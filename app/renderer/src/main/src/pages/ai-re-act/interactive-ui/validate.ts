@@ -4,6 +4,7 @@ import { catalog } from './catalog.mjs'
 import { parseJSONPrefix } from './partialJson'
 import { normalizeVisualization } from './visualizationValidation'
 import { normalizeNavigation } from './navigationValidation'
+import { normalizeForm } from './formValidation'
 
 export interface UINode {
   id: string
@@ -158,7 +159,8 @@ export function readDocument(source: string, final: boolean) {
         next.action = node.action
       else diagnose('action', '未声明或不合法的动作，已禁用')
     }
-    if (normalizeVisualization(next, diagnose) && normalizeNavigation(next, diagnose)) nodes.push(next)
+    if (normalizeVisualization(next, diagnose) && normalizeNavigation(next, diagnose) && normalizeForm(next, diagnose))
+      nodes.push(next)
   }
   if (final && !partial.complete) diagnostics.push({ nodeId: '', path: '', message: '组件 JSON 未完成' })
   if (final && partial.complete) {

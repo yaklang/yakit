@@ -1,5 +1,5 @@
 import { syncQuestionPanel } from '../interactive-ui/questionPanel'
-import type { QuestionDraft } from '../interactive-ui/types'
+import { UI_PROTOCOL, type QuestionDraft } from '../interactive-ui/types'
 import type { AIAgentChatData, AIAgentChatMetaData } from '@/pages/ai-agent/type/aiChat'
 import catalogManifest from '../interactive-ui/catalog.manifest.json'
 import {
@@ -247,7 +247,7 @@ type SessionConnection = {
 }
 
 export class ChatMultiSessionController {
-  private uiReceipts = new Map<string, { resolve: () => void; reject: (error: Error) => void }>()
+  private uiReceipts = new Map<string, { sessionId: string; resolve: () => void; reject: (error: Error) => void }>()
 
   public persistUIState(sessionId: string, fallback: AIChatQSData, state: unknown) {
     const current = this.rawDataPool.get(sessionId)?.contents.get(fallback.id) || fallback
@@ -283,17 +283,20 @@ export class ChatMultiSessionController {
     const key = `${sessionId}:${submissionId || syncId}`
     if (this.uiReceipts.has(key)) throw new Error('正在提交，请稍候')
     return new Promise<void>((resolve, reject) => {
+      let settled = false
       const timer = setTimeout(() => {
-        this.uiReceipts.delete(key)
-        reject(new Error('暂未收到确认，草稿已保存。可重试同一次提交。'))
+        done(new Error('暂未收到确认，草稿已保存。可重试同一次提交。'))
       }, 15000)
       const done = (error?: Error) => {
+        // An old IPC rejection may arrive after timeout and a new retry.
+        if (settled) return
+        settled = true
         clearTimeout(timer)
         this.uiReceipts.delete(key)
         if (error) reject(error)
         else resolve()
       }
-      this.uiReceipts.set(key, { resolve: () => done(), reject: done })
+      this.uiReceipts.set(key, { sessionId, resolve: () => done(), reject: done })
       void ipcRenderer
         .invoke('send-ai-re-act', this.tokenBySessionId.get(sessionId), { ...request, SyncID: syncId })
         .catch((error) => done(error instanceof Error ? error : new Error(String(error))))
@@ -400,7 +403,7 @@ export class ChatMultiSessionController {
         ...params,
         Params: {
           ...params.Params,
-          ClientUI: JSON.stringify({ protocol: 'memfit.ui/1', questions: true, catalog: catalogManifest }),
+          ClientUI: JSON.stringify({ protocol: UI_PROTOCOL, questions: true, catalog: catalogManifest }),
         },
       }
     const { token, data } = connection
@@ -2084,6 +2087,13 @@ export class ChatMultiSessionController {
     const meta = this.metaPool.get(sessionId)
     if (!store || !rawData || !meta) return
     for (const item of rawData.contents.values()) {
+      if (item.type === AIChatQSDataTypeEnum.UI_COMPONENT && !item.data.final && !item.data.streamEnded) {
+        item.data.streamEnded = true
+        item.stageSettled = true
+        store.getState().incrementNodeVersion(item.id, 'item')
+        upsertSessionContent(sessionId, item.id, item, meta.lifecycle)
+        continue
+      }
       if (item.type !== AIChatQSDataTypeEnum.STREAM || item.data.status === 'end') continue
       item.data.status = 'end'
       if (store.getState().items[item.id]) store.getState().incrementNodeVersion(item.id, 'item')
@@ -2118,6 +2128,11 @@ export class ChatMultiSessionController {
       try {
         await lifecycle.preparation
         await lifecycle.events
+        // Drain already received acknowledgements before rejecting requests
+        // whose response can no longer arrive on this connection.
+        for (const pending of this.uiReceipts.values()) {
+          if (pending.sessionId === sessionId) pending.reject(new Error('会话已断开，草稿已保存。连接后可重试。'))
+        }
         const data = this.ensureSession(sessionId)
         const { store } = data
         if (lifecycle.current && this.pendingDisposeSessions.get(sessionId) !== true) {

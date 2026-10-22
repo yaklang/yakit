@@ -6,14 +6,14 @@
 yarn test:memfit-ui:all
 ```
 
-- `yarn test:memfit-ui`：现有 Vitest 用例，覆盖 Schema、流式前缀、问答队列、回执乱序、草稿、输入法、倒计时、失败重试与防重复提交。
+- `yarn test:memfit-ui`：现有 Vitest 用例，覆盖 Schema、流式前缀、问答队列、回执乱序、草稿、输入法、倒计时、失败重试与防重复提交，以及真实会话控制器的连接收尾与迟到回执（模拟 IPC）。
 - `yarn test:memfit-ui:electron`：复用已有 WebdriverIO/Electron 依赖，构建独立测试页面，使用实际组件、校验器、Yakit 控件、主题和 SCSS。在真实 Chromium 中点击、输入、切页、开关浮层，检查发送内容及结束状态，保存截图。
 
 首次运行可能需要下载与 Electron 匹配的 ChromeDriver。Linux 无桌面时使用 `xvfb-run -a yarn test:memfit-ui:electron`。退出非零即验证失败。
 
 结果位于 `reports/e2e-electron/memfit-ui/<运行时间>/`：`results.json` 逐项记录结果；同时保存每个组件的亮暗主题截图、展开的 Tooltip/Popover、问答浮层截图，以及失败现场和运行日志。单测 JUnit 位于 `reports/junit.xml`。相关 PR 改动自动触发 `Memfit UI regression` workflow，并上传这些产物。
 
-当前 Electron 套件有 34 项检查，包含 1100px 亮色和 800px 暗色窗口。与 49 项模块测试一起，本地完整运行约 30 秒（不含首次安装依赖和下载驱动）。截图用于检查和定位，没有跨操作系统的像素基准比较。
+当前 Electron 套件有 34 项检查，包含 1100px 亮色和 800px 暗色窗口。与 89 项模块及会话控制器测试一起，本地完整运行约 30–50 秒（不含首次安装依赖和下载驱动）。截图用于检查和定位，没有跨操作系统的像素基准比较。
 
 ## 新增组件时
 

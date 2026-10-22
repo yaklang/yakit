@@ -1,7 +1,7 @@
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createRequire } from 'node:module'
-import { writeFile } from 'node:fs/promises'
+import { access, writeFile } from 'node:fs/promises'
 import { capture } from '../fixtures/memfit-ui/capture.mjs'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
@@ -38,12 +38,28 @@ export const config = {
   connectionRetryCount: 0,
   mochaOpts: { ui: 'bdd', timeout: 30000 },
   async after() {
-    // Electron 27 waits for the main-process inspector on exit. Detach after
-    // the last test so ChromeDriver can close the isolated app normally.
-    await browser.electron.execute(() => {
+    // Wait for detachment itself, not just the scheduled callback. Otherwise
+    // Linux can exit its event loop first and wait forever for the debugger.
+    const detached = path.join(process.env.MEMFIT_UI_PROFILE, 'inspector-detached')
+    await browser.electron.execute((_electron, marker) => {
       const inspector = process.mainModule.require('node:inspector')
-      setTimeout(() => inspector.close(), 50)
-    })
+      const fs = process.mainModule.require('node:fs')
+      setTimeout(() => {
+        inspector.close()
+        fs.writeFileSync(marker, '')
+      }, 50)
+    }, detached)
+    await browser.waitUntil(
+      () =>
+        access(detached).then(
+          () => true,
+          () => false,
+        ),
+      {
+        timeout: 5000,
+        timeoutMsg: 'Electron inspector did not detach before teardown',
+      },
+    )
   },
   async afterTest(test, _context, result) {
     results.push({ title: test.title, passed: result.passed, duration: result.duration, error: result.error?.message })

@@ -574,4 +574,78 @@ describe('frontend allocated session identity', () => {
     expect(grpcQueryAIEvent).not.toHaveBeenCalled()
     await controller.handleSessionEnd('client-session')
   })
+
+  it('does not let an expired IPC attempt remove the receipt handler for its retry', async () => {
+    const token = await start()
+    await emit(token, 'pong', 'client-session')
+    let rejectFirst!: (error: Error) => void
+    ipcRendererMock.invoke.mockImplementation((method, _token, request) =>
+      method === 'send-ai-re-act' && request?.UserInteraction === 'first'
+        ? new Promise((_resolve, reject) => {
+            rejectFirst = reject
+          })
+        : Promise.resolve(),
+    )
+    const first = controller
+      .sendUIInteraction('client-session', { IsFreeInput: true, UserInteraction: 'first' }, 'receipt')
+      .catch(String)
+    await vi.advanceTimersByTimeAsync(15000)
+    expect(await first).toContain('暂未收到确认')
+    const resolved = vi.fn()
+    const retry = controller
+      .sendUIInteraction('client-session', { IsFreeInput: true, UserInteraction: 'retry' }, 'receipt')
+      .then(resolved, resolved)
+    rejectFirst(new Error('late IPC failure'))
+    await tick()
+    const listener = ipcRendererMock.on.mock.calls.find(([name]) => name === `${token}-data`)![1]
+    listener({}, makeGrpcJsonRes('ui_receipt', { id: 'receipt', ok: true }, { SessionId: 'client-session' }))
+    await tick()
+    expect(resolved).toHaveBeenCalledExactlyOnceWith(undefined)
+    await retry
+    await controller.handleSessionEnd('client-session')
+  })
+
+  it('settles interrupted UI streams and releases pending UI requests when the connection closes', async () => {
+    const token = await start()
+    await emit(token, 'pong', 'client-session')
+    const { rawData } = controller.ensureSession('client-session')
+    const item = {
+      id: 'ui-component:partial',
+      type: AIChatQSDataTypeEnum.UI_COMPONENT as const,
+      chatType: 'reAct' as const,
+      Timestamp: 0,
+      AIService: '',
+      AIModelName: '',
+      stageSettled: false,
+      data: { sessionId: 'client-session', source: '{"id":"partial",', final: false },
+    }
+    rawData.contents.set(item.id, item)
+    const settled = vi.fn()
+    const pending = controller
+      .sendUIInteraction('client-session', { IsSyncMessage: true, SyncType: 'ui_interaction' })
+      .then(settled, settled)
+    await controller.handleSessionEnd('client-session')
+    expect(rawData.contents.get(item.id)).toMatchObject({
+      stageSettled: true,
+      data: { streamEnded: true, final: false },
+    })
+    expect(aiChatPersistStore.setSessionContent).toHaveBeenCalledWith('client-session', item.id, expect.any(Function))
+    expect(settled).toHaveBeenCalledOnce()
+    expect(settled.mock.calls[0][0]).toBeInstanceOf(Error)
+    await pending
+  })
+
+  it('accepts an already queued UI receipt before connection teardown', async () => {
+    const token = await start()
+    await emit(token, 'pong', 'client-session')
+    const accepted = vi.fn()
+    const pending = controller
+      .sendUIInteraction('client-session', { IsFreeInput: true }, 'closing-receipt')
+      .then(accepted, accepted)
+    const listener = ipcRendererMock.on.mock.calls.find(([name]) => name === `${token}-data`)![1]
+    listener({}, makeGrpcJsonRes('ui_receipt', { id: 'closing-receipt', ok: true }, { SessionId: 'client-session' }))
+    await controller.handleSessionEnd('client-session')
+    await pending
+    expect(accepted).toHaveBeenCalledExactlyOnceWith(undefined)
+  })
 })
