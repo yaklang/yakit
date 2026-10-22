@@ -353,11 +353,15 @@ const AIMCPList: React.FC<AIMCPListProps> = React.memo((props) => {
     emiter.emit('openPage', JSON.stringify({ route: YakitRoute.Settings, params: { anchor: 'yak-mcp' } }))
   })
   const onSetData = useMemoizedFn((item: MCPServer) => {
-    setResponse((preV) => ({
-      ...preV,
-      // 与后端 updated_at 倒序一致：刚被操作的卡片立即移到对应分组第一位
-      MCPServers: [{ ...item }, ...preV.MCPServers.filter((ele) => ele.ID !== item.ID)],
-    }))
+    setResponse((preV) => {
+      // 迟到的启停结果可能晚于搜索词切换：当前结果不含该服务器时丢弃，避免把旧卡片插进新搜索结果
+      if (!preV.MCPServers.some((ele) => ele.ID === item.ID)) return preV
+      return {
+        ...preV,
+        // 与后端 updated_at 倒序一致：刚被操作的卡片立即移到对应分组第一位
+        MCPServers: [{ ...item }, ...preV.MCPServers.filter((ele) => ele.ID !== item.ID)],
+      }
+    })
   })
   const groups = useCreation(() => {
     return [
@@ -474,6 +478,14 @@ const AIMCPListItem: React.FC<AIMCPListItemProps> = React.memo((props) => {
 
   const [stopVisible, setStopVisible] = useState<boolean>(false)
   const [stopLoading, setStopLoading] = useState<boolean>(false)
+  // 用户打开任一服务器的工具页都会卸载整个列表，用于识别启用请求迟到的自动导航是否已被用户操作打断
+  const aliveRef = useRef(true)
+  useEffect(() => {
+    aliveRef.current = true
+    return () => {
+      aliveRef.current = false
+    }
+  }, [])
 
   const updateMCPServer = useMemoizedFn((enable: boolean) => {
     setStopLoading(true)
@@ -485,6 +497,8 @@ const AIMCPListItem: React.FC<AIMCPListItemProps> = React.memo((props) => {
     grpcUpdateMCPServer(updateValue)
       .then(() => {
         const openToolList = (server: MCPServer) => {
+          // 启用期间用户已打开其他服务器（本卡片随列表卸载）时，迟到的结果不再覆盖当前工具页
+          if (!aliveRef.current) return
           onSetData(server)
           if (enable) setCurrentMCP(server)
         }
@@ -606,6 +620,7 @@ const AIMCPListItem: React.FC<AIMCPListItemProps> = React.memo((props) => {
       <span
         className={classNames(styles['mcp-status-dot'], {
           [styles['mcp-status-dot-inactive']]: !item.Enable,
+          [styles['mcp-status-dot-error']]: !!item.ErrorMsg,
         })}
         aria-hidden
       />
@@ -620,6 +635,13 @@ const AIMCPListItem: React.FC<AIMCPListItemProps> = React.memo((props) => {
             {item.Name}
           </span>
           {infoByType.typeNode}
+          {!!item.ErrorMsg && (
+            <Tooltip title={item.ErrorMsg}>
+              <YakitTag size="small" color="danger" fullRadius className={styles['mcp-card-error-tag']}>
+                {t('AIMCP.toolFetchFailed')}
+              </YakitTag>
+            </Tooltip>
+          )}
           <div
             className={styles['mcp-card-controls']}
             onClick={(event) => {

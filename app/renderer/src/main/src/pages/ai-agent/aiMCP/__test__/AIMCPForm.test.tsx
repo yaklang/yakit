@@ -77,6 +77,29 @@ describe('AIMCPForm 保存', () => {
     expect(onCancel).toHaveBeenCalledTimes(1)
   })
 
+  it('编辑保存成功回传含 ID 的保存值', async () => {
+    vi.mocked(grpcUpdateMCPServer).mockResolvedValue({ Ok: true, Reason: '' })
+    const onCancel = vi.fn()
+    render(<AIMCPForm onCancel={onCancel} defaultValues={{ ...created, ID: 7, Name: 'old name' }} />)
+    // 等待 defaultValues 回填表单
+    await waitFor(() => expect(screen.getByLabelText('AIMCPForm.serverName')).toHaveValue('old name'))
+    fireEvent.change(screen.getByLabelText('AIMCPForm.serverName'), { target: { value: created.Name } })
+    fireEvent.click(screen.getByRole('button', { name: 'YakitButton.ok' }))
+    await waitFor(() =>
+      expect(onCancel).toHaveBeenCalledExactlyOnceWith(
+        expect.objectContaining({ ID: 7, Name: created.Name, Type: 'sse', URL: created.URL, Enable: true }),
+      ),
+    )
+  })
+
+  it('点击取消按钮无参数回调', async () => {
+    const onCancel = vi.fn()
+    render(<AIMCPForm onCancel={onCancel} />)
+    fireEvent.click(screen.getByRole('button', { name: 'YakitButton.cancel' }))
+    expect(onCancel).toHaveBeenCalledTimes(1)
+    expect(onCancel.mock.calls[0]).toHaveLength(0)
+  })
+
   it('重名等保存失败时提示错误，不回调不关闭', async () => {
     vi.mocked(grpcAddMCPServer).mockResolvedValue({ Ok: false, Reason: 'mcp server name already exists' })
     const onCancel = vi.fn()

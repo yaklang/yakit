@@ -241,6 +241,17 @@
   background: var(--Colors-Use-Neutral-Disable);
 }
 
+/* 需排在 inactive 之后：工具获取失败优先于停用置灰，避免启用中的失败服务仍显示绿色 */
+.mcp-status-dot-error {
+  border-color: var(--yakit-colors-Error-80);
+  background: var(--Colors-Use-Error-Primary);
+}
+
+.mcp-card-error-tag {
+  flex-shrink: 0;
+  margin-right: 0;
+}
+
 .mcp-card-content {
   @extend %display-column;
   flex: 1;
