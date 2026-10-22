@@ -256,7 +256,7 @@ export const OrdinaryMenu: React.FC<OrdinaryMenuProps> = React.memo((props) => {
         <YakitPopover
           key={itemKey}
           classNames={{ root: classNames(styles['menu-popover'], styles['menu-popover-no-arrow']) }}
-          styles={{ root: { paddingTop: 2 } }}
+          styles={{ root: { paddingTop: 0 } }}
           placement="bottomRight"
           trigger="click"
           content={
