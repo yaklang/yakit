@@ -1,0 +1,24 @@
+body {
+  background: var(--Colors-Use-Basic-Background);
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+}
+main {
+  margin: 24px auto;
+  padding: 0 16px;
+  max-width: 960px;
+  height: calc(100vh - 48px);
+  overflow: auto;
+}
+.composer {
+  position: absolute;
+  top: 160px;
+  bottom: 28px;
+  left: 16px;
+  right: 16px;
+}
+.composer > textarea {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 110px;
+}

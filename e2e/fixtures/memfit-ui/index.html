@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Memfit UI regression</title>
+  </head>
+  <body>
+    <script>
+      window.memfitUIErrors = []
+      // This standalone fixture has no application preload or real IPC access.
+      const namespace = new Proxy({}, { get: () => async () => undefined })
+      window.yakitBridge = new Proxy({}, { get: () => namespace })
+      window.addEventListener('error', (event) => window.memfitUIErrors.push(event.message))
+      window.addEventListener('unhandledrejection', (event) => window.memfitUIErrors.push(String(event.reason)))
+    </script>
+    <div id="root"></div>
+    <script type="module" src="./renderer.tsx"></script>
+  </body>
+</html>
