@@ -1,4 +1,4 @@
-// Data-only definitions shared by the prompt manifest and runtime validation.
+// Data-only definitions shared by on-demand model loading and runtime validation.
 export const visualizationComponents = [
   {
     name: 'BarChart',

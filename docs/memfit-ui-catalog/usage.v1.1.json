@@ -3,7 +3,10 @@
   "description": "Catalog 1.1 已实现 BarChart、LineChart、DataTable，并保留原有六个组件。运行时权威定义为 catalog.mjs 及其构建生成的 catalog.manifest.json；catalog.v1.1.draft.json 保留为最初设计草案。示例须在更新后的前后端中运行。",
   "catalogFile": "../../app/renderer/src/main/src/pages/ai-re-act/interactive-ui/catalog.manifest.json",
   "runtimeRequirements": [
-    "目录由 catalog.mjs 引用 visualizationCatalog.mjs，并通过 scripts/export-memfit-ui-catalog.mjs 生成模型提示词和运行时使用的同一份 Schema 清单。",
+    "catalog.mjs 汇总组件并由 scripts/export-memfit-ui-catalog.mjs 导出完整清单，客户端仍完整上报用于协商和严格校验；不再把全部组件描述和 Schema 放进模型常驻提示词。",
+    "展示前调用 load_ui_components({names:[\"Stack\",\"BarChart\"]})，再按动态上下文 UI_COMPONENT_DEFINITIONS 中的真实定义调用 render_ui；复用已加载定义，不重复申请。每批最多 8 个名称、3072 tokens，新批次整体替换旧批次，names:[] 主动清空。超预算或未知名称整批拒绝，保留原批次，不截断 Schema。",
+    "常驻名称索引上限 128 tokens；超过时只提供 search_ui_components 入口。搜索 query 按名称/描述做不区分大小写的字面子串匹配，空字符串可分页浏览；结果最多 8 项、512 tokens，按 nextOffset 续查，再加载需要的组件。预算使用项目 Qwen BPE 分词器计量，索引预算不含固定说明和工具定义。",
+    "加载定义只存在于当前 loop/任务的可替换上下文，不进入永久历史；历史只保留简短回执。切换任务、结束或取消任务、catalog 版本或内容变化、交互权限变化时失效。多 worker 不共享加载状态。完整协商清单另设 512 个组件、1 MiB 传输上限，与模型上下文预算独立。",
     "保持 memfit.ui/1 的文档/节点结构，稳定文档和节点 ID。组件名、枚举动作、参数类型及组件数量均受目录限制；不提供 HTML、CSS、JavaScript、formatter、表达式或任意图表 options。",
     "JSON Schema 负责字段类型、必填项、范围和默认值；唯一 ID、系列长度匹配、列引用和类型匹配、横坐标有序、动作与 selection 的配对由组件运行时验证，并进入现有诊断/一次修正链路。Schema 校验通过不等于这些跨字段规则已满足。",
     "就近降级：非法可选参数移除并记录诊断；必填参数先尝试默认值，仍无效才丢弃组件。DataTable 非法单元格清空并诊断，未知键删除；重复行 ID/列 key、重复系列 ID、乱序/重复横坐标、完整条形数据长度不匹配使对应组件无效。非法 initialSort 移除；selection=none 时禁用提交动作并诊断。",
