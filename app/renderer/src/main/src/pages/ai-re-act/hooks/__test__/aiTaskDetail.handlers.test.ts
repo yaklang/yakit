@@ -8,6 +8,99 @@ vi.mock('../persist/contentPersistHelper', () => ({
 }))
 
 describe('aiTaskDetail handlers', () => {
+  it('capability_inventory 按加载状态重新分类两组技能，保留字段并兼容缺失状态', () => {
+    const taskId = 'legacy-skill-state'
+    const req = makeHandlerRequest({
+      res: makeGrpcJsonRes(
+        'structured',
+        {
+          fixed: {
+            skills: [
+              { name: 'fixed-loaded', verbose_name: '已加载', category: 'skill', skill_load_state: 'loaded' },
+              {
+                name: 'fixed-metadata',
+                verbose_name: '可加载',
+                description: '技能描述',
+                category: 'skill',
+                skill_load_state: 'metadata',
+                token_count: 0,
+              },
+              { name: 'fixed-missing', verbose_name: '缺失状态', category: 'skill' },
+              { name: 'fixed-empty', verbose_name: '空状态', category: 'skill', skill_load_state: '' },
+            ],
+          },
+          dynamic: {
+            skills: [
+              {
+                name: 'dynamic-loaded',
+                description: '动态来源',
+                category: 'skill',
+                skill_load_state: 'loaded',
+                token_count: 123,
+              },
+              { name: 'dynamic-metadata', category: 'skill', skill_load_state: 'metadata' },
+            ],
+          },
+        },
+        { NodeId: 'capability_inventory', TaskId: taskId },
+      ),
+    })
+
+    aiTaskDetailDataHandlers.capability_inventory(req)
+
+    const skills = req.rawData.taskDetailsMap.get(taskId)!.skills
+    expect(skills.fixed.map((skill) => skill.name)).toEqual(['fixed-loaded', 'dynamic-loaded'])
+    expect(skills.fixed[1]).toMatchObject({
+      verbose_name: 'dynamic-loaded',
+      description: '动态来源',
+      skill_load_state: 'loaded',
+      token_count: 123,
+    })
+    expect(skills.dynamic.map((skill) => skill.name)).toEqual([
+      'fixed-metadata',
+      'fixed-missing',
+      'fixed-empty',
+      'dynamic-metadata',
+    ])
+    expect(skills.dynamic[0]).toMatchObject({ description: '技能描述', skill_load_state: 'metadata', token_count: 0 })
+    expect(skills.dynamic[1].skill_load_state).toBe('')
+    expect(skills.dynamic[2].skill_load_state).toBe('')
+  })
+
+  it.each(['capability_inventory', 'task_snapshot'] as const)('%s 随加载状态变化移动技能且不残留旧分组', (nodeId) => {
+    const taskId = 'skill-state-transition'
+    const { rawData, store } = makeHandlerRequest({ res: makeGrpcJsonRes('structured', {}) })
+    const states = ['metadata', 'loaded', 'metadata'] as const
+
+    states.forEach((state, index) => {
+      const payload =
+        nodeId === 'task_snapshot'
+          ? {
+              task_id: taskId,
+              revision: index + 1,
+              snapshot: {
+                capabilities: [
+                  { name: 'skill', type: 'skill', position: 'Dynamic', data: { skill_load_state: state } },
+                ],
+              },
+            }
+          : {
+              fixed: { skills: [] },
+              dynamic: { skills: [{ name: 'skill', description: '', category: 'skill', skill_load_state: state }] },
+            }
+      const req = makeHandlerRequest({
+        rawData,
+        store,
+        res: makeGrpcJsonRes('structured', payload, { NodeId: nodeId, TaskId: taskId }),
+      })
+      aiTaskDetailDataHandlers[nodeId](req)
+
+      const skills = rawData.taskDetailsMap.get(taskId)!.skills
+      expect(skills.fixed.map((skill) => skill.name)).toEqual(state === 'loaded' ? ['skill'] : [])
+      expect(skills.dynamic.map((skill) => skill.name)).toEqual(state === 'loaded' ? [] : ['skill'])
+    })
+  })
+
   it.each([
     ['capability_inventory', 'structured', { fixed: { tools: [] } }],
     ['perception', 'perception', { summary: 'updated perception' }],
@@ -490,7 +583,7 @@ describe('aiTaskDetail handlers', () => {
     expect(detail?.todoList?.items?.[0]?.content).toBe('同 rev 待办')
   })
 
-  it('task_snapshot capabilities：各 type/position 落入 fixed/dynamic，skill_load_state 优先 data 再回退 stage', () => {
+  it('task_snapshot 技能按加载状态分类，其他能力按 position 分类，加载状态优先 data 再回退 stage', () => {
     const taskId = 'task-capabilities'
     const req = makeHandlerRequest({
       res: makeGrpcJsonRes(
@@ -507,7 +600,7 @@ describe('aiTaskDetail handlers', () => {
             capabilities: [
               // 空名跳过
               { name: '  ', type: 'tool', stage: '', position: 'Fixed' },
-              // skill：固定/动态都保留加载状态，data 优先于 stage=loaded
+              // skill：忽略 position，按加载状态分类，data 优先于 stage=loaded
               { name: 'skill-fixed', type: 'skill', stage: '', position: 'Fixed' },
               {
                 name: 'skill-fixed-data-priority',
@@ -575,21 +668,21 @@ describe('aiTaskDetail handlers', () => {
     expect(detail).toBeDefined()
 
     expect(detail!.skills.fixed.map((i) => ({ name: i.name, state: i.skill_load_state }))).toEqual([
-      { name: 'skill-fixed', state: 'metadata' },
-      { name: 'skill-fixed-data-priority', state: 'metadata' },
       { name: 'skill-fixed-from-data', state: 'loaded' },
       { name: 'skill-fixed-stage-fallback', state: 'loaded' },
-    ])
-    expect(detail!.skills.fixed[1].token_count).toBe(123)
-    expect(detail!.skills.fixed[0].token_count).toBeUndefined()
-    expect(detail!.skills.dynamic[0].token_count).toBe(0)
-    expect(detail!.skills.dynamic[1].token_count).toBe(456)
-    expect(detail!.skills.dynamic[2].token_count).toBeUndefined()
-    expect(detail!.skills.dynamic.map((i) => ({ name: i.name, state: i.skill_load_state }))).toEqual([
-      { name: 'skill-data-priority', state: 'metadata' },
       { name: 'skill-from-data', state: 'loaded' },
-      { name: 'skill-default', state: 'metadata' },
       { name: 'skill-stage-fallback', state: 'loaded' },
+    ])
+    expect(detail!.skills.fixed[2].token_count).toBe(456)
+    expect(detail!.skills.fixed[0].token_count).toBeUndefined()
+    expect(detail!.skills.dynamic[1].token_count).toBe(123)
+    expect(detail!.skills.dynamic[2].token_count).toBe(0)
+    expect(detail!.skills.dynamic[3].token_count).toBeUndefined()
+    expect(detail!.skills.dynamic.map((i) => ({ name: i.name, state: i.skill_load_state }))).toEqual([
+      { name: 'skill-fixed', state: 'metadata' },
+      { name: 'skill-fixed-data-priority', state: 'metadata' },
+      { name: 'skill-data-priority', state: 'metadata' },
+      { name: 'skill-default', state: 'metadata' },
       { name: 'skill-empty-state', state: '' },
     ])
 
@@ -628,8 +721,8 @@ describe('aiTaskDetail handlers', () => {
     })
     aiTaskDetailDataHandlers.task_snapshot(req)
     const skills = req.rawData.taskDetailsMap.get(taskId)!.skills
-    const items = position === 'Fixed' ? skills.fixed : skills.dynamic
-    expect(items.map((item) => item.token_count)).toEqual(tokenCounts)
+    expect(skills.fixed.map((item) => item.token_count)).toEqual(tokenCounts)
+    expect(skills.dynamic).toEqual([])
   })
 
   it('task_snapshot capabilities=[] 整表清空，不残留旧 tool/forge/技能', () => {
@@ -654,7 +747,7 @@ describe('aiTaskDetail handlers', () => {
     })
     aiTaskDetailDataHandlers.task_snapshot(seeded)
     expect(seeded.rawData.taskDetailsMap.get(taskId)?.tool.fixed).toHaveLength(1)
-    expect(seeded.rawData.taskDetailsMap.get(taskId)?.skills.fixed).toHaveLength(1)
+    expect(seeded.rawData.taskDetailsMap.get(taskId)?.skills.dynamic).toHaveLength(1)
     expect(seeded.rawData.taskDetailsMap.get(taskId)?.forges.dynamic).toHaveLength(1)
 
     const clearReq = makeHandlerRequest({

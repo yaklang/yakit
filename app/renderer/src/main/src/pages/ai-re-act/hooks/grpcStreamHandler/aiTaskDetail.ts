@@ -48,9 +48,6 @@ const planItemDetailsToCapabilityFields = (payload: AIAgentGrpcApi.PlanItemDetai
   if (fixed?.forges) {
     itemData.forges.fixed = fixed.forges
   }
-  if (fixed?.skills) {
-    itemData.skills.fixed = fixed.skills
-  }
 
   if (dynamic?.tools) {
     for (const item of dynamic.tools) {
@@ -69,11 +66,24 @@ const planItemDetailsToCapabilityFields = (payload: AIAgentGrpcApi.PlanItemDetai
       }
     }
   }
-  if (dynamic?.skills) {
-    itemData.skills.dynamic = dynamic.skills
-  }
   if (dynamic?.forges) {
     itemData.forges.dynamic = dynamic.forges
+  }
+
+  // 技能按加载状态分类，不沿用后端的 fixed/dynamic 位置。
+  for (const skill of [...(fixed?.skills || []), ...(dynamic?.skills || [])]) {
+    if (skill.skill_load_state === 'loaded') {
+      itemData.skills.fixed.push({
+        ...skill,
+        verbose_name: 'verbose_name' in skill ? skill.verbose_name : skill.name,
+      })
+    } else {
+      itemData.skills.dynamic.push({
+        ...skill,
+        category: 'skill',
+        skill_load_state: skill.skill_load_state ?? '',
+      })
+    }
   }
 
   return itemData

@@ -7,6 +7,10 @@ import { AITaskSkillList } from '@/pages/ai-agent/chatTemplate/aiTaskExecutionDe
 import { AISkillList } from '../AISkillLoadingPane/aiSkillList/AISkillList'
 
 vi.mock('antd', () => ({ Tooltip: ({ children }: { children: ReactNode }) => children }))
+vi.mock('@/components/yakitUI/YakitPopover/YakitPopover', () => ({
+  YakitPopover: ({ children }: { children: ReactNode }) => children,
+}))
+vi.mock('../AISkillLoadingPane/aiSkillList/AISkillDetails/AISkillDetails', () => ({ default: () => null }))
 vi.mock('@yakit-libs/yakit-ui-icons/outline', () => ({ PlusOutlined: () => null }))
 vi.mock('@/i18n/useI18nNamespaces', () => ({ useI18nNamespaces: () => ({ t: (key: string) => key }) }))
 vi.mock('@/components/yakitUI/YakitEmpty/YakitEmpty', () => ({ YakitEmpty: () => <div>empty</div> }))

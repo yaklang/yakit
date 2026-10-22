@@ -46,6 +46,7 @@ export const AISkillLoadingPane: React.FC<AISkillLoadingPaneProps> = memo(({ loa
   }, [list.length, onTotalChange])
 
   const onRefresh = useMemoizedFn(() => {
+    if (!taskId) return
     const syncId = randomString(8)
     markSending(syncId)
     onSend({
@@ -53,15 +54,16 @@ export const AISkillLoadingPane: React.FC<AISkillLoadingPaneProps> = memo(({ loa
       type: '',
       params: {
         IsSyncMessage: true,
-        SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_SESSION_SNAPSHOT_SYNC,
+        SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_TASK_SNAPSHOT,
         SyncID: syncId,
+        SyncJsonInput: JSON.stringify({ task_id: taskId }),
       },
     })
   })
 
   useEffect(() => {
     if (inViewport && !addLoading) onRefresh()
-  }, [inViewport, sessionId, addLoading, onRefresh])
+  }, [inViewport, sessionId, taskId, addLoading, onRefresh])
 
   return (
     <div className={styles['content']} ref={contentRef}>

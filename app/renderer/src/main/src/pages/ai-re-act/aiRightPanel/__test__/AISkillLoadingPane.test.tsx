@@ -176,8 +176,9 @@ describe('AISkillLoadingPane', () => {
         type: '',
         params: {
           IsSyncMessage: true,
-          SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_SESSION_SNAPSHOT_SYNC,
+          SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_TASK_SNAPSHOT,
           SyncID: expect.any(String),
+          SyncJsonInput: JSON.stringify({ task_id: 'task-1' }),
         },
       })
       const refresh = screen.getByRole('button', { name: 'YakitButton.refresh' })
@@ -225,7 +226,8 @@ describe('AISkillLoadingPane', () => {
       expect(add).not.toBeDisabled()
       expect(anotherAdd).not.toBeDisabled()
       expect(onSend).toHaveBeenCalledTimes(2)
-      expect(onSend.mock.calls[1][0].params.SyncType).toBe(AIInputEventSyncTypeEnum.SYNC_TYPE_SESSION_SNAPSHOT_SYNC)
+      expect(onSend.mock.calls[1][0].params.SyncType).toBe(AIInputEventSyncTypeEnum.SYNC_TYPE_TASK_SNAPSHOT)
+      expect(onSend.mock.calls[1][0].params.SyncJsonInput).toBe(JSON.stringify({ task_id: 'task-1' }))
     } finally {
       cleanup()
       vi.clearAllTimers()
@@ -402,6 +404,35 @@ describe('AISkillLoadingPane', () => {
     }
   })
 
+  it('可见时切换任务会请求新任务的 task_snapshot_sync', () => {
+    vi.useFakeTimers()
+    try {
+      store.setState({ inViewport: true })
+      render(<AISkillLoadingPane loadState="loaded" />)
+      expect(onSend.mock.calls[0][0].params).toMatchObject({
+        SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_TASK_SNAPSHOT,
+        SyncJsonInput: JSON.stringify({ task_id: 'task-1' }),
+      })
+
+      act(() => store.setState({ currentChatStatus: { questionID: 'task-2', coordinatorId: '' } }))
+      expect(onSend).toHaveBeenCalledTimes(2)
+      expect(onSend.mock.calls[1][0].params).toMatchObject({
+        SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_TASK_SNAPSHOT,
+        SyncJsonInput: JSON.stringify({ task_id: 'task-2' }),
+      })
+    } finally {
+      cleanup()
+      vi.useRealTimers()
+    }
+  })
+
+  it('没有当前任务时不发送快照刷新', () => {
+    store.setState({ inViewport: true, currentChatStatus: { questionID: '', coordinatorId: '' } })
+    render(<AISkillLoadingPane loadState="loaded" />)
+    fireEvent.click(screen.getByRole('button', { name: 'YakitButton.refresh' }))
+    expect(onSend).not.toHaveBeenCalled()
+  })
+
   it('刷新等待匹配的快照回执，超过最短展示时间仍保持禁用且不会重复发送', async () => {
     vi.useFakeTimers()
     try {
@@ -415,8 +446,9 @@ describe('AISkillLoadingPane', () => {
         type: '',
         params: {
           IsSyncMessage: true,
-          SyncType: 'session_snapshot_sync',
+          SyncType: 'task_snapshot_sync',
           SyncID: expect.stringMatching(/^.{8}$/),
+          SyncJsonInput: JSON.stringify({ task_id: 'task-1' }),
         },
       })
       expect(refresh).toBeDisabled()
