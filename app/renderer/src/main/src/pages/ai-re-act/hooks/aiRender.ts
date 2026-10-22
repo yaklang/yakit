@@ -1,6 +1,8 @@
 import type { StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
 import type { AIAgentGrpcApi, AIOutputEvent, AITaskStatusType, AIOutputI18n } from './grpcApi'
 import type { CustomPluginExecuteFormValue } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
+import type { QuestionRequest, UISubmission } from '../interactive-ui/types'
+import type { UIDiagnostic } from '../interactive-ui/validate'
 
 // #region AI-Agent 非会话列表外的渲染数据
 /** 自由对话-实时问题队列 */
@@ -424,7 +426,7 @@ export type AIChatQSDataType = `${AIChatQSDataTypeEnum}`
 
 export interface AIChatQSDataBase<T extends string, U> {
   uiState?: unknown
-  interactionMetadata?: import('../interactive-ui/types').UISubmission
+  interactionMetadata?: UISubmission
   type: T
   data: U
   /** id就是token */
@@ -505,14 +507,11 @@ export type AIChatQSData =
         final: boolean
         streamEnded?: boolean
         revision?: number
-        diagnostics?: import('../interactive-ui/validate').UIDiagnostic[]
-        submissions?: Record<string, import('../interactive-ui/types').UISubmission>
+        diagnostics?: UIDiagnostic[]
+        submissions?: Record<string, UISubmission>
       }
     >
-  | AIChatQSDataBase<
-      AIChatQSDataTypeEnum.UI_QUESTION,
-      { sessionId: string; request: import('../interactive-ui/types').QuestionRequest }
-    >
+  | AIChatQSDataBase<AIChatQSDataTypeEnum.UI_QUESTION, { sessionId: string; request: QuestionRequest }>
   | ChatQuestion
   | ChatStream
   | ChatThought
