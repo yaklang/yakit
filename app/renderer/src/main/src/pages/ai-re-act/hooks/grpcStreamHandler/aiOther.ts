@@ -226,6 +226,7 @@ const handleReactTaskDequeue: AIMessageHandler = (requestInfo) => {
   if (!res.IsSync) {
     sendRequest({ IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_QUEUE_INFO })
     rawData.taskDetailsMap.set(res.TaskId || data.react_task_id, cloneDeep(DefaultPlanItemDetailsData))
+    store.getState().updateStateCount('taskDetailsUpdate')
     store.getState().updateStateCount('chatTodoListUpdate')
     store.getState().updateState({
       pendingReply: false,
@@ -559,6 +560,7 @@ const handleReactTaskCreated: AIMessageHandler = (requestInfo) => {
   persistIndependentItem(requestInfo.sessionId, chatData, requestInfo.meta.lifecycle)
   // taskDetailsMap 按 react_task_id 初始化主任务详情条目
   rawData.taskDetailsMap.set(info.react_task_id, cloneDeep(DefaultPlanItemDetailsData))
+  store.getState().updateStateCount('taskDetailsUpdate')
   store.getState().dispatchStreamingNode({
     chatType: 'reAct',
     node: {

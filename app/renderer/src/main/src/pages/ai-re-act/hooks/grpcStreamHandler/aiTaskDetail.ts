@@ -6,7 +6,7 @@ import cloneDeep from 'lodash/cloneDeep'
 import isArray from 'lodash/isArray'
 import isEmpty from 'lodash/isEmpty'
 import { v4 as uuidv4 } from 'uuid'
-import { type PlanItemDetailsData } from '../aiRender'
+import type { PlanItemDetailsData } from '../aiRender'
 import { DefaultPlanItemDetailsData } from '../defaultConstant'
 
 type CapabilityFields = Pick<PlanItemDetailsData, 'tool' | 'forges' | 'skills' | 'plugins' | 'mcp'>
@@ -170,7 +170,7 @@ const mapSessionPerceptionToPerceptionData = (
 }
 
 const handleCapabilityInventory: AIMessageHandler = (requestInfo) => {
-  const { res, rawData } = requestInfo
+  const { res, rawData, store } = requestInfo
   if (res.Type !== 'structured' || res.NodeId !== 'capability_inventory') return
   if (!res.TaskId) return
 
@@ -182,10 +182,11 @@ const handleCapabilityInventory: AIMessageHandler = (requestInfo) => {
   const oldData = rawData.taskDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
   applyCapabilityFieldsToTarget(oldData, fields, res.TaskId)
   rawData.taskDetailsMap.set(res.TaskId, oldData)
+  store.getState().updateStateCount('taskDetailsUpdate')
 }
 
 const handlePerception: AIMessageHandler = (requestInfo) => {
-  const { res, rawData } = requestInfo
+  const { res, rawData, store } = requestInfo
   if (res.Type !== 'perception' || res.NodeId !== 'perception') return
   if (!res.TaskId) return
 
@@ -203,6 +204,7 @@ const handlePerception: AIMessageHandler = (requestInfo) => {
   const oldData = rawData.taskDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
   applyPerceptionFields(oldData)
   rawData.taskDetailsMap.set(res.TaskId, oldData)
+  store.getState().updateStateCount('taskDetailsUpdate')
 }
 
 const handleCurrentTaskTodoListUpdate: AIMessageHandler = (requestInfo) => {
@@ -233,6 +235,7 @@ const handleCurrentTaskTodoListUpdate: AIMessageHandler = (requestInfo) => {
   const oldData = rawData.taskDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
   applyTodoListFields(oldData)
   rawData.taskDetailsMap.set(res.TaskId, oldData)
+  store.getState().updateStateCount('taskDetailsUpdate')
   if (chatType === 'reAct') {
     store.getState().updateStateCount('chatTodoListUpdate')
   }
@@ -288,6 +291,7 @@ const handleSessionSnapshot: AIMessageHandler = (requestInfo) => {
 
   applySnapshotFields(oldData)
   rawData.taskDetailsMap.set(res.TaskId, oldData)
+  store.getState().updateStateCount('taskDetailsUpdate')
 }
 
 const handleTaskSnapshot: AIMessageHandler = (requestInfo) => {
@@ -354,6 +358,7 @@ const handleTaskSnapshot: AIMessageHandler = (requestInfo) => {
   }
 
   rawData.taskDetailsMap.set(taskId, oldData)
+  store.getState().updateStateCount('taskDetailsUpdate')
   // 与 current_task_todo_list_update 一致：通知聊天待办条从 map 重读
   if (todoUpdated && chatType === 'reAct') {
     store.getState().updateStateCount('chatTodoListUpdate')

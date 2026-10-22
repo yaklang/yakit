@@ -77,6 +77,8 @@ describe('aiOther other handlers', () => {
       coordinatorId: '',
     })
     aiOtherDataHandlers.react_task_created(req)
+    expect(req.rawData.taskDetailsMap.has('sub-1')).toBe(true)
+    expect(req.store.getState().taskDetailsUpdate).toBe(1)
     const node = req.rawData.contents.get('q1-sub-1') as ChatTaskNodeGroup | undefined
     expect(node?.type).toBe(AIChatQSDataTypeEnum.TASK_NODE_GROUP)
     expect(node?.data.loadingTitle).toBe('')

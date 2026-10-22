@@ -646,6 +646,8 @@ export interface ChatStoreState {
   chatElements: SessionRenderContent['chatElements']
   /** 任务详情数据触发计数，对应 taskDetailsMap 的 todoList 更新 */
   chatTodoListUpdate: number
+  /** 任务详情 Map 写入后触发的更新计数 */
+  taskDetailsUpdate: number
   currentPlan: CurrentExecTaskTree
 
   /**
@@ -687,7 +689,8 @@ export interface ChatStoreState {
       | 'syncIDUpdate'
       | 'timelineDumpUpdate'
       | 'currentPlanReviewExtraUpdate'
-      | 'chatTodoListUpdate',
+      | 'chatTodoListUpdate'
+      | 'taskDetailsUpdate',
   ) => void
 
   updateFolders: (info: AIFileSystemPin) => void
@@ -728,6 +731,7 @@ export interface ChatStoreState {
         | 'tasks'
         | 'chatElements'
         | 'chatTodoListUpdate'
+        | 'taskDetailsUpdate'
         | 'uiExpandMap'
       >
     >,

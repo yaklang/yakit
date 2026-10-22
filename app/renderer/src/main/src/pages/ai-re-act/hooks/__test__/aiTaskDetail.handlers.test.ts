@@ -8,6 +8,24 @@ vi.mock('../persist/contentPersistHelper', () => ({
 }))
 
 describe('aiTaskDetail handlers', () => {
+  it.each([
+    ['capability_inventory', 'structured', { fixed: { tools: [] } }],
+    ['perception', 'perception', { summary: 'updated perception' }],
+  ] as const)('%s notifies after writing task details', (nodeId, type, payload) => {
+    const req = makeHandlerRequest({
+      res: makeGrpcJsonRes(type, payload, { NodeId: nodeId, TaskId: 'task-detail-notify' }),
+    })
+    const listener = vi.fn(() => {
+      expect(req.rawData.taskDetailsMap.has('task-detail-notify')).toBe(true)
+    })
+    req.store.subscribe(listener)
+
+    aiTaskDetailDataHandlers[nodeId](req)
+
+    expect(req.store.getState().taskDetailsUpdate).toBe(1)
+    expect(listener).toHaveBeenCalledTimes(1)
+  })
+
   it('D8: handler keys exist', () => {
     for (const key of [
       'capability_inventory',
@@ -38,6 +56,7 @@ describe('aiTaskDetail handlers', () => {
     })
     const before = req.store.getState().chatTodoListUpdate
     aiTaskDetailDataHandlers.current_task_todo_list_update(req)
+    expect(req.store.getState().taskDetailsUpdate).toBe(1)
     // reAct 分支应触发 chatTodoListUpdate
     expect(req.store.getState().chatTodoListUpdate).toBeGreaterThan(before)
     // taskDetailsMap 应写入对应 taskId 的条目
@@ -62,6 +81,7 @@ describe('aiTaskDetail handlers', () => {
     const before = req.store.getState().chatTodoListUpdate
     aiTaskDetailDataHandlers.current_task_todo_list_update(req)
     // task 分支不应触发 chatTodoListUpdate
+    expect(req.store.getState().taskDetailsUpdate).toBe(1)
     expect(req.store.getState().chatTodoListUpdate).toBe(before)
     // 但 taskDetailsMap 仍应写入
     expect(req.rawData.taskDetailsMap.get(taskId)).toBeDefined()
@@ -92,6 +112,7 @@ describe('aiTaskDetail handlers', () => {
     expect(detail?.execution?.http_flow_count).toBe(42)
     expect(detail?.execution?.risk_level_count).toEqual(snapshot.execution.risk_level_count)
     expect(detail?.sessionSnapshotRevision).toBe(2)
+    expect(req.store.getState().taskDetailsUpdate).toBe(1)
 
     const staleRequest = makeHandlerRequest({
       rawData: req.rawData,
@@ -103,6 +124,7 @@ describe('aiTaskDetail handlers', () => {
       ),
     })
     aiTaskDetailDataHandlers.session_snapshot(staleRequest)
+    expect(req.store.getState().taskDetailsUpdate).toBe(1)
     expect(req.rawData.taskDetailsMap.get(taskId)?.execution?.http_flow_count).toBe(42)
   })
 
@@ -329,6 +351,7 @@ describe('aiTaskDetail handlers', () => {
 
     const beforeTodoUpdate = req.store.getState().chatTodoListUpdate
     aiTaskDetailDataHandlers.task_snapshot(req)
+    expect(req.store.getState().taskDetailsUpdate).toBe(1)
 
     const detail = req.rawData.taskDetailsMap.get(taskId)
     expect(detail).toBeDefined()
@@ -386,6 +409,7 @@ describe('aiTaskDetail handlers', () => {
       ),
     })
     aiTaskDetailDataHandlers.task_snapshot(newerReq)
+    expect(newerReq.store.getState().taskDetailsUpdate).toBe(1)
     expect(newerReq.rawData.taskDetailsMap.get(taskId)?.execution?.http_flow_count).toBe(10)
     expect(newerReq.rawData.taskDetailsMap.get(taskId)?.taskSnapshotRevision).toBe(5)
 
@@ -409,6 +433,7 @@ describe('aiTaskDetail handlers', () => {
       ),
     })
     aiTaskDetailDataHandlers.task_snapshot(staleReq)
+    expect(newerReq.store.getState().taskDetailsUpdate).toBe(1)
 
     const detail = newerReq.rawData.taskDetailsMap.get(taskId)
     expect(detail?.execution?.task_name).toBe('新快照')

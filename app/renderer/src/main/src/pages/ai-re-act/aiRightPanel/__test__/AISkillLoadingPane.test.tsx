@@ -3,7 +3,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createStore } from 'zustand/vanilla'
 import { useStore } from 'zustand'
 import type { PlanItemDetailsData } from '../../hooks/aiRender'
-import type { RollingLoadListProps } from '@/components/RollingLoadList/RollingLoadList'
+import type { VirtuosoProps } from 'react-virtuoso'
+import type { AISkillListItem } from '../AISkillLoadingPane/aiSkillList/type'
 import type * as AISkillLoadingPaneModule from '../AISkillLoadingPane/AISkillLoadingPane'
 import { compileReactModule } from '@/utils/__test__/helpers/compileReactModule'
 import { AIInputEventSyncTypeEnum } from '../../hooks/grpcApi'
@@ -20,14 +21,14 @@ vi.mock('ahooks', async () => ({
 }))
 const meta = { syncIDMap: new Map<string, boolean>() }
 const details = new Map<string, Pick<PlanItemDetailsData, 'skills'> & { uuid?: string }>()
-const { rollingList, onSend } = vi.hoisted(() => ({ rollingList: vi.fn(), onSend: vi.fn() }))
-vi.mock('@/components/RollingLoadList/RollingLoadList', () => ({
-  RollingLoadList: (props: RollingLoadListProps<{ name: string }>) => {
-    rollingList(props)
+const { virtuosoList, onSend } = vi.hoisted(() => ({ virtuosoList: vi.fn(), onSend: vi.fn() }))
+vi.mock('react-virtuoso', () => ({
+  Virtuoso: (props: VirtuosoProps<AISkillListItem, unknown>) => {
+    virtuosoList(props)
     return (
       <div role="list">
-        {props.data.map((skill, index) => (
-          <div key={skill.name}>{props.renderRow(skill, index)}</div>
+        {props.data?.map((skill, index) => (
+          <div key={skill.name}>{props.itemContent?.(index, skill, undefined)}</div>
         ))}
       </div>
     )
@@ -73,7 +74,7 @@ describe('AISkillLoadingPane', () => {
       return Promise.resolve()
     })
     details.clear()
-    rollingList.mockClear()
+    virtuosoList.mockClear()
     details.set('task-1', {
       skills: {
         fixed: [
@@ -114,14 +115,22 @@ describe('AISkillLoadingPane', () => {
     expect(screen.queryByText('empty-state')).not.toBeInTheDocument()
   })
 
-  it('切换到可加载只展示 metadata 技能和添加按钮，不展示 Token', () => {
+  it('切换到可加载隐藏排序按钮，切回已加载保留原排序', () => {
     const result = render(<AISkillLoadingPane loadState="loaded" />)
+    fireEvent.click(screen.getByRole('button', { name: 'AISkillLoadingPane.sortByTokens' }))
     result.rerender(<AISkillLoadingPane loadState="metadata" />)
+    expect(screen.queryByRole('button', { name: /AISkillLoadingPane\.sortByTokens/ })).not.toBeInTheDocument()
     expect(screen.getAllByRole('listitem')).toHaveLength(1)
     expect(screen.getByText('available-skill')).toBeInTheDocument()
     expect(screen.queryByText('—')).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'YakitButton.add' })).toBeInTheDocument()
     expect(screen.queryByText('code-review')).not.toBeInTheDocument()
+    result.rerender(<AISkillLoadingPane loadState="loaded" />)
+    expect(screen.getByRole('button', { name: 'AISkillLoadingPane.sortByTokensAscending' })).toBeInTheDocument()
+    expect(virtuosoList.mock.lastCall![0].data.map((skill: { name: string }) => skill.name)).toEqual([
+      'code-review',
+      'fixed-loaded',
+    ])
   })
 
   it('添加技能显示 loading，等待对应 SyncID 回执后仅刷新一次', async () => {
@@ -131,6 +140,7 @@ describe('AISkillLoadingPane', () => {
       store.setState({ currentChatStatus: { questionID: 'task-1', coordinatorId: 'coordinator-1' }, inViewport: true })
       render(<AISkillLoadingPane loadState="metadata" />)
       onSend.mockClear()
+      expect(screen.queryByRole('button', { name: /AISkillLoadingPane\.sortByTokens/ })).not.toBeInTheDocument()
       expect(screen.queryByText('456')).not.toBeInTheDocument()
       const add = screen.getByRole('button', { name: 'YakitButton.add' })
       expect(onSend).not.toHaveBeenCalled()
@@ -336,17 +346,18 @@ describe('AISkillLoadingPane', () => {
     expect(screen.getByText('安全检测')).toBeInTheDocument()
   })
 
-  it('使用虚拟列表，并在同任务快照行数不变时刷新缓存', () => {
+  it('使用不定高虚拟列表，并在同任务快照行数不变时更新内容', () => {
     render(<AISkillLoadingPane loadState="loaded" />)
-    const initial = rollingList.mock.lastCall![0]
-    expect(initial).toMatchObject({ rowKey: 'name', defItemHeight: 58, hasMore: false, loading: false })
+    const initial = virtuosoList.mock.lastCall![0]
+    expect(initial.fixedItemHeight).toBeUndefined()
+    expect(initial.computeItemKey(0, initial.data[0])).toBe(initial.data[0].name)
     const task = details.get('task-1')!
     task.uuid = 'updated'
     task.skills.dynamic[0] = { ...task.skills.dynamic[0], token_count: 456, description: '更新描述' }
     act(() => store.setState({ revision: 1 }))
     expect(screen.getByText('456')).toBeInTheDocument()
     expect(screen.getByText('更新描述')).toBeInTheDocument()
-    expect(rollingList.mock.lastCall![0].recalculation).not.toBe(initial.recalculation)
+    expect(virtuosoList.mock.lastCall![0].data).not.toBe(initial.data)
   })
 
   it('进入视口刷新一次，持续可见的重渲染不重复请求，重新进入后再次刷新', async () => {
@@ -467,7 +478,7 @@ describe('AISkillLoadingPane', () => {
     })
     const original = structuredClone(task.skills)
     render(<AISkillLoadingPane loadState="loaded" />)
-    const names = () => rollingList.mock.lastCall![0].data.map((skill: { name: string }) => skill.name)
+    const names = () => virtuosoList.mock.lastCall![0].data.map((skill: { name: string }) => skill.name)
     const sort = screen.getByRole('button', { name: 'AISkillLoadingPane.sortByTokens' })
     const search = screen.getByRole('searchbox', { name: 'AISkillLoadingPane.searchPlaceholder' })
     expect(names()).toEqual(['fixed-loaded', 'code-review', 'missing-token', 'middle-token'])

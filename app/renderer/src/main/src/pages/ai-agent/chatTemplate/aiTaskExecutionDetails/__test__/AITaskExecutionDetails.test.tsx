@@ -1,4 +1,6 @@
 import type { ReactNode } from 'react'
+import type { VirtuosoProps } from 'react-virtuoso'
+import type { AISkillListItem } from '@/pages/ai-re-act/aiRightPanel/AISkillLoadingPane/aiSkillList/type'
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createStore } from 'zustand/vanilla'
@@ -13,9 +15,12 @@ const taskDetailsMap = new Map<string, PlanItemDetailsData>()
 const todoDetail = vi.fn(({ todoData }: { todoData: TodoListCardData }) => (
   <div data-testid="todo-detail">{todoData.items.map((item) => item.content).join(',')}</div>
 ))
-const onSend = vi.fn(() => true)
+const onSend = vi.fn((..._args: unknown[]) => true)
+const meta = { syncIDMap: new Map<string, boolean>() }
 const sessionStore = createStore(() => ({
   sessionTaskList: [] as AIAgentGrpcApi.SessionSnapshotTaskSummary[],
+  syncIDUpdate: 0,
+  taskDetailsUpdate: 0,
 }))
 
 /** 可变 i18n 状态：模拟语言切换时 t 结果变、i18nRefresh 抬升（t 引用本身稳定） */
@@ -46,10 +51,11 @@ vi.mock('@/i18n/useI18nNamespaces', () => ({
   }),
 }))
 
-// 保留真实的数据读取、轮询和快照逻辑，只隔离会话来源及无关子组件。
+// 保留真实的数据读取、更新通知和快照逻辑，只隔离会话来源及无关子组件。
 vi.mock('@/pages/ai-re-act/hooks/useCurrentDataBySession', () => ({
   useCurrentRawData: () => ({ taskDetailsMap }),
   useCurrentStore: () => sessionStore,
+  useCurrentMeta: () => meta,
 }))
 vi.mock('@/pages/ai-re-act/hooks/useCurrentSessionId', () => ({ default: () => 'session-1' }))
 vi.mock('../../../useContext/useDispatcher', () => ({ default: () => ({ onSend }) }))
@@ -93,7 +99,15 @@ vi.mock('@/pages/plugins/operator/horizontalScrollCard/HorizontalScrollCard', ()
     </div>
   ),
 }))
-vi.mock('@/components/RollingLoadList/RollingLoadList', () => ({ RollingLoadList: () => null }))
+vi.mock('react-virtuoso', () => ({
+  Virtuoso: ({ data, itemContent }: VirtuosoProps<AISkillListItem, unknown>) => (
+    <div data-testid="virtuoso-list">
+      {data?.map((item, index) => (
+        <div key={item.name}>{itemContent?.(index, item, undefined)}</div>
+      ))}
+    </div>
+  ),
+}))
 vi.mock('@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber', () => ({
   TableTotalAndSelectNumber: () => null,
 }))
@@ -111,6 +125,9 @@ vi.mock('../aiTaskGantt/AITaskGantt.module.scss', () => ({
   default: new Proxy({}, { get: (_, key) => (key === '__esModule' ? false : key) }),
 }))
 vi.mock('../aiTaskBoard/AITaskBoard.module.scss', () => ({
+  default: new Proxy({}, { get: (_, key) => (key === '__esModule' ? false : key) }),
+}))
+vi.mock('../aiTaskSkillList/AITaskSkillList.module.scss', () => ({
   default: new Proxy({}, { get: (_, key) => (key === '__esModule' ? false : key) }),
 }))
 
@@ -132,7 +149,8 @@ beforeEach(() => {
   taskDetailsMap.clear()
   todoDetail.mockClear()
   onSend.mockClear()
-  sessionStore.setState({ sessionTaskList: [] }, true)
+  sessionStore.setState({ sessionTaskList: [], syncIDUpdate: 0, taskDetailsUpdate: 0 }, true)
+  meta.syncIDMap.clear()
   i18nState.refresh = 0
   i18nState.prefix = ''
 })
@@ -144,19 +162,144 @@ afterEach(() => {
 })
 
 describe('AITaskExecutionDetails 技能列表', () => {
-  it('固定和动态列表只展示 skills，排除 forges', () => {
+  it('技能合并固定和动态来源后按加载状态分类，显示当前数量并排除 forges', () => {
     const data = createTask('task-skills', '技能感知')
-    data.skills.fixed = [{ name: 'fixed-skill', verbose_name: 'fixed-skill', description: '', category: 'skill' }]
-    data.skills.dynamic = [{ name: 'dynamic-skill', description: '', category: 'skill', skill_load_state: 'metadata' }]
+    data.skills.fixed = [
+      {
+        name: 'fixed-skill',
+        verbose_name: 'fixed-skill',
+        description: '',
+        category: 'skill',
+        skill_load_state: 'metadata',
+      },
+      {
+        name: 'fixed-loaded',
+        verbose_name: 'fixed-loaded',
+        description: '',
+        category: 'skill',
+        skill_load_state: 'loaded',
+      },
+      { name: 'no-state', verbose_name: 'no-state', description: '', category: 'skill' },
+    ]
+    data.skills.dynamic = [{ name: 'dynamic-skill', description: '', category: 'skill', skill_load_state: 'loaded' }]
     data.forges.fixed = [{ name: 'fixed-forge', verbose_name: 'fixed-forge', description: '', category: 'forge' }]
     data.forges.dynamic = [{ name: 'dynamic-forge', description: '', category: 'forge' }]
     render(<AITaskExecutionDetails taskId="task-skills" />)
 
-    expect(screen.getByText('fixed-skill')).toBeInTheDocument()
-    expect(screen.queryByText('fixed-forge')).not.toBeInTheDocument()
-    fireEvent.click(screen.getByRole('radio', { name: 'AITaskExecutionDetails.dynamicLoad' }))
     expect(screen.getByText('dynamic-skill')).toBeInTheDocument()
+    expect(screen.getByText('fixed-loaded')).toBeInTheDocument()
+    expect(screen.queryByText('no-state')).not.toBeInTheDocument()
+    expect(screen.queryByText('fixed-skill')).not.toBeInTheDocument()
+    expect(document.querySelector('.plugin-group-title')).toHaveTextContent('2')
+    expect(screen.queryByText('fixed-forge')).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('radio', { name: 'AISkillLoadingPane.available' }))
+    expect(screen.getByText('fixed-skill')).toBeInTheDocument()
+    expect(document.querySelector('.plugin-group-title')).toHaveTextContent('1')
+    expect(screen.queryByText('fixed-loaded')).not.toBeInTheDocument()
+    expect(screen.queryByText('no-state')).not.toBeInTheDocument()
+    expect(screen.queryByText('dynamic-skill')).not.toBeInTheDocument()
+    expect(screen.queryByText('YakitButton.add')).not.toBeInTheDocument()
     expect(screen.queryByText('dynamic-forge')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'YakitButton.add' })).toBeInTheDocument()
+    expect(onSend).not.toHaveBeenCalled()
+  })
+
+  it('Token 排序依次升序、降序、恢复原顺序', () => {
+    const data = createTask('task-sort', '排序')
+    data.skills.dynamic = [
+      { name: 'middle', description: '', category: 'skill', skill_load_state: 'loaded', token_count: 20 },
+      { name: 'large', description: '', category: 'skill', skill_load_state: 'loaded', token_count: 30 },
+      { name: 'small', description: '', category: 'skill', skill_load_state: 'loaded', token_count: 10 },
+    ]
+    render(<AITaskExecutionDetails taskId="task-sort" />)
+    const names = () =>
+      within(screen.getByTestId('virtuoso-list'))
+        .getAllByRole('listitem')
+        .map((row) => row.querySelector('[title]')?.textContent)
+    expect(names()).toEqual(['middle', 'large', 'small'])
+    fireEvent.click(screen.getByRole('button', { name: 'AISkillLoadingPane.sortByTokens' }))
+    expect(names()).toEqual(['small', 'middle', 'large'])
+    fireEvent.click(screen.getByRole('button', { name: 'AISkillLoadingPane.sortByTokensAscending' }))
+    expect(names()).toEqual(['large', 'middle', 'small'])
+    fireEvent.click(screen.getByRole('button', { name: 'AISkillLoadingPane.sortByTokensDescending' }))
+    expect(names()).toEqual(['middle', 'large', 'small'])
+  })
+
+  it('行内加载发送技能请求，等待回执后刷新当前选择的任务', () => {
+    const first = createTask('task-a', '任务甲')
+    const second = createTask('task-b', '任务乙')
+    first.skills.dynamic = [{ name: 'skill-a', description: '', category: 'skill', skill_load_state: 'metadata' }]
+    second.skills.dynamic = [{ name: 'skill-b', description: '', category: 'skill', skill_load_state: 'metadata' }]
+    const { rerender } = render(<AITaskExecutionDetails taskId="task-a" />)
+    fireEvent.click(screen.getByRole('radio', { name: 'AISkillLoadingPane.available' }))
+    rerender(<AITaskExecutionDetails taskId="task-b" />)
+    expect(screen.queryByText('skill-a')).not.toBeInTheDocument()
+    expect(screen.getByText('skill-b')).toBeInTheDocument()
+    expect(onSend).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: 'YakitButton.add' }))
+    expect(onSend).toHaveBeenCalledWith(
+      expect.objectContaining({
+        token: 'session-1',
+        params: expect.objectContaining({
+          SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_LOAD_SKILL,
+          SyncJsonInput: JSON.stringify({ skill_names: ['skill-b'] }),
+        }),
+      }),
+    )
+    const request = onSend.mock.calls[0][0] as unknown as { params: { SyncID: string } }
+    act(() => {
+      meta.syncIDMap.set(request.params.SyncID, true)
+      sessionStore.setState({ syncIDUpdate: 1 })
+      vi.advanceTimersByTime(300)
+    })
+    expect(screen.getByRole('button', { name: 'YakitButton.add' })).toBeDisabled()
+    expect(onSend).toHaveBeenCalledTimes(1)
+    act(() => {
+      meta.syncIDMap.delete(request.params.SyncID)
+      sessionStore.setState({ syncIDUpdate: 2 })
+    })
+    expect(screen.getByRole('button', { name: 'YakitButton.add' })).not.toBeDisabled()
+    expect(onSend).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        params: expect.objectContaining({
+          SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_TASK_SNAPSHOT,
+          SyncJsonInput: JSON.stringify({ task_id: 'task-b' }),
+        }),
+      }),
+    )
+  })
+
+  it.each(['tool', 'plugins', 'mcp'] as const)('%s 保留固定/动态页签、当前数量和头部添加', (category) => {
+    const data = createTask('task-capabilities', '工具')
+    data[category].fixed = [{ name: 'fixed-item', verbose_name: 'fixed-item', description: '', category: 'tool' }]
+    data[category].dynamic = [
+      { name: 'dynamic-one', verbose_name: 'dynamic-one', description: '', category: 'tool' },
+      { name: 'dynamic-two', verbose_name: 'dynamic-two', description: '', category: 'tool' },
+    ]
+    render(<AITaskExecutionDetails taskId="task-capabilities" />)
+    expect(document.querySelector('.plugin-group-title')).toHaveTextContent('1')
+    expect(screen.getByText('fixed-item')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('radio', { name: 'AITaskExecutionDetails.dynamicLoad' }))
+    expect(document.querySelector('.plugin-group-title')).toHaveTextContent('2')
+    expect(screen.getByRole('button', { name: 'YakitButton.add' })).toBeInTheDocument()
+  })
+
+  it('技能头部仅在已加载时提供排序按钮，不提供手动刷新', () => {
+    const data = createTask('task-refresh', '刷新')
+    data.skills.dynamic = [{ name: 'skill', description: '', category: 'skill', skill_load_state: 'metadata' }]
+    render(<AITaskExecutionDetails taskId="task-refresh" />)
+    expect(onSend).not.toHaveBeenCalled()
+    const header = document.querySelector('.skill-card-header') as HTMLElement
+    expect(within(header).getByRole('button', { name: 'AISkillLoadingPane.sortByTokens' })).toBeInTheDocument()
+    expect(within(header).getByRole('radio', { name: 'AISkillLoadingPane.loaded' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'YakitButton.refresh' })).not.toBeInTheDocument()
+    fireEvent.click(within(header).getByRole('button', { name: 'AISkillLoadingPane.sortByTokens' }))
+    fireEvent.click(screen.getByRole('radio', { name: 'AISkillLoadingPane.available' }))
+    expect(within(header).queryByRole('button', { name: /AISkillLoadingPane\.sortByTokens/ })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'YakitButton.add' })).not.toBeDisabled()
+    expect(screen.queryByRole('button', { name: 'YakitButton.refresh' })).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('radio', { name: 'AISkillLoadingPane.loaded' }))
+    expect(within(header).getByRole('button', { name: 'AISkillLoadingPane.sortByTokensAscending' })).toBeInTheDocument()
   })
 
   it('只有 forges 时不展示技能区域', () => {
@@ -197,7 +340,7 @@ describe('AITaskExecutionDetails 快照刷新', () => {
     expect(screen.getByText('AITaskExecutionDetails.emptyTodoTitle')).toBeInTheDocument()
   })
 
-  it('uuid 变化后在 5 秒轮询时生成新快照并刷新详情', () => {
+  it('uuid 变化并收到更新通知后生成新快照并刷新详情', () => {
     const data = createTask('task-a', '刷新前感知')
     render(<AITaskExecutionDetails taskId="task-a" />)
     const previousTodo = todoDetail.mock.calls.at(-1)![0].todoData
@@ -205,10 +348,8 @@ describe('AITaskExecutionDetails 快照刷新', () => {
     data.perception.summary = '刷新后感知'
     data.todoList.items[0].content = '刷新后待办'
     data.uuid = 'uuid-2'
-    act(() => vi.advanceTimersByTime(4999))
-    expect(screen.getByText('刷新前感知')).toBeInTheDocument()
-
-    act(() => vi.advanceTimersByTime(1))
+    act(() => sessionStore.setState((state) => ({ taskDetailsUpdate: state.taskDetailsUpdate + 1 })))
+    act(() => vi.advanceTimersByTime(3000))
 
     expect(screen.queryByText('刷新前感知')).not.toBeInTheDocument()
     expect(screen.getByText('刷新后感知')).toBeInTheDocument()
@@ -217,7 +358,7 @@ describe('AITaskExecutionDetails 快照刷新', () => {
     expect(previousTodo.items[0].content).toBe('刷新前感知待办')
   })
 
-  it('Map 条目原地修改且 uuid 不变时，轮询和父组件重渲染均不污染已渲染快照', () => {
+  it('Map 条目原地修改且 uuid 不变时，更新通知和父组件重渲染均不污染已渲染快照', () => {
     const data = createTask('task-a', '原始感知')
     const { rerender } = render(<AITaskExecutionDetails taskId="task-a" taskName="原始标题" />)
     const renderedTodo = todoDetail.mock.calls.at(-1)![0].todoData
@@ -227,7 +368,8 @@ describe('AITaskExecutionDetails 快照刷新', () => {
     data.todoList.items[0].status = 'DONE'
     data.todoList.stats.pending = 0
     data.todoList.stats.done = 1
-    act(() => vi.advanceTimersByTime(5000))
+    act(() => sessionStore.setState((state) => ({ taskDetailsUpdate: state.taskDetailsUpdate + 1 })))
+    act(() => vi.advanceTimersByTime(3000))
     // 改变非数据属性，确保 React.memo 不会跳过本次组件渲染。
     rerender(<AITaskExecutionDetails taskId="task-a" taskName="新标题" />)
 

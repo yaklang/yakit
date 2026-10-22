@@ -48,7 +48,10 @@ describe('历史渲染批次', () => {
     store.getState().updateState({ grpcLoadMoreLoading: true })
     store.renderStore.getState().updateState({ cancelChatLoading: true })
     expect(store.getState().cancelChatLoading).toBe(true)
+    store.getState().updateStateCount('taskDetailsUpdate')
+    expect(store.getState().taskDetailsUpdate).toBe(1)
     store.reset()
+    expect(store.getState().taskDetailsUpdate).toBe(0)
     expect(store.renderStore.getState()).toEqual(store.getState())
     expect(store.renderStore.getState().grpcLoadMoreLoading).toBe(false)
   })
@@ -58,6 +61,7 @@ describe('chatStore basics', () => {
   it('C1: initial state and updateCurrentChatStatus / updateCurrentLoadingTitle', () => {
     const store = createChatStore()
     expect(store.getState().execute).toBe(false)
+    expect(store.getState().taskDetailsUpdate).toBe(0)
     expect(store.getState().currentChatStatus).toEqual(DefaultAgentChatStatus)
     expect(store.getState().currentLoadingTitle).toEqual(getDefaultAgentLoadingTitle())
     expect(store.getState().pendingReply).toBe(false)

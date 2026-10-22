@@ -38,8 +38,9 @@ import type { StoreApi } from 'zustand/vanilla'
 interface MockTaskStoreState {
   currentChatStatus: { questionID: string }
   execute: boolean
+  taskDetailsUpdate: number
 }
-// 详情条目带 uuid：父级轮询比较 uuid 判断详情是否被流数据刷新（参照 AITaskExecutionDetails）
+// 详情条目带 uuid：父级收到更新通知后比较 uuid 判断详情是否被流数据刷新（参照 AITaskExecutionDetails）
 interface MockTaskDetails {
   uuid?: string
   execution?: Record<string, unknown>
@@ -49,13 +50,14 @@ const mockAgentStore = createStore<{ activeChat?: { Id: number; SessionID: strin
 const mockTaskStore: StoreApi<MockTaskStoreState> = createStore<MockTaskStoreState>(() => ({
   currentChatStatus: { questionID: '' },
   execute: false,
+  taskDetailsUpdate: 0,
 }))
 const setMockQuestionID = (questionID: string) => {
   mockTaskStore.setState((state) => ({ currentChatStatus: { ...state.currentChatStatus, questionID } }))
   casualTaskState.questionID = questionID
 }
 const resetMockStore = () => {
-  mockTaskStore.setState({ currentChatStatus: { questionID: '' }, execute: false })
+  mockTaskStore.setState({ currentChatStatus: { questionID: '' }, execute: false, taskDetailsUpdate: 0 })
   mockTaskDetailsMap.clear()
   casualTaskState.questionID = ''
 }
@@ -1343,6 +1345,7 @@ describe('AIRightPanel', () => {
         // 与 session_snapshot 一致：保留任务条目引用，替换 execution 并更新 uuid。
         detail.execution = { http_flow_count: count, risk_level_count: { high: count, total: count } }
         detail.uuid = `snapshot-${index + 1}`
+        act(() => mockTaskStore.setState((state) => ({ taskDetailsUpdate: state.taskDetailsUpdate + 1 })))
         act(() => vi.advanceTimersByTime(3000))
 
         const displayedCount = small && count > 99 ? 99 : count || ''
@@ -1603,7 +1606,7 @@ describe('AIRightPanel', () => {
     }
   })
 
-  it('数据源：同任务详情原地更新（uuid 变化）后轮询刷新卡片数据', async () => {
+  it('数据源：同任务详情原地更新（uuid 变化）后通过更新通知刷新卡片数据', async () => {
     setMockQuestionID('task-3')
     const taskDetails: MockTaskDetails = {
       uuid: 'uuid-3a',
@@ -1614,7 +1617,7 @@ describe('AIRightPanel', () => {
     try {
       expect(screen.getAllByText('执行中').length).toBeGreaterThanOrEqual(1)
 
-      // session_snapshot 保留详情对象引用并替换 execution，靠 uuid 轮询（3s 间隔）感知更新。
+      // session_snapshot 保留详情对象引用并替换 execution，通过 store 通知并比较 uuid 感知更新。
       taskDetails.uuid = 'uuid-3b'
       taskDetails.execution = {
         started_at: 1000,
@@ -1623,7 +1626,8 @@ describe('AIRightPanel', () => {
         tool_call_failed: 2,
         tool_call_total: 7,
       }
-      // 轮询间隔 3s，超时放宽到 5s 预留余量，避免慢环境下 flaky
+      act(() => mockTaskStore.setState((state) => ({ taskDetailsUpdate: state.taskDetailsUpdate + 1 })))
+      // 防抖等待 3s，超时放宽到 5s 预留余量，避免慢环境下 flaky
       await waitFor(() => expect(screen.getAllByText('8000s').length).toBeGreaterThanOrEqual(1), {
         timeout: 5000,
       })

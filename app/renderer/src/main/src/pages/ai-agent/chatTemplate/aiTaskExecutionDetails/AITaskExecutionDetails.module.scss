@@ -422,6 +422,12 @@
   }
 }
 
+.plugin-group-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 /* ====================================================
    响应式：基于容器大小的适配 (Container Queries)
    当该组件的父容器自身宽度小于 800px 时生效

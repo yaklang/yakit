@@ -1,10 +1,5 @@
 import Icon from '@ant-design/icons'
-import type { CustomIconComponentProps } from '@ant-design/icons/lib/components/Icon'
-import type React from 'react'
-
-interface IconProps extends CustomIconComponentProps {
-  onClick: (e: React.MouseEvent) => void
-}
+import type { IconProps } from './type'
 
 const OutlineArrowsUpDown = () => (
   <svg
@@ -18,7 +13,7 @@ const OutlineArrowsUpDown = () => (
     <path
       d="M7 3V21M4 6L7 3L10 6M14 18L17 21L20 18M17 21V3"
       stroke="currentColor"
-      strokeWidth="2"
+      strokeWidth="1.5"
       strokeLinecap="round"
       strokeLinejoin="round"
     />
@@ -42,7 +37,7 @@ const OutlineArrowsTransferUp = () => (
     <path
       d="M7 21V15M4 18L7 21L10 18M14 6L17 3L20 6M17 3V21M7 3V5M7 9V11"
       stroke="currentColor"
-      strokeWidth="2"
+      strokeWidth="1.5"
       strokeLinecap="round"
       strokeLinejoin="round"
     />
@@ -66,7 +61,7 @@ const OutlineArrowsTransferDown = () => (
     <path
       d="M17 3V9M14 6L17 3L20 6M4 18L7 21L10 18M7 21V3M17 21V19M17 15V13"
       stroke="currentColor"
-      strokeWidth="2"
+      strokeWidth="1.5"
       strokeLinecap="round"
       strokeLinejoin="round"
     />

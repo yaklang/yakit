@@ -78,6 +78,7 @@ import { getSessionRiskTagEntries } from '@/pages/ai-re-act/aiRightPanel/riskLev
 import { YakitSegmented } from '@/components/yakitUI/YakitSegmented/YakitSegmented'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { AITaskSelectDropdown } from './aiTaskSelectDropdown/AITaskSelectDropdown'
+import { AITaskSkillList } from './aiTaskSkillList/AITaskSkillList'
 
 /** 顶部状态统计项配置（title 在渲染时用 t 注入） */
 const TODO_STAT_META: Array<{
@@ -104,7 +105,7 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
     setSelectedTaskId(taskId)
   }, [taskId])
 
-  const taskData = useCurrentTaskData(selectedTaskId, 5)
+  const taskData = useCurrentTaskData(selectedTaskId, 3000)
   // taskDetailsMap 中的数据会原地更新，使用 uuid 作为快照变更信号，避免详情组件持有可变引用。
   const planItemDetailsData = useCreation<PlanItemDetailsData | undefined>(
     () => (taskData ? cloneDeep(taskData) : undefined),
@@ -453,14 +454,10 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
         {showSkill || showTool || showPlugin || showMCP ? (
           <div className={styles['section']}>
             {showSkill && (
-              <AITaskDetailsCardList
-                key="forge"
-                type="forge"
-                colTitle={t('AITaskExecutionDetails.skill')}
-                taskId={selectedTaskId}
-                fixedList={skillFixedList}
-                dynamicList={skillDynamicList}
-              />
+              <div className={styles['section-card']}>
+                <div className={styles['section-card-title']}>{t('AITaskExecutionDetails.skill')}</div>
+                <AITaskSkillList skills={planItemDetailsData?.skills} taskId={selectedTaskId} />
+              </div>
             )}
             {showTool && (
               <AITaskDetailsCardList
@@ -920,9 +917,9 @@ const AITaskDetailsCardList: React.FC<AITaskDetailsCardListProps> = React.memo((
             options={typeOptions}
             // size="small"
           />
-          {/* <YakitTag border={false} fullRadius size="small">
-{configType === 'dynamic' ? dynamicList.length : fixedList.length}
-</YakitTag> */}
+          <YakitTag border={false} fullRadius size="small">
+            {configType === 'dynamic' ? dynamicList.length : fixedList.length}
+          </YakitTag>
         </div>
         {configType === 'dynamic' && (
           <YakitPopover

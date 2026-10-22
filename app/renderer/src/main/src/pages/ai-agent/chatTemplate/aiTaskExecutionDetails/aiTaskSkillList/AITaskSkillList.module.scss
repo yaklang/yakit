@@ -1,0 +1,31 @@
+.plugin-group-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.skill-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.skill-card-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+  background: var(--Colors-Use-Neutral-Bg);
+  border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
+  border-radius: 6px;
+}
+
+.skill-card-list {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  max-height: 400px;
+  min-height: 0;
+  overflow: auto;
+}

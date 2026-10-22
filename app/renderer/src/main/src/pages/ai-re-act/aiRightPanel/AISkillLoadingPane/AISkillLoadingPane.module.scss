@@ -6,12 +6,6 @@
   min-height: 0;
 }
 
-.list {
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-}
-
 .toolbar {
   display: flex;
   flex: none;
@@ -22,60 +16,4 @@
   flex: 1;
   min-width: 0;
   margin-right: 4px;
-}
-
-.row {
-  height: 58px;
-  padding-bottom: 4px;
-  box-sizing: border-box;
-}
-
-.item {
-  height: 100%;
-  box-sizing: border-box;
-  padding: 8px;
-  border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
-  border-radius: 8px;
-  background: var(--Colors-Use-Basic-Background);
-}
-
-.item-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-
-  .add-button {
-    flex: none;
-    height: 16px;
-    padding: 0;
-  }
-}
-
-.name {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  color: var(--Colors-Use-Neutral-Text-1-Title);
-  font-size: 12px;
-  line-height: 16px;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.token-count {
-  flex: none;
-  color: var(--Colors-Use-Neutral-Text-3-Secondary);
-  font-size: 12px;
-  line-height: 16px;
-  font-variant-numeric: tabular-nums;
-}
-
-.description {
-  margin-top: 4px;
-  overflow: hidden;
-  color: var(--Colors-Use-Neutral-Text-4-Help-text);
-  font-size: 12px;
-  line-height: 16px;
-  white-space: nowrap;
-  text-overflow: ellipsis;
 }

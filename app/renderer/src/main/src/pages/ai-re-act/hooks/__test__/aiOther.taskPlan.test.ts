@@ -212,6 +212,7 @@ describe('aiOther task plan gate', () => {
     expect(req.store.getState().focusMode).toBe('focus-a')
     expect(req.store.getState().currentPlan).toEqual(DefaultCurrentExecTaskTree)
     expect(req.store.getState().chatTodoListUpdate).toBe(1)
+    expect(req.store.getState().taskDetailsUpdate).toBe(1)
     expect(req.rawData.taskDetailsMap.has('q-normal')).toBe(true)
     expect(req.rawData.contents.get('q-normal')?.type).toBe(AIChatQSDataTypeEnum.QUESTION)
     expect(sendRequest).toHaveBeenCalledWith({
