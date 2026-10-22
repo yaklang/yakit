@@ -12,7 +12,13 @@ import { globalSessionEngine } from '../hooks/ChatMultiSessionController'
 import { emptyAnswer, questionAnswers, questionText, type QuestionDraft } from './types'
 import styles from './interactive.module.scss'
 
-export function QuestionCard({ item }: { item: Extract<AIChatQSData, { type: AIChatQSDataTypeEnum.UI_QUESTION }> }) {
+export function QuestionCard({
+  item,
+  floating = false,
+}: {
+  item: Extract<AIChatQSData, { type: AIChatQSDataTypeEnum.UI_QUESTION }>
+  floating?: boolean
+}) {
   const { request, sessionId } = item.data
   const { t } = useI18nNamespaces(['aiAgent'])
   const [draft, setDraft] = useState<QuestionDraft>(
@@ -25,6 +31,13 @@ export function QuestionCard({ item }: { item: Extract<AIChatQSData, { type: AIC
       },
   )
   const current = useRef(draft)
+  useEffect(() => {
+    const saved = item.uiState as QuestionDraft | undefined
+    if (saved && saved !== current.current) {
+      current.current = saved
+      setDraft(saved)
+    }
+  }, [item.uiState])
   const composing = useRef(false)
   const compositionEndedAt = useRef<number | null>(null)
   const submitting = useRef(false)
@@ -33,6 +46,7 @@ export function QuestionCard({ item }: { item: Extract<AIChatQSData, { type: AIC
   const [now, setNow] = useState(() => Date.now())
   const submitted = request.state === 'submitted' || draft.outcome === 'submitted'
   const outcome = submitted ? 'submitted' : draft.outcome || request.state
+  const terminal = ['submitted', 'skipped', 'cancelled'].includes(outcome)
   const save = (next: QuestionDraft) => {
     current.current = next
     item.uiState = next
@@ -46,7 +60,7 @@ export function QuestionCard({ item }: { item: Extract<AIChatQSData, { type: AIC
       SyncJsonInput: JSON.stringify({ requestId: request.id, operation }),
     })
   const touch = () => {
-    if (current.current.touched || request.touched || submitted) return
+    if (current.current.touched || request.touched || terminal) return
     save({ ...current.current, touched: true })
     void control('touch').catch((reason) => setError(String(reason)))
   }
@@ -87,7 +101,7 @@ export function QuestionCard({ item }: { item: Extract<AIChatQSData, { type: AIC
       answers: { ...current.current.answers, [q.id]: next },
     })
   const choose = (id: string) => {
-    if (submitted || busy) return
+    if (terminal || busy) return
     touch()
     const selected = q.multiple
       ? answer.selected.includes(id)
@@ -97,7 +111,7 @@ export function QuestionCard({ item }: { item: Extract<AIChatQSData, { type: AIC
     updateAnswer({ ...answer, selected, skipped: false })
   }
   const submit = async (next = current.current) => {
-    if (submitting.current || submitted || current.current.outcome === 'submitted') return
+    if (submitting.current || submitted || Boolean(current.current.outcome)) return
     submitting.current = true
     setBusy(true)
     setError('')
@@ -129,7 +143,7 @@ export function QuestionCard({ item }: { item: Extract<AIChatQSData, { type: AIC
     }
   }
   const skip = () => {
-    if (submitted || submitting.current) return
+    if (terminal || submitting.current) return
     const next = {
       ...current.current,
       submissionId: undefined,
@@ -139,12 +153,13 @@ export function QuestionCard({ item }: { item: Extract<AIChatQSData, { type: AIC
     else void submit(next)
   }
   const nextPage = () => {
-    if (submitted || submitting.current) return
+    if (terminal || submitting.current) return
     if (page < request.questions.length - 1) save({ ...current.current, page: page + 1 })
     else void submit()
   }
   const onKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
     touch()
+    if (event.key === 'Enter' || event.key === 'Escape') event.stopPropagation()
     if (composing.current || event.nativeEvent.isComposing || event.keyCode === 229) return
     if (
       event.key === 'Enter' &&
@@ -155,11 +170,12 @@ export function QuestionCard({ item }: { item: Extract<AIChatQSData, { type: AIC
       return
     }
     if (event.key === 'Escape') {
+      event.stopPropagation()
       event.preventDefault()
       save({ ...current.current, collapsed: true })
       return
     }
-    if (draft.collapsed || submitted) return
+    if (draft.collapsed || terminal) return
     const target = event.target as HTMLInputElement
     const typing =
       target.isContentEditable ||
@@ -168,6 +184,7 @@ export function QuestionCard({ item }: { item: Extract<AIChatQSData, { type: AIC
     // Native buttons keep their own keyboard action (collapse, previous, skip).
     if (event.key === 'Enter' && target.closest('button')) return
     if (event.key === 'Enter' && !event.shiftKey && !busy) {
+      event.stopPropagation()
       event.preventDefault()
       nextPage()
     } else if (!typing && !busy) {
@@ -220,10 +237,10 @@ export function QuestionCard({ item }: { item: Extract<AIChatQSData, { type: AIC
               : t('InteractiveUI.continuing')
   return (
     <section
-      className={styles.card}
+      className={floating ? styles.questionFloating : styles.card}
       aria-label={t('InteractiveUI.questionRegion')}
       onPointerDownCapture={touch}
-      onFocusCapture={touch}
+      onClickCapture={touch}
       onKeyDown={onKeyDown}
     >
       <div className={styles.toolbar}>
@@ -245,8 +262,8 @@ export function QuestionCard({ item }: { item: Extract<AIChatQSData, { type: AIC
             : t('InteractiveUI.collapse')}
         </YakitButton>
       </div>
-      {error && !submitted && <YakitAlert type="error" message={error} />}
-      {!draft.collapsed && submitted && (
+      {error && !terminal && <YakitAlert type="error" message={error} />}
+      {!draft.collapsed && terminal && (
         <dl className={styles.answers}>
           {request.questions.map((question, index) => {
             const accepted =
@@ -272,7 +289,7 @@ export function QuestionCard({ item }: { item: Extract<AIChatQSData, { type: AIC
           })}
         </dl>
       )}
-      {!draft.collapsed && !submitted && (
+      {!draft.collapsed && !terminal && (
         <>
           <div className={styles.toolbar}>
             <strong>{q.title}</strong>
@@ -315,7 +332,7 @@ export function QuestionCard({ item }: { item: Extract<AIChatQSData, { type: AIC
               autoSize={{ minRows: 2, maxRows: 5 }}
               isShowResize={false}
               value={answer.text}
-              disabled={busy || submitted}
+              disabled={busy || terminal}
               onCompositionStart={() => {
                 composing.current = true
                 touch()

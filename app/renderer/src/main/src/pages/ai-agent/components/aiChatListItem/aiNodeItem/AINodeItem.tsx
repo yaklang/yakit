@@ -1,5 +1,5 @@
 import React from 'react'
-import { QuestionCard } from '@/pages/ai-re-act/interactive-ui/QuestionCard'
+import { QuestionSummary } from '@/pages/ai-re-act/interactive-ui/QuestionSummary'
 import { ComponentCard } from '@/pages/ai-re-act/interactive-ui/ComponentCard'
 import type { AINodeItemProps } from './type'
 import { AIChatQSDataTypeEnum } from '@/pages/ai-re-act/hooks/aiRender'
@@ -28,7 +28,7 @@ const AINodeItem: React.FC<AINodeItemProps> = React.memo((props) => {
     case AIChatQSDataTypeEnum.UI_COMPONENT:
       return <ComponentCard key={itemData.id} item={itemData} />
     case AIChatQSDataTypeEnum.UI_QUESTION:
-      return <QuestionCard key={itemData.id} item={itemData} />
+      return <QuestionSummary key={itemData.id} item={itemData} />
     case AIChatQSDataTypeEnum.QUESTION:
       return <AITriageChatContentWrapper isAnswer={false} itemData={itemData} renderNum={renderNum} />
     case AIChatQSDataTypeEnum.RESULT:

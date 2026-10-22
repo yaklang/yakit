@@ -5,6 +5,7 @@ import { genBaseAIChatData } from '../utils'
 import { persistGetSessionContent, persistIndependentItem } from '../persist/contentPersistHelper'
 import type { QuestionRequest, UISubmission } from '../../interactive-ui/types'
 import { recordComponentSubmission } from './aiComponentUI'
+import { syncQuestionPanel } from '../../interactive-ui/questionPanel'
 
 const acceptedQuestions = new WeakMap<object, Map<string, UISubmission>>()
 async function recordQuestionSubmission(info: AIMessageHandlerParams, receipt?: UISubmission) {
@@ -28,6 +29,7 @@ async function recordQuestionSubmission(info: AIMessageHandlerParams, receipt?: 
   info.rawData.contents.set(token, previous)
   persistIndependentItem(info.sessionId, previous, info.meta.lifecycle)
   info.store.getState().incrementNodeVersion(token, 'item')
+  syncQuestionPanel(info.store, previous)
 }
 
 const handleInteractiveUI: AIMessageHandler = async (info) => {
@@ -73,6 +75,7 @@ const handleInteractiveUI: AIMessageHandler = async (info) => {
     node: { token: id, kind: 'item', type: item.type, isHistory: res.IsSync },
   })
   if (previous) store.getState().incrementNodeVersion(id, 'item')
+  if (item.type === AIChatQSDataTypeEnum.UI_QUESTION) syncQuestionPanel(store, item)
 }
 
 export const aiInteractiveUIHandlers: Record<string, AIMessageHandler> = {

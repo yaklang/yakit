@@ -263,3 +263,26 @@
   min-width: 100px;
   margin-top: 4px;
 }
+
+.questionPanel {
+  max-height: min(65vh, 640px);
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+.questionFloating {
+  padding: 8px;
+  border-radius: 4px;
+  background: var(--Colors-Use-Neutral-Bg-Hover);
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  font-size: 12px;
+  line-height: 20px;
+  overflow-wrap: anywhere;
+  strong {
+    font-size: 14px;
+    font-weight: 500;
+  }
+}
+.questionSummary {
+  margin-top: 8px;
+  white-space: pre-wrap;
+}
