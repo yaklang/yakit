@@ -12,12 +12,22 @@ vi.mock('../../hooks/persist/contentPersistHelper', () => ({
 const bytes = (text: string) => new TextEncoder().encode(text)
 let contents = new Map()
 const dispatch = vi.fn()
+let state: any
+const resetState = () => {
+  state = {
+    questionPanelTokens: [],
+    questionPanelRevision: 0,
+    dispatchStreamingNode: dispatch,
+    incrementNodeVersion: vi.fn(),
+    updateState: (next: object) => Object.assign(state, next),
+  }
+}
 const info = (res: object) =>
   ({
     sessionId: 'session',
     rawData: { contents },
     meta: { lifecycle: { current: true, writable: true } },
-    store: { getState: () => ({ dispatchStreamingNode: dispatch, incrementNodeVersion: vi.fn() }) },
+    store: { getState: () => state },
     res: {
       Content: bytes(''),
       StreamDelta: bytes(''),
@@ -37,6 +47,7 @@ const doc = {
 }
 beforeEach(() => {
   contents = new Map()
+  resetState()
   dispatch.mockClear()
 })
 describe('UI event integration', () => {
@@ -110,6 +121,7 @@ describe('UI event integration', () => {
     await aiInteractiveUIHandlers.ui_question(question)
     expect(contents.get('ui-question:question').data.request.state).toBe('submitted')
     expect(contents.get('ui-question:question').data.request.answers).toEqual(metadata.answers)
+    expect(state.questionPanelTokens).toEqual([])
   })
   it.each([true, false])(
     'deduplicates a late answer and dequeue regardless of arrival order (%s)',

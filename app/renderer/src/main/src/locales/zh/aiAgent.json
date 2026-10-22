@@ -917,7 +917,7 @@
     "reviewPolicy": "Review 规则",
     "allowPlanUserInteract": "允许 plan 阶段人机交互",
     "planUserInteractMaxCount": "plan 阶段人机交互次数",
-    "planUserInteractMaxCountDesc": "在任务规划的时候，如果 AI 允许用户问题，那么最多问几次",
+    "planUserInteractMaxCountDesc": "PLAN 是拆解任务、生成计划并等待确认的阶段。同步、异步提问共用此额度，每批 1–3 题计一次；0 使用默认 3 次。",
     "reActMaxIteration": "ReAct 迭代轮数限制",
     "planExecTaskConcurrency": "深度规划任务并发数",
     "planExecTaskConcurrencyDesc": "控制深度搜索或复杂拆解任务时的并行处理能力",
@@ -936,7 +936,7 @@
     "aiCallTokenLimit": "压力 token 阈值",
     "aiCallTokenLimitDesc": "Token pressure limit，当 AI 对话的 token 数量超过这个限制时，需要警告",
     "userInteractLimit": "用户交互上限",
-    "userInteractLimitDesc": "用户交互的最大次数限制，超过这个次数，AI 将不再被允许问用户问题"
+    "userInteractLimitDesc": "每个任务的同步、异步提问共用额度。0 使用阶段默认值：普通任务 1 次、PLAN 3 次；大于 0 时也限制 PLAN，取两项较小值。"
   },
   "AIChatWorkspace": {
     "close": "关闭",
@@ -1006,6 +1006,7 @@
   },
   "InteractiveUI": {
     "questionRegion": "模型追问",
+    "nextRequest": "下一组问题",
     "recommended": "（推荐）",
     "answered": "已回答",
     "skipped": "已跳过",

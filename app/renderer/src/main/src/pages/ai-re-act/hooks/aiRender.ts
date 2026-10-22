@@ -645,6 +645,10 @@ export interface ChatStoreState {
   /** 当前正在等待用户操作的review数据 */
   currentReviewDetail: { token: string; renderNum: number }
 
+  /** Structured clarification requests displayed above the composer, in arrival order. */
+  questionPanelTokens: string[]
+  questionPanelRevision: number
+
   /**
    * 当前review是plan时，异步数据的更新版本
    * aiChat.d.ts AIAgentChatMetaData planReviewExtraData

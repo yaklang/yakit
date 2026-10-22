@@ -57,6 +57,8 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
       showPlanList: false,
 
       currentReviewDetail: { token: '', renderNum: 0 },
+      questionPanelTokens: [],
+      questionPanelRevision: 0,
       currentPlanReviewExtraUpdate: 0,
 
       skipSubtaskTaskIDs: [],

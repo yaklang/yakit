@@ -1,3 +1,5 @@
+import { syncQuestionPanel } from '../interactive-ui/questionPanel'
+import type { QuestionDraft } from '../interactive-ui/types'
 import type { AIAgentChatData, AIAgentChatMetaData } from '@/pages/ai-agent/type/aiChat'
 import catalogManifest from '../interactive-ui/catalog.manifest.json'
 import {
@@ -250,9 +252,26 @@ export class ChatMultiSessionController {
   public persistUIState(sessionId: string, fallback: AIChatQSData, state: unknown) {
     const current = this.rawDataPool.get(sessionId)?.contents.get(fallback.id) || fallback
     current.uiState = state
+    const store = this.storePool.get(sessionId)
+    if (store && current.type === AIChatQSDataTypeEnum.UI_QUESTION) {
+      syncQuestionPanel(store, current)
+      store.getState().incrementNodeVersion(current.id, 'item')
+    }
     // Patch only local state: an async submit callback may still hold an older
     // question/component snapshot than the one just confirmed by the server.
     void upsertSessionContent(sessionId, fallback.id, (stored) => ({ ...(stored || current), uiState: state }))
+  }
+
+  public openQuestion(item: Extract<AIChatQSData, { type: AIChatQSDataTypeEnum.UI_QUESTION }>) {
+    const { sessionId, request } = item.data
+    const store = this.storePool.get(sessionId)
+    if (!store || !['pending', 'expired'].includes(request.state)) return
+    const draft = item.uiState as QuestionDraft | undefined
+    if (draft?.outcome) return
+    const next: QuestionDraft = { answers: {}, page: 0, ...draft, collapsed: false, touched: true }
+    this.rawDataPool.get(sessionId)?.contents.set(item.id, item)
+    this.persistUIState(sessionId, item, next)
+    syncQuestionPanel(store, item, true)
   }
 
   public async sendUIInteraction(sessionId: string, request: AIInputEvent, submissionId?: string): Promise<void> {

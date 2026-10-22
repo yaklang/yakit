@@ -917,7 +917,7 @@
     "reviewPolicy": "Review policy",
     "allowPlanUserInteract": "Allow human-computer interaction in plan stage",
     "planUserInteractMaxCount": "Plan-stage interaction count",
-    "planUserInteractMaxCountDesc": "During task planning, if AI may ask the user, the maximum number of questions",
+    "planUserInteractMaxCountDesc": "PLAN breaks down tasks and prepares a plan for approval. Blocking and async questions share this budget; a batch of 1–3 questions counts once. 0 uses the default of 3.",
     "reActMaxIteration": "ReAct iteration limit",
     "planExecTaskConcurrency": "Deep planning task concurrency",
     "planExecTaskConcurrencyDesc": "Controls parallel processing for deep search or complex breakdown tasks",
@@ -936,7 +936,7 @@
     "aiCallTokenLimit": "Pressure token threshold",
     "aiCallTokenLimitDesc": "Warn when AI dialogue tokens exceed this limit",
     "userInteractLimit": "User interaction limit",
-    "userInteractLimitDesc": "Maximum user interactions; beyond this, AI may no longer ask the user"
+    "userInteractLimitDesc": "Shared blocking/async question budget per task. 0 uses phase defaults: 1 for ordinary tasks, 3 for PLAN. A positive value also caps PLAN; the smaller limit applies."
   },
   "AIChatWorkspace": {
     "close": "Close",
@@ -1006,6 +1006,7 @@
   },
   "InteractiveUI": {
     "questionRegion": "AI questions",
+    "nextRequest": "Next request",
     "recommended": " (Recommended)",
     "answered": "Answered",
     "skipped": "Skipped",
