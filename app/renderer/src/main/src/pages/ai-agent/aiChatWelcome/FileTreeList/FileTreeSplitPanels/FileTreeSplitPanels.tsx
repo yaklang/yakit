@@ -1,4 +1,4 @@
-import { memo } from 'react'
+import { memo, useMemo } from 'react'
 import type { FileNodeProps } from '@/pages/yakRunner/FileTree/FileTreeType'
 import { useCustomFolder } from '../../../components/aiFileSystemList/store/useCustomFolder'
 import FileTreeSystemListWrapper from '../../../components/aiFileSystemList/FileTreeSystemListWrapper/FileTreeSystemListWrapper'
@@ -26,6 +26,8 @@ const FileTreeSplitPanels: React.FC<FileTreeSplitPanelsProps> = memo(({ selected
   const sessionId = useCurrentSessionId()
   const grpcFolders = useStore(store, (state) => state.grpcFolders)
   const customFolder = useCustomFolder()
+  const hasAiFolder = grpcFolders.length > 0
+
   const onSelect = useMemoizedFn((node?: FileNodeProps) => {
     setSelected(node)
     if (node && !node.isFolder) {
@@ -36,6 +38,33 @@ const FileTreeSplitPanels: React.FC<FileTreeSplitPanelsProps> = memo(({ selected
   const onSearchAiFolder = useMemoizedFn(() => onOpenSearch?.(FileTreeSearchScope.AiFolder))
   const onSearchUserFolder = useMemoizedFn(() => onOpenSearch?.(FileTreeSearchScope.UserFolder))
   const onSearchUserRoot = useMemoizedFn((path: string) => onOpenSearch?.(FileTreeSearchScope.UserFolder, path))
+
+  const openedFilesPanel = useMemo(
+    () => (
+      <FileTreeDrop className={styles['opened-files']}>
+        {({ setDragSource }) => (
+          <FileTreeSystemListWrapper
+            variant="sidebar"
+            isOpen
+            title={t('FileTreeSystem.myOpenedFiles')}
+            selected={selected}
+            path={customFolder}
+            setSelected={onSelect}
+            onTitleSearch={onOpenSearch ? onSearchUserFolder : undefined}
+            onRootSearch={onOpenSearch ? onSearchUserRoot : undefined}
+            onTreeDragStart={() => setDragSource('AIRreeToChat')}
+            onTreeDragEnd={() => setDragSource(null)}
+          />
+        )}
+      </FileTreeDrop>
+    ),
+    [t, selected, customFolder, onSelect, onOpenSearch, onSearchUserFolder, onSearchUserRoot],
+  )
+
+  // AI 文件夹为空时不展示 AI Artifacts 分区
+  if (!hasAiFolder) {
+    return openedFilesPanel
+  }
 
   return (
     <SplitView
@@ -62,24 +91,7 @@ const FileTreeSplitPanels: React.FC<FileTreeSplitPanelsProps> = memo(({ selected
           ),
         },
         {
-          element: (
-            <FileTreeDrop className={styles['opened-files']}>
-              {({ setDragSource }) => (
-                <FileTreeSystemListWrapper
-                  variant="sidebar"
-                  isOpen
-                  title={t('FileTreeSystem.myOpenedFiles')}
-                  selected={selected}
-                  path={customFolder}
-                  setSelected={onSelect}
-                  onTitleSearch={onOpenSearch ? onSearchUserFolder : undefined}
-                  onRootSearch={onOpenSearch ? onSearchUserRoot : undefined}
-                  onTreeDragStart={() => setDragSource('AIRreeToChat')}
-                  onTreeDragEnd={() => setDragSource(null)}
-                />
-              )}
-            </FileTreeDrop>
-          ),
+          element: openedFilesPanel,
         },
       ]}
     />

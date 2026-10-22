@@ -130,7 +130,7 @@ describe('文件系统侧栏', () => {
     await waitFor(() => expect(within(aiTitle).getByText('1')).toBeInTheDocument())
   })
 
-  it('切换到没有文件的新会话后总数归零', async () => {
+  it('切换到没有文件的新会话后隐藏 AI Artifacts 分区', async () => {
     aiPaths.push({ path: 'report.txt', isFolder: false })
     const result = render(<FileTreeList setSelected={vi.fn()} />)
     await waitFor(() =>
@@ -139,10 +139,9 @@ describe('文件系统侧栏', () => {
     session.id = 'empty-session'
     aiPaths.splice(0)
     result.rerender(<FileTreeList setSelected={vi.fn()} />)
-    await waitFor(() =>
-      expect(within(screen.getByText('FileTreeSystem.aiArtifacts').parentElement!).getByText('0')).toBeInTheDocument(),
-    )
+    await waitFor(() => expect(screen.queryByText('FileTreeSystem.aiArtifacts')).not.toBeInTheDocument())
     expect(screen.queryByRole('button', { name: 'ai-output' })).not.toBeInTheDocument()
+    expect(screen.getByText('FileTreeSystem.myOpenedFiles')).toBeInTheDocument()
   })
 
   it('头部独立于分屏，两个打开操作位于我打开的文件标题栏', async () => {
