@@ -82,6 +82,8 @@ const setup = () => {
     setSuccessCount: vi.fn(),
     setFailedCount: vi.fn(),
     setFuzzerListVersion: vi.fn(),
+    // 推进假定时器超过 500ms 会触发 throttled run.update 的落点
+    updateData: vi.fn(),
     setCurrentSelectId: vi.fn(),
     setBrowserTransformSelection: vi.fn(),
     updateConcurrentLoad: vi.fn(),
@@ -375,6 +377,74 @@ describe('HTTPFuzzerPage real IPC control paths', () => {
     expect(b.setLoading).toHaveBeenLastCalledWith(false)
     expect(b.streamRunRef.current.isActive()).toBe(false)
     dispose()
+  })
+
+  it('holds trimmed rows for the 2s grace window, then releases them in adaptive batches', async () => {
+    const { api, bindings: b, send, dispose } = setup()
+    api.submitToHTTPFuzzer()
+    const rows: any[] = []
+    const successRef = b.successFuzzerRef as { current: any[] }
+    const push = successRef.current.push.bind(successRef.current)
+    successRef.current.push = (...items: any[]) => {
+      rows.push(...items)
+      return push(...items)
+    }
+    // 表格上限 100（fuzzerTableMaxDataRef.current），发送 360 行 → 最旧的 260 行被淘汰进释放队列
+    for (let i = 0; i < 360; i++) send(`row-${i}`)
+    expect(successRef.current).toHaveLength(100)
+    const trimmed = rows.slice(0, 260)
+
+    // 未过 2s 保护期：+500ms/+1s 两个 tick 都不释放
+    vi.advanceTimersByTime(1000)
+    expect(trimmed.every((row) => row.RequestRaw !== null && row.ResponseRaw !== null)).toBe(true)
+
+    // 过期后按自适应批量释放：首个到期 tick 释放 max(50, ceil(260/5)) = 52 条
+    vi.advanceTimersByTime(1000)
+    expect(trimmed.filter((row) => row.RequestRaw === null)).toHaveLength(52)
+
+    // 后续 tick 逐批清空剩余积压；清空后的空队列 tick 停表（spy 先装，避免停表 tick 落在推进窗口内漏截）
+    const clearIntervalSpy = vi.spyOn(globalThis, 'clearInterval')
+    let guard = 0
+    while (trimmed.some((row) => row.RequestRaw !== null) && guard++ < 40) {
+      vi.advanceTimersByTime(500)
+    }
+    expect(trimmed.every((row) => row.RequestRaw === null && row.ResponseRaw === null)).toBe(true)
+    vi.advanceTimersByTime(1000)
+    expect(clearIntervalSpy).toHaveBeenCalled()
+
+    // 留在表格内的 100 行不受释放影响
+    expect(rows.slice(260).every((row) => row.RequestRaw !== null && row.ResponseRaw !== null)).toBe(true)
+    dispose()
+  })
+
+  it('decodes defaultHttpResponse only while the config panel stays open', () => {
+    const declaration = findOne(
+      (node) =>
+        ts.isVariableStatement(node) &&
+        node.declarationList.declarations.some((entry) => entry.name.getText(source) === 'defaultHttpResponse'),
+    )
+    const code = ts.transpileModule(declaration, {
+      compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None },
+    }).outputText
+    const runCase = (configKeepAlive: boolean) => {
+      const decode = vi.fn(() => 'decoded-response')
+      const caseBindings = {
+        useMemo: (factory: () => unknown) => factory(),
+        configKeepAlive,
+        multipleReturnsHttpResponse: { ResponseRaw: new Uint8Array([1, 2, 3]) },
+        Uint8ArrayToString: decode,
+      }
+      const value = new Function(...Object.keys(caseBindings), `${code}\nreturn defaultHttpResponse`)(
+        ...Object.values(caseBindings),
+      )
+      return { value, decode }
+    }
+    const closed = runCase(false)
+    expect(closed.value).toBe('')
+    expect(closed.decode).not.toHaveBeenCalled()
+    const opened = runCase(true)
+    expect(opened.value).toBe('decoded-response')
+    expect(opened.decode).toHaveBeenCalledTimes(1)
   })
 })
 

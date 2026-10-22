@@ -109,6 +109,12 @@ if (shouldAbortStartupForDebugFlags) {
 /** 获取缓存数据-软件是否需要展示关闭二次确认弹框 */
 const UICloseFlag = 'windows-close-flag'
 
+// Without this switch Chromium returns coarse, barely-updating performance.memory values, which
+// would feed the renderer-diagnostics heap sampler with another constant fake reading.
+if (!shouldAbortStartupForDebugFlags && !app.commandLine.hasSwitch('enable-precise-memory-info')) {
+  app.commandLine.appendSwitch('enable-precise-memory-info')
+}
+
 /**
  * 诊断收集在除 debug-flag 阻止启动之外的所有环境都启用，方便导出日志、事件和 dump。
  * 恢复对话框在打包生产环境、E2E 测试和开发环境下都会启用。

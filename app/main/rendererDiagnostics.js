@@ -8,10 +8,22 @@ const HISTORY_LIMIT = 12
 const INCIDENT_LIMIT = 10
 const LOG_TAIL_BYTES = 2 * 1024 * 1024
 const DUMP_MAX_BYTES = 32 * 1024 * 1024
-const MEMORY_CHANNEL = 'renderer-diagnostics:memory'
 const MEMORY_INTERVAL_MS = 1000
 const MEMORY_HISTORY_LIMIT = 60
 const MEMORY_FRESH_MS = 10_000
+// 堆压力事件看不见 cage 外的字节（多 tab 前端存的原始报文），工作集是这部分唯一可见的代理
+const WORKING_SET_WARN_KB = 4 * 1024 * 1024
+const WORKING_SET_PRESSURE_INTERVAL_MS = 600_000
+// Runs in the page's main world; the sandboxed preload isolate has its own tiny
+// V8 heap, so sampling there reports preload memory instead of the page heap.
+const MEMORY_PAGE_SCRIPT = `(() => {
+  const memory = performance && performance.memory
+  if (!memory || !Number.isFinite(memory.usedJSHeapSize) || memory.jsHeapSizeLimit <= 0) return null
+  return {
+    usedHeapKB: Math.round(memory.usedJSHeapSize / 1024),
+    heapLimitKB: Math.round(memory.jsHeapSizeLimit / 1024),
+  }
+})()`
 
 function memoryAssessment(details, memory, pid) {
   if (details.reason === 'oom') return { status: 'reported-oom', source: 'electron' }
@@ -28,7 +40,6 @@ function memoryAssessment(details, memory, pid) {
     heapUsedRatio: ratio,
     usedHeapKB: last.usedHeapKB,
     heapLimitKB: last.heapLimitKB,
-    availableHeapKB: last.availableHeapKB,
   }
 }
 
@@ -152,14 +163,32 @@ function createRendererDiagnostics({ app, crashReporter, writeLog, flushLogs, ge
     }
     history.push(value)
     if (history.length > HISTORY_LIMIT) history.shift()
+    const workingSetByPid = new Map(
+      (Array.isArray(value.processes) ? value.processes : [])
+        .filter((process) => typeof process.workingSetSizeKB === 'number')
+        .map((process) => [process.pid, process.workingSetSizeKB]),
+    )
     for (const [window, identity] of windows) {
+      let alive = false
       try {
         if (!window.isDestroyed() && !window.webContents.isDestroyed() && !window.webContents.isCrashed()) {
           const pid = window.webContents.getOSProcessId()
           if (pid) identity.rendererPid = pid
+          alive = true
         }
       } catch (error) {
         identity.samplingError = String(error?.message || error)
+      }
+      // 已毁/崩溃窗口的 rendererPid 是旧值，PID 复用时可能误配到别的进程指标
+      if (!alive) continue
+      const workingSetKB = identity.rendererPid ? workingSetByPid.get(identity.rendererPid) : undefined
+      if (
+        typeof workingSetKB === 'number' &&
+        workingSetKB >= WORKING_SET_WARN_KB &&
+        Date.now() - identity.lastWorkingSetPressureAt >= WORKING_SET_PRESSURE_INTERVAL_MS
+      ) {
+        identity.lastWorkingSetPressureAt = Date.now()
+        record('renderer-working-set-pressure', { workingSetKB, thresholdKB: WORKING_SET_WARN_KB }, window)
       }
     }
     return value
@@ -189,66 +218,59 @@ function createRendererDiagnostics({ app, crashReporter, writeLog, flushLogs, ge
       rendererPid: null,
       memory: [],
       pending: null,
+      generation: 0,
       lastPressureAt: -Infinity,
+      lastWorkingSetPressureAt: -Infinity,
     }
     windows.set(window, identity)
     window.webContents.on('did-finish-load', sample)
     window.webContents.on('dom-ready', () => {
       identity.pending = null
+      identity.generation += 1
       requestMemory(window, identity)
     })
     window.webContents.on('did-start-loading', () => {
       identity.pending = null
-    })
-    window.webContents.on('ipc-message', (event, channel, nonce, payload) => {
-      if (
-        channel !== MEMORY_CHANNEL ||
-        !identity.pending ||
-        nonce !== identity.pending.nonce ||
-        event.senderFrame !== window.webContents.mainFrame
-      )
-        return
-      const pending = identity.pending
-      identity.pending = null
-      const keys = ['usedHeapKB', 'heapLimitKB', 'availableHeapKB', 'blinkAllocatedKB', 'blinkTotalKB']
-      if (
-        !payload ||
-        keys.some((key) => !Number.isSafeInteger(payload[key]) || payload[key] < 0) ||
-        payload.heapLimitKB === 0 ||
-        payload.usedHeapKB > payload.heapLimitKB
-      )
-        return
-      const value = { receivedAt: Date.now(), rendererPid: pending.pid }
-      for (const key of keys) value[key] = payload[key]
-      identity.memory.push(value)
-      if (identity.memory.length > MEMORY_HISTORY_LIMIT) identity.memory.shift()
-      if (value.usedHeapKB / value.heapLimitKB >= 0.8 && Date.now() - identity.lastPressureAt >= 60_000) {
-        identity.lastPressureAt = Date.now()
-        record('renderer-memory-pressure', { source: 'v8-heap' }, window)
-      }
+      identity.generation += 1
     })
     window.once('closed', () => windows.delete(window))
   }
 
   function requestMemory(window, identity) {
+    // One outstanding request per window: keep the real executeJavaScript promise in the
+    // slot until it settles or navigation clears pending. Timing out only the wrapper would
+    // free the slot while Chromium still runs the earlier script and stack more queries.
+    if (identity.pending || window.isDestroyed() || window.webContents.isDestroyed() || window.webContents.isCrashed())
+      return
+    const pid = window.webContents.getOSProcessId()
+    if (!pid) return
+    identity.rendererPid = pid
+    const generation = identity.generation
+    let request
     try {
-      // One outstanding request per window: a hung renderer cannot accumulate polling IPC.
-      if (
-        identity.pending ||
-        window.isDestroyed() ||
-        window.webContents.isDestroyed() ||
-        window.webContents.isCrashed()
-      )
-        return
-      const pid = window.webContents.getOSProcessId()
-      if (!pid) return
-      identity.rendererPid = pid
-      const nonce = randomUUID()
-      identity.pending = { nonce, pid }
-      window.webContents.send(MEMORY_CHANNEL, nonce)
+      // Keep the Chromium execution promise itself in the slot (not a timeout wrapper).
+      request = Promise.resolve(window.webContents.executeJavaScript(MEMORY_PAGE_SCRIPT, false)).catch(() => null)
     } catch {
-      identity.pending = null
+      return
     }
+    identity.pending = request
+    request.then((value) => {
+      // Only the request that still owns the slot may free it; a late resolution from a
+      // previous query must not clear a newer in-flight request's slot.
+      if (identity.pending === request) identity.pending = null
+      // A query from a previous page instance (pre-navigation) must not feed current history.
+      if (identity.generation !== generation) return
+      if (window.isDestroyed() || window.webContents.isDestroyed() || window.webContents.isCrashed()) return
+      if (!value || !Number.isSafeInteger(value.usedHeapKB) || !Number.isSafeInteger(value.heapLimitKB)) return
+      if (value.usedHeapKB < 0 || value.heapLimitKB <= 0 || value.usedHeapKB > value.heapLimitKB) return
+      const item = { receivedAt: Date.now(), rendererPid: pid, ...value }
+      identity.memory.push(item)
+      if (identity.memory.length > MEMORY_HISTORY_LIMIT) identity.memory.shift()
+      if (item.usedHeapKB / item.heapLimitKB >= 0.8 && Date.now() - identity.lastPressureAt >= 60_000) {
+        identity.lastPressureAt = Date.now()
+        record('renderer-memory-pressure', { source: 'page-heap' }, window)
+      }
+    })
   }
 
   async function start() {
@@ -407,6 +429,8 @@ module.exports = {
   HISTORY_LIMIT,
   INCIDENT_LIMIT,
   LOG_TAIL_BYTES,
-  MEMORY_CHANNEL,
+  MEMORY_PAGE_SCRIPT,
   MEMORY_HISTORY_LIMIT,
+  WORKING_SET_WARN_KB,
+  WORKING_SET_PRESSURE_INTERVAL_MS,
 }

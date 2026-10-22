@@ -10,8 +10,10 @@ import {
   HISTORY_LIMIT,
   INCIDENT_LIMIT,
   LOG_TAIL_BYTES,
-  MEMORY_CHANNEL,
+  MEMORY_PAGE_SCRIPT,
   MEMORY_HISTORY_LIMIT,
+  WORKING_SET_WARN_KB,
+  WORKING_SET_PRESSURE_INTERVAL_MS,
 } from '../rendererDiagnostics'
 
 const require = createRequire(import.meta.url)
@@ -49,29 +51,32 @@ describe('renderer diagnostics', () => {
     return recorder
   }
 
+  // Queue-driven page sampler: queued values feed the next executeJavaScript call; without a
+  // queued value the page never answers, so pending-state and timeout behavior stay observable.
   function memoryWindow(id = 1) {
+    const pageSamples = []
     const window = Object.assign(new EventEmitter(), { id, isDestroyed: () => false })
     window.webContents = Object.assign(new EventEmitter(), {
       id,
-      mainFrame: {},
-      send: vi.fn(),
+      executeJavaScript: vi.fn((script) => {
+        expect(script).toBe(MEMORY_PAGE_SCRIPT)
+        return pageSamples.length ? Promise.resolve(pageSamples.shift()) : new Promise(() => {})
+      }),
       isDestroyed: () => false,
       isCrashed: vi.fn(() => false),
       getOSProcessId: vi.fn(() => id * 100),
     })
+    window.pushPageSample = (value) => pageSamples.push(value)
     recorder.trackWindow(window, id === 1 ? 'mainWin' : 'engineLinkWin')
     return window
   }
 
-  function respond(window, usedHeapKB = 90_000) {
-    const [, nonce] = window.webContents.send.mock.calls.at(-1)
-    window.webContents.emit('ipc-message', { senderFrame: window.webContents.mainFrame }, MEMORY_CHANNEL, nonce, {
-      usedHeapKB,
-      heapLimitKB: 100_000,
-      availableHeapKB: 10_000,
-      blinkAllocatedKB: 100,
-      blinkTotalKB: 200,
-    })
+  function respond(window, usedHeapKB = 90_000, heapLimitKB = 100_000) {
+    window.pushPageSample(usedHeapKB === null ? null : { usedHeapKB, heapLimitKB })
+  }
+
+  async function flushPromises() {
+    for (let i = 0; i < 10; i++) await Promise.resolve()
   }
 
   afterEach(() => {
@@ -148,9 +153,9 @@ describe('renderer diagnostics', () => {
     const link = memoryWindow(2)
     await recorder.start()
     for (let i = 0; i < 75; i++) {
-      await vi.advanceTimersByTimeAsync(1000)
       respond(main)
       respond(link, 1000)
+      await vi.advanceTimersByTimeAsync(1000)
     }
     const incident = recorder.record('render-process-gone', { reason: 'crashed', exitCode: 5 }, main)
     expect(incident.memoryAssessment).toMatchObject({ status: 'suspected-js-heap-pressure', heapUsedRatio: 0.9 })
@@ -163,26 +168,85 @@ describe('renderer diagnostics', () => {
     expect(pressureRecords).toHaveLength(2) // no repeated disk writes for every high sample
   })
 
-  it('allows one outstanding request and rejects wrong frames, nonces and malformed counters', async () => {
+  it('records working-set pressure once per debounce window for an oversized renderer', async () => {
+    vi.useFakeTimers()
+    create()
+    const main = memoryWindow() // webContents.getOSProcessId() => 100
+    app.getAppMetrics.mockReturnValue([
+      { pid: 100, creationTime: 1, type: 'Tab', cpu: {}, memory: { workingSetSize: WORKING_SET_WARN_KB } },
+    ])
+    await recorder.start()
+    const count = () =>
+      writeLog.mock.calls.filter(([line]) => line.includes('"event":"renderer-working-set-pressure"')).length
+    expect(count()).toBe(1)
+    // 持续高于阈值：去抖窗口内不重复记录
+    await vi.advanceTimersByTimeAsync(60_000)
+    expect(count()).toBe(1)
+    // 跨过去抖窗口后补记一次
+    await vi.advanceTimersByTimeAsync(WORKING_SET_PRESSURE_INTERVAL_MS)
+    expect(count()).toBe(2)
+  })
+
+  it('does not record working-set pressure for untracked, small, or dead renderers', async () => {
+    create()
+    const main = memoryWindow() // webContents.getOSProcessId() => 100
+    // PID 对不上（指标里只有 321 的小进程）
+    await recorder.start()
+    const count = () =>
+      writeLog.mock.calls.filter(([line]) => line.includes('"event":"renderer-working-set-pressure"')).length
+    expect(count()).toBe(0)
+    // PID 对上但低于阈值
+    app.getAppMetrics.mockReturnValue([
+      { pid: 100, creationTime: 1, type: 'Tab', cpu: {}, memory: { workingSetSize: WORKING_SET_WARN_KB - 1 } },
+    ])
+    recorder.record('probe', {})
+    expect(count()).toBe(0)
+    // PID 对上且超阈值，但窗口已销毁：残留旧 PID 不得触发
+    main.webContents.isDestroyed = () => true
+    app.getAppMetrics.mockReturnValue([
+      { pid: 100, creationTime: 1, type: 'Tab', cpu: {}, memory: { workingSetSize: WORKING_SET_WARN_KB } },
+    ])
+    recorder.record('probe', {})
+    expect(count()).toBe(0)
+  })
+
+  it('keeps one unresolved execution until it settles and does not stack queries', async () => {
+    vi.useFakeTimers()
+    create()
+    const window = memoryWindow()
+    let resolveHang
+    window.webContents.executeJavaScript.mockImplementationOnce(() => new Promise((resolve) => (resolveHang = resolve)))
+    await recorder.start()
+    await vi.advanceTimersByTimeAsync(1000)
+    await flushPromises()
+    expect(window.webContents.executeJavaScript).toHaveBeenCalledTimes(1)
+    await vi.advanceTimersByTimeAsync(60_000)
+    expect(window.webContents.executeJavaScript).toHaveBeenCalledTimes(1)
+    expect(recorder.snapshot().rendererMemory[0].samples).toHaveLength(0)
+    resolveHang?.({ usedHeapKB: 90_000, heapLimitKB: 100_000 })
+    await flushPromises()
+    expect(recorder.snapshot().rendererMemory[0].samples.at(-1).usedHeapKB).toBe(90_000)
+    respond(window)
+    await vi.advanceTimersByTimeAsync(1000)
+    await flushPromises()
+    expect(window.webContents.executeJavaScript.mock.calls.length).toBeGreaterThanOrEqual(2)
+    expect(recorder.snapshot().rendererMemory[0].samples.at(-1).usedHeapKB).toBe(90_000)
+  })
+
+  it('rejects null results and survives executeJavaScript rejection', async () => {
     vi.useFakeTimers()
     create()
     const window = memoryWindow()
     await recorder.start()
-    await vi.advanceTimersByTimeAsync(60_000)
-    expect(window.webContents.send).toHaveBeenCalledTimes(1)
-    const [, nonce] = window.webContents.send.mock.calls[0]
-    window.webContents.emit('ipc-message', { senderFrame: {} }, MEMORY_CHANNEL, nonce, {})
-    window.webContents.emit('ipc-message', { senderFrame: window.webContents.mainFrame }, MEMORY_CHANNEL, 'stale', {})
-    expect(recorder.snapshot().rendererMemory[0].samples).toHaveLength(0)
-    respond(window, Infinity)
+    respond(window, null)
     await vi.advanceTimersByTimeAsync(1000)
-    expect(window.webContents.send).toHaveBeenCalledTimes(2)
+    window.webContents.executeJavaScript.mockImplementationOnce(() => Promise.reject(new Error('frame disposed')))
+    await vi.advanceTimersByTimeAsync(1000)
     respond(window)
-    respond(window) // duplicate response does not extend history or write another incident
-    expect(recorder.snapshot().rendererMemory[0].samples).toHaveLength(1)
-    recorder.stop()
-    await vi.advanceTimersByTimeAsync(60_000)
-    expect(window.webContents.send).toHaveBeenCalledTimes(2)
+    await vi.advanceTimersByTimeAsync(1000)
+    const samples = recorder.snapshot().rendererMemory[0].samples
+    expect(samples).toHaveLength(1)
+    expect(samples[0].usedHeapKB).toBe(90_000)
   })
 
   it('does not attribute old PID or stale heap samples to an early or subsequent crash', async () => {
@@ -192,12 +256,30 @@ describe('renderer diagnostics', () => {
     expect(recorder.record('render-process-gone', { reason: 'crashed' }, window).memoryAssessment.status).toBe(
       'unknown',
     )
-    window.webContents.emit('dom-ready')
+    // Queue before dom-ready so executeJavaScript consumes a real sample (not a hung empty call).
     respond(window)
-    await vi.advanceTimersByTimeAsync(10_001)
+    window.webContents.emit('dom-ready')
+    await flushPromises()
+    expect(recorder.snapshot().rendererMemory[0].samples).toHaveLength(1)
+    expect(recorder.snapshot().rendererMemory[0].samples[0].usedHeapKB).toBe(90_000)
+    expect(recorder.record('render-process-gone', { reason: 'killed' }, window).memoryAssessment.status).toBe(
+      'suspected-js-heap-pressure',
+    )
+    // No further answers; the accepted sample ages past MEMORY_FRESH_MS.
+    await vi.advanceTimersByTimeAsync(12_000)
     expect(recorder.record('render-process-gone', { reason: 'killed' }, window).memoryAssessment.status).toBe('unknown')
+    // Fresh sample with the current PID so the next assertion cannot pass solely because the sample is stale.
+    respond(window, 1_000)
+    window.webContents.emit('dom-ready')
+    await flushPromises()
+    expect(recorder.snapshot().rendererMemory[0].samples.at(-1).usedHeapKB).toBe(1_000)
+    expect(recorder.record('render-process-gone', { reason: 'killed' }, window).memoryAssessment.status).toBe(
+      'no-js-heap-pressure-observed',
+    )
+    // New renderer PID: identity updates on the hung query, but history still has the prior PID's sample.
     window.webContents.getOSProcessId.mockReturnValue(999)
     window.webContents.emit('dom-ready')
+    await flushPromises()
     expect(recorder.record('render-process-gone', { reason: 'crashed' }, window).memoryAssessment.status).toBe(
       'unknown',
     )
@@ -208,17 +290,79 @@ describe('renderer diagnostics', () => {
     expect(recorder.snapshot().rendererMemory).toHaveLength(0)
   })
 
-  it('invalidates an in-flight response on navigation and accepts sampling before application-ready', () => {
+  it('drops resolutions from a pre-navigation page instance and accepts sampling before application-ready', async () => {
+    vi.useFakeTimers()
     create()
     const window = memoryWindow()
-    window.webContents.emit('dom-ready')
-    const [, oldNonce] = window.webContents.send.mock.calls.at(-1)
+    let resolveFirst
+    window.webContents.executeJavaScript.mockImplementationOnce(
+      () => new Promise((resolve) => (resolveFirst = resolve)),
+    )
+    await recorder.start()
+    await vi.advanceTimersByTimeAsync(1000)
+    await flushPromises()
+    expect(window.webContents.executeJavaScript).toHaveBeenCalledTimes(1)
+    // New page instance answers with a low sample so history has a known baseline.
+    respond(window, 1000)
     window.webContents.emit('did-start-loading')
     window.webContents.emit('dom-ready')
-    window.webContents.emit('ipc-message', { senderFrame: window.webContents.mainFrame }, MEMORY_CHANNEL, oldNonce, {})
-    respond(window, 1000)
+    await flushPromises()
+    expect(window.webContents.executeJavaScript).toHaveBeenCalledTimes(2)
     expect(recorder.snapshot().rendererMemory[0].samples).toHaveLength(1)
+    expect(recorder.snapshot().rendererMemory[0].samples[0].usedHeapKB).toBe(1000)
+    const pressureBefore = writeLog.mock.calls.filter(([line]) =>
+      line.includes('"event":"renderer-memory-pressure"'),
+    ).length
+    // Stale pre-navigation query resolves with a *valid* high-pressure payload (not null).
+    // Generation must discard it: history stays at the post-nav sample, no pressure event.
+    resolveFirst?.({ usedHeapKB: 95_000, heapLimitKB: 100_000 })
+    await flushPromises()
+    expect(recorder.snapshot().rendererMemory[0].samples).toHaveLength(1)
+    expect(recorder.snapshot().rendererMemory[0].samples[0].usedHeapKB).toBe(1000)
+    expect(writeLog.mock.calls.filter(([line]) => line.includes('"event":"renderer-memory-pressure"'))).toHaveLength(
+      pressureBefore,
+    )
     expect(recorder.record('render-process-gone', {}, window).window.rendererPid).toBe(100)
+  })
+
+  it('a late resolution from an older query must not free the newer query slot', async () => {
+    vi.useFakeTimers()
+    create()
+    const window = memoryWindow()
+    let resolveFirst
+    let resolveSecond
+    window.webContents.executeJavaScript
+      .mockImplementationOnce(() => new Promise((resolve) => (resolveFirst = resolve)))
+      .mockImplementationOnce(() => new Promise((resolve) => (resolveSecond = resolve)))
+    await recorder.start()
+    window.webContents.emit('dom-ready') // query #1 hangs under test control
+    window.webContents.emit('did-start-loading')
+    window.webContents.emit('dom-ready') // query #2 hangs and owns the slot
+    await Promise.resolve() // requestMemory schedules executeJavaScript in a microtask
+    expect(window.webContents.executeJavaScript).toHaveBeenCalledTimes(2)
+    // Late resolve of #1 with a valid high-pressure payload must not clear #2's pending,
+    // must not append samples (wrong generation), and must not fire pressure.
+    const pressureBefore = writeLog.mock.calls.filter(([line]) =>
+      line.includes('"event":"renderer-memory-pressure"'),
+    ).length
+    resolveFirst?.({ usedHeapKB: 95_000, heapLimitKB: 100_000 })
+    await flushPromises()
+    expect(recorder.snapshot().rendererMemory[0].samples).toHaveLength(0)
+    expect(writeLog.mock.calls.filter(([line]) => line.includes('"event":"renderer-memory-pressure"'))).toHaveLength(
+      pressureBefore,
+    )
+    await vi.advanceTimersByTimeAsync(1000) // interval tick must skip: query #2 still in flight
+    expect(window.webContents.executeJavaScript).toHaveBeenCalledTimes(2)
+    // After the live query settles, sampling can resume and record a current-generation sample.
+    resolveSecond?.({ usedHeapKB: 2_000, heapLimitKB: 100_000 })
+    await flushPromises()
+    expect(recorder.snapshot().rendererMemory[0].samples).toHaveLength(1)
+    expect(recorder.snapshot().rendererMemory[0].samples[0].usedHeapKB).toBe(2_000)
+    respond(window, 3_000)
+    await vi.advanceTimersByTimeAsync(1000)
+    await flushPromises()
+    expect(window.webContents.executeJavaScript.mock.calls.length).toBeGreaterThanOrEqual(3)
+    expect(recorder.snapshot().rendererMemory[0].samples.at(-1).usedHeapKB).toBe(3_000)
   })
 
   it('survives reporter, filesystem and log-sink failures', () => {
