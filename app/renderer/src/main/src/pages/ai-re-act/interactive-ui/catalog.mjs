@@ -1,7 +1,8 @@
 import { visualizationComponents } from './visualizationCatalog.mjs'
 import { informationComponents } from './informationCatalog.mjs'
 
-// This data-only catalog is the source for both the prompt manifest and validation.
+// Send the full data-only catalog for negotiation and validation. The backend
+// exposes a bounded name index and loads selected definitions into model context.
 const text = { type: 'string', maxLength: 8000 }
 const shortText = { type: 'string', maxLength: 256 }
 const primitive = { anyOf: [{ type: 'string' }, { type: 'number' }, { type: 'boolean' }] }
