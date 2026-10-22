@@ -2,51 +2,70 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import FileTreeSearchView from '../FileTreeSearchView'
 
-const { invoke, emit, aiPaths, openedPaths } = vi.hoisted(() => {
-  const invoke = vi.fn(
-    async (
-      _channel: string,
-      _params: {
-        Method: string
-        Url: { Schema: string; Path: string; Query: { Key: string; Value: string }[] }
+const { invoke, emit, aiPaths, openedPaths, setSearchResponse } = vi.hoisted(() => {
+  const pathRelation = (pathA: string, pathB: string) => {
+    const norm = (p: string) => p.replace(/\\/g, '/').replace(/\/+$/, '').toLowerCase()
+    const a = norm(pathA)
+    const b = norm(pathB)
+    if (a === b) return 0
+    if (b.startsWith(`${a}/`)) return 1
+    if (a.startsWith(`${b}/`)) return 2
+    return 3
+  }
+  const defaultSearchResponse = {
+    Resources: [
+      {
+        ResourceType: '',
+        VerboseType: '',
+        ResourceName: 'demo.txt',
+        VerboseName: 'demo.txt [10B]',
+        Size: 10,
+        SizeVerbose: '10B',
+        ModifiedTimestamp: 0,
+        Path: 'ai-output/demo.txt',
+        YakURLVerbose: '',
+        Url: null,
+        HaveChildrenNodes: false,
+        Extra: [
+          {
+            Key: 'search_result',
+            Value: JSON.stringify({
+              match_count: 3,
+              results: [
+                {
+                  line: 3,
+                  text: 'hello world foo',
+                  matches: [
+                    { start_column: 1, end_column: 6 },
+                    { start_column: 13, end_column: 16 },
+                  ],
+                },
+                { line: 9, text: 'foo bar', matches: [{ start_column: 1, end_column: 4 }] },
+              ],
+            }),
+          },
+        ],
       },
-    ) => ({
-      Resources: [
-        {
-          ResourceType: '',
-          VerboseType: '',
-          ResourceName: 'demo.txt',
-          VerboseName: 'demo.txt [10B]',
-          Size: 10,
-          SizeVerbose: '10B',
-          ModifiedTimestamp: 0,
-          Path: 'ai-output/demo.txt',
-          YakURLVerbose: '',
-          Url: null,
-          HaveChildrenNodes: false,
-          Extra: [
-            {
-              Key: 'search_result',
-              Value: JSON.stringify({
-                match_count: 3,
-                results: [
-                  {
-                    line: 3,
-                    text: 'hello world foo',
-                    matches: [
-                      { start_column: 1, end_column: 6 },
-                      { start_column: 13, end_column: 16 },
-                    ],
-                  },
-                  { line: 9, text: 'foo bar', matches: [{ start_column: 1, end_column: 4 }] },
-                ],
-              }),
-            },
-          ],
-        },
-      ],
-    }),
-  )
+    ],
+  }
+  let searchResponse: { Resources: unknown[] } = defaultSearchResponse
+  const setSearchResponse = (next: { Resources: unknown[] }) => {
+    searchResponse = next
+  }
+  type InvokeParams =
+    | { pathA?: string; pathB?: string }
+    | {
+        Method?: string
+        Url?: { Schema?: string; Path?: string; Query?: { Key: string; Value: string }[] }
+      }
+
+  const invoke = vi.fn(async (channel: string, params?: InvokeParams) => {
+    if (channel === 'fetch-path-contains-relation') {
+      const relationParams = params as { pathA?: string; pathB?: string } | undefined
+      return pathRelation(relationParams?.pathA || '', relationParams?.pathB || '')
+    }
+    return searchResponse
+  })
   Object.defineProperty(window, 'require', {
     configurable: true,
     value: () => ({ ipcRenderer: { invoke } }),
@@ -56,8 +75,17 @@ const { invoke, emit, aiPaths, openedPaths } = vi.hoisted(() => {
     emit: vi.fn(),
     aiPaths: [{ path: 'ai-output', isFolder: true }],
     openedPaths: [{ path: 'opened-file.txt', isFolder: false }],
+    setSearchResponse: (next?: { Resources: unknown[] }) => setSearchResponse(next ?? defaultSearchResponse),
   }
 })
+
+type RequestYakURLParams = {
+  Method?: string
+  Url?: { Schema?: string; Path?: string; Query?: { Key: string; Value: string }[] }
+}
+
+const getRequestYakURLParams = (calls: unknown[][]) =>
+  calls.filter((call) => call[0] === 'RequestYakURL').map((call) => call[1] as RequestYakURLParams | undefined)
 
 vi.mock('@/i18n/useI18nNamespaces', () => ({
   useI18nNamespaces: () => ({
@@ -89,7 +117,10 @@ vi.mock('@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu', () => ({
     menu,
     children,
   }: {
-    menu: { data?: { key: string; label: string }[]; onClick?: (info: { key: string }) => void }
+    menu: {
+      data?: { key: string; label: string; children?: { key: string; label: string }[] }[]
+      onClick?: (info: { key: string }) => void
+    }
     children?: React.ReactNode
   }) => (
     <div data-testid="file-tree-search-scope-dropdown">
@@ -100,6 +131,17 @@ vi.mock('@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu', () => ({
             <button type="button" onClick={() => menu.onClick?.({ key: item.key })}>
               {item.label}
             </button>
+            {item.children?.length ? (
+              <ul data-testid={`file-tree-search-scope-submenu-${item.key}`}>
+                {item.children.map((child) => (
+                  <li key={child.key}>
+                    <button type="button" onClick={() => menu.onClick?.({ key: child.key })}>
+                      {child.label}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
           </li>
         ))}
       </ul>
@@ -163,6 +205,7 @@ const selectScope = (label: string) => {
 
 beforeEach(() => {
   vi.clearAllMocks()
+  setSearchResponse()
   aiPaths.splice(0, aiPaths.length, { path: 'ai-output', isFolder: true })
   openedPaths.splice(0, openedPaths.length, { path: 'opened-file.txt', isFolder: false })
 })
@@ -194,11 +237,11 @@ describe('FileTreeSearchView', () => {
 
     const menu = screen.getByTestId('file-tree-search-scope-menu')
     expect(within(menu).getByText('FileTreeSearch.all')).toBeInTheDocument()
-    expect(within(menu).getByText('FileTreeSearch.aiFolder')).toBeInTheDocument()
-    expect(within(menu).getByText('FileTreeSearch.userFolder')).toBeInTheDocument()
+    expect(within(menu).getByText('FileTreeSystem.aiArtifacts')).toBeInTheDocument()
+    expect(within(menu).getByText('FileTreeSystem.myOpenedFiles')).toBeInTheDocument()
 
-    selectScope('FileTreeSearch.aiFolder')
-    expect(trigger).toHaveAttribute('title', 'FileTreeSearch.aiFolder')
+    selectScope('FileTreeSystem.aiArtifacts')
+    expect(trigger).toHaveAttribute('title', 'FileTreeSystem.aiArtifacts')
   })
 
   it('初始未搜索时展示输入提示空态', () => {
@@ -227,17 +270,20 @@ describe('FileTreeSearchView', () => {
 
     // 范围=全部时，AI 文件夹与用户文件夹根路径各发起一次 op=search
     await waitFor(() => {
-      const calls = invoke.mock.calls.filter(([channel]) => channel === 'RequestYakURL')
-      expect(calls).toHaveLength(2)
-      const params = calls[0][1]
-      expect(params.Method).toBe('GET')
-      expect(params.Url.Schema).toBe('file')
-      expect(params.Url.Query).toEqual(
-        expect.arrayContaining([
-          { Key: 'op', Value: 'search' },
-          { Key: 'keyword', Value: 'hello' },
-          { Key: 'global', Value: 'true' },
-        ]),
+      const paramsList = getRequestYakURLParams(invoke.mock.calls)
+      expect(paramsList).toHaveLength(2)
+      expect(paramsList[0]).toEqual(
+        expect.objectContaining({
+          Method: 'GET',
+          Url: expect.objectContaining({
+            Schema: 'file',
+            Query: expect.arrayContaining([
+              { Key: 'op', Value: 'search' },
+              { Key: 'keyword', Value: 'hello' },
+              { Key: 'global', Value: 'true' },
+            ]),
+          }),
+        }),
       )
     })
 
@@ -261,13 +307,42 @@ describe('FileTreeSearchView', () => {
   it('选择用户文件夹范围后仅搜索用户文件夹路径', async () => {
     render(<FileTreeSearchView />)
 
-    selectScope('FileTreeSearch.userFolder')
+    selectScope('FileTreeSystem.myOpenedFiles')
     searchByEnter('foo')
 
     await waitFor(() => {
-      const calls = invoke.mock.calls.filter(([channel]) => channel === 'RequestYakURL')
-      expect(calls).toHaveLength(1)
-      expect(calls[0][1].Url.Path).toBe('opened-file.txt')
+      const paramsList = getRequestYakURLParams(invoke.mock.calls)
+      expect(paramsList).toHaveLength(1)
+      expect(paramsList[0]?.Url?.Path).toBe('opened-file.txt')
+    })
+  })
+
+  it('仅打开一个文件时「我打开的文件」无二级菜单', () => {
+    render(<FileTreeSearchView />)
+    expect(screen.queryByTestId('file-tree-search-scope-submenu-user')).not.toBeInTheDocument()
+  })
+
+  it('打开多个文件时「我打开的文件」有二级菜单，点子项只搜该路径', async () => {
+    openedPaths.splice(
+      0,
+      openedPaths.length,
+      { path: 'a/foo.txt', isFolder: false },
+      { path: 'b/bar.txt', isFolder: false },
+    )
+    render(<FileTreeSearchView />)
+
+    const submenu = screen.getByTestId('file-tree-search-scope-submenu-user')
+    expect(within(submenu).getByText('foo.txt')).toBeInTheDocument()
+    expect(within(submenu).getByText('bar.txt')).toBeInTheDocument()
+
+    fireEvent.click(within(submenu).getByText('foo.txt'))
+    expect(screen.getByTestId('file-tree-search-scope')).toHaveAttribute('title', 'foo.txt')
+
+    searchByEnter('foo')
+    await waitFor(() => {
+      const paramsList = getRequestYakURLParams(invoke.mock.calls)
+      expect(paramsList).toHaveLength(1)
+      expect(paramsList[0]?.Url?.Path).toBe('a/foo.txt')
     })
   })
 
@@ -278,14 +353,13 @@ describe('FileTreeSearchView', () => {
     searchByEnter('foo.*bar')
 
     await waitFor(() => {
-      const params = invoke.mock.calls.find(([channel]) => channel === 'RequestYakURL')?.[1]
-      expect(params?.Url.Query).toEqual(expect.arrayContaining([{ Key: 'regex', Value: 'true' }]))
+      const params = getRequestYakURLParams(invoke.mock.calls)[0]
+      expect(params?.Url?.Query).toEqual(expect.arrayContaining([{ Key: 'regex', Value: 'true' }]))
     })
   })
 
   it('搜索结果为空时展示无结果空态', async () => {
-    invoke.mockImplementationOnce(async () => ({ Resources: [] }))
-    invoke.mockImplementationOnce(async () => ({ Resources: [] }))
+    setSearchResponse({ Resources: [] })
     render(<FileTreeSearchView />)
 
     searchByEnter('nothing')
@@ -294,27 +368,26 @@ describe('FileTreeSearchView', () => {
   })
 
   it('ai/用户文件夹无结果时展示查询全部，点击后切到全部并重搜', async () => {
-    // ai 范围 1 次 + 切到全部后 2 次，均无命中
-    invoke
-      .mockResolvedValueOnce({ Resources: [] })
-      .mockResolvedValueOnce({ Resources: [] })
-      .mockResolvedValueOnce({ Resources: [] })
+    setSearchResponse({ Resources: [] })
     render(<FileTreeSearchView />)
 
-    selectScope('FileTreeSearch.aiFolder')
+    selectScope('FileTreeSystem.aiArtifacts')
+    await waitFor(() =>
+      expect(screen.getByTestId('file-tree-search-scope')).toHaveAttribute('title', 'FileTreeSystem.aiArtifacts'),
+    )
     searchByEnter('nothing')
 
     await waitFor(() => expect(screen.getByTestId('file-tree-search-all')).toBeInTheDocument())
     expect(screen.queryByText('FileTreeSearch.emptyNoResult')).not.toBeInTheDocument()
 
-    const callsBefore = invoke.mock.calls.filter(([channel]) => channel === 'RequestYakURL').length
+    const callsBefore = getRequestYakURLParams(invoke.mock.calls).length
     fireEvent.click(screen.getByTestId('file-tree-search-all'))
 
     await waitFor(() => {
       expect(screen.getByTestId('file-tree-search-scope')).toHaveAttribute('title', 'FileTreeSearch.all')
-      const calls = invoke.mock.calls.filter(([channel]) => channel === 'RequestYakURL')
-      expect(calls.length).toBe(callsBefore + 2)
-      expect(calls.slice(-2).map(([, params]) => params.Url.Path)).toEqual(
+      const paramsList = getRequestYakURLParams(invoke.mock.calls)
+      expect(paramsList.length).toBe(callsBefore + 2)
+      expect(paramsList.slice(-2).map((params) => params?.Url?.Path)).toEqual(
         expect.arrayContaining(['ai-output', 'opened-file.txt']),
       )
     })
@@ -325,7 +398,7 @@ describe('FileTreeSearchView', () => {
 
     searchByEnter('hello')
 
-    await waitFor(() => expect(invoke.mock.calls.filter(([channel]) => channel === 'RequestYakURL')).toHaveLength(2))
+    await waitFor(() => expect(getRequestYakURLParams(invoke.mock.calls)).toHaveLength(2))
     await waitFor(() => expect(screen.getAllByTestId('file-tree-search-result-item')).toHaveLength(1))
   })
 
@@ -345,7 +418,7 @@ describe('FileTreeSearchView', () => {
     openedPaths.splice(0)
     render(<FileTreeSearchView />)
 
-    selectScope('FileTreeSearch.userFolder')
+    selectScope('FileTreeSystem.myOpenedFiles')
     searchByEnter('nothing')
 
     await waitFor(() => expect(screen.getByTestId('file-tree-search-all')).toBeInTheDocument())

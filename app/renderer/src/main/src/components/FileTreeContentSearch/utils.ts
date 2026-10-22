@@ -66,14 +66,11 @@ export const grpcSearchFileContent = async (params: SearchFileContentParams): Pr
   if (params.regex) query.push({ Key: 'regex', Value: 'true' })
   if (params.ignoreCase) query.push({ Key: 'ignoreCase', Value: 'true' })
 
-  const res: RequestYakURLResponse = await ipcRenderer.invoke(
-    'RequestYakURL',
-    {
-      Method: 'GET',
-      Url: { Schema: 'file', Path: params.path, Query: query },
-    },
-    params.token,
-  )
+  const requestParams = {
+    Method: 'GET',
+    Url: { Schema: 'file', Path: params.path, Query: query },
+  }
+  const res: RequestYakURLResponse = await ipcRenderer.invoke('RequestYakURL', requestParams, params.token)
 
   const resources = res.Resources || []
   if (isUnsupportedSearchResponse(resources)) {

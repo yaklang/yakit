@@ -638,8 +638,6 @@
     "keyword": "关键字",
     "regexp": "正则",
     "all": "全部",
-    "aiFolder": "ai文件夹",
-    "userFolder": "用户文件夹",
     "matchCount": "{{count}} 处命中",
     "expandMatches": "展开命中行",
     "collapseMatches": "收起命中行",

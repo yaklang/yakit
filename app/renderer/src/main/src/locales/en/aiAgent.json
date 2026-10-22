@@ -638,8 +638,6 @@
     "keyword": "Keyword",
     "regexp": "Regexp",
     "all": "All",
-    "aiFolder": "AI Folder",
-    "userFolder": "User Folder",
     "matchCount": "{{count}} matches",
     "expandMatches": "Expand matches",
     "collapseMatches": "Collapse matches",

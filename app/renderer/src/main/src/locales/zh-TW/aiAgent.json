@@ -638,8 +638,6 @@
     "keyword": "關鍵字",
     "regexp": "正則",
     "all": "全部",
-    "aiFolder": "ai資料夾",
-    "userFolder": "使用者資料夾",
     "matchCount": "{{count}} 處命中",
     "expandMatches": "展開命中行",
     "collapseMatches": "收起命中行",

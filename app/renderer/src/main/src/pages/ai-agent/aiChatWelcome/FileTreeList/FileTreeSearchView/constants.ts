@@ -6,11 +6,19 @@ export const FileTreeSearchScope = {
 
 export type FileTreeSearchScopeValue = (typeof FileTreeSearchScope)[keyof typeof FileTreeSearchScope]
 
+/** 「我打开的文件」二级菜单 key 前缀，值为具体路径 */
+export const USER_SCOPE_PATH_PREFIX = 'user-path:'
+
+export const toUserScopeMenuKey = (path: string) => `${USER_SCOPE_PATH_PREFIX}${path}`
+
+export const parseUserScopeMenuKey = (key: string): string | undefined =>
+  key.startsWith(USER_SCOPE_PATH_PREFIX) ? key.slice(USER_SCOPE_PATH_PREFIX.length) : undefined
+
 /** 搜索范围选项（i18n key → value），UI 用 t(labelKey) 渲染 */
 export const FILE_TREE_SEARCH_SCOPE_OPTIONS = [
   { value: FileTreeSearchScope.All, labelKey: 'FileTreeSearch.all' },
-  { value: FileTreeSearchScope.AiFolder, labelKey: 'FileTreeSearch.aiFolder' },
-  { value: FileTreeSearchScope.UserFolder, labelKey: 'FileTreeSearch.userFolder' },
+  { value: FileTreeSearchScope.AiFolder, labelKey: 'FileTreeSystem.aiArtifacts' },
+  { value: FileTreeSearchScope.UserFolder, labelKey: 'FileTreeSystem.myOpenedFiles' },
 ] as const
 
 export const isSingleFolderSearchScope = (scope: FileTreeSearchScopeValue) =>
