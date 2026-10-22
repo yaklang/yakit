@@ -795,6 +795,7 @@
     "disabledRefreshTools": "Disabled, please enable and refresh the tool list",
     "refresh": "Refresh",
     "enableTools": "Enable Tools",
+    "description": "Description",
     "paramIntro": "Parameter Introduction",
     "addMcpServer": "Add MCP Server",
     "mcpServerConfig": "MCP Server Configuration",
@@ -805,7 +806,9 @@
     "command": "Command: {{command}}",
     "toolFetchFailed": "Tool fetch failed",
     "toolCount": "{{count}} tools",
-    "disableConfirm": "Are you sure you want to disable {{name}}?"
+    "disableConfirm": "Are you sure you want to disable {{name}}?",
+    "runningGroup": "Running",
+    "disabledGroup": "Disabled"
   },
   "AIMCPForm": {
     "serverUrl": "Server URL",

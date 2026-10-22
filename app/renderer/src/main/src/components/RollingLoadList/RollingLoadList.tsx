@@ -19,6 +19,7 @@ export interface RollingLoadListProps<T> {
   isRef?: boolean // 刷新全部
   classNameRow?: string
   classNameList?: string
+  noMoreText?: string
   defItemHeight: number
   numberRoll?: number
   isGridLayout?: boolean
@@ -51,6 +52,7 @@ function RollingLoadListInner<T>(props: RollingLoadListProps<T>, ref: React.Forw
     isRef,
     classNameRow,
     classNameList,
+    noMoreText,
     defItemHeight,
     defOverscan,
     numberRoll,
@@ -259,7 +261,7 @@ function RollingLoadListInner<T>(props: RollingLoadListProps<T>, ref: React.Forw
             </div>
           )}
           {!loading && !hasMore && (page || 0) > 0 && (
-            <div className="grid-block text-center no-more-text">{t('YakitEmpty.noMoreData')}</div>
+            <div className="grid-block text-center no-more-text">{noMoreText || t('YakitEmpty.noMoreData')}</div>
           )}
         </div>
       </div>

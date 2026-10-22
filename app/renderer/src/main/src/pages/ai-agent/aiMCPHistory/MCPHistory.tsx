@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { useMemoizedFn } from 'ahooks'
+import { useDebounce, useMemoizedFn } from 'ahooks'
 import classNames from 'classnames'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
@@ -9,7 +9,7 @@ import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import { RollingLoadList } from '@/components/RollingLoadList/RollingLoadList'
 import { YakitModalConfirm } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
-import { FilterOutlined, RefreshOutlined, TrashOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { PaintbrushOutlined, RefreshOutlined, SearchOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { NewHTTPPacketEditor } from '@/utils/editors'
 import type { MCPToolCallHistory, MCPToolCallHistorySummary, QueryMCPToolCallHistoryRequest } from '../type/aiMCP'
 import {
@@ -17,10 +17,12 @@ import {
   grpcGetMCPToolCallHistoryDetail,
   grpcQueryMCPToolCallHistory,
 } from '../aiMCP/utils'
-import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { formatTimestamp } from '@/utils/timeUtil'
 import { YakitCheckableTag } from '@/components/yakitUI/YakitTag/YakitCheckableTag'
+import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
+import { YakitRoundCornerTag } from '@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag'
+import { ParkLeftSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import styles from './MCPHistory.module.scss'
 
 type HistoryStatus = QueryMCPToolCallHistoryRequest['Status']
@@ -58,10 +60,11 @@ const dedupeHistoriesByID = (histories: MCPToolCallHistorySummary[]) => {
 }
 
 const MCPHistory: React.FC = React.memo(() => {
-  const { t, i18n } = useI18nNamespaces(['layout', 'yakitUi'])
+  const { t, i18nRefresh } = useI18nNamespaces(['layout', 'yakitUi'])
   const [keyword, setKeyword] = useState('')
-  const [appliedKeyword, setAppliedKeyword] = useState('')
-  const [status, setStatus] = useState<HistoryStatus>('')
+  const appliedKeyword = useDebounce(keyword.trim(), { wait: 300 })
+  const [status, setStatus] = useState<HistoryStatus>('success')
+  const [leftVisible, setLeftVisible] = useState(true)
   const [loading, setLoading] = useState(false)
   const [histories, setHistories] = useState<MCPToolCallHistorySummary[]>([])
   const [total, setTotal] = useState(0)
@@ -69,22 +72,12 @@ const MCPHistory: React.FC = React.memo(() => {
   const [detail, setDetail] = useState<MCPToolCallHistory>()
   const [detailLoading, setDetailLoading] = useState(false)
   const [resultTab, setResultTab] = useState<ResultTab>('result')
-  const [filterVisible, setFilterVisible] = useState(false)
   const [listResetFlag, setListResetFlag] = useState(false)
 
   const pageRef = useRef(1)
   const loadingRef = useRef(false)
   const requestIDRef = useRef(0)
   const detailRequestIDRef = useRef(0)
-
-  const statusFilterOptions = useMemo(
-    () => [
-      { key: '' as HistoryStatus, label: t('MCPHistory.all') },
-      { key: 'success' as HistoryStatus, label: t('MCPHistory.success') },
-      { key: 'failed' as HistoryStatus, label: t('MCPHistory.failed') },
-    ],
-    [i18n.language],
-  )
 
   const query = useMemoizedFn(async (refresh = false) => {
     if (loadingRef.current && !refresh) return
@@ -124,19 +117,8 @@ const MCPHistory: React.FC = React.memo(() => {
     query(true)
   }, [appliedKeyword, status, query])
 
-  const applyKeyword = useMemoizedFn((value: string) => {
-    const nextKeyword = value.trim()
-    if (nextKeyword === appliedKeyword) {
-      query(true)
-      return
-    }
-    setAppliedKeyword(nextKeyword)
-  })
-
   const onKeywordChange = useMemoizedFn((event: React.ChangeEvent<HTMLInputElement>) => {
-    const nextKeyword = event.target.value
-    setKeyword(nextKeyword)
-    if (!nextKeyword.trim() && appliedKeyword) setAppliedKeyword('')
+    setKeyword(event.target.value)
   })
 
   const clearDetail = useMemoizedFn(() => {
@@ -197,10 +179,8 @@ const MCPHistory: React.FC = React.memo(() => {
     })
   })
 
-  const onFilterMenuClick = useMemoizedFn(({ key }: { key: string }) => {
-    setStatus((key === 'all' ? '' : key) as HistoryStatus)
-    setFilterVisible(false)
-  })
+  const collapseLeft = useMemoizedFn(() => setLeftVisible(false))
+  const expandLeft = useMemoizedFn(() => setLeftVisible(true))
 
   const renderRow = useMemoizedFn((item: MCPToolCallHistorySummary) => (
     <div
@@ -209,28 +189,32 @@ const MCPHistory: React.FC = React.memo(() => {
       })}
       onClick={() => openDetail(item)}
     >
-      <div className={styles['history-row-title']}>
-        <span className={styles['history-row-tool-name']} title={item.ToolName}>
-          {item.ToolName}
-        </span>
-        <YakitTag size="small" color={item.Success ? 'success' : 'danger'}>
-          {item.Success ? t('MCPHistory.success') : t('MCPHistory.failed')}
-        </YakitTag>
-      </div>
-      <div className={styles['history-row-meta']}>
-        <span>{formatTimestamp(item.CreatedAt)}</span>
-        <span>{formatDuration(item.DurationMillis)}</span>
+      <div className={styles['history-row-card']}>
+        <span
+          className={classNames(styles['history-status-dot'], {
+            [styles['history-status-dot-success']]: item.Success,
+            [styles['history-status-dot-failed']]: !item.Success,
+          })}
+        />
+        <div className={styles['history-row-body']}>
+          <div className={styles['history-row-top']}>
+            <span className={styles['history-row-tool-name']} title={item.ToolName}>
+              {item.ToolName}
+            </span>
+            <span className={styles['history-row-duration']}>{formatDuration(item.DurationMillis)}</span>
+          </div>
+          <div className={styles['history-row-time']}>{formatTimestamp(item.CreatedAt)}</div>
+        </div>
       </div>
     </div>
   ))
 
   const renderEditor = useMemoizedFn(
-    (title: React.ReactNode, value: string, options?: { language?: string; editorKey?: string }) => (
-      <div className={styles['detail-panel']}>
+    (title: React.ReactNode, value: string, options?: { language?: string; editorKey?: string; panel?: string }) => (
+      <div className={classNames(styles['detail-panel'], options?.panel && styles[options.panel])}>
         <NewHTTPPacketEditor
           key={options?.editorKey}
-          title={title}
-          titleStyle={{ fontSize: 12 }}
+          title={<span className={styles['detail-editor-title']}>{title}</span>}
           originValue={value}
           language={options?.language || 'json'}
           readOnly
@@ -241,7 +225,15 @@ const MCPHistory: React.FC = React.memo(() => {
           noOpenPacketNewWindow
           showDefaultExtra
           noSetIngEditor
-          extra={<CopyComponents copyText={value === '-' ? '' : value} />}
+          extra={
+            <>
+              <CopyComponents
+                copyText={value === '-' ? '' : value}
+                iconColor="var(--Colors-Use-Neutral-Text-3-Secondary)"
+              />
+              <span className={styles['detail-editor-divider']} />
+            </>
+          }
         />
       </div>
     ),
@@ -258,13 +250,8 @@ const MCPHistory: React.FC = React.memo(() => {
   }, [detail, resultTab])
   const clientLabel = useMemo(
     () => (detail ? getClientLabel(detail, t('MCPHistory.unknownCaller')) : ''),
-    [detail, i18n.language],
+    [detail, i18nRefresh],
   )
-  const statusFilterLabel = useMemo(
-    () => statusFilterOptions.find((item) => item.key === status)?.label || t('MCPHistory.all'),
-    [statusFilterOptions, status, i18n.language],
-  )
-
   const resultPanelTitle = useMemo(() => {
     const tabs: { key: ResultTab; label: string }[] = []
     if (hasResult) tabs.push({ key: 'result', label: t('MCPHistory.result') })
@@ -285,12 +272,30 @@ const MCPHistory: React.FC = React.memo(() => {
         ))}
       </div>
     )
-  }, [hasResult, hasError, resultTab, i18n.language])
+  }, [hasResult, hasError, resultTab, i18nRefresh])
+
+  const expandButton = useMemo(
+    () =>
+      leftVisible ? null : (
+        <YakitButton
+          type="text2"
+          icon={<ParkLeftSolid color="currentColor" />}
+          title={t('YakitButton.expand')}
+          onClick={expandLeft}
+        />
+      ),
+    [leftVisible, expandLeft, i18nRefresh],
+  )
 
   const renderDetail = useMemo(() => {
     if (!selected) {
       return (
         <div className={styles['detail-side']}>
+          {expandButton && (
+            <div className={styles['detail-header']}>
+              <div className={styles['detail-header-title']}>{expandButton}</div>
+            </div>
+          )}
           <div className={styles['detail-empty']}>
             <YakitEmpty title={t('MCPHistory.emptyDetail')} />
           </div>
@@ -300,6 +305,11 @@ const MCPHistory: React.FC = React.memo(() => {
     if (detailLoading || !detail) {
       return (
         <div className={styles['detail-side']}>
+          {expandButton && (
+            <div className={styles['detail-header']}>
+              <div className={styles['detail-header-title']}>{expandButton}</div>
+            </div>
+          )}
           <div className={styles['detail-loading']}>
             <YakitSpin spinning wrapperClassName={styles['detail-spin']} />
           </div>
@@ -310,50 +320,75 @@ const MCPHistory: React.FC = React.memo(() => {
       <div className={styles['detail-side']}>
         <div className={styles['detail-header']}>
           <div className={styles['detail-header-title']}>
+            {expandButton}
             <span className={styles['detail-tool-name']} title={detail.ToolName}>
               {detail.ToolName}
             </span>
-            <YakitTag size="small" color={detail.Success ? 'success' : 'danger'}>
+            <YakitTag
+              size="small"
+              fullRadius
+              border={false}
+              color={detail.Success ? 'success' : 'danger'}
+              className={classNames(
+                styles['detail-status-tag'],
+                styles[detail.Success ? 'detail-status-tag-success' : 'detail-status-tag-failed'],
+              )}
+            >
               {detail.Success ? t('MCPHistory.success') : t('MCPHistory.failed')}
             </YakitTag>
           </div>
-          <div className={styles['detail-grid']}>
-            <span>{t('MCPHistory.caller')}</span>
-            <strong title={clientLabel}>{clientLabel}</strong>
-            <span>{t('MCPHistory.callTime')}</span>
-            <strong>{formatTimestamp(detail.CreatedAt)}</strong>
-            <span>{t('MCPHistory.duration')}</span>
-            <strong>{formatDuration(detail.DurationMillis)}</strong>
-            <span>{t('MCPHistory.sessionId')}</span>
-            <strong title={detail.SessionID}>{detail.SessionID || '-'}</strong>
-          </div>
         </div>
-        <div className={styles['detail-payload']}>
-          {showResultPanel ? (
-            <YakitResizeBox
-              firstRatio="50%"
-              secondRatio="50%"
-              firstMinSize="240px"
-              secondMinSize="240px"
-              lineDirection="right"
-              firstNode={renderEditor(t('MCPHistory.arguments'), argumentsValue, {
+        <div className={styles['detail-body']}>
+          <div className={styles['detail-meta']}>
+            {[
+              { label: t('MCPHistory.caller'), value: clientLabel },
+              { label: t('MCPHistory.callTime'), value: formatTimestamp(detail.CreatedAt) },
+              { label: t('MCPHistory.duration'), value: formatDuration(detail.DurationMillis) },
+              { label: t('MCPHistory.sessionId'), value: detail.SessionID || '-' },
+            ].map((item, index) => (
+              <React.Fragment key={item.label}>
+                {index > 0 && <span className={styles['detail-meta-divider']} />}
+                <span className={styles['detail-meta-item']}>
+                  <span className={styles['detail-meta-label']}>{item.label}</span>
+                  <span className={styles['detail-meta-value']} title={item.value}>
+                    {item.value}
+                  </span>
+                </span>
+              </React.Fragment>
+            ))}
+          </div>
+          <div className={styles['detail-payload']}>
+            {showResultPanel ? (
+              <YakitResizeBox
+                firstRatio="50%"
+                secondRatio="50%"
+                firstMinSize="240px"
+                secondMinSize="240px"
+                lineSize={4}
+                firstNodeStyle={{ padding: 0 }}
+                secondNodeStyle={{ padding: 0 }}
+                firstNode={renderEditor(t('MCPHistory.arguments'), argumentsValue, {
+                  editorKey: `arguments-${detail.ID}`,
+                  panel: 'detail-panel-left',
+                })}
+                secondNode={renderEditor(resultPanelTitle, resultPanelValue, {
+                  language: resultTab === 'error' ? 'plaintext' : 'json',
+                  editorKey: `result-${detail.ID}-${resultTab}`,
+                  panel: 'detail-panel-right',
+                })}
+              />
+            ) : (
+              renderEditor(t('MCPHistory.arguments'), argumentsValue, {
                 editorKey: `arguments-${detail.ID}`,
-              })}
-              secondNode={renderEditor(resultPanelTitle, resultPanelValue, {
-                language: resultTab === 'error' ? 'plaintext' : 'json',
-                editorKey: `result-${detail.ID}-${resultTab}`,
-              })}
-            />
-          ) : (
-            renderEditor(t('MCPHistory.arguments'), argumentsValue, {
-              editorKey: `arguments-${detail.ID}`,
-            })
-          )}
+              })
+            )}
+          </div>
         </div>
       </div>
     )
   }, [
     selected,
+    expandButton,
     detailLoading,
     detail,
     clientLabel,
@@ -363,99 +398,83 @@ const MCPHistory: React.FC = React.memo(() => {
     resultPanelValue,
     resultTab,
     renderEditor,
-    i18n.language,
+    i18nRefresh,
   ])
 
   return (
     <div className={styles['mcp-history']}>
-      <YakitResizeBox
-        firstRatio="360px"
-        secondRatio="70%"
-        firstMinSize="280px"
-        secondMinSize="420px"
-        lineDirection="left"
-        firstNode={
-          <div className={styles['history-side']}>
-            <div className={styles['history-header']}>
-              <div className={styles['history-title']}>
-                <strong>{t('MCPHistory.title')}</strong>
-                <span>{total}</span>
-              </div>
-              <div className={styles['history-actions']}>
-                <YakitButton
-                  type="outline1"
-                  size="small"
-                  colors="danger"
-                  icon={<TrashOutlined color="currentColor" />}
-                  title={t('MCPHistory.clearHistoryTitle')}
-                  disabled={total === 0 || loading}
-                  onClick={onDeleteClick}
-                >
-                  {t('YakitButton.delete')}
-                </YakitButton>
-                <YakitButton
-                  type="text2"
-                  icon={<RefreshOutlined color="currentColor" />}
-                  title={t('YakitButton.refresh')}
-                  onClick={() => query(true)}
-                  loading={loading}
-                />
-              </div>
-            </div>
-            <div className={styles['history-filter']}>
-              <YakitInput.Search
-                value={keyword}
-                onChange={onKeywordChange}
-                onSearch={applyKeyword}
-                placeholder={t('MCPHistory.searchPlaceholder')}
-                allowClear
-                wrapperStyle={{ flex: 1, minWidth: 0 }}
+      {leftVisible && (
+        <div className={styles['history-side']}>
+          <div className={styles['history-status']}>
+            <div className={styles['history-status-main']}>
+              <YakitRadioButtons
+                buttonStyle="solid"
+                value={status}
+                options={[
+                  { value: 'success', label: t('MCPHistory.success') },
+                  { value: 'failed', label: t('MCPHistory.failed') },
+                ]}
+                onChange={(e) => setStatus(e.target.value as HistoryStatus)}
               />
-              <YakitDropdownMenu
-                menu={{
-                  data: statusFilterOptions.map((item) => ({
-                    key: item.key || 'all',
-                    label: item.label,
-                  })),
-                  selectedKeys: [status || 'all'],
-                  onClick: onFilterMenuClick,
-                }}
-                dropdown={{
-                  trigger: ['click'],
-                  placement: 'bottomRight',
-                  open: filterVisible,
-                  onOpenChange: setFilterVisible,
-                }}
-              >
-                <YakitButton
-                  type={status ? 'primary' : 'outline2'}
-                  icon={<FilterOutlined color="currentColor" />}
-                  isActive={filterVisible}
-                  title={statusFilterLabel}
-                />
-              </YakitDropdownMenu>
+              <YakitRoundCornerTag>{total}</YakitRoundCornerTag>
             </div>
-            <div className={styles['history-list']}>
-              {histories.length === 0 && !loading ? (
-                <YakitEmpty title={t('MCPHistory.emptyList')} />
-              ) : (
-                <RollingLoadList<MCPToolCallHistorySummary>
-                  data={histories}
-                  page={pageRef.current}
-                  hasMore={histories.length < total}
-                  loadMoreData={() => query(false)}
-                  loading={loading}
-                  isRef={listResetFlag}
-                  rowKey="ID"
-                  defItemHeight={64}
-                  renderRow={renderRow}
-                />
-              )}
+            <div className={styles['history-status-actions']}>
+              <YakitButton
+                type="text2"
+                icon={<PaintbrushOutlined color="currentColor" />}
+                title={t('MCPHistory.clearHistoryTitle')}
+                disabled={total === 0 || loading}
+                onClick={onDeleteClick}
+              />
+              <YakitButton
+                type="text2"
+                icon={<RefreshOutlined color="currentColor" />}
+                title={t('YakitButton.refresh')}
+                disabled={loading}
+                onClick={() => {
+                  pageRef.current = 1
+                  query(true)
+                }}
+              />
+              <YakitButton
+                type="text"
+                icon={<ParkLeftSolid color="currentColor" />}
+                title={t('YakitButton.collapse')}
+                onClick={collapseLeft}
+              />
             </div>
           </div>
-        }
-        secondNode={renderDetail}
-      />
+          <div className={styles['history-filter']}>
+            <YakitInput
+              prefix={<SearchOutlined className={styles['search-icon']} color="currentColor" />}
+              value={keyword}
+              onChange={onKeywordChange}
+              placeholder={t('MCPHistory.searchPlaceholder')}
+              allowClear
+            />
+          </div>
+          <div className={styles['history-list']}>
+            {histories.length === 0 && !loading ? (
+              <YakitEmpty title={t('MCPHistory.emptyList')} />
+            ) : (
+              <RollingLoadList<MCPToolCallHistorySummary>
+                data={histories}
+                page={pageRef.current}
+                hasMore={histories.length < total}
+                loadMoreData={() => query(false)}
+                loading={loading}
+                isRef={listResetFlag}
+                rowKey="ID"
+                defItemHeight={58}
+                classNameRow={styles['history-row-slot']}
+                noMoreText={t('YakitEmpty.end_of_list')}
+                renderRow={renderRow}
+              />
+            )}
+          </div>
+        </div>
+      )}
+      {renderDetail}
     </div>
   )
 })

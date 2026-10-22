@@ -795,6 +795,7 @@
     "disabledRefreshTools": "未启用,请启用后刷新工具列表",
     "refresh": "刷新",
     "enableTools": "启用工具",
+    "description": "描述",
     "paramIntro": "参数介绍",
     "addMcpServer": "添加MCP Server",
     "mcpServerConfig": "MCP服务器配置",
@@ -805,7 +806,9 @@
     "command": "命令: {{command}}",
     "toolFetchFailed": "工具获取失败",
     "toolCount": "{{count}}个工具",
-    "disableConfirm": "确定要停用 {{name}} 吗？"
+    "disableConfirm": "确定要停用 {{name}} 吗？",
+    "runningGroup": "运行中",
+    "disabledGroup": "已停用"
   },
   "AIMCPForm": {
     "serverUrl": "服务器URL",
