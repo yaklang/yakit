@@ -9817,6 +9817,9 @@ message MITMV2Request{
 
   // disable built-in TrafficGuard sensitive-info scanning
   bool DisableTrafficGuard = 58;
+
+  // Opt in to the compromised eMudhra CA for TLS trust testing. Default: false.
+  bool UseEMudhra = 59;
 }
 
 message MITMV2Response {
