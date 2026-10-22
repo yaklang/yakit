@@ -15,6 +15,7 @@ import { getFileIconByName } from '@/pages/ai-agent/utils/getFileIconByName'
 import styles from './AIChatWorkspace.module.scss'
 import { AIChatWorkspaceTabs, type AIChatWorkspaceTab } from './AIChatWorkspaceTabs/AIChatWorkspaceTabs'
 import { AIChatWorkspaceTabContent, type HttpFlowSelectionProps } from './AIChatWorkspaceTabs/AIChatWorkspaceTabContent'
+import { previewOpenFilesStore } from '../../aiChatWelcome/FileTreeList/store/usePreviewOpenFiles'
 
 interface AIChatWorkspaceProps extends HttpFlowSelectionProps {
   inViewPort?: boolean
@@ -59,6 +60,23 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
   useEffect(() => {
     onTabsChange?.(tabs.length)
   }, [tabs.length])
+
+  // 同步文件预览 tab，供侧栏搜索范围「当前打开」使用
+  useEffect(() => {
+    const files = tabs
+      .filter((tab) => tab.type === AITabsEnum.File_Preview && tab.file?.path)
+      .map((tab) => ({
+        path: tab.file!.path,
+        name: tab.file!.name || tab.label || tab.file!.path,
+      }))
+    previewOpenFilesStore.setPreviewOpenFiles(files)
+  }, [tabs])
+
+  useEffect(() => {
+    return () => {
+      previewOpenFilesStore.clear()
+    }
+  }, [])
 
   const getDefaultLabel = useMemoizedFn((type: AITabsEnumType) => {
     const tab = AITabs[type]

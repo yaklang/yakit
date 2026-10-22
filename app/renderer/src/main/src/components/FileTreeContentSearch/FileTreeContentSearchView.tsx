@@ -15,16 +15,24 @@ import {
 import type { FileSearchFileItem, FileSearchLine } from './type'
 import styles from './FileTreeContentSearchView.module.scss'
 
+export interface FileTreeSearchEmptyContext {
+  searched: boolean
+  hasSearchPath: boolean
+  onSearch: (value?: string) => void
+}
+
 export interface FileTreeContentSearchViewProps {
   /** 搜索面板是否处于展示态（用于进入时聚焦输入框） */
   active?: boolean
-  /** 搜索根路径 */
+  /** 搜索根路径（展示 / hasSearchPath） */
   roots: { path: string }[]
+  /** Enter 时解析根路径；优先于静态 roots */
+  resolveRoots?: () => Promise<{ path: string }[]> | { path: string }[]
   onOpen: (path: string, line?: FileSearchLine, fileItem?: FileSearchFileItem) => void
   /** 搜索栏下方插槽（如 AI 范围下拉） */
   toolbarExtra?: ReactNode
   /** 自定义空态；不传则用默认 hint / noResult；也可按搜索态动态返回 */
-  emptyDescription?: ReactNode | ((ctx: { searched: boolean; hasSearchPath: boolean }) => ReactNode)
+  emptyDescription?: ReactNode | ((ctx: FileTreeSearchEmptyContext) => ReactNode)
   'data-testid'?: string
   /** 结果列表 testid，默认 `${data-testid}-results` */
   resultsTestId?: string
@@ -45,6 +53,7 @@ const focusSearchInput = (root: HTMLElement | null) => {
 const FileTreeContentSearchView: FC<FileTreeContentSearchViewProps> = ({
   active = false,
   roots,
+  resolveRoots,
   onOpen,
   toolbarExtra,
   emptyDescription,
@@ -65,7 +74,7 @@ const FileTreeContentSearchView: FC<FileTreeContentSearchViewProps> = ({
     results,
     onSearch,
     onCancelSearch,
-  } = useFileContentSearch({ roots })
+  } = useFileContentSearch({ roots, resolveRoots })
   const [showCancel, setShowCancel] = useState(false)
 
   useEffect(() => {
@@ -93,11 +102,11 @@ const FileTreeContentSearchView: FC<FileTreeContentSearchViewProps> = ({
 
   const resolvedEmpty = useMemo(() => {
     if (typeof emptyDescription === 'function') {
-      return emptyDescription({ searched, hasSearchPath })
+      return emptyDescription({ searched, hasSearchPath, onSearch })
     }
     if (emptyDescription !== undefined) return emptyDescription
     return searched ? t('FileTreeSearch.emptyNoResult') : t('FileTreeSearch.emptyHint')
-  }, [emptyDescription, searched, hasSearchPath, t])
+  }, [emptyDescription, searched, hasSearchPath, onSearch, t])
 
   return (
     <div ref={rootRef} className={styles['file-tree-search-view']} data-testid={dataTestId}>

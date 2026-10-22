@@ -22,8 +22,8 @@ vi.mock('../../AIChatWelcomeSideSetting', () => ({
   SideSettingButton: () => null,
 }))
 vi.mock('../FileTreeSearchView/FileTreeSearchView', () => ({
-  default: ({ scopePreset }: { scopePreset?: string }) => (
-    <div data-testid="file-tree-search-view" data-scope={scopePreset ?? ''} />
+  default: ({ scopePreset, scopePathPreset }: { scopePreset?: string; scopePathPreset?: string }) => (
+    <div data-testid="file-tree-search-view" data-scope={scopePreset ?? ''} data-scope-path={scopePathPreset ?? ''} />
   ),
 }))
 vi.mock('@/utils/eventBus/eventBus', () => ({ default: { emit } }))
@@ -49,16 +49,23 @@ vi.mock('../../FileTreeDrop/FileTreeDrop', () => ({
   ),
 }))
 vi.mock('../../../components/aiFileSystemList/FileTreeSystemList/FileTreeSystemList', () => ({
-  default: ({ path, setSelected, onTreeDragStart, onTreeDragEnd }: FileTreeSystemListProps) => {
+  default: ({ path, setSelected, onTreeDragStart, onTreeDragEnd, onRootSearch }: FileTreeSystemListProps) => {
     return (
-      <button
-        draggable
-        onDragStart={onTreeDragStart}
-        onDragEnd={onTreeDragEnd}
-        onClick={() => setSelected({ path, name: path, isFolder: false } as FileNodeProps)}
-      >
-        {path}
-      </button>
+      <div>
+        <button
+          draggable
+          onDragStart={onTreeDragStart}
+          onDragEnd={onTreeDragEnd}
+          onClick={() => setSelected({ path, name: path, isFolder: false } as FileNodeProps)}
+        >
+          {path}
+        </button>
+        {onRootSearch ? (
+          <button data-testid={`file-tree-root-search-${path}`} onClick={() => onRootSearch(path)}>
+            root-search
+          </button>
+        ) : null}
+      </div>
     )
   },
 }))
@@ -67,6 +74,7 @@ beforeEach(() => {
   vi.clearAllMocks()
   session.id = 'session-1'
   aiPaths.splice(0, aiPaths.length, { path: 'ai-output', isFolder: true })
+  openedPaths.splice(0, openedPaths.length, { path: 'opened-file.txt', isFolder: false })
   vi.stubGlobal(
     'ResizeObserver',
     class {
@@ -176,6 +184,21 @@ describe('文件系统侧栏', () => {
     fireEvent.click(within(openedHeader).getByTestId('file-tree-title-search'))
     expect(screen.getByTestId('file-tree-view-track')).toHaveAttribute('data-search-view', 'true')
     expect(screen.getByTestId('file-tree-search-view')).toHaveAttribute('data-scope', 'user')
+  })
+
+  it('我打开的文件根节点搜索进入用户范围并带上该路径', async () => {
+    openedPaths.splice(0, openedPaths.length, { path: 'qweq', isFolder: true })
+    render(<FileTreeList setSelected={vi.fn()} />)
+    await screen.findByRole('button', { name: 'qweq' })
+
+    // AI Artifacts 根不展示根搜索
+    expect(screen.queryByTestId('file-tree-root-search-ai-output')).not.toBeInTheDocument()
+    fireEvent.click(screen.getByTestId('file-tree-root-search-qweq'))
+
+    const searchView = screen.getByTestId('file-tree-search-view')
+    expect(screen.getByTestId('file-tree-view-track')).toHaveAttribute('data-search-view', 'true')
+    expect(searchView).toHaveAttribute('data-scope', 'user')
+    expect(searchView).toHaveAttribute('data-scope-path', 'qweq')
   })
 
   it('点击搜索切换到空白搜索界面，关闭后回到文件树且保留分屏', async () => {

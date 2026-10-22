@@ -1,5 +1,5 @@
 export { default as FileTreeContentSearchView } from './FileTreeContentSearchView'
-export type { FileTreeContentSearchViewProps } from './FileTreeContentSearchView'
+export type { FileTreeContentSearchViewProps, FileTreeSearchEmptyContext } from './FileTreeContentSearchView'
 export { default as FileSearchResultItem } from './FileSearchResultItem'
 export { useFileContentSearch } from './useFileContentSearch'
 export type { UseFileContentSearchOptions } from './useFileContentSearch'

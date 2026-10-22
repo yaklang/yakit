@@ -638,6 +638,7 @@
     "keyword": "Keyword",
     "regexp": "Regexp",
     "all": "All",
+    "currentOpen": "Current Open",
     "matchCount": "{{count}} matches",
     "expandMatches": "Expand matches",
     "collapseMatches": "Collapse matches",

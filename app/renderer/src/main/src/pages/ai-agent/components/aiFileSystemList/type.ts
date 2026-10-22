@@ -15,6 +15,8 @@ export interface FileTreeSystemListWrapperProps {
   showTitleActions?: boolean
   /** 标题栏搜索：传入则展示搜索按钮 */
   onTitleSearch?: () => void
+  /** 根节点右侧搜索：传入则在「我打开的文件」根上展示，点击后按该路径打开搜索 */
+  onRootSearch?: (path: string) => void
   selected?: FileNodeProps
   setSelected: (v?: FileNodeProps) => void
   onTreeDragStart?: () => void
@@ -40,6 +42,7 @@ export interface FileTreeSystemListProps {
   setSelected: FileTreeSystemListWrapperProps['setSelected']
   onTreeDragStart?: FileTreeSystemListWrapperProps['onTreeDragStart']
   onTreeDragEnd?: FileTreeSystemListWrapperProps['onTreeDragEnd']
+  onRootSearch?: FileTreeSystemListWrapperProps['onRootSearch']
   checkable?: boolean
   checkedKeys?: HistoryItem[]
   setCheckedKeys?: (v: boolean, nodeData: FileNodeProps) => void
@@ -64,6 +67,8 @@ export interface FileTreeSystemItemProps {
   setChecked?: (checked: boolean) => void
   selected?: FileTreeSystemListWrapperProps['selected']
   setSelected: FileTreeSystemListWrapperProps['setSelected']
+  /** 根节点（depth===1）搜索回调；仅「我打开的文件」传入 */
+  onRootSearch?: (path: string) => void
 }
 
 export interface FileInfo {

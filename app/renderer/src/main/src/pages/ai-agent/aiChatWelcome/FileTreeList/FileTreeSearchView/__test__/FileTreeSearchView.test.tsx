@@ -409,9 +409,8 @@ describe('FileTreeSearchView', () => {
 
     searchByEnter('hello')
 
-    expect(invoke).not.toHaveBeenCalled()
-    // 全部范围且无路径：仍提示空态文案
-    expect(screen.getByText('FileTreeSearch.emptyHint')).toBeInTheDocument()
+    await waitFor(() => expect(screen.getByText('FileTreeSearch.emptyHint')).toBeInTheDocument())
+    expect(getRequestYakURLParams(invoke.mock.calls)).toHaveLength(0)
   })
 
   it('用户文件夹无路径或无结果时也展示查询全部', async () => {

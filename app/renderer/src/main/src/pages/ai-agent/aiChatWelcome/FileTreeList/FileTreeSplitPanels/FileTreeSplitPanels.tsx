@@ -17,7 +17,7 @@ import styles from './FileTreeSplitPanels.module.scss'
 interface FileTreeSplitPanelsProps {
   selected?: FileNodeProps
   setSelected: (selected?: FileNodeProps) => void
-  onOpenSearch?: (scope: FileTreeSearchScopeValue) => void
+  onOpenSearch?: (scope: FileTreeSearchScopeValue, path?: string) => void
 }
 
 const FileTreeSplitPanels: React.FC<FileTreeSplitPanelsProps> = memo(({ selected, setSelected, onOpenSearch }) => {
@@ -35,10 +35,12 @@ const FileTreeSplitPanels: React.FC<FileTreeSplitPanelsProps> = memo(({ selected
 
   const onSearchAiFolder = useMemoizedFn(() => onOpenSearch?.(FileTreeSearchScope.AiFolder))
   const onSearchUserFolder = useMemoizedFn(() => onOpenSearch?.(FileTreeSearchScope.UserFolder))
+  const onSearchUserRoot = useMemoizedFn((path: string) => onOpenSearch?.(FileTreeSearchScope.UserFolder, path))
 
   return (
     <SplitView
       isVertical
+      minWidth={0}
       minHeight={80}
       defaultSizes={[160, undefined]}
       className={styles['file-split']}
@@ -71,6 +73,7 @@ const FileTreeSplitPanels: React.FC<FileTreeSplitPanelsProps> = memo(({ selected
                   path={customFolder}
                   setSelected={onSelect}
                   onTitleSearch={onOpenSearch ? onSearchUserFolder : undefined}
+                  onRootSearch={onOpenSearch ? onSearchUserRoot : undefined}
                   onTreeDragStart={() => setDragSource('AIRreeToChat')}
                   onTreeDragEnd={() => setDragSource(null)}
                 />

@@ -54,6 +54,7 @@ const FileTreeSystemListWrapper: FC<FileTreeSystemListWrapperProps> = ({
   fillHeight = true,
   showTitleActions = true,
   onTitleSearch,
+  onRootSearch,
   selected,
   setSelected,
   onTreeDragStart,
@@ -108,6 +109,7 @@ const FileTreeSystemListWrapper: FC<FileTreeSystemListWrapperProps> = ({
         setSelected={setSelected}
         onTreeDragStart={onTreeDragStart}
         onTreeDragEnd={onTreeDragEnd}
+        onRootSearch={isOpen ? onRootSearch : undefined}
       />
     ))
   }

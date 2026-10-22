@@ -1,7 +1,9 @@
 .file-tree-list {
+  width: 100%;
   height: 100%;
   display: flex;
   flex-direction: column;
+  min-width: 0;
   min-height: 0;
   overflow: hidden;
   background-color: var(--Colors-Use-Basic-Background);
@@ -41,12 +43,17 @@
 }
 
 .body {
+  position: relative;
   flex: 1;
+  min-width: 0;
   min-height: 0;
   overflow: hidden;
 }
 
+/* absolute 避免 width:200% 撑大 flex min-content，导致侧栏盖住左侧竖向 tab */
 .track {
+  position: absolute;
+  inset: 0;
   display: flex;
   width: 200%;
   height: 100%;

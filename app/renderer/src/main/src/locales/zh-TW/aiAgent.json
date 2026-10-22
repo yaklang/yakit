@@ -638,6 +638,7 @@
     "keyword": "關鍵字",
     "regexp": "正則",
     "all": "全部",
+    "currentOpen": "目前開啟",
     "matchCount": "{{count}} 處命中",
     "expandMatches": "展開命中行",
     "collapseMatches": "收起命中行",

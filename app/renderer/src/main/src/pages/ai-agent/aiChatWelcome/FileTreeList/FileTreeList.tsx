@@ -19,9 +19,12 @@ const FileTreeList: React.FC<FileTreeListProps> = ({ selected, setSelected }) =>
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const [isSearchView, setIsSearchView] = useState(false)
   const [searchScope, setSearchScope] = useState<FileTreeSearchScopeValue>(FileTreeSearchScope.All)
+  /** 进入搜索时预设的单路径（如根节点搜索） */
+  const [searchScopePath, setSearchScopePath] = useState<string>()
 
-  const openSearch = (scope: FileTreeSearchScopeValue = FileTreeSearchScope.All) => {
+  const openSearch = (scope: FileTreeSearchScopeValue = FileTreeSearchScope.All, path?: string) => {
     setSearchScope(scope)
+    setSearchScopePath(path)
     setIsSearchView(true)
   }
 
@@ -61,7 +64,12 @@ const FileTreeList: React.FC<FileTreeListProps> = ({ selected, setSelected }) =>
             <FileTreeSplitPanels selected={selected} setSelected={setSelected} onOpenSearch={openSearch} />
           </div>
           <div className={styles['panel']} aria-hidden={!isSearchView}>
-            <FileTreeSearchView active={isSearchView} scopePreset={searchScope} setSelected={setSelected} />
+            <FileTreeSearchView
+              active={isSearchView}
+              scopePreset={searchScope}
+              scopePathPreset={searchScopePath}
+              setSelected={setSelected}
+            />
           </div>
         </div>
       </div>

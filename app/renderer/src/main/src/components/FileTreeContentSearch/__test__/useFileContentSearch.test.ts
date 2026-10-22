@@ -65,7 +65,7 @@ describe('useFileContentSearch 竞态', () => {
     expect(result.current.loading).toBe(false)
   })
 
-  it('切到无根路径作废进行中请求：延迟响应不得写回旧结果', async () => {
+  it('roots 变化不打断进行中请求；完成仍按原请求写回', async () => {
     let resolveFirst!: (value: FileSearchFileItem[]) => void
     mockSearch.mockImplementationOnce(
       () =>
@@ -82,78 +82,73 @@ describe('useFileContentSearch 竞态', () => {
     expect(result.current.loading).toBe(true)
 
     rerender({ roots: [] })
-
-    expect(result.current.results).toEqual([])
-    expect(result.current.searched).toBe(true)
-    expect(result.current.loading).toBe(false)
+    expect(result.current.loading).toBe(true)
 
     await act(async () => {
-      resolveFirst([sampleItem('stale.txt')])
+      resolveFirst([sampleItem('ok.txt')])
     })
-    expect(result.current.results).toEqual([])
+    expect(result.current.results).toHaveLength(1)
+    expect(result.current.results[0].name).toBe('ok.txt')
     expect(result.current.loading).toBe(false)
   })
 
-  it('移除根路径后清空旧结果，延迟响应不得写回', async () => {
-    let resolveFirst!: (value: FileSearchFileItem[]) => void
-    mockSearch.mockImplementationOnce(
-      () =>
-        new Promise<FileSearchFileItem[]>((resolve) => {
-          resolveFirst = resolve
-        }),
-    )
-    mockSearch.mockResolvedValue([])
+  it('Enter 清理旧结果后按当前 roots 重搜；roots 变化不自动重搜', async () => {
+    mockSearch.mockResolvedValueOnce([sampleItem('old.txt')])
+    mockSearch.mockResolvedValueOnce([sampleItem('new-session.txt')])
 
     const { result, rerender } = renderHook(({ roots }) => useFileContentSearch({ roots }), {
       initialProps: { roots: [{ path: 'ai-output' }] },
     })
     act(() => result.current.setKeyword('hello'))
     act(() => result.current.onSearch('hello'))
-    expect(result.current.loading).toBe(true)
-    expect(mockSearch).toHaveBeenCalled()
-
-    rerender({ roots: [] })
-
-    expect(result.current.results).toEqual([])
-    expect(result.current.loading).toBe(false)
-
-    await act(async () => {
-      resolveFirst([sampleItem('stale.txt')])
+    await waitFor(() => {
+      expect(result.current.results).toHaveLength(1)
+      expect(result.current.results[0].name).toBe('old.txt')
     })
-    expect(result.current.results).toEqual([])
-  })
-
-  it('切换根路径后清空旧结果，延迟响应不得写回，并按新根重搜', async () => {
-    let resolveFirst!: (value: FileSearchFileItem[]) => void
-    mockSearch.mockImplementation((args: { path: string }) => {
-      if (args.path === 'new-ai-root') {
-        return Promise.resolve([sampleItem('new-session.txt')])
-      }
-      return new Promise<FileSearchFileItem[]>((resolve) => {
-        resolveFirst = resolve
-      })
-    })
-
-    const { result, rerender } = renderHook(({ roots }) => useFileContentSearch({ roots }), {
-      initialProps: { roots: [{ path: 'ai-output' }] },
-    })
-    act(() => result.current.setKeyword('hello'))
-    act(() => result.current.onSearch('hello'))
-    expect(result.current.loading).toBe(true)
 
     rerender({ roots: [{ path: 'new-ai-root' }] })
+    expect(result.current.results[0].name).toBe('old.txt')
+    expect(mockSearch).toHaveBeenCalledTimes(1)
 
+    act(() => result.current.onSearch('hello'))
+    expect(result.current.results).toEqual([])
     await waitFor(() => {
       expect(result.current.loading).toBe(false)
       expect(result.current.results).toHaveLength(1)
       expect(result.current.results[0].name).toBe('new-session.txt')
     })
+    expect(mockSearch).toHaveBeenCalledTimes(2)
+  })
 
-    await act(async () => {
-      resolveFirst([sampleItem('stale.txt')])
+  it('resolveRoots 优先于静态 roots，Enter 时用解析结果搜索', async () => {
+    mockSearch.mockResolvedValue([sampleItem('resolved.txt')])
+    const resolveRoots = vi.fn(async () => [{ path: 'resolved-root' }])
+    const { result } = renderHook(() => useFileContentSearch({ roots: [{ path: 'stale-root' }], resolveRoots }))
+    act(() => result.current.setKeyword('hello'))
+    act(() => result.current.onSearch('hello'))
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false)
+      expect(result.current.results[0].name).toBe('resolved.txt')
     })
+    expect(resolveRoots).toHaveBeenCalled()
+    expect(mockSearch).toHaveBeenCalledWith(expect.objectContaining({ path: 'resolved-root', keyword: 'hello' }))
+  })
+
+  it('切换搜索类型后保留上次结果且不自动重搜', async () => {
+    mockSearch.mockResolvedValue([sampleItem('demo.txt')])
+    const { result } = renderHook(() => useFileContentSearch({ roots: [{ path: 'ai-output' }] }))
+    act(() => result.current.setKeyword('hello'))
+    act(() => result.current.onSearch('hello'))
+    await waitFor(() => {
+      expect(result.current.results).toHaveLength(1)
+    })
+    expect(mockSearch).toHaveBeenCalledTimes(1)
+
+    act(() => result.current.setSearchType('regexp' as never))
     expect(result.current.results).toHaveLength(1)
-    expect(result.current.results[0].name).toBe('new-session.txt')
+    expect(result.current.results[0].name).toBe('demo.txt')
+    expect(result.current.searched).toBe(true)
+    expect(mockSearch).toHaveBeenCalledTimes(1)
   })
 
   it('正常搜索成功仍写回最新结果', async () => {

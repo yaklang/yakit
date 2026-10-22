@@ -2,11 +2,13 @@ export const FileTreeSearchScope = {
   All: 'all',
   AiFolder: 'ai',
   UserFolder: 'user',
+  /** 工作区文件预览 tab 中当前打开的文件 */
+  CurrentOpen: 'current',
 } as const
 
 export type FileTreeSearchScopeValue = (typeof FileTreeSearchScope)[keyof typeof FileTreeSearchScope]
 
-/** 「我打开的文件」二级菜单 key 前缀，值为具体路径 */
+/** 「我打开的文件」二级菜单 key 前缀 */
 export const USER_SCOPE_PATH_PREFIX = 'user-path:'
 
 export const toUserScopeMenuKey = (path: string) => `${USER_SCOPE_PATH_PREFIX}${path}`
@@ -14,15 +16,26 @@ export const toUserScopeMenuKey = (path: string) => `${USER_SCOPE_PATH_PREFIX}${
 export const parseUserScopeMenuKey = (key: string): string | undefined =>
   key.startsWith(USER_SCOPE_PATH_PREFIX) ? key.slice(USER_SCOPE_PATH_PREFIX.length) : undefined
 
-/** 搜索范围选项（i18n key → value），UI 用 t(labelKey) 渲染 */
+/** 「当前打开」二级菜单 key 前缀 */
+export const CURRENT_OPEN_PATH_PREFIX = 'current-path:'
+
+export const toCurrentOpenMenuKey = (path: string) => `${CURRENT_OPEN_PATH_PREFIX}${path}`
+
+export const parseCurrentOpenMenuKey = (key: string): string | undefined =>
+  key.startsWith(CURRENT_OPEN_PATH_PREFIX) ? key.slice(CURRENT_OPEN_PATH_PREFIX.length) : undefined
+
+/** 搜索范围选项（i18n key → value）；「当前打开」有预览 tab 时才展示 */
 export const FILE_TREE_SEARCH_SCOPE_OPTIONS = [
   { value: FileTreeSearchScope.All, labelKey: 'FileTreeSearch.all' },
   { value: FileTreeSearchScope.AiFolder, labelKey: 'FileTreeSystem.aiArtifacts' },
   { value: FileTreeSearchScope.UserFolder, labelKey: 'FileTreeSystem.myOpenedFiles' },
+  { value: FileTreeSearchScope.CurrentOpen, labelKey: 'FileTreeSearch.currentOpen' },
 ] as const
 
 export const isSingleFolderSearchScope = (scope: FileTreeSearchScopeValue) =>
-  scope === FileTreeSearchScope.AiFolder || scope === FileTreeSearchScope.UserFolder
+  scope === FileTreeSearchScope.AiFolder ||
+  scope === FileTreeSearchScope.UserFolder ||
+  scope === FileTreeSearchScope.CurrentOpen
 
 export type FileTreeSearchEmptyKind = 'hint' | 'searchAll' | 'noResult'
 

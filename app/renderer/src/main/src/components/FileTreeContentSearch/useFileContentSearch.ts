@@ -15,17 +15,22 @@ import type { FileSearchFileItem } from './type'
 const t = i18n.getFixedT(null, 'aiAgent')
 
 export interface UseFileContentSearchOptions {
-  /** 搜索根路径列表；引用抖动时用 path 拼接键判断变化 */
+  /** 搜索根路径列表（展示 / hasSearchPath） */
   roots: { path: string }[]
+  /**
+   * Enter 搜索时解析根路径（优先于静态 roots）。
+   * AI 侧异步范围时传入，避免用到切范围后尚未更新的旧/空 roots。
+   */
+  resolveRoots?: () => Promise<{ path: string }[]> | { path: string }[]
 }
 
 /**
  * @name 文件内容搜索（通用）
- * @description 按 roots 调用 RequestYakURL op=search 并发搜索，requestId 防竞态；
- * 根路径 / 搜索类型变化时若已有搜索词则自动重搜
+ * @description 按 roots / resolveRoots 调用 RequestYakURL op=search；仅手动触发；
+ * Enter 时清理旧请求与结果，再按当前范围搜索
  */
 export const useFileContentSearch = (options: UseFileContentSearchOptions) => {
-  const { roots } = options
+  const { roots, resolveRoots } = options
   const [searchType, setSearchType] = useState<FileTreeSearchTypeValue>(FileTreeSearchType.Keyword)
   const [keyword, setKeyword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -52,29 +57,16 @@ export const useFileContentSearch = (options: UseFileContentSearchOptions) => {
     setLoading(false)
   })
 
-  const onSearch = useMemoizedFn((value?: string) => {
-    const text = (value ?? keyword).trim()
-    if (!text) {
-      cancelInFlight()
-      requestIdRef.current += 1
-      setResults([])
-      setLoading(false)
-      setSearched(false)
-      return
-    }
-    const paths = roots.map((item) => item.path?.trim()).filter(Boolean) as string[]
+  const runSearchWithPaths = useMemoizedFn((text: string, paths: string[], requestId: number) => {
     if (paths.length === 0) {
-      cancelInFlight()
-      requestIdRef.current += 1
+      searchTokensRef.current = []
       setResults([])
       setSearched(true)
       setLoading(false)
       return
     }
-    cancelInFlight()
     const tokens = paths.map(() => uuidv4())
     searchTokensRef.current = tokens
-    const requestId = ++requestIdRef.current
     setLoading(true)
     setSearched(true)
     Promise.allSettled(
@@ -109,16 +101,51 @@ export const useFileContentSearch = (options: UseFileContentSearchOptions) => {
     })
   })
 
+  const onSearch = useMemoizedFn((value?: string) => {
+    const text = (value ?? keyword).trim()
+    // Enter：先清理旧请求与结果，再按当前范围搜
+    cancelInFlight()
+    const requestId = ++requestIdRef.current
+    setResults([])
+
+    if (!text) {
+      setLoading(false)
+      setSearched(false)
+      return
+    }
+
+    setLoading(true)
+    setSearched(true)
+
+    const applyPaths = (list: { path: string }[]) => {
+      if (requestId !== requestIdRef.current) return
+      const paths = list.map((item) => item.path?.trim()).filter(Boolean) as string[]
+      runSearchWithPaths(text, paths, requestId)
+    }
+
+    if (!resolveRoots) {
+      applyPaths(roots)
+      return
+    }
+
+    Promise.resolve(resolveRoots())
+      .then(applyPaths)
+      .catch((err) => {
+        if (requestId !== requestIdRef.current) return
+        searchTokensRef.current = []
+        setLoading(false)
+        setResults([])
+        const message = err instanceof Error ? err.message : String(err ?? '')
+        yakitNotify('error', `${t('FileTreeSearch.searchFailed')}: ${message}`)
+      })
+  })
+
   useEffect(() => {
-    // 根路径 / 类型变化时作废旧请求并清空。用 rootsKey 避免数组引用抖动死循环。
+    // 仅搜索类型变化时作废进行中请求；roots 异步刷新不再打断 Enter 解析中的搜索
     cancelInFlight()
     requestIdRef.current += 1
-    setResults([])
     setLoading(false)
-    setSearched(false)
-    if (!keyword.trim()) return
-    onSearch()
-  }, [rootsKey, searchType, onSearch, cancelInFlight])
+  }, [searchType, cancelInFlight])
 
   return {
     keyword,

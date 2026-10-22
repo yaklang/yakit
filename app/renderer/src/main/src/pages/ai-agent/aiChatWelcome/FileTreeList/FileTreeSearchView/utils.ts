@@ -44,19 +44,35 @@ export const resolveAiArtifactSearchRoots = async (
   return merged.map(({ path }) => ({ path }))
 }
 
-/** 按范围收集可搜索根路径并去重（AI 业务：ai 文件夹 / 用户文件夹 / 单个已打开路径） */
+export interface ResolveSearchPathsOptions {
+  /** UserFolder 二级菜单选中的单个路径 */
+  userScopePath?: string
+  /** 工作区预览 tab 打开的文件 */
+  previewOpenFiles?: { path: string }[]
+  /** CurrentOpen 二级菜单选中的单个路径 */
+  currentOpenPath?: string
+}
+
+/** 按范围收集可搜索根路径并去重 */
 export const resolveSearchPaths = async (
   scope: FileTreeSearchScopeValue,
   grpcFolders: { path: string; isFolder?: boolean }[],
   customFolder: { path: string }[],
-  /** UserFolder 下指定单个已打开路径；未传则搜全部用户路径 */
-  userScopePath?: string,
+  options: ResolveSearchPathsOptions = {},
 ): Promise<{ path: string }[]> => {
+  const { userScopePath, previewOpenFiles = [], currentOpenPath } = options
+
+  if (scope === FileTreeSearchScope.CurrentOpen) {
+    if (currentOpenPath?.trim()) return [{ path: currentOpenPath.trim() }]
+    return dedupePaths(previewOpenFiles)
+  }
+
   // 二级菜单选中的单路径：只搜该路径，不再回落到全部用户文件夹
   if (scope === FileTreeSearchScope.UserFolder && userScopePath?.trim()) {
     return [{ path: userScopePath.trim() }]
   }
 
+  // CurrentOpen 已在上方 return；此处仅剩 All / AiFolder / UserFolder
   const aiRoots = scope === FileTreeSearchScope.UserFolder ? [] : await resolveAiArtifactSearchRoots(grpcFolders)
   const list =
     scope === FileTreeSearchScope.AiFolder
@@ -65,6 +81,10 @@ export const resolveSearchPaths = async (
         ? customFolder
         : [...aiRoots, ...customFolder]
 
+  return dedupePaths(list)
+}
+
+const dedupePaths = (list: { path: string }[]): { path: string }[] => {
   const seen = new Set<string>()
   return list.filter((item) => {
     const path = item.path?.trim()

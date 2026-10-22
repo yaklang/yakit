@@ -113,8 +113,29 @@ describe('resolveSearchPaths', () => {
 
   it('UserFolder + userScopePath 仅该路径', async () => {
     await expect(
-      resolveSearchPaths(FileTreeSearchScope.UserFolder, grpcFolders, customFolder, 'opened.txt'),
+      resolveSearchPaths(FileTreeSearchScope.UserFolder, grpcFolders, customFolder, {
+        userScopePath: 'opened.txt',
+      }),
     ).resolves.toEqual([{ path: 'opened.txt' }])
+  })
+
+  it('CurrentOpen 使用全部预览文件', async () => {
+    mockMergePathArray.mockClear()
+    await expect(
+      resolveSearchPaths(FileTreeSearchScope.CurrentOpen, grpcFolders, customFolder, {
+        previewOpenFiles: [{ path: '/tmp/a.js' }, { path: '/tmp/b.js' }],
+      }),
+    ).resolves.toEqual([{ path: '/tmp/a.js' }, { path: '/tmp/b.js' }])
+    expect(mockMergePathArray).not.toHaveBeenCalled()
+  })
+
+  it('CurrentOpen + currentOpenPath 仅该文件', async () => {
+    await expect(
+      resolveSearchPaths(FileTreeSearchScope.CurrentOpen, grpcFolders, customFolder, {
+        previewOpenFiles: [{ path: '/tmp/a.js' }, { path: '/tmp/b.js' }],
+        currentOpenPath: '/tmp/b.js',
+      }),
+    ).resolves.toEqual([{ path: '/tmp/b.js' }])
   })
 })
 
