@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { FileSearchFileItem, FileSearchLine } from '@/components/FileTreeContentSearch'
+import type * as FileTreeContentSearchModule from '@/components/FileTreeContentSearch'
 import { RunnerFileTreeSearchView } from '../RunnerFileTreeSearchView'
 
 const { emit } = vi.hoisted(() => ({ emit: vi.fn() }))
@@ -8,7 +9,7 @@ const { emit } = vi.hoisted(() => ({ emit: vi.fn() }))
 vi.mock('@/utils/eventBus/eventBus', () => ({ default: { emit } }))
 
 vi.mock('@/components/FileTreeContentSearch', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/components/FileTreeContentSearch')>()
+  const actual = await importOriginal<typeof FileTreeContentSearchModule>()
   return {
     ...actual,
     FileTreeContentSearchView: ({
