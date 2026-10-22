@@ -79,6 +79,22 @@ afterEach(() => {
 })
 
 describe('catalog and incremental JSON', () => {
+  it.each([
+    { properties: { name: { type: 'array' } }, required: ['name'] },
+    { properties: { name: { type: 'string' } }, required: ['missing'] },
+    { properties: { name: { type: 'number', minimum: 10, maximum: 1 } }, required: ['name'] },
+  ])('drops an unusable form but keeps its valid siblings: %j', (fields) => {
+    const doc = document()
+    doc.nodes[1].props.schema = { type: 'object', additionalProperties: false, ...fields } as any
+    doc.nodes[0].children!.push('note')
+    doc.nodes.push({ id: 'note', component: 'Text', props: { text: '仍然可读' } } as any)
+    const result = readDocument(JSON.stringify(doc), true)
+    expect(result.document?.nodes.map((node) => node.id)).toEqual(['layout', 'note'])
+    expect(result.diagnostics.length).toBeGreaterThan(0)
+    render(<ComponentCard item={item(doc)} />)
+    expect(screen.getByText('仍然可读')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '发送姓名' })).not.toBeInTheDocument()
+  })
   it('keeps the build manifest, schema registry and renderer in sync', () => {
     expect(manifest).toEqual(catalog)
     expect(registeredComponents.sort()).toEqual(catalog.components.map((entry) => entry.name).sort())

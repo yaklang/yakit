@@ -123,5 +123,3 @@ export const catalog = {
     },
   ],
 }
-
-export const clientUI = { protocol: 'memfit.ui/1', questions: true, catalog }
