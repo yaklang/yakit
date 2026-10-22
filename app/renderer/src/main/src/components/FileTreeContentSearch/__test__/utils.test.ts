@@ -1,6 +1,33 @@
-import { describe, expect, it } from 'vitest'
-import { clipLineAroundMatches, resolveOpenHighlights } from '../utils'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+const { invoke } = vi.hoisted(() => {
+  const invoke = vi.fn()
+  Object.defineProperty(window, 'require', {
+    configurable: true,
+    value: () => ({
+      ipcRenderer: {
+        invoke,
+        on: () => {},
+        removeListener: () => {},
+        removeAllListeners: () => {},
+        send: () => {},
+      },
+    }),
+  })
+  return { invoke }
+})
+
+import {
+  clipLineAroundMatches,
+  FILE_SEARCH_UNSUPPORTED_ENGINE,
+  grpcSearchFileContent,
+  resolveOpenHighlights,
+} from '../utils'
 import type { FileSearchFileItem, FileSearchLine } from '../type'
+
+beforeEach(() => {
+  invoke.mockReset()
+})
 
 const lineOf = (text: string, matches: FileSearchLine['matches'], line = 1): FileSearchLine => ({
   line,
@@ -87,6 +114,130 @@ describe('resolveOpenHighlights', () => {
     expect(resolveOpenHighlights(undefined, fileItem)).toEqual([
       { startLineNumber: 1, startColumn: 1, endLineNumber: 1, endColumn: 6 },
       { startLineNumber: 2, startColumn: 1, endLineNumber: 2, endColumn: 6 },
+    ])
+  })
+})
+
+describe('grpcSearchFileContent', () => {
+  it('构造 RequestYakURL query / token（含 regex、ignoreCase）', async () => {
+    invoke.mockResolvedValueOnce({ Resources: [] })
+    await grpcSearchFileContent({
+      path: '/tmp/root',
+      keyword: 'foo.*',
+      regex: true,
+      ignoreCase: true,
+      token: 'tok-1',
+    })
+
+    expect(invoke).toHaveBeenCalledWith(
+      'RequestYakURL',
+      {
+        Method: 'GET',
+        Url: {
+          Schema: 'file',
+          Path: '/tmp/root',
+          Query: [
+            { Key: 'op', Value: 'search' },
+            { Key: 'keyword', Value: 'foo.*' },
+            { Key: 'global', Value: 'true' },
+            { Key: 'regex', Value: 'true' },
+            { Key: 'ignoreCase', Value: 'true' },
+          ],
+        },
+      },
+      'tok-1',
+    )
+  })
+
+  it('单文件根无 search_result 时识别为不支持（不依赖 ResourceType=dir）', async () => {
+    invoke.mockResolvedValueOnce({
+      Resources: [
+        {
+          ResourceType: '',
+          ResourceName: 'a.js',
+          Path: '/tmp/a.js',
+          Extra: [{ Key: 'Directory-Name', Value: 'a.js' }],
+        },
+      ],
+    })
+
+    await expect(grpcSearchFileContent({ path: '/tmp/a.js', keyword: 'foo' })).rejects.toThrow(
+      FILE_SEARCH_UNSUPPORTED_ENGINE,
+    )
+  })
+
+  it('空 Resources 视为真正无命中，不抛不支持', async () => {
+    invoke.mockResolvedValueOnce({ Resources: [] })
+    await expect(grpcSearchFileContent({ path: '/tmp', keyword: 'foo' })).resolves.toEqual([])
+  })
+
+  it('带 search_result 的命中正常解析', async () => {
+    invoke.mockResolvedValueOnce({
+      Resources: [
+        {
+          ResourceType: '',
+          ResourceName: 'a.js',
+          Path: '/tmp/a.js',
+          Extra: [
+            {
+              Key: 'search_result',
+              Value: JSON.stringify({
+                match_count: 1,
+                results: [{ line: 1, text: 'foo', matches: [{ start_column: 1, end_column: 4 }] }],
+              }),
+            },
+          ],
+        },
+      ],
+    })
+
+    await expect(grpcSearchFileContent({ path: '/tmp', keyword: 'foo' })).resolves.toEqual([
+      {
+        path: '/tmp/a.js',
+        name: 'a.js',
+        searchResult: {
+          match_count: 1,
+          results: [{ line: 1, text: 'foo', matches: [{ start_column: 1, end_column: 4 }] }],
+        },
+      },
+    ])
+  })
+
+  it('malformed search_result JSON 被跳过，不抛错也不当不支持', async () => {
+    invoke.mockResolvedValueOnce({
+      Resources: [
+        {
+          ResourceType: '',
+          ResourceName: 'bad.js',
+          Path: '/tmp/bad.js',
+          Extra: [{ Key: 'search_result', Value: '{not-json' }],
+        },
+        {
+          ResourceType: '',
+          ResourceName: 'ok.js',
+          Path: '/tmp/ok.js',
+          Extra: [
+            {
+              Key: 'search_result',
+              Value: JSON.stringify({
+                match_count: 1,
+                results: [{ line: 2, text: 'bar', matches: [{ start_column: 1, end_column: 4 }] }],
+              }),
+            },
+          ],
+        },
+      ],
+    })
+
+    await expect(grpcSearchFileContent({ path: '/tmp', keyword: 'bar' })).resolves.toEqual([
+      {
+        path: '/tmp/ok.js',
+        name: 'ok.js',
+        searchResult: {
+          match_count: 1,
+          results: [{ line: 2, text: 'bar', matches: [{ start_column: 1, end_column: 4 }] }],
+        },
+      },
     ])
   })
 })

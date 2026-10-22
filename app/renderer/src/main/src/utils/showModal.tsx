@@ -125,11 +125,8 @@ export interface BaseDrawerProp extends DrawerProps, React.ComponentProps<any> {
 
 export const BaseDrawer: React.FC<BaseDrawerProp> = (props) => {
   const { afterVisible, afterInvisible, afterClose, ...restProps } = props
-  const [visible, setVisible] = useState(false)
-
-  useEffect(() => {
-    setVisible(true)
-  }, [])
+  // 与 BaseModal 一致：初始即为打开，避免 mount effect 里 setState 触发级联渲染
+  const [visible, setVisible] = useState(true)
 
   useEffect(() => {
     if (visible) {

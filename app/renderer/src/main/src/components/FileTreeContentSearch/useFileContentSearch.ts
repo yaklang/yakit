@@ -158,6 +158,13 @@ export const useFileContentSearch = (options: UseFileContentSearchOptions) => {
     setLoading(false)
   }, [searchType, cancelInFlight])
 
+  useEffect(() => {
+    return () => {
+      cancelInFlight()
+      requestIdRef.current += 1
+    }
+  }, [cancelInFlight])
+
   return {
     keyword,
     setKeyword,

@@ -24,12 +24,13 @@ const getExtraValue = (extra: YakURLResource['Extra'] | undefined, key: string):
   return item.Value || item.MarshalValue || ''
 }
 
-/** 引擎未实现 op=search 时会走 default：把搜索根路径原样返回（多为 dir，Extra 只有 Directory-Name） */
+/**
+ * 引擎未实现 op=search 时会走 default：把搜索根路径原样返回（dir 或文件，Extra 无 search_result）。
+ * 真正无命中一般是空 Resources；非空且全部缺少 search_result 即视为不支持。
+ */
 const isUnsupportedSearchResponse = (resources: YakURLResource[]): boolean => {
   if (!resources.length) return false
-  return resources.every(
-    (resource) => resource.ResourceType === 'dir' && !getExtraValue(resource.Extra, SEARCH_RESULT_EXTRA_KEY),
-  )
+  return resources.every((resource) => !getExtraValue(resource.Extra, SEARCH_RESULT_EXTRA_KEY))
 }
 
 const resourceToFileItem = (resource: YakURLResource): FileSearchFileItem | null => {

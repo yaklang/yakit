@@ -1347,7 +1347,9 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
                 : [editorInfo.highLightRange]
               : undefined
           }
-          highLightClass="hight-light-file-search-hit"
+          highLightClass={
+            Array.isArray(editorInfo?.highLightRange) ? 'hight-light-file-search-hit' : 'hight-light-yak-runner-color'
+          }
           contextMenu={rightContextMenu}
         />
       )}

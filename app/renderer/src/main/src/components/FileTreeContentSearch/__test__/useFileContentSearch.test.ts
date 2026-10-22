@@ -221,4 +221,27 @@ describe('useFileContentSearch 竞态', () => {
     expect(result.current.loading).toBe(false)
     expect(mockNotify).not.toHaveBeenCalled()
   })
+
+  it('卸载时取消进行中请求，延迟响应不得写回或通知', async () => {
+    let resolveFirst!: (value: FileSearchFileItem[]) => void
+    mockSearch.mockImplementationOnce(
+      () =>
+        new Promise<FileSearchFileItem[]>((resolve) => {
+          resolveFirst = resolve
+        }),
+    )
+
+    const { result, unmount } = renderHook(() => useFileContentSearch({ roots: [{ path: 'ai-output' }] }))
+    act(() => result.current.setKeyword('hello'))
+    act(() => result.current.onSearch('hello'))
+    expect(result.current.loading).toBe(true)
+
+    unmount()
+    expect(mockCancel).toHaveBeenCalled()
+
+    await act(async () => {
+      resolveFirst([sampleItem('stale.txt')])
+    })
+    expect(mockNotify).not.toHaveBeenCalled()
+  })
 })
