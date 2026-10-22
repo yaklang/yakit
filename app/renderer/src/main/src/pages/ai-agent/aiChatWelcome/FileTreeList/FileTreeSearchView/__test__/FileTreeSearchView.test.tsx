@@ -347,12 +347,12 @@ describe('FileTreeSearchView', () => {
     })
   })
 
-  it('preset 进入时清掉工具栏遗留的 resolveOverride，根搜索打到正确路径', async () => {
+  it('preset 进入时按新范围搜索，不受面板关闭前工具栏所选范围影响', async () => {
     const { rerender } = render(<FileTreeSearchView active={false} />)
     selectScope('FileTreeSystem.aiArtifacts')
     expect(screen.getByTestId('file-tree-search-scope')).toHaveAttribute('title', 'FileTreeSystem.aiArtifacts')
 
-    // 关闭后再以「我打开的文件」单路径 preset 进入；不得消费上一次 AI override
+    // 关闭后再以「我打开的文件」单路径 preset 进入
     rerender(
       <FileTreeSearchView active scopePreset={FileTreeSearchScope.UserFolder} scopePathPreset="opened-file.txt" />,
     )

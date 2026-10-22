@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import classNames from 'classnames'
 import type { FileNodeProps } from '@/pages/yakRunner/FileTree/FileTreeType'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { SideSettingButton } from '../AIChatWelcomeSideSetting'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import { SlidePanels } from '@/components/SlidePanels/SlidePanels'
 import { SearchOutlined, XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import FileTreeSplitPanels from './FileTreeSplitPanels/FileTreeSplitPanels'
 import FileTreeSearchView from './FileTreeSearchView/FileTreeSearchView'
@@ -54,25 +54,19 @@ const FileTreeList: React.FC<FileTreeListProps> = ({ selected, setSelected }) =>
           <SideSettingButton type="text2" />
         </div>
       </div>
-      <div className={styles['body']}>
-        <div
-          className={classNames(styles['track'], { [styles['track-search']]: isSearchView })}
-          data-testid="file-tree-view-track"
-          data-search-view={isSearchView ? 'true' : 'false'}
-        >
-          <div className={styles['panel']} aria-hidden={isSearchView}>
-            <FileTreeSplitPanels selected={selected} setSelected={setSelected} onOpenSearch={openSearch} />
-          </div>
-          <div className={styles['panel']} aria-hidden={!isSearchView}>
-            <FileTreeSearchView
-              active={isSearchView}
-              scopePreset={searchScope}
-              scopePathPreset={searchScopePath}
-              setSelected={setSelected}
-            />
-          </div>
-        </div>
-      </div>
+      <SlidePanels
+        showSecond={isSearchView}
+        data-testid="file-tree-view-track"
+        first={<FileTreeSplitPanels selected={selected} setSelected={setSelected} onOpenSearch={openSearch} />}
+        second={
+          <FileTreeSearchView
+            active={isSearchView}
+            scopePreset={searchScope}
+            scopePathPreset={searchScopePath}
+            setSelected={setSelected}
+          />
+        }
+      />
     </div>
   )
 }

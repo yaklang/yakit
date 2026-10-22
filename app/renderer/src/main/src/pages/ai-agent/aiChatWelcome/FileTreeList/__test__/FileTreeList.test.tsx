@@ -173,15 +173,15 @@ describe('文件系统侧栏', () => {
     const aiHeader = screen.getByText('FileTreeSystem.aiArtifacts').parentElement!.parentElement!
     fireEvent.click(within(aiHeader).getByTestId('file-tree-title-search'))
     const searchView = screen.getByTestId('file-tree-search-view')
-    expect(screen.getByTestId('file-tree-view-track')).toHaveAttribute('data-search-view', 'true')
+    expect(screen.getByTestId('file-tree-view-track')).toHaveAttribute('data-show-second', 'true')
     expect(searchView).toHaveAttribute('data-scope', 'ai')
 
     fireEvent.click(screen.getByRole('button', { name: 'YakitButton.close' }))
-    expect(screen.getByTestId('file-tree-view-track')).toHaveAttribute('data-search-view', 'false')
+    expect(screen.getByTestId('file-tree-view-track')).toHaveAttribute('data-show-second', 'false')
 
     const openedHeader = screen.getByText('FileTreeSystem.myOpenedFiles').parentElement!.parentElement!
     fireEvent.click(within(openedHeader).getByTestId('file-tree-title-search'))
-    expect(screen.getByTestId('file-tree-view-track')).toHaveAttribute('data-search-view', 'true')
+    expect(screen.getByTestId('file-tree-view-track')).toHaveAttribute('data-show-second', 'true')
     expect(screen.getByTestId('file-tree-search-view')).toHaveAttribute('data-scope', 'user')
   })
 
@@ -195,7 +195,7 @@ describe('文件系统侧栏', () => {
     fireEvent.click(screen.getByTestId('file-tree-root-search-qweq'))
 
     const searchView = screen.getByTestId('file-tree-search-view')
-    expect(screen.getByTestId('file-tree-view-track')).toHaveAttribute('data-search-view', 'true')
+    expect(screen.getByTestId('file-tree-view-track')).toHaveAttribute('data-show-second', 'true')
     expect(searchView).toHaveAttribute('data-scope', 'user')
     expect(searchView).toHaveAttribute('data-scope-path', 'qweq')
   })
@@ -217,12 +217,12 @@ describe('文件系统侧栏', () => {
     fireEvent.mouseUp(document)
 
     const track = screen.getByTestId('file-tree-view-track')
-    expect(track).toHaveAttribute('data-search-view', 'false')
+    expect(track).toHaveAttribute('data-show-second', 'false')
 
     // 切换搜索会触发父级重渲；越过 useThrottleEffect(200ms) trailing，
     // 旧依赖 [elements] 会把 sash 重置为 defaultSizes(160px)，新依赖 [elements.length] 应保持 220px
     fireEvent.click(screen.getByTestId('file-tree-header-search'))
-    expect(track).toHaveAttribute('data-search-view', 'true')
+    expect(track).toHaveAttribute('data-show-second', 'true')
     expect(searchView.closest('[aria-hidden="false"]')).toBeTruthy()
     expect(split.closest('[aria-hidden="true"]')).toBeTruthy()
     expect(searchView).toHaveAttribute('data-scope', 'all')
@@ -240,7 +240,7 @@ describe('文件系统侧栏', () => {
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 250))
     })
-    expect(track).toHaveAttribute('data-search-view', 'false')
+    expect(track).toHaveAttribute('data-show-second', 'false')
     expect(searchView.closest('[aria-hidden="true"]')).toBeTruthy()
     expect(split.closest('[aria-hidden="false"]')).toBeTruthy()
     expect(screen.getByText('AITabs.fileSystem')).toBeInTheDocument()

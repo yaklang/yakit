@@ -1,3 +1,4 @@
+import type { FileSearchEditorHighlight } from '@/components/FileTreeContentSearch'
 import type { AIReActChatRefProps } from '@/pages/ai-re-act/aiReActChat/AIReActChatType'
 import { type AITabsEnum } from '../defaultConstant'
 
@@ -15,13 +16,9 @@ export interface AIChatContentProps {
   /** 提供聊天布局容器供外部定位右侧面板；传入后不再渲染内置右侧面板。 */
   rightPanelLayoutRef?: React.RefCallback<HTMLDivElement>
 }
-/** 文件预览高亮区间（Monaco 1-based 行列，endColumn 不含） */
-export interface AIAgentFilePreviewHighlight {
-  startLineNumber: number
-  startColumn: number
-  endLineNumber: number
-  endColumn: number
-}
+
+/** 文件预览高亮区间；与 FileSearchEditorHighlight 同一结构 */
+export type AIAgentFilePreviewHighlight = FileSearchEditorHighlight
 
 export interface AIAgentTabPayload {
   key: AITabsEnum

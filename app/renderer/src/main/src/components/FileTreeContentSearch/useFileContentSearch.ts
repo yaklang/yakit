@@ -24,6 +24,11 @@ export interface UseFileContentSearchOptions {
   resolveRoots?: () => Promise<{ path: string }[]> | { path: string }[]
 }
 
+/** 单次搜索可选参数：显式 roots 时跳过 resolveRoots / 静态 roots */
+export interface FileContentSearchRunOptions {
+  roots?: { path: string }[]
+}
+
 /**
  * @name 文件内容搜索（通用）
  * @description 按 roots / resolveRoots 调用 RequestYakURL op=search；仅手动触发；
@@ -101,7 +106,7 @@ export const useFileContentSearch = (options: UseFileContentSearchOptions) => {
     })
   })
 
-  const onSearch = useMemoizedFn((value?: string) => {
+  const onSearch = useMemoizedFn((value?: string, runOptions?: FileContentSearchRunOptions) => {
     const text = (value ?? keyword).trim()
     // Enter：先清理旧请求与结果，再按当前范围搜
     cancelInFlight()
@@ -121,6 +126,12 @@ export const useFileContentSearch = (options: UseFileContentSearchOptions) => {
       if (requestId !== requestIdRef.current) return
       const paths = list.map((item) => item.path?.trim()).filter(Boolean) as string[]
       runSearchWithPaths(text, paths, requestId)
+    }
+
+    // 调用方已算好本次 roots（如空态切范围立刻重搜），不再读可能未提交的 state
+    if (runOptions?.roots) {
+      applyPaths(runOptions.roots)
+      return
     }
 
     if (!resolveRoots) {

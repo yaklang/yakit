@@ -60,8 +60,7 @@ export const openFolder = () => {
     handleOpenFileSystemDialog({ title: tOriginal('RunnerFileTree.selectFolder'), properties: ['openDirectory'] }).then(
       (data) => {
         if (data.filePaths.length) {
-          const absolutePath: string = data.filePaths[0].replace(/\\/g, '\\')
-          emiter.emit('onOpenFileTree', absolutePath)
+          emiter.emit('onOpenFileTree', data.filePaths[0])
         }
       },
     )

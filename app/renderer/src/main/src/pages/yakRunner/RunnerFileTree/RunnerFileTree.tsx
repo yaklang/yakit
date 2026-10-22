@@ -12,6 +12,7 @@ import useYakRunnerStoreRefs from '../hooks/useYakRunnerStoreRefs'
 import { FileTree } from '../FileTree/FileTree'
 import { RunnerFileTreeSearchView } from './RunnerFileTreeSearchView'
 import { openFolder } from './openFolder'
+import { SlidePanels } from '@/components/SlidePanels/SlidePanels'
 
 import classNames from 'classnames'
 import styles from './RunnerFileTree.module.scss'
@@ -59,8 +60,6 @@ import type { FileMonitorItemProps, FileMonitorProps } from '@/utils/duplex/dupl
 import { Tooltip } from 'antd'
 import { WatchFolderID } from '../FileTreeMap/watchFolderID'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-
-export { openFolder, OpenFolderDragger } from './openFolder'
 
 export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
   const { addFileTab } = props
@@ -702,34 +701,26 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
               </div>
             </div>
 
-            <div className={styles['file-tree-body']}>
-              <div
-                className={classNames(styles['file-tree-track'], {
-                  [styles['file-tree-track-search']]: isSearchView,
-                })}
-                data-testid="runner-file-tree-view-track"
-                data-search-view={isSearchView ? 'true' : 'false'}
-              >
-                <div className={styles['file-tree-panel']} aria-hidden={isSearchView}>
-                  <div className={styles['tree-body']}>
-                    <FileTree
-                      folderPath={fileTree.length > 0 ? fileTree[0].path : ''}
-                      data={fileDetailTree}
-                      storeRefs={storeRefs}
-                      onLoadData={onLoadData}
-                      onSelect={onSelectFileTree}
-                      foucsedKey={foucsedKey}
-                      setFoucsedKey={setFoucsedKey}
-                      expandedKeys={expandedKeys}
-                      setExpandedKeys={setExpandedKeys}
-                    />
-                  </div>
+            <SlidePanels
+              showSecond={isSearchView}
+              data-testid="runner-file-tree-view-track"
+              first={
+                <div className={styles['tree-body']}>
+                  <FileTree
+                    folderPath={fileTree.length > 0 ? fileTree[0].path : ''}
+                    data={fileDetailTree}
+                    storeRefs={storeRefs}
+                    onLoadData={onLoadData}
+                    onSelect={onSelectFileTree}
+                    foucsedKey={foucsedKey}
+                    setFoucsedKey={setFoucsedKey}
+                    expandedKeys={expandedKeys}
+                    setExpandedKeys={setExpandedKeys}
+                  />
                 </div>
-                <div className={styles['file-tree-panel']} aria-hidden={!isSearchView}>
-                  <RunnerFileTreeSearchView active={isSearchView} roots={searchRoots} />
-                </div>
-              </div>
-            </div>
+              }
+              second={<RunnerFileTreeSearchView active={isSearchView} roots={searchRoots} />}
+            />
           </div>
         </div>
       </div>

@@ -4,7 +4,7 @@ import classNames from 'classnames'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { ChevronDownOutlined } from '@yakit-libs/yakit-ui-icons/outline'
-import { FileDefault, FileSuffix, KeyToIcon } from '@/pages/yakRunner/FileTree/icon'
+import { getFileIconByName, KeyToIcon } from '@/pages/yakRunner/FileTree/icon'
 import { clipLineAroundMatches, splitLineByMatches } from './utils'
 import type { FileSearchFileItem, FileSearchLine } from './type'
 import styles from './FileSearchResultItem.module.scss'
@@ -13,11 +13,6 @@ interface FileSearchResultItemProps {
   item: FileSearchFileItem
   /** line 为空表示打开整文件；第三参便于调用方取全量命中行做高亮 */
   onOpen: (path: string, line?: FileSearchLine, fileItem?: FileSearchFileItem) => void
-}
-
-const getFileIconByName = (name: string): string => {
-  const suffix = name.includes('.') ? name.split('.').pop() || '' : ''
-  return suffix ? FileSuffix[suffix] || FileDefault : FileDefault
 }
 
 const FileSearchResultItem: React.FC<FileSearchResultItemProps> = memo(({ item, onOpen }) => {

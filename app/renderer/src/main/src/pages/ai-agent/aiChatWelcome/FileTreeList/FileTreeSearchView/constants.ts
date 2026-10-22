@@ -8,21 +8,23 @@ export const FileTreeSearchScope = {
 
 export type FileTreeSearchScopeValue = (typeof FileTreeSearchScope)[keyof typeof FileTreeSearchScope]
 
-/** 「我打开的文件」二级菜单 key 前缀 */
+/** 带前缀的菜单 key 编解码（二级菜单 path 项） */
+const createPrefixedKeyCodec = (prefix: string) => ({
+  toKey: (path: string) => `${prefix}${path}`,
+  parseKey: (key: string): string | undefined => (key.startsWith(prefix) ? key.slice(prefix.length) : undefined),
+})
+
+/** 「我打开的文件」二级菜单 key */
 export const USER_SCOPE_PATH_PREFIX = 'user-path:'
+const userScopePathKey = createPrefixedKeyCodec(USER_SCOPE_PATH_PREFIX)
+export const toUserScopeMenuKey = userScopePathKey.toKey
+export const parseUserScopeMenuKey = userScopePathKey.parseKey
 
-export const toUserScopeMenuKey = (path: string) => `${USER_SCOPE_PATH_PREFIX}${path}`
-
-export const parseUserScopeMenuKey = (key: string): string | undefined =>
-  key.startsWith(USER_SCOPE_PATH_PREFIX) ? key.slice(USER_SCOPE_PATH_PREFIX.length) : undefined
-
-/** 「当前打开」二级菜单 key 前缀 */
+/** 「当前打开」二级菜单 key */
 export const CURRENT_OPEN_PATH_PREFIX = 'current-path:'
-
-export const toCurrentOpenMenuKey = (path: string) => `${CURRENT_OPEN_PATH_PREFIX}${path}`
-
-export const parseCurrentOpenMenuKey = (key: string): string | undefined =>
-  key.startsWith(CURRENT_OPEN_PATH_PREFIX) ? key.slice(CURRENT_OPEN_PATH_PREFIX.length) : undefined
+const currentOpenPathKey = createPrefixedKeyCodec(CURRENT_OPEN_PATH_PREFIX)
+export const toCurrentOpenMenuKey = currentOpenPathKey.toKey
+export const parseCurrentOpenMenuKey = currentOpenPathKey.parseKey
 
 /** 搜索范围选项（i18n key → value）；「当前打开」有预览 tab 时才展示 */
 export const FILE_TREE_SEARCH_SCOPE_OPTIONS = [

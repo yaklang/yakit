@@ -5,7 +5,7 @@ import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import FileSearchResultItem from './FileSearchResultItem'
-import { useFileContentSearch } from './useFileContentSearch'
+import { useFileContentSearch, type FileContentSearchRunOptions } from './useFileContentSearch'
 import {
   FileTreeSearchType,
   SEARCH_CANCEL_VISIBLE_MS,
@@ -18,7 +18,7 @@ import styles from './FileTreeContentSearchView.module.scss'
 export interface FileTreeSearchEmptyContext {
   searched: boolean
   hasSearchPath: boolean
-  onSearch: (value?: string) => void
+  onSearch: (value?: string, options?: FileContentSearchRunOptions) => void
 }
 
 export interface FileTreeContentSearchViewProps {
@@ -124,7 +124,7 @@ const FileTreeContentSearchView: FC<FileTreeContentSearchViewProps> = ({
             autoFocus: active,
             placeholder: t('YakitInput.searchKeyWordPlaceholder'),
             onChange: (e) => setKeyword(e.target.value),
-            onSearch,
+            onSearch: (value) => onSearch(value),
           }}
         />
       </div>

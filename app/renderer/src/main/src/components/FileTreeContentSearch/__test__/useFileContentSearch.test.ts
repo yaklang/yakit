@@ -134,6 +134,20 @@ describe('useFileContentSearch 竞态', () => {
     expect(mockSearch).toHaveBeenCalledWith(expect.objectContaining({ path: 'resolved-root', keyword: 'hello' }))
   })
 
+  it('显式传入 roots 时跳过 resolveRoots 与静态 roots', async () => {
+    mockSearch.mockResolvedValue([sampleItem('explicit.txt')])
+    const resolveRoots = vi.fn(async () => [{ path: 'resolved-root' }])
+    const { result } = renderHook(() => useFileContentSearch({ roots: [{ path: 'stale-root' }], resolveRoots }))
+    act(() => result.current.setKeyword('hello'))
+    act(() => result.current.onSearch('hello', { roots: [{ path: 'explicit-root' }] }))
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false)
+      expect(result.current.results[0].name).toBe('explicit.txt')
+    })
+    expect(resolveRoots).not.toHaveBeenCalled()
+    expect(mockSearch).toHaveBeenCalledWith(expect.objectContaining({ path: 'explicit-root', keyword: 'hello' }))
+  })
+
   it('切换搜索类型后保留上次结果且不自动重搜', async () => {
     mockSearch.mockResolvedValue([sampleItem('demo.txt')])
     const { result } = renderHook(() => useFileContentSearch({ roots: [{ path: 'ai-output' }] }))
