@@ -611,6 +611,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
               setAdvancedFormVisible(false)
             }}
             enableGMTLS={stateSecretHijacking === 'enableGMTLS'}
+            supportsEMudhra={mitmVersion === MITMVersion.V2}
             ref={advancedFormRef}
           />
         </React.Suspense>

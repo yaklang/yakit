@@ -382,6 +382,8 @@
     "gmTLSFirstHelp": "启用此选项将优先选择国密TLS，当连接失败后，自动降级为普通 TLS，关闭后优先普通 TLS",
     "gmTLSOnly": "仅国密 TLS",
     "gmTLSOnlyHelp": "此选项开启后，将不支持除国密算法的 TLS 外其安全传输层",
+    "useEMudhra": "使用 eMudhra CA",
+    "useEMudhraHelp": "使用已公开泄露的 eMudhra 中间 CA 签发普通 TLS 证书。默认关闭；已封禁该 CA 或要求证书透明度的客户端会拒绝连接。重启 MITM 后生效。",
     "proxyAuth": "代理认证",
     "proxyAuthHelp": "为劫持代理启动认证，需要在代理客户端配置代理认证信息",
     "proxyAuthUsername": "代理认证用户名",

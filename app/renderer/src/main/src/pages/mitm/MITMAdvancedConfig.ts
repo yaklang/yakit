@@ -20,6 +20,7 @@ interface AdvancedConfigurationFromValue {
   ExtraPorts: string[]
   filterWebsocket: boolean
   disableCACertPage: boolean
+  UseEMudhra: boolean
   DisableSystemProxy: boolean
   DisableWebsocketCompression: boolean
   PluginConcurrency: number
@@ -87,6 +88,7 @@ const createDefaultAdvancedConfig = (): AdvancedConfigurationFromValue => ({
   ExtraPorts: [],
   filterWebsocket: false,
   disableCACertPage: false,
+  UseEMudhra: false,
   DisableSystemProxy: false,
   DisableWebsocketCompression: false,
   PluginConcurrency: 20,
@@ -132,6 +134,7 @@ const normalizeConfig = (value?: Partial<AdvancedConfigurationFromValue> | null)
 
   return {
     ...merged,
+    UseEMudhra: merged.UseEMudhra === true,
     certs: Array.isArray(merged.certs) ? merged.certs : defaults.certs,
     dnsServers: Array.isArray(merged.dnsServers) ? merged.dnsServers : defaults.dnsServers,
     etcHosts: Array.isArray(merged.etcHosts) ? merged.etcHosts : defaults.etcHosts,
@@ -217,6 +220,7 @@ const buildMitmExtra = (params: AdvancedConfigurationFromValue): ExtraMITMServer
     ExtraPorts,
     filterWebsocket,
     disableCACertPage,
+    UseEMudhra,
     DisableSystemProxy,
     DisableWebsocketCompression,
     PluginConcurrency,
@@ -237,6 +241,7 @@ const buildMitmExtra = (params: AdvancedConfigurationFromValue): ExtraMITMServer
     ExtraPorts,
     filterWebsocket,
     disableCACertPage,
+    UseEMudhra,
     DisableSystemProxy,
     DisableWebsocketCompression,
     PluginConcurrency,
@@ -273,6 +278,7 @@ const buildMitmExtraV2 = (extra?: ExtraMITMServerProps) => {
     ExtraPorts,
     filterWebsocket,
     disableCACertPage,
+    UseEMudhra,
     DisableSystemProxy,
     DisableWebsocketCompression,
     PluginConcurrency,
@@ -295,6 +301,7 @@ const buildMitmExtraV2 = (extra?: ExtraMITMServerProps) => {
     ExtraPorts: (ExtraPorts || []).map((item) => parseInt(item) || 0).filter((item) => Boolean(item)),
     FilterWebsocket: filterWebsocket,
     DisableCACertPage: disableCACertPage,
+    UseEMudhra: UseEMudhra === true,
     DisableSystemProxy,
     DisableWebsocketCompression,
     PluginConcurrency,

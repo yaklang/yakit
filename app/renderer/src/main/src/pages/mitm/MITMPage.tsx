@@ -580,6 +580,8 @@ export interface ExtraMITMServerProps {
   filterWebsocket: boolean
   /**禁用初始页 */
   disableCACertPage: boolean
+  /**使用已公开泄露的 eMudhra 中间 CA 签发普通 TLS 证书 */
+  UseEMudhra?: boolean
   /**禁用系统代理 */
   DisableSystemProxy: boolean
   DisableWebsocketCompression: boolean

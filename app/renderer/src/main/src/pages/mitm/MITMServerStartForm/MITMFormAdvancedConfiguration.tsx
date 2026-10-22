@@ -49,10 +49,11 @@ interface MITMFormAdvancedConfigurationProps {
   setVisible: (b: boolean) => void
   onSave: (v: AdvancedConfigurationFromValue) => void
   enableGMTLS: boolean
+  supportsEMudhra: boolean
 }
 const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps> = React.memo(
   React.forwardRef((props, ref) => {
-    const { visible, setVisible, onSave, enableGMTLS } = props
+    const { visible, setVisible, onSave, enableGMTLS, supportsEMudhra } = props
     const { t, i18n } = useI18nNamespaces(['webFuzzer', 'mitm', 'yakitUi'])
     const [certs, setCerts] = useState<ClientCertificate[]>([])
 
@@ -354,6 +355,15 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
               </Form.Item>
             </>
           )}
+          <Form.Item
+            label={t('MITMFormAdvancedConfiguration.useEMudhra')}
+            hidden={!supportsEMudhra}
+            name="UseEMudhra"
+            help={t('MITMFormAdvancedConfiguration.useEMudhraHelp')}
+            valuePropName="checked"
+          >
+            <YakitSwitch />
+          </Form.Item>
           <Form.Item
             label={t('MITMFormAdvancedConfiguration.proxyAuth')}
             name="enableProxyAuth"

@@ -382,6 +382,8 @@
     "gmTLSFirstHelp": "Prefer GM TLS first; if the connection fails, fall back to regular TLS.",
     "gmTLSOnly": "GM TLS Only",
     "gmTLSOnlyHelp": "When enabled, only GM TLS will be supported.",
+    "useEMudhra": "Use eMudhra CA",
+    "useEMudhraHelp": "Sign regular TLS certificates with the publicly compromised eMudhra intermediate CA. Disabled by default. Clients that block this CA or require Certificate Transparency will reject the connection. Takes effect after restarting MITM.",
     "proxyAuth": "Proxy Authentication",
     "proxyAuthHelp": "Enable authentication for the hijack proxy and configure it in the proxy client.",
     "proxyAuthUsername": "Proxy Auth Username",
