@@ -139,7 +139,7 @@ export interface AIAgentChatData {
   sessionTitle?: string
   /** 记忆列表 */
   memoryList: AIAgentGrpcApi.MemoryEntryList
-  /** 当前会话的技能列表（skill_inventory） */
+  /** 当前会话的技能列表（skill_loaded / skill_available） */
   skills: AISkillListItem[]
   /** 按技能名称缓存当前会话的详情 */
   skillDetails: Map<string, AIAgentGrpcApi.SkillDetail>

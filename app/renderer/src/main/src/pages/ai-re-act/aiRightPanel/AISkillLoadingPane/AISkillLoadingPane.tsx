@@ -6,6 +6,7 @@ import { useCreation, useInViewport, useMemoizedFn } from 'ahooks'
 import { RefreshOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
 import { randomString } from '@/utils/randomUtil'
@@ -26,7 +27,9 @@ export const AISkillLoadingPane: React.FC<AISkillLoadingPaneProps> = memo(({ loa
   const rawData = useCurrentRawData()
   const sessionId = useCurrentSessionId()
   const { onSend } = useAIAgentDispatcher()
-  const { loading: refreshLoading, markSending } = useSyncLoadingState()
+  const { loading: loadedLoading, markSending: markLoadedSending } = useSyncLoadingState()
+  const { loading: availableLoading, markSending: markAvailableSending } = useSyncLoadingState()
+  const refreshLoading = loadedLoading || availableLoading
   const { addLoading, addingSkill, onAddSkill } = useSkillLoading()
   const skillsUpdate = useStore(store, (state) => state.skillsUpdate)
   const [keyword, setKeyword] = useState('')
@@ -46,15 +49,27 @@ export const AISkillLoadingPane: React.FC<AISkillLoadingPaneProps> = memo(({ loa
 
   const onRefresh = useMemoizedFn(() => {
     if (!sessionId) return
-    const syncId = randomString(8)
-    markSending(syncId)
+    const loadedSyncId = randomString(8)
+    markLoadedSending(loadedSyncId)
     onSend({
       token: sessionId,
       type: '',
       params: {
         IsSyncMessage: true,
-        SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_SKILL_INVENTORY,
-        SyncID: syncId,
+        SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_SKILL_LOADED,
+        SyncID: loadedSyncId,
+      },
+    })
+    const availableSyncId = randomString(8)
+    markAvailableSending(availableSyncId)
+    onSend({
+      token: sessionId,
+      type: '',
+      params: {
+        IsSyncMessage: true,
+        SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_SKILL_AVAILABLE,
+        SyncID: availableSyncId,
+        SyncJsonInput: JSON.stringify({ page: 1 }),
       },
     })
   })
@@ -90,15 +105,17 @@ export const AISkillLoadingPane: React.FC<AISkillLoadingPaneProps> = memo(({ loa
           />
         </Tooltip>
       </div>
-      <AISkillList
-        source="right-panel"
-        key={`${sessionId}:${loadState}:${keyword}`}
-        data={list}
-        loadState={loadState}
-        onAdd={onAddSkill}
-        addLoading={addLoading}
-        addingSkill={addingSkill}
-      />
+      <YakitSpin spinning={refreshLoading} wrapperClassName={styles['list-spin']}>
+        <AISkillList
+          source="right-panel"
+          key={`${sessionId}:${loadState}:${keyword}`}
+          data={list}
+          loadState={loadState}
+          onAdd={onAddSkill}
+          addLoading={addLoading}
+          addingSkill={addingSkill}
+        />
+      </YakitSpin>
     </div>
   )
 })

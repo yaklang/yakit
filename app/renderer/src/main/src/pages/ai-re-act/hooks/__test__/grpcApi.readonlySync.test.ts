@@ -13,7 +13,8 @@ describe('readonlySyncQueryTypes', () => {
         AIInputEventSyncTypeEnum.SYNC_TYPE_MEMORY_CONTEXT,
         AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN_EXEC_TASKS,
         AIInputEventSyncTypeEnum.SYNC_CAPABILITY_INVENTORY,
-        AIInputEventSyncTypeEnum.SYNC_TYPE_SKILL_INVENTORY,
+        AIInputEventSyncTypeEnum.SYNC_TYPE_SKILL_LOADED,
+        AIInputEventSyncTypeEnum.SYNC_TYPE_SKILL_AVAILABLE,
         AIInputEventSyncTypeEnum.SYNC_TYPE_SKILL_DETAIL,
         AIInputEventSyncTypeEnum.SYNC_TYPE_TASK_SNAPSHOT,
       ]

@@ -187,13 +187,20 @@ const handleSkillDetail: AIMessageHandler = ({ res, rawData }) => {
   }
 }
 
-const handleSkillInventory: AIMessageHandler = ({ res, store, rawData }) => {
-  if (res.Type !== 'structured' || res.NodeId !== 'skill_inventory') return
+const handleSkillList: AIMessageHandler = ({ res, store, rawData }) => {
+  if (res.Type !== 'structured' || !['skill_loaded', 'skill_available'].includes(res.NodeId)) return
 
   const ipcContent = Uint8ArrayToString(res.Content)
-  const skills = JSON.parse(ipcContent) as AIAgentGrpcApi.SkillInventoryItem[]
-  rawData.skills = skills.map((skill) => {
-    const loadState = (skill.data?.skill_load_state || skill.stage) as AISkillListItem['skill_load_state']
+  const { skills } = JSON.parse(ipcContent) as
+    | AIAgentGrpcApi.SkillLoadedResponse
+    | AIAgentGrpcApi.SkillAvailableResponse
+  console.log(res.NodeId, 'handleSkillList-skills', skills)
+  const loadState = res.NodeId === 'skill_loaded' ? 'loaded' : 'metadata'
+  const incomingNames = new Set(skills.map((skill) => skill.name))
+  const otherSkills = rawData.skills.filter(
+    (skill) => skill.skill_load_state !== loadState && !incomingNames.has(skill.name),
+  )
+  const incomingSkills: AISkillListItem[] = skills.map((skill) => {
     const detail = rawData.skillDetails.get(skill.name)
     if (detail && detail.loaded !== (loadState === 'loaded')) rawData.skillDetails.delete(skill.name)
     return {
@@ -203,6 +210,7 @@ const handleSkillInventory: AIMessageHandler = ({ res, store, rawData }) => {
       token_count: skill.data?.token_count,
     }
   })
+  rawData.skills = [...otherSkills, ...incomingSkills]
   store.getState().updateStateCount('skillsUpdate')
 }
 const handleCapabilityInventory: AIMessageHandler = (requestInfo) => {
@@ -404,7 +412,8 @@ const handleTaskSnapshot: AIMessageHandler = (requestInfo) => {
 /** 单条grpc流数据对应一个独立的UI数据 */
 export const aiTaskDetailDataHandlers = {
   skill_detail: handleSkillDetail,
-  skill_inventory: handleSkillInventory,
+  skill_loaded: handleSkillList,
+  skill_available: handleSkillList,
   capability_inventory: handleCapabilityInventory,
   perception: handlePerception,
   current_task_todo_list_update: handleCurrentTaskTodoListUpdate,

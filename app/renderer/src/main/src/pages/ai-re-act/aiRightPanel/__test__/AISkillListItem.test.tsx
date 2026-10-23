@@ -158,13 +158,16 @@ describe('AISkillListItem hover details', () => {
     act(() => {
       meta.syncIDMap.delete(onSend.mock.lastCall![0].params.SyncID!)
       store.setState((state) => ({ syncIDUpdate: state.syncIDUpdate + 1 }))
-      aiTaskDetailDataHandlers.skill_inventory(
+      aiTaskDetailDataHandlers.skill_loaded(
         makeHandlerRequest({
           rawData,
           res: makeGrpcJsonRes(
             'structured',
-            [{ name: 'skill', description: '', stage: 'loaded', data: { skill_load_state: 'loaded' } }],
-            { NodeId: 'skill_inventory' },
+            {
+              skills: [{ name: 'skill', description: '', stage: 'loaded', data: { skill_load_state: 'loaded' } }],
+              total: 1,
+            },
+            { NodeId: 'skill_loaded' },
           ),
         }),
       )

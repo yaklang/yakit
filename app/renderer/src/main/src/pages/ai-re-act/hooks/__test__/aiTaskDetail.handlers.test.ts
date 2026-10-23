@@ -42,85 +42,111 @@ describe('aiTaskDetail handlers', () => {
     expect(req.rawData.skillDetails.size).toBe(0)
   })
 
-  it('skill_inventory 转换为列表项，保存加载状态，替换旧数组并递增计数', () => {
-    const skills = [
-      {
-        name: 'code-review',
-        verbose_name: '代码审查',
-        description: 'review',
-        type: 'skill',
-        stage: 'loaded',
-        position: 'SemiDynamic',
-        is_fixed: false,
-        data: { skill_load_state: 'loaded', token_count: 0 },
-      },
-    ]
+  it.each([
+    ['skill_loaded', 'loaded', {}],
+    ['skill_available', 'metadata', { page: 1, page_size: 100, has_more: true }],
+  ] as const)('%s 转换清单并只替换对应分组，保留零 Token', (nodeId, loadState, pagination) => {
+    const skills = [{ name: 'new', description: 'review', data: { token_count: 0 } }]
     const req = makeHandlerRequest({
-      res: makeGrpcJsonRes('structured', skills, { NodeId: 'skill_inventory', IsSync: true }),
+      res: makeGrpcJsonRes('structured', { skills, total: 132, ...pagination }, { NodeId: nodeId, IsSync: true }),
     })
-    aiTaskDetailDataHandlers.skill_inventory(req)
+    const otherState = loadState === 'loaded' ? 'metadata' : 'loaded'
+    const otherSkill = { name: 'other', description: '', skill_load_state: otherState } as const
+    req.rawData.skills = [{ name: 'old', description: '', skill_load_state: loadState }, otherSkill]
+    aiTaskDetailDataHandlers[nodeId](req)
     expect(req.rawData.skills).toEqual([
-      { name: 'code-review', description: 'review', skill_load_state: 'loaded', token_count: 0 },
+      otherSkill,
+      { name: 'new', description: 'review', skill_load_state: loadState, token_count: 0 },
     ])
     expect(req.store.getState().skillsUpdate).toBe(1)
-    const replacement = [{ ...skills[0], name: 'recon', stage: 'metadata', data: { skill_load_state: 'metadata' } }]
-    req.res = makeGrpcJsonRes('structured', replacement, { NodeId: 'skill_inventory', IsSync: true })
-    aiTaskDetailDataHandlers.skill_inventory(req)
-    expect(req.rawData.skills).toEqual([{ name: 'recon', description: 'review', skill_load_state: 'metadata' }])
-    expect(req.store.getState().skillsUpdate).toBe(2)
-  })
 
-  it('skill_inventory 空清单清除旧技能', () => {
-    const req = makeHandlerRequest({
-      res: makeGrpcJsonRes(
-        'structured',
-        [{ name: 'old', description: '', stage: 'loaded', data: { skill_load_state: 'loaded', token_count: 1 } }],
-        { NodeId: 'skill_inventory' },
-      ),
-    })
-    aiTaskDetailDataHandlers.skill_inventory(req)
-    req.res = makeGrpcJsonRes('structured', [], { NodeId: 'skill_inventory' })
-    aiTaskDetailDataHandlers.skill_inventory(req)
-    expect(req.rawData.skills).toEqual([])
+    req.res = makeGrpcJsonRes('structured', { skills: [], total: 0, ...pagination }, { NodeId: nodeId })
+    aiTaskDetailDataHandlers[nodeId](req)
+    expect(req.rawData.skills).toEqual([otherSkill])
     expect(req.store.getState().skillsUpdate).toBe(2)
   })
 
   it.each([
-    [false, 'loaded'],
-    [true, 'metadata'],
-  ] as const)('skill_inventory 从 loaded=%s 变为 %s 时仅清除状态不匹配的详情', (loaded, stage) => {
+    ['skill_loaded', 'skill_available'],
+    ['skill_available', 'skill_loaded'],
+  ] as const)('%s 与 %s 乱序返回保留两组数据，重复同步不重复追加', (first, second) => {
+    const payloads = {
+      skill_loaded: { skills: [{ name: 'loaded', description: 'loaded skill' }], total: 1 },
+      skill_available: {
+        skills: [{ name: 'available', description: 'available skill' }],
+        page: 1,
+        page_size: 100,
+        total: 132,
+        has_more: true,
+      },
+    }
+    const req = makeHandlerRequest({
+      res: makeGrpcJsonRes('structured', payloads[first], { NodeId: first }),
+    })
+    aiTaskDetailDataHandlers[first](req)
+    req.res = makeGrpcJsonRes('structured', payloads[second], { NodeId: second })
+    aiTaskDetailDataHandlers[second](req)
+    aiTaskDetailDataHandlers[second](req)
+    expect(req.rawData.skills).toEqual(
+      expect.arrayContaining([
+        { name: 'loaded', description: 'loaded skill', skill_load_state: 'loaded' },
+        { name: 'available', description: 'available skill', skill_load_state: 'metadata' },
+      ]),
+    )
+    expect(req.rawData.skills).toHaveLength(2)
+  })
+
+  it.each([
+    [false, 'skill_loaded', 'loaded'],
+    [true, 'skill_available', 'metadata'],
+  ] as const)('%s 的缓存收到 %s 时清除状态不匹配的详情并移动分组', (loaded, nodeId, loadState) => {
     const req = makeHandlerRequest({
       res: makeGrpcJsonRes(
         'structured',
-        [
-          { name: 'changed', description: '', stage, data: { skill_load_state: stage } },
-          { name: 'unchanged', description: '', stage: 'loaded', data: { skill_load_state: 'loaded' } },
-        ],
-        { NodeId: 'skill_inventory' },
+        { skills: [{ name: 'changed', description: '' }], total: 1 },
+        { NodeId: nodeId },
       ),
     })
+    req.rawData.skills = [{ name: 'changed', description: '', skill_load_state: loaded ? 'loaded' : 'metadata' }]
     const unchanged = { name: 'unchanged', loaded: true, prompt_content: '保留内容' }
     req.rawData.skillDetails.set('changed', { name: 'changed', loaded })
     req.rawData.skillDetails.set('unchanged', unchanged)
     const otherSession = makeHandlerRequest({ res: req.res })
     otherSession.rawData.skillDetails.set('changed', { name: 'changed', loaded })
 
-    aiTaskDetailDataHandlers.skill_inventory(req)
+    aiTaskDetailDataHandlers[nodeId](req)
 
+    expect(req.rawData.skills).toEqual([{ name: 'changed', description: '', skill_load_state: loadState }])
     expect(req.rawData.skillDetails.has('changed')).toBe(false)
     expect(req.rawData.skillDetails.get('unchanged')).toBe(unchanged)
     expect(otherSession.rawData.skillDetails.has('changed')).toBe(true)
     expect(req.store.getState().skillsUpdate).toBe(1)
   })
 
+  it.each(['skill_loaded', 'skill_available'] as const)('%s 保留加载状态相同的详情缓存', (nodeId) => {
+    const req = makeHandlerRequest({
+      res: makeGrpcJsonRes(
+        'structured',
+        { skills: [{ name: 'unchanged', description: '' }], total: 1 },
+        { NodeId: nodeId },
+      ),
+    })
+    const detail = { name: 'unchanged', loaded: nodeId === 'skill_loaded' }
+    req.rawData.skillDetails.set('unchanged', detail)
+    aiTaskDetailDataHandlers[nodeId](req)
+    expect(req.rawData.skillDetails.get('unchanged')).toBe(detail)
+  })
+
   it.each([
-    ['thought', 'skill_inventory'],
+    ['thought', 'skill_loaded'],
+    ['thought', 'skill_available'],
     ['structured', 'session_snapshot'],
-  ])('skill_inventory 忽略不匹配的 Type=%s NodeId=%s', (type, nodeId) => {
+  ])('技能列表忽略不匹配的 Type=%s NodeId=%s', (type, nodeId) => {
     const req = makeHandlerRequest({
       res: makeGrpcJsonRes(type, [{ name: 'ignored' }], { NodeId: nodeId }),
     })
-    aiTaskDetailDataHandlers.skill_inventory(req)
+    aiTaskDetailDataHandlers.skill_loaded(req)
+    aiTaskDetailDataHandlers.skill_available(req)
     expect(req.rawData.skills).toEqual([])
     expect(req.store.getState().skillsUpdate).toBe(0)
   })

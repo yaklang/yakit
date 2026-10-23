@@ -109,10 +109,12 @@ describe('frontend allocated session identity', () => {
     expect(pending.data.store.getState().pendingReply).toBe(false)
   })
 
-  it('新建空闲会话连接成功后仅查询一次技能清单', async () => {
+  it('新建空闲会话连接成功后分别查询一次已加载技能和第一页可加载技能', async () => {
     const token = await start('')
     const queries = () =>
-      ipcRendererMock.invoke.mock.calls.filter(([, , input]) => input?.SyncType === 'skill_inventory_sync')
+      ipcRendererMock.invoke.mock.calls.filter(([, , input]) =>
+        ['skill_loaded_sync', 'skill_available_sync'].includes(input?.SyncType),
+      )
     expect(queries()).toHaveLength(0)
     await emit(token, 'pong', 'client-session')
     expect(queries()).toEqual([
@@ -121,52 +123,79 @@ describe('frontend allocated session identity', () => {
         token,
         expect.objectContaining({
           IsSyncMessage: true,
-          SyncType: 'skill_inventory_sync',
+          SyncType: 'skill_loaded_sync',
           SyncID: expect.any(String),
         }),
       ],
+      [
+        'send-ai-re-act',
+        token,
+        expect.objectContaining({
+          IsSyncMessage: true,
+          SyncType: 'skill_available_sync',
+          SyncID: expect.any(String),
+          SyncJsonInput: JSON.stringify({ page: 1 }),
+        }),
+      ],
     ])
+    expect(queries()[0][2]).not.toHaveProperty('SyncJsonInput')
+    expect(queries()[0][2].SyncID).not.toBe(queries()[1][2].SyncID)
     await emit(token, 'pong', 'client-session')
-    expect(queries()).toHaveLength(1)
+    expect(queries()).toHaveLength(2)
     await controller.handleSessionEnd('client-session')
   })
 
-  it('技能清单通过 structured 路由保存到所属会话，其他会话保持不变', async () => {
-    const first = await start('', 'first-tab', 'first-session')
-    const second = await start('', 'second-tab', 'second-session')
-    await emit(first, 'pong', 'first-session')
-    await emit(second, 'pong', 'second-session')
-    const skills = [
-      {
-        name: 'review',
-        verbose_name: '审查',
-        description: 'description',
-        type: 'skill',
-        stage: 'metadata',
-        position: 'SemiDynamic',
-        is_fixed: false,
-        data: { skill_load_state: 'metadata' },
-      },
-    ]
-    const listener = ipcRendererMock.on.mock.calls.find(([name]) => name === `${first}-data`)![1]
-    listener(
-      {},
-      makeGrpcJsonRes('structured', skills, {
-        NodeId: 'skill_inventory',
-        SessionId: 'first-session',
-        IsSync: true,
-      }),
-    )
-    await tick()
-    expect(controller.ensureSession('first-session').rawData.skills).toEqual([
-      { name: 'review', description: 'description', skill_load_state: 'metadata' },
-    ])
-    expect(controller.ensureSession('first-session').store.getState().skillsUpdate).toBe(1)
-    expect(controller.ensureSession('second-session').rawData.skills).toEqual([])
-    expect(controller.ensureSession('second-session').store.getState().skillsUpdate).toBe(0)
-    await controller.handleSessionEnd('first-session')
-    await controller.handleSessionEnd('second-session')
-  })
+  it.each(['skill_loaded', 'skill_available'])(
+    '%s 通过 structured 路由保存到所属会话，其他会话保持不变',
+    async (nodeId) => {
+      const first = await start('', 'first-tab', 'first-session')
+      const second = await start('', 'second-tab', 'second-session')
+      await emit(first, 'pong', 'first-session')
+      await emit(second, 'pong', 'second-session')
+      const skills = [
+        {
+          name: 'review',
+          verbose_name: '审查',
+          description: 'description',
+          type: 'skill',
+          stage: 'metadata',
+          position: 'SemiDynamic',
+          is_fixed: false,
+          data: { skill_load_state: 'metadata' },
+        },
+      ]
+      const listener = ipcRendererMock.on.mock.calls.find(([name]) => name === `${first}-data`)![1]
+      listener(
+        {},
+        makeGrpcJsonRes(
+          'structured',
+          {
+            skills,
+            total: skills.length,
+            ...(nodeId === 'skill_available' ? { page: 1, page_size: 100, has_more: false } : {}),
+          },
+          {
+            NodeId: nodeId,
+            SessionId: 'first-session',
+            IsSync: true,
+          },
+        ),
+      )
+      await tick()
+      expect(controller.ensureSession('first-session').rawData.skills).toEqual([
+        {
+          name: 'review',
+          description: 'description',
+          skill_load_state: nodeId === 'skill_loaded' ? 'loaded' : 'metadata',
+        },
+      ])
+      expect(controller.ensureSession('first-session').store.getState().skillsUpdate).toBe(1)
+      expect(controller.ensureSession('second-session').rawData.skills).toEqual([])
+      expect(controller.ensureSession('second-session').store.getState().skillsUpdate).toBe(0)
+      await controller.handleSessionEnd('first-session')
+      await controller.handleSessionEnd('second-session')
+    },
+  )
 
   it('技能详情写入所属会话并通知同步完成，其他会话详情保持隔离', async () => {
     const first = await start('', 'first-tab', 'first-session')
@@ -415,12 +444,24 @@ describe('frontend allocated session identity', () => {
     )
     await tick()
     expect(
-      ipcRendererMock.invoke.mock.calls.filter(([, , input]) => input?.SyncType === 'skill_inventory_sync'),
+      ipcRendererMock.invoke.mock.calls.filter(([, , input]) =>
+        ['skill_loaded_sync', 'skill_available_sync'].includes(input?.SyncType),
+      ),
     ).toEqual([
       [
         'send-ai-re-act',
         token,
-        expect.objectContaining({ IsSyncMessage: true, SyncType: 'skill_inventory_sync', SyncID: expect.any(String) }),
+        expect.objectContaining({ IsSyncMessage: true, SyncType: 'skill_loaded_sync', SyncID: expect.any(String) }),
+      ],
+      [
+        'send-ai-re-act',
+        token,
+        expect.objectContaining({
+          IsSyncMessage: true,
+          SyncType: 'skill_available_sync',
+          SyncID: expect.any(String),
+          SyncJsonInput: JSON.stringify({ page: 1 }),
+        }),
       ],
     ])
     expect(aiChatPersistStore.deleteSessionPersist).toHaveBeenCalledWith('existing')

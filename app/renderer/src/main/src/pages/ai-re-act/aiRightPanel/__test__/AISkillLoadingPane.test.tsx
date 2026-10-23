@@ -103,7 +103,7 @@ afterEach(() => {
   vi.useRealTimers()
 })
 
-describe('AISkillLoadingPane session inventory', () => {
+describe('AISkillLoadingPane session skills', () => {
   it('读取 rawData.skills，按 skill_load_state 分组并保留零 Token，不依赖任务', () => {
     const result = render(<AISkillLoadingPane loadState="loaded" />)
     expect(names()).toEqual(['large-skill', 'code-review'])
@@ -154,37 +154,56 @@ describe('AISkillLoadingPane session inventory', () => {
     expect(onSend).not.toHaveBeenCalled()
   })
 
-  it('打开面板发送一次 inventory，数据和任务变化不追加请求，重新打开再发一次', () => {
+  it('打开面板查询已加载及可加载技能，数据和任务变化不追加请求，重新打开再次查询', () => {
     render(<AISkillLoadingPane loadState="loaded" />)
     expect(onSend).not.toHaveBeenCalled()
     act(() => store.setState({ inViewport: true }))
-    expect(onSend).toHaveBeenCalledTimes(1)
-    expect(onSend.mock.calls[0][0]).toMatchObject({
+    expect(onSend).toHaveBeenCalledTimes(2)
+    expect(onSend.mock.calls[0][0]).toEqual({
       token: 'session-1',
-      params: { IsSyncMessage: true, SyncType: 'skill_inventory_sync' },
+      type: '',
+      params: { IsSyncMessage: true, SyncType: 'skill_loaded_sync', SyncID: expect.any(String) },
     })
+    expect(onSend.mock.calls[1][0]).toEqual({
+      token: 'session-1',
+      type: '',
+      params: {
+        IsSyncMessage: true,
+        SyncType: 'skill_available_sync',
+        SyncID: expect.any(String),
+        SyncJsonInput: JSON.stringify({ page: 1 }),
+      },
+    })
+    expect(onSend.mock.calls[0][0].params.SyncID).not.toBe(onSend.mock.calls[1][0].params.SyncID)
     act(() =>
       store.setState({
         skillsUpdate: 1,
         currentChatStatus: { questionID: 'task-new', coordinatorId: 'coordinator-new' },
       }),
     )
-    expect(onSend).toHaveBeenCalledTimes(1)
-    act(() => acknowledge(onSend.mock.calls[0][0].params.SyncID))
+    expect(onSend).toHaveBeenCalledTimes(2)
+    act(() => {
+      acknowledge(onSend.mock.calls[0][0].params.SyncID)
+      acknowledge(onSend.mock.calls[1][0].params.SyncID)
+    })
     act(() => store.setState({ inViewport: false }))
     act(() => store.setState({ inViewport: true }))
-    expect(onSend).toHaveBeenCalledTimes(2)
+    expect(onSend).toHaveBeenCalledTimes(4)
   })
 
   it('空闲会话首次打开也查询，随后允许用户手动刷新', async () => {
     store.setState({ inViewport: true })
     render(<AISkillLoadingPane loadState="loaded" />)
-    expect(onSend).toHaveBeenCalledTimes(1)
-    act(() => acknowledge(onSend.mock.calls[0][0].params.SyncID))
+    expect(onSend).toHaveBeenCalledTimes(2)
+    act(() => {
+      acknowledge(onSend.mock.calls[0][0].params.SyncID)
+      acknowledge(onSend.mock.calls[1][0].params.SyncID)
+    })
     await act(async () => vi.advanceTimersByTimeAsync(300))
     fireEvent.click(screen.getByRole('button', { name: 'YakitButton.refresh' }))
-    expect(onSend).toHaveBeenCalledTimes(2)
-    expect(onSend.mock.calls[1][0].params.SyncType).toBe(AIInputEventSyncTypeEnum.SYNC_TYPE_SKILL_INVENTORY)
+    expect(onSend).toHaveBeenCalledTimes(4)
+    expect(onSend.mock.calls[2][0].params.SyncType).toBe(AIInputEventSyncTypeEnum.SYNC_TYPE_SKILL_LOADED)
+    expect(onSend.mock.calls[3][0].params.SyncType).toBe(AIInputEventSyncTypeEnum.SYNC_TYPE_SKILL_AVAILABLE)
   })
 
   it('手动刷新清空当前会话的全部技能详情缓存，再查询列表', () => {
@@ -199,12 +218,13 @@ describe('AISkillLoadingPane session inventory', () => {
 
     expect(current.skillDetails.size).toBe(0)
     expect(otherDetails.size).toBe(2)
-    expect(onSend).toHaveBeenCalledTimes(1)
-    expect(onSend.mock.calls[0][0].params.SyncType).toBe('skill_inventory_sync')
+    expect(onSend).toHaveBeenCalledTimes(2)
+    expect(onSend.mock.calls[0][0].params.SyncType).toBe('skill_loaded_sync')
+    expect(onSend.mock.calls[1][0].params.SyncType).toBe('skill_available_sync')
     expect(names()).toEqual(['large-skill', 'code-review'])
   })
 
-  it('添加完成后仅查询一次 inventory，其他同步更新不触发刷新', async () => {
+  it('添加完成后查询两组技能，其他同步更新不触发刷新', async () => {
     store.setState({ inViewport: true })
     render(<AISkillLoadingPane loadState="metadata" />)
     onSend.mockClear()
@@ -220,13 +240,20 @@ describe('AISkillLoadingPane session inventory', () => {
     await act(async () => vi.advanceTimersByTimeAsync(300))
     expect(onSend).toHaveBeenCalledTimes(1)
     act(() => acknowledge(onSend.mock.calls[0][0].params.SyncID))
-    expect(onSend).toHaveBeenCalledTimes(2)
+    expect(onSend).toHaveBeenCalledTimes(3)
     expect(onSend.mock.calls[1][0].params).toMatchObject({
-      SyncType: 'skill_inventory_sync',
+      SyncType: 'skill_loaded_sync',
     })
-    act(() => acknowledge(onSend.mock.calls[1][0].params.SyncID))
+    expect(onSend.mock.calls[2][0].params).toMatchObject({
+      SyncType: 'skill_available_sync',
+      SyncJsonInput: JSON.stringify({ page: 1 }),
+    })
+    act(() => {
+      acknowledge(onSend.mock.calls[1][0].params.SyncID)
+      acknowledge(onSend.mock.calls[2][0].params.SyncID)
+    })
     await act(async () => vi.advanceTimersByTimeAsync(300))
-    expect(onSend).toHaveBeenCalledTimes(2)
+    expect(onSend).toHaveBeenCalledTimes(3)
   })
 
   it('切换会话后通过 skillsUpdate 更新展示，不主动请求', () => {
@@ -248,20 +275,30 @@ describe('AISkillLoadingPane session inventory', () => {
     await act(async () => vi.advanceTimersByTimeAsync(300))
     expect(onSend).toHaveBeenCalledTimes(1)
     act(() => store.setState({ inViewport: true }))
-    expect(onSend).toHaveBeenCalledTimes(2)
-    expect(onSend.mock.calls[1][0].params.SyncType).toBe('skill_inventory_sync')
+    expect(onSend).toHaveBeenCalledTimes(3)
+    expect(onSend.mock.calls[1][0].params.SyncType).toBe('skill_loaded_sync')
+    expect(onSend.mock.calls[2][0].params.SyncType).toBe('skill_available_sync')
   })
 
-  it('手动刷新等待 SyncID 回执，不因最短展示时间结束而重复请求', async () => {
+  it.each([0, 1])('手动刷新等待两个 SyncID 回执，先收到第 %i 个回执仍保持 loading', async (firstAck) => {
     render(<AISkillLoadingPane loadState="loaded" />)
     const refresh = screen.getByRole('button', { name: 'YakitButton.refresh' })
+    const listContainer = screen.getByRole('list').closest('.ant-spin-container')
+    expect(listContainer).not.toHaveClass('ant-spin-blur')
     fireEvent.click(refresh)
     await act(async () => vi.advanceTimersByTimeAsync(1000))
     expect(refresh).toBeDisabled()
+    expect(listContainer).toHaveClass('ant-spin-blur')
     fireEvent.click(refresh)
-    expect(onSend).toHaveBeenCalledTimes(1)
-    act(() => acknowledge(onSend.mock.calls[0][0].params.SyncID))
+    expect(onSend).toHaveBeenCalledTimes(2)
+    act(() => acknowledge(onSend.mock.calls[firstAck][0].params.SyncID))
+    expect(refresh).toBeDisabled()
+    expect(listContainer).toHaveClass('ant-spin-blur')
+    fireEvent.click(refresh)
+    expect(onSend).toHaveBeenCalledTimes(2)
+    act(() => acknowledge(onSend.mock.calls[1 - firstAck][0].params.SyncID))
     expect(refresh).not.toBeDisabled()
-    expect(onSend).toHaveBeenCalledTimes(1)
+    expect(listContainer).not.toHaveClass('ant-spin-blur')
+    expect(onSend).toHaveBeenCalledTimes(2)
   })
 })
