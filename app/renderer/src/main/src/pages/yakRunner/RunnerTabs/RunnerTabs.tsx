@@ -86,6 +86,7 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import type { OtherMenuListProps } from '@/components/yakitUI/YakitEditor/YakitEditorType'
 import { fetchCursorContent, fetchSelectionRange } from '@/components/yakitUI/YakitEditor/editorUtils'
 import { useYakRunnerAiAttachRef } from '../YakRunnerAiAttachContext'
+import { getRunnerEditorHighlightProps } from './runnerTabHighlightProps'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -1340,16 +1341,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
           type={editorInfo?.language}
           value={editorInfo?.code || ''}
           setValue={setYakitEditorValue}
-          highLightText={
-            editorInfo?.highLightRange
-              ? Array.isArray(editorInfo.highLightRange)
-                ? editorInfo.highLightRange
-                : [editorInfo.highLightRange]
-              : undefined
-          }
-          highLightClass={
-            Array.isArray(editorInfo?.highLightRange) ? 'hight-light-file-search-hit' : 'hight-light-yak-runner-color'
-          }
+          {...getRunnerEditorHighlightProps(editorInfo?.highLightRange)}
           contextMenu={rightContextMenu}
         />
       )}

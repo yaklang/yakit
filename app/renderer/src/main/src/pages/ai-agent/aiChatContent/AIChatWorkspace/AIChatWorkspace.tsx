@@ -52,7 +52,7 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
   const httpRunTimeIDs = useCreation(() => [...rawData.httpRunTimeIDs], [rawData.httpRunTimeIDs, httpTabUpdate])
   const riskRunTimeIDs = useCreation(() => [...rawData.riskRunTimeIDs], [rawData.riskRunTimeIDs, riskTabUpdate])
 
-  const { activeChat } = useAIAgentStore()
+  const { activeChat, pageId } = useAIAgentStore()
   const relatedRuntimeIDs = useMemo(() => activeChat?.RelatedRuntimeIDs ?? [], [activeChat?.RelatedRuntimeIDs])
 
   const [tabs, setTabs] = useState<WorkspaceTab[]>([])
@@ -60,12 +60,14 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
   const [showFileTooLargeHint, setShowFileTooLargeHint] = useState(false)
   /** switchAIActTab 带来的高亮，经 filePreviewData effect 打开 tab 时消费 */
   const pendingFileHighlightsRef = useRef<AIAgentFilePreviewHighlight[] | undefined>()
+  /** 会话切换时递增，使进行中的 getCodeSizeByPath 返回后放弃 openTab */
+  const openPreviewEpochRef = useRef(0)
 
   useEffect(() => {
     onTabsChange?.(tabs.length)
   }, [tabs.length])
 
-  // 同步文件预览 tab，供侧栏搜索范围「当前打开」使用
+  // 按 pageId 同步预览 tab，供本页侧栏搜索范围「当前打开」使用
   useEffect(() => {
     const files = tabs
       .filter((tab) => tab.type === AITabsEnum.File_Preview && tab.file?.path)
@@ -73,14 +75,14 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
         path: tab.file!.path,
         name: tab.file!.name || tab.label || tab.file!.path,
       }))
-    previewOpenFilesStore.setPreviewOpenFiles(files)
-  }, [tabs])
+    previewOpenFilesStore.setPreviewOpenFiles(pageId, files)
+  }, [tabs, pageId])
 
   useEffect(() => {
     return () => {
-      previewOpenFilesStore.clear()
+      previewOpenFilesStore.clear(pageId)
     }
-  }, [])
+  }, [pageId])
 
   const getDefaultLabel = useMemoizedFn((type: AITabsEnumType) => {
     const tab = AITabs[type]
@@ -102,6 +104,7 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
     const tabKey = `file:${file.path}`
     // 已打开的 tab 只聚焦/更新高亮；新开前先校验体积，过大则提示且不 push
     const alreadyOpen = tabs.some((item) => item.key === tabKey)
+    const epoch = openPreviewEpochRef.current
     if (!alreadyOpen) {
       let size = 0
       try {
@@ -111,6 +114,8 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
         yakitNotify('error', t('FilePreview.loadFailed', { error: String(err) }))
         return
       }
+      // 等待期间切会话：丢弃旧请求，避免把旧文件打开到新会话
+      if (epoch !== openPreviewEpochRef.current) return
       if (size > MAX_FILE_SIZE_BYTES) {
         setShowFileTooLargeHint(true)
         if (filePreviewData?.path === file.path) {
@@ -136,6 +141,7 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
   }, [filePreviewData])
 
   useEffect(() => {
+    openPreviewEpochRef.current += 1
     setTabs([])
     setActiveTabKey('')
     setFilePreviewData(undefined)

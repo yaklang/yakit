@@ -21,6 +21,7 @@ import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession
 import { useCustomFolder } from '../../../components/aiFileSystemList/store/useCustomFolder'
 import emiter from '@/utils/eventBus/eventBus'
 import { AITabsEnum } from '../../../defaultConstant'
+import useAIAgentStore from '../../../useContext/useStore'
 import { usePreviewOpenFiles } from '../store/usePreviewOpenFiles'
 import { getPathBaseName, resolveSearchPaths } from './utils'
 import {
@@ -86,10 +87,11 @@ const FileTreeSearchView: React.FC<FileTreeSearchViewProps> = ({
   setSelected,
 }) => {
   const { t } = useI18nNamespaces(['aiAgent'])
+  const { pageId } = useAIAgentStore()
   const store = useCurrentStore()
   const grpcFolders = useStore(store, (state) => state.grpcFolders)
   const customFolder = useCustomFolder()
-  const previewOpenFiles = usePreviewOpenFiles()
+  const previewOpenFiles = usePreviewOpenFiles(pageId)
   const prevActiveRef = useRef(active)
   const [scopeOpen, setScopeOpen] = useState(false)
   const [emptyScopeOpen, setEmptyScopeOpen] = useState(false)

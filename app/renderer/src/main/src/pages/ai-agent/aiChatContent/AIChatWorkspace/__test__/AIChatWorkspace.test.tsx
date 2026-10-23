@@ -51,6 +51,7 @@ import { compileReactModule } from '@/utils/__test__/helpers/compileReactModule'
 import type { PluginExecuteWebsiteTreeProps } from '@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResultType'
 import { useHttpFlowSelection } from '@/components/useHttpFlowSelection'
 import { MAX_FILE_SIZE_BYTES } from '@/pages/yakRunner/utils'
+import { previewOpenFilesStore } from '../../../aiChatWelcome/FileTreeList/store/usePreviewOpenFiles'
 const flowCallbacks: PluginExecuteWebsiteTreeProps[] = []
 
 beforeEach(() => {
@@ -130,7 +131,8 @@ const initialState = store.getState()
 const rawData = { httpRunTimeIDs: [] as string[], riskRunTimeIDs: [] as string[] }
 const agentStore = createStore<{
   activeChat?: { SessionID: string; Title: string; RelatedRuntimeIDs: string[] }
-}>(() => ({}))
+  pageId?: string
+}>(() => ({ pageId: 'test-page' }))
 
 vi.mock('@/pages/ai-re-act/hooks/useCurrentDataBySession', () => ({
   useCurrentStore: () => store,
@@ -205,13 +207,17 @@ vi.mock('@/components/yakitUI/YakitEmpty/YakitEmpty', () => ({ YakitEmpty: () =>
 
 beforeEach(() => {
   flowCallbacks.length = 0
-  agentStore.setState({ activeChat: { SessionID: 'session-1', Title: '当前任务', RelatedRuntimeIDs: [] } })
+  agentStore.setState({
+    activeChat: { SessionID: 'session-1', Title: '当前任务', RelatedRuntimeIDs: [] },
+    pageId: 'test-page',
+  })
   store.setState(initialState, true)
   rawData.httpRunTimeIDs = []
   rawData.riskRunTimeIDs = []
   mockGetCodeSizeByPath.mockReset()
   mockGetCodeSizeByPath.mockResolvedValue({ size: 1, isPlainText: true })
   mockNotify.mockReset()
+  previewOpenFilesStore.clearAll()
 })
 
 describe('AIChatWorkspace 菜单切换', () => {
@@ -747,6 +753,68 @@ describe('AIChatWorkspace 菜单切换', () => {
     expect(screen.queryByText('broken.js')).not.toBeInTheDocument()
     expect(screen.queryByTestId('file-preview')).not.toBeInTheDocument()
     expect(onTabsChange).toHaveBeenLastCalledWith(0)
+  })
+
+  it('「当前打开」按 pageId 写入；卸载只清理本页，不影响其他 page', async () => {
+    previewOpenFilesStore.setPreviewOpenFiles('page-b', [{ path: '/b.js', name: 'b.js' }])
+    agentStore.setState({ pageId: 'page-a' })
+
+    function Harness() {
+      const [filePreviewData, setFilePreviewData] = React.useState<undefined | { name: string; path: string }>()
+      return (
+        <AIChatWorkspace filePreviewData={filePreviewData as never} setFilePreviewData={setFilePreviewData as never} />
+      )
+    }
+    const { unmount } = render(<Harness />)
+
+    await act(async () => {
+      emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.File_Preview, value: '/tmp/a.js' }))
+    })
+    await waitFor(() => {
+      expect(previewOpenFilesStore.getSnapshot('page-a')).toEqual([{ path: '/tmp/a.js', name: 'a.js' }])
+    })
+    expect(previewOpenFilesStore.getSnapshot('page-b')).toEqual([{ path: '/b.js', name: 'b.js' }])
+
+    unmount()
+    expect(previewOpenFilesStore.getSnapshot('page-a')).toEqual([])
+    expect(previewOpenFilesStore.getSnapshot('page-b')).toEqual([{ path: '/b.js', name: 'b.js' }])
+  })
+
+  it('等待文件大小期间切换会话：旧请求返回后不再打开预览', async () => {
+    let resolveSize!: (value: { size: number; isPlainText: boolean }) => void
+    mockGetCodeSizeByPath.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveSize = resolve
+        }),
+    )
+
+    function Harness() {
+      const [filePreviewData, setFilePreviewData] = React.useState<undefined | { name: string; path: string }>()
+      return (
+        <AIChatWorkspace filePreviewData={filePreviewData as never} setFilePreviewData={setFilePreviewData as never} />
+      )
+    }
+    render(<Harness />)
+
+    await act(async () => {
+      emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.File_Preview, value: '/tmp/stale.js' }))
+    })
+    expect(mockGetCodeSizeByPath).toHaveBeenCalled()
+
+    await act(async () => {
+      agentStore.setState({
+        activeChat: { SessionID: 'session-2', Title: '新会话', RelatedRuntimeIDs: [] },
+      })
+    })
+
+    await act(async () => {
+      resolveSize({ size: 1, isPlainText: true })
+    })
+
+    expect(screen.queryByText('stale.js')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('file-preview')).not.toBeInTheDocument()
+    expect(previewOpenFilesStore.getSnapshot('test-page')).toEqual([])
   })
 
   it('搜索打开预览带高亮；无 pending 的二次 open 不会清空高亮', async () => {
