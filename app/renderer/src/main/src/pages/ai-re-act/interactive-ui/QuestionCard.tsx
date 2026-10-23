@@ -1,5 +1,5 @@
 import type React from 'react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
@@ -9,8 +9,17 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import type { AIChatQSData } from '../hooks/aiRender'
 import type { AIChatQSDataTypeEnum } from '../hooks/aiRender'
 import { globalSessionEngine } from '../hooks/ChatMultiSessionController'
-import { emptyAnswer, questionAnswers, questionText, type QuestionDraft } from './types'
+import {
+  emptyAnswer,
+  questionAnswers,
+  questionText,
+  formAnswerText,
+  type QuestionOption,
+  type QuestionDraft,
+} from './types'
 import styles from './interactive.module.scss'
+import { QuestionFormFields } from './QuestionFormFields'
+import { readQuestionForm } from './formValidation'
 
 export function QuestionCard({
   item,
@@ -30,6 +39,9 @@ export function QuestionCard({
         touched: request.touched,
       },
   )
+  const form = useMemo(() => (request.form ? readQuestionForm(request.form) : undefined), [request.form])
+  const formContainer = useRef<HTMLDivElement>(null)
+  const questions = request.questions || []
   const current = useRef(draft)
   useEffect(() => {
     const saved = item.uiState as QuestionDraft | undefined
@@ -90,18 +102,18 @@ export function QuestionCard({
     const timer = setInterval(tick, 1000)
     return () => clearInterval(timer)
   }, [request.deadline, outcome, request.touched, draft.touched])
-  const page = Math.min(draft.page, request.questions.length - 1)
-  const q = request.questions[page]
-  if (!q) return null
-  const answer = draft.answers[q.id] || emptyAnswer(q.id)
+  const page = Math.min(draft.page, questions.length - 1)
+  const q = questions[page]
+  if (!q && !form) return <YakitAlert type="error" message={t('InteractiveUI.invalidQuestion')} />
+  const answer = draft.answers[q?.id || ''] || emptyAnswer(q?.id || '')
   const updateAnswer = (next: typeof answer) =>
     save({
       ...current.current,
       submissionId: undefined,
-      answers: { ...current.current.answers, [q.id]: next },
+      answers: { ...current.current.answers, [q!.id]: next },
     })
   const choose = (id: string) => {
-    if (terminal || busy) return
+    if (!q || terminal || busy) return
     touch()
     const selected = q.multiple
       ? answer.selected.includes(id)
@@ -118,14 +130,20 @@ export function QuestionCard({
     const id = next.submissionId || crypto.randomUUID()
     save({ ...next, submissionId: id })
     const answers = questionAnswers(request, next)
-    const text = questionText(request, answers)
+    const values = form ? next.values || {} : undefined
+    const text = form ? formAnswerText(form, values!) : questionText(request, answers)
     try {
       await globalSessionEngine.sendUIInteraction(
         sessionId,
         {
           IsFreeInput: true,
           FreeInput: text,
-          UserInteraction: JSON.stringify({ id, source: 'questionnaire', requestId: request.id, answers }),
+          UserInteraction: JSON.stringify({
+            id,
+            source: 'questionnaire',
+            requestId: request.id,
+            ...(form ? { values } : { answers }),
+          }),
         },
         id,
       )
@@ -144,17 +162,34 @@ export function QuestionCard({
   }
   const skip = () => {
     if (terminal || submitting.current) return
+    if (form) {
+      submitting.current = true
+      setBusy(true)
+      void control('skip')
+        .then(() => save({ ...current.current, collapsed: true, outcome: 'skipped' }))
+        .catch((reason) => setError(String(reason)))
+        .finally(() => {
+          submitting.current = false
+          setBusy(false)
+        })
+      return
+    }
+    if (!q) return
     const next = {
       ...current.current,
       submissionId: undefined,
       answers: { ...current.current.answers, [q.id]: { ...emptyAnswer(q.id), skipped: true } },
     }
-    if (page < request.questions.length - 1) save({ ...next, page: page + 1 })
+    if (page < questions.length - 1) save({ ...next, page: page + 1 })
     else void submit(next)
   }
   const nextPage = () => {
     if (terminal || submitting.current) return
-    if (page < request.questions.length - 1) save({ ...current.current, page: page + 1 })
+    if (form) {
+      formContainer.current?.querySelector('form')?.requestSubmit()
+      return
+    }
+    if (page < questions.length - 1) save({ ...current.current, page: page + 1 })
     else void submit()
   }
   const onKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
@@ -187,7 +222,7 @@ export function QuestionCard({
       event.stopPropagation()
       event.preventDefault()
       nextPage()
-    } else if (!typing && !busy) {
+    } else if (!typing && !busy && q) {
       if (/^[0-9]$/.test(event.key)) {
         event.preventDefault()
         const option = q.options[(Number(event.key) + 9) % 10]
@@ -196,7 +231,7 @@ export function QuestionCard({
         event.preventDefault()
         save({
           ...current.current,
-          page: Math.max(0, Math.min(request.questions.length - 1, page + (event.key === 'ArrowLeft' ? -1 : 1))),
+          page: Math.max(0, Math.min(questions.length - 1, page + (event.key === 'ArrowLeft' ? -1 : 1))),
         })
       } else if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
         event.preventDefault()
@@ -214,7 +249,7 @@ export function QuestionCard({
       }
     }
   }
-  const optionLabel = (option: (typeof q.options)[number], index: number) => (
+  const optionLabel = (option: QuestionOption, index: number) => (
     <span className={styles.optionContent}>
       <span>
         {(index + 1) % 10}. {option.label}
@@ -242,6 +277,15 @@ export function QuestionCard({
       onPointerDownCapture={touch}
       onClickCapture={touch}
       onKeyDown={onKeyDown}
+      onInputCapture={touch}
+      onCompositionStart={() => {
+        composing.current = true
+        touch()
+      }}
+      onCompositionEnd={(event) => {
+        composing.current = false
+        compositionEndedAt.current = event.timeStamp
+      }}
     >
       <div className={styles.toolbar}>
         <strong>{status}</strong>
@@ -263,9 +307,9 @@ export function QuestionCard({
         </YakitButton>
       </div>
       {error && !terminal && <YakitAlert type="error" message={error} />}
-      {!draft.collapsed && terminal && (
+      {!draft.collapsed && terminal && !form && (
         <dl className={styles.answers}>
-          {request.questions.map((question, index) => {
+          {questions.map((question, index) => {
             const accepted =
               request.answers?.find((value) => value.questionId === question.id) || draft.answers[question.id]
             const parts = accepted?.skipped
@@ -289,72 +333,106 @@ export function QuestionCard({
           })}
         </dl>
       )}
+      {!draft.collapsed && terminal && form && (
+        <div className={styles.questionSummary}>
+          {submitted ? formAnswerText(form, request.values || draft.values || {}) : status}
+        </div>
+      )}
       {!draft.collapsed && !terminal && (
         <>
-          <div className={styles.toolbar}>
-            <strong>{q.title}</strong>
-            <span>
-              {page + 1} / {request.questions.length}
-            </span>
-          </div>
-          <p className={styles.prompt}>{q.prompt}</p>
-          <div className={styles.secondary}>{q.multiple ? t('InteractiveUI.multiple') : t('InteractiveUI.single')}</div>
-          {q.multiple ? (
-            <div role="group" aria-label={q.title} className={styles.options}>
-              {q.options.map((option, index) => (
-                <YakitCheckbox
-                  key={option.id}
-                  wrapperClassName={`${styles.option} ${answer.selected.includes(option.id) ? styles.selected : ''}`}
-                  checked={answer.selected.includes(option.id)}
-                  disabled={busy}
-                  onChange={() => choose(option.id)}
-                >
-                  {optionLabel(option, index)}
-                </YakitCheckbox>
-              ))}
+          {form ? (
+            <div ref={formContainer}>
+              <QuestionFormFields
+                form={form}
+                values={draft.values}
+                disabled={busy}
+                instanceId={request.id}
+                onChange={(values) => {
+                  if (!submitting.current && !current.current.outcome)
+                    save({ ...current.current, values, submissionId: undefined })
+                }}
+                onSubmit={(values) => {
+                  if (!composing.current && !submitting.current) void submit({ ...current.current, values })
+                }}
+              />
             </div>
           ) : (
-            <YakitRadioButtons
-              wrapClassName={styles.options}
-              className={styles.radioOptions}
-              aria-label={q.title}
-              value={answer.selected[0]}
-              disabled={busy}
-              options={q.options.map((option, index) => ({ value: option.id, label: optionLabel(option, index) }))}
-              onChange={(event) => choose(event.target.value)}
-            />
-          )}
-          {q.allowFreeText && (
-            <YakitInput.TextArea
-              wrapperClassName={styles.freeText}
-              aria-label={t('InteractiveUI.ownAnswer')}
-              placeholder={t('InteractiveUI.answerPlaceholder')}
-              autoSize={{ minRows: 2, maxRows: 5 }}
-              isShowResize={false}
-              value={answer.text}
-              disabled={busy || terminal}
-              onCompositionStart={() => {
-                composing.current = true
-                touch()
-              }}
-              onCompositionEnd={(event) => {
-                composing.current = false
-                compositionEndedAt.current = event.timeStamp
-              }}
-              onChange={(event) => {
-                touch()
-                updateAnswer({ ...answer, text: event.target.value, skipped: false })
-              }}
-            />
+            q && (
+              <>
+                <div className={styles.toolbar}>
+                  <strong>{q.title}</strong>
+                  <span>
+                    {page + 1} / {questions.length}
+                  </span>
+                </div>
+                <p className={styles.prompt}>{q.prompt}</p>
+                <div className={styles.secondary}>
+                  {q.multiple ? t('InteractiveUI.multiple') : t('InteractiveUI.single')}
+                </div>
+                {q.multiple ? (
+                  <div role="group" aria-label={q.title} className={styles.options}>
+                    {q.options.map((option, index) => (
+                      <YakitCheckbox
+                        key={option.id}
+                        wrapperClassName={`${styles.option} ${answer.selected.includes(option.id) ? styles.selected : ''}`}
+                        checked={answer.selected.includes(option.id)}
+                        disabled={busy}
+                        onChange={() => choose(option.id)}
+                      >
+                        {optionLabel(option, index)}
+                      </YakitCheckbox>
+                    ))}
+                  </div>
+                ) : (
+                  <YakitRadioButtons
+                    wrapClassName={styles.options}
+                    className={styles.radioOptions}
+                    aria-label={q.title}
+                    value={answer.selected[0]}
+                    disabled={busy}
+                    options={q.options.map((option, index) => ({
+                      value: option.id,
+                      label: optionLabel(option, index),
+                    }))}
+                    onChange={(event) => choose(event.target.value)}
+                  />
+                )}
+                {q.allowFreeText && (
+                  <YakitInput.TextArea
+                    wrapperClassName={styles.freeText}
+                    aria-label={t('InteractiveUI.ownAnswer')}
+                    placeholder={t('InteractiveUI.answerPlaceholder')}
+                    autoSize={{ minRows: 2, maxRows: 5 }}
+                    isShowResize={false}
+                    value={answer.text}
+                    disabled={busy || terminal}
+                    onCompositionStart={() => {
+                      composing.current = true
+                      touch()
+                    }}
+                    onCompositionEnd={(event) => {
+                      composing.current = false
+                      compositionEndedAt.current = event.timeStamp
+                    }}
+                    onChange={(event) => {
+                      touch()
+                      updateAnswer({ ...answer, text: event.target.value, skipped: false })
+                    }}
+                  />
+                )}
+              </>
+            )
           )}
           <div className={styles.actions}>
-            <YakitButton
-              type="outline2"
-              disabled={page === 0 || busy}
-              onClick={() => save({ ...current.current, page: page - 1 })}
-            >
-              {t('InteractiveUI.previous')}
-            </YakitButton>
+            {!form && (
+              <YakitButton
+                type="outline2"
+                disabled={page === 0 || busy}
+                onClick={() => save({ ...current.current, page: page - 1 })}
+              >
+                {t('InteractiveUI.previous')}
+              </YakitButton>
+            )}
             <YakitButton type="text2" disabled={busy} onClick={skip}>
               {t('InteractiveUI.skipQuestion')}
             </YakitButton>
@@ -372,7 +450,7 @@ export function QuestionCard({
               </YakitButton>
             )}
             <YakitButton type="primary" loading={busy} onClick={nextPage}>
-              {page === request.questions.length - 1 ? t('InteractiveUI.submit') : t('InteractiveUI.next')}
+              {form || page === questions.length - 1 ? t('InteractiveUI.submit') : t('InteractiveUI.next')}
             </YakitButton>
           </div>
         </>

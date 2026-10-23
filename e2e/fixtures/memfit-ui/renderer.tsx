@@ -18,7 +18,7 @@ import { QuestionSummary } from '@/pages/ai-re-act/interactive-ui/QuestionSummar
 import { readDocument } from '@/pages/ai-re-act/interactive-ui/validate'
 import { syncQuestionPanel } from '@/pages/ai-re-act/interactive-ui/questionPanel'
 import { AIChatQSDataTypeEnum } from '@/pages/ai-re-act/hooks/aiRender'
-import { examples, question } from './examples.mjs'
+import { examples, question, questionForm } from './examples.mjs'
 import { contents, messages, store } from './adapter'
 
 const errors: string[] = (window as any).memfitUIErrors
@@ -39,7 +39,8 @@ function Fixture() {
       messages.length = 0
       contents.clear()
       store.setState({ questionPanelTokens: [], questionPanelRevision: 0 })
-      const request = name === 'question' ? question(options.mode, options.deadline) : undefined
+      const request =
+        name === 'question' ? (options.form ? questionForm : question)(options.mode, options.deadline) : undefined
       const next = {
         ...base,
         id: request ? `ui-question:${request.id}` : `ui-component:${name}`,
@@ -76,7 +77,7 @@ function Fixture() {
   ;(window as any).memfitUITest = api
   return (
     <ConfigProvider theme={getYakitAntdTheme(theme)}>
-      <main data-testid="fixture">
+      <main data-testid="fixture" data-example={item?.id}>
         {item?.data.request ? (
           <>
             <div data-testid="history">

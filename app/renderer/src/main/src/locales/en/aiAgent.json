@@ -1030,8 +1030,6 @@
     "submit": "Submit",
     "next": "Next",
     "expiredHint": "Automatically skipped. Reopen to answer later.",
-    "submitted": "Submitted",
-    "submitToChat": "Submit to chat",
     "addItem": "Add item",
     "removeItem": "Remove",
     "moveUp": "Move up",
@@ -1042,10 +1040,7 @@
     "chartHint": "Hover or focus to inspect values. Use arrow keys to move between points.",
     "viewChartData": "View data",
     "category": "Category",
-    "removedRows": "The data changed. Selections for removed rows were cleared.",
     "dataTable": "Data table",
-    "selectRow": "Select",
-    "selectRowId": "Select row {{id}}",
     "sortColumn": "Sort: {{column}}",
     "filterColumn": "Filter: {{column}}",
     "filter": "Filter",
@@ -1053,11 +1048,10 @@
     "previousPage": "Previous page",
     "nextPage": "Next page",
     "pageInfo": "Page {{page}} / {{pages}}, {{total}} rows",
-    "selectedRows": "{{count}} selected (including filtered rows)",
     "clearFilters": "Clear filters",
-    "submitSelected": "Submit selected rows",
     "tabPending": "Content is being generated…",
     "tabUnavailable": "This view is unavailable.",
-    "views": "Switch view"
+    "views": "Switch view",
+    "invalidQuestion": "Invalid question format"
   }
 }

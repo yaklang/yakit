@@ -8,38 +8,9 @@ const shortText = { type: 'string', maxLength: 256 }
 const primitive = { anyOf: [{ type: 'string' }, { type: 'number' }, { type: 'boolean' }] }
 const object = (properties, required = []) => ({ type: 'object', properties, required, additionalProperties: false })
 const array = (items, maxItems = 100) => ({ type: 'array', items, maxItems })
-const field = object(
-  {
-    type: { type: 'string', enum: ['string', 'number', 'integer', 'boolean', 'array'] },
-    title: shortText,
-    description: shortText,
-    default: { anyOf: [primitive, array(primitive)] },
-    enum: array(primitive, 30),
-    minimum: { type: 'number' },
-    maximum: { type: 'number' },
-    minLength: { type: 'integer', minimum: 0, maximum: 8000 },
-    maxLength: { type: 'integer', minimum: 0, maximum: 8000 },
-    uniqueItems: { type: 'boolean', default: true },
-    minItems: { type: 'integer', minimum: 0, maximum: 30 },
-    maxItems: { type: 'integer', minimum: 0, maximum: 30 },
-    items: object({ type: { const: 'string' }, enum: array(shortText, 30) }, ['type']),
-  },
-  ['type'],
-)
-const formSchema = object(
-  {
-    type: { const: 'object' },
-    properties: { type: 'object', maxProperties: 30, additionalProperties: field },
-    required: array(shortText, 30),
-    additionalProperties: { const: false, default: false },
-  },
-  ['type', 'properties'],
-)
-const submit = object({ label: { ...shortText, default: '提交到对话' } })
-
 export const catalog = {
-  version: '1.2',
-  compatibleVersions: ['1.0', '1.1'],
+  version: '1.3',
+  compatibleVersions: [],
   components: [
     ...visualizationComponents,
     ...informationComponents,
@@ -65,26 +36,6 @@ export const catalog = {
         },
         ['columns', 'rows'],
       ),
-    },
-    {
-      name: 'ParameterForm',
-      description:
-        '收集参数，使用平面 JSON Schema。fieldOrder 指定字段顺序；枚举字符串数组默认 uniqueItems=true，显示为多选，需要至少一项时设 minItems=1。只支持字符串、数值、布尔值和字符串数组；禁止 $ref、uiSchema、文件、代码和表达式。bindings.value 是本节点的本地状态键。submit_to_chat 成功后表单只读，每个节点只提交一次。不能替代专用追问的分页、自述、跳过或超时语义。',
-      schema: object(
-        {
-          title: shortText,
-          schema: formSchema,
-          fieldOrder: { ...array(shortText, 30), uniqueItems: true },
-          initial: {
-            type: 'object',
-            maxProperties: 30,
-            additionalProperties: { anyOf: [primitive, array(primitive)] },
-          },
-        },
-        ['schema'],
-      ),
-      bindings: ['value'],
-      actions: { submit_to_chat: submit },
     },
     {
       name: 'Steps',

@@ -2,7 +2,7 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import type { AIChatQSDataTypeEnum, AIChatQSData } from '../hooks/aiRender'
 import { globalSessionEngine } from '../hooks/ChatMultiSessionController'
-import { questionAnswers, questionText, type QuestionDraft } from './types'
+import { questionAnswers, questionText, formAnswerText, type QuestionDraft } from './types'
 import styles from './interactive.module.scss'
 
 export function QuestionSummary({
@@ -40,10 +40,16 @@ export function QuestionSummary({
           </YakitButton>
         )}
       </div>
-      {outcome === 'submitted' && answers.length > 0 ? (
+      {outcome === 'submitted' && request.form ? (
+        <div className={styles.questionSummary}>
+          {formAnswerText(request.form, request.values || draft?.values || {})}
+        </div>
+      ) : outcome === 'submitted' && answers.length > 0 ? (
         <div className={styles.questionSummary}>{questionText(request, answers)}</div>
       ) : (
-        <div className={styles.secondary}>{request.questions.map((question) => question.title).join(' / ')}</div>
+        <div className={styles.secondary}>
+          {request.form?.title || (request.questions || []).map((question) => question.title).join(' / ')}
+        </div>
       )}
     </section>
   )

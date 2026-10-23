@@ -1030,8 +1030,6 @@
     "submit": "提交",
     "next": "下一題",
     "expiredHint": "已自動跳過，展開後仍可補答。",
-    "submitted": "已提交",
-    "submitToChat": "提交到對話",
     "addItem": "新增一項",
     "removeItem": "刪除",
     "moveUp": "上移",
@@ -1042,10 +1040,7 @@
     "chartHint": "懸停或聚焦資料以檢視數值，方向鍵切換資料點。",
     "viewChartData": "檢視資料明細",
     "category": "類別",
-    "removedRows": "資料已更新，已移除失效的列選擇。",
     "dataTable": "資料明細",
-    "selectRow": "選擇",
-    "selectRowId": "選擇列 {{id}}",
     "sortColumn": "排序：{{column}}",
     "filterColumn": "篩選：{{column}}",
     "filter": "篩選",
@@ -1053,11 +1048,10 @@
     "previousPage": "上一頁",
     "nextPage": "下一頁",
     "pageInfo": "第 {{page}} / {{pages}} 頁，共 {{total}} 列",
-    "selectedRows": "已選 {{count}} 列（含篩選隱藏列）",
     "clearFilters": "清除篩選",
-    "submitSelected": "提交選取列",
     "tabPending": "內容正在產生…",
     "tabUnavailable": "此檢視暫時無法顯示。",
-    "views": "切換檢視"
+    "views": "切換檢視",
+    "invalidQuestion": "提問格式無效"
   }
 }

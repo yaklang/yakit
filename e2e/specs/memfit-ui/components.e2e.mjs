@@ -5,6 +5,9 @@ import { examples } from '../../fixtures/memfit-ui/examples.mjs'
 const button = (label) => $(`//button[normalize-space(.)='${label}']`)
 const show = async (name, options = {}) => {
   await browser.execute((name, options) => window.memfitUITest.show(name, options), name, options)
+  await $(
+    `main[data-example="${name === 'question' ? 'ui-question:question' : `ui-component:${name}`}"]`,
+  ).waitForExist()
   await (
     name === 'question' ? $('[data-testid="composer"] section') : $('section[aria-label="交互组件"]')
   ).waitForDisplayed()
@@ -80,45 +83,51 @@ describe('Memfit real Chromium component regression', () => {
     assert.equal(await $$('circle[data-point]').length, 3)
   })
 
-  it('form drafts survive streaming and remount and submit exactly once', async () => {
-    await show('ParameterForm')
-    await $('input[type="text"]').setValue('测试用户')
-    await browser.execute(
-      (source) => window.memfitUITest.setSource(source, false),
-      JSON.stringify(examples.ParameterForm),
-    )
-    await expect(button('提交到对话')).toBeDisabled()
-    await browser.execute(
-      (source) => window.memfitUITest.setSource(source, true),
-      JSON.stringify(examples.ParameterForm),
-    )
-    await browser.execute(() => window.memfitUITest.remount())
-    await expect($('input[type="text"]')).toHaveValue('测试用户')
-    await browser.execute(() => {
-      const button = document.querySelector('button[type="submit"]')
-      for (let index = 0; index < 15; index++) button.click()
+  for (const mode of ['blocking', 'async']) {
+    it(`${mode} form uses the composer overlay and submits exactly once`, async () => {
+      await show('question', { mode, form: true })
+      const region = $('[data-testid="composer"] section')
+      await region.$('input[type="text"]').setValue('测试用户')
+      await browser.execute(() => window.memfitUITest.remount())
+      await expect(region.$('input[type="text"]')).toHaveValue('测试用户')
+      await capture(`question-form-${mode}`)
+      await browser.execute(() => {
+        const input = document.querySelector('[data-testid="composer"] section input')
+        input.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true }))
+        input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', isComposing: true, bubbles: true }))
+        input.dispatchEvent(new CompositionEvent('compositionend', { bubbles: true }))
+      })
+      assert.equal((await messages()).length, 0)
+      await browser.execute(() => {
+        const button = Array.from(document.querySelectorAll('[data-testid="composer"] section button')).find(
+          (button) => button.textContent.trim() === '提交',
+        )
+        for (let index = 0; index < 15; index++) button.click()
+      })
+      await region.waitForExist({ reverse: true })
+      const sent = await messages()
+      assert.equal(sent.length, 1)
+      const receipt = JSON.parse(sent[0].UserInteraction)
+      assert.equal(receipt.source, 'questionnaire')
+      assert.deepEqual(receipt.values, { name: '测试用户' })
+      await expect($('[data-testid="history"]')).toHaveText(expect.stringContaining('姓名：测试用户'))
+      await browser.execute(() => window.memfitUITest.remount())
+      assert.equal(await button('提交').isExisting(), false)
+      assert.equal(await button('跳过此题').isExisting(), false)
     })
-    await button('提交到对话').waitForExist({ reverse: true })
-    const sent = await messages()
-    assert.equal(sent.length, 1)
-    assert.deepEqual(JSON.parse(sent[0].UserInteraction).values, { name: '测试用户' })
-    await expect($('input[type="text"]')).toBeDisabled()
-    await browser.execute(() => window.memfitUITest.remount())
-    assert.equal(await button('提交到对话').isExisting(), false)
-  })
+  }
 
-  it('table filter preserves hidden selection and submits selected rows', async () => {
+  it('table sorting and filtering stay local and preserve their state', async () => {
     await show('DataTable')
-    await $('input[aria-label="选择行 api"]').click()
+    await $('button[aria-label="排序：问题数量"]').click()
+    await expect($('tbody tr')).toHaveText(expect.stringContaining('管理界面'))
     await $('input[aria-label="筛选：模块"]').setValue('管理')
-    await expect($('input[aria-label="选择行 api"]')).not.toExist()
-    await button('提交到对话').click()
-    await button('提交到对话').waitForExist({ reverse: true })
-    const sent = await messages()
-    assert.equal(sent.length, 1)
-    assert.deepEqual(JSON.parse(sent[0].UserInteraction).values, { selectedRowIds: ['api'] })
-    assert.ok(sent[0].FreeInput.includes('API 网关'))
-    assert.ok(!sent[0].FreeInput.includes('管理界面'))
+    await browser.execute(() => window.memfitUITest.reparse())
+    await expect($('input[aria-label="筛选：模块"]')).toHaveValue('管理')
+    assert.equal(await $$('tbody tr').length, 1)
+    assert.equal(await $$('input[type="checkbox"]').length, 0)
+    assert.equal(await button('提交到对话').isExisting(), false)
+    assert.equal((await messages()).length, 0)
   })
 
   it('tabs and portal overlays work with real focus and Escape', async () => {

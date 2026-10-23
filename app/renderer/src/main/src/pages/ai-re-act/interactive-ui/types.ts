@@ -1,3 +1,5 @@
+import type { RJSFSchema } from '@rjsf/utils'
+
 export const UI_PROTOCOL = 'memfit.ui/1'
 
 export interface QuestionOption {
@@ -18,7 +20,9 @@ export interface QuestionRequest {
   id: string
   taskId: string
   mode: 'async' | 'blocking'
-  questions: UserQuestion[]
+  questions?: UserQuestion[]
+  form?: QuestionForm
+  values?: Record<string, unknown>
   deadline?: number
   touched: boolean
   state: 'pending' | 'submitted' | 'skipped' | 'expired' | 'cancelled'
@@ -33,14 +37,14 @@ export interface QuestionAnswer {
 }
 export interface UISubmission {
   id: string
-  source: 'questionnaire' | 'component'
+  source: 'questionnaire'
   requestId: string
   answers?: QuestionAnswer[]
-  nodeId?: string
   values?: Record<string, unknown>
 }
 export interface QuestionDraft {
   answers: Record<string, QuestionAnswer>
+  values?: Record<string, unknown>
   page: number
   collapsed: boolean
   touched: boolean
@@ -51,11 +55,11 @@ export interface QuestionDraft {
 export const emptyAnswer = (questionId: string): QuestionAnswer => ({ questionId, selected: [], text: '' })
 
 export function questionAnswers(request: QuestionRequest, draft: QuestionDraft): QuestionAnswer[] {
-  return request.questions.map((q) => draft.answers[q.id] || emptyAnswer(q.id))
+  return (request.questions || []).map((q) => draft.answers[q.id] || emptyAnswer(q.id))
 }
 
 export function questionText(request: QuestionRequest, answers: QuestionAnswer[]): string {
-  const lines = request.questions.map((q, index) => {
+  const lines = (request.questions || []).map((q, index) => {
     const a = answers.find((answer) => answer.questionId === q.id)
     const parts = a?.skipped
       ? []
@@ -69,4 +73,28 @@ export function questionText(request: QuestionRequest, answers: QuestionAnswer[]
     }
   })
   return lines.some((line) => line.answered) ? `对追问的回答：\n${lines.map((line) => line.text).join('\n')}` : ''
+}
+
+export interface QuestionForm {
+  title: string
+  schema: RJSFSchema
+  fieldOrder?: string[]
+  initial?: Record<string, unknown>
+}
+
+export function formAnswerText(form: QuestionForm, values: Record<string, unknown>): string {
+  const fields = form.schema.properties || {}
+  const order = [
+    ...(form.fieldOrder || []),
+    ...Object.keys(fields)
+      .filter((key) => !form.fieldOrder?.includes(key))
+      .sort(),
+  ]
+  return `对追问的回答：${form.title}\n${order
+    .map((key) => {
+      const field = fields[key] as RJSFSchema
+      const value = values[key]
+      return `${field.title || key}：${value === undefined ? '未填写' : typeof value === 'string' ? value : JSON.stringify(value)}`
+    })
+    .join('\n')}`
 }

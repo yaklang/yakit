@@ -23,7 +23,7 @@ vi.mock('@/i18n/useI18nNamespaces', async () => {
   }
 })
 
-const request = (): QuestionRequest => ({
+const request = (): QuestionRequest & { questions: NonNullable<QuestionRequest['questions']> } => ({
   id: 'q',
   taskId: 'task',
   state: 'pending',

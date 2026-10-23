@@ -3,7 +3,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-libra
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import { parseJSONPrefix } from '../partialJson'
-import { matchesSchema, readDocument, type UIDocument } from '../validate'
+import { readDocument, type UIDocument } from '../validate'
 import { catalog } from '../catalog.mjs'
 import manifest from '../catalog.manifest.json'
 import { ComponentCard, registeredComponents } from '../ComponentCard'
@@ -41,27 +41,14 @@ vi.mock('@/i18n/useI18nNamespaces', async () => {
   }
 })
 
-const document = () => ({
+const document = (): UIDocument => ({
   id: 'block',
   catalogVersion: catalog.version,
-  fallback: '请填写姓名',
+  fallback: '展示说明',
   root: 'layout',
   nodes: [
     { id: 'layout', component: 'Stack', props: { title: '信息' }, children: ['form'] },
-    {
-      id: 'form',
-      component: 'ParameterForm',
-      props: {
-        schema: {
-          type: 'object',
-          properties: { name: { type: 'string', title: '姓名' } },
-          required: ['name'],
-          additionalProperties: false,
-        },
-      },
-      bindings: { value: 'answers' },
-      action: { name: 'submit_to_chat', args: { label: '发送姓名' } },
-    },
+    { id: 'form', component: 'Text', props: { text: '参数只读内容' } },
   ],
 })
 const item = (doc = document()): React.ComponentProps<typeof ComponentCard>['item'] => ({
@@ -80,20 +67,21 @@ afterEach(() => {
 
 describe('catalog and incremental JSON', () => {
   it.each([
-    { properties: { name: { type: 'array' } }, required: ['name'] },
-    { properties: { name: { type: 'string' } }, required: ['missing'] },
-    { properties: { name: { type: 'number', minimum: 10, maximum: 1 } }, required: ['name'] },
-  ])('drops an unusable form but keeps its valid siblings: %j', (fields) => {
+    { component: 'ParameterForm', props: { schema: { type: 'object' } } },
+    { component: 'Text', props: { text: '不可提交' }, action: { name: 'submit_to_chat', args: {} } },
+    { component: 'Text', props: { text: '不可绑定答案' }, bindings: { value: 'answer' } },
+  ])('rejects input components and response actions while retaining valid siblings: %j', (node) => {
     const doc = document()
-    doc.nodes[1].props.schema = { type: 'object', additionalProperties: false, ...fields } as any
+    doc.nodes[1] = { id: 'form', ...node }
     doc.nodes[0].children!.push('note')
-    doc.nodes.push({ id: 'note', component: 'Text', props: { text: '仍然可读' } } as any)
+    doc.nodes.push({ id: 'note', component: 'Text', props: { text: '仍然可读' } })
     const result = readDocument(JSON.stringify(doc), true)
     expect(result.document?.nodes.map((node) => node.id)).toEqual(['layout', 'note'])
     expect(result.diagnostics.length).toBeGreaterThan(0)
     render(<ComponentCard item={item(doc)} />)
     expect(screen.getByText('仍然可读')).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: '发送姓名' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /提交/ })).toBeNull()
+    expect(send.mock.calls.some((call) => call[1].IsFreeInput)).toBe(false)
   })
   it('keeps the build manifest, schema registry and renderer in sync', () => {
     expect(manifest).toEqual(catalog)
@@ -121,141 +109,23 @@ describe('catalog and incremental JSON', () => {
   it('drops optional bad properties, unknown components and unsupported actions', () => {
     const doc = document()
     ;(doc.nodes[0].props as any).title = 123
-    ;(doc.nodes[1].action as any).name = 'execute_javascript'
+    doc.nodes[1].action = { name: 'execute_javascript' }
     const result = readDocument(JSON.stringify(doc), true)
     expect(result.document?.nodes[0].props.title).toBeUndefined()
-    expect(result.document?.nodes[1].action).toBeUndefined()
-    expect(result.diagnostics).toHaveLength(2)
+    expect(result.document?.nodes).toHaveLength(1)
+    expect(result.diagnostics.map((entry) => entry.path)).toEqual(['props.title', 'action', 'children'])
     ;(doc.nodes[0] as any).component = 'script'
-    expect(readDocument(JSON.stringify(doc), true).document?.nodes).toHaveLength(1)
+    expect(readDocument(JSON.stringify(doc), true).document?.nodes).toHaveLength(0)
   })
   it('falls back the entire block for a different version or required unknown component', () => {
     expect(readDocument(JSON.stringify({ ...document(), catalogVersion: '2.0' }), true).document).toBeUndefined()
     expect(readDocument(JSON.stringify({ ...document(), requiredComponents: ['FutureChart'] }), true).fallback).toBe(
-      '请填写姓名',
+      '展示说明',
     )
   })
-  it('rejects executable schema extensions', () => {
-    const doc = document()
-    ;(doc.nodes[1].props.schema as any).properties.name['ui:widget'] = 'FileUpload'
-    const result = readDocument(JSON.stringify(doc), true)
-    expect(result.document?.nodes[1].props.schema.properties.name['ui:widget']).toBeUndefined()
-    expect(result.diagnostics.length).toBeGreaterThan(0)
-  })
-  it('uses the catalog default to reject undeclared form values', () => {
-    const doc = document()
-    delete (doc.nodes[1].props.schema as any).additionalProperties
-    const result = readDocument(JSON.stringify(doc), true)
-    const schema = result.document!.nodes[1].props.schema
-    expect(result.diagnostics).toEqual([])
-    expect(schema.additionalProperties).toBe(false)
-    expect(matchesSchema(schema, { name: '小明', admin: true })).toBe(false)
-  })
 })
 
-describe('local component state', () => {
-  it('preserves form data during reparsing and only sends on explicit submit', async () => {
-    const initial = item()
-    const view = render(<ComponentCard item={initial} />)
-    fireEvent.change(screen.getByLabelText('姓名'), { target: { value: '小明' } })
-    expect(send).not.toHaveBeenCalled()
-    const revised = document()
-    revised.nodes[0].props.title = '补充信息'
-    const updated = { ...initial, data: { ...initial.data, source: JSON.stringify(revised) } }
-    view.rerender(<ComponentCard item={updated} />)
-    expect((screen.getByLabelText('姓名') as HTMLInputElement).value).toBe('小明')
-    await act(async () => {
-      fireEvent.click(screen.getByText('发送姓名'))
-    })
-    const request = send.mock.calls.find((call) => call[1].IsFreeInput)![1]
-    expect(JSON.parse(request.UserInteraction).values).toEqual({ name: '小明' })
-    expect(screen.getByRole('status')).toHaveTextContent('已提交')
-    expect(screen.queryByRole('button', { name: '发送姓名' })).toBeNull()
-    await act(async () => {
-      for (let i = 0; i < 15; i++) fireEvent.submit(screen.getByLabelText('姓名').closest('form')!)
-    })
-    expect(send.mock.calls.filter((call) => call[1].IsFreeInput)).toHaveLength(1)
-    view.unmount()
-    render(<ComponentCard item={updated} />)
-    expect(screen.getByRole('status')).toHaveTextContent('已提交')
-    expect(screen.queryByRole('button', { name: '发送姓名' })).toBeNull()
-    expect(screen.getByLabelText('姓名')).toBeDisabled()
-  })
-  it('cannot submit a streaming preview before server validation', async () => {
-    const data = item()
-    data.data.final = false
-    render(<ComponentCard item={data} />)
-    expect((screen.getByText('发送姓名').closest('button') as HTMLButtonElement).disabled).toBe(true)
-  })
-  it('keeps the same receipt ID when a failed submission is retried', async () => {
-    send.mockRejectedValueOnce(new Error('连接中断'))
-    render(<ComponentCard item={item()} />)
-    fireEvent.change(screen.getByLabelText('姓名'), { target: { value: '小明' } })
-    await act(async () => {
-      fireEvent.click(screen.getByText('发送姓名'))
-    })
-    expect(screen.getByText('Error: 连接中断')).toBeInTheDocument()
-    await act(async () => {
-      fireEvent.click(screen.getByText('发送姓名'))
-    })
-    const attempts = send.mock.calls.filter((call) => call[1].IsFreeInput)
-    expect(attempts).toHaveLength(2)
-    expect(JSON.parse(attempts[0][1].UserInteraction).id).toBe(JSON.parse(attempts[1][1].UserInteraction).id)
-    expect(screen.getByRole('status')).toHaveTextContent('已提交')
-    expect(screen.queryByRole('button', { name: '发送姓名' })).toBeNull()
-  })
-  it('uses the server receipt after reconnect even without a local draft', () => {
-    const data = item()
-    data.data.submissions = {
-      form: { id: 'accepted', source: 'component', requestId: 'block', nodeId: 'form', values: { name: '已接受' } },
-    }
-    render(<ComponentCard item={data} />)
-    expect(screen.getByLabelText('姓名')).toHaveValue('已接受')
-    expect(screen.getByLabelText('姓名')).toBeDisabled()
-    expect(screen.getByRole('status')).toHaveTextContent('已提交')
-    expect(screen.queryByRole('button', { name: '发送姓名' })).toBeNull()
-  })
-  it('keeps schema value types when using Yakit number, boolean and enum controls', async () => {
-    const doc = document()
-    Object.assign(doc.nodes[1].props.schema!.properties, {
-      retries: { type: 'integer', title: '重试次数', minimum: 0, maximum: 5 },
-      enabled: { type: 'boolean', title: '启用' },
-      mode: { type: 'number', title: '模式', enum: [1, 2] },
-    })
-    ;(doc.nodes[1].props as any).initial = { name: '小明', retries: 2, enabled: false, mode: 1 }
-    render(<ComponentCard item={item(doc)} />)
-    fireEvent.change(screen.getByRole('spinbutton'), { target: { value: '3' } })
-    fireEvent.click(screen.getByRole('checkbox', { name: '启用' }))
-    fireEvent.mouseDown(screen.getByRole('combobox'))
-    fireEvent.click(screen.getByText('2', { selector: '.ant-select-item-option-content' }))
-    await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: '发送姓名' }))
-    })
-    const request = send.mock.calls.find((call) => call[1].IsFreeInput)![1]
-    expect(JSON.parse(request.UserInteraction).values).toEqual({ name: '小明', retries: 3, enabled: true, mode: 2 })
-  })
-  it('renders ordered enum arrays as checkboxes and enforces nonempty unique values', () => {
-    const doc = document()
-    const form = doc.nodes[1]
-    ;(form.props as any).fieldOrder = ['focus', 'name']
-    ;(form.props.schema!.properties as any).focus = {
-      type: 'array',
-      title: '关注方面',
-      minItems: 1,
-      items: { type: 'string', enum: ['模块职责', '数据流'] },
-    }
-    const result = readDocument(JSON.stringify(doc), true)
-    const schema = result.document!.nodes[1].props.schema
-    expect(schema.properties.focus.uniqueItems).toBe(true)
-    expect(matchesSchema(schema, { name: '小明', focus: [] })).toBe(false)
-    expect(matchesSchema(schema, { name: '小明', focus: ['数据流', '数据流'] })).toBe(false)
-    const { container } = render(<ComponentCard item={item(doc)} />)
-    expect(screen.getByRole('checkbox', { name: '数据流' })).toBeInTheDocument()
-    expect(container.querySelector('input')).toHaveAttribute('type', 'checkbox')
-  })
-})
-
-const visualizationItem = (component: string, props: Record<string, any>, action = false) =>
+const visualizationItem = (component: string, props: Record<string, any>) =>
   item({
     ...document(),
     root: 'data',
@@ -264,9 +134,6 @@ const visualizationItem = (component: string, props: Record<string, any>, action
         id: 'data',
         component,
         props,
-        ...(action
-          ? { bindings: { value: 'selection' }, action: { name: 'submit_to_chat', args: { label: '分析选中行' } } }
-          : {}),
       },
     ],
   } as any)
@@ -289,7 +156,6 @@ const table = (count = 3) => ({
     id: `r${index}`,
     values: { name: `模块 ${index}`, count: index },
   })),
-  selection: 'multiple',
 })
 
 describe('visualization validation and rendering', () => {
@@ -380,116 +246,25 @@ describe('visualization validation and rendering', () => {
   })
 })
 
-describe('interactive data table', () => {
-  it('sorts numerically and retains hidden selections across filters, pages and reparsing', async () => {
-    const initial = visualizationItem('DataTable', table(25), true)
+describe('local data table viewing', () => {
+  it('sorts numerically, filters, pages and preserves view state without sending answers', () => {
+    const initial = visualizationItem('DataTable', table(25))
     const view = render(<ComponentCard item={initial} />)
-    fireEvent.click(screen.getByRole('checkbox', { name: '选择行 r0' }))
     fireEvent.click(screen.getByRole('button', { name: '排序：数量' }))
     fireEvent.click(screen.getByRole('button', { name: '排序：数量' }))
-    expect(screen.getAllByRole('checkbox')[0]).toHaveAttribute('aria-label', '选择行 r24')
+    expect(screen.getAllByRole('row')[1]).toHaveTextContent('模块 24')
     fireEvent.click(screen.getByRole('button', { name: '下一页' }))
-    expect(screen.getByRole('checkbox', { name: '选择行 r0' })).toBeChecked()
+    expect(screen.getByText('模块 0')).toBeInTheDocument()
     fireEvent.change(screen.getByLabelText('筛选：数量'), { target: { value: '24' } })
-    expect(screen.getAllByRole('checkbox')).toHaveLength(1)
-    expect(screen.getByText('已选 1 行（含筛选隐藏行）')).toBeInTheDocument()
+    expect(screen.getAllByRole('row')).toHaveLength(2)
     const next = { ...initial, data: { ...initial.data } }
     view.rerender(<ComponentCard item={next} />)
     expect(screen.getByLabelText('筛选：数量')).toHaveValue('24')
-    expect(send).not.toHaveBeenCalled()
-    await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: '分析选中行' }))
-    })
-    const request = send.mock.calls.find((call) => call[1].IsFreeInput)![1]
-    expect(JSON.parse(request.UserInteraction).values).toEqual({ selectedRowIds: ['r0'] })
-    expect(request.FreeInput).toContain('模块 0')
-    expect(request.FreeInput).not.toContain('模块 24')
-    expect(screen.queryByRole('button', { name: '分析选中行' })).toBeNull()
     view.unmount()
     render(<ComponentCard item={next} />)
-    expect(screen.queryByRole('button', { name: '分析选中行' })).toBeNull()
-  })
-  it('locks rapid clicks while pending, permits retry, and restores server receipts', async () => {
-    let reject!: (error: Error) => void
-    send.mockImplementationOnce(
-      () =>
-        new Promise((_, rejectPromise) => {
-          reject = rejectPromise
-        }),
-    )
-    const initial = visualizationItem('DataTable', table(), true)
-    const view = render(<ComponentCard item={initial} />)
-    fireEvent.click(screen.getByRole('checkbox', { name: '选择行 r1' }))
-    const button = screen.getByRole('button', { name: '分析选中行' })
-    await act(async () => {
-      for (let i = 0; i < 12; i++) fireEvent.click(button)
-    })
-    expect(send).toHaveBeenCalledTimes(1)
-    await act(async () => {
-      reject(new Error('断开'))
-    })
-    await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: '分析选中行' }))
-    })
-    expect(send).toHaveBeenCalledTimes(2)
-    expect(JSON.parse(send.mock.calls[0][1].UserInteraction).id).toBe(
-      JSON.parse(send.mock.calls[1][1].UserInteraction).id,
-    )
-    view.unmount()
-    const restored = visualizationItem('DataTable', table(), true)
-    restored.data.submissions = {
-      data: {
-        id: 'accepted',
-        source: 'component',
-        requestId: 'block',
-        nodeId: 'data',
-        values: { selectedRowIds: ['r1'] },
-      },
-    }
-    render(<ComponentCard item={restored} />)
-    expect(screen.getByRole('checkbox', { name: '选择行 r1' })).toBeChecked()
-    expect(screen.getByRole('checkbox', { name: '选择行 r1' })).toBeDisabled()
-    expect(screen.queryByRole('button', { name: '分析选中行' })).toBeNull()
-  })
-  it('keeps filters changed while a submission is awaiting acknowledgement', async () => {
-    let resolve!: () => void
-    send.mockImplementationOnce(
-      () =>
-        new Promise<void>((complete) => {
-          resolve = complete
-        }),
-    )
-    render(<ComponentCard item={visualizationItem('DataTable', table(), true)} />)
-    fireEvent.click(screen.getByRole('checkbox', { name: '选择行 r0' }))
-    await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: '分析选中行' }))
-    })
-    fireEvent.change(screen.getByLabelText('筛选：数量'), { target: { value: '2' } })
-    await act(async () => {
-      resolve()
-    })
-    expect(screen.getByLabelText('筛选：数量')).toHaveValue('2')
-    expect(screen.getAllByRole('checkbox')).toHaveLength(1)
-    expect(screen.getByRole('status')).toHaveTextContent('已提交')
-  })
-  it('removes stale selected rows on data updates, and disables streaming submissions', () => {
-    const initial = visualizationItem('DataTable', table(), true)
-    initial.data.final = false
-    const view = render(<ComponentCard item={initial} />)
-    fireEvent.click(screen.getByRole('checkbox', { name: '选择行 r1' }))
-    expect(screen.getByRole('button', { name: '分析选中行' })).toBeDisabled()
-    const nextProps = table()
-    nextProps.rows = nextProps.rows.filter((row) => row.id !== 'r1')
-    view.rerender(
-      <ComponentCard
-        item={{
-          ...initial,
-          data: { ...initial.data, source: visualizationItem('DataTable', nextProps, true).data.source },
-        }}
-      />,
-    )
-    expect(screen.getByText('数据已更新，已移除失效的行选择。')).toBeInTheDocument()
-    expect(screen.getByText('已选 0 行（含筛选隐藏行）')).toBeInTheDocument()
+    expect(screen.getByLabelText('筛选：数量')).toHaveValue('24')
+    expect(screen.queryByRole('checkbox')).toBeNull()
+    expect(screen.queryByRole('button', { name: /分析|提交/ })).toBeNull()
     expect(send).not.toHaveBeenCalled()
   })
 })
@@ -525,12 +300,12 @@ function informationDocument(): UIDocument {
 }
 
 describe('information components and view containers', () => {
-  it('replays compatible older catalog documents after the additive upgrade', () => {
-    for (const version of ['1.0', '1.1']) {
+  it('falls back for catalogs with the removed input contract', () => {
+    for (const version of ['1.0', '1.1', '1.2']) {
       const doc = { ...document(), catalogVersion: version }
       const result = readDocument(JSON.stringify(doc), true)
-      expect(result.document?.nodes).toHaveLength(2)
-      expect(result.diagnostics).toEqual([])
+      expect(result.document).toBeUndefined()
+      expect(result.fallback).toBe('展示说明')
     }
   })
   it('derives tab graph edges, repairs defaults and rejects duplicate identifiers or targets', () => {
@@ -567,16 +342,15 @@ describe('information components and view containers', () => {
     const complete = informationDocument()
     complete.root = 'views'
     view.rerender(<ComponentCard item={{ ...pending, data: { ...pending.data, source: JSON.stringify(complete) } }} />)
-    expect(screen.getByLabelText('姓名')).toBeTruthy()
+    expect(screen.getByText('参数只读内容')).toBeTruthy()
     expect(readDocument(source, true).diagnostics.filter((entry) => entry.path === 'children')).toHaveLength(2)
   })
 
-  it('keeps drafts and the selected tab through switching, reparsing and remounting', async () => {
+  it('keeps the selected tab through switching, reparsing and remounting', async () => {
     const user = userEvent.setup()
     const doc = informationDocument()
     const current = item(doc as any)
     const view = render(<ComponentCard item={current} />)
-    fireEvent.change(screen.getByLabelText('姓名'), { target: { value: '保留草稿' } })
     await user.click(screen.getByRole('tab', { name: '概览' }))
     expect(screen.getByRole('tab', { name: '概览' }).getAttribute('aria-selected')).toBe('true')
     doc.nodes.find((node) => node.id === 'views')!.props.defaultTab = 'input'
@@ -587,14 +361,8 @@ describe('information components and view containers', () => {
     render(<ComponentCard item={current} />)
     expect(screen.getByRole('tab', { name: '概览' }).getAttribute('aria-selected')).toBe('true')
     await user.click(screen.getByRole('tab', { name: '参数' }))
-    expect((screen.getByLabelText('姓名') as HTMLInputElement).value).toBe('保留草稿')
+    expect(screen.getByText('参数只读内容')).toBeInTheDocument()
     expect(send).not.toHaveBeenCalled()
-    await user.click(screen.getByRole('button', { name: '发送姓名' }))
-    await waitFor(() => expect(screen.queryByRole('button', { name: '发送姓名' })).toBeNull())
-    await user.click(screen.getByRole('tab', { name: '概览' }))
-    await user.click(screen.getByRole('tab', { name: '参数' }))
-    expect(screen.queryByRole('button', { name: '发送姓名' })).toBeNull()
-    expect(send).toHaveBeenCalledTimes(1)
   })
 
   it('offers segmented views and recovers when the selected tab is removed', async () => {

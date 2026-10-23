@@ -1,3 +1,4 @@
+import type { UISubmission } from '../types'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { handleComponentStream, handleComponentUI, UI_CONTENT_TYPE } from '../../hooks/grpcStreamHandler/aiComponentUI'
 import { AIChatQSDataTypeEnum } from '../../hooks/aiRender'
@@ -51,44 +52,19 @@ beforeEach(() => {
   dispatch.mockClear()
 })
 describe('UI event integration', () => {
-  it.each([true, false])(
-    'locks legacy forms from ordinary message receipts in either replay order (%s)',
-    async (messageFirst) => {
-      const metadata = {
-        id: 'receipt',
-        source: 'component',
-        requestId: 'block',
-        nodeId: 'form',
-        values: { name: '小明' },
-      }
-      const message = info({
-        Type: 'user_message',
-        IsSync: true,
-        Content: bytes(JSON.stringify({ id: 'receipt', text: '回答', metadata })),
-      })
-      const component = info({
-        Type: 'ui_component',
-        IsSync: true,
-        Content: bytes(JSON.stringify({ document: doc, revision: 0 })),
-      })
-      if (messageFirst) {
-        await aiInteractiveUIHandlers.user_message(message)
-        await handleComponentUI(component)
-      } else {
-        await handleComponentUI(component)
-        await aiInteractiveUIHandlers.user_message(message)
-      }
-      expect(contents.get('ui-component:block').data.submissions.form).toEqual(metadata)
-      await handleComponentUI(component)
-      expect(contents.get('ui-component:block').data.submissions.form).toEqual(metadata)
-    },
-  )
-  it.each([true, false])('restores accepted questions in either replay order (%s)', async (messageFirst) => {
-    const metadata = {
+  it.each([
+    [true, false],
+    [false, false],
+    [true, true],
+    [false, true],
+  ])('restores question/form receipts (message first %s, form %s)', async (messageFirst, form) => {
+    const metadata: UISubmission = {
       id: 'receipt',
       source: 'questionnaire',
       requestId: 'question',
-      answers: [{ questionId: 'scope', selected: ['frontend'], text: '只看交互' }],
+      ...(form
+        ? { values: { count: 3, enabled: true } }
+        : { answers: [{ questionId: 'scope', selected: ['frontend'], text: '只看交互' }] }),
     }
     const message = info({
       Type: 'user_message',
@@ -115,18 +91,20 @@ describe('UI event integration', () => {
       state: 'submitted',
       touched: true,
       answers: metadata.answers,
+      values: metadata.values,
     })
     expect(contents.get('ui-question:question').data.request.deadline).toBeUndefined()
     question.res.ID = 3
     await aiInteractiveUIHandlers.ui_question(question)
     expect(contents.get('ui-question:question').data.request.state).toBe('submitted')
     expect(contents.get('ui-question:question').data.request.answers).toEqual(metadata.answers)
+    expect(contents.get('ui-question:question').data.request.values).toEqual(metadata.values)
     expect(state.questionPanelTokens).toEqual([])
   })
   it.each([true, false])(
     'deduplicates a late answer and dequeue regardless of arrival order (%s)',
     async (messageFirst) => {
-      const metadata = { id: 'receipt', source: 'questionnaire', requestId: 'question', answers: [] }
+      const metadata: UISubmission = { id: 'receipt', source: 'questionnaire', requestId: 'question', answers: [] }
       const message = info({
         Type: 'user_message',
         IsSync: true,
@@ -159,7 +137,7 @@ describe('UI event integration', () => {
       expect(contents.get('new-task').interactionMetadata).toEqual(metadata)
     },
   )
-  it('merges streaming and authoritative snapshots into one stable block and preserves input', async () => {
+  it('merges streaming and authoritative snapshots into one stable block and preserves view state', async () => {
     const request = info({ Type: 'stream_start', Content: bytes('{"event_writer_id":"stream"}') })
     await handleComponentStream(request)
     const source = JSON.stringify(doc)
@@ -172,7 +150,7 @@ describe('UI event integration', () => {
     const block = contents.get('ui-component:block')
     expect(block.type).toBe(AIChatQSDataTypeEnum.UI_COMPONENT)
     expect(block.data.source).toBe(source)
-    block.uiState = { 'form:value': { value: { name: 'saved input' } } }
+    block.uiState = { table: { view: { page: 2 } } }
     await handleComponentUI({
       ...request,
       res: { ...request.res, Type: 'ui_component', Content: bytes(JSON.stringify({ document: doc, revision: 0 })) },

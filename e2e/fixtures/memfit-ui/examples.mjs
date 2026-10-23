@@ -14,14 +14,6 @@ const props = {
       { name: '集群', cost: 300 },
     ],
   },
-  ParameterForm: {
-    title: '参数设置',
-    schema: {
-      type: 'object',
-      properties: { name: { type: 'string', title: '姓名', minLength: 1 } },
-      required: ['name'],
-    },
-  },
   Steps: { items: [{ title: '读取', status: 'done' }, { title: '分析', status: 'active' }, { title: '交付' }] },
   Metrics: {
     items: [
@@ -62,7 +54,6 @@ const props = {
       { id: 'api', values: { name: 'API 网关', count: 12 } },
       { id: 'web', values: { name: '管理界面', count: 4 } },
     ],
-    selection: 'multiple',
   },
   Alert: { title: '存在风险', description: '请先确认目标范围。', severity: 'warning' },
   Tabs: {
@@ -89,9 +80,6 @@ export const examples = Object.fromEntries(
           component,
           props: value,
           ...(component === 'Stack' ? { children: ['child'] } : {}),
-          ...(['ParameterForm', 'DataTable'].includes(component)
-            ? { bindings: { value: 'answer' }, action: { name: 'submit_to_chat', args: { label: '提交到对话' } } }
-            : {}),
         },
         ...(component === 'Stack' ? [{ id: 'child', component: 'Text', props: { text: '分组内容' } }] : []),
         ...(component === 'Tabs'
@@ -148,5 +136,21 @@ export function question(mode = 'async', deadline) {
         ],
       },
     ],
+  }
+}
+
+export function questionForm(mode = 'async', deadline) {
+  const request = question(mode, deadline)
+  delete request.questions
+  return {
+    ...request,
+    form: {
+      title: '参数设置',
+      schema: {
+        type: 'object',
+        properties: { name: { type: 'string', title: '姓名', minLength: 1 } },
+        required: ['name'],
+      },
+    },
   }
 }
