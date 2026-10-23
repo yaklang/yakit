@@ -315,6 +315,28 @@
 .smart-decode-float-layer {
   position: fixed;
   z-index: 1050;
+  margin-top: 0;
+  padding: 2px 4px 4px;
+  .menu-drag {
+    height: 16px;
+    align-items: center;
+    button {
+      height: 16px;
+      width: 16px;
+      min-width: 16px;
+    }
+  }
+  .decode-box {
+    .only-one {
+      padding: 0 4px;
+    }
+    .decode-copy-replace {
+      .content,
+      .content-solid {
+        padding: 6px 8px;
+      }
+    }
+  }
 }
 .http-fuzzer-range-editor-menu {
   position: absolute;

@@ -492,7 +492,7 @@ export const SmartDecodeFloatPanel: React.FC<SmartDecodeFloatPanelProps> = (prop
     const directionX = editorInfo?.direction?.x
     const alignRight = directionX === 'middle' || directionX === 'right'
     let nextLeft = alignRight ? anchor.right - panelWidth : anchor.left
-    const gap = 6
+    const gap = 2
     let nextTop = editorInfo?.direction?.y === 'bottom' ? anchor.top - gap - panelHeight : anchor.bottom + gap
 
     if (nextLeft < hostRect.left) nextLeft = hostRect.left
