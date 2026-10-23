@@ -1,57 +1,40 @@
 import type React from 'react'
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { Avatar, Timeline } from 'antd'
-import { PlusOutlined } from '@ant-design/icons'
+import { createPortal } from 'react-dom'
+import { Timeline } from 'antd'
 import styles from './HTTPFuzzerEditorMenu.module.scss'
 import { failed } from '@/utils/notification'
 import classNames from 'classnames'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import {
-  XOutlined,
-  ChevronDownOutlined,
-  DocumentDuplicateOutlined,
-  PencilAltOutlined,
-  TrashOutlined,
-} from '@yakit-libs/yakit-ui-icons/outline'
+import { XOutlined, DocumentDuplicateOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import ReactDraggable from 'react-draggable'
-import { ChevronUpIcon } from '@yakit-libs/yakit-ui-icons/oldicon/ChevronUpIcon'
 import { IconSolidCodeIcon } from '@yakit-libs/yakit-ui-icons/oldicon/IconSolidCodeIcon'
 import { IconSolidSparklesIcon } from '@yakit-libs/yakit-ui-icons/oldicon/IconSolidSparklesIcon'
 import { IconSolidTagIcon } from '@yakit-libs/yakit-ui-icons/oldicon/IconSolidTagIcon'
-import { DragDropContext, Droppable, Draggable, type DraggingStyle } from '@hello-pangea/dnd'
 import { type AutoDecodeResult, execAutoDecode } from '@/utils/encodec'
-import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import type { QueryFuzzerLabelResponseProps } from './StringFuzzer'
-import { setRemoteValue } from '@/utils/kv'
-import { useMemoizedFn, useThrottleFn } from 'ahooks'
-import { TerminalSolid, DragSortSolid } from '@yakit-libs/yakit-ui-icons/solid'
+import { useMemoizedFn } from 'ahooks'
+import { TerminalSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { queryYakScriptList } from '../yakitStore/network'
 import type { YakScript } from '../invoker/schema'
 import { IconSolidAIIcon } from '@yakit-libs/yakit-ui-icons/oldicon/IconSolidAIIcon'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
-import { defaultLabel } from '@/defaultConstants/HTTPFuzzerPage'
 import { PluginSwitchToTag } from '../pluginEditor/defaultconstants'
 import { setClipboardText } from '@/utils/clipboard'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import type { YakParamProps } from '../plugins/pluginsType'
+import { getMenuPanelStyle, type CountDirectionProps, type EditorDetailInfoProps } from './fuzzerEditorMenuLayout'
+import { FuzzerEditorMenuBar, type FuzzerEditorMenuGroup, type FuzzerEditorMenuItem } from './fuzzerEditorMenuBar'
+import {
+  CodecMenuList,
+  DECODE_MENU_ACTIONS,
+  ENCODE_MENU_ACTIONS,
+  FUZZER_LABEL_LIST_NUMBER,
+  InsertTagPanel,
+} from './fuzzerEditorMenuItems'
+
+export type { CountDirectionProps, EditorDetailInfoProps, FuzzerEditorMenuGroup, FuzzerEditorMenuItem }
 const { ipcRenderer } = window.require('electron')
-
-export interface CountDirectionProps {
-  x?: 'middle' | 'left' | 'right'
-  y?: 'bottom' | 'top'
-}
-
-export interface EditorDetailInfoProps {
-  direction: CountDirectionProps
-  top: number
-  bottom: number
-  left: number
-  right: number
-  focusX: number
-  focusY: number
-  lineHeight: number
-  scrollTop: number
-}
 
 export interface SmartDecodeAnchorRect {
   top: number
@@ -62,21 +45,6 @@ export interface SmartDecodeAnchorRect {
   height: number
 }
 
-// isOtherGroup是否为 编码/解码
-// isGroupShow插入标签是否相邻其他元素
-const directionStyle = (editorInfo, isOtherGroup = false, isGroupShow = false) => {
-  const { direction, top = 0, left = 0, bottom = 0, right = 0 } = editorInfo || {}
-  const obj: any = {}
-  if (direction) {
-    if (direction.y === 'bottom') {
-      obj.bottom = '32px'
-    } else if (direction.y === 'top') {
-      obj.top = '28px'
-    }
-  }
-  return obj
-}
-
 export const snapshotRect = (rect: DOMRect): SmartDecodeAnchorRect => ({
   top: rect.top,
   left: rect.left,
@@ -85,27 +53,6 @@ export const snapshotRect = (rect: DOMRect): SmartDecodeAnchorRect => ({
   width: rect.width,
   height: rect.height,
 })
-
-// 拖拽左右限制
-const getItemStyle = (isDragging, draggableStyle) => {
-  let transform: string = draggableStyle['transform'] || ''
-  // console.log("transform---",transform,isDragging);
-  if (isDragging) {
-    // 使用正则表达式匹配 translate 函数中的两个参数
-    const match = transform.match(/translate\((-?\d+)px, (-?\d+)px\)/)
-    if (match) {
-      // 提取匹配到的两个值，并将它们转换为数字
-      const [value1, value2] = match.slice(1).map(Number)
-      const modifiedString = transform.replace(/translate\((-?\d+)px, (-?\d+)px\)/, `translate(0px, ${value2}px)`)
-      transform = modifiedString
-    }
-  }
-
-  return {
-    ...draggableStyle,
-    transform,
-  }
-}
 
 export interface HTTPFuzzerClickEditorMenuProps {
   close: () => void
@@ -119,6 +66,10 @@ export interface HTTPFuzzerClickEditorMenuProps {
   closeTimeout?: boolean
   toOpenAiChat?: AIPluginComponentProps['toOpenAiChat']
   onClickSegmentedType?: (v: 'insert-tag' | 'aiplugin' | undefined) => void
+  /** 选区工具条测量后决定是否显示文案，未传时按编辑器宽度自行判断 */
+  showMenuLabel?: boolean
+  /** 不传则是插入标签、AI工具。传入后整组替换，方便以后改标签和面板 */
+  menuGroups?: FuzzerEditorMenuGroup[]
 }
 
 export interface LabelDataProps {
@@ -128,7 +79,48 @@ export interface LabelDataProps {
   Label?: string
 }
 
-export const FUZZER_LABEL_LIST_NUMBER = 'fuzzer-label-list-number'
+export { FUZZER_LABEL_LIST_NUMBER }
+
+export const buildClickEditorMenuItems = (
+  t: (key: string) => string,
+  options: {
+    editorInfo?: EditorDetailInfoProps
+    insert: (v: QueryFuzzerLabelResponseProps) => void
+    addLabel: () => void
+    toOpenAiChat?: AIPluginComponentProps['toOpenAiChat']
+  },
+): FuzzerEditorMenuItem[] => [
+  {
+    id: 'insert-tag',
+    label: t('HTTPFuzzerClickEditorMenu.insertTag'),
+    icon: <IconSolidTagIcon className={styles['tag']} />,
+    className: styles['insert-box'],
+    panelClassName: styles['http-fuzzer-click-editor-menu'],
+    waitReady: true,
+    renderPanel: ({ maxWidth, onReady }) => (
+      <InsertTagPanel
+        editorInfo={options.editorInfo}
+        insert={options.insert}
+        addLabel={options.addLabel}
+        maxWidth={maxWidth}
+        onReady={onReady}
+      />
+    ),
+  },
+  {
+    id: 'ai',
+    label: t('HTTPFuzzerClickEditorMenu.aiTool'),
+    icon: <IconSolidAIIcon className={styles['tag']} />,
+    className: styles['aiplugin-box'],
+    panelClassName: styles['http-fuzzer-click-editor-menu'],
+    waitReady: true,
+    renderPanel: ({ onReady }) => (
+      <div className={styles['menu-content']}>
+        <AIPluginComponent toOpenAiChat={options.toOpenAiChat} onReady={onReady} />
+      </div>
+    ),
+  },
+]
 
 export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps> = (props) => {
   const {
@@ -136,61 +128,27 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
     editorInfo,
     insert,
     addLabel,
+    className,
     fizzSelectTimeoutId,
     closeTimeout = true,
     toOpenAiChat,
-    segmentedTypeReset,
-    onClickSegmentedType,
+    showMenuLabel,
+    menuGroups,
   } = props
   const { t, i18n } = useI18nNamespaces(['webFuzzer', 'yakitUi'])
-  const { direction, top = 0, left = 0, bottom = 0, right = 0, scrollTop = 0 } = editorInfo || {}
-  const [labelData, setLabelData] = useState<QueryFuzzerLabelResponseProps[]>([])
-  const [selectLabel, setSelectLabel] = useState<string>()
-  const [inputValue, setInputValue] = useState<string>()
-  const [segmentedType, setSegmentedType] = useState<'insert-tag' | 'aiplugin'>()
-  const [destinationDrag, setDestinationDrag] = useState<string>('droppable-editor')
-  // 是否中文输入中
-  const isComposition = useRef<boolean>(false)
-  // 是否在拖拽中
-  const isDragging = useRef<boolean>(false)
-  // 鼠标是否进入main
   const isMainEnter = useRef<boolean>(false)
-  // 鼠标是否进入simple
-  const isSimpleEnter = useRef<boolean>(false)
-  // 菜单显示宽度
-  const [menuWidth, setMenuWidth] = useState<number>()
-  // 菜单显示高度
-  const [menuHeight, setMenuHeight] = useState<number>()
-
-  const getData = () => {
-    ipcRenderer.invoke('QueryFuzzerLabel').then((data: { Data: QueryFuzzerLabelResponseProps[] }) => {
-      const { Data } = data
-      if (Array.isArray(Data) && Data.length > 0) {
-        const defaultMap = new Map(defaultLabel.map((item) => [item.DefaultDescription, item.DescriptionUi]))
-        const mergedData = Data.map((item) => ({
-          ...item,
-          DescriptionUi: defaultMap.get(item.DefaultDescription) || '',
-        }))
-
-        setLabelData(mergedData)
-        setSelectLabel(undefined)
-      }
-    })
-  }
-
   const [boxHidden, setBoxHidden] = useState<boolean>(true)
-  // 0.3秒后显示
+
   useEffect(() => {
     setTimeout(() => {
       setBoxHidden(false)
     }, 300)
   }, [])
-  // 5秒无操作自动关闭
+
   const closeTimeoutFun = useMemoizedFn(() => {
     const closeTimeoutId = setTimeout(() => {
       close()
     }, 5 * 1000)
-    // 返回timeoutId，以便稍后取消
     return closeTimeoutId
   })
   useEffect(() => {
@@ -202,96 +160,22 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
         fizzSelectTimeoutId.current = closeTimeoutFun()
       }
     }
-  }, [isMainEnter.current, isSimpleEnter.current])
+  }, [isMainEnter.current])
 
-  useEffect(() => {
-    if (segmentedTypeReset) {
-      setSegmentedType(undefined)
-    }
-  }, [segmentedTypeReset])
-
-  useEffect(() => {
-    onClickSegmentedType && onClickSegmentedType(segmentedType)
-  }, [segmentedType])
-
-  useEffect(() => {
-    if (right - left < 720) {
-      const width: number = Math.floor((right - left) / 2)
-      setMenuWidth(width)
-    }
-
-    const height: number = Math.floor((bottom - top) / 2 - 30)
-    setMenuHeight(height)
-
-    getData()
-  }, [])
-
-  const insertLabel = (item: QueryFuzzerLabelResponseProps) => {
-    if (isSelect(item)) {
-      // 复原修改项
-      setSelectLabel(undefined)
-    } else {
-      insert(item)
-    }
-  }
-  const delLabel = (Hash: string) => {
-    ipcRenderer.invoke('DeleteFuzzerLabel', { Hash }).then(() => {
-      getData()
-    })
-  }
-  const reset = () => {
-    // 删除标签后重新添加默认标签
-    ipcRenderer.invoke('DeleteFuzzerLabel', {}).then(() => {
-      setRemoteValue(FUZZER_LABEL_LIST_NUMBER, JSON.stringify({ number: defaultLabel.length }))
-      ipcRenderer
-        .invoke('SaveFuzzerLabel', {
-          Data: defaultLabel,
-        })
-        .then(() => {
-          getData()
-        })
-    })
-  }
-  const isSelect = (item: QueryFuzzerLabelResponseProps) => selectLabel === item.Hash
-
-  const dragList = (newItems) => {
-    // 重新排序
-    ipcRenderer.invoke('DeleteFuzzerLabel', {}).then(() => {
-      setRemoteValue(FUZZER_LABEL_LIST_NUMBER, JSON.stringify({ number: newItems.length }))
-      ipcRenderer.invoke('SaveFuzzerLabel', {
-        Data: newItems,
-      })
-    })
-  }
-
-  // 拖放完成后的回调函数
-  const onDragEnd = (result) => {
-    isDragging.current = false
-    if (!result.destination) return
-
-    const newItems = Array.from(labelData)
-    const [reorderedItem] = newItems.splice(result.source.index, 1)
-    newItems.splice(result.destination.index, 0, reorderedItem)
-
-    setLabelData(newItems)
-    dragList([...newItems].reverse())
-  }
-
-  /**
-   * @description: 计算移动的范围是否在目标范围类destinationDrag
-   */
-  const onDragUpdate = useThrottleFn(
-    (result) => {
-      if (!result.destination) {
-        setDestinationDrag('')
-        return
-      }
-      if (result.destination.droppableId !== destinationDrag) setDestinationDrag(result.destination.droppableId)
+  const groups: FuzzerEditorMenuGroup[] = menuGroups ?? [
+    {
+      id: 'click',
+      simpleClassName: classNames(styles['http-fuzzer-click-editor-simple'], className),
+      items: buildClickEditorMenuItems(t, { editorInfo, insert, addLabel, toOpenAiChat }),
     },
-    { wait: 200 },
-  ).run
+  ]
+
   return (
-    <div
+    <FuzzerEditorMenuBar
+      groups={groups}
+      editorInfo={editorInfo}
+      lang={i18n.language}
+      showLabel={showMenuLabel}
       className={classNames(styles['http-fuzzer-click-editor'], {
         [styles['box-hidden']]: boxHidden,
       })}
@@ -301,264 +185,17 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
       onMouseLeave={() => {
         isMainEnter.current = false
       }}
-    >
-      <div className={classNames(styles['http-fuzzer-click-editor-simple'], props.className || '')}>
-        <div className={styles['show-box']}>
-          <div
-            className={styles['insert-box']}
-            style={{ width: right - left < 550 ? undefined : i18n.language.startsWith('zh') ? 104 : 120 }}
-            onClick={() => {
-              if (segmentedType === 'insert-tag') {
-                setSegmentedType(undefined)
-              } else {
-                setSegmentedType('insert-tag')
-              }
-            }}
-          >
-            <IconSolidTagIcon className={styles['tag']} />
-            {right - left < 550 ? (
-              <></>
-            ) : (
-              <div className={styles['content']}>{t('HTTPFuzzerClickEditorMenu.insertTag')}</div>
-            )}
-            {segmentedType === 'insert-tag' ? (
-              <ChevronUpIcon className={styles['up']} />
-            ) : (
-              <ChevronDownOutlined size={16} className={styles['down']} />
-            )}
-          </div>
-          <div className={styles['line']}></div>
-          <div
-            className={styles['aiplugin-box']}
-            style={{ width: right - left < 550 ? undefined : 95 }}
-            onClick={() => {
-              if (segmentedType === 'aiplugin') {
-                setSegmentedType(undefined)
-              } else {
-                setSegmentedType('aiplugin')
-              }
-            }}
-          >
-            <IconSolidAIIcon className={styles['tag']} />
-            {right - left < 550 ? (
-              <></>
-            ) : (
-              <div className={styles['content']}>{t('HTTPFuzzerClickEditorMenu.aiTool')}</div>
-            )}
-            {segmentedType === 'aiplugin' ? (
-              <ChevronUpIcon className={styles['up']} />
-            ) : (
-              <ChevronDownOutlined size={16} className={styles['down']} />
-            )}
-          </div>
-        </div>
-      </div>
-      {segmentedType === 'insert-tag' && (
-        <div
-          className={classNames(styles['http-fuzzer-click-editor-menu'])}
-          onCompositionStart={() => {
-            isComposition.current = true
-          }}
-          onCompositionEnd={() => {
-            isComposition.current = false
-          }}
-          style={{
-            ...directionStyle(editorInfo),
-            left: ['left'].includes(editorInfo?.direction.x || '') ? 0 : undefined,
-            right: ['right', 'middle'].includes(editorInfo?.direction.x || '') && !onClickSegmentedType ? 0 : undefined,
-            width: menuWidth ? menuWidth : 360,
-            maxHeight: menuHeight ? menuHeight : undefined,
-          }}
-        >
-          <div className={styles['menu-header']}>
-            <div className={styles['menu-header-left']}>
-              {t('HTTPFuzzerClickEditorMenu.commonTags')}
-              {!(menuWidth && menuWidth < 220) && (
-                <span className={styles['menu-header-left-count']}>{labelData.length || ''}</span>
-              )}
-            </div>
-            <div className={styles['menu-header-opt']}>
-              <YakitButton style={{ paddingLeft: 2, paddingRight: 2 }} type="text" onClick={() => addLabel()}>
-                {t('YakitButton.add')} <PlusOutlined className={styles['add-icon']} />
-              </YakitButton>
-              <div className={styles['line']}></div>
-              <YakitButton type="text2" style={{ color: '#85899E' }} onClick={() => reset()}>
-                {t('YakitButton.restore')}
-              </YakitButton>
-            </div>
-          </div>
-
-          <div className={styles['menu-list']}>
-            <DragDropContext
-              onDragEnd={onDragEnd}
-              onDragUpdate={onDragUpdate}
-              onBeforeDragStart={() => {
-                isDragging.current = true
-              }}
-            >
-              <Droppable droppableId="droppable-editor">
-                {(provided) => (
-                  <div {...provided.droppableProps} ref={provided.innerRef}>
-                    {labelData.map((item, index) => (
-                      <Draggable key={item?.Description} draggableId={`${item.Id}`} index={index}>
-                        {(provided, snapshot) => {
-                          const draggablePropsStyle = provided.draggableProps.style as DraggingStyle
-
-                          return (
-                            <div
-                              ref={provided.innerRef}
-                              {...provided.draggableProps}
-                              {...provided.dragHandleProps}
-                              style={{
-                                ...draggablePropsStyle,
-                                ...getItemStyle(snapshot.isDragging, provided.draggableProps.style),
-                                top:
-                                  isDragging.current && draggablePropsStyle?.top
-                                    ? draggablePropsStyle.top - top + scrollTop
-                                    : 'none',
-                                left:
-                                  isDragging.current && draggablePropsStyle?.left
-                                    ? draggablePropsStyle.left - left - 60
-                                    : 'none',
-                              }}
-                            >
-                              <div
-                                className={classNames(styles['menu-list-item'], {
-                                  [styles['menu-list-item-drag']]: snapshot.isDragging,
-                                })}
-                                onClick={() => insertLabel(item)}
-                              >
-                                <div
-                                  className={styles['menu-list-item-info']}
-                                  style={{
-                                    overflow: 'hidden',
-                                  }}
-                                >
-                                  <DragSortSolid size={12} className={styles['drag-sort-icon']} />
-                                  {isSelect(item) ? (
-                                    <YakitInput
-                                      defaultValue={item.Description}
-                                      className={styles['input']}
-                                      size="small"
-                                      onChange={(e) => {
-                                        setInputValue(e.target.value)
-                                      }}
-                                      onClick={(e) => {
-                                        e.stopPropagation()
-                                      }}
-                                    />
-                                  ) : (
-                                    <>
-                                      <div className={styles['title']}>{t(item.DescriptionUi || item.Description)}</div>
-                                      {(!menuWidth || menuWidth > 250) && (
-                                        <div
-                                          className={classNames(styles['sub-title'], {
-                                            [styles['sub-title-left']]: !!item.Description,
-                                          })}
-                                        >
-                                          {item.Label}
-                                        </div>
-                                      )}
-                                    </>
-                                  )}
-                                </div>
-                                <div className={styles['menu-list-item-opt']}>
-                                  {isSelect(item) ? (
-                                    <YakitButton
-                                      type="text"
-                                      onClick={(e) => {
-                                        e.stopPropagation()
-                                        if (inputValue) {
-                                          ipcRenderer
-                                            .invoke('SaveFuzzerLabel', {
-                                              Data: [
-                                                {
-                                                  ...item,
-                                                  Description: inputValue,
-                                                },
-                                              ],
-                                            })
-                                            .then(() => {
-                                              getData()
-                                            })
-                                        }
-                                      }}
-                                    >
-                                      {t('YakitButton.confirm')}
-                                    </YakitButton>
-                                  ) : (
-                                    <>
-                                      {!item.DefaultDescription.endsWith('-fixed') && (
-                                        <>
-                                          <PencilAltOutlined
-                                            color="#85899E"
-                                            size={16}
-                                            className={classNames(styles['form-outlined'])}
-                                            onClick={(e) => {
-                                              e.stopPropagation()
-                                              setSelectLabel(item.Hash)
-                                              setInputValue(item.Description)
-                                            }}
-                                          />
-                                          <TrashOutlined
-                                            size={16}
-                                            className={classNames(styles['trash-icon'])}
-                                            onClick={(e) => {
-                                              e.stopPropagation()
-                                              delLabel(item.Hash)
-                                            }}
-                                          />
-                                        </>
-                                      )}
-                                    </>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          )
-                          // snapshot.isDragging 是否拖拽此项
-                        }}
-                      </Draggable>
-                    ))}
-                    {provided.placeholder}
-                  </div>
-                )}
-              </Droppable>
-            </DragDropContext>
-          </div>
-        </div>
-      )}
-      {segmentedType === 'aiplugin' && (
-        <div
-          style={{
-            ...directionStyle(editorInfo),
-            left: ['left'].includes(editorInfo?.direction.x || '')
-              ? right - left < 550
-                ? 50
-                : i18n.language.startsWith('zh')
-                  ? 104
-                  : 120
-              : undefined,
-            right: ['right', 'middle'].includes(editorInfo?.direction.x || '') ? 0 : undefined,
-            width: 200,
-          }}
-          className={classNames(styles['http-fuzzer-click-editor-menu'])}
-        >
-          <div className={styles['menu-content']}>
-            {segmentedType === 'aiplugin' && <AIPluginComponent toOpenAiChat={toOpenAiChat} />}
-          </div>
-        </div>
-      )}
-    </div>
+    />
   )
 }
 
 export interface AIPluginComponentProps {
   toOpenAiChat?: (v: string, params?: YakParamProps[]) => void
+  onReady?: () => void
 }
 
-export const AIPluginComponent: React.FC<AIPluginComponentProps> = (props) => {
-  const { toOpenAiChat } = props
+export function AIPluginComponent(props: AIPluginComponentProps) {
+  const { toOpenAiChat, onReady } = props
   const { t, i18n } = useI18nNamespaces(['webFuzzer'])
   const [loading, setLoading] = useState<boolean>(false)
   const [dataSource, setDataSource] = useState<{ key: string; value: string; params?: YakParamProps[] }[]>([])
@@ -598,6 +235,7 @@ export const AIPluginComponent: React.FC<AIPluginComponentProps> = (props) => {
       },
       () => {
         setLoading(false)
+        onReady?.()
       },
       10,
       undefined,
@@ -617,156 +255,13 @@ export const AIPluginComponent: React.FC<AIPluginComponentProps> = (props) => {
             key={item.key}
             onClick={() => toOpenAiChat && toOpenAiChat(item.key, item.params)}
           >
-            <div className={styles['title']}>{item.value}</div>
+            <div className={styles['title']} title={item.value}>
+              {item.value}
+            </div>
           </div>
         ))}
       </div>
     </YakitSpin>
-  )
-}
-
-export interface EncodeComponentProps {
-  insert: (v: any) => void
-}
-interface decodeDataProps {
-  color: string
-  avatar: string
-  title: string
-  sub_title: string
-  encode: (v: string) => string
-}
-const EncodeComponent: React.FC<EncodeComponentProps> = (props) => {
-  const { insert } = props
-  const { t, i18n } = useI18nNamespaces(['webFuzzer'])
-  const decodeData = useRef<decodeDataProps[]>([
-    {
-      color: 'rgba(136, 99, 247, 0.6)',
-      avatar: 'm',
-      title: t('EncodeComponent.md5Encode'),
-      sub_title: 'md5',
-      encode: (v: string) => `{{md5(${v})}}`,
-    },
-    {
-      color: 'rgba(74, 148, 248, 0.6)',
-      avatar: 'b',
-      title: t('EncodeComponent.base64Encode'),
-      sub_title: 'base64enc',
-      encode: (v: string) => `{{base64enc(${v})}}`,
-    },
-    {
-      color: 'rgba(74, 148, 248, 0.6)',
-      avatar: 'b',
-      title: t('EncodeComponent.base64ThenUrlEncode'),
-      sub_title: '{{urlenc(base64enc(xxx))}}',
-      encode: (v: string) => `{{urlenc(base64enc(${v}))}}`,
-    },
-    {
-      color: 'rgba(86, 201, 145, 0.6)',
-      avatar: 'h',
-      title: t('EncodeComponent.hexEncode'),
-      sub_title: 'hexenc',
-      encode: (v: string) => `{{hexenc(${v})}}`,
-    },
-    {
-      color: 'rgba(244, 115, 107, 0.6)',
-      avatar: 'h',
-      title: t('EncodeComponent.htmlEncode'),
-      sub_title: 'htmlenc',
-      encode: (v: string) => `{{htmlenc(${v})}}`,
-    },
-    {
-      color: 'rgba(255, 182, 96, 0.6)',
-      avatar: 'u',
-      title: t('EncodeComponent.urlEncode'),
-      sub_title: 'urlenc',
-      encode: (v: string) => `{{urlenc(${v})}}`,
-    },
-    {
-      color: 'rgba(218, 95, 221, 0.6)',
-      avatar: 'u',
-      title: t('EncodeComponent.urlEncodeSpecial'),
-      sub_title: 'urlescape',
-      encode: (v: string) => `{{urlescape(${v})}}`,
-    },
-  ])
-  return (
-    <div className={styles['encode-box']}>
-      {decodeData.current.map((item) => {
-        return (
-          <div key={item.title} className={styles['encode-item']} onClick={() => insert(item.encode)}>
-            <Avatar size={16} style={{ color: 'rgba(49, 52, 63, 1)', backgroundColor: item.color, flexShrink: 0 }}>
-              {item.avatar}
-            </Avatar>
-            <div className={styles['title']}>{item.title}</div>
-            <div className={styles['sub-title']}>{item.sub_title}</div>
-          </div>
-        )
-      })}
-    </div>
-  )
-}
-
-const DecodeLableComponent: React.FC<EncodeComponentProps> = (props) => {
-  const { insert } = props
-  const { t, i18n } = useI18nNamespaces(['webFuzzer'])
-  const decodeData = useRef<decodeDataProps[]>([
-    {
-      color: 'rgba(136, 99, 247, 0.6)',
-      avatar: 'b',
-      title: t('DecodeLableComponent.base64Decode'),
-      sub_title: 'base64dec',
-      encode: (v: string) => `{{base64dec(${v})}}`,
-    },
-    {
-      color: 'rgba(74, 148, 248, 0.6)',
-      avatar: 'd',
-      title: t('DecodeLableComponent.doubleUrlDecode'),
-      sub_title: 'doubleurldec',
-      encode: (v: string) => `{{doubleurldec(${v})}}`,
-    },
-    {
-      color: 'rgba(74, 148, 248, 0.6)',
-      avatar: 'h',
-      title: t('DecodeLableComponent.hexDecode'),
-      sub_title: 'hexdec',
-      encode: (v: string) => `{{hexdec(${v})}}`,
-    },
-    {
-      color: 'rgba(86, 201, 145, 0.6)',
-      avatar: 'h',
-      title: t('DecodeLableComponent.htmlDecode'),
-      sub_title: 'htmldec',
-      encode: (v: string) => `{{htmldec(${v})}}`,
-    },
-    {
-      color: 'rgba(244, 115, 107, 0.6)',
-      avatar: 'u',
-      title: t('DecodeLableComponent.urlForceDecode'),
-      sub_title: 'urldec',
-      encode: (v: string) => `{{urldec(${v})}}`,
-    },
-    {
-      color: 'rgba(255, 182, 96, 0.6)',
-      avatar: 'u',
-      title: t('DecodeLableComponent.unicodeChineseDecode'),
-      sub_title: 'unicode:decode',
-      encode: (v: string) => `{{unicode:decode(${v})}}`,
-    },
-  ])
-  return (
-    <div className={styles['decodeLabel-box']}>
-      {decodeData.current.map((item) => {
-        return (
-          <div key={item.title} className={styles['encode-item']} onClick={() => insert(item.encode)}>
-            <Avatar size={16} style={{ color: 'rgba(49, 52, 63, 1)', backgroundColor: item.color, flexShrink: 0 }}>
-              {item.avatar}
-            </Avatar>
-            <div className={styles['title']}>{item.title}</div>
-            <div className={styles['sub-title']}>{item.sub_title}</div>
-          </div>
-        )
-      })}
-    </div>
   )
 }
 
@@ -831,44 +326,64 @@ export interface DecodeComponentProps {
   isReadOnly?: boolean
   rangeValue: string
   replace?: (v: string) => void
+  /** 解码状态已经写入，浮层可以按最终高度显示 */
+  onReady?: () => void
 }
 
 export const DecodeComponent: React.FC<DecodeComponentProps> = (props) => {
-  const { isReadOnly, rangeValue, replace } = props
+  const { isReadOnly, rangeValue, replace, onReady } = props
   const { t, i18n } = useI18nNamespaces(['webFuzzer'])
   const [status, setStatus] = useState<'none' | 'only' | 'many'>()
   const [result, setResult] = useState<AutoDecodeResult[]>([])
+  const onReadyRef = useRef(onReady)
+  onReadyRef.current = onReady
   useEffect(() => {
+    let cancelled = false
+    const ready = () => {
+      if (!cancelled) onReadyRef.current?.()
+    }
     try {
       if (!rangeValue) {
         setStatus('none')
+        ready()
         return
       }
-      ipcRenderer.invoke('AutoDecode', { Data: rangeValue }).then((e: { Results: AutoDecodeResult[] }) => {
-        // console.log("Results", e.Results)
-        const { Results } = e
-        const successArr: AutoDecodeResult[] = []
-        const failArr: AutoDecodeResult[] = []
-        Results.map((item) => {
-          if (item.Type === 'No') {
-            failArr.push(item)
+      ipcRenderer
+        .invoke('AutoDecode', { Data: rangeValue })
+        .then((e: { Results: AutoDecodeResult[] }) => {
+          if (cancelled) return
+          // console.log("Results", e.Results)
+          const { Results } = e
+          const successArr: AutoDecodeResult[] = []
+          const failArr: AutoDecodeResult[] = []
+          Results.map((item) => {
+            if (item.Type === 'No') {
+              failArr.push(item)
+            } else {
+              successArr.push(item)
+            }
+          })
+          setResult(successArr)
+          if (successArr.length === 0) {
+            setStatus('none')
+          } else if (successArr.length === 1) {
+            setStatus('only')
           } else {
-            successArr.push(item)
+            setStatus('many')
           }
         })
-        setResult(successArr)
-        if (successArr.length === 0) {
-          setStatus('none')
-        } else if (successArr.length === 1) {
-          setStatus('only')
-        } else {
-          setStatus('many')
-        }
-      })
+        .catch(() => {
+          if (!cancelled) setStatus('none')
+        })
+        .finally(ready)
     } catch (e) {
       failed('editor exec auto-decode failed')
+      ready()
     }
-  }, [])
+    return () => {
+      cancelled = true
+    }
+  }, [rangeValue])
 
   return (
     <div className={styles['decode-box']}>
@@ -904,48 +419,117 @@ export const DecodeComponent: React.FC<DecodeComponentProps> = (props) => {
   )
 }
 
-/** 挂在 YakitEditor 上的智能解码浮层：不随选区菜单一起消失 */
+/** 智能解码浮层：相对选区弹出，位置和拖拽都限制在挂载编辑器内。挂到 body 是为了不被编辑器 overflow 裁切 */
 export interface SmartDecodeFloatPanelProps {
   rangeValue: string
   replace?: (v: string) => void
   editorInfo?: EditorDetailInfoProps
   anchorRect?: SmartDecodeAnchorRect
+  /** 挂载这次浮层的编辑器根节点 */
+  hostEl?: HTMLElement | null
   onClose: () => void
 }
 export const SmartDecodeFloatPanel: React.FC<SmartDecodeFloatPanelProps> = (props) => {
-  const { rangeValue, replace, editorInfo, anchorRect, onClose } = props
-  const wrapRef = useRef<HTMLDivElement>(null)
+  const { rangeValue, replace, editorInfo, anchorRect, hostEl, onClose } = props
   const nodeRef = useRef<HTMLDivElement>(null)
-  const [wrapStyle, setWrapStyle] = useState<React.CSSProperties>({
-    position: 'absolute',
+  const draggedRef = useRef(false)
+  const placedRef = useRef('')
+  const [contentReady, setContentReady] = useState(false)
+  const [panelStyle, setPanelStyle] = useState<React.CSSProperties>({
+    position: 'fixed',
     visibility: 'hidden',
-    pointerEvents: 'none',
+    marginTop: 0,
   })
   const [dragBounds, setDragBounds] = useState({ left: 0, top: 0, bottom: 0, right: 0 })
-  const { top = 0, left = 0, bottom = 0, right = 0 } = editorInfo || {}
-  const menuWidth = right - left < 720 ? Math.floor((right - left) / 2) : undefined
-  const menuHeight = Math.floor((bottom - top) / 2 - 30)
+  const menuHeight = getMenuPanelStyle(editorInfo).maxHeight as number
 
-  useLayoutEffect(() => {
-    const host = wrapRef.current?.parentElement
-    if (!anchorRect || !host) return
-    const hostRect = host.getBoundingClientRect()
-    setWrapStyle({
-      position: 'absolute',
-      top: anchorRect.top - hostRect.top,
-      left: anchorRect.left - hostRect.left,
-      width: anchorRect.width,
-      height: anchorRect.height,
-      pointerEvents: 'none',
+  const readHostRect = useMemoizedFn(() => {
+    if (hostEl) {
+      const rect = hostEl.getBoundingClientRect()
+      if (rect.width > 0 && rect.height > 0) return rect
+    }
+    if (!editorInfo) return null
+    const width = editorInfo.right - editorInfo.left
+    const height = editorInfo.bottom - editorInfo.top
+    if (width <= 0 || height <= 0) return null
+    return {
+      left: editorInfo.left,
+      top: editorInfo.top,
+      right: editorInfo.right,
+      bottom: editorInfo.bottom,
+      width,
+      height,
+    }
+  })
+
+  const fitInHost = useMemoizedFn(() => {
+    if (draggedRef.current) return
+    const panel = nodeRef.current
+    const anchor = anchorRect
+    const hostRect = readHostRect()
+    if (!panel || !anchor || !hostRect) return
+
+    // 默认 360，编辑器更窄时再缩小，用光标所在一侧的空白而不是固定半高
+    let width = Math.min(360, hostRect.width)
+    let maxHeight = Math.min(menuHeight > 0 ? menuHeight : hostRect.height, hostRect.height)
+    panel.style.position = 'fixed'
+    panel.style.marginTop = '0px'
+    panel.style.width = `${width}px`
+    panel.style.maxHeight = `${maxHeight}px`
+    let panelWidth = panel.offsetWidth
+    let panelHeight = panel.offsetHeight
+    if (panelWidth > hostRect.width) {
+      width = Math.max(0, width - (panelWidth - hostRect.width))
+      panel.style.width = `${width}px`
+      panelWidth = panel.offsetWidth
+    }
+    if (panelHeight > hostRect.height) {
+      maxHeight = Math.max(0, maxHeight - (panelHeight - hostRect.height))
+      panel.style.maxHeight = `${maxHeight}px`
+      panelHeight = panel.offsetHeight
+    }
+
+    const directionX = editorInfo?.direction?.x
+    const alignRight = directionX === 'middle' || directionX === 'right'
+    let nextLeft = alignRight ? anchor.right - panelWidth : anchor.left
+    const gap = 6
+    let nextTop = editorInfo?.direction?.y === 'bottom' ? anchor.top - gap - panelHeight : anchor.bottom + gap
+
+    if (nextLeft < hostRect.left) nextLeft = hostRect.left
+    if (nextLeft + panelWidth > hostRect.right) nextLeft = Math.max(hostRect.left, hostRect.right - panelWidth)
+    if (nextTop < hostRect.top) nextTop = hostRect.top
+    if (nextTop + panelHeight > hostRect.bottom) nextTop = Math.max(hostRect.top, hostRect.bottom - panelHeight)
+
+    const signature = `${nextLeft}|${nextTop}|${width}|${maxHeight}`
+    if (placedRef.current === signature) return
+    placedRef.current = signature
+    setPanelStyle({
+      position: 'fixed',
+      left: nextLeft,
+      top: nextTop,
+      width,
+      maxHeight,
+      marginTop: 0,
       visibility: 'visible',
     })
-  }, [anchorRect])
+    setDragBounds({
+      left: hostRect.left - nextLeft,
+      right: hostRect.right - nextLeft - panelWidth,
+      top: hostRect.top - nextTop,
+      bottom: hostRect.bottom - nextTop - panelHeight,
+    })
+  })
+
+  useLayoutEffect(() => {
+    if (!contentReady) return
+    fitInHost()
+  }, [contentReady, anchorRect, hostEl, menuHeight, editorInfo])
 
   const onDragStart = useMemoizedFn((_e: any, uiData: { x: number; y: number }) => {
-    const host = wrapRef.current?.parentElement
+    draggedRef.current = true
+    const hostRect = readHostRect()
     const panelRect = nodeRef.current?.getBoundingClientRect()
-    if (!host || !panelRect) return
-    const hostRect = host.getBoundingClientRect()
+    if (!hostRect || !panelRect) return
     setDragBounds({
       left: hostRect.left - panelRect.left + uiData.x,
       right: hostRect.right - panelRect.right + uiData.x,
@@ -954,42 +538,35 @@ export const SmartDecodeFloatPanel: React.FC<SmartDecodeFloatPanelProps> = (prop
     })
   })
 
-  return (
-    <div ref={wrapRef} style={wrapStyle}>
-      <ReactDraggable
-        nodeRef={nodeRef}
-        handle={`.${styles['menu-drag']}`}
-        cancel="button"
-        bounds={dragBounds}
-        onStart={onDragStart}
+  return createPortal(
+    <ReactDraggable
+      nodeRef={nodeRef}
+      handle={`.${styles['menu-drag']}`}
+      cancel="button"
+      bounds={dragBounds}
+      onStart={onDragStart}
+    >
+      <div
+        ref={nodeRef}
+        className={classNames(styles['http-fuzzer-range-editor-menu'], styles['smart-decode-float-layer'])}
+        style={panelStyle}
       >
-        <div
-          ref={nodeRef}
-          className={styles['http-fuzzer-range-editor-menu']}
-          style={{
-            ...directionStyle(editorInfo, true),
-            left: right - left < 750 ? undefined : ['left'].includes(editorInfo?.direction.x || '') ? 0 : undefined,
-            right: right - left < 750 ? 0 : ['middle', 'right'].includes(editorInfo?.direction.x || '') ? 0 : undefined,
-            width: menuWidth ? menuWidth : 360,
-            maxHeight: menuHeight ? menuHeight : undefined,
-            pointerEvents: 'auto',
-          }}
-        >
-          <div className={styles['menu-drag']}>
-            <YakitButton type="text2" size="small" icon={<XOutlined color="currentColor" />} onClick={onClose} />
-          </div>
-          <div className={styles['menu-content']}>
-            <DecodeComponent
-              rangeValue={rangeValue}
-              replace={(v) => {
-                replace?.(v)
-                onClose()
-              }}
-            />
-          </div>
+        <div className={styles['menu-drag']}>
+          <YakitButton type="text2" size="small" icon={<XOutlined color="currentColor" />} onClick={onClose} />
         </div>
-      </ReactDraggable>
-    </div>
+        <div className={styles['menu-content']}>
+          <DecodeComponent
+            rangeValue={rangeValue}
+            onReady={() => setContentReady(true)}
+            replace={(v) => {
+              replace?.(v)
+              onClose()
+            }}
+          />
+        </div>
+      </div>
+    </ReactDraggable>,
+    document.body,
   )
 }
 
@@ -1003,40 +580,78 @@ export interface HTTPFuzzerRangeEditorMenuProps {
   fizzRangeTimeoutId?: any
   onOpenSmartDecode?: (rangeValue: string, anchorRect?: DOMRect) => void
   toOpenAiChat?: AIPluginComponentProps['toOpenAiChat']
+  /** 不传则是插入标签、AI工具、编码、解码、智能解码 */
+  menuGroups?: FuzzerEditorMenuGroup[]
 }
+export const buildRangeCodecMenuItems = (
+  t: (key: string) => string,
+  options: {
+    insert: (v: any) => void
+    rangeValue: string
+    onOpenSmartDecode?: (rangeValue: string, anchorRect?: DOMRect) => void
+  },
+): FuzzerEditorMenuItem[] => [
+  {
+    id: 'encode',
+    label: t('HTTPFuzzerRangeEditorMenu.encode'),
+    icon: <IconSolidCodeIcon className={styles['tag']} />,
+    className: styles['encode-box'],
+    panelClassName: styles['http-fuzzer-range-editor-menu'],
+    renderPanel: () => (
+      <div className={styles['menu-content']}>
+        <CodecMenuList actions={ENCODE_MENU_ACTIONS} insert={options.insert} className={styles['encode-box']} />
+      </div>
+    ),
+  },
+  {
+    id: 'decode',
+    label: t('HTTPFuzzerRangeEditorMenu.decode'),
+    icon: <IconSolidSparklesIcon />,
+    className: styles['decodeLabel-box'],
+    panelClassName: styles['http-fuzzer-range-editor-menu'],
+    renderPanel: () => (
+      <div className={styles['menu-content']}>
+        <CodecMenuList actions={DECODE_MENU_ACTIONS} insert={options.insert} className={styles['decodeLabel-box']} />
+      </div>
+    ),
+  },
+  {
+    id: 'smart-decode',
+    label: t('HTTPFuzzerRangeEditorMenu.smartDecode'),
+    icon: <IconSolidSparklesIcon />,
+    className: styles['decode-box'],
+    onClick: (e) => {
+      const button = e.currentTarget.getBoundingClientRect()
+      const bar = e.currentTarget.closest('[data-menu-bar]')?.getBoundingClientRect()
+      const top = bar?.top ?? button.top
+      const bottom = bar?.bottom ?? button.bottom
+      options.onOpenSmartDecode?.(options.rangeValue, new DOMRect(button.left, top, button.width, bottom - top))
+    },
+  },
+]
+
 export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps> = (props) => {
   const {
     close,
     editorInfo,
     insert,
     rangeValue,
-    replace,
     hTTPFuzzerClickEditorMenuProps,
     fizzRangeTimeoutId,
     onOpenSmartDecode,
     toOpenAiChat,
+    menuGroups,
   } = props
   const { t, i18n } = useI18nNamespaces(['webFuzzer'])
-  const { direction, top = 0, left = 0, bottom = 0, right = 0 } = editorInfo || {}
-  // 菜单显示宽度
-  const [menuWidth, setMenuWidth] = useState<number>()
-  // 菜单显示高度
-  const [menuHeight, setMenuHeight] = useState<number>()
-  useEffect(() => {
-    if (right - left < 720) {
-      const width: number = Math.floor((right - left) / 2)
-      setMenuWidth(width)
-    }
-
-    const height: number = Math.floor((bottom - top) / 2 - 30)
-    setMenuHeight(height)
-  }, [])
-  const [segmentedType, setSegmentedType] = useState<'encode' | 'decodeLabel'>()
-  const [clickSegmentedType, setClickSegmentedType] = useState<'insert-tag' | 'aiplugin'>()
-  const rangeEditorRef = useRef<HTMLDivElement>(null)
-
   const [boxHidden, setBoxHidden] = useState<boolean>(true)
-  // 0.3秒后显示
+
+  const closeTimeoutFun = useMemoizedFn(() => {
+    const closeTimeoutId = setTimeout(() => {
+      close()
+    }, 5 * 1000)
+    return closeTimeoutId
+  })
+
   useEffect(() => {
     fizzRangeTimeoutId.current = undefined
     fizzRangeTimeoutId.current = closeTimeoutFun()
@@ -1044,24 +659,44 @@ export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps>
       setBoxHidden(false)
     }, 300)
   }, [])
-  // 5秒无操作自动关闭
-  const closeTimeoutFun = useMemoizedFn(() => {
-    const closeTimeoutId = setTimeout(() => {
-      close()
-    }, 5 * 1000)
-    // 返回timeoutId，以便稍后取消
-    return closeTimeoutId
-  })
 
-  useEffect(() => {
-    if (clickSegmentedType) {
-      setSegmentedType(undefined)
-    }
-  }, [clickSegmentedType])
+  const clickItems = hTTPFuzzerClickEditorMenuProps
+    ? buildClickEditorMenuItems(t, {
+        editorInfo: hTTPFuzzerClickEditorMenuProps.editorInfo ?? editorInfo,
+        insert: hTTPFuzzerClickEditorMenuProps.insert,
+        addLabel: hTTPFuzzerClickEditorMenuProps.addLabel,
+        toOpenAiChat,
+      })
+    : []
+  const groups: FuzzerEditorMenuGroup[] = menuGroups ?? [
+    ...(clickItems.length
+      ? [
+          {
+            id: 'click',
+            className: styles['http-fuzzer-click-editor'],
+            simpleClassName: classNames(
+              styles['http-fuzzer-click-editor-simple'],
+              styles['range-click-editor-menu'],
+              hTTPFuzzerClickEditorMenuProps?.className,
+            ),
+            items: clickItems,
+          },
+        ]
+      : []),
+    {
+      id: 'codec',
+      className: styles['http-fuzzer-range-editor'],
+      simpleClassName: styles['http-fuzzer-range-editor-simple'],
+      leadingDivider: true,
+      items: buildRangeCodecMenuItems(t, { insert, rangeValue, onOpenSmartDecode }),
+    },
+  ]
 
-  // right - left 为编辑器宽度
   return (
-    <div
+    <FuzzerEditorMenuBar
+      groups={groups}
+      editorInfo={editorInfo}
+      lang={i18n.language}
       className={classNames(styles['http-fuzzer-range-editor-body'], {
         [styles['box-hidden']]: boxHidden,
       })}
@@ -1072,106 +707,7 @@ export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps>
         fizzRangeTimeoutId.current = undefined
         fizzRangeTimeoutId.current = closeTimeoutFun()
       }}
-    >
-      {hTTPFuzzerClickEditorMenuProps && (
-        <HTTPFuzzerClickEditorMenu
-          className={styles['range-click-editor-menu']}
-          closeTimeout={false}
-          toOpenAiChat={toOpenAiChat}
-          segmentedTypeReset={!!segmentedType}
-          onClickSegmentedType={setClickSegmentedType}
-          {...hTTPFuzzerClickEditorMenuProps}
-        />
-      )}
-      <div className={styles['http-fuzzer-range-editor']} ref={rangeEditorRef}>
-        <div className={styles['http-fuzzer-range-editor-simple']}>
-          <div className={styles['show-box']}>
-            <div className={styles['line']}></div>
-            <div
-              className={styles['encode-box']}
-              style={{ width: right - left > 550 ? 90 : undefined }}
-              onClick={() => {
-                if (segmentedType === 'encode') {
-                  setSegmentedType(undefined)
-                } else {
-                  setSegmentedType('encode')
-                }
-              }}
-            >
-              <IconSolidCodeIcon className={styles['tag']} />
-              {right - left < 550 ? (
-                <></>
-              ) : (
-                <div className={styles['content']}>{t('HTTPFuzzerRangeEditorMenu.encode')}</div>
-              )}
-              {segmentedType === 'encode' ? (
-                <ChevronUpIcon className={styles['up']} />
-              ) : (
-                <ChevronDownOutlined size={16} className={styles['down']} />
-              )}
-            </div>
-            <div className={styles['line']}></div>
-            <div
-              className={styles['decodeLabel-box']}
-              style={{ width: right - left > 550 ? 90 : undefined }}
-              onClick={() => {
-                if (segmentedType === 'decodeLabel') {
-                  setSegmentedType(undefined)
-                } else {
-                  setSegmentedType('decodeLabel')
-                }
-              }}
-            >
-              <IconSolidSparklesIcon />
-              {right - left < 550 ? (
-                <></>
-              ) : (
-                <div className={styles['content']}>{t('HTTPFuzzerRangeEditorMenu.decode')}</div>
-              )}
-              {segmentedType === 'decodeLabel' ? (
-                <ChevronUpIcon className={styles['up']} />
-              ) : (
-                <ChevronDownOutlined size={16} className={styles['down']} />
-              )}
-            </div>
-            <div className={styles['line']}></div>
-            <div
-              className={styles['decode-box']}
-              style={{ width: right - left > 550 ? (i18n.language.startsWith('zh') ? 100 : 120) : undefined }}
-              onClick={() => {
-                const anchorRect = rangeEditorRef.current?.getBoundingClientRect()
-                onOpenSmartDecode?.(rangeValue, anchorRect)
-              }}
-            >
-              <IconSolidSparklesIcon />
-              {right - left < 550 ? (
-                <></>
-              ) : (
-                <div className={styles['content']}>{t('HTTPFuzzerRangeEditorMenu.smartDecode')}</div>
-              )}
-            </div>
-          </div>
-        </div>
-        {segmentedType && (
-          <div
-            style={{
-              ...directionStyle(editorInfo, true),
-              left: right - left < 750 ? undefined : ['left'].includes(editorInfo?.direction.x || '') ? 0 : undefined,
-              right:
-                right - left < 750 ? 0 : ['middle', 'right'].includes(editorInfo?.direction.x || '') ? 0 : undefined,
-              width: menuWidth ? menuWidth : 360,
-              maxHeight: menuHeight ? menuHeight : undefined,
-            }}
-            className={classNames(styles['http-fuzzer-range-editor-menu'])}
-          >
-            <div className={styles['menu-content']}>
-              {segmentedType === 'encode' && <EncodeComponent insert={insert} />}
-              {segmentedType === 'decodeLabel' && <DecodeLableComponent insert={insert} />}
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
+    />
   )
 }
 
@@ -1188,11 +724,7 @@ export const HTTPFuzzerRangeReadOnlyEditorMenu: React.FC<HTTPFuzzerRangeReadOnly
   const { editorInfo, rangeValue, fizzRangeTimeoutId, close, execAutoDecodeCallback } = props
   const { t, i18n } = useI18nNamespaces(['webFuzzer'])
   const [segmentedType, setSegmentedType] = useState<'decode'>()
-  const { direction, top = 0, left = 0, bottom = 0, right = 0 } = editorInfo || {}
-  // 菜单显示宽度
-  const [menuWidth, setMenuWidth] = useState<number>()
-  // 菜单显示高度
-  const [menuHeight, setMenuHeight] = useState<number>()
+  const readOnlyPanelStyle = getMenuPanelStyle(editorInfo)
 
   const [boxHidden, setBoxHidden] = useState<boolean>(true)
   // 0.3秒后显示
@@ -1212,15 +744,6 @@ export const HTTPFuzzerRangeReadOnlyEditorMenu: React.FC<HTTPFuzzerRangeReadOnly
     return closeTimeoutId
   })
 
-  useEffect(() => {
-    if (right - left < 720) {
-      const width: number = Math.floor((right - left) / 2)
-      setMenuWidth(width)
-    }
-
-    const height: number = Math.floor((bottom - top) / 2 - 30)
-    setMenuHeight(height)
-  }, [])
   return (
     <div
       className={classNames(styles['http-fuzzer-read-editor'], {
@@ -1248,13 +771,7 @@ export const HTTPFuzzerRangeReadOnlyEditorMenu: React.FC<HTTPFuzzerRangeReadOnly
       </div>
       {segmentedType && (
         <div
-          style={{
-            ...directionStyle(editorInfo, true),
-            left: ['left'].includes(editorInfo?.direction.x || '') ? 0 : undefined,
-            right: ['middle', 'right'].includes(editorInfo?.direction.x || '') ? 0 : undefined,
-            width: menuWidth ? menuWidth : 360,
-            maxHeight: menuHeight ? menuHeight : undefined,
-          }}
+          style={readOnlyPanelStyle}
           className={classNames(styles['http-fuzzer-range-read-only-editor-menu'])}
           onMouseLeave={() => setSegmentedType(undefined)}
         >

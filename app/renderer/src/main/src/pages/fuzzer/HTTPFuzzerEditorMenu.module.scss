@@ -1,6 +1,8 @@
 .http-fuzzer-click-editor {
   position: relative;
+  flex-shrink: 0;
   .http-fuzzer-click-editor-simple {
+    flex-shrink: 0;
     box-sizing: content-box;
     background-color: var(--Colors-Use-Basic-Background);
     border-radius: 6px;
@@ -18,6 +20,8 @@
       }
       .insert-box,
       .aiplugin-box {
+        flex-shrink: 0;
+        white-space: nowrap;
         padding: 4px 8px;
         display: flex;
         flex-direction: row;
@@ -35,6 +39,7 @@
           font-size: 12px;
           font-weight: 500;
           line-height: 16px;
+          white-space: nowrap;
         }
         .down,
         .up {
@@ -53,6 +58,7 @@
 }
 .http-fuzzer-click-editor-menu {
   position: absolute;
+  box-sizing: border-box;
   margin-top: 2px;
   border: 1px solid var(--Colors-Use-Neutral-Border);
   border-radius: 4px;
@@ -65,8 +71,11 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    min-width: 0;
     padding: 8px 4px;
     &-left {
+      flex: 1;
+      min-width: 0;
       padding: 0px 12px;
       font-weight: 500;
       font-size: 12px;
@@ -84,7 +93,7 @@
       }
     }
     &-opt {
-      // padding-right: 4px;
+      flex-shrink: 0;
       display: flex;
       flex-direction: row;
       gap: 4px;
@@ -120,6 +129,8 @@
       &-info {
         display: flex;
         align-items: center;
+        flex: 1;
+        min-width: 0;
         .input {
           margin-left: 12px;
         }
@@ -136,6 +147,7 @@
           font-weight: 500;
           line-height: 16px;
           color: var(--Colors-Use-Neutral-Text-1-Title);
+          min-width: 0;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -215,6 +227,7 @@
           font-weight: 500;
           line-height: 16px;
           flex: 1;
+          min-width: 0;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -228,8 +241,10 @@
   }
 }
 .http-fuzzer-range-editor-body {
+  position: relative;
   display: flex;
   align-items: center;
+  width: max-content;
   box-shadow: 0px 2px 4px 0px var(--Colors-Use-Basic-Shadow);
   border: 0.5px solid var(--Colors-Use-Neutral-Border);
   border-radius: 6px;
@@ -262,6 +277,8 @@
       .encode-box,
       .decodeLabel-box,
       .decode-box {
+        flex-shrink: 0;
+        white-space: nowrap;
         padding: 4px 8px;
         display: flex;
         flex-direction: row;
@@ -278,6 +295,7 @@
           font-size: 12px;
           font-weight: 500;
           line-height: 16px;
+          white-space: nowrap;
         }
         .down,
         .up {
@@ -293,6 +311,10 @@
       }
     }
   }
+}
+.smart-decode-float-layer {
+  position: fixed;
+  z-index: 1050;
 }
 .http-fuzzer-range-editor-menu {
   position: absolute;
@@ -329,6 +351,7 @@
           font-weight: 500;
           line-height: 16px;
           flex: 1;
+          min-width: 0;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;

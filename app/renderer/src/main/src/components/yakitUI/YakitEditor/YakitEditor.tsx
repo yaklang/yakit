@@ -1573,19 +1573,18 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
       />
       {disabled && <div className={styles['yakit-editor-shade']}></div>}
       {smartDecode && (
-        <div className={styles['smart-decode-float-host']}>
-          <SmartDecodeFloatPanel
-            key={smartDecode.openId}
-            rangeValue={smartDecode.rangeValue}
-            editorInfo={smartDecode.editorInfo}
-            anchorRect={smartDecode.anchorRect}
-            onClose={() => setSmartDecode(null)}
-            replace={(text) => {
-              editor?.trigger('keyboard', 'paste', { text })
-              setSmartDecode(null)
-            }}
-          />
-        </div>
+        <SmartDecodeFloatPanel
+          key={smartDecode.openId}
+          rangeValue={smartDecode.rangeValue}
+          editorInfo={smartDecode.editorInfo}
+          anchorRect={smartDecode.anchorRect}
+          hostEl={ref.current}
+          onClose={() => setSmartDecode(null)}
+          replace={(text) => {
+            editor?.trigger('keyboard', 'paste', { text })
+            setSmartDecode(null)
+          }}
+        />
       )}
       <div
         className={styles['yakit-editor-container']}
