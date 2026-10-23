@@ -63,10 +63,6 @@ export function normalizeVisualization(node: UINode, diagnose: (path: string, me
       delete props.initialSort
       diagnose('props.initialSort', '排序列不存在或不允许排序')
     }
-    if ((!props.selection || props.selection === 'none') && node.action) {
-      delete node.action
-      diagnose('action', '未启用行选择，提交动作已禁用')
-    }
   }
   return true
 }

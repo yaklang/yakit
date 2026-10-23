@@ -1,27 +1,17 @@
 import type React from 'react'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { YakitAlert } from '@/components/yakitUI/YakitAlert/YakitAlert'
-import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import JsonForm from '@rjsf/antd'
-import validator from '@rjsf/validator-ajv8'
-import type { RJSFSchema } from '@rjsf/utils'
 import type { AIChatQSDataTypeEnum } from '../hooks/aiRender'
 import { type AIChatQSData } from '../hooks/aiRender'
 import { globalSessionEngine } from '../hooks/ChatMultiSessionController'
 import { readDocument, type UINode } from './validate'
 import { catalog } from './catalog.mjs'
 import styles from './interactive.module.scss'
-import { formWidgets } from './formWidgets'
 import { DataChart } from './DataCharts'
 import { DataTable } from './DataTable'
 import { InformationAlert, InformationHint, ViewTabs } from './InformationComponents'
 
 type ComponentItem = Extract<AIChatQSData, { type: AIChatQSDataTypeEnum.UI_COMPONENT }>
-type State = Record<
-  string,
-  { value: Record<string, unknown>; submissionId?: string; submitted?: boolean; view?: Record<string, any> }
->
+type State = Record<string, { value: Record<string, unknown>; view?: Record<string, any> }>
 export interface NodeProps {
   instanceId: string
   node: UINode
@@ -29,127 +19,7 @@ export interface NodeProps {
   childNodes?: Record<string, React.ReactNode>
   state?: State[string]
   change: (next: State[string]) => void
-  submit: (node: UINode, values: Record<string, unknown>, id: string) => Promise<void>
   ready: boolean
-}
-
-function ParameterForm({ node, state, change, submit, ready, instanceId }: NodeProps) {
-  const { t } = useI18nNamespaces(['aiAgent'])
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState('')
-  const submitting = useRef(false)
-  const completed = useRef(false)
-  const composing = useRef(false)
-  const compositionEndedAt = useRef(0)
-  const value = state?.value || node.props.initial || {}
-  const submitted = !!state?.submitted
-  const fieldOrder = node.props.fieldOrder?.filter((key: string) =>
-    Object.prototype.hasOwnProperty.call(node.props.schema.properties, key),
-  )
-  const widgets = Object.fromEntries(
-    Object.entries(node.props.schema.properties)
-      .filter(([, field]: [string, any]) => field.type === 'array' && field.uniqueItems && field.items?.enum)
-      .map(([key]) => [key, { 'ui:widget': 'checkboxes' }]),
-  )
-  return (
-    <div
-      className={styles.form}
-      onCompositionStart={() => {
-        composing.current = true
-      }}
-      onCompositionEnd={() => {
-        composing.current = false
-        compositionEndedAt.current = Date.now()
-      }}
-      onKeyDownCapture={(event) => {
-        if (
-          event.key === 'Enter' &&
-          (composing.current ||
-            event.nativeEvent.isComposing ||
-            event.keyCode === 229 ||
-            Date.now() - compositionEndedAt.current < 50)
-        )
-          event.preventDefault()
-      }}
-    >
-      {node.props.title && <strong>{node.props.title}</strong>}
-      <JsonForm
-        schema={node.props.schema as RJSFSchema}
-        validator={validator}
-        widgets={formWidgets}
-        showErrorList={false}
-        templates={{
-          ButtonTemplates: {
-            AddButton: ({ onClick, disabled }) => (
-              <YakitButton type="outline2" onClick={onClick} disabled={disabled}>
-                {t('InteractiveUI.addItem')}
-              </YakitButton>
-            ),
-            RemoveButton: ({ onClick, disabled }) => (
-              <YakitButton type="text2" onClick={onClick} disabled={disabled}>
-                {t('InteractiveUI.removeItem')}
-              </YakitButton>
-            ),
-            MoveUpButton: ({ onClick, disabled }) => (
-              <YakitButton type="text2" onClick={onClick} disabled={disabled}>
-                {t('InteractiveUI.moveUp')}
-              </YakitButton>
-            ),
-            MoveDownButton: ({ onClick, disabled }) => (
-              <YakitButton type="text2" onClick={onClick} disabled={disabled}>
-                {t('InteractiveUI.moveDown')}
-              </YakitButton>
-            ),
-          },
-        }}
-        formData={value}
-        idPrefix={`memfit-${encodeURIComponent(instanceId)}`}
-        uiSchema={{
-          ...widgets,
-          'ui:submitButtonOptions': { norender: true },
-          ...(fieldOrder ? { 'ui:order': [...fieldOrder, '*'] } : {}),
-        }}
-        disabled={busy || submitted}
-        omitExtraData
-        liveOmit
-        onChange={(event) => {
-          if (!submitting.current && !completed.current && !submitted) change({ value: event.formData || {} })
-        }}
-        onSubmit={async (event) => {
-          if (!node.action || !ready || submitting.current || completed.current || submitted || composing.current)
-            return
-          submitting.current = true
-          setBusy(true)
-          setError('')
-          const id = state?.submissionId || crypto.randomUUID()
-          const values = event.formData || {}
-          change({ value: values, submissionId: id })
-          try {
-            await submit(node, values, id)
-            completed.current = true
-            change({ value: values, submissionId: id, submitted: true })
-          } catch (reason) {
-            setError(String(reason))
-          } finally {
-            submitting.current = false
-            setBusy(false)
-          }
-        }}
-      >
-        {node.action && !submitted && (
-          <YakitButton type="primary" htmlType="submit" loading={busy} disabled={!ready}>
-            {node.action.args.label || t('InteractiveUI.submitToChat')}
-          </YakitButton>
-        )}
-        {submitted && (
-          <div role="status" className={styles.secondary}>
-            {t('InteractiveUI.submitted')}
-          </div>
-        )}
-      </JsonForm>
-      {error && !submitted && <YakitAlert type="error" message={error} />}
-    </div>
-  )
 }
 
 // The catalog and this registry are the complete surface available to the model.
@@ -185,7 +55,6 @@ const registry: Record<string, React.FC<NodeProps>> = {
       </table>
     </div>
   ),
-  ParameterForm,
   BarChart: DataChart,
   LineChart: DataChart,
   DataTable,
@@ -260,26 +129,6 @@ export function ComponentCard({ item }: { item: ComponentItem }) {
     item.uiState = updated
     globalSessionEngine.persistUIState(item.data.sessionId, item, updated)
   }
-  const submit: NodeProps['submit'] = async (node, values, id) => {
-    if (!document || !item.data.final || !node.action) return
-    await globalSessionEngine.sendUIInteraction(
-      item.data.sessionId,
-      {
-        IsFreeInput: true,
-        FreeInput:
-          node.component === 'DataTable'
-            ? `数据表选择：${node.props.title || ''}\n${node.props.rows
-                .filter((row) => (values.selectedRowIds as string[]).includes(row.id))
-                .map((row) =>
-                  node.props.columns.map((column) => `${column.label}：${row.values[column.key] ?? '—'}`).join('；'),
-                )
-                .join('\n')}`
-            : `表单回答：${node.props.title || ''}\n${JSON.stringify(values, null, 2)}`,
-        UserInteraction: JSON.stringify({ id, source: 'component', requestId: document.id, nodeId: node.id, values }),
-      },
-      id,
-    )
-  }
   const nodes = new Map(document?.nodes.map((node) => [node.id, node]))
   const visited = new Set<string>()
   const renderNode = (id: string, depth = 0): React.ReactNode => {
@@ -297,21 +146,15 @@ export function ComponentCard({ item }: { item: ComponentItem }) {
       !node.props.title
     )
       return null
-    const key = `${node.id}:${node.bindings?.value || 'value'}`
-    const receipt = item.data.submissions?.[node.id]
+    const key = node.id
     return (
       <Component
         key={`${node.id}:${node.component}`}
         instanceId={`${document?.id}:${node.id}`}
         node={node}
         childNodes={childNodes}
-        state={
-          receipt
-            ? { ...state[key], value: receipt.values || {}, submissionId: receipt.id, submitted: true }
-            : state[key]
-        }
+        state={state[key]}
         change={(value) => save(key, value)}
-        submit={submit}
         ready={item.data.final}
       >
         {children}

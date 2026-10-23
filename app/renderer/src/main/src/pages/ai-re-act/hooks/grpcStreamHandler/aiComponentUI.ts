@@ -4,33 +4,9 @@ import { genBaseAIChatData } from '../utils'
 import { Uint8ArrayToString } from '@/utils/str'
 import { persistGetSessionContent, persistIndependentItem } from '../persist/contentPersistHelper'
 import { parseJSONPrefix } from '../../interactive-ui/partialJson'
-import type { UISubmission } from '../../interactive-ui/types'
 
 export const UI_CONTENT_TYPE = 'application/vnd.memfit.ui+json'
 const streams = new WeakMap<object, Map<string, { source: string; id?: string }>>()
-const accepted = new WeakMap<object, Map<string, Record<string, UISubmission>>>()
-
-// Ordinary user messages are also durable receipts, including old engine
-// histories that have no component snapshot after submission.
-export async function recordComponentSubmission(info: AIMessageHandlerParams, receipt: UISubmission) {
-  if (receipt?.source !== 'component' || !receipt.requestId || !receipt.nodeId) return
-  let cache = accepted.get(info.rawData.contents)
-  if (!cache) {
-    cache = new Map()
-    accepted.set(info.rawData.contents, cache)
-  }
-  const submissions = cache.get(receipt.requestId) || {}
-  submissions[receipt.nodeId] ||= receipt
-  cache.set(receipt.requestId, submissions)
-  const token = `ui-component:${receipt.requestId}`
-  const item = info.rawData.contents.get(token) || (await persistGetSessionContent(info.sessionId, token))
-  if (!info.meta.lifecycle.current || item?.type !== AIChatQSDataTypeEnum.UI_COMPONENT) return
-  item.data.submissions = { ...submissions, ...item.data.submissions }
-  info.rawData.contents.set(token, item)
-  persistIndependentItem(info.sessionId, item, info.meta.lifecycle)
-  info.store.getState().incrementNodeVersion(token, 'item')
-}
-
 async function upsert(
   info: AIMessageHandlerParams,
   id: string,
@@ -38,7 +14,6 @@ async function upsert(
   final: boolean,
   revision = 0,
   diagnostics = [],
-  submissions: Record<string, UISubmission> = {},
 ) {
   const token = `ui-component:${id}`
   const { rawData, store, res, sessionId } = info
@@ -60,11 +35,6 @@ async function upsert(
       final,
       revision,
       diagnostics,
-      submissions: {
-        ...accepted.get(rawData.contents)?.get(id),
-        ...(previous?.type === AIChatQSDataTypeEnum.UI_COMPONENT ? previous.data.submissions : {}),
-        ...submissions,
-      },
     },
     uiState: previous?.uiState,
     stageSettled: final,
@@ -80,15 +50,7 @@ async function upsert(
 export const handleComponentUI: AIMessageHandler = async (info) => {
   const payload = JSON.parse(Uint8ArrayToString(info.res.Content))
   if (!payload.document?.id) return
-  await upsert(
-    info,
-    payload.document.id,
-    JSON.stringify(payload.document),
-    true,
-    payload.revision,
-    payload.diagnostics,
-    payload.submissions,
-  )
+  await upsert(info, payload.document.id, JSON.stringify(payload.document), true, payload.revision, payload.diagnostics)
 }
 
 /** Returns true only for the registered UI stream; other streams keep their existing path. */

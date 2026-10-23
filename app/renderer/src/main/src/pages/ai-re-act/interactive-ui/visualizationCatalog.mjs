@@ -110,7 +110,7 @@ export const visualizationComponents = [
   {
     name: 'DataTable',
     description:
-      '展示需要排序、筛选或选中后回传的明细数据。只需静态比较时用 ComparisonTable。前端持有排序、筛选、分页和选择状态，排序筛选不触发模型；默认每页 20 行。columns.key 和 rows.id 各自唯一且稳定；values 的键只能来自 columns，非空值必须符合对应列 type；缺失/null 显示为无数据，不显示为零。字符串筛选是包含匹配，数字/布尔筛选是精确匹配，不支持代码或正则表达式。initialSort.key 必须指向允许排序的列。初始状态只初始化一次，增量渲染保留本地状态。selection 开启时 bindings.value 指向本地状态键，状态中的 selectedRowIds 初始为空；筛选分页保留选择，并展示包含隐藏行的已选数量。submit_to_chat 显式提交所选行的人类可读文本和结构化回执，元数据携带文档/节点/行 ID；不提交未选行。仅在 selection 非 none、已声明动作且选中至少一行时允许提交；成功后只读并移除提交按钮，失败保留选择可重试。',
+      '展示明细数据，支持本地排序、筛选和分页，不向模型发送消息。默认每页 20 行。columns.key 和 rows.id 各自唯一且稳定；values 的键只能来自 columns，非空值符合对应列 type；缺失/null 显示为无数据。字符串筛选为包含匹配，数字/布尔筛选为精确匹配；不支持代码或正则表达式。initialSort.key 指向允许排序的列；增量渲染保留本地查看状态。',
     schema: {
       type: 'object',
       properties: {
@@ -176,24 +176,9 @@ export const visualizationComponents = [
           required: ['key'],
           additionalProperties: false,
         },
-        selection: {
-          type: 'string',
-          enum: ['none', 'single', 'multiple'],
-          default: 'none',
-          description: 'none=仅查看；single=最多选中一行；multiple=可选多行。推荐或排序均不会自动选择或提交。',
-        },
       },
       required: ['columns', 'rows'],
       additionalProperties: false,
-    },
-    bindings: ['value'],
-    actions: {
-      submit_to_chat: {
-        type: 'object',
-        properties: { label: { type: 'string', maxLength: 256, default: '提交选中行' } },
-        required: [],
-        additionalProperties: false,
-      },
     },
   },
 ]

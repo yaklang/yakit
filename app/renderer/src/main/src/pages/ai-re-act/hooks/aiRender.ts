@@ -508,7 +508,6 @@ export type AIChatQSData =
         streamEnded?: boolean
         revision?: number
         diagnostics?: UIDiagnostic[]
-        submissions?: Record<string, UISubmission>
       }
     >
   | AIChatQSDataBase<AIChatQSDataTypeEnum.UI_QUESTION, { sessionId: string; request: QuestionRequest }>

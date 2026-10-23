@@ -4,7 +4,6 @@ import { Uint8ArrayToString } from '@/utils/str'
 import { genBaseAIChatData } from '../utils'
 import { persistGetSessionContent, persistIndependentItem } from '../persist/contentPersistHelper'
 import type { QuestionRequest, UISubmission } from '../../interactive-ui/types'
-import { recordComponentSubmission } from './aiComponentUI'
 import { syncQuestionPanel } from '../../interactive-ui/questionPanel'
 
 const acceptedQuestions = new WeakMap<object, Map<string, UISubmission>>()
@@ -25,6 +24,7 @@ async function recordQuestionSubmission(info: AIMessageHandlerParams, receipt?: 
     touched: true,
     deadline: undefined,
     answers: receipt.answers,
+    values: receipt.values,
   }
   info.rawData.contents.set(token, previous)
   persistIndependentItem(info.sessionId, previous, info.meta.lifecycle)
@@ -39,7 +39,6 @@ const handleInteractiveUI: AIMessageHandler = async (info) => {
   const id = isQuestion ? `ui-question:${payload.id}` : payload.taskId || `ui-message:${payload.id}`
   if (!payload.id) return
   if (!isQuestion) {
-    await recordComponentSubmission(info, payload.metadata)
     await recordQuestionSubmission(info, payload.metadata)
   }
   const previous = rawData.contents.get(id) || (await persistGetSessionContent(sessionId, id))
@@ -56,6 +55,7 @@ const handleInteractiveUI: AIMessageHandler = async (info) => {
           touched: true,
           deadline: undefined,
           answers: accepted?.answers || previousRequest?.answers,
+          values: accepted?.values || previousRequest?.values,
         }
       : payload
   const item: AIChatQSData & { uiEventId: number } = {
