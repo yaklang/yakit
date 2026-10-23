@@ -1,0 +1,117 @@
+name: Build and Release Yakit (English Edition)
+
+on:
+  # Tag တင်လိုက်တိုင်း အလိုအလျောက် Build ပြီး Release ထုတ်ပေးရန် (ဥပမာ - v1.3.5-en)
+  push:
+    tags:
+      - 'v*'
+  # GitHub Actions tab မှ Manual နှိပ်ပြီး စမ်းသပ် Build နိုင်ရန်
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            platform: win
+            build_flag: --win
+          - os: ubuntu-latest
+            platform: linux
+            build_flag: --linux
+          - os: macos-latest
+            platform: mac
+            build_flag: --mac
+
+    env:
+      # React + Monaco Editor build လုပ်ချိန်တွင် Memory မလောက်ခြင်း (OOM) မဖြစ်စေရန်
+      NODE_OPTIONS: "--max-old-space-size=8192"
+      # Code Signing Certificate မရှိဘဲ Build နိုင်စေရန်
+      CSC_IDENTITY_AUTO_DISCOVERY: "false"
+      GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+
+    steps:
+      - name: 1. Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: 2. Setup Node.js & Yarn
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+
+      - name: 3. Setup Python for Auto-Translation Sync
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 4. Enforce English Default Language (i18n Patch)
+        shell: bash
+        run: |
+          I18N_FILE="app/renderer/src/main/src/i18n/i18n.ts"
+          if [ -f "$I18N_FILE" ]; then
+            sed -i.bak "s/lng:.*'zh'/lng: localStorage.getItem('i18nextLng') || 'en'/g" "$I18N_FILE"
+            sed -i.bak "s/fallbackLng:.*'zh'/fallbackLng: 'en'/g" "$I18N_FILE"
+            rm -f "${I18N_FILE}.bak"
+            echo "Successfully patched i18n.ts to default to English."
+          fi
+
+      - name: 5. Install Linux Build Dependencies
+        if: matrix.platform == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libnss3-dev libgdk-pixbuf2.0-dev libgtk-3-dev libxss-dev libasound2-dev rpm
+
+      - name: 6. Install Project Dependencies
+        shell: bash
+        run: |
+          yarn config set network-timeout 300000
+          yarn install
+
+      - name: 7. Compile Renderer & Main Process
+        shell: bash
+        run: |
+          yarn build
+
+      - name: 8. Package Electron Installers
+        shell: bash
+        run: |
+          npx electron-builder ${{ matrix.build_flag }} --publish never
+
+      - name: 9. Upload Build Artifacts (For Manual Runs)
+        uses: actions/upload-artifact@v4
+        with:
+          name: Yakit-English-${{ matrix.platform }}
+          path: |
+            dist/*.exe
+            dist/*.dmg
+            dist/*.zip
+            dist/*.AppImage
+            dist/*.deb
+          if-no-files-found: ignore
+
+      - name: 10. Publish to GitHub Releases (On Tag Push)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "Yakit English Edition (${{ github.ref_name }})"
+          body: |
+            ### Yakit English Edition - ${{ github.ref_name }}
+            * Default UI language set to **English (`en`)** out of the box.
+            * Built automatically via GitHub Actions for Windows, Linux, and macOS.
+          draft: false
+          prerelease: false
+          files: |
+            dist/*.exe
+            dist/*.dmg
+            dist/*.zip
+            dist/*.AppImage
+            dist/*.deb
