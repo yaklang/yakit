@@ -28,7 +28,7 @@ const NS_REFRESH_DEBOUNCE_MS = 500
 
 let langVersion = 0
 /** 上一次已用于 bump 的语言，用于忽略同语言的 languageChanged */
-let lastEmittedLang = i18nInstance.language || ''
+let lastEmittedLang = i18nInstance.language || 'en'
 const nsVersions: Record<string, number> = {}
 const refreshListeners = new Set<() => void>()
 
