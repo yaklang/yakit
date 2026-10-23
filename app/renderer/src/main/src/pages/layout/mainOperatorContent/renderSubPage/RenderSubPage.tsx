@@ -11,29 +11,34 @@ import { YakitRoute } from '@/enums/yakitRoute'
 import { shallow } from 'zustand/shallow'
 import type { MultipleNodeInfo } from '../MainOperatorContentType'
 import type { WebFuzzerType } from '@/pages/fuzzer/WebFuzzerPage/WebFuzzerPageType'
+import { useKeepAliveMounted } from '@/utils/keepAliveResidence'
 
 const FuzzerSequenceWrapper = React.lazy(() => import('@/pages/fuzzer/WebFuzzerPage/FuzzerSequenceWrapper'))
 const FuzzerSequence = React.lazy(() => import('@/pages/fuzzer/FuzzerSequence/FuzzerSequence'))
 
 const EMPTY_FUZZER_SEQUENCE_LIST: never[] = []
 
-/** 单个二级页签面板：display 切换不触发 PageItem 重渲染 */
+/** 二级页签：display 切换不重渲；隐藏超时卸载 */
 const RenderSubPagePanel = React.memo(
-  ({ route, subItem, isSelected }: { route: YakitRoute; subItem: MultipleNodeInfo; isSelected: boolean }) => (
-    <div
-      id={subItem.id}
-      tabIndex={isSelected ? 1 : -1}
-      style={{
-        display: isSelected ? '' : 'none',
-        padding: NoPaddingRoute.includes(route) ? 0 : '8px 16px 13px 16px',
-      }}
-      className={styles['page-body']}
-    >
-      <React.Suspense fallback={null}>
-        <PageItem routeKey={route} params={subItem.pageParams} />
-      </React.Suspense>
-    </div>
-  ),
+  ({ route, subItem, isSelected }: { route: YakitRoute; subItem: MultipleNodeInfo; isSelected: boolean }) => {
+    const mounted = useKeepAliveMounted(isSelected, subItem.id)
+    if (!mounted) return null
+    return (
+      <div
+        id={subItem.id}
+        tabIndex={isSelected ? 1 : -1}
+        style={{
+          display: isSelected ? '' : 'none',
+          padding: NoPaddingRoute.includes(route) ? 0 : '8px 16px 13px 16px',
+        }}
+        className={styles['page-body']}
+      >
+        <React.Suspense fallback={null}>
+          <PageItem routeKey={route} params={subItem.pageParams} />
+        </React.Suspense>
+      </div>
+    )
+  },
   (prev, next) =>
     prev.isSelected === next.isSelected &&
     prev.route === next.route &&
@@ -82,6 +87,26 @@ export const RenderSubPage: React.FC<RenderSubPageProps> = React.memo(
 )
 
 type SequenceTabType = Extract<WebFuzzerType, 'sequence' | 'concurrency'>
+
+/** 序列组隐藏超时卸载，再进入挂回 */
+const FuzzerSequenceKeepAlive: React.FC<{
+  groupId: string
+  visible: boolean
+  renderType: WebFuzzerType
+  setType: (value: WebFuzzerType) => void
+}> = ({ groupId, visible, renderType, setType }) => {
+  const mounted = useKeepAliveMounted(visible, groupId)
+  if (!mounted) return null
+  return (
+    <div className={styles['fuzzer-sequence-list-item']} style={{ display: visible ? '' : 'none' }}>
+      <React.Suspense fallback={<Spin />}>
+        <FuzzerSequenceWrapper type={renderType}>
+          <FuzzerSequence groupId={groupId} setType={setType} type={renderType} />
+        </FuzzerSequenceWrapper>
+      </React.Suspense>
+    </div>
+  )
+}
 
 /**
  * 序列 / 并发：懒加载；按 group 首次进入后保活（display:none）；
@@ -135,17 +160,13 @@ export const RenderFuzzerSequence: React.FC<RenderFuzzerSequenceProps> = React.m
       {fuzzerSequenceList.map(
         (ele) =>
           getPageSequenceRenderList(ele.groupId) && (
-            <div
+            <FuzzerSequenceKeepAlive
               key={ele.groupId}
-              className={styles['fuzzer-sequence-list-item']}
-              style={{ display: selectGroupId === ele.groupId ? '' : 'none' }}
-            >
-              <React.Suspense fallback={<Spin />}>
-                <FuzzerSequenceWrapper type={renderType}>
-                  <FuzzerSequence groupId={ele.groupId} setType={setType} type={renderType} />
-                </FuzzerSequenceWrapper>
-              </React.Suspense>
-            </div>
+              groupId={ele.groupId}
+              visible={isSequenceOrConcurrencyType && selectGroupId === ele.groupId}
+              renderType={renderType}
+              setType={setType}
+            />
           ),
       )}
     </div>

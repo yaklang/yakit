@@ -59,6 +59,7 @@ import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { yakitFailed, yakitNotify } from '@/utils/notification'
 import { YakitRoute } from '@/enums/yakitRoute'
+import { pinKeepAlive } from '@/utils/keepAliveResidence'
 import {
   FuzzerExtraShow,
   type FuzzerRequestProps,
@@ -441,6 +442,16 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     () => (isConcurrency ? concurrencyLoading : sequenceLoading),
     [isConcurrency, concurrencyLoading, sequenceLoading],
   )
+  // 序列进行中 pin 住组页签
+  useEffect(() => {
+    if (!loading || !propsGroupId) return
+    const unpinGroup = pinKeepAlive(propsGroupId)
+    const unpinRoute = pinKeepAlive(YakitRoute.HTTPFuzzer)
+    return () => {
+      unpinGroup()
+      unpinRoute()
+    }
+  }, [loading, propsGroupId])
 
   useDebounceEffect(
     () => {

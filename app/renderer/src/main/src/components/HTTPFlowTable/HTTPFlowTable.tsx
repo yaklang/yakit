@@ -1170,6 +1170,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     }
   }, [handleShieldDataUpdate, mitmVersion, pageType, shieldData])
   useEffect(() => {
+    // Only when visible: rapid History/MITM/Fuzzer tab switches were reloading shield on every hide+show.
+    if (!inViewport) return
     getShieldList()
   }, [inViewport])
   useEffect(() => {

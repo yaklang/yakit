@@ -187,6 +187,7 @@ import { loadAdvancedConfig } from '@/pages/mitm/MITMAdvancedConfig'
 import { updateConcurrentLoad } from '@/utils/duplex/duplex'
 import { debugToPrintLog } from '@/utils/logCollection'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { pinKeepAlive } from '@/utils/keepAliveResidence'
 import { formatTimeYMD } from '@/utils/timeUtil'
 import { type LoggerData, useLogger } from '@/hook/useLogger/useLogger'
 import i18n from '@/i18n/i18n'
@@ -1013,7 +1014,9 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
   const [historySelectorOpen, setHistorySelectorOpen] = useState(false)
 
   const fuzzerRef = useRef<HTMLDivElement>(null)
-  const [inViewport = true] = useInViewport(fuzzerRef)
+  const [viewportState] = useInViewport(fuzzerRef)
+  // undefined 不能当 true：保活隐藏页首帧会误判可见并恢复历史
+  const inViewport = viewportState === true
 
   // first Node
   const firstNodeRef = useRef(null)
@@ -1051,7 +1054,8 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
   }, [advancedConfigValue.isHttps])
   const { setSubscribeClose, getSubscribeClose } = useSubscribeClose()
   const inViewportRef = useRef<boolean>(inViewport)
-  const prevInViewportRef = useRef<boolean>(inViewport)
+  const prevInViewportRef = useRef<boolean>(false)
+  const sawVisibleRef = useRef(false)
   const { globalEnabledTemplateName, onDisableGlobalHotPatch } = useGlobalHotPatchTag()
 
   const [hex, setHex] = useState<boolean>(false)
@@ -1112,7 +1116,9 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
 
   useEffect(() => {
     inViewportRef.current = inViewport
-    const becameVisible = inViewport && !prevInViewportRef.current
+    // 首次进入视口不算切回，避免无意义 flush
+    const becameVisible = inViewport && sawVisibleRef.current && !prevInViewportRef.current
+    if (inViewport) sawVisibleRef.current = true
     prevInViewportRef.current = inViewport
     if (inViewport) {
       // 仅「切回可见」时 flush，避免首次挂载无意义 bump；并刷新 firstResponse 引用（后台可能原地 mutate）
@@ -1617,6 +1623,17 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
       setLoadingText('sending packets')
     }
   }, [isbuttonIsSendReqStatus])
+
+  // 请求进行中（含暂停）pin 住，卸载会 cancel-HTTPFuzzer
+  useEffect(() => {
+    if (!props.id || isbuttonIsSendReqStatus) return
+    const unpinPage = pinKeepAlive(props.id)
+    const unpinRoute = pinKeepAlive(YakitRoute.HTTPFuzzer)
+    return () => {
+      unpinPage()
+      unpinRoute()
+    }
+  }, [isbuttonIsSendReqStatus, props.id])
 
   const cancelCurrentHTTPFuzzer = useMemoizedFn(async () => {
     // Send cancellation before unlocking the UI so a fresh send follows it over IPC.
@@ -2140,7 +2157,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
   }, [currentSelectId, showAll])
 
   /**
-   * 初次加载且可见时恢复上次的历史选中状态：
+   * 真正进入视口后再恢复历史（启动/保活隐藏期间不拉）：
    * 1. 从页面缓存读取上次的 {id, showAll}，先同步「查看全部」开关；
    * 2. 有 id 则先探测该记录是否仍存在，存在才恢复选中并加载，不存在则清掉缓存的脏 id；
    * 3. 没有 id（上次无选中）只恢复 showAll，不自动选中。

@@ -434,6 +434,14 @@ const setupAutoSelect = (
   return { bindings, invoke }
 }
 
+describe('history restore viewport gate', () => {
+  it('treats an unknown viewport as hidden so keep-alive tabs do not restore at first paint', () => {
+    const text = readFileSync('app/renderer/src/main/src/pages/fuzzer/HTTPFuzzerPage.tsx', 'utf8')
+    expect(text).toContain('const inViewport = viewportState === true')
+    expect(text).not.toContain('const [inViewport = true] = useInViewport(fuzzerRef)')
+  })
+})
+
 describe('auto-select history on initial load', () => {
   beforeEach(() => vi.useFakeTimers())
   afterEach(() => {

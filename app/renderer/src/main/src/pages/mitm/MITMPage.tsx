@@ -39,6 +39,7 @@ import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeB
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitRoute } from '@/enums/yakitRoute'
+import { pinKeepAlive } from '@/utils/keepAliveResidence'
 import { apiDownloadPluginOther, apiQueryYakScript } from '../plugins/utils'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { MITMConsts } from './MITMConsts'
@@ -182,6 +183,11 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
   const { t, i18n } = useI18nNamespaces(['mitm'])
 
   const mitmContent = useContext(MITMContext)
+  // 劫持中 pin 住（context.route：V1=HTTPHacker / V2=MITMHacker），避免闲置卸载触发 grpcMITMStopCall
+  useEffect(() => {
+    if (status === 'idle') return
+    return pinKeepAlive(mitmContent.mitmStore.route)
+  }, [status, mitmContent.mitmStore.route])
 
   const mitmVersion = useCreation(() => {
     return mitmContent.mitmStore.version
