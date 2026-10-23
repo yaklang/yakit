@@ -34,7 +34,7 @@ jobs:
       NODE_OPTIONS: "--max-old-space-size=8192"
       # Code Signing Certificate မရှိဘဲ Build နိုင်စေရန်
       CSC_IDENTITY_AUTO_DISCOVERY: "false"
-      GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN_TOKEN }}
 
     steps:
       - name: 1. Checkout Repository

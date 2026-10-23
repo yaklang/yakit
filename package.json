@@ -4,6 +4,7 @@
   "description": "Yakit is for yaklang.io Electron GUI Entry",
   "main": "dist/electron/main/index.js",
   "scripts": {
+    "build": "node ./cli/cli.mjs build",
     "cli": "node ./cli/cli.mjs",
     "check-deps": "node scripts/check-deps.js",
     "postinstall": "electron-builder install-app-deps",

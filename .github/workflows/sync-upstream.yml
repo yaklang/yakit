@@ -27,7 +27,7 @@ jobs:
         with:
           ref: ${{ env.TARGET_BRANCH }}
           fetch-depth: 0
-          token: ${{ secrets.PAT_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN_TOKEN }}
 
       - name: 2. Configure Git & Fetch Upstream
         run: |

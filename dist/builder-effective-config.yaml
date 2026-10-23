@@ -1,0 +1,5 @@
+directories:
+  output: dist
+  buildResources: build
+files: []
+electronVersion: 27.0.0
