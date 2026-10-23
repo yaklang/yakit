@@ -60,8 +60,8 @@ export interface EditerMenuFunParams {
  * 编辑器内点击/选中浮层菜单
  *
  * 包含：
- * 1. 点击菜单（插入标签）
- * 2. 选中菜单（编/解码）
+ * 1. 点击菜单
+ * 2. 选中菜单
  * 3. 鼠标移动/点击/滚动事件绑定
  * 4. 浮层位置计算与显示/隐藏
  */
@@ -125,8 +125,53 @@ export const editerMenuFun = (params: EditerMenuFunParams) => {
   let selectRoot: Root | null = null
   let rangeRoot: Root | null = null
 
+  // Monaco 会按整段宽度把浮层 left 推进视口，光标在右侧时工具条会离开点击处。
+  // 宽度报 0，left 就留在光标上；上下仍按真实高度，和面板一样选择展开方向。
+  const menuAnchorSize = (domNode: HTMLElement | null) => {
+    const bar = domNode?.querySelector('[data-menu-bar]') as HTMLElement | null
+    if (!bar) return null
+    return { width: 0, height: bar.offsetHeight || 0 }
+  }
+  const menuAnchorPreference = (whenUnset: number[]) => {
+    const y = editorInfoRef.current?.direction?.y
+    if (y === 'bottom') return [1, 2]
+    if (y === 'top') return [2, 1]
+    return whenUnset
+  }
+  const watchMenuAnchorHeight = (
+    domNode: HTMLElement,
+    holder: { anchorObserver: ResizeObserver | null; anchorFrame?: number | null },
+    relayout: () => void,
+  ) => {
+    domNode.style.overflow = 'visible'
+    holder.anchorObserver?.disconnect()
+    holder.anchorObserver = null
+    if (holder.anchorFrame) {
+      cancelAnimationFrame(holder.anchorFrame)
+      holder.anchorFrame = null
+    }
+    if (typeof ResizeObserver === 'undefined') return
+    let seenHeight = -1
+    const observer = new ResizeObserver(() => {
+      const bar = domNode.querySelector('[data-menu-bar]') as HTMLElement | null
+      const height = bar?.offsetHeight ?? 0
+      if (!bar || height === seenHeight) return
+      seenHeight = height
+      if (holder.anchorFrame) cancelAnimationFrame(holder.anchorFrame)
+      holder.anchorFrame = requestAnimationFrame(relayout)
+    })
+    observer.observe(domNode)
+    holder.anchorObserver = observer
+  }
+
   // 关闭点击的菜单
   const closeFizzSelectWidget = () => {
+    fizzSelectWidget.anchorObserver?.disconnect()
+    fizzSelectWidget.anchorObserver = null
+    if (fizzSelectWidget.anchorFrame) {
+      cancelAnimationFrame(fizzSelectWidget.anchorFrame)
+      fizzSelectWidget.anchorFrame = null
+    }
     fizzSelectWidget.isOpen = false
     fizzSelectTimeoutIdRef.current && clearTimeout(fizzSelectTimeoutIdRef.current)
     editor.removeContentWidget(fizzSelectWidget)
@@ -135,6 +180,12 @@ export const editerMenuFun = (params: EditerMenuFunParams) => {
   }
   // 关闭选中的菜单
   const closeFizzRangeWidget = () => {
+    fizzRangeWidget.anchorObserver?.disconnect()
+    fizzRangeWidget.anchorObserver = null
+    if (fizzRangeWidget.anchorFrame) {
+      cancelAnimationFrame(fizzRangeWidget.anchorFrame)
+      fizzRangeWidget.anchorFrame = null
+    }
     fizzRangeWidget.isOpen = false
     fizzRangeTimeoutIdRef.current && clearTimeout(fizzRangeTimeoutIdRef.current)
     editor.removeContentWidget(fizzRangeWidget)
@@ -145,12 +196,20 @@ export const editerMenuFun = (params: EditerMenuFunParams) => {
   // 编辑器点击显示的菜单
   const fizzSelectWidget = {
     isOpen: false,
+    domNode: null as HTMLElement | null,
+    anchorObserver: null as ResizeObserver | null,
+    anchorFrame: null as number | null,
+    beforeRender: function () {
+      return menuAnchorSize(this.domNode)
+    },
     getId: function () {
       return selectId
     },
     getDomNode: function () {
       // 将TSX转换为DOM节点
       const domNode = document.createElement('div')
+      this.domNode = domNode
+      watchMenuAnchorHeight(domNode, this, () => editor.layoutContentWidget(this))
       // 解决弹窗内鼠标滑轮无法滚动的问题
       domNode.onwheel = (e) => e.stopPropagation()
       unmountMenuRoot(selectRoot)
@@ -184,7 +243,7 @@ export const editerMenuFun = (params: EditerMenuFunParams) => {
           lineNumber: currentPos?.lineNumber || 0,
           column: currentPos?.column || 0,
         },
-        preference: [1, 2],
+        preference: menuAnchorPreference([1, 2]),
       }
     },
     update: function () {
@@ -197,12 +256,20 @@ export const editerMenuFun = (params: EditerMenuFunParams) => {
   // 编辑器选中显示的菜单
   const fizzRangeWidget = {
     isOpen: false,
+    domNode: null as HTMLElement | null,
+    anchorObserver: null as ResizeObserver | null,
+    anchorFrame: null as number | null,
+    beforeRender: function () {
+      return menuAnchorSize(this.domNode)
+    },
     getId: function () {
       return rangeId
     },
     getDomNode: function () {
       // 将TSX转换为DOM节点
       const domNode = document.createElement('div')
+      this.domNode = domNode
+      watchMenuAnchorHeight(domNode, this, () => editor.layoutContentWidget(this))
       // 解决弹窗内鼠标滑轮无法滚动的问题
       domNode.onwheel = (e) => e.stopPropagation()
       unmountMenuRoot(rangeRoot)
@@ -225,7 +292,7 @@ export const editerMenuFun = (params: EditerMenuFunParams) => {
               <HTTPFuzzerRangeEditorMenu
                 editorInfo={editorInfoRef.current}
                 close={() => closeFizzRangeWidget()}
-                insert={(fun: any) => {
+                insert={(apply: (text: string) => string) => {
                   if (editor) {
                     const selectedText = editor.getModel()?.getValueInRange(editor.getSelection() as any) || ''
                     if (selectedText.length > 0) {
@@ -239,29 +306,20 @@ export const editerMenuFun = (params: EditerMenuFunParams) => {
                             newSelectedText = selectedText.replace(/{{|}}/g, '')
                           }
                         }
-                        const text: string = fun(newSelectedText)
+                        const text: string = apply(newSelectedText)
                         //   editor.trigger("keyboard", "type", {text})// 选择范围大会卡死
                         monacoEditorWrite(editor, text)
                       })
                     }
                   }
                 }}
-                replace={(text: string) => {
-                  if (editor) {
-                    editor.trigger('keyboard', 'paste', { text })
-                    closeFizzRangeWidget()
-                  }
-                }}
-                toOpenAiChat={toOpenAiChat}
                 rangeValue={(editor && editor.getModel()?.getValueInRange(editor.getSelection() as any)) || ''}
                 fizzRangeTimeoutId={fizzRangeTimeoutIdRef}
                 onOpenSmartDecode={onOpenSmartDecode}
-                hTTPFuzzerClickEditorMenuProps={
+                clickMenu={
                   readOnly
                     ? undefined
                     : {
-                        editorInfo: editorInfoRef.current,
-                        close: () => closeFizzRangeWidget(),
                         insert: (v: QueryFuzzerLabelResponseProps) => {
                           insertLabelFun(v)
                           closeFizzRangeWidget()
@@ -270,6 +328,7 @@ export const editerMenuFun = (params: EditerMenuFunParams) => {
                           closeFizzRangeWidget()
                           onInsertYakFuzzer(editor)
                         },
+                        toOpenAiChat,
                       }
                 }
               />,
@@ -285,7 +344,7 @@ export const editerMenuFun = (params: EditerMenuFunParams) => {
           lineNumber: currentPos?.lineNumber || 0,
           column: currentPos?.column || 0,
         },
-        preference: [2, 1],
+        preference: menuAnchorPreference([2, 1]),
       }
     },
     update: function () {
@@ -372,6 +431,18 @@ export const editerMenuFun = (params: EditerMenuFunParams) => {
     editor.onMouseUp((e) => {
       // @ts-expect-error 类型定义不完整，需要忽略此行
       const { leftButton, rightButton, posy, editorPos } = e.event
+      // 点工具条本身会让 Monaco 重新布局浮层，智能解码弹窗会跟着闪一下；右键仍要关菜单
+      const isMenuWidget =
+        e.target?.type === newEditor.MouseTargetType.CONTENT_WIDGET ||
+        e.target?.type === newEditor.MouseTargetType.OVERLAY_WIDGET
+      if (isMenuWidget && !rightButton) {
+        return
+      }
+      if (rightButton) {
+        closeFizzRangeWidget()
+        closeFizzSelectWidget()
+        return
+      }
       // 获取编辑器所处x，y轴,并获取其长宽
       const { x, y } = editorPos
 
@@ -466,10 +537,6 @@ export const editerMenuFun = (params: EditerMenuFunParams) => {
               closeFizzSelectWidget()
             }
           }
-        }
-        if (rightButton) {
-          closeFizzRangeWidget()
-          closeFizzSelectWidget()
         }
       }
     }),
