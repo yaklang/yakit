@@ -7,6 +7,7 @@ import { nodePolyfills } from 'vite-plugin-node-polyfills'
 import { visualizer } from 'rollup-plugin-visualizer'
 import checker from 'vite-plugin-checker'
 import { yakitUiIconsPurePlugin } from '../../vite-plugins/yakitUiIconsPurePlugin.mjs'
+import { filterModulePreloadDeps } from './scripts/filterModulePreloadDeps.mjs'
 
 const rootDir = path.dirname(fileURLToPath(import.meta.url))
 const outDir = path.resolve(rootDir, '../../pages/main')
@@ -311,8 +312,13 @@ export default defineConfig(({ mode, command }) => {
       outDir,
       emptyOutDir: true,
       target: 'esnext',
-      // Electron 本地 file:// 加载，不需要 module preload polyfill
-      modulePreload: { polyfill: false },
+      // Electron file:// 无需 preload polyfill；Monaco 不进首屏 modulepreload。
+      modulePreload: {
+        polyfill: false,
+        resolveDependencies(_filename, deps) {
+          return filterModulePreloadDeps(deps)
+        },
+      },
       sourcemap,
       // Local/WSL Electron E2E builds keep production React semantics but skip
       // minification, whose minify workers can exceed 10 GiB in this project.
@@ -334,6 +340,18 @@ export default defineConfig(({ mode, command }) => {
         output: {
           codeSplitting: {
             groups: [
+              {
+                // 避免 __vitePreload 卷进 vendor-monaco 导致入口静态拉编辑器
+                name: 'vite-preload-helper',
+                test: /vite\/preload-helper/,
+                priority: 80,
+              },
+              {
+                // buffer/prop-types 勿并进 vendor-monaco，否则首屏为 Buffer 拉整包编辑器
+                name: 'vendor-shared-polyfill',
+                test: /[\\/]node_modules[\\/](vite-plugin-node-polyfills[\\/]shims[\\/]buffer|prop-types)[\\/]/,
+                priority: 70,
+              },
               {
                 // react 本体会被 rolldown 合并进 monaco/streamdown 组，导致任何引 react 的 chunk
                 // 都必须整包 import 3.5MB 的 vendor-monaco。这里用更高优先级把 react 单独抽出。
