@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, renderHook, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createStore } from 'zustand/vanilla'
 import type { ReactNode } from 'react'
@@ -10,8 +10,11 @@ import AISkillListItem from '../AISkillLoadingPane/aiSkillList/AISkillListItem/A
 import AISkillDetails from '../AISkillLoadingPane/aiSkillList/AISkillDetails/AISkillDetails'
 import type { AIAgentGrpcApi } from '../../hooks/grpcApi'
 import type { AIChatSendParams } from '../../hooks/type'
+import { createTestRawData, makeGrpcJsonRes, makeHandlerRequest } from '../../hooks/__test__/fixtures'
+import { aiTaskDetailDataHandlers } from '../../hooks/grpcStreamHandler/aiTaskDetail'
+import { useSkillLoading } from '../AISkillLoadingPane/useSkillLoading'
 
-const rawData = { skillDetails: new Map<string, AIAgentGrpcApi.SkillDetail>() }
+const rawData = createTestRawData()
 const meta = { syncIDMap: new Map<string, boolean>() }
 const store = createStore(() => ({ syncIDUpdate: 0 }))
 const onSend = vi.fn<(payload: AIChatSendParams) => boolean>()
@@ -72,6 +75,7 @@ const receiveDetail = (detail: AIAgentGrpcApi.SkillDetail) => {
 
 beforeEach(() => {
   vi.resetAllMocks()
+  rawData.skills = []
   rawData.skillDetails.clear()
   meta.syncIDMap.clear()
   store.setState({ syncIDUpdate: 0 })
@@ -131,6 +135,51 @@ describe('AISkillListItem hover details', () => {
     await waitFor(() => expect(screen.getByRole('status')).toHaveAttribute('aria-busy', 'false'))
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
     expect(grpcGetAIForge).toHaveBeenCalledTimes(1)
+  })
+
+  it('查看可加载详情后添加技能，再次悬停会重新查询并展示已加载上下文', async () => {
+    const { result } = renderHook(() => useSkillLoading())
+    const first = render(
+      <AISkillListItem
+        source="right-panel"
+        skill={{ name: 'skill', description: '', skill_load_state: 'metadata' }}
+        loadState="metadata"
+        onAdd={result.current.onAddSkill}
+      />,
+    )
+    hoverItem()
+    await waitFor(() => expect(onSend).toHaveBeenCalledTimes(1))
+    act(() => receiveDetail({ name: 'skill', loaded: false, skill_md: '# 原始全文' }))
+    await waitFor(() => expect(screen.getByRole('status')).toHaveAttribute('aria-busy', 'false'))
+    expect(screen.getByRole('textbox', { name: 'skill-content' })).toHaveValue('# 原始全文')
+
+    fireEvent.click(screen.getByRole('button', { name: 'YakitButton.add' }))
+    expect(onSend.mock.lastCall![0].params.SyncType).toBe('load_skill_sync')
+    act(() => {
+      meta.syncIDMap.delete(onSend.mock.lastCall![0].params.SyncID!)
+      store.setState((state) => ({ syncIDUpdate: state.syncIDUpdate + 1 }))
+      aiTaskDetailDataHandlers.skill_inventory(
+        makeHandlerRequest({
+          rawData,
+          res: makeGrpcJsonRes(
+            'structured',
+            [{ name: 'skill', description: '', stage: 'loaded', data: { skill_load_state: 'loaded' } }],
+            { NodeId: 'skill_inventory' },
+          ),
+        }),
+      )
+    })
+    first.unmount()
+    onSend.mockClear()
+
+    render(<AISkillListItem source="right-panel" skill={rawData.skills[0]} loadState="loaded" />)
+    hoverItem()
+    await waitFor(() => expect(onSend).toHaveBeenCalledTimes(1))
+    expect(onSend.mock.lastCall![0].params.SyncType).toBe('skill_detail_sync')
+    expect(screen.getByRole('status')).toHaveAttribute('aria-busy', 'true')
+    act(() => receiveDetail({ name: 'skill', loaded: true, prompt_content: '当前上下文片段' }))
+    await waitFor(() => expect(screen.getByRole('status')).toHaveAttribute('aria-busy', 'false'))
+    expect(screen.getByRole('textbox', { name: 'skill-content' })).toHaveValue('当前上下文片段')
   })
 
   it('缓存命中时不请求，重新打开读取 Map 中最新的详情', () => {

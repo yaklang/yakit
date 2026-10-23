@@ -86,6 +86,34 @@ describe('aiTaskDetail handlers', () => {
   })
 
   it.each([
+    [false, 'loaded'],
+    [true, 'metadata'],
+  ] as const)('skill_inventory 从 loaded=%s 变为 %s 时仅清除状态不匹配的详情', (loaded, stage) => {
+    const req = makeHandlerRequest({
+      res: makeGrpcJsonRes(
+        'structured',
+        [
+          { name: 'changed', description: '', stage, data: { skill_load_state: stage } },
+          { name: 'unchanged', description: '', stage: 'loaded', data: { skill_load_state: 'loaded' } },
+        ],
+        { NodeId: 'skill_inventory' },
+      ),
+    })
+    const unchanged = { name: 'unchanged', loaded: true, prompt_content: '保留内容' }
+    req.rawData.skillDetails.set('changed', { name: 'changed', loaded })
+    req.rawData.skillDetails.set('unchanged', unchanged)
+    const otherSession = makeHandlerRequest({ res: req.res })
+    otherSession.rawData.skillDetails.set('changed', { name: 'changed', loaded })
+
+    aiTaskDetailDataHandlers.skill_inventory(req)
+
+    expect(req.rawData.skillDetails.has('changed')).toBe(false)
+    expect(req.rawData.skillDetails.get('unchanged')).toBe(unchanged)
+    expect(otherSession.rawData.skillDetails.has('changed')).toBe(true)
+    expect(req.store.getState().skillsUpdate).toBe(1)
+  })
+
+  it.each([
     ['thought', 'skill_inventory'],
     ['structured', 'session_snapshot'],
   ])('skill_inventory 忽略不匹配的 Type=%s NodeId=%s', (type, nodeId) => {

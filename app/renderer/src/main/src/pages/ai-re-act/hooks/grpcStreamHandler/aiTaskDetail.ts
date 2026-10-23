@@ -192,12 +192,17 @@ const handleSkillInventory: AIMessageHandler = ({ res, store, rawData }) => {
 
   const ipcContent = Uint8ArrayToString(res.Content)
   const skills = JSON.parse(ipcContent) as AIAgentGrpcApi.SkillInventoryItem[]
-  rawData.skills = skills.map((skill) => ({
-    name: skill.name,
-    description: skill.description,
-    skill_load_state: (skill.data?.skill_load_state || skill.stage) as AISkillListItem['skill_load_state'],
-    token_count: skill.data?.token_count,
-  }))
+  rawData.skills = skills.map((skill) => {
+    const loadState = (skill.data?.skill_load_state || skill.stage) as AISkillListItem['skill_load_state']
+    const detail = rawData.skillDetails.get(skill.name)
+    if (detail && detail.loaded !== (loadState === 'loaded')) rawData.skillDetails.delete(skill.name)
+    return {
+      name: skill.name,
+      description: skill.description,
+      skill_load_state: loadState,
+      token_count: skill.data?.token_count,
+    }
+  })
   store.getState().updateStateCount('skillsUpdate')
 }
 const handleCapabilityInventory: AIMessageHandler = (requestInfo) => {
