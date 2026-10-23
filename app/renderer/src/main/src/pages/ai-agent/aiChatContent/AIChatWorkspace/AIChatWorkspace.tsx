@@ -3,6 +3,7 @@ import { useCreation, useMemoizedFn } from 'ahooks'
 import { useStore } from 'zustand'
 import classNames from 'classnames'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
+import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import { useCurrentRawData, useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import { AITabs, AITabsEnum } from '../../defaultConstant'
 import type { AITabsEnumType, AIAgentTriggerEventInfo } from '../../aiAgentType'
@@ -12,6 +13,8 @@ import type { FileNodeProps } from '@/pages/yakRunner/FileTree/FileTreeType'
 import emiter from '@/utils/eventBus/eventBus'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { getFileIconByName } from '@/pages/yakRunner/FileTree/icon'
+import { getCodeSizeByPath, MAX_FILE_SIZE_BYTES } from '@/pages/yakRunner/utils'
+import { yakitNotify } from '@/utils/notification'
 import styles from './AIChatWorkspace.module.scss'
 import { AIChatWorkspaceTabs, type AIChatWorkspaceTab } from './AIChatWorkspaceTabs/AIChatWorkspaceTabs'
 import { AIChatWorkspaceTabContent, type HttpFlowSelectionProps } from './AIChatWorkspaceTabs/AIChatWorkspaceTabContent'
@@ -54,6 +57,7 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
 
   const [tabs, setTabs] = useState<WorkspaceTab[]>([])
   const [activeTabKey, setActiveTabKey] = useState('')
+  const [showFileTooLargeHint, setShowFileTooLargeHint] = useState(false)
   /** switchAIActTab 带来的高亮，经 filePreviewData effect 打开 tab 时消费 */
   const pendingFileHighlightsRef = useRef<AIAgentFilePreviewHighlight[] | undefined>()
 
@@ -93,10 +97,30 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
     setActiveTabKey(tab.key)
   })
 
-  const openFilePreview = useMemoizedFn((file: FileNodeProps, highlights?: AIAgentFilePreviewHighlight[]) => {
+  const openFilePreview = useMemoizedFn(async (file: FileNodeProps, highlights?: AIAgentFilePreviewHighlight[]) => {
     if (file.isFolder) return
+    const tabKey = `file:${file.path}`
+    // 已打开的 tab 只聚焦/更新高亮；新开前先校验体积，过大则提示且不 push
+    const alreadyOpen = tabs.some((item) => item.key === tabKey)
+    if (!alreadyOpen) {
+      let size = 0
+      try {
+        const result = await getCodeSizeByPath(file.path)
+        size = result.size
+      } catch (err) {
+        yakitNotify('error', t('FilePreview.loadFailed', { error: String(err) }))
+        return
+      }
+      if (size > MAX_FILE_SIZE_BYTES) {
+        setShowFileTooLargeHint(true)
+        if (filePreviewData?.path === file.path) {
+          setFilePreviewData(undefined)
+        }
+        return
+      }
+    }
     openTab({
-      key: `file:${file.path}`,
+      key: tabKey,
       type: AITabsEnum.File_Preview,
       label: file.name || file.path,
       file,
@@ -311,6 +335,14 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
           />
         </div>
       </div>
+      <YakitHint
+        visible={showFileTooLargeHint}
+        title={t('FilePreview.warningTitle')}
+        content={t('FilePreview.tooLarge')}
+        cancelButtonProps={{ style: { display: 'none' } }}
+        onOk={() => setShowFileTooLargeHint(false)}
+        okButtonText={t('YakitButton.iKnow')}
+      />
     </div>
   )
 })

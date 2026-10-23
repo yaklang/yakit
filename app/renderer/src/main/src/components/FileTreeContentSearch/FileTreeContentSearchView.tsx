@@ -3,9 +3,10 @@ import { YakitCombinationSearch } from '@/components/YakitCombinationSearch/Yaki
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
+import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import FileSearchResultItem from './FileSearchResultItem'
-import { useFileContentSearch, type FileContentSearchRunOptions } from './useFileContentSearch'
+import { useFileContentSearch } from './useFileContentSearch'
 import {
   FileTreeSearchType,
   SEARCH_CANCEL_VISIBLE_MS,
@@ -18,7 +19,7 @@ import styles from './FileTreeContentSearchView.module.scss'
 export interface FileTreeSearchEmptyContext {
   searched: boolean
   hasSearchPath: boolean
-  onSearch: (value?: string, options?: FileContentSearchRunOptions) => void
+  onSearch: (value?: string) => void
 }
 
 export interface FileTreeContentSearchViewProps {
@@ -105,8 +106,31 @@ const FileTreeContentSearchView: FC<FileTreeContentSearchViewProps> = ({
       return emptyDescription({ searched, hasSearchPath, onSearch })
     }
     if (emptyDescription !== undefined) return emptyDescription
-    return searched ? t('FileTreeSearch.emptyNoResult') : t('FileTreeSearch.emptyHint')
+    return searched ? t('FileTreeSearch.emptyNoResult') : null
   }, [emptyDescription, searched, hasSearchPath, onSearch, t])
+
+  const resultTotal = useMemo(() => results.reduce((sum, item) => sum + item.searchResult.match_count, 0), [results])
+  const showResultTotal = !loading && searched
+
+  let resultsContent: ReactNode = null
+  if (loading) {
+    resultsContent = (
+      <div className={styles['loading']} data-testid={loadingTestId ?? `${dataTestId}-loading`}>
+        <div className={styles['loading-center']}>
+          <YakitSpin size="small" wrapperClassName={styles['loading-spin']} />
+          {showCancel ? (
+            <YakitButton type="outline2" size="small" data-testid={`${dataTestId}-cancel`} onClick={onCancelSearch}>
+              {t('FileTreeSearch.cancelSearch')}
+            </YakitButton>
+          ) : null}
+        </div>
+      </div>
+    )
+  } else if (results.length > 0) {
+    resultsContent = results.map((item) => <FileSearchResultItem key={item.path} item={item} onOpen={onOpen} />)
+  } else if (resolvedEmpty != null) {
+    resultsContent = <YakitEmpty className={styles['empty']} description={resolvedEmpty} />
+  }
 
   return (
     <div ref={rootRef} className={styles['file-tree-search-view']} data-testid={dataTestId}>
@@ -128,24 +152,25 @@ const FileTreeContentSearchView: FC<FileTreeContentSearchViewProps> = ({
           }}
         />
       </div>
-      {toolbarExtra ? <div className={styles['scope-bar']}>{toolbarExtra}</div> : null}
+      {toolbarExtra || showResultTotal ? (
+        <div className={styles['scope-bar']}>
+          {toolbarExtra ? <div className={styles['scope-bar-extra']}>{toolbarExtra}</div> : null}
+          {showResultTotal ? (
+            <YakitTag
+              size="small"
+              fullRadius
+              border={false}
+              className={styles['scope-result-total']}
+              data-testid={`${dataTestId}-result-total`}
+              title={t('FileTreeSearch.matchCount', { count: resultTotal })}
+            >
+              {resultTotal}
+            </YakitTag>
+          ) : null}
+        </div>
+      ) : null}
       <div className={styles['results']} data-testid={resultsTestId ?? `${dataTestId}-results`}>
-        {loading ? (
-          <div className={styles['loading']} data-testid={loadingTestId ?? `${dataTestId}-loading`}>
-            <div className={styles['loading-center']}>
-              <YakitSpin size="small" wrapperClassName={styles['loading-spin']} />
-              {showCancel ? (
-                <YakitButton type="outline2" size="small" data-testid={`${dataTestId}-cancel`} onClick={onCancelSearch}>
-                  {t('FileTreeSearch.cancelSearch')}
-                </YakitButton>
-              ) : null}
-            </div>
-          </div>
-        ) : results.length > 0 ? (
-          results.map((item) => <FileSearchResultItem key={item.path} item={item} onOpen={onOpen} />)
-        ) : (
-          <YakitEmpty className={styles['empty']} description={resolvedEmpty} />
-        )}
+        {resultsContent}
       </div>
     </div>
   )

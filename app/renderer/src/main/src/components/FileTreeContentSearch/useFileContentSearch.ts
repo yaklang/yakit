@@ -24,15 +24,10 @@ export interface UseFileContentSearchOptions {
   resolveRoots?: () => Promise<{ path: string }[]> | { path: string }[]
 }
 
-/** 单次搜索可选参数：显式 roots 时跳过 resolveRoots / 静态 roots */
-export interface FileContentSearchRunOptions {
-  roots?: { path: string }[]
-}
-
 /**
  * @name 文件内容搜索（通用）
- * @description 按 roots / resolveRoots 调用 RequestYakURL op=search；仅手动触发；
- * Enter 时清理旧请求与结果，再按当前范围搜索
+ * @description 按 roots / resolveRoots 调用 RequestYakURL op=search；
+ * Enter 手动搜；搜索类型 / roots 变化且有关键字时自动重搜
  */
 export const useFileContentSearch = (options: UseFileContentSearchOptions) => {
   const { roots, resolveRoots } = options
@@ -43,6 +38,8 @@ export const useFileContentSearch = (options: UseFileContentSearchOptions) => {
   const [results, setResults] = useState<FileSearchFileItem[]>([])
   const requestIdRef = useRef(0)
   const searchTokensRef = useRef<string[]>([])
+  /** roots 首次从空到有值只做初始化，不触发自动重搜 */
+  const rootsReadyRef = useRef(false)
 
   const rootsKey = useMemo(() => roots.map((item) => item.path).join('\0'), [roots])
   const hasSearchPath = useMemo(() => roots.some((item) => !!item.path?.trim()), [rootsKey])
@@ -106,9 +103,8 @@ export const useFileContentSearch = (options: UseFileContentSearchOptions) => {
     })
   })
 
-  const onSearch = useMemoizedFn((value?: string, runOptions?: FileContentSearchRunOptions) => {
+  const onSearch = useMemoizedFn((value?: string) => {
     const text = (value ?? keyword).trim()
-    // Enter：先清理旧请求与结果，再按当前范围搜
     cancelInFlight()
     const requestId = ++requestIdRef.current
     setResults([])
@@ -128,12 +124,6 @@ export const useFileContentSearch = (options: UseFileContentSearchOptions) => {
       runSearchWithPaths(text, paths, requestId)
     }
 
-    // 调用方已算好本次 roots（如空态切范围立刻重搜），不再读可能未提交的 state
-    if (runOptions?.roots) {
-      applyPaths(runOptions.roots)
-      return
-    }
-
     if (!resolveRoots) {
       applyPaths(roots)
       return
@@ -151,12 +141,16 @@ export const useFileContentSearch = (options: UseFileContentSearchOptions) => {
       })
   })
 
+  // 搜索类型或范围 roots 变化后，有关键字则自动重搜（不监听 keyword，避免输入过程触发）
   useEffect(() => {
-    // 仅搜索类型变化时作废进行中请求；roots 异步刷新不再打断 Enter 解析中的搜索
-    cancelInFlight()
-    requestIdRef.current += 1
-    setLoading(false)
-  }, [searchType, cancelInFlight])
+    if (!rootsReadyRef.current) {
+      if (rootsKey) rootsReadyRef.current = true
+      return
+    }
+    if (!keyword.trim()) return
+    onSearch()
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 仅 searchType / roots 变化时重搜
+  }, [searchType, rootsKey])
 
   useEffect(() => {
     return () => {

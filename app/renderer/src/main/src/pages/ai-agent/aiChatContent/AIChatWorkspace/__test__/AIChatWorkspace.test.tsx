@@ -4,8 +4,44 @@ import '@/pages/ai-re-act/hooks/__test__/setupElectron'
 // 依赖链经 AI 组件会拉到 lottie-web / xterm，模块加载期探测 canvas，jsdom 不支持
 vi.mock('lottie-web', () => ({ default: { loadAnimation: vi.fn(), destroy: vi.fn() } }))
 vi.mock('@xterm/xterm', () => ({ Terminal: vi.fn() }))
+
+const { mockGetCodeSizeByPath, mockNotify } = vi.hoisted(() => ({
+  mockGetCodeSizeByPath: vi.fn(async () => ({ size: 1, isPlainText: true })),
+  mockNotify: vi.fn(),
+}))
+vi.mock('@/pages/yakRunner/utils', async (importOriginal) => {
+  const actual = (await importOriginal()) as Record<string, unknown>
+  return {
+    ...actual,
+    getCodeSizeByPath: mockGetCodeSizeByPath,
+  }
+})
+vi.mock('@/utils/notification', () => ({ yakitNotify: mockNotify }))
+vi.mock('@/components/yakitUI/YakitHint/YakitHint', () => ({
+  YakitHint: ({
+    visible,
+    title,
+    content,
+    onOk,
+  }: {
+    visible?: boolean
+    title?: string
+    content?: string
+    onOk?: () => void
+  }) =>
+    visible ? (
+      <div data-testid="file-too-large-hint">
+        <span>{title}</span>
+        <span>{content}</span>
+        <button type="button" onClick={onOk}>
+          ok
+        </button>
+      </div>
+    ) : null,
+}))
+
 import React from 'react'
-import { act, fireEvent, render, screen, within } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { createStore } from 'zustand/vanilla'
 import { AIRightPanel } from '@/pages/ai-re-act/aiRightPanel/AIRightPanel'
 import emiter from '@/utils/eventBus/eventBus'
@@ -14,6 +50,7 @@ import type * as AIChatWorkspaceModule from '../AIChatWorkspace'
 import { compileReactModule } from '@/utils/__test__/helpers/compileReactModule'
 import type { PluginExecuteWebsiteTreeProps } from '@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResultType'
 import { useHttpFlowSelection } from '@/components/useHttpFlowSelection'
+import { MAX_FILE_SIZE_BYTES } from '@/pages/yakRunner/utils'
 const flowCallbacks: PluginExecuteWebsiteTreeProps[] = []
 
 beforeEach(() => {
@@ -172,6 +209,9 @@ beforeEach(() => {
   store.setState(initialState, true)
   rawData.httpRunTimeIDs = []
   rawData.riskRunTimeIDs = []
+  mockGetCodeSizeByPath.mockReset()
+  mockGetCodeSizeByPath.mockResolvedValue({ size: 1, isPlainText: true })
+  mockNotify.mockReset()
 })
 
 describe('AIChatWorkspace 菜单切换', () => {
@@ -540,7 +580,7 @@ describe('AIChatWorkspace 菜单切换', () => {
     expect(setFilePreviewData).toHaveBeenLastCalledWith(undefined)
   })
 
-  it('打开多个文件预览时各自独立页签，关闭其中一个不影响其余', () => {
+  it('打开多个文件预览时各自独立页签，关闭其中一个不影响其余', async () => {
     const onTabsChange = vi.fn()
     const setFilePreviewData = vi.fn()
     const { rerender, container } = render(
@@ -573,8 +613,10 @@ describe('AIChatWorkspace 菜单切换', () => {
         onTabsChange={onTabsChange}
       />,
     )
-    expect(screen.getByText('a.ts')).toBeInTheDocument()
-    expect(screen.getByTestId('file-preview')).toHaveTextContent('/workspace/a.ts')
+    await waitFor(() => {
+      expect(screen.getByText('a.ts')).toBeInTheDocument()
+      expect(screen.getByTestId('file-preview')).toHaveTextContent('/workspace/a.ts')
+    })
     expect(onTabsChange).toHaveBeenLastCalledWith(1)
 
     rerender(
@@ -584,9 +626,11 @@ describe('AIChatWorkspace 菜单切换', () => {
         onTabsChange={onTabsChange}
       />,
     )
-    expect(screen.getByText('a.ts')).toBeInTheDocument()
-    expect(screen.getByText('b.ts')).toBeInTheDocument()
-    expect(screen.getByTestId('file-preview')).toHaveTextContent('/workspace/b.ts')
+    await waitFor(() => {
+      expect(screen.getByText('a.ts')).toBeInTheDocument()
+      expect(screen.getByText('b.ts')).toBeInTheDocument()
+      expect(screen.getByTestId('file-preview')).toHaveTextContent('/workspace/b.ts')
+    })
     expect(onTabsChange).toHaveBeenLastCalledWith(2)
 
     // 再次打开已存在文件应聚焦，不新增页签
@@ -597,9 +641,11 @@ describe('AIChatWorkspace 菜单切换', () => {
         onTabsChange={onTabsChange}
       />,
     )
-    expect(screen.getAllByText('a.ts')).toHaveLength(1)
-    expect(screen.getByText('b.ts')).toBeInTheDocument()
-    expect(screen.getByTestId('file-preview')).toHaveTextContent('/workspace/a.ts')
+    await waitFor(() => {
+      expect(screen.getAllByText('a.ts')).toHaveLength(1)
+      expect(screen.getByText('b.ts')).toBeInTheDocument()
+      expect(screen.getByTestId('file-preview')).toHaveTextContent('/workspace/a.ts')
+    })
     expect(onTabsChange).toHaveBeenLastCalledWith(2)
 
     fireEvent.click(screen.getByText('b.ts'))
@@ -614,7 +660,7 @@ describe('AIChatWorkspace 菜单切换', () => {
     expect(onTabsChange).toHaveBeenLastCalledWith(1)
   })
 
-  it('通过 switchAIActTab 打开文件预览可叠加多个页签', () => {
+  it('通过 switchAIActTab 打开文件预览可叠加多个页签', async () => {
     const onTabsChange = vi.fn()
     function Harness() {
       const [filePreviewData, setFilePreviewData] = React.useState<undefined | { name: string; path: string }>()
@@ -628,19 +674,82 @@ describe('AIChatWorkspace 菜单切换', () => {
     }
     render(<Harness />)
 
-    act(() => emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.File_Preview, value: '/tmp/one.js' })))
-    expect(screen.getByText('one.js')).toBeInTheDocument()
-    expect(screen.getByTestId('file-preview')).toHaveTextContent('/tmp/one.js')
+    await act(async () => {
+      emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.File_Preview, value: '/tmp/one.js' }))
+    })
+    await waitFor(() => {
+      expect(screen.getByText('one.js')).toBeInTheDocument()
+      expect(screen.getByTestId('file-preview')).toHaveTextContent('/tmp/one.js')
+    })
     expect(onTabsChange).toHaveBeenLastCalledWith(1)
 
-    act(() => emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.File_Preview, value: '/tmp/two.js' })))
-    expect(screen.getByText('one.js')).toBeInTheDocument()
-    expect(screen.getByText('two.js')).toBeInTheDocument()
-    expect(screen.getByTestId('file-preview')).toHaveTextContent('/tmp/two.js')
+    await act(async () => {
+      emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.File_Preview, value: '/tmp/two.js' }))
+    })
+    await waitFor(() => {
+      expect(screen.getByText('one.js')).toBeInTheDocument()
+      expect(screen.getByText('two.js')).toBeInTheDocument()
+      expect(screen.getByTestId('file-preview')).toHaveTextContent('/tmp/two.js')
+    })
     expect(onTabsChange).toHaveBeenLastCalledWith(2)
   })
 
-  it('搜索打开预览带高亮；无 pending 的二次 open 不会清空高亮', () => {
+  it('文件过大时提前提示且不打开预览 tab', async () => {
+    mockGetCodeSizeByPath.mockResolvedValue({ size: MAX_FILE_SIZE_BYTES + 1, isPlainText: true })
+    const onTabsChange = vi.fn()
+    function Harness() {
+      const [filePreviewData, setFilePreviewData] = React.useState<undefined | { name: string; path: string }>()
+      return (
+        <AIChatWorkspace
+          filePreviewData={filePreviewData as never}
+          setFilePreviewData={setFilePreviewData as never}
+          onTabsChange={onTabsChange}
+        />
+      )
+    }
+    render(<Harness />)
+
+    await act(async () => {
+      emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.File_Preview, value: '/tmp/huge.log' }))
+    })
+
+    await waitFor(() => {
+      expect(screen.getByTestId('file-too-large-hint')).toBeInTheDocument()
+      expect(screen.getByTestId('file-too-large-hint')).toHaveTextContent('FilePreview.tooLarge')
+    })
+    expect(screen.queryByText('huge.log')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('file-preview')).not.toBeInTheDocument()
+    expect(onTabsChange).toHaveBeenLastCalledWith(0)
+  })
+
+  it('读取文件大小失败时提示错误且不打开预览 tab', async () => {
+    mockGetCodeSizeByPath.mockRejectedValue(new Error('boom'))
+    const onTabsChange = vi.fn()
+    function Harness() {
+      const [filePreviewData, setFilePreviewData] = React.useState<undefined | { name: string; path: string }>()
+      return (
+        <AIChatWorkspace
+          filePreviewData={filePreviewData as never}
+          setFilePreviewData={setFilePreviewData as never}
+          onTabsChange={onTabsChange}
+        />
+      )
+    }
+    render(<Harness />)
+
+    await act(async () => {
+      emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.File_Preview, value: '/tmp/broken.js' }))
+    })
+
+    await waitFor(() => {
+      expect(mockNotify).toHaveBeenCalledWith('error', expect.stringContaining('FilePreview.loadFailed'))
+    })
+    expect(screen.queryByText('broken.js')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('file-preview')).not.toBeInTheDocument()
+    expect(onTabsChange).toHaveBeenLastCalledWith(0)
+  })
+
+  it('搜索打开预览带高亮；无 pending 的二次 open 不会清空高亮', async () => {
     let setFilePreviewData: React.Dispatch<
       React.SetStateAction<{ name: string; path: string; isFolder?: boolean } | undefined>
     >
@@ -654,23 +763,25 @@ describe('AIChatWorkspace 菜单切换', () => {
     render(<Harness />)
 
     const highlights = [{ startLineNumber: 1, startColumn: 1, endLineNumber: 1, endColumn: 3 }]
-    act(() =>
+    await act(async () => {
       emiter.emit(
         'switchAIActTab',
         JSON.stringify({ key: AITabsEnum.File_Preview, value: 'C:\\tmp\\222.txt', highlights }),
-      ),
-    )
-    expect(screen.getByTestId('file-preview')).toHaveAttribute('data-highlights', '1')
-    expect(screen.getByTestId('file-preview')).toHaveTextContent('C:\\tmp\\222.txt')
+      )
+    })
+    await waitFor(() => {
+      expect(screen.getByTestId('file-preview')).toHaveAttribute('data-highlights', '1')
+      expect(screen.getByTestId('file-preview')).toHaveTextContent('C:\\tmp\\222.txt')
+    })
 
     // 模拟 StrictMode / effect 重复：pending 已消费后再 set 同路径，不应覆盖高亮
-    act(() => {
+    await act(async () => {
       setFilePreviewData({ name: '222.txt', path: 'C:\\tmp\\222.txt', isFolder: false })
     })
     expect(screen.getByTestId('file-preview')).toHaveAttribute('data-highlights', '1')
   })
 
-  it('同路径再次打开只更新高亮，不经 setFilePreviewData', () => {
+  it('同路径再次打开只更新高亮，不经 setFilePreviewData', async () => {
     function Harness() {
       const [filePreviewData, setFilePreviewData] = React.useState<
         { name: string; path: string; isFolder?: boolean } | undefined
@@ -681,7 +792,7 @@ describe('AIChatWorkspace 菜单切换', () => {
     }
     render(<Harness />)
 
-    act(() =>
+    await act(async () => {
       emiter.emit(
         'switchAIActTab',
         JSON.stringify({
@@ -689,11 +800,11 @@ describe('AIChatWorkspace 菜单切换', () => {
           value: 'C:\\tmp\\222.txt',
           highlights: [{ startLineNumber: 1, startColumn: 1, endLineNumber: 1, endColumn: 2 }],
         }),
-      ),
-    )
-    expect(screen.getByTestId('file-preview')).toHaveAttribute('data-highlights', '1')
+      )
+    })
+    await waitFor(() => expect(screen.getByTestId('file-preview')).toHaveAttribute('data-highlights', '1'))
 
-    act(() =>
+    await act(async () => {
       emiter.emit(
         'switchAIActTab',
         JSON.stringify({
@@ -704,10 +815,12 @@ describe('AIChatWorkspace 菜单切换', () => {
             { startLineNumber: 4, startColumn: 5, endLineNumber: 4, endColumn: 7 },
           ],
         }),
-      ),
-    )
-    expect(screen.getByTestId('file-preview')).toHaveAttribute('data-highlights', '2')
-    expect(screen.getByTestId('file-preview')).toHaveTextContent('C:\\tmp\\222.txt')
+      )
+    })
+    await waitFor(() => {
+      expect(screen.getByTestId('file-preview')).toHaveAttribute('data-highlights', '2')
+      expect(screen.getByTestId('file-preview')).toHaveTextContent('C:\\tmp\\222.txt')
+    })
   })
 
   it.each([
@@ -810,7 +923,7 @@ describe('AIChatWorkspace 标签页右键菜单', () => {
     expect(onTabsChange).toHaveBeenLastCalledWith(0)
   })
 
-  it('多文件预览页签支持右键关闭其他', () => {
+  it('多文件预览页签支持右键关闭其他', async () => {
     const onTabsChange = vi.fn()
     const setFilePreviewData = vi.fn()
     const { rerender } = render(<AIChatWorkspace setFilePreviewData={setFilePreviewData} onTabsChange={onTabsChange} />)
@@ -839,6 +952,7 @@ describe('AIChatWorkspace 标签页右键菜单', () => {
         onTabsChange={onTabsChange}
       />,
     )
+    await waitFor(() => expect(screen.getByText('a.ts')).toBeInTheDocument())
     rerender(
       <AIChatWorkspace
         filePreviewData={fileB as never}
@@ -846,6 +960,7 @@ describe('AIChatWorkspace 标签页右键菜单', () => {
         onTabsChange={onTabsChange}
       />,
     )
+    await waitFor(() => expect(screen.getByText('b.ts')).toBeInTheDocument())
     act(() => emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.HTTP })))
     expect(onTabsChange).toHaveBeenLastCalledWith(3)
 

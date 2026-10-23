@@ -1,4 +1,10 @@
 .text-dropdown-trigger {
+  max-width: 100%;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+
   &:hover:not(:disabled) {
     background: var(--Colors-Use-Neutral-Bg-Hover);
     color: var(--Colors-Use-Neutral-Text-1-Title);
@@ -12,6 +18,7 @@
 }
 
 .text-dropdown-trigger-label {
+  flex: 1;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;

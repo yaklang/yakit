@@ -646,7 +646,7 @@
     "engineUnsupported": "目前引擎不支援檔案內容搜尋，請升級 yaklang 引擎後重試",
     "emptyHint": "請輸入關鍵字搜尋檔案內容",
     "emptyNoResult": "未搜尋到匹配內容",
-    "searchAllFolders": "查詢全部資料夾",
+    "changeSearchScope": "更改搜尋範圍",
     "cancelSearch": "取消搜尋"
   },
   "ExportAILogsModal": {

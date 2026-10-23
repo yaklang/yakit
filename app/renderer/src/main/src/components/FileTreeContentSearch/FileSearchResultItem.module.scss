@@ -7,6 +7,12 @@
   align-items: center;
   gap: 4px;
   min-width: 0;
+  border-radius: 4px;
+
+  // 挂在容器上，不与 YakitButton hover 抢优先级
+  &:hover {
+    background-color: var(--Colors-Use-Neutral-Bg-Hover);
+  }
 }
 
 .result-file-chevron {
@@ -33,10 +39,6 @@
   padding: 4px 8px 4px 0;
   border-radius: 4px;
   text-align: left;
-
-  &:hover {
-    background-color: var(--Colors-Use-Neutral-Bg-Hover);
-  }
 }
 
 .result-file-icon {
@@ -68,11 +70,11 @@
   justify-content: flex-start;
   gap: 8px;
   padding: 2px 8px 2px 22px;
-  border-radius: 0;
+  border-radius: 4px;
   text-align: left;
 
   &:hover {
-    background-color: var(--Colors-Use-Neutral-Bg-Hover);
+    background-color: var(--Colors-Use-Neutral-Bg-Hover) !important;
   }
 }
 

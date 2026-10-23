@@ -56,13 +56,6 @@ interface ScopeDropdownProps {
   children: ReactNode
 }
 
-/** 一次范围选择对应的可搜索参数（用于立刻重搜时显式传入 roots） */
-interface ScopeSelection {
-  scope: FileTreeSearchScopeValue
-  userScopePath?: string
-  currentOpenPath?: string
-}
-
 /** 工具栏与空态共用同一套范围下拉 */
 const ScopeDropdown: React.FC<ScopeDropdownProps> = ({
   open,
@@ -189,59 +182,38 @@ const FileTreeSearchView: React.FC<FileTreeSearchViewProps> = ({
     return scopeOptions.find((item) => item.value === scope)?.label || t('FileTreeSearch.all')
   }, [scope, userScopePath, currentOpenPath, scopeOptions, t])
 
-  /** 应用范围选择；有变更时返回本次选择，供立刻重搜显式算 roots */
-  const applyScopeKey = useMemoizedFn((key: string): ScopeSelection | undefined => {
-    if (!key) return undefined
+  /** 只改范围 state；roots 更新后由 useFileContentSearch 的 useEffect 自动重搜 */
+  const onSelectScope = useMemoizedFn(({ key }: { key: string }) => {
+    if (!key) return
 
     const userPath = parseUserScopeMenuKey(key)
     if (userPath !== undefined) {
       setScope(FileTreeSearchScope.UserFolder)
       setUserScopePath(userPath)
       setCurrentOpenPath(undefined)
-      return { scope: FileTreeSearchScope.UserFolder, userScopePath: userPath }
-    }
-    const openPath = parseCurrentOpenMenuKey(key)
-    if (openPath !== undefined) {
-      setScope(FileTreeSearchScope.CurrentOpen)
-      setCurrentOpenPath(openPath)
-      setUserScopePath(undefined)
-      return { scope: FileTreeSearchScope.CurrentOpen, currentOpenPath: openPath }
+    } else {
+      const openPath = parseCurrentOpenMenuKey(key)
+      if (openPath !== undefined) {
+        setScope(FileTreeSearchScope.CurrentOpen)
+        setCurrentOpenPath(openPath)
+        setUserScopePath(undefined)
+      } else if (
+        // 同范围重复点击忽略；二级菜单选中单路径后再点父项，则回到该范围全部
+        !(
+          key === scope &&
+          !(scope === FileTreeSearchScope.UserFolder && userScopePath) &&
+          !(scope === FileTreeSearchScope.CurrentOpen && currentOpenPath)
+        )
+      ) {
+        setScope(key as FileTreeSearchScopeValue)
+        setUserScopePath(undefined)
+        setCurrentOpenPath(undefined)
+      }
     }
 
-    // 同范围重复点击忽略；二级菜单选中单路径后再点父项，则回到该范围全部
-    if (
-      key === scope &&
-      !(scope === FileTreeSearchScope.UserFolder && userScopePath) &&
-      !(scope === FileTreeSearchScope.CurrentOpen && currentOpenPath)
-    ) {
-      return undefined
-    }
-
-    const next = key as FileTreeSearchScopeValue
-    setScope(next)
-    setUserScopePath(undefined)
-    setCurrentOpenPath(undefined)
-    return { scope: next }
+    setEmptyScopeOpen(false)
+    setScopeOpen(false)
   })
-
-  /** 工具栏：只切范围，不自动重搜 */
-  const onSelectScope = useMemoizedFn(({ key }: { key: string }) => {
-    applyScopeKey(key)
-  })
-
-  /** 空态切范围后立刻按新范围重搜（显式传入 roots，不依赖未提交的 state） */
-  const searchWithSelection = useMemoizedFn(
-    (next: ScopeSelection, onSearch: FileTreeSearchEmptyContext['onSearch']) => {
-      setEmptyScopeOpen(false)
-      void resolveSearchPaths(next.scope, grpcFolders, customFolder, {
-        userScopePath: next.userScopePath,
-        previewOpenFiles,
-        currentOpenPath: next.currentOpenPath,
-      }).then((nextRoots) => {
-        onSearch(undefined, { roots: nextRoots })
-      })
-    },
-  )
 
   const scopeMenuData = useMemo((): YakitMenuItemType[] => {
     return scopeOptions.map((item) => {
@@ -322,25 +294,17 @@ const FileTreeSearchView: React.FC<FileTreeSearchViewProps> = ({
     })
   })
 
-  // 依赖 scope：两端 roots 相同时改范围不会触发 roots 变化，空态仍需切换
+  // 空态与工具栏共用 scopeMenu；切范围后 roots 变化触发自动重搜
   const emptyDescription = useMemo(
     () =>
-      ({ searched, hasSearchPath, onSearch }: FileTreeSearchEmptyContext) => {
+      ({ searched, hasSearchPath }: FileTreeSearchEmptyContext) => {
         const emptyKind = resolveFileTreeSearchEmptyKind({ searched, hasSearchPath, scope })
         if (emptyKind === 'searchAll') {
-          // 空态菜单单独绑 onClick，闭包 onSearch；工具栏仍用 scopeMenu（不重搜）
-          const emptyMenu = {
-            ...scopeMenu,
-            onClick: ({ key }: { key: string }) => {
-              const next = applyScopeKey(key)
-              if (next) searchWithSelection(next, onSearch)
-            },
-          }
           return (
             <div data-testid="file-tree-search-empty-scope">
-              <ScopeDropdown open={emptyScopeOpen} onOpenChange={setEmptyScopeOpen} menu={emptyMenu} placement="bottom">
+              <ScopeDropdown open={emptyScopeOpen} onOpenChange={setEmptyScopeOpen} menu={scopeMenu} placement="bottom">
                 <YakitButton type="outline1" data-testid="file-tree-search-all">
-                  {t('FileTreeSearch.searchAllFolders')}
+                  {t('FileTreeSearch.changeSearchScope')}
                   <ChevronDownOutlined
                     color="currentColor"
                     size={14}
@@ -356,9 +320,10 @@ const FileTreeSearchView: React.FC<FileTreeSearchViewProps> = ({
           )
         }
         if (emptyKind === 'noResult') return t('FileTreeSearch.emptyNoResult')
-        return t('FileTreeSearch.emptyHint')
+        // hint（未搜索 / 无可搜路径）：不展示空态插画，留白
+        return null
       },
-    [scope, t, scopeMenu, emptyScopeOpen, applyScopeKey, searchWithSelection],
+    [scope, t, scopeMenu, emptyScopeOpen],
   )
 
   const toolbarExtra = (

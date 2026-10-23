@@ -3,12 +3,16 @@ import type * as Antd from 'antd'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
-import { useState, type ComponentProps } from 'react'
+import { useState, type ComponentProps, type Key } from 'react'
 import type { FileNodeProps } from '@/pages/yakRunner/FileTree/FileTreeType'
 import FileTreeSystemList from '../FileTreeSystemList'
 
 type MeasuredSize = { width: number; height: number }
-type DirectoryTreeCapture = { height?: number }
+type DirectoryTreeCapture = {
+  height?: number
+  treeData?: FileNodeProps[]
+  selectedKeys?: Key[]
+}
 
 const { fetchTree, measuredSize, directoryTreeProps } = vi.hoisted(() => {
   Object.defineProperty(window, 'require', {
@@ -51,7 +55,11 @@ vi.mock('antd', async (importOriginal) => {
   const OriginalDirectoryTree = antd.Tree.DirectoryTree
   type DirectoryTreeProps = ComponentProps<typeof OriginalDirectoryTree>
   const DirectoryTree = (props: DirectoryTreeProps) => {
-    directoryTreeProps.current = { height: typeof props.height === 'number' ? props.height : undefined }
+    directoryTreeProps.current = {
+      height: typeof props.height === 'number' ? props.height : undefined,
+      treeData: props.treeData as FileNodeProps[] | undefined,
+      selectedKeys: props.selectedKeys as Key[] | undefined,
+    }
     return <OriginalDirectoryTree {...props} />
   }
   const Tree = Object.assign((...args: Parameters<typeof antd.Tree>) => antd.Tree(...args), antd.Tree, {
@@ -91,6 +99,30 @@ describe('我打开的文件：文件夹展开', () => {
     )
     await waitFor(() => expect(screen.getByText('file.txt')).toBeVisible())
     expect(fetchTree).toHaveBeenCalledWith('opened/nested')
+  })
+
+  it('目录节点 treeData 为 selectable: false，文件节点不强制设置', async () => {
+    fetchTree.mockImplementation(async (path: string) => {
+      if (path === 'opened') {
+        return [
+          { path: 'opened/nested', name: 'nested', parent: 'opened', isFolder: true },
+          { path: 'opened/a.txt', name: 'a.txt', parent: 'opened', isFolder: false },
+        ]
+      }
+      return []
+    })
+    const user = userEvent.setup()
+    render(<FileTree />)
+    await screen.findByText('opened')
+    expect(directoryTreeProps.current?.treeData?.[0]).toMatchObject({
+      path: 'opened',
+      selectable: false,
+    })
+    await user.click(screen.getByText('opened'))
+    await waitFor(() => expect(screen.getByText('a.txt')).toBeVisible())
+    const children = directoryTreeProps.current?.treeData?.[0]?.children ?? []
+    expect(children.find((c) => c.path === 'opened/nested')).toMatchObject({ selectable: false })
+    expect(children.find((c) => c.path === 'opened/a.txt')?.selectable).toBeUndefined()
   })
 })
 

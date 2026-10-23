@@ -50,6 +50,7 @@ export interface FileNodeProps {
   // 底部占位
   isBottom?: boolean
   isLeaf?: boolean
+  selectable?: boolean
   children?: FileNodeProps[]
 }
 

@@ -65,7 +65,7 @@ describe('useFileContentSearch 竞态', () => {
     expect(result.current.loading).toBe(false)
   })
 
-  it('roots 变化不打断进行中请求；完成仍按原请求写回', async () => {
+  it('roots 变化时取消进行中请求，旧结果不写回', async () => {
     let resolveFirst!: (value: FileSearchFileItem[]) => void
     mockSearch.mockImplementationOnce(
       () =>
@@ -73,6 +73,7 @@ describe('useFileContentSearch 竞态', () => {
           resolveFirst = resolve
         }),
     )
+    mockSearch.mockResolvedValueOnce([sampleItem('new.txt')])
 
     const { result, rerender } = renderHook(({ roots }) => useFileContentSearch({ roots }), {
       initialProps: { roots: [{ path: 'ai-output' }] },
@@ -81,18 +82,21 @@ describe('useFileContentSearch 竞态', () => {
     act(() => result.current.onSearch('hello'))
     expect(result.current.loading).toBe(true)
 
-    rerender({ roots: [] })
-    expect(result.current.loading).toBe(true)
+    await act(async () => {
+      rerender({ roots: [{ path: 'other-root' }] })
+    })
+    await waitFor(() => expect(mockSearch).toHaveBeenCalledTimes(2))
 
     await act(async () => {
-      resolveFirst([sampleItem('ok.txt')])
+      resolveFirst([sampleItem('stale.txt')])
     })
-    expect(result.current.results).toHaveLength(1)
-    expect(result.current.results[0].name).toBe('ok.txt')
-    expect(result.current.loading).toBe(false)
+    await waitFor(() => {
+      expect(result.current.results).toHaveLength(1)
+      expect(result.current.results[0].name).toBe('new.txt')
+    })
   })
 
-  it('Enter 清理旧结果后按当前 roots 重搜；roots 变化不自动重搜', async () => {
+  it('Enter 后 roots 变化自动按新范围重搜', async () => {
     mockSearch.mockResolvedValueOnce([sampleItem('old.txt')])
     mockSearch.mockResolvedValueOnce([sampleItem('new-session.txt')])
 
@@ -106,18 +110,32 @@ describe('useFileContentSearch 竞态', () => {
       expect(result.current.results[0].name).toBe('old.txt')
     })
 
-    rerender({ roots: [{ path: 'new-ai-root' }] })
-    expect(result.current.results[0].name).toBe('old.txt')
-    expect(mockSearch).toHaveBeenCalledTimes(1)
-
-    act(() => result.current.onSearch('hello'))
-    expect(result.current.results).toEqual([])
+    await act(async () => {
+      rerender({ roots: [{ path: 'new-ai-root' }] })
+    })
     await waitFor(() => {
-      expect(result.current.loading).toBe(false)
+      expect(mockSearch).toHaveBeenCalledTimes(2)
       expect(result.current.results).toHaveLength(1)
       expect(result.current.results[0].name).toBe('new-session.txt')
     })
-    expect(mockSearch).toHaveBeenCalledTimes(2)
+  })
+
+  it('挂载 roots 为空时 Enter 得空结果；首次变为有值只初始化、不自动重搜', async () => {
+    const { result, rerender } = renderHook(({ roots }) => useFileContentSearch({ roots }), {
+      initialProps: { roots: [] as { path: string }[] },
+    })
+    act(() => result.current.setKeyword('hello'))
+    act(() => result.current.onSearch('hello'))
+    expect(result.current.searched).toBe(true)
+    expect(result.current.results).toEqual([])
+    expect(mockSearch).not.toHaveBeenCalled()
+
+    await act(async () => {
+      rerender({ roots: [{ path: 'ai-output' }] })
+    })
+    expect(mockSearch).not.toHaveBeenCalled()
+    expect(result.current.results).toEqual([])
+    expect(result.current.searched).toBe(true)
   })
 
   it('resolveRoots 优先于静态 roots，Enter 时用解析结果搜索', async () => {
@@ -134,21 +152,7 @@ describe('useFileContentSearch 竞态', () => {
     expect(mockSearch).toHaveBeenCalledWith(expect.objectContaining({ path: 'resolved-root', keyword: 'hello' }))
   })
 
-  it('显式传入 roots 时跳过 resolveRoots 与静态 roots', async () => {
-    mockSearch.mockResolvedValue([sampleItem('explicit.txt')])
-    const resolveRoots = vi.fn(async () => [{ path: 'resolved-root' }])
-    const { result } = renderHook(() => useFileContentSearch({ roots: [{ path: 'stale-root' }], resolveRoots }))
-    act(() => result.current.setKeyword('hello'))
-    act(() => result.current.onSearch('hello', { roots: [{ path: 'explicit-root' }] }))
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false)
-      expect(result.current.results[0].name).toBe('explicit.txt')
-    })
-    expect(resolveRoots).not.toHaveBeenCalled()
-    expect(mockSearch).toHaveBeenCalledWith(expect.objectContaining({ path: 'explicit-root', keyword: 'hello' }))
-  })
-
-  it('切换搜索类型后保留上次结果且不自动重搜', async () => {
+  it('切换搜索类型后按新模式自动重搜', async () => {
     mockSearch.mockResolvedValue([sampleItem('demo.txt')])
     const { result } = renderHook(() => useFileContentSearch({ roots: [{ path: 'ai-output' }] }))
     act(() => result.current.setKeyword('hello'))
@@ -157,12 +161,14 @@ describe('useFileContentSearch 竞态', () => {
       expect(result.current.results).toHaveLength(1)
     })
     expect(mockSearch).toHaveBeenCalledTimes(1)
+    expect(mockSearch).toHaveBeenLastCalledWith(expect.objectContaining({ regex: false }))
 
     act(() => result.current.setSearchType('regexp' as never))
-    expect(result.current.results).toHaveLength(1)
-    expect(result.current.results[0].name).toBe('demo.txt')
+    await waitFor(() => {
+      expect(mockSearch).toHaveBeenCalledTimes(2)
+      expect(mockSearch).toHaveBeenLastCalledWith(expect.objectContaining({ regex: true, keyword: 'hello' }))
+    })
     expect(result.current.searched).toBe(true)
-    expect(mockSearch).toHaveBeenCalledTimes(1)
   })
 
   it('正常搜索成功仍写回最新结果', async () => {

@@ -2,7 +2,7 @@ export { default as FileTreeContentSearchView } from './FileTreeContentSearchVie
 export type { FileTreeContentSearchViewProps, FileTreeSearchEmptyContext } from './FileTreeContentSearchView'
 export { default as FileSearchResultItem } from './FileSearchResultItem'
 export { useFileContentSearch } from './useFileContentSearch'
-export type { UseFileContentSearchOptions, FileContentSearchRunOptions } from './useFileContentSearch'
+export type { UseFileContentSearchOptions } from './useFileContentSearch'
 export { FileTreeSearchType, SEARCH_INPUT_FOCUS_DELAY_MS, SEARCH_CANCEL_VISIBLE_MS } from './constants'
 export type { FileTreeSearchTypeValue } from './constants'
 export {

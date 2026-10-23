@@ -1,9 +1,9 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import FileTreeSearchView from '../FileTreeSearchView'
 import { FileTreeSearchScope } from '../constants'
 
-const { invoke, emit, aiPaths, openedPaths, setSearchResponse } = vi.hoisted(() => {
+const { invoke, emit, aiPaths, openedPaths, setSearchResponse, pendingSearches, setHoldSearch } = vi.hoisted(() => {
   const pathRelation = (pathA: string, pathB: string) => {
     const norm = (p: string) => p.replace(/\\/g, '/').replace(/\/+$/, '').toLowerCase()
     const a = norm(pathA)
@@ -50,6 +50,8 @@ const { invoke, emit, aiPaths, openedPaths, setSearchResponse } = vi.hoisted(() 
     ],
   }
   let searchResponse: { Resources: unknown[] } = defaultSearchResponse
+  let holdSearch = false
+  const pendingSearches: Array<(value: { Resources: unknown[] }) => void> = []
   const setSearchResponse = (next: { Resources: unknown[] }) => {
     searchResponse = next
   }
@@ -65,6 +67,11 @@ const { invoke, emit, aiPaths, openedPaths, setSearchResponse } = vi.hoisted(() 
       const relationParams = params as { pathA?: string; pathB?: string } | undefined
       return pathRelation(relationParams?.pathA || '', relationParams?.pathB || '')
     }
+    if (holdSearch && channel === 'RequestYakURL') {
+      return new Promise<{ Resources: unknown[] }>((resolve) => {
+        pendingSearches.push(resolve)
+      })
+    }
     return searchResponse
   })
   Object.defineProperty(window, 'require', {
@@ -76,6 +83,10 @@ const { invoke, emit, aiPaths, openedPaths, setSearchResponse } = vi.hoisted(() 
     emit: vi.fn(),
     aiPaths: [{ path: 'ai-output', isFolder: true }],
     openedPaths: [{ path: 'opened-file.txt', isFolder: false }],
+    pendingSearches,
+    setHoldSearch: (next: boolean) => {
+      holdSearch = next
+    },
     setSearchResponse: (next?: { Resources: unknown[] }) => setSearchResponse(next ?? defaultSearchResponse),
   }
 })
@@ -207,6 +218,8 @@ const selectScope = (label: string) => {
 beforeEach(() => {
   vi.clearAllMocks()
   setSearchResponse()
+  setHoldSearch(false)
+  pendingSearches.splice(0)
   aiPaths.splice(0, aiPaths.length, { path: 'ai-output', isFolder: true })
   openedPaths.splice(0, openedPaths.length, { path: 'opened-file.txt', isFolder: false })
 })
@@ -245,9 +258,12 @@ describe('FileTreeSearchView', () => {
     expect(trigger).toHaveAttribute('title', 'FileTreeSystem.aiArtifacts')
   })
 
-  it('初始未搜索时展示输入提示空态', () => {
+  it('初始未搜索时不展示空态插画，结果区留白', () => {
     render(<FileTreeSearchView />)
-    expect(screen.getByText('FileTreeSearch.emptyHint')).toBeInTheDocument()
+    expect(screen.queryByText('FileTreeSearch.emptyHint')).not.toBeInTheDocument()
+    expect(screen.queryByText('FileTreeSearch.emptyNoResult')).not.toBeInTheDocument()
+    expect(screen.getByTestId('file-tree-search-results')).toBeInTheDocument()
+    expect(screen.queryByTestId('file-tree-search-view-result-total')).not.toBeInTheDocument()
   })
 
   it('搜索后按文件展示命中行并高亮命中片段，点击命中行打开文件预览', async () => {
@@ -260,6 +276,7 @@ describe('FileTreeSearchView', () => {
     expect(item).toBeInTheDocument()
     expect(screen.getByText('demo.txt')).toBeInTheDocument()
     expect(screen.getByTestId('file-tree-search-result-count')).toHaveTextContent('3')
+    expect(screen.getByTestId('file-tree-search-view-result-total')).toHaveTextContent('3')
     expect(screen.getByText('9')).toBeInTheDocument()
     // 3 处命中分别高亮：line3 的 hello/foo 与 line9 的 foo（用 testid，避免 CI 下 scss stub 无 class）
     expect(item.querySelectorAll('[data-testid="file-tree-search-result-hit"]')).toHaveLength(3)
@@ -368,7 +385,7 @@ describe('FileTreeSearchView', () => {
     })
   })
 
-  it('有结果后工具栏切范围不自动重搜，再次 Enter 才按新范围搜', async () => {
+  it('有结果后工具栏切范围自动按新范围重搜', async () => {
     render(<FileTreeSearchView />)
     searchByEnter('hello')
     await waitFor(() => expect(getRequestYakURLParams(invoke.mock.calls)).toHaveLength(2))
@@ -377,11 +394,7 @@ describe('FileTreeSearchView', () => {
     const callsAfterFirst = getRequestYakURLParams(invoke.mock.calls).length
     selectScope('FileTreeSystem.aiArtifacts')
     expect(screen.getByTestId('file-tree-search-scope')).toHaveAttribute('title', 'FileTreeSystem.aiArtifacts')
-    // 仍保留上次结果，不因切范围自动发请求
-    expect(screen.getAllByTestId('file-tree-search-result-item')).toHaveLength(1)
-    expect(getRequestYakURLParams(invoke.mock.calls)).toHaveLength(callsAfterFirst)
 
-    searchByEnter('hello')
     await waitFor(() => {
       const paramsList = getRequestYakURLParams(invoke.mock.calls)
       expect(paramsList.length).toBe(callsAfterFirst + 1)
@@ -408,6 +421,63 @@ describe('FileTreeSearchView', () => {
     searchByEnter('nothing')
 
     await waitFor(() => expect(screen.getByText('FileTreeSearch.emptyNoResult')).toBeInTheDocument())
+    expect(screen.getByTestId('file-tree-search-view-result-total')).toHaveTextContent('0')
+  })
+
+  it('加载中隐藏命中总数 Tag，结束后再显示', async () => {
+    setHoldSearch(true)
+    setSearchResponse({
+      Resources: [
+        {
+          ResourceName: 'demo.txt',
+          Path: 'ai-output/demo.txt',
+          Extra: [
+            {
+              Key: 'search_result',
+              Value: JSON.stringify({
+                match_count: 2,
+                results: [{ line: 1, text: 'hello', matches: [{ start_column: 1, end_column: 6 }] }],
+              }),
+            },
+          ],
+        },
+      ],
+    })
+
+    render(<FileTreeSearchView />)
+    selectScope('FileTreeSystem.aiArtifacts')
+    searchByEnter('hello')
+
+    await waitFor(() => expect(screen.getByTestId('file-tree-search-loading')).toBeInTheDocument())
+    expect(screen.queryByTestId('file-tree-search-view-result-total')).not.toBeInTheDocument()
+    expect(pendingSearches).toHaveLength(1)
+
+    const resolveSearch = pendingSearches[0]
+    setHoldSearch(false)
+    await act(async () => {
+      resolveSearch?.({
+        Resources: [
+          {
+            ResourceName: 'demo.txt',
+            Path: 'ai-output/demo.txt',
+            Extra: [
+              {
+                Key: 'search_result',
+                Value: JSON.stringify({
+                  match_count: 2,
+                  results: [{ line: 1, text: 'hello', matches: [{ start_column: 1, end_column: 6 }] }],
+                }),
+              },
+            ],
+          },
+        ],
+      })
+    })
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('file-tree-search-loading')).not.toBeInTheDocument()
+      expect(screen.getByTestId('file-tree-search-view-result-total')).toHaveTextContent('2')
+    })
   })
 
   it('ai/用户文件夹无结果时展示范围下拉，选全部后切范围并重搜', async () => {
@@ -456,8 +526,9 @@ describe('FileTreeSearchView', () => {
 
     searchByEnter('hello')
 
-    await waitFor(() => expect(screen.getByText('FileTreeSearch.emptyHint')).toBeInTheDocument())
+    await waitFor(() => expect(screen.queryByTestId('file-tree-search-loading')).not.toBeInTheDocument())
     expect(getRequestYakURLParams(invoke.mock.calls)).toHaveLength(0)
+    expect(screen.queryByText('FileTreeSearch.emptyHint')).not.toBeInTheDocument()
   })
 
   it('用户文件夹无路径或无结果时也展示范围下拉', async () => {

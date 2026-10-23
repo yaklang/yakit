@@ -23,6 +23,7 @@ export const TextDropdownTrigger: React.FC<TextDropdownTriggerProps> = (props) =
       disabled={disabled}
       aria-expanded={open}
       className={classNames(
+        styles['text-dropdown-trigger'],
         {
           [styles['text-dropdown-trigger-open']]: open,
           [styles['text-dropdown-trigger-disabled']]: disabled,
