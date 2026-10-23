@@ -70,18 +70,35 @@ describe('catalog and incremental JSON', () => {
     { component: 'ParameterForm', props: { schema: { type: 'object' } } },
     { component: 'Text', props: { text: '不可提交' }, action: { name: 'submit_to_chat', args: {} } },
     { component: 'Text', props: { text: '不可绑定答案' }, bindings: { value: 'answer' } },
-  ])('rejects input components and response actions while retaining valid siblings: %j', (node) => {
+  ])('silently rejects input collection in streamed and final documents: %j', (node) => {
     const doc = document()
     doc.nodes[1] = { id: 'form', ...node }
     doc.nodes[0].children!.push('note')
     doc.nodes.push({ id: 'note', component: 'Text', props: { text: '仍然可读' } })
     const result = readDocument(JSON.stringify(doc), true)
-    expect(result.document?.nodes.map((node) => node.id)).toEqual(['layout', 'note'])
+    expect(result.document?.nodes).toEqual([])
     expect(result.diagnostics.length).toBeGreaterThan(0)
-    render(<ComponentCard item={item(doc)} />)
-    expect(screen.getByText('仍然可读')).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: /提交/ })).toBeNull()
+    expect(result.fallback).toBe('')
+    const streamed = item(doc)
+    streamed.data.final = false
+    streamed.data.source = JSON.stringify(doc).slice(0, -2)
+    const view = render(<ComponentCard item={streamed} />)
+    expect(view.container).toBeEmptyDOMElement()
+    expect(send).not.toHaveBeenCalled()
+    view.rerender(<ComponentCard item={item(doc)} />)
+    expect(view.container).toBeEmptyDOMElement()
+    expect(send).toHaveBeenCalledTimes(1)
+    expect(JSON.parse(send.mock.calls[0][1].SyncJsonInput)).toMatchObject({
+      requestId: doc.id,
+      operation: 'diagnostics',
+    })
     expect(send.mock.calls.some((call) => call[1].IsFreeInput)).toBe(false)
+    // A rejected block must not leak its fallback even to an incompatible client.
+    view.rerender(<ComponentCard item={item({ ...doc, catalogVersion: 'future' })} />)
+    expect(view.container).toBeEmptyDOMElement()
+    // A corrected display document can appear at the same stable ID.
+    view.rerender(<ComponentCard item={item(document())} />)
+    expect(screen.getByText('参数只读内容')).toBeInTheDocument()
   })
   it('keeps the build manifest, schema registry and renderer in sync', () => {
     expect(manifest).toEqual(catalog)
@@ -106,16 +123,39 @@ describe('catalog and incremental JSON', () => {
     expect(result.document?.nodes.map((node) => node.id)).toEqual(['layout'])
     expect(result.diagnostics).toEqual([])
   })
-  it('drops optional bad properties, unknown components and unsupported actions', () => {
+  it('drops optional bad properties and unknown components without exposing diagnostics', () => {
     const doc = document()
     ;(doc.nodes[0].props as any).title = 123
-    doc.nodes[1].action = { name: 'execute_javascript' }
+    doc.nodes[1].component = 'UnknownComponent'
     const result = readDocument(JSON.stringify(doc), true)
     expect(result.document?.nodes[0].props.title).toBeUndefined()
     expect(result.document?.nodes).toHaveLength(1)
-    expect(result.diagnostics.map((entry) => entry.path)).toEqual(['props.title', 'action', 'children'])
+    expect(result.diagnostics.map((entry) => entry.path)).toEqual(['props.title', 'component', 'children'])
     ;(doc.nodes[0] as any).component = 'script'
     expect(readDocument(JSON.stringify(doc), true).document?.nodes).toHaveLength(0)
+  })
+  it('renders valid siblings and sends diagnostics only through the internal feedback channel', () => {
+    const doc = document()
+    doc.nodes[0].props.title = 123
+    doc.nodes[0].children!.push('invalid')
+    doc.nodes.push({ id: 'invalid', component: 'UnknownComponent', props: {} })
+    const view = render(<ComponentCard item={item(doc)} />)
+    expect(screen.getByText('参数只读内容')).toBeInTheDocument()
+    expect(view.container.querySelector('details')).toBeNull()
+    expect(screen.queryByText(/降级|未知组件|Schema/)).toBeNull()
+    expect(send).toHaveBeenCalledTimes(1)
+    expect(JSON.parse(send.mock.calls[0][1].SyncJsonInput).diagnostics.length).toBeGreaterThan(0)
+    expect(send.mock.calls[0][1].IsFreeInput).toBeUndefined()
+  })
+  it.each([
+    '{"id":"block",]',
+    JSON.stringify({ ...document(), root: 'missing' }),
+    JSON.stringify({ ...document(), nodes: [] }),
+  ])('does not render error placeholders or fallback for invalid content: %s', (source) => {
+    const data = item()
+    data.data.source = source
+    const view = render(<ComponentCard item={data} />)
+    expect(view.container).toBeEmptyDOMElement()
   })
   it('falls back the entire block for a different version or required unknown component', () => {
     expect(readDocument(JSON.stringify({ ...document(), catalogVersion: '2.0' }), true).document).toBeUndefined()

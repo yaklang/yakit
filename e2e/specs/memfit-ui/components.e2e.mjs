@@ -324,14 +324,22 @@ describe('Memfit real Chromium component regression', () => {
   })
 
   for (const forbidden of ['ParameterForm', 'action', 'bindings']) {
-    it(`render_ui rejects ${forbidden} instead of collecting an answer`, async () => {
+    it(`render_ui silently discards ${forbidden} and keeps diagnostics internal`, async () => {
       await show('Text')
       const document = structuredClone(examples.Text)
-      document.fallback = '展示组件不能收集回答，请使用提问工具。'
+      document.fallback = '这段错误降级文案不应该显示给用户。'
       if (forbidden === 'ParameterForm') document.nodes[0].component = forbidden
       else document.nodes[0][forbidden] = { type: 'submit_to_chat' }
       await browser.execute((source) => window.memfitUITest.setSource(source, true), JSON.stringify(document))
-      await expect($('section[aria-label="交互组件"]')).toHaveText(expect.stringContaining(document.fallback))
+      await $('section[aria-label="交互组件"]').waitForExist({ reverse: true })
+      await expect($('main')).toHaveText('')
+      await browser.waitUntil(async () =>
+        browser.execute(() =>
+          window.memfitUITest.messages.some(
+            (event) => event.SyncJsonInput && JSON.parse(event.SyncJsonInput).operation === 'diagnostics',
+          ),
+        ),
+      )
       // AntD retains a body-level hidden textarea for autosizing. Check generated content.
       assert.deepEqual(
         await browser.execute(() =>
@@ -343,7 +351,6 @@ describe('Memfit real Chromium component regression', () => {
       )
       assert.equal(await button('提交').isExisting(), false)
       assert.equal((await messages()).length, 0)
-      await capture(`render-rejected-${forbidden}`)
     })
   }
 

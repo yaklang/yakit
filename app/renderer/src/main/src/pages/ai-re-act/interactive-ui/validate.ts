@@ -89,7 +89,16 @@ export function normalize(
   return value
 }
 
-export function readDocument(source: string, final: boolean) {
+export function readDocument(
+  source: string,
+  final: boolean,
+): {
+  document?: UIDocument
+  diagnostics: UIDiagnostic[]
+  fallback: string
+  complete: boolean
+  incompatible?: boolean
+} {
   const diagnostics: UIDiagnostic[] = []
   let partial: ReturnType<typeof parseJSONPrefix>
   try {
@@ -105,6 +114,28 @@ export function readDocument(source: string, final: boolean) {
   const raw = partial.value as Partial<UIDocument> | undefined
   const fallback = typeof raw?.fallback === 'string' ? raw.fallback : ''
   if (!raw || typeof raw !== 'object') return { document: undefined, diagnostics, fallback, complete: partial.complete }
+  const makeDocument = (nodes: UINode[]) =>
+    typeof raw.id === 'string' && raw.id && typeof raw.root === 'string' && versions.has(raw.catalogVersion || '')
+      ? ({ ...raw, nodes } as UIDocument)
+      : undefined
+  // Match RenderUI's whole-document rejection, including raw streams before the handler runs.
+  // Check before capability fallback so a forbidden form never becomes visible text.
+  for (const node of Array.isArray(raw.nodes) ? raw.nodes : []) {
+    if (node?.component === 'ParameterForm' || node?.action !== undefined || node?.bindings !== undefined) {
+      diagnostics.push({
+        nodeId: typeof node.id === 'string' ? node.id : '',
+        path: node.component === 'ParameterForm' ? 'component' : 'action',
+        message: '展示组件不支持收集或回传用户输入',
+      })
+    }
+  }
+  if (diagnostics.length)
+    return {
+      document: makeDocument([]),
+      diagnostics: final ? diagnostics : [],
+      fallback: '',
+      complete: partial.complete,
+    }
   const incompatible =
     (raw.catalogVersion && !versions.has(raw.catalogVersion)) ||
     (Array.isArray(raw.requiredComponents) && raw.requiredComponents.some((name) => !entries.has(name)))
@@ -114,6 +145,7 @@ export function readDocument(source: string, final: boolean) {
       diagnostics,
       fallback: fallback || '此客户端暂不支持该组件，请更新客户端查看。',
       complete: partial.complete,
+      incompatible: true,
     }
   const nodes: UINode[] = []
   const ids = new Set<string>()
@@ -138,10 +170,6 @@ export function readDocument(source: string, final: boolean) {
         next.children = node.children
       else diagnose('children', '此组件不接受这些子节点')
     }
-    if (node.bindings !== undefined || node.action !== undefined) {
-      diagnose('action', '展示组件不支持收集或回传用户输入')
-      continue
-    }
     if (normalizeVisualization(next, diagnose) && normalizeNavigation(next, diagnose)) nodes.push(next)
   }
   if (final && !partial.complete) diagnostics.push({ nodeId: '', path: '', message: '组件 JSON 未完成' })
@@ -154,9 +182,5 @@ export function readDocument(source: string, final: boolean) {
           diagnostics.push({ nodeId: node.id, path: 'children', message: `引用不存在：${id}` })
       }
   }
-  const document =
-    typeof raw.id === 'string' && raw.id && typeof raw.root === 'string' && versions.has(raw.catalogVersion || '')
-      ? ({ ...raw, nodes } as UIDocument)
-      : undefined
-  return { document, diagnostics: final ? diagnostics : [], fallback, complete: partial.complete }
+  return { document: makeDocument(nodes), diagnostics: final ? diagnostics : [], fallback, complete: partial.complete }
 }

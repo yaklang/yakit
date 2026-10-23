@@ -162,25 +162,12 @@ export function ComponentCard({ item }: { item: ComponentItem }) {
     )
   }
   const body = document && nodes.has(document.root) ? renderNode(document.root) : null
+  // Validation diagnostics are feedback to the model, never a user-facing error card.
+  // Only a client capability mismatch may use the document's readable text fallback.
+  if (!body && !result.incompatible) return null
   return (
     <section className={styles.card} aria-label="交互组件">
-      {body || (
-        <p style={{ whiteSpace: 'pre-wrap' }}>
-          {fallback || (item.data.final || item.data.streamEnded ? '组件暂时无法显示。' : '正在生成组件…')}
-        </p>
-      )}
-      {!!diagnostics.length && (
-        <details>
-          <summary>部分组件已降级</summary>
-          <ul>
-            {diagnostics.map((item, index) => (
-              <li key={index}>
-                {item.nodeId} {item.path}: {item.message}
-              </li>
-            ))}
-          </ul>
-        </details>
-      )}
+      {body || <p style={{ whiteSpace: 'pre-wrap' }}>{fallback}</p>}
     </section>
   )
 }

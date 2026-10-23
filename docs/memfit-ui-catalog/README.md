@@ -8,7 +8,7 @@
 
 模型先 `load_ui_components({"names":["BarChart"]})`，再 `render_ui({"ui": ...})`。目录索引有预算上限，完整 Schema 按当前批次加载，不永久追加到历史。保持稳定的文档/节点 ID，必须提供纯文本 fallback。
 
-展示组件只允许本地查看交互：图例、排序、筛选、分页、Tabs 和浮层。没有 ParameterForm、行选择回传、bindings 或 submit_to_chat。未知组件和非法参数按既有规则诊断、降级；出现提交动作的节点会被拒绝。旧版本文档整体文本降级，不把旧表单转换成新协议。
+展示组件只允许本地查看交互：图例、排序、筛选、分页、Tabs 和浮层。没有 ParameterForm、行选择回传、bindings 或 submit_to_chat。误发 ParameterForm、action 或 bindings 时，后端拒绝整块文档并把错误返回模型，前端对原始流式数据也静默丢弃整块，不展示错误卡片或其 fallback。其他参数校验错误保留有效内容，无法渲染时不显示占位；诊断仅走内部反馈供模型修正，不显示“部分组件已降级”等技术说明。只有客户端版本或必需组件能力不匹配时，才保留可读的正文 fallback；不把旧表单转换成新协议。
 
 ## 收集回答：ask_for_clarification / ask_for_clarification_async
 
@@ -48,4 +48,4 @@
 
 运行 `yarn test:memfit-ui:all`，无需连接模型。详见 `e2e/fixtures/memfit-ui/README.md`。新增展示组件需补目录样例；新增问法在 QuestionCard/QuestionForm 测试及 Electron composer 场景中验证。
 
-运行后打开 `reports/e2e-electron/memfit-ui/<运行时间>/index.html`，可以查看实际生产组件的截图效果：ask 的分页问卷、复杂参数表单及提交后的摘要；render_ui 的 12 种展示组件及越界输入降级。页面来自独立 Electron 测试容器，传输经过测试适配器，不是完整产品与真实模型联调截图。
+运行后打开 `reports/e2e-electron/memfit-ui/<运行时间>/index.html`，可以查看实际生产组件的截图效果：ask 的分页问卷、复杂参数表单及提交后的摘要，以及 render_ui 的 12 种展示组件。越界输入属于故障注入测试，只在测试结果中记录，不作为 UI 效果展示。页面来自独立 Electron 测试容器，传输经过测试适配器，不是完整产品与真实模型联调截图。

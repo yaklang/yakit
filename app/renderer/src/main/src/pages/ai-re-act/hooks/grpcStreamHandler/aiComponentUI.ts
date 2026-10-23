@@ -112,7 +112,7 @@ export async function handleComponentStream(info: AIMessageHandlerParams): Promi
       await upsert(info, doc.id, source, false)
     }
   } catch {
-    // The authoritative final event carries diagnostics and a textual fallback.
+    // Wait for more data or the authoritative snapshot. Protocol errors remain invisible.
   }
   return true
 }

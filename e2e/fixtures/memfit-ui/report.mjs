@@ -67,12 +67,6 @@ export async function writeGallery(directory) {
       include: (file) => /^(light|dark)-/.test(file) || ['popover-open.png', 'tooltip-open.png'].includes(file),
     },
     {
-      id: 'rejected',
-      title: 'render_ui：拒绝输入收集',
-      description: '误发 ParameterForm、action 或 bindings 时显示文字降级，不生成可提交的表单。',
-      include: (file) => file.startsWith('render-rejected-'),
-    },
-    {
       id: 'failures',
       title: '失败现场',
       description: '以下截图对应失败用例，需要结合测试结果定位。',
