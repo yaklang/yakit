@@ -82,7 +82,6 @@ import { createHTTPFuzzerRun } from './httpFuzzerRun'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { FUZZER_LABEL_LIST_NUMBER } from './HTTPFuzzerEditorMenu'
 import { BlastingAnimationAemonstration } from './AnimationAemonstration'
-import { WebFuzzerNewEditor } from './WebFuzzerNewEditor/WebFuzzerNewEditor'
 import {
   AnnotationOutlined,
   BeakerOutlined,
@@ -128,7 +127,6 @@ import { openABSFileLocated, openExternalWebsite, openPacketNewWindow } from '@/
 import type { PayloadGroupNodeProps } from '../payloadManager/newPayload'
 import { createRoot, type Root } from 'react-dom/client'
 import { PauseSolid, PlaySolid, StopSolid } from '@yakit-libs/yakit-ui-icons/solid'
-import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { WebFuzzerCasualReplaceReviewOverlay } from '@/pages/fuzzer/WebFuzzerCasualReplaceReviewOverlay'
 import { prettifyPacketCode } from '@/utils/prettifyPacket'
 import type { WebFuzzerType } from './WebFuzzerPage/WebFuzzerPageType'
@@ -255,6 +253,17 @@ const WebFuzzerResponseExtractor = React.lazy(() =>
 const CodingPopover = React.lazy(() =>
   import('../../components/HTTPFlowDetail').then(({ CodingPopover }) => ({
     default: CodingPopover,
+  })),
+)
+/** Fuzzer 入口避免静态拉 monaco：编辑器按需懒加载 */
+const WebFuzzerNewEditor = React.lazy(() =>
+  import('./WebFuzzerNewEditor/WebFuzzerNewEditor').then(({ WebFuzzerNewEditor }) => ({
+    default: WebFuzzerNewEditor,
+  })),
+)
+const YakitEditor = React.lazy(() =>
+  import('@/components/yakitUI/YakitEditor/YakitEditor').then(({ YakitEditor }) => ({
+    default: YakitEditor,
   })),
 )
 
@@ -3576,25 +3585,27 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                 {...ResizeBoxProps}
                 firstNode={
                   <div ref={firstNodeRef} style={{ height: '100%', overflow: 'hidden', position: 'relative' }}>
-                    <WebFuzzerNewEditor
-                      ref={webFuzzerNewEditorRef}
-                      refreshTrigger={refreshTrigger}
-                      casualEditorApplyNonce={casualEditorApplyNonce}
-                      request={requestRef.current}
-                      setRequest={onSetRequest}
-                      hex={hex}
-                      isHttps={advancedConfigValue.isHttps}
-                      hotPatchCode={hotPatchCodeRef.current}
-                      hotPatchCodeWithParamGetter={hotPatchCodeWithParamGetterRef.current}
-                      setHotPatchCode={setHotPatchCode}
-                      setHotPatchCodeWithParamGetter={setHotPatchCodeWithParamGetter}
-                      firstNodeExtra={firstNodeExtra}
-                      pageId={props.id}
-                      oneResponseValue={oneResponseValue}
-                      privacy={privacy}
-                      foldBinaryFuzztag={foldBinaryFuzztag}
-                      onFoldBinaryFuzztagChange={setFoldBinaryFuzztag}
-                    />
+                    <React.Suspense fallback={null}>
+                      <WebFuzzerNewEditor
+                        ref={webFuzzerNewEditorRef}
+                        refreshTrigger={refreshTrigger}
+                        casualEditorApplyNonce={casualEditorApplyNonce}
+                        request={requestRef.current}
+                        setRequest={onSetRequest}
+                        hex={hex}
+                        isHttps={advancedConfigValue.isHttps}
+                        hotPatchCode={hotPatchCodeRef.current}
+                        hotPatchCodeWithParamGetter={hotPatchCodeWithParamGetterRef.current}
+                        setHotPatchCode={setHotPatchCode}
+                        setHotPatchCodeWithParamGetter={setHotPatchCodeWithParamGetter}
+                        firstNodeExtra={firstNodeExtra}
+                        pageId={props.id}
+                        oneResponseValue={oneResponseValue}
+                        privacy={privacy}
+                        foldBinaryFuzztag={foldBinaryFuzztag}
+                        onFoldBinaryFuzztagChange={setFoldBinaryFuzztag}
+                      />
+                    </React.Suspense>
                     {casualReviewQueue[0] ? (
                       <WebFuzzerCasualReplaceReviewOverlay
                         roundKey={casualReviewQueue[0].id}
@@ -3874,7 +3885,9 @@ export const ContextMenuExecutor: React.FC<ContextMenuProp> = (props) => {
   return (
     <YakitSpin spinning={loading} style={{ width: '100%', height: '100%' }}>
       <div style={{ height: '100%' }}>
-        <YakitEditor fontSize={14} type={'plaintext'} readOnly={true} value={value} />
+        <React.Suspense fallback={null}>
+          <YakitEditor fontSize={14} type={'plaintext'} readOnly={true} value={value} />
+        </React.Suspense>
       </div>
     </YakitSpin>
   )
