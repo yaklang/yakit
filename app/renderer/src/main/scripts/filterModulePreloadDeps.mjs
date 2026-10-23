@@ -1,6 +1,6 @@
-/** 从 HTML modulepreload 去掉 Monaco；编辑器首次打开再加载。 */
+/** 从 HTML modulepreload 去掉重包；编辑器/文档渲染首次打开再加载。 */
 const HEAVY_MODULE_PRELOAD =
-  /(?:^|\/)(?:vendor-monaco|monaco-editor|react-monaco-editor|editor\.worker|json\.worker|css\.worker|html\.worker|ts\.worker)[^/]*$/
+  /(?:^|\/)(?:vendor-monaco|monaco-editor|react-monaco-editor|editor\.worker|json\.worker|css\.worker|html\.worker|ts\.worker|vendor-streamdown|vendor-milkdown|mermaid|katex)[^/]*$/
 
 export function filterModulePreloadDeps(deps) {
   if (!Array.isArray(deps)) return []

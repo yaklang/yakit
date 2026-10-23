@@ -55,7 +55,6 @@ import {
   type HTTPFuzzerPageTableQuery,
 } from './components/HTTPFuzzerPageTable/HTTPFuzzerPageTable'
 import { useSubscribeClose } from '@/store/tabSubscribe'
-import { monaco } from 'react-monaco-editor'
 import type { OtherMenuListProps } from '@/components/yakitUI/YakitEditor/YakitEditorType'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import type {
@@ -4873,7 +4872,7 @@ export const onAddOverlayWidget = (editor, rsp, isShow?: boolean) => {
     },
     getPosition() {
       return {
-        preference: monaco.editor.OverlayWidgetPositionPreference.TOP_RIGHT_CORNER,
+        preference: 0, // OverlayWidgetPositionPreference.TOP_RIGHT_CORNER; avoid static react-monaco-editor import
       }
     },
   }
