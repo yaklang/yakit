@@ -2626,7 +2626,7 @@ export const RelatedHoleList: React.FC<RelatedHoleListProps> = memo((props) => {
                       <YakitPopover
                         trigger="click"
                         classNames={{ root: styles['severity-menu-popover'] }}
-                        styles={{ root: { paddingTop: 2 } }}
+                        align={{ offset: [0, 2] }}
                         content={
                           <div className={styles['severity-menu-cont-wrapper']}>
                             {SeverityMapTag.map((item) => (

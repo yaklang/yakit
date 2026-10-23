@@ -463,7 +463,7 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
               key={`${item.label}-${index}`}
               trigger={'click'}
               classNames={{ root: styles['child-menu-popover'] }}
-              styles={{ root: { paddingTop: 2 } }}
+              align={{ offset: [0, 2] }}
               placement={index === 0 ? 'bottomLeft' : 'bottom'}
               open={noExpandMenu === index}
               content={
