@@ -47,3 +47,5 @@
 ## 回归
 
 运行 `yarn test:memfit-ui:all`，无需连接模型。详见 `e2e/fixtures/memfit-ui/README.md`。新增展示组件需补目录样例；新增问法在 QuestionCard/QuestionForm 测试及 Electron composer 场景中验证。
+
+运行后打开 `reports/e2e-electron/memfit-ui/<运行时间>/index.html`，可以查看实际生产组件的截图效果：ask 的分页问卷、复杂参数表单及提交后的摘要；render_ui 的 12 种展示组件及越界输入降级。页面来自独立 Electron 测试容器，传输经过测试适配器，不是完整产品与真实模型联调截图。

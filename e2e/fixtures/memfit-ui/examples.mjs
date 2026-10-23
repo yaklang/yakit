@@ -139,18 +139,40 @@ export function question(mode = 'async', deadline) {
   }
 }
 
-export function questionForm(mode = 'async', deadline) {
+export function questionForm(mode = 'async', deadline, typed = false) {
   const request = question(mode, deadline)
   delete request.questions
   return {
     ...request,
-    form: {
-      title: '参数设置',
-      schema: {
-        type: 'object',
-        properties: { name: { type: 'string', title: '姓名', minLength: 1 } },
-        required: ['name'],
-      },
-    },
+    form: typed
+      ? {
+          title: '部署分析参数',
+          schema: {
+            type: 'object',
+            properties: {
+              name: { type: 'string', title: '任务名称', minLength: 2 },
+              environment: { type: 'string', title: '环境', enum: ['测试', '生产'], default: '测试' },
+              replicas: { type: 'integer', title: '副本数', minimum: 1, maximum: 10, default: 2 },
+              backup: { type: 'boolean', title: '启用备份', default: false },
+              focus: {
+                type: 'array',
+                title: '关注方面',
+                minItems: 1,
+                uniqueItems: true,
+                items: { type: 'string', enum: ['数据流', '部署方式', '模块职责'] },
+              },
+            },
+            required: ['name', 'environment', 'replicas', 'focus'],
+          },
+          fieldOrder: ['name', 'environment', 'replicas', 'backup', 'focus'],
+        }
+      : {
+          title: '参数设置',
+          schema: {
+            type: 'object',
+            properties: { name: { type: 'string', title: '姓名', minLength: 1 } },
+            required: ['name'],
+          },
+        },
   }
 }
