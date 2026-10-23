@@ -292,6 +292,10 @@ export enum AIInputEventSyncTypeEnum {
   SYNC_TYPE_RECOVERY_HISTORY = 'recovery_history',
   /** 获取能力相关数据 */
   SYNC_CAPABILITY_INVENTORY = 'capability_inventory_sync',
+  /** 获取当前会话的技能列表 */
+  SYNC_TYPE_SKILL_INVENTORY = 'skill_inventory_sync',
+  /** 查询技能详情 */
+  SYNC_TYPE_SKILL_DETAIL = 'skill_detail_sync',
   /** 加载指定技能 */
   SYNC_TYPE_LOAD_SKILL = 'load_skill_sync',
   /** 执行分离PLAN */
@@ -316,6 +320,8 @@ export const readonlySyncQueryTypes = new Set<`${AIInputEventSyncTypeEnum}`>([
   AIInputEventSyncTypeEnum.SYNC_TYPE_MEMORY_CONTEXT,
   AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN_EXEC_TASKS,
   AIInputEventSyncTypeEnum.SYNC_CAPABILITY_INVENTORY,
+  AIInputEventSyncTypeEnum.SYNC_TYPE_SKILL_INVENTORY,
+  AIInputEventSyncTypeEnum.SYNC_TYPE_SKILL_DETAIL,
   AIInputEventSyncTypeEnum.SYNC_TYPE_TASK_SNAPSHOT,
 ])
 
@@ -791,6 +797,41 @@ export declare namespace AIAgentGrpcApi {
     is_final: boolean
     updated_at: number
     todo_stats?: TodoListUpdateStats
+  }
+
+  /** skill_inventory 返回的当前会话技能清单项 */
+  export interface SkillInventoryItem {
+    name: string
+    verbose_name: string
+    description: string
+    type: string
+    stage: string
+    position: string
+    is_fixed: boolean
+    data: {
+      skill_load_state: string
+      token_count?: number
+    }
+  }
+
+  /** skill_detail 返回的技能详情；有 error 时展示后端错误 */
+  export interface SkillDetail {
+    name: string
+    loaded: boolean
+    prompt_content?: string
+    skill_md?: string
+    file_tree?: string
+    url?: string
+    error?: string
+    meta?: {
+      name: string
+      description: string
+      license?: string
+      compatibility?: string
+      metadata?: Record<string, string>
+      disable_model_invocation?: boolean
+      body?: string
+    }
   }
 
   /** session_snapshot / task_snapshot 内的扁平能力清单项 */

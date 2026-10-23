@@ -2,7 +2,7 @@ import type { GetSkillListParams } from './type'
 
 export const getSkillList = ({ skills, loadState, keyword = '', sortOrder }: GetSkillListParams) => {
   const query = keyword.trim().toLowerCase()
-  const list = [...(skills?.fixed || []), ...(skills?.dynamic || [])].filter(
+  const list = skills.filter(
     (skill) =>
       skill.skill_load_state === loadState &&
       (!query || skill.name.toLowerCase().includes(query) || skill.description.toLowerCase().includes(query)),

@@ -36,6 +36,7 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
       syntaxflowRuleChangeUpdate: 0,
       syncIDUpdate: 0,
       timelineDumpUpdate: 0,
+      skillsUpdate: 0,
 
       grpcFolders: [],
       reActTimelines: [],

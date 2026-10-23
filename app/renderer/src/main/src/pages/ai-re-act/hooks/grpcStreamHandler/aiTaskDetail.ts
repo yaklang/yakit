@@ -1,5 +1,6 @@
 import type { AIMessageHandler } from '../type'
 import type { AIAgentGrpcApi } from '../grpcApi'
+import type { AISkillListItem } from '../../aiRightPanel/AISkillLoadingPane/aiSkillList/type'
 import { Uint8ArrayToString } from '@/utils/str'
 import { handleTodoListData } from '../utils'
 import cloneDeep from 'lodash/cloneDeep'
@@ -179,6 +180,26 @@ const mapSessionPerceptionToPerceptionData = (
   }
 }
 
+const handleSkillDetail: AIMessageHandler = ({ res, rawData }) => {
+  if (res.Type === 'structured' && res.NodeId === 'skill_detail') {
+    const detail: AIAgentGrpcApi.SkillDetail = JSON.parse(Uint8ArrayToString(res.Content))
+    rawData.skillDetails.set(detail.name, detail)
+  }
+}
+
+const handleSkillInventory: AIMessageHandler = ({ res, store, rawData }) => {
+  if (res.Type !== 'structured' || res.NodeId !== 'skill_inventory') return
+
+  const ipcContent = Uint8ArrayToString(res.Content)
+  const skills = JSON.parse(ipcContent) as AIAgentGrpcApi.SkillInventoryItem[]
+  rawData.skills = skills.map((skill) => ({
+    name: skill.name,
+    description: skill.description,
+    skill_load_state: (skill.data?.skill_load_state || skill.stage) as AISkillListItem['skill_load_state'],
+    token_count: skill.data?.token_count,
+  }))
+  store.getState().updateStateCount('skillsUpdate')
+}
 const handleCapabilityInventory: AIMessageHandler = (requestInfo) => {
   const { res, rawData, store } = requestInfo
   if (res.Type !== 'structured' || res.NodeId !== 'capability_inventory') return
@@ -377,6 +398,8 @@ const handleTaskSnapshot: AIMessageHandler = (requestInfo) => {
 
 /** 单条grpc流数据对应一个独立的UI数据 */
 export const aiTaskDetailDataHandlers = {
+  skill_detail: handleSkillDetail,
+  skill_inventory: handleSkillInventory,
   capability_inventory: handleCapabilityInventory,
   perception: handlePerception,
   current_task_todo_list_update: handleCurrentTaskTodoListUpdate,

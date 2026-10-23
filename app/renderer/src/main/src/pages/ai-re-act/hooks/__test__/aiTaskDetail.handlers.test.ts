@@ -8,6 +8,95 @@ vi.mock('../persist/contentPersistHelper', () => ({
 }))
 
 describe('aiTaskDetail handlers', () => {
+  it('skill_detail 按名称缓存完整详情，替换同名结果并保留业务错误，不新增通知计数', () => {
+    const detail = {
+      name: 'review',
+      loaded: false,
+      skill_md: '# review',
+      file_tree: 'SKILL.md',
+      url: '/api/ai/skill?skill_name=review',
+      meta: { name: 'review', description: 'Review code' },
+    }
+    const req = makeHandlerRequest({ res: makeGrpcJsonRes('structured', detail, { NodeId: 'skill_detail' }) })
+    const state = req.store.getState()
+    aiTaskDetailDataHandlers.skill_detail(req)
+    expect(req.rawData.skillDetails.get('review')).toEqual(detail)
+    const loaded = { name: 'review', loaded: true, prompt_content: 'Visible context' }
+    req.res = makeGrpcJsonRes('structured', loaded, { NodeId: 'skill_detail' })
+    aiTaskDetailDataHandlers.skill_detail(req)
+    expect(req.rawData.skillDetails.get('review')).toEqual(loaded)
+    const failed = { name: 'missing', error: 'skill not found' }
+    req.res = makeGrpcJsonRes('structured', failed, { NodeId: 'skill_detail' })
+    aiTaskDetailDataHandlers.skill_detail(req)
+    expect(req.rawData.skillDetails.get('missing')).toEqual(failed)
+    expect(req.rawData.skillDetails.size).toBe(2)
+    expect(req.store.getState()).toBe(state)
+  })
+
+  it.each([
+    ['thought', 'skill_detail'],
+    ['structured', 'other'],
+  ])('skill_detail 忽略不匹配的 Type=%s NodeId=%s', (type, nodeId) => {
+    const req = makeHandlerRequest({ res: makeGrpcJsonRes(type, { name: 'review' }, { NodeId: nodeId }) })
+    aiTaskDetailDataHandlers.skill_detail(req)
+    expect(req.rawData.skillDetails.size).toBe(0)
+  })
+
+  it('skill_inventory 转换为列表项，保存加载状态，替换旧数组并递增计数', () => {
+    const skills = [
+      {
+        name: 'code-review',
+        verbose_name: '代码审查',
+        description: 'review',
+        type: 'skill',
+        stage: 'loaded',
+        position: 'SemiDynamic',
+        is_fixed: false,
+        data: { skill_load_state: 'loaded', token_count: 0 },
+      },
+    ]
+    const req = makeHandlerRequest({
+      res: makeGrpcJsonRes('structured', skills, { NodeId: 'skill_inventory', IsSync: true }),
+    })
+    aiTaskDetailDataHandlers.skill_inventory(req)
+    expect(req.rawData.skills).toEqual([
+      { name: 'code-review', description: 'review', skill_load_state: 'loaded', token_count: 0 },
+    ])
+    expect(req.store.getState().skillsUpdate).toBe(1)
+    const replacement = [{ ...skills[0], name: 'recon', stage: 'metadata', data: { skill_load_state: 'metadata' } }]
+    req.res = makeGrpcJsonRes('structured', replacement, { NodeId: 'skill_inventory', IsSync: true })
+    aiTaskDetailDataHandlers.skill_inventory(req)
+    expect(req.rawData.skills).toEqual([{ name: 'recon', description: 'review', skill_load_state: 'metadata' }])
+    expect(req.store.getState().skillsUpdate).toBe(2)
+  })
+
+  it('skill_inventory 空清单清除旧技能', () => {
+    const req = makeHandlerRequest({
+      res: makeGrpcJsonRes(
+        'structured',
+        [{ name: 'old', description: '', stage: 'loaded', data: { skill_load_state: 'loaded', token_count: 1 } }],
+        { NodeId: 'skill_inventory' },
+      ),
+    })
+    aiTaskDetailDataHandlers.skill_inventory(req)
+    req.res = makeGrpcJsonRes('structured', [], { NodeId: 'skill_inventory' })
+    aiTaskDetailDataHandlers.skill_inventory(req)
+    expect(req.rawData.skills).toEqual([])
+    expect(req.store.getState().skillsUpdate).toBe(2)
+  })
+
+  it.each([
+    ['thought', 'skill_inventory'],
+    ['structured', 'session_snapshot'],
+  ])('skill_inventory 忽略不匹配的 Type=%s NodeId=%s', (type, nodeId) => {
+    const req = makeHandlerRequest({
+      res: makeGrpcJsonRes(type, [{ name: 'ignored' }], { NodeId: nodeId }),
+    })
+    aiTaskDetailDataHandlers.skill_inventory(req)
+    expect(req.rawData.skills).toEqual([])
+    expect(req.store.getState().skillsUpdate).toBe(0)
+  })
+
   it('capability_inventory 按加载状态重新分类两组技能，保留字段并兼容缺失状态', () => {
     const taskId = 'legacy-skill-state'
     const req = makeHandlerRequest({

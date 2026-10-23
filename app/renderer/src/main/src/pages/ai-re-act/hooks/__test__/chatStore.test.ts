@@ -58,6 +58,20 @@ describe('历史渲染批次', () => {
 })
 
 describe('chatStore basics', () => {
+  it('skillsUpdate 从 0 递增并在会话重置后归零，不影响其他会话', () => {
+    const store = createChatStore()
+    const other = createChatStore()
+    expect(store.getState().skillsUpdate).toBe(0)
+    store.getState().updateStateCount('skillsUpdate')
+    store.getState().updateStateCount('skillsUpdate')
+    expect(store.getState().skillsUpdate).toBe(2)
+    expect(store.renderStore.getState().skillsUpdate).toBe(2)
+    expect(other.getState().skillsUpdate).toBe(0)
+    store.reset()
+    expect(store.getState().skillsUpdate).toBe(0)
+    expect(store.renderStore.getState().skillsUpdate).toBe(0)
+  })
+
   it('C1: initial state and updateCurrentChatStatus / updateCurrentLoadingTitle', () => {
     const store = createChatStore()
     expect(store.getState().execute).toBe(false)

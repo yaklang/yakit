@@ -1,12 +1,12 @@
 import type { MouseEvent } from 'react'
 import type { CustomIconComponentProps } from '@ant-design/icons/lib/components/Icon'
-import type { AISkillInventory } from './aiSkillList/type'
+import type { AISkillListItem } from './aiSkillList/type'
 
 export type AISkillLoadState = 'loaded' | 'metadata'
 export type AISkillSortOrder = 'asc' | 'desc' | undefined
 
 export interface GetSkillListParams {
-  skills: AISkillInventory | undefined
+  skills: AISkillListItem[]
   loadState: AISkillLoadState
   keyword?: string
   sortOrder?: AISkillSortOrder

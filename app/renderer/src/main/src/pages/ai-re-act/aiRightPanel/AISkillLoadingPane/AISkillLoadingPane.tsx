@@ -9,8 +9,7 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
 import { randomString } from '@/utils/randomUtil'
-import { useCurrentStore } from '../../hooks/useCurrentDataBySession'
-import useCurrentTaskData from '../../hooks/useCurrentTaskData/useCurrentTaskData'
+import { useCurrentRawData, useCurrentStore } from '../../hooks/useCurrentDataBySession'
 import useCurrentSessionId from '../../hooks/useCurrentSessionId'
 import { useSyncLoadingState } from '../../hooks/useSyncLoadingState'
 import { AIInputEventSyncTypeEnum } from '../../hooks/grpcApi'
@@ -24,12 +23,12 @@ import styles from './AISkillLoadingPane.module.scss'
 export const AISkillLoadingPane: React.FC<AISkillLoadingPaneProps> = memo(({ loadState, onTotalChange }) => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const store = useCurrentStore()
+  const rawData = useCurrentRawData()
   const sessionId = useCurrentSessionId()
   const { onSend } = useAIAgentDispatcher()
   const { loading: refreshLoading, markSending } = useSyncLoadingState()
   const { addLoading, addingSkill, onAddSkill } = useSkillLoading()
-  const taskId = useStore(store, (state) => state.currentChatStatus.questionID)
-  const taskData = useCurrentTaskData(taskId)
+  const skillsUpdate = useStore(store, (state) => state.skillsUpdate)
   const [keyword, setKeyword] = useState('')
   const [sortOrder, setSortOrder] = useState<AISkillSortOrder>()
 
@@ -37,8 +36,8 @@ export const AISkillLoadingPane: React.FC<AISkillLoadingPaneProps> = memo(({ loa
   const [inViewport] = useInViewport(contentRef)
 
   const list = useCreation(
-    () => getSkillList({ skills: taskData?.skills, loadState, keyword, sortOrder }),
-    [taskId, taskData?.uuid, loadState, keyword, sortOrder],
+    () => getSkillList({ skills: rawData.skills, loadState, keyword, sortOrder }),
+    [skillsUpdate, loadState, keyword, sortOrder],
   )
 
   useEffect(() => {
@@ -46,7 +45,7 @@ export const AISkillLoadingPane: React.FC<AISkillLoadingPaneProps> = memo(({ loa
   }, [list.length, onTotalChange])
 
   const onRefresh = useMemoizedFn(() => {
-    if (!taskId) return
+    if (!sessionId) return
     const syncId = randomString(8)
     markSending(syncId)
     onSend({
@@ -54,16 +53,15 @@ export const AISkillLoadingPane: React.FC<AISkillLoadingPaneProps> = memo(({ loa
       type: '',
       params: {
         IsSyncMessage: true,
-        SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_TASK_SNAPSHOT,
+        SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_SKILL_INVENTORY,
         SyncID: syncId,
-        SyncJsonInput: JSON.stringify({ task_id: taskId }),
       },
     })
   })
 
   useEffect(() => {
     if (inViewport && !addLoading) onRefresh()
-  }, [inViewport, sessionId, taskId, addLoading, onRefresh])
+  }, [inViewport, addLoading])
 
   return (
     <div className={styles['content']} ref={contentRef}>
@@ -85,12 +83,16 @@ export const AISkillLoadingPane: React.FC<AISkillLoadingPaneProps> = memo(({ loa
             icon={<RefreshOutlined />}
             loading={refreshLoading}
             disabled={refreshLoading}
-            onClick={onRefresh}
+            onClick={() => {
+              rawData.skillDetails.clear()
+              onRefresh()
+            }}
           />
         </Tooltip>
       </div>
       <AISkillList
-        key={`${taskId}:${loadState}:${keyword}`}
+        source="right-panel"
+        key={`${sessionId}:${loadState}:${keyword}`}
         data={list}
         loadState={loadState}
         onAdd={onAddSkill}

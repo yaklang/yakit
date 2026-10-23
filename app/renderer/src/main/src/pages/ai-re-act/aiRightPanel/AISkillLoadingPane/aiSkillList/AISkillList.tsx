@@ -6,7 +6,7 @@ import AISkillListItem from './AISkillListItem/AISkillListItem'
 import type { AISkillListProps } from './type'
 import styles from './AISkillList.module.scss'
 
-export const AISkillList: FC<AISkillListProps> = ({ data, loadState, onAdd, addLoading, addingSkill }) => {
+export const AISkillList: FC<AISkillListProps> = ({ source, data, loadState, onAdd, addLoading, addingSkill }) => {
   const [scrollParent, setScrollParent] = useState<HTMLDivElement | null>(null)
 
   return (
@@ -19,6 +19,7 @@ export const AISkillList: FC<AISkillListProps> = ({ data, loadState, onAdd, addL
           computeItemKey={(_index, skill) => skill.name}
           itemContent={(_index, skill) => (
             <AISkillListItem
+              source={source}
               skill={skill}
               loadState={loadState}
               onAdd={onAdd}

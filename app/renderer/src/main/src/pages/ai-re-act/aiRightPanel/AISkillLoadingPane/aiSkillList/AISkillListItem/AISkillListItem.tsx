@@ -11,9 +11,43 @@ import styles from './AISkillListItem.module.scss'
 
 const AISkillDetails = lazy(() => import('../AISkillDetails/AISkillDetails'))
 
-const AISkillListItem: FC<AISkillListItemProps> = ({ skill, loadState, onAdd, addLoading, addingSkill }) => {
+const AISkillListItem: FC<AISkillListItemProps> = ({ source, skill, loadState, onAdd, addLoading, addingSkill }) => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const [open, setOpen] = useState(false)
+
+  const renderExtra = () => {
+    const tokenCount =
+      loadState === 'loaded' ? (
+        <Tooltip title={t('AISkillLoadingPane.contextSize')}>
+          <span className={styles['token-count']}>{skill.token_count ?? '—'}</span>
+        </Tooltip>
+      ) : null
+
+    switch (source) {
+      case 'task-details':
+        return tokenCount
+      case 'right-panel':
+        if (loadState === 'metadata') {
+          return (
+            <Tooltip title={t('YakitButton.add')}>
+              <YakitButton
+                type="text2"
+                size="small"
+                className={styles['add-button']}
+                aria-label={t('YakitButton.add')}
+                icon={<PlusOutlined />}
+                loading={addLoading && addingSkill === skill.name}
+                disabled={addLoading}
+                onClick={() => onAdd?.(skill.name)}
+              />
+            </Tooltip>
+          )
+        }
+        return tokenCount
+      default:
+        return null
+    }
+  }
 
   return (
     <YakitPopover
@@ -32,7 +66,7 @@ const AISkillListItem: FC<AISkillListItemProps> = ({ skill, loadState, onAdd, ad
             </div>
           }
         >
-          {open && <AISkillDetails key={skill.name} name={skill.name} />}
+          {open && <AISkillDetails key={skill.name} source={source} name={skill.name} />}
         </Suspense>
       }
     >
@@ -42,24 +76,7 @@ const AISkillListItem: FC<AISkillListItemProps> = ({ skill, loadState, onAdd, ad
             <span className={styles['name']} title={skill.name}>
               {skill.name}
             </span>
-            {loadState === 'metadata' ? (
-              <Tooltip title={t('YakitButton.add')}>
-                <YakitButton
-                  type="text2"
-                  size="small"
-                  className={styles['add-button']}
-                  aria-label={t('YakitButton.add')}
-                  icon={<PlusOutlined />}
-                  loading={addLoading && addingSkill === skill.name}
-                  disabled={addLoading}
-                  onClick={() => onAdd(skill.name)}
-                />
-              </Tooltip>
-            ) : (
-              <Tooltip title={t('AISkillLoadingPane.contextSize')}>
-                <span className={styles['token-count']}>{skill.token_count ?? '—'}</span>
-              </Tooltip>
-            )}
+            {renderExtra()}
           </div>
           <div className={styles['description']} title={skill.description}>
             {skill.description}

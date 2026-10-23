@@ -1,5 +1,7 @@
 import type { AISkillLoadState } from '../type'
 
+export type AISkillListSource = 'task-details' | 'right-panel'
+
 export interface AISkillListItem {
   name: string
   description: string
@@ -7,15 +9,11 @@ export interface AISkillListItem {
   token_count?: number
 }
 
-export interface AISkillInventory {
-  fixed: AISkillListItem[]
-  dynamic: AISkillListItem[]
-}
-
 export interface AISkillListProps {
+  source: AISkillListSource
   data: AISkillListItem[]
   loadState: AISkillLoadState
-  onAdd: (name: string) => void
-  addLoading: boolean
-  addingSkill: string
+  onAdd?: (name: string) => void
+  addLoading?: boolean
+  addingSkill?: string
 }

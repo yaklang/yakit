@@ -584,6 +584,8 @@ export interface ChatStoreState {
   syncIDUpdate: number
   /** aiChat.d.ts AIAgentChatData timelineDump */
   timelineDumpUpdate: number
+  /** aiChat.d.ts AIAgentChatData skills */
+  skillsUpdate: number
 
   /** 接口运行过程中的数据文件夹合集 */
   grpcFolders: AIFileSystemPin[]
@@ -688,6 +690,7 @@ export interface ChatStoreState {
       | 'syntaxflowRuleChangeUpdate'
       | 'syncIDUpdate'
       | 'timelineDumpUpdate'
+      | 'skillsUpdate'
       | 'currentPlanReviewExtraUpdate'
       | 'chatTodoListUpdate'
       | 'taskDetailsUpdate',
@@ -719,6 +722,7 @@ export interface ChatStoreState {
         | 'syntaxflowRuleChangeUpdate'
         | 'syncIDUpdate'
         | 'timelineDumpUpdate'
+        | 'skillsUpdate'
         | 'grpcFolders'
         | 'reActTimelines'
         | 'httpTabShow'

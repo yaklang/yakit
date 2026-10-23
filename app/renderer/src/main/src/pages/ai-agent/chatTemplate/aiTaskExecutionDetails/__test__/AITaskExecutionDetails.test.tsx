@@ -200,7 +200,7 @@ describe('AITaskExecutionDetails 技能列表', () => {
     expect(screen.queryByText('dynamic-skill')).not.toBeInTheDocument()
     expect(screen.queryByText('YakitButton.add')).not.toBeInTheDocument()
     expect(screen.queryByText('dynamic-forge')).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'YakitButton.add' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'YakitButton.add' })).not.toBeInTheDocument()
     expect(onSend).not.toHaveBeenCalled()
   })
 
@@ -225,7 +225,7 @@ describe('AITaskExecutionDetails 技能列表', () => {
     expect(names()).toEqual(['middle', 'large', 'small'])
   })
 
-  it('行内加载发送技能请求，等待回执后刷新当前选择的任务', () => {
+  it('任务详情切换任务后技能保持只读，不发送添加或回执刷新请求', () => {
     const first = createTask('task-a', '任务甲')
     const second = createTask('task-b', '任务乙')
     first.skills.dynamic = [{ name: 'skill-a', description: '', category: 'skill', skill_load_state: 'metadata' }]
@@ -235,38 +235,13 @@ describe('AITaskExecutionDetails 技能列表', () => {
     rerender(<AITaskExecutionDetails taskId="task-b" />)
     expect(screen.queryByText('skill-a')).not.toBeInTheDocument()
     expect(screen.getByText('skill-b')).toBeInTheDocument()
-    expect(onSend).not.toHaveBeenCalled()
-    fireEvent.click(screen.getByRole('button', { name: 'YakitButton.add' }))
-    expect(onSend).toHaveBeenCalledWith(
-      expect.objectContaining({
-        token: 'session-1',
-        params: expect.objectContaining({
-          SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_LOAD_SKILL,
-          SyncJsonInput: JSON.stringify({ skill_names: ['skill-b'] }),
-        }),
-      }),
-    )
-    const request = onSend.mock.calls[0][0] as unknown as { params: { SyncID: string } }
+    expect(screen.queryByRole('button', { name: 'YakitButton.add' })).not.toBeInTheDocument()
+    expect(within(screen.getByTestId('virtuoso-list')).queryByRole('button')).not.toBeInTheDocument()
     act(() => {
-      meta.syncIDMap.set(request.params.SyncID, true)
       sessionStore.setState({ syncIDUpdate: 1 })
       vi.advanceTimersByTime(300)
     })
-    expect(screen.getByRole('button', { name: 'YakitButton.add' })).toBeDisabled()
-    expect(onSend).toHaveBeenCalledTimes(1)
-    act(() => {
-      meta.syncIDMap.delete(request.params.SyncID)
-      sessionStore.setState({ syncIDUpdate: 2 })
-    })
-    expect(screen.getByRole('button', { name: 'YakitButton.add' })).not.toBeDisabled()
-    expect(onSend).toHaveBeenLastCalledWith(
-      expect.objectContaining({
-        params: expect.objectContaining({
-          SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_TASK_SNAPSHOT,
-          SyncJsonInput: JSON.stringify({ task_id: 'task-b' }),
-        }),
-      }),
-    )
+    expect(onSend).not.toHaveBeenCalled()
   })
 
   it.each(['tool', 'plugins', 'mcp'] as const)('%s 保留固定/动态页签、当前数量和头部添加', (category) => {
@@ -296,7 +271,7 @@ describe('AITaskExecutionDetails 技能列表', () => {
     fireEvent.click(within(header).getByRole('button', { name: 'AISkillLoadingPane.sortByTokens' }))
     fireEvent.click(screen.getByRole('radio', { name: 'AISkillLoadingPane.available' }))
     expect(within(header).queryByRole('button', { name: /AISkillLoadingPane\.sortByTokens/ })).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'YakitButton.add' })).not.toBeDisabled()
+    expect(screen.queryByRole('button', { name: 'YakitButton.add' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'YakitButton.refresh' })).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('radio', { name: 'AISkillLoadingPane.loaded' }))
     expect(within(header).getByRole('button', { name: 'AISkillLoadingPane.sortByTokensAscending' })).toBeInTheDocument()
