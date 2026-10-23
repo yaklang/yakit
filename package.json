@@ -4,6 +4,7 @@
   "description": "Yakit is for yaklang.io Electron GUI Entry",
   "main": "dist/electron/main/index.js",
   "scripts": {
+    "build": "node ./cli/cli.mjs build",
     "cli": "node ./cli/cli.mjs",
     "check-deps": "node scripts/check-deps.js",
     "postinstall": "electron-builder install-app-deps",
@@ -65,6 +66,7 @@
   "devDependencies": {
     "@electron/notarize": "^2.5.0",
     "@testing-library/jest-dom": "^6.1.5",
+    "@types/node": "16.18.126",
     "@wdio/cli": "9.30.0",
     "@wdio/electron-service": "10.1.0",
     "@wdio/globals": "9.29.1",
@@ -72,11 +74,13 @@
     "@wdio/logger": "9.29.1",
     "@wdio/mocha-framework": "9.30.0",
     "@wdio/spec-reporter": "9.29.1",
+    "@yakit-libs/color": "1.4.1",
     "chalk": "5.6.2",
     "commander": "13.1.0",
     "concurrently": "6.5.1",
     "electron": "27.0.0",
     "electron-builder": "26.15.3",
+    "esbuild": "0.28.1",
     "execa": "8.0.0",
     "expect-webdriverio": "5.7.0",
     "husky": "^9.1.7",
@@ -86,14 +90,11 @@
     "npm-run-all": "^4.1.5",
     "prettier": "3.8.1",
     "protoc-gen-ts": "^0.3.9",
+    "typescript": "6.0.3",
     "vite": "8.2.0",
     "vitest": "4.1.10",
     "wait-on": "^6.0.0",
-    "webdriverio": "9.30.0",
-    "typescript": "6.0.3",
-    "esbuild": "0.28.1",
-    "@types/node": "16.18.126",
-    "@yakit-libs/color": "1.4.1"
+    "webdriverio": "9.30.0"
   },
   "resolutions": {
     "@wdio/native-utils": "2.5.0"
@@ -103,6 +104,7 @@
     "@grpc/proto-loader": "^0.6.4",
     "adm-zip": "^0.5.16",
     "axios": "0.26.1",
+    "build": "^0.1.4",
     "chrome-launcher": "^0.15.0",
     "compressing": "^1.8.0",
     "cross-spawn": "^7.0.6",
