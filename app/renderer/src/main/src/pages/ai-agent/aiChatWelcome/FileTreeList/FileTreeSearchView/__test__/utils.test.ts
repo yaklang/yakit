@@ -74,6 +74,34 @@ describe('resolveAiArtifactSearchRoots', () => {
       ]),
     ).resolves.toEqual([{ path: `${sessionA}\\a.md` }, { path: `${sessionB}\\b.md` }])
   })
+
+  it('混合 aispace 与外部路径：收敛 session 根并保留外部路径', async () => {
+    const sessionPath = '/x/aispace/session/a.md'
+    const externalPath = '/tmp/report.md'
+    mockMergePathArray.mockResolvedValueOnce([
+      { path: sessionPath, isFolder: false },
+      { path: externalPath, isFolder: false },
+    ])
+    await expect(
+      resolveAiArtifactSearchRoots([
+        { path: sessionPath, isFolder: false },
+        { path: externalPath, isFolder: false },
+      ]),
+    ).resolves.toEqual([{ path: '/x/aispace/session' }, { path: externalPath }])
+  })
+
+  it('全是外部路径时不收敛，原样返回', async () => {
+    mockMergePathArray.mockResolvedValueOnce([
+      { path: '/tmp/a.md', isFolder: false },
+      { path: '/tmp/b.md', isFolder: false },
+    ])
+    await expect(
+      resolveAiArtifactSearchRoots([
+        { path: '/tmp/a.md', isFolder: false },
+        { path: '/tmp/b.md', isFolder: false },
+      ]),
+    ).resolves.toEqual([{ path: '/tmp/a.md' }, { path: '/tmp/b.md' }])
+  })
 })
 
 describe('resolveSearchPaths', () => {

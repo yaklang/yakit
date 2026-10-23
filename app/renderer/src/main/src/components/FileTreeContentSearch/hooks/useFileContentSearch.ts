@@ -114,12 +114,12 @@ export const useFileContentSearch = (options: UseFileContentSearchOptions) => {
   })
 
   const onSearch = useMemoizedFn((value?: string) => {
-    const text = (value ?? keyword).trim()
+    const text = value ?? keyword
     cancelInFlight()
     const requestId = ++requestIdRef.current
     setResults([])
 
-    if (!text) {
+    if (text.length === 0) {
       setLoading(false)
       setSearched(false)
       return
@@ -157,7 +157,7 @@ export const useFileContentSearch = (options: UseFileContentSearchOptions) => {
       if (rootsKey) rootsReadyRef.current = true
       return
     }
-    if (!keyword.trim()) return
+    if (keyword.length === 0) return
     onSearch()
     // eslint-disable-next-line react-hooks/exhaustive-deps -- 仅 searchType / roots 变化时重搜
   }, [searchType, rootsKey])

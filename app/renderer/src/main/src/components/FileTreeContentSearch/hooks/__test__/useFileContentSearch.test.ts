@@ -171,6 +171,49 @@ describe('useFileContentSearch 竞态', () => {
     expect(result.current.searched).toBe(true)
   })
 
+  it('关键字保留首尾空白，不 trim', async () => {
+    mockSearch.mockResolvedValue([])
+    const { result } = renderHook(() => useFileContentSearch({ roots: [{ path: 'ai-output' }] }))
+    act(() => result.current.onSearch('foo '))
+    await waitFor(() => expect(mockSearch).toHaveBeenCalled())
+    expect(mockSearch).toHaveBeenCalledWith(expect.objectContaining({ keyword: 'foo ', regex: false }))
+
+    mockSearch.mockClear()
+    act(() => result.current.onSearch('  bar'))
+    await waitFor(() => expect(mockSearch).toHaveBeenCalled())
+    expect(mockSearch).toHaveBeenCalledWith(expect.objectContaining({ keyword: '  bar', regex: false }))
+  })
+
+  it('关键字纯空白可搜索', async () => {
+    mockSearch.mockResolvedValue([])
+    const { result } = renderHook(() => useFileContentSearch({ roots: [{ path: 'ai-output' }] }))
+    act(() => result.current.onSearch('   '))
+    await waitFor(() => expect(mockSearch).toHaveBeenCalled())
+    expect(mockSearch).toHaveBeenCalledWith(expect.objectContaining({ keyword: '   ', regex: false }))
+    expect(result.current.searched).toBe(true)
+  })
+
+  it('正则保留首尾空白与空分支语义，不 trim', async () => {
+    mockSearch.mockResolvedValue([])
+    const { result } = renderHook(() => useFileContentSearch({ roots: [{ path: 'ai-output' }] }))
+    act(() => result.current.setSearchType('regexp' as never))
+    act(() => result.current.onSearch('foo| '))
+    await waitFor(() => expect(mockSearch).toHaveBeenCalled())
+    expect(mockSearch).toHaveBeenCalledWith(expect.objectContaining({ keyword: 'foo| ', regex: true }))
+
+    mockSearch.mockClear()
+    act(() => result.current.onSearch('  '))
+    await waitFor(() => expect(mockSearch).toHaveBeenCalled())
+    expect(mockSearch).toHaveBeenCalledWith(expect.objectContaining({ keyword: '  ', regex: true }))
+  })
+
+  it('空字符串仍视为空输入，不发起搜索', () => {
+    const { result } = renderHook(() => useFileContentSearch({ roots: [{ path: 'ai-output' }] }))
+    act(() => result.current.onSearch(''))
+    expect(mockSearch).not.toHaveBeenCalled()
+    expect(result.current.searched).toBe(false)
+  })
+
   it('正常搜索成功仍写回最新结果', async () => {
     mockSearch.mockResolvedValue([sampleItem('demo.txt')])
     const { result } = renderHook(() => useFileContentSearch({ roots: [{ path: 'ai-output' }] }))

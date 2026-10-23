@@ -10,7 +10,7 @@ const highlight = {
   endColumn: 4,
 }
 
-const fileWithHighlight = (path: string, withHighlight = true): FileDetailInfo =>
+const baseFile = (path: string): FileDetailInfo =>
   ({
     name: path.split('/').pop() || path,
     path,
@@ -18,22 +18,27 @@ const fileWithHighlight = (path: string, withHighlight = true): FileDetailInfo =
     icon: 'txt',
     openTimestamp: 0,
     isPlainText: true,
-    ...(withHighlight ? { highLightRange: [highlight] } : {}),
   }) as FileDetailInfo
 
+const fileWithSearchHighlight = (path: string): FileDetailInfo =>
+  ({ ...baseFile(path), highLightRange: [highlight] }) as FileDetailInfo
+
+const fileWithCodeRefHighlight = (path: string): FileDetailInfo =>
+  ({ ...baseFile(path), highLightRange: highlight }) as FileDetailInfo
+
 describe('YakRunner clearFileSearchHighlights（onClearFileSearchHighlightsFun）', () => {
-  it('清除 areaInfo 与 activeFile 上的搜索高亮', () => {
+  it('清除 areaInfo 与 activeFile 上的搜索高亮（数组）', () => {
     const areaInfo: AreaInfoProps[] = [
       {
         elements: [
           {
             id: 'tab-1',
-            files: [fileWithHighlight('/a.txt'), fileWithHighlight('/b.txt', false)],
+            files: [fileWithSearchHighlight('/a.txt'), baseFile('/b.txt')],
           },
         ],
       },
     ]
-    const activeFile = fileWithHighlight('/a.txt')
+    const activeFile = fileWithSearchHighlight('/a.txt')
 
     const next = clearFileSearchHighlights(areaInfo, activeFile)
 
@@ -46,18 +51,43 @@ describe('YakRunner clearFileSearchHighlights（onClearFileSearchHighlightsFun�
     expect(next.areaInfo[0].elements[0].files[1]).toBe(areaInfo[0].elements[0].files[1])
   })
 
+  it('单对象代码引用高亮保持不变', () => {
+    const codeRefFile = fileWithCodeRefHighlight('/ref.txt')
+    const areaInfo: AreaInfoProps[] = [
+      {
+        elements: [
+          {
+            id: 'tab-1',
+            files: [codeRefFile, fileWithSearchHighlight('/search.txt')],
+          },
+        ],
+      },
+    ]
+    const activeFile = fileWithCodeRefHighlight('/ref.txt')
+
+    const next = clearFileSearchHighlights(areaInfo, activeFile)
+
+    expect(next.areaChanged).toBe(true)
+    expect(next.activeChanged).toBe(false)
+    expect(next.areaInfo[0].elements[0].files[0].highLightRange).toEqual(highlight)
+    expect(next.areaInfo[0].elements[0].files[0]).toBe(codeRefFile)
+    expect(next.areaInfo[0].elements[0].files[1].highLightRange).toBeUndefined()
+    expect(next.activeFile).toBe(activeFile)
+    expect(next.activeFile?.highLightRange).toEqual(highlight)
+  })
+
   it('无任何高亮时 areaChanged/activeChanged 为 false（不触发 setState）', () => {
     const areaInfo: AreaInfoProps[] = [
       {
         elements: [
           {
             id: 'tab-1',
-            files: [fileWithHighlight('/a.txt', false)],
+            files: [baseFile('/a.txt')],
           },
         ],
       },
     ]
-    const activeFile = fileWithHighlight('/a.txt', false)
+    const activeFile = baseFile('/a.txt')
 
     const next = clearFileSearchHighlights(areaInfo, activeFile)
 
@@ -65,5 +95,26 @@ describe('YakRunner clearFileSearchHighlights（onClearFileSearchHighlightsFun�
     expect(next.activeChanged).toBe(false)
     expect(next.activeFile).toBe(activeFile)
     expect(next.areaInfo[0].elements[0].files[0]).toBe(areaInfo[0].elements[0].files[0])
+  })
+
+  it('仅有单对象高亮时不触发 changed', () => {
+    const areaInfo: AreaInfoProps[] = [
+      {
+        elements: [
+          {
+            id: 'tab-1',
+            files: [fileWithCodeRefHighlight('/ref.txt')],
+          },
+        ],
+      },
+    ]
+    const activeFile = fileWithCodeRefHighlight('/ref.txt')
+
+    const next = clearFileSearchHighlights(areaInfo, activeFile)
+
+    expect(next.areaChanged).toBe(false)
+    expect(next.activeChanged).toBe(false)
+    expect(next.areaInfo[0].elements[0].files[0].highLightRange).toEqual(highlight)
+    expect(next.activeFile?.highLightRange).toEqual(highlight)
   })
 })

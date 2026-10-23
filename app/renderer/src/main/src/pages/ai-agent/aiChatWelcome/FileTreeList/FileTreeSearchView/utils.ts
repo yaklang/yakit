@@ -19,7 +19,8 @@ export const extractAiSessionRoot = (path: string): string | undefined => {
 /**
  * AI Artifacts 搜索根：
  * 1. mergePathArray 父吞子（列表里有父目录时）
- * 2. 仍多条且同属一个 aispace/<session> 时，再收敛到该 session（只有子 pin 时）
+ * 2. 仍多条且可提取的 aispace/<session> 唯一时，收敛到该 session；
+ *    无法提取 session 的外部 pin 路径一并保留（避免漏搜）
  */
 export const resolveAiArtifactSearchRoots = async (
   grpcFolders: { path: string; isFolder?: boolean }[],
@@ -34,11 +35,17 @@ export const resolveAiArtifactSearchRoots = async (
     return merged.map(({ path }) => ({ path }))
   }
 
+  const sessionByPath = merged.map((item) => ({
+    path: item.path,
+    sessionRoot: extractAiSessionRoot(item.path),
+  }))
   const sessionRoots = [
-    ...new Set(merged.map((item) => extractAiSessionRoot(item.path)).filter((path): path is string => !!path)),
+    ...new Set(sessionByPath.map((item) => item.sessionRoot).filter((path): path is string => !!path)),
   ]
   if (sessionRoots.length === 1) {
-    return [{ path: sessionRoots[0] }]
+    const sessionRoot = sessionRoots[0]
+    const externalPaths = sessionByPath.filter((item) => !item.sessionRoot).map(({ path }) => ({ path }))
+    return [{ path: sessionRoot }, ...externalPaths]
   }
 
   return merged.map(({ path }) => ({ path }))
