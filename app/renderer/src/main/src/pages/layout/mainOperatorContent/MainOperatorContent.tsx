@@ -105,7 +105,7 @@ import {
 import { isSubTabGroupNode } from './subTabOverview'
 import { useSubTabOverviewScroll } from './useSubTabOverviewScroll'
 import { isPageRouteActive } from '@/utils/getMainOperatorPageBodyContainer'
-import { useKeepAliveMounted } from '@/utils/keepAliveResidence'
+import { keepAliveIdleMsForRoute, useKeepAliveMounted } from '@/utils/keepAliveResidence'
 import type { WebFuzzerType } from '@/pages/fuzzer/WebFuzzerPage/WebFuzzerPageType'
 import { type FuzzerSequenceCacheDataProps, useFuzzerSequence } from '@/store/fuzzerSequence'
 import emiter from '@/utils/eventBus/eventBus'
@@ -4189,7 +4189,7 @@ const PageBodyItem: React.FC<PageBodyItemProps> = React.memo((props) => {
   } = props
   const isActive = usePageInfo((s) => s.currentPageTabRouteKey === pageItem.routeKey)
   // 隐藏超时卸载，再进入按缓存挂回
-  const mounted = useKeepAliveMounted(isActive, pageItem.routeKey)
+  const mounted = useKeepAliveMounted(isActive, pageItem.routeKey, keepAliveIdleMsForRoute(pageItem.route))
 
   return (
     <div

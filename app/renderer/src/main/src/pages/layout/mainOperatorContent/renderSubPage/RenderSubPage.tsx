@@ -11,7 +11,11 @@ import { YakitRoute } from '@/enums/yakitRoute'
 import { shallow } from 'zustand/shallow'
 import type { MultipleNodeInfo } from '../MainOperatorContentType'
 import type { WebFuzzerType } from '@/pages/fuzzer/WebFuzzerPage/WebFuzzerPageType'
-import { useKeepAliveMounted } from '@/utils/keepAliveResidence'
+import {
+  KEEP_ALIVE_HEAVY_IDLE_UNLOAD_MS,
+  keepAliveIdleMsForRoute,
+  useKeepAliveMounted,
+} from '@/utils/keepAliveResidence'
 
 const FuzzerSequenceWrapper = React.lazy(() => import('@/pages/fuzzer/WebFuzzerPage/FuzzerSequenceWrapper'))
 const FuzzerSequence = React.lazy(() => import('@/pages/fuzzer/FuzzerSequence/FuzzerSequence'))
@@ -21,7 +25,7 @@ const EMPTY_FUZZER_SEQUENCE_LIST: never[] = []
 /** 二级页签：display 切换不重渲；隐藏超时卸载 */
 const RenderSubPagePanel = React.memo(
   ({ route, subItem, isSelected }: { route: YakitRoute; subItem: MultipleNodeInfo; isSelected: boolean }) => {
-    const mounted = useKeepAliveMounted(isSelected, subItem.id)
+    const mounted = useKeepAliveMounted(isSelected, subItem.id, keepAliveIdleMsForRoute(route))
     if (!mounted) return null
     return (
       <div
@@ -95,7 +99,7 @@ const FuzzerSequenceKeepAlive: React.FC<{
   renderType: WebFuzzerType
   setType: (value: WebFuzzerType) => void
 }> = ({ groupId, visible, renderType, setType }) => {
-  const mounted = useKeepAliveMounted(visible, groupId)
+  const mounted = useKeepAliveMounted(visible, groupId, KEEP_ALIVE_HEAVY_IDLE_UNLOAD_MS)
   if (!mounted) return null
   return (
     <div className={styles['fuzzer-sequence-list-item']} style={{ display: visible ? '' : 'none' }}>

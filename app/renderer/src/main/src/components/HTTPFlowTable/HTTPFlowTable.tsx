@@ -1169,9 +1169,11 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       handleShieldDataUpdate()
     }
   }, [handleShieldDataUpdate, mitmVersion, pageType, shieldData])
+  const shieldListLoadedRef = useRef(false)
   useEffect(() => {
-    // Only when visible: rapid History/MITM/Fuzzer tab switches were reloading shield on every hide+show.
+    // Only when visible; skip repeat IPC once loaded this mount.
     if (!inViewport) return
+    if (shieldListLoadedRef.current) return
     getShieldList()
   }, [inViewport])
   useEffect(() => {
@@ -1216,6 +1218,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       })
       .finally(() => {
         isOneceLoading.current = false
+        shieldListLoadedRef.current = true
       })
   })
   useDebounceEffect(

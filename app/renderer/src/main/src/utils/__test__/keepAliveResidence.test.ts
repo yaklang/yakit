@@ -1,13 +1,16 @@
 import { act, renderHook } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
+  KEEP_ALIVE_HEAVY_IDLE_UNLOAD_MS,
   KEEP_ALIVE_IDLE_UNLOAD_MS,
+  keepAliveIdleMsForRoute,
   pinKeepAlive,
   resetKeepAlivePinsForTests,
   resolveKeepAliveMounted,
   subscribeKeepAlivePins,
   useKeepAliveMounted,
 } from '../keepAliveResidence'
+import { YakitRoute } from '@/enums/yakitRoute'
 
 describe('resolveKeepAliveMounted', () => {
   const now = 1_000_000
@@ -150,5 +153,43 @@ describe('subscribeKeepAlivePins per-id', () => {
     expect(b).toHaveBeenCalledTimes(0)
     unsubA()
     unsubB()
+  })
+})
+
+describe('keepAliveIdleMsForRoute', () => {
+  it('uses the shorter idle for History / MITM / Fuzzer routes', () => {
+    expect(keepAliveIdleMsForRoute(YakitRoute.HTTPFuzzer)).toBe(KEEP_ALIVE_HEAVY_IDLE_UNLOAD_MS)
+    expect(keepAliveIdleMsForRoute(YakitRoute.HTTPHacker)).toBe(KEEP_ALIVE_HEAVY_IDLE_UNLOAD_MS)
+    expect(keepAliveIdleMsForRoute(YakitRoute.MITMHacker)).toBe(KEEP_ALIVE_HEAVY_IDLE_UNLOAD_MS)
+    expect(keepAliveIdleMsForRoute(YakitRoute.DB_HTTPHistory)).toBe(KEEP_ALIVE_HEAVY_IDLE_UNLOAD_MS)
+    expect(keepAliveIdleMsForRoute(YakitRoute.DB_HTTPHistoryAnalysis)).toBe(KEEP_ALIVE_HEAVY_IDLE_UNLOAD_MS)
+  })
+
+  it('keeps the default idle for other routes', () => {
+    expect(keepAliveIdleMsForRoute(undefined)).toBe(KEEP_ALIVE_IDLE_UNLOAD_MS)
+  })
+})
+
+describe('useKeepAliveMounted custom idleMs', () => {
+  afterEach(() => {
+    resetKeepAlivePinsForTests()
+    vi.useRealTimers()
+  })
+
+  it('unloads after a custom heavy idle threshold', () => {
+    vi.useFakeTimers()
+    const { result, rerender } = renderHook(
+      ({ active }) => useKeepAliveMounted(active, 'heavy', KEEP_ALIVE_HEAVY_IDLE_UNLOAD_MS),
+      { initialProps: { active: true } },
+    )
+    rerender({ active: false })
+    act(() => {
+      vi.advanceTimersByTime(KEEP_ALIVE_HEAVY_IDLE_UNLOAD_MS - 1)
+    })
+    expect(result.current).toBe(true)
+    act(() => {
+      vi.advanceTimersByTime(1)
+    })
+    expect(result.current).toBe(false)
   })
 })

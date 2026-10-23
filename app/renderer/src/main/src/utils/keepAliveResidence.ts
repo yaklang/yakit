@@ -1,7 +1,27 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
+import { YakitRoute } from '@/enums/yakitRoute'
 
 /** display:none 超过此时长后卸载正文；pinKeepAlive 期间不卸。 */
 export const KEEP_ALIVE_IDLE_UNLOAD_MS = 8 * 60 * 1000
+
+/** History / MITM / Fuzzer 等重页签：更短闲置即卸，减轻 display:none 期间内存。 */
+export const KEEP_ALIVE_HEAVY_IDLE_UNLOAD_MS = 2 * 60 * 1000
+
+const HEAVY_KEEP_ALIVE_ROUTES = new Set<YakitRoute>([
+  YakitRoute.HTTPFuzzer,
+  YakitRoute.HTTPHacker,
+  YakitRoute.MITMHacker,
+  YakitRoute.DB_HTTPHistory,
+  YakitRoute.DB_HTTPHistoryAnalysis,
+])
+
+/** 按路由选闲置卸载时长；未知路由用默认 8 分钟。 */
+export function keepAliveIdleMsForRoute(route?: YakitRoute | string): number {
+  if (route && HEAVY_KEEP_ALIVE_ROUTES.has(route as YakitRoute)) {
+    return KEEP_ALIVE_HEAVY_IDLE_UNLOAD_MS
+  }
+  return KEEP_ALIVE_IDLE_UNLOAD_MS
+}
 
 type Listener = () => void
 
@@ -91,8 +111,12 @@ export function resolveKeepAliveMounted(input: KeepAliveMountInput): KeepAliveMo
   return { mounted: false, everMounted: true, hiddenAt }
 }
 
-/** 隐藏超时卸载；pin 期间不卸；再可见立刻挂回。 */
-export function useKeepAliveMounted(active: boolean, pinId?: string): boolean {
+/** 隐藏超时卸载；pin 期间不卸；再可见立刻挂回。idleMs 默认 8 分钟，重页签可传更短。 */
+export function useKeepAliveMounted(
+  active: boolean,
+  pinId?: string,
+  idleMs: number = KEEP_ALIVE_IDLE_UNLOAD_MS,
+): boolean {
   const pinned = useSyncExternalStore(
     (listener) => subscribeKeepAlivePins(pinId, listener),
     () => (pinId ? isKeepAlivePinned(pinId) : false),
@@ -116,17 +140,18 @@ export function useKeepAliveMounted(active: boolean, pinId?: string): boolean {
       pinned,
       hiddenAt: hiddenAtRef.current,
       now,
+      idleMs,
     })
     everRef.current = decision.everMounted
     hiddenAtRef.current = decision.hiddenAt
     setMounted((prev) => (prev === decision.mounted ? prev : decision.mounted))
 
     if (decision.mounted && decision.hiddenAt != null && !active && !pinned) {
-      const wait = Math.max(0, KEEP_ALIVE_IDLE_UNLOAD_MS - (now - decision.hiddenAt))
+      const wait = Math.max(0, idleMs - (now - decision.hiddenAt))
       const timer = window.setTimeout(() => setTick((n) => n + 1), wait)
       return () => window.clearTimeout(timer)
     }
-  }, [active, pinned, tick, pinId])
+  }, [active, pinned, tick, pinId, idleMs])
 
   return active ? true : mounted
 }
