@@ -1,6 +1,8 @@
 import type { StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
 import type { AIAgentGrpcApi, AIOutputEvent, AITaskStatusType, AIOutputI18n } from './grpcApi'
 import type { CustomPluginExecuteFormValue } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
+import type { QuestionRequest, UISubmission } from '../interactive-ui/types'
+import type { UIDiagnostic } from '../interactive-ui/validate'
 
 // #region AI-Agent 非会话列表外的渲染数据
 /** 自由对话-实时问题队列 */
@@ -365,6 +367,8 @@ export interface BrowserHandoffCardData {
 
 // #region chat 问答内容组件的类型集合(包括了类型推导)
 export enum AIChatQSDataTypeEnum {
+  UI_COMPONENT = 'ui_component',
+  UI_QUESTION = 'ui_question',
   /**用户的自由输入 */
   QUESTION = 'question',
   /**流 */
@@ -421,6 +425,8 @@ export enum AIChatQSDataTypeEnum {
 export type AIChatQSDataType = `${AIChatQSDataTypeEnum}`
 
 export interface AIChatQSDataBase<T extends string, U> {
+  uiState?: unknown
+  interactionMetadata?: UISubmission
   type: T
   data: U
   /** id就是token */
@@ -493,6 +499,18 @@ type ChatStreamGroup = AIChatQSDataBase<
 >
 
 export type AIChatQSData =
+  | AIChatQSDataBase<
+      AIChatQSDataTypeEnum.UI_COMPONENT,
+      {
+        sessionId: string
+        source: string
+        final: boolean
+        streamEnded?: boolean
+        revision?: number
+        diagnostics?: UIDiagnostic[]
+      }
+    >
+  | AIChatQSDataBase<AIChatQSDataTypeEnum.UI_QUESTION, { sessionId: string; request: QuestionRequest }>
   | ChatQuestion
   | ChatStream
   | ChatThought
@@ -625,6 +643,10 @@ export interface ChatStoreState {
 
   /** 当前正在等待用户操作的review数据 */
   currentReviewDetail: { token: string; renderNum: number }
+
+  /** Structured clarification requests displayed above the composer, in arrival order. */
+  questionPanelTokens: string[]
+  questionPanelRevision: number
 
   /**
    * 当前review是plan时，异步数据的更新版本

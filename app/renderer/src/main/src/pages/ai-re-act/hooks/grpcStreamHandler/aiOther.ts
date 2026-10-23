@@ -245,6 +245,7 @@ const handleReactTaskDequeue: AIMessageHandler = (requestInfo) => {
   }
 
   // 用户问题的UI回显
+  const previousMessage = rawData.contents.get(res.TaskId || data.react_task_id)
   const chatData: AIChatQSData = {
     id: res.TaskId || data.react_task_id,
     chatType: 'reAct',
@@ -253,6 +254,7 @@ const handleReactTaskDequeue: AIMessageHandler = (requestInfo) => {
     data: data.react_task_input || '',
     AIService: '',
     AIModelName: '',
+    interactionMetadata: previousMessage?.interactionMetadata,
     // showQS为了UI渲染方便，重新构建的字段
     extraValue: {
       showQS: data.react_task_input || '',

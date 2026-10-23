@@ -35,6 +35,7 @@ import { AITaskContent } from '../aiTaskContent/AITaskContent'
 import { useCurrentStore } from '../hooks/useCurrentDataBySession'
 import useCurrentSessionId from '../hooks/useCurrentSessionId'
 import { useStore } from 'zustand'
+import { AIAgentSettingDefault } from '@/pages/ai-agent/defaultConstant'
 
 const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
   const { setShowFreeChat, setTimeLine, onTaskTabsChange } = props
@@ -145,6 +146,7 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
   const globalSingleModelMode = !!aiGlobalConfig.SingleModelMode
   const effectiveSingleModelMode = globalSingleModelMode || !!setting.SingleModelMode
   const singleModelModeLocked = globalSingleModelMode || !!activeChat?.SessionID || execute
+  const allowUserPrompt = !(setting.DisallowRequireForUserPrompt ?? AIAgentSettingDefault.DisallowRequireForUserPrompt)
 
   const [visible, setVisible] = useControllableValue<boolean>(props, {
     defaultValue: false,
@@ -156,7 +158,8 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
   useEffect(() => {
     if (!visible) return
     form.setFieldValue('SingleModelMode', effectiveSingleModelMode)
-  }, [visible, effectiveSingleModelMode])
+    form.setFieldValue('AllowUserPrompt', allowUserPrompt)
+  }, [visible, effectiveSingleModelMode, allowUserPrompt])
 
   // 缓存弹窗打开时的文本域初始值，用于关闭时比较是否修改
   const promptSnapshotRef = useRef<{ AIPresetPrompt: string; AIPlanPrompt: string }>({
@@ -196,6 +199,33 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
   )
 
   const onValuesChange = useMemoizedFn((changedValues: AIInputSettingFormProps) => {
+    if (has(changedValues, 'AllowUserPrompt')) {
+      const disallow = !changedValues.AllowUserPrompt
+      if (store.getState().execute && sessionId) {
+        onSend({
+          token: sessionId,
+          type: 'casual',
+          params: {
+            IsConfigHotpatch: true,
+            HotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_AllowRequireForUserInteract,
+            Params: { DisallowRequireForUserPrompt: disallow },
+          },
+        })
+      }
+      setSetting?.((v) => ({ ...v, DisallowRequireForUserPrompt: disallow }))
+      if (activeChat?.SessionID) {
+        emiter.emit(
+          'sessionData',
+          JSON.stringify({
+            type: 'updateSession',
+            sessionId: activeChat.SessionID,
+            updates: {
+              StartParams: { ...(activeChat.StartParams || {}), DisallowRequireForUserPrompt: disallow },
+            },
+          }),
+        )
+      }
+    }
     const runtimeContextSizeLimit = changedValues.RuntimeContextSizeLimit
     if (runtimeContextSizeLimit && runtimeContextSizeLimit >= 60 && Number.isInteger(runtimeContextSizeLimit)) {
       onHotConfigChange(AIInputEventHotPatchTypeEnum.HotPatchType_RuntimeContextSizeLimit, {
@@ -231,6 +261,7 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
         AIPlanPrompt: aiGlobalConfig.AIPlanPrompt || '',
       }
       form.setFieldsValue({
+        AllowUserPrompt: allowUserPrompt,
         SingleModelMode: effectiveSingleModelMode,
         RuntimeContextSizeLimit: runtimeContextSizeLimit,
         AIPresetPrompt: aiGlobalConfig.AIPresetPrompt || '',
@@ -261,6 +292,7 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
           wrapperCol={{ span: 14 }}
           onValuesChange={onValuesChange}
           initialValues={{
+            AllowUserPrompt: allowUserPrompt,
             SingleModelMode: effectiveSingleModelMode,
             SyncPerceptionTrigger: setting.SyncPerceptionTrigger,
             RuntimeContextSizeLimit: runtimeContextSizeLimit,
@@ -298,6 +330,15 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
             <YakitSwitch disabled={singleModelModeLocked} />
           </Form.Item>
           <Form.Item
+            label={t('AIReActTaskChatContent.allowUserPrompt')}
+            name="AllowUserPrompt"
+            valuePropName="checked"
+            extra={t('AIReActTaskChatContent.allowUserPromptTip')}
+            className={styles['switch-form-item']}
+          >
+            <YakitSwitch aria-label={t('AIReActTaskChatContent.allowUserPrompt')} disabled={execute && !sessionId} />
+          </Form.Item>
+          <Form.Item
             label={
               <>
                 {t('AIReActTaskChatContent.syncPerceptionTrigger')}
@@ -313,7 +354,7 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
             valuePropName="checked"
             className={styles['switch-form-item']}
           >
-            <YakitSwitch />
+            <YakitSwitch aria-label={t('AIReActTaskChatContent.syncPerceptionTrigger')} />
           </Form.Item>
           <Form.Item
             label={
