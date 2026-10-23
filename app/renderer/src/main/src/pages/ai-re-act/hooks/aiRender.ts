@@ -584,6 +584,8 @@ export interface ChatStoreState {
   syncIDUpdate: number
   /** aiChat.d.ts AIAgentChatData timelineDump */
   timelineDumpUpdate: number
+  /** aiChat.d.ts AIAgentChatData skills */
+  skillsUpdate: number
 
   /** 接口运行过程中的数据文件夹合集 */
   grpcFolders: AIFileSystemPin[]
@@ -646,6 +648,8 @@ export interface ChatStoreState {
   chatElements: SessionRenderContent['chatElements']
   /** 任务详情数据触发计数，对应 taskDetailsMap 的 todoList 更新 */
   chatTodoListUpdate: number
+  /** 任务详情 Map 写入后触发的更新计数 */
+  taskDetailsUpdate: number
   currentPlan: CurrentExecTaskTree
 
   /**
@@ -686,8 +690,10 @@ export interface ChatStoreState {
       | 'syntaxflowRuleChangeUpdate'
       | 'syncIDUpdate'
       | 'timelineDumpUpdate'
+      | 'skillsUpdate'
       | 'currentPlanReviewExtraUpdate'
-      | 'chatTodoListUpdate',
+      | 'chatTodoListUpdate'
+      | 'taskDetailsUpdate',
   ) => void
 
   updateFolders: (info: AIFileSystemPin) => void
@@ -716,6 +722,7 @@ export interface ChatStoreState {
         | 'syntaxflowRuleChangeUpdate'
         | 'syncIDUpdate'
         | 'timelineDumpUpdate'
+        | 'skillsUpdate'
         | 'grpcFolders'
         | 'reActTimelines'
         | 'httpTabShow'
@@ -728,6 +735,7 @@ export interface ChatStoreState {
         | 'tasks'
         | 'chatElements'
         | 'chatTodoListUpdate'
+        | 'taskDetailsUpdate'
         | 'uiExpandMap'
       >
     >,

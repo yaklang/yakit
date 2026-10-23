@@ -77,6 +77,8 @@ const genAIAgentChatData = (): AIAgentChatData => {
     httpFlowFuzzStatus: undefined,
     sessionTitle: '',
     memoryList: DefaultMemoryList,
+    skills: [],
+    skillDetails: new Map(),
     systemStream: '',
     yaklangCodeChange: undefined,
     syntaxflowRuleChange: undefined,
@@ -1595,6 +1597,19 @@ export class ChatMultiSessionController {
       SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_SESSION_SNAPSHOT_SYNC,
     })
 
+    this.requestMessage(sessionId, {
+      IsSyncMessage: true,
+      SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_SKILL_LOADED,
+      SyncID: uuidv4(),
+    })
+
+    this.requestMessage(sessionId, {
+      IsSyncMessage: true,
+      SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_SKILL_AVAILABLE,
+      SyncID: uuidv4(),
+      SyncJsonInput: JSON.stringify({ page: 1 }),
+    })
+
     // 获取最新记忆列表数据, 并注册轮询定时器
     this.requestMessage(sessionId, { IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_MEMORY_CONTEXT })
     if (meta.memoryPollingTimer) clearInterval(meta.memoryPollingTimer)
@@ -1757,6 +1772,9 @@ export class ChatMultiSessionController {
         'status',
         'stream-finished',
         'capability_inventory',
+        'skill_loaded',
+        'skill_available',
+        'skill_detail',
         'react_task_created',
         'plan_exec_tasks',
         'skip_subtask_in_plan',

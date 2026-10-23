@@ -1,39 +1,37 @@
-import { useCreation, useInterval, useMemoizedFn } from 'ahooks'
+import { useCreation, useDebounceFn } from 'ahooks'
 import { useEffect, useState } from 'react'
+import { useStore } from 'zustand'
 import type { PlanItemDetailsData } from '../aiRender'
-import { useCurrentRawData } from '../useCurrentDataBySession'
+import { useCurrentRawData, useCurrentStore } from '../useCurrentDataBySession'
 import useCurrentSessionId from '../useCurrentSessionId'
 
 /**
- * 根据外部传入的 taskId，从当前会话的 taskDetailsMap 读取任务详情。
- * taskDetailsMap 由流事件原地更新（不触发渲染），靠轮询比对条目是否存在和 uuid 感知变化，
- * 信号不变时引用稳定。轮询间隔单位为秒，默认 3 秒。
- * 返回 map 里的活引用，需要不可变快照的调用方请自行 cloneDeep。
+ * 读取当前会话的任务详情，监听 store 更新并防抖刷新，默认最长等待 3000ms。
+ * 首次及切换任务、会话时立即读取；返回原始引用。
  */
-const useCurrentTaskData = (taskId: string, intervalSeconds = 3): PlanItemDetailsData | undefined => {
+const useCurrentTaskData = (taskId: string, debounceMs = 3000): PlanItemDetailsData | undefined => {
   const sessionId = useCurrentSessionId()
   const rawData = useCurrentRawData()
+  const store = useCurrentStore()
+  const taskDetailsUpdate = useStore(store, (state) => state.taskDetailsUpdate)
 
-  // 条目存在性和 uuid 共同构成变更信号，避免“缺失条目”和“默认空 uuid 条目”无法区分
+  // 区分缺失条目与空 uuid 条目
   const [detailsSignal, setDetailsSignal] = useState('missing')
 
+  const getData = useDebounceFn(
+    () => {
+      const taskData = taskId ? rawData.taskDetailsMap.get(taskId) : undefined
+      const nextSignal = taskData ? `present:${taskData.uuid}` : 'missing'
+      setDetailsSignal((previous) => (previous === nextSignal ? previous : nextSignal))
+    },
+    { wait: debounceMs, maxWait: debounceMs, leading: true },
+  ).run
   useEffect(() => {
-    onReset()
+    return () => getData.cancel()
+  }, [sessionId, taskId, store])
+  useEffect(() => {
     getData()
-  }, [sessionId, taskId])
-
-  useInterval(() => {
-    getData()
-  }, intervalSeconds * 1000)
-
-  const onReset = useMemoizedFn(() => {
-    setDetailsSignal('missing')
-  })
-  const getData = useMemoizedFn(() => {
-    const taskData = taskId ? rawData.taskDetailsMap.get(taskId) : undefined
-    const nextSignal = taskData ? `present:${taskData.uuid}` : 'missing'
-    setDetailsSignal((previous) => (previous === nextSignal ? previous : nextSignal))
-  })
+  }, [sessionId, taskId, store, taskDetailsUpdate])
 
   return useCreation(() => {
     if (!taskId) return undefined

@@ -1,5 +1,7 @@
 import { act, cleanup, renderHook } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { createStore } from 'zustand/vanilla'
+import type { StoreApi } from 'zustand/vanilla'
 
 interface MockTaskData {
   uuid: string
@@ -11,6 +13,7 @@ interface MockTaskData {
 
 interface MockRawData {
   taskDetailsMap: Map<string, MockTaskData>
+  store: StoreApi<{ taskDetailsUpdate: number }>
 }
 
 const hoisted = vi.hoisted(() => ({
@@ -24,6 +27,7 @@ vi.mock('../useCurrentDataBySession', () => ({
     if (!rawData) throw new Error(`未找到测试会话：${hoisted.currentSessionId.value}`)
     return rawData
   },
+  useCurrentStore: () => hoisted.sessions.get(hoisted.currentSessionId.value)!.store,
 }))
 
 vi.mock('../useCurrentSessionId', () => ({
@@ -33,7 +37,14 @@ vi.mock('../useCurrentSessionId', () => ({
 import useCurrentTaskData from '../useCurrentTaskData/useCurrentTaskData'
 import useCurrentTaskExecution from '../useCurrentTaskData/useCurrentTaskExecution'
 
-const createRawData = (): MockRawData => ({ taskDetailsMap: new Map() })
+const createRawData = (): MockRawData => ({
+  taskDetailsMap: new Map(),
+  store: createStore(() => ({ taskDetailsUpdate: 0 })),
+})
+
+const notifyUpdate = (session: MockRawData) => {
+  session.store.setState((state) => ({ taskDetailsUpdate: state.taskDetailsUpdate + 1 }))
+}
 
 const createTaskData = (taskId: string, uuid: string, taskName: string): MockTaskData => ({
   uuid,
@@ -63,12 +74,13 @@ afterEach(() => {
 describe('useCurrentTaskData', () => {
   it('条目从不存在变成默认空 uuid 条目时会刷新', () => {
     const session = getSession('session-a')
-    const { result } = renderHook(() => useCurrentTaskData('task-1', 1)?.taskId ?? 'missing')
+    const { result } = renderHook(() => useCurrentTaskData('task-1', 1000)?.taskId ?? 'missing')
 
     expect(result.current).toBe('missing')
 
     session.taskDetailsMap.set('task-1', createTaskData('task-1', '', 'task-1'))
     act(() => {
+      notifyUpdate(session)
       vi.advanceTimersByTime(1000)
     })
 
@@ -80,16 +92,152 @@ describe('useCurrentTaskData', () => {
     const taskData = createTaskData('task-1', 'uuid-1', 'before')
     session.taskDetailsMap.set('task-1', taskData)
 
-    const { result } = renderHook(() => useCurrentTaskData('task-1', 1)?.execution?.task_name ?? 'missing')
+    const { result } = renderHook(() => useCurrentTaskData('task-1', 1000)?.execution?.task_name ?? 'missing')
     expect(result.current).toBe('before')
 
     taskData.execution = { task_name: 'after' }
     taskData.uuid = 'uuid-2'
     act(() => {
+      notifyUpdate(session)
       vi.advanceTimersByTime(1000)
     })
 
     expect(result.current).toBe('after')
+  })
+
+  it('首次立即读取，默认在 3000ms 内合并连续更新', () => {
+    const session = getSession('session-a')
+    const taskData = createTaskData('task-1', 'uuid-1', 'before')
+    session.taskDetailsMap.set('task-1', taskData)
+    const read = vi.spyOn(session.taskDetailsMap, 'get')
+    const { result } = renderHook(() => useCurrentTaskData('task-1')?.execution?.task_name)
+    expect(result.current).toBe('before')
+    const initialReads = read.mock.calls.length
+
+    act(() => {
+      session.taskDetailsMap.set('task-1', createTaskData('task-1', 'uuid-2', 'intermediate'))
+      notifyUpdate(session)
+    })
+    act(() => vi.advanceTimersByTime(1000))
+    act(() => {
+      session.taskDetailsMap.set('task-1', createTaskData('task-1', 'uuid-3', 'latest'))
+      notifyUpdate(session)
+    })
+    act(() => vi.advanceTimersByTime(1999))
+    expect(result.current).toBe('before')
+    expect(read).toHaveBeenCalledTimes(initialReads)
+
+    act(() => vi.advanceTimersByTime(1))
+    expect(result.current).toBe('latest')
+    expect(read).toHaveBeenCalledTimes(initialReads + 2)
+  })
+
+  it.each([1000, 3000])('持续收到其他任务通知时，首次详情仍在 %ims 内刷新', (debounceMs) => {
+    const session = getSession('session-a')
+    const { result } = renderHook(() => useCurrentTaskData('task-1', debounceMs)?.execution?.task_name ?? 'missing')
+    expect(result.current).toBe('missing')
+
+    act(() => vi.advanceTimersByTime(debounceMs / 5))
+    act(() => {
+      session.taskDetailsMap.set('task-1', createTaskData('task-1', 'uuid-1', 'arrived'))
+      notifyUpdate(session)
+    })
+
+    for (let index = 2; index <= 4; index++) {
+      act(() => vi.advanceTimersByTime(debounceMs / 5))
+      act(() => {
+        session.taskDetailsMap.set('other-task', createTaskData('other-task', `uuid-${index}`, 'other'))
+        notifyUpdate(session)
+      })
+    }
+
+    act(() => vi.advanceTimersByTime(debounceMs / 5 - 1))
+    expect(result.current).toBe('missing')
+    act(() => vi.advanceTimersByTime(1))
+    expect(result.current).toBe('arrived')
+  })
+
+  it('没有更新通知时不轮询读取', () => {
+    const session = getSession('session-a')
+    session.taskDetailsMap.set('task-1', createTaskData('task-1', 'uuid-1', 'before'))
+    const read = vi.spyOn(session.taskDetailsMap, 'get')
+    const { result } = renderHook(() => useCurrentTaskData('task-1')?.execution?.task_name)
+    const initialReads = read.mock.calls.length
+
+    session.taskDetailsMap.set('task-1', createTaskData('task-1', 'uuid-2', 'after'))
+    act(() => vi.advanceTimersByTime(30000))
+
+    expect(result.current).toBe('before')
+    expect(read).toHaveBeenCalledTimes(initialReads)
+  })
+
+  it('防抖空闲后的第一次通知立即读取', () => {
+    const session = getSession('session-a')
+    const { result } = renderHook(() => useCurrentTaskData('task-1')?.taskId)
+    act(() => vi.advanceTimersByTime(3000))
+    act(() => {
+      session.taskDetailsMap.set('task-1', createTaskData('task-1', '', 'task-1'))
+      notifyUpdate(session)
+    })
+    expect(result.current).toBe('task-1')
+  })
+
+  it('uuid 未变化时保留上次读取的引用', () => {
+    const session = getSession('session-a')
+    const original = createTaskData('task-1', 'same-uuid', 'before')
+    session.taskDetailsMap.set('task-1', original)
+    const { result } = renderHook(() => useCurrentTaskData('task-1'))
+
+    act(() => {
+      session.taskDetailsMap.set('task-1', createTaskData('task-1', 'same-uuid', 'after'))
+      notifyUpdate(session)
+      vi.advanceTimersByTime(3000)
+    })
+    expect(result.current).toBe(original)
+  })
+
+  it('条目移除并通知后返回 undefined', () => {
+    const session = getSession('session-a')
+    session.taskDetailsMap.set('task-1', createTaskData('task-1', 'uuid-1', 'before'))
+    const { result } = renderHook(() => useCurrentTaskData('task-1'))
+    act(() => {
+      session.taskDetailsMap.delete('task-1')
+      notifyUpdate(session)
+      vi.advanceTimersByTime(3000)
+    })
+    expect(result.current).toBeUndefined()
+  })
+
+  it('卸载时取消待执行读取并移除订阅', () => {
+    const session = getSession('session-a')
+    const read = vi.spyOn(session.taskDetailsMap, 'get')
+    const { unmount } = renderHook(() => useCurrentTaskData('task-1'))
+    act(() => notifyUpdate(session))
+    const initialReads = read.mock.calls.length
+    unmount()
+    act(() => {
+      vi.advanceTimersByTime(3000)
+      notifyUpdate(session)
+      vi.advanceTimersByTime(3000)
+    })
+    expect(read).toHaveBeenCalledTimes(initialReads)
+  })
+
+  it('切换任务时立即读取并取消上个任务的待执行读取', () => {
+    const session = getSession('session-a')
+    session.taskDetailsMap.set('task-a', createTaskData('task-a', 'same-uuid', 'task-a'))
+    session.taskDetailsMap.set('task-b', createTaskData('task-b', 'same-uuid', 'task-b'))
+    const read = vi.spyOn(session.taskDetailsMap, 'get')
+    const { result, rerender } = renderHook(({ taskId }) => useCurrentTaskData(taskId)?.execution?.task_name, {
+      initialProps: { taskId: 'task-a' },
+    })
+    act(() => notifyUpdate(session))
+    rerender({ taskId: 'task-b' })
+    expect(result.current).toBe('task-b')
+    const readsAfterSwitch = read.mock.calls.length
+
+    act(() => vi.advanceTimersByTime(3000))
+    expect(read).toHaveBeenCalledTimes(readsAfterSwitch)
   })
 
   it('切换会话后会读取新会话的同名任务', () => {
@@ -97,7 +245,7 @@ describe('useCurrentTaskData', () => {
     getSession('session-b').taskDetailsMap.set('shared-task', createTaskData('shared-task', 'same-uuid', 'session-b'))
 
     const { result, rerender } = renderHook(
-      () => useCurrentTaskData('shared-task', 60)?.execution?.task_name ?? 'missing',
+      () => useCurrentTaskData('shared-task', 60000)?.execution?.task_name ?? 'missing',
     )
     expect(result.current).toBe('session-a')
 
@@ -117,7 +265,7 @@ describe('useCurrentTaskExecution', () => {
     session.taskDetailsMap.set('task-b', createTaskData('task-b', '', 'task-b'))
 
     const { result, rerender } = renderHook(
-      ({ taskId }: { taskId: string }) => useCurrentTaskExecution(taskId, 60)?.task_name ?? 'missing',
+      ({ taskId }: { taskId: string }) => useCurrentTaskExecution(taskId, 60000)?.task_name ?? 'missing',
       { initialProps: { taskId: 'task-a' } },
     )
     expect(result.current).toBe('task-a')
@@ -131,7 +279,7 @@ describe('useCurrentTaskExecution', () => {
     getSession('session-a').taskDetailsMap.set('shared-task', createTaskData('shared-task', 'same-uuid', 'session-a'))
     getSession('session-b').taskDetailsMap.set('shared-task', createTaskData('shared-task', 'same-uuid', 'session-b'))
 
-    const { result, rerender } = renderHook(() => useCurrentTaskExecution('shared-task', 60)?.task_name ?? 'missing')
+    const { result, rerender } = renderHook(() => useCurrentTaskExecution('shared-task', 60000)?.task_name ?? 'missing')
     expect(result.current).toBe('session-a')
 
     act(() => {

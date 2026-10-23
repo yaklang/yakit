@@ -684,6 +684,7 @@
     "taskBoard": "任務詳情看板",
     "fileSystem": "檔案系統",
     "browserInstances": "瀏覽器實例",
+    "loadSkills": "載入技能",
     "traffic": "流量",
     "risk": "漏洞",
     "sessionHistory": "會話歷史",
@@ -698,6 +699,15 @@
     "step": "Step",
     "runtime": "運行時間",
     "toolCallCount": "工具呼叫數"
+  },
+  "AISkillLoadingPane": {
+    "loaded": "已載入",
+    "available": "可載入",
+    "searchPlaceholder": "請輸入關鍵詞搜尋",
+    "contextSize": "該技能佔用的上下文大小（Token）",
+    "sortByTokens": "按token大小排序",
+    "sortByTokensAscending": "按token升序",
+    "sortByTokensDescending": "按token降序"
   },
   "AIChatContent": {
     "noActiveChat": "當前沒有活躍的會話",

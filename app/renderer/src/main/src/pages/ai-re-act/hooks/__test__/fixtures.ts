@@ -21,6 +21,8 @@ export const createTestRawData = (): AIAgentChatData => {
     httpFlowFuzzStatus: undefined,
     sessionTitle: '',
     memoryList: DefaultMemoryList,
+    skills: [],
+    skillDetails: new Map(),
     systemStream: '',
     yaklangCodeChange: undefined,
     syntaxflowRuleChange: undefined,

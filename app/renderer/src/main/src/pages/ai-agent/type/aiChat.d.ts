@@ -1,6 +1,7 @@
 import type { SessionLifecycle } from '@/pages/ai-re-act/hooks/sessionLifecycle'
 import type { AIAgentGrpcApi, AIInputEvent, AIStartParams, AISource } from '@/pages/ai-re-act/hooks/grpcApi'
 import type { PlanItemDetailsData, AIChatQSData } from '@/pages/ai-re-act/hooks/aiRender'
+import type { AISkillListItem } from '@/pages/ai-re-act/aiRightPanel/AISkillLoadingPane/aiSkillList/type'
 import { type PaginationSchema } from '@/pages/invoker/schema'
 
 /** 上下文字节统计 */
@@ -138,6 +139,10 @@ export interface AIAgentChatData {
   sessionTitle?: string
   /** 记忆列表 */
   memoryList: AIAgentGrpcApi.MemoryEntryList
+  /** 当前会话的技能列表（skill_loaded / skill_available） */
+  skills: AISkillListItem[]
+  /** 按技能名称缓存当前会话的详情 */
+  skillDetails: Map<string, AIAgentGrpcApi.SkillDetail>
   /** 系统流信息(isSystem=true&type=stream) */
   systemStream: string
   /** CodeChange 数据（事件类型 yaklang_code_change） */

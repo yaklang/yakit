@@ -683,6 +683,7 @@
     "aiSettings": "AI 设置",
     "taskBoard": "任务详情看板",
     "fileSystem": "文件系统",
+    "loadSkills": "加载技能",
     "browserInstances": "浏览器实例",
     "traffic": "流量",
     "risk": "漏洞",
@@ -698,6 +699,15 @@
     "step": "Step",
     "runtime": "运行时间",
     "toolCallCount": "工具调用数"
+  },
+  "AISkillLoadingPane": {
+    "loaded": "已加载",
+    "available": "可加载",
+    "searchPlaceholder": "请输入关键词搜索",
+    "contextSize": "该技能占用的上下文大小（Token）",
+    "sortByTokens": "按token大小排序",
+    "sortByTokensAscending": "按token升序",
+    "sortByTokensDescending": "按token降序"
   },
   "AIChatContent": {
     "noActiveChat": "当前没有活跃的会话",

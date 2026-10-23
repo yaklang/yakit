@@ -684,6 +684,7 @@
     "taskBoard": "Task Board",
     "fileSystem": "File System",
     "browserInstances": "Browser Instances",
+    "loadSkills": "Load Skills",
     "traffic": "Traffic",
     "risk": "Risks",
     "sessionHistory": "Session History",
@@ -698,6 +699,15 @@
     "step": "Step",
     "runtime": "Runtime",
     "toolCallCount": "Tool Call Count"
+  },
+  "AISkillLoadingPane": {
+    "loaded": "Loaded",
+    "available": "Available",
+    "searchPlaceholder": "Search skills",
+    "contextSize": "Context size used by this skill (tokens)",
+    "sortByTokens": "Sort by token count",
+    "sortByTokensAscending": "Sort by token count ascending",
+    "sortByTokensDescending": "Sort by token count descending"
   },
   "AIChatContent": {
     "noActiveChat": "There is no active session",

@@ -1,12 +1,13 @@
 import type { AIMessageHandler } from '../type'
 import type { AIAgentGrpcApi } from '../grpcApi'
+import type { AISkillListItem } from '../../aiRightPanel/AISkillLoadingPane/aiSkillList/type'
 import { Uint8ArrayToString } from '@/utils/str'
 import { handleTodoListData } from '../utils'
 import cloneDeep from 'lodash/cloneDeep'
 import isArray from 'lodash/isArray'
 import isEmpty from 'lodash/isEmpty'
 import { v4 as uuidv4 } from 'uuid'
-import { type PlanItemDetailsData } from '../aiRender'
+import type { PlanItemDetailsData } from '../aiRender'
 import { DefaultPlanItemDetailsData } from '../defaultConstant'
 
 type CapabilityFields = Pick<PlanItemDetailsData, 'tool' | 'forges' | 'skills' | 'plugins' | 'mcp'>
@@ -48,9 +49,6 @@ const planItemDetailsToCapabilityFields = (payload: AIAgentGrpcApi.PlanItemDetai
   if (fixed?.forges) {
     itemData.forges.fixed = fixed.forges
   }
-  if (fixed?.skills) {
-    itemData.skills.fixed = fixed.skills
-  }
 
   if (dynamic?.tools) {
     for (const item of dynamic.tools) {
@@ -69,11 +67,24 @@ const planItemDetailsToCapabilityFields = (payload: AIAgentGrpcApi.PlanItemDetai
       }
     }
   }
-  if (dynamic?.skills) {
-    itemData.skills.dynamic = dynamic.skills
-  }
   if (dynamic?.forges) {
     itemData.forges.dynamic = dynamic.forges
+  }
+
+  // 技能按加载状态分类，不沿用后端的 fixed/dynamic 位置。
+  for (const skill of [...(fixed?.skills || []), ...(dynamic?.skills || [])]) {
+    if (skill.skill_load_state === 'loaded') {
+      itemData.skills.fixed.push({
+        ...skill,
+        verbose_name: 'verbose_name' in skill ? skill.verbose_name : skill.name,
+      })
+    } else {
+      itemData.skills.dynamic.push({
+        ...skill,
+        category: 'skill',
+        skill_load_state: skill.skill_load_state ?? '',
+      })
+    }
   }
 
   return itemData
@@ -101,17 +112,20 @@ const capabilityInventoryItemsToPlanItemDetails = (
 
     switch (item.type) {
       case 'skill': {
-        if (isDynamic) {
-          const skillLoadState =
-            item.stage === 'loaded'
+        const skillLoadState =
+          typeof item.data?.skill_load_state === 'string'
+            ? (item.data.skill_load_state as 'metadata' | 'loaded' | '')
+            : item.stage === 'loaded'
               ? 'loaded'
-              : typeof item.data?.skill_load_state === 'string'
-                ? (item.data.skill_load_state as 'metadata' | 'loaded' | '')
-                : 'metadata'
-          payload.dynamic.skills.push({ ...base, category: 'skill', skill_load_state: skillLoadState })
-        } else {
-          payload.fixed.skills.push({ ...base, category: 'skill' })
+              : 'metadata'
+        const skill: AIAgentGrpcApi.PlanItemDetailsFixedItem & AIAgentGrpcApi.PlanItemDetailsDynamicSkillsItem = {
+          ...base,
+          category: 'skill',
+          skill_load_state: skillLoadState,
+          token_count: item.data?.token_count as number,
         }
+        if (isDynamic) payload.dynamic.skills.push(skill)
+        else payload.fixed.skills.push(skill)
         break
       }
       case 'forge': {
@@ -166,8 +180,41 @@ const mapSessionPerceptionToPerceptionData = (
   }
 }
 
+const handleSkillDetail: AIMessageHandler = ({ res, rawData }) => {
+  if (res.Type === 'structured' && res.NodeId === 'skill_detail') {
+    const detail: AIAgentGrpcApi.SkillDetail = JSON.parse(Uint8ArrayToString(res.Content))
+    rawData.skillDetails.set(detail.name, detail)
+  }
+}
+
+const handleSkillList: AIMessageHandler = ({ res, store, rawData }) => {
+  if (res.Type !== 'structured' || !['skill_loaded', 'skill_available'].includes(res.NodeId)) return
+
+  const ipcContent = Uint8ArrayToString(res.Content)
+  const { skills } = JSON.parse(ipcContent) as
+    | AIAgentGrpcApi.SkillLoadedResponse
+    | AIAgentGrpcApi.SkillAvailableResponse
+  console.log(res.NodeId, 'handleSkillList-skills', skills)
+  const loadState = res.NodeId === 'skill_loaded' ? 'loaded' : 'metadata'
+  const incomingNames = new Set(skills.map((skill) => skill.name))
+  const otherSkills = rawData.skills.filter(
+    (skill) => skill.skill_load_state !== loadState && !incomingNames.has(skill.name),
+  )
+  const incomingSkills: AISkillListItem[] = skills.map((skill) => {
+    const detail = rawData.skillDetails.get(skill.name)
+    if (detail && detail.loaded !== (loadState === 'loaded')) rawData.skillDetails.delete(skill.name)
+    return {
+      name: skill.name,
+      description: skill.description,
+      skill_load_state: loadState,
+      token_count: skill.data?.token_count,
+    }
+  })
+  rawData.skills = [...otherSkills, ...incomingSkills]
+  store.getState().updateStateCount('skillsUpdate')
+}
 const handleCapabilityInventory: AIMessageHandler = (requestInfo) => {
-  const { res, rawData } = requestInfo
+  const { res, rawData, store } = requestInfo
   if (res.Type !== 'structured' || res.NodeId !== 'capability_inventory') return
   if (!res.TaskId) return
 
@@ -179,10 +226,11 @@ const handleCapabilityInventory: AIMessageHandler = (requestInfo) => {
   const oldData = rawData.taskDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
   applyCapabilityFieldsToTarget(oldData, fields, res.TaskId)
   rawData.taskDetailsMap.set(res.TaskId, oldData)
+  store.getState().updateStateCount('taskDetailsUpdate')
 }
 
 const handlePerception: AIMessageHandler = (requestInfo) => {
-  const { res, rawData } = requestInfo
+  const { res, rawData, store } = requestInfo
   if (res.Type !== 'perception' || res.NodeId !== 'perception') return
   if (!res.TaskId) return
 
@@ -200,6 +248,7 @@ const handlePerception: AIMessageHandler = (requestInfo) => {
   const oldData = rawData.taskDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
   applyPerceptionFields(oldData)
   rawData.taskDetailsMap.set(res.TaskId, oldData)
+  store.getState().updateStateCount('taskDetailsUpdate')
 }
 
 const handleCurrentTaskTodoListUpdate: AIMessageHandler = (requestInfo) => {
@@ -230,6 +279,7 @@ const handleCurrentTaskTodoListUpdate: AIMessageHandler = (requestInfo) => {
   const oldData = rawData.taskDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
   applyTodoListFields(oldData)
   rawData.taskDetailsMap.set(res.TaskId, oldData)
+  store.getState().updateStateCount('taskDetailsUpdate')
   if (chatType === 'reAct') {
     store.getState().updateStateCount('chatTodoListUpdate')
   }
@@ -285,6 +335,7 @@ const handleSessionSnapshot: AIMessageHandler = (requestInfo) => {
 
   applySnapshotFields(oldData)
   rawData.taskDetailsMap.set(res.TaskId, oldData)
+  store.getState().updateStateCount('taskDetailsUpdate')
 }
 
 const handleTaskSnapshot: AIMessageHandler = (requestInfo) => {
@@ -351,6 +402,7 @@ const handleTaskSnapshot: AIMessageHandler = (requestInfo) => {
   }
 
   rawData.taskDetailsMap.set(taskId, oldData)
+  store.getState().updateStateCount('taskDetailsUpdate')
   // 与 current_task_todo_list_update 一致：通知聊天待办条从 map 重读
   if (todoUpdated && chatType === 'reAct') {
     store.getState().updateStateCount('chatTodoListUpdate')
@@ -359,6 +411,9 @@ const handleTaskSnapshot: AIMessageHandler = (requestInfo) => {
 
 /** 单条grpc流数据对应一个独立的UI数据 */
 export const aiTaskDetailDataHandlers = {
+  skill_detail: handleSkillDetail,
+  skill_loaded: handleSkillList,
+  skill_available: handleSkillList,
   capability_inventory: handleCapabilityInventory,
   perception: handlePerception,
   current_task_todo_list_update: handleCurrentTaskTodoListUpdate,

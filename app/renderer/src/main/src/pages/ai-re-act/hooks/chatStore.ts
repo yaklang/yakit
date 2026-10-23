@@ -1,4 +1,5 @@
-import { AIChatQSDataTypeEnum, type ChatStoreState } from './aiRender'
+import { AIChatQSDataTypeEnum } from './aiRender'
+import type { ChatStoreState } from './aiRender'
 import { createStore } from 'zustand/vanilla'
 import { immer } from 'zustand/middleware/immer'
 import { enableMapSet } from 'immer'
@@ -35,6 +36,7 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
       syntaxflowRuleChangeUpdate: 0,
       syncIDUpdate: 0,
       timelineDumpUpdate: 0,
+      skillsUpdate: 0,
 
       grpcFolders: [],
       reActTimelines: [],
@@ -67,6 +69,7 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
 
       chatElements: [],
       chatTodoListUpdate: 0,
+      taskDetailsUpdate: 0,
       currentPlan: cloneDeep(DefaultCurrentExecTaskTree),
       uiExpandMap: {},
 

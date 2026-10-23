@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { aiOtherDataHandlers } from '../grpcStreamHandler/aiOther'
 import { AIInputEventSyncTypeEnum, AITaskStatus } from '../grpcApi'
-import { DefaultCurrentExecTaskTree, DefaultTaskPlanEndGate } from '../defaultConstant'
+import { DefaultCurrentExecTaskTree, DefaultPlanItemDetailsData, DefaultTaskPlanEndGate } from '../defaultConstant'
+import cloneDeep from 'lodash/cloneDeep'
 import { makeGrpcJsonRes, makeHandlerRequest } from './fixtures'
 import { AIChatQSDataTypeEnum } from '../aiRender'
 import i18n from '@/i18n/i18n'
@@ -52,6 +53,29 @@ describe('aiOther task plan gate', () => {
       IsSyncMessage: true,
       SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN,
     })
+  })
+
+  it('D2: start preserves current and historical task details', () => {
+    const req = makeHandlerRequest({
+      res: makeGrpcJsonRes('start_plan_and_execution', startPayload),
+      chatType: 'reAct',
+    })
+    for (const taskId of ['task-1', 'historical-task']) {
+      const detail = cloneDeep(DefaultPlanItemDetailsData)
+      detail.taskId = taskId
+      detail.uuid = `snapshot-${taskId}`
+      detail.todoList.items = [{ id: 'todo-1', content: '保留待办', status: 'PENDING', created_at: 1, updated_at: 1 }]
+      detail.skills.fixed = [{ name: 'skill-1', verbose_name: '技能', description: '保留技能', category: 'skill' }]
+      detail.execution = { ...detail.execution, http_flow_count: 7 }
+      detail.sessionSnapshotRevision = 5
+      detail.taskSnapshotRevision = 3
+      req.rawData.taskDetailsMap.set(taskId, detail)
+    }
+    const detailsBeforeStart = cloneDeep(req.rawData.taskDetailsMap)
+
+    aiOtherDataHandlers.start_plan_and_execution(req)
+
+    expect(req.rawData.taskDetailsMap).toEqual(detailsBeforeStart)
   })
 
   it('D2: start does not reset current plan tree', () => {
@@ -188,6 +212,7 @@ describe('aiOther task plan gate', () => {
     expect(req.store.getState().focusMode).toBe('focus-a')
     expect(req.store.getState().currentPlan).toEqual(DefaultCurrentExecTaskTree)
     expect(req.store.getState().chatTodoListUpdate).toBe(1)
+    expect(req.store.getState().taskDetailsUpdate).toBe(1)
     expect(req.rawData.taskDetailsMap.has('q-normal')).toBe(true)
     expect(req.rawData.contents.get('q-normal')?.type).toBe(AIChatQSDataTypeEnum.QUESTION)
     expect(sendRequest).toHaveBeenCalledWith({

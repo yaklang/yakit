@@ -1,0 +1,25 @@
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: 100%;
+  min-height: 0;
+}
+
+.toolbar {
+  display: flex;
+  flex: none;
+  align-items: center;
+}
+
+.search {
+  flex: 1;
+  min-width: 0;
+  margin-right: 4px;
+}
+
+.list-spin {
+  flex: 1;
+  min-height: 0;
+  height: auto;
+}
