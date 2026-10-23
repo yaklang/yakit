@@ -40,7 +40,11 @@ function Fixture() {
       contents.clear()
       store.setState({ questionPanelTokens: [], questionPanelRevision: 0 })
       const request =
-        name === 'question' ? (options.form ? questionForm : question)(options.mode, options.deadline) : undefined
+        name === 'question'
+          ? options.form
+            ? questionForm(options.mode, options.deadline, options.form === 'typed')
+            : question(options.mode, options.deadline)
+          : undefined
       const next = {
         ...base,
         id: request ? `ui-question:${request.id}` : `ui-component:${name}`,

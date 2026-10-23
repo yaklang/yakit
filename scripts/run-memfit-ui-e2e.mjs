@@ -8,6 +8,7 @@ import { createRequire } from 'node:module'
 import { catalog } from '../app/renderer/src/main/src/pages/ai-re-act/interactive-ui/catalog.mjs'
 import { examples } from '../e2e/fixtures/memfit-ui/examples.mjs'
 import { terminateProcessTree } from '../e2e/fixtures/process/process-tree.mjs'
+import { writeGallery } from '../e2e/fixtures/memfit-ui/report.mjs'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const fixture = path.join(root, 'e2e/fixtures/memfit-ui')
@@ -88,4 +89,6 @@ try {
   )
 } finally {
   await rm(temporary, { recursive: true, force: true })
+  await writeGallery(artifacts)
+  console.log(`[Memfit UI] screenshot gallery: ${path.join(artifacts, 'index.html')}`)
 }

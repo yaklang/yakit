@@ -11,11 +11,21 @@ yarn test:memfit-ui:all
 
 首次运行可能需要下载与 Electron 匹配的 ChromeDriver。Linux 无桌面时使用 `xvfb-run -a yarn test:memfit-ui:electron`。退出非零即验证失败。
 
-结果位于 `reports/e2e-electron/memfit-ui/<运行时间>/`：`results.json` 逐项记录结果；同时保存每个组件的亮暗主题截图、展开的 Tooltip/Popover、问答浮层截图，以及失败现场和运行日志。单测 JUnit 位于 `reports/junit.xml`。相关 PR 改动自动触发 `Memfit UI regression` workflow，并上传这些产物。
+结果位于 `reports/e2e-electron/memfit-ui/<运行时间>/`：打开 `index.html` 查看按 ask 问卷、ask 表单、render_ui 展示、非法输入分组的截图效果页，点击图片查看原图；`results.json` 逐项记录结果。也会保存失败现场和运行日志。单测 JUnit 位于 `reports/junit.xml`。相关 PR 改动自动触发 `Memfit UI regression` workflow，并上传这些产物；下载 artifact 后也可以直接打开效果页。
 
-当前 Electron 套件有 33 项检查，包含 1100px 亮色和 800px 暗色窗口。与 87 项模块及会话控制器测试一起，本地完整运行约 30–50 秒（不含首次安装依赖和下载驱动）。截图用于检查和定位，没有跨操作系统的像素基准比较。
+当前 Electron 套件有 43 项检查，包含 1100px 亮色和 800px 暗色窗口。与 87 项模块及会话控制器测试一起运行（耗时取决于机器，不含首次安装依赖和下载驱动）。截图用于检查和定位，没有跨操作系统的像素基准比较。
 
 表单的输入、验证与提交测试位于 ask 浮层场景；DataTable 只验证本地排序、筛选、分页，不包含用户答案回传。
+
+## 用户看到的两条路径
+
+| 路径 | 实际界面 | Electron 自动检查 |
+| --- | --- | --- |
+| ask + questions | 输入栏浮层内逐题展示单选/多选、自由文本；同步提示需要回答，异步提示任务继续 | 两种模式的亮暗主题、浮层边界、分页、IME、Esc 保留草稿、提交后的只读摘要 |
+| ask + form | 同一浮层内展示参数表单，不经过展示 catalog | 字符串、枚举、数值、布尔、多选、默认值不自动提交、非法值不发送、草稿恢复、类型保持、防重复提交 |
+| ask 关闭/到期 | 取消或跳过后关闭浮层；异步到期可补答，交互永久取消倒计时 | 不发送答案、终态不再出现提交按钮、到期恢复、真实输入后不再到期 |
+| render_ui | 消息中的图表、表格、指标、提示与分组视图 | 全部 12 组件亮暗主题、无横向溢出、图表图例、表格本地操作、Tabs 与浮层；不发送用户回答 |
+| render_ui 越界输入 | 文字降级与诊断，不显示可填写组件 | ParameterForm、action、bindings 均不产生输入表单或答案回传 |
 
 ## 新增组件时
 
