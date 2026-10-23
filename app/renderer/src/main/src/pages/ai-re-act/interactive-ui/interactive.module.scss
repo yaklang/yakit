@@ -37,6 +37,15 @@
 .actions {
   margin-top: 12px;
 }
+.questionActionGroup {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.questionSecondaryActions {
+  margin-inline-start: auto;
+}
 .prompt {
   margin: 8px 0;
 }

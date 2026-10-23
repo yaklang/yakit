@@ -424,34 +424,38 @@ export function QuestionCard({
             )
           )}
           <div className={styles.actions}>
-            {!form && (
-              <YakitButton
-                type="outline2"
-                disabled={page === 0 || busy}
-                onClick={() => save({ ...current.current, page: page - 1 })}
-              >
-                {t('InteractiveUI.previous')}
+            <div className={styles.questionActionGroup}>
+              {!form && (
+                <YakitButton
+                  type="outline2"
+                  disabled={page === 0 || busy}
+                  onClick={() => save({ ...current.current, page: page - 1 })}
+                >
+                  {t('InteractiveUI.previous')}
+                </YakitButton>
+              )}
+              <YakitButton type="primary" loading={busy} onClick={nextPage}>
+                {form || page === questions.length - 1 ? t('InteractiveUI.submit') : t('InteractiveUI.next')}
               </YakitButton>
-            )}
-            <YakitButton type="text2" disabled={busy} onClick={skip}>
-              {t('InteractiveUI.skipQuestion')}
-            </YakitButton>
-            {request.mode === 'blocking' && request.state === 'pending' && (
-              <YakitButton
-                type="text2"
-                disabled={busy}
-                onClick={() => {
-                  void control('cancel')
-                    .then(() => save({ ...current.current, collapsed: true, outcome: 'cancelled' }))
-                    .catch((reason) => setError(String(reason)))
-                }}
-              >
-                {t('InteractiveUI.cancelWait')}
+            </div>
+            <div className={`${styles.questionActionGroup} ${styles.questionSecondaryActions}`}>
+              {request.mode === 'blocking' && request.state === 'pending' && (
+                <YakitButton
+                  type="text2"
+                  disabled={busy}
+                  onClick={() => {
+                    void control('cancel')
+                      .then(() => save({ ...current.current, collapsed: true, outcome: 'cancelled' }))
+                      .catch((reason) => setError(String(reason)))
+                  }}
+                >
+                  {t('InteractiveUI.cancelWait')}
+                </YakitButton>
+              )}
+              <YakitButton type="text2" disabled={busy} onClick={skip}>
+                {t('InteractiveUI.skipQuestion')}
               </YakitButton>
-            )}
-            <YakitButton type="primary" loading={busy} onClick={nextPage}>
-              {form || page === questions.length - 1 ? t('InteractiveUI.submit') : t('InteractiveUI.next')}
-            </YakitButton>
+            </div>
           </div>
         </>
       )}
