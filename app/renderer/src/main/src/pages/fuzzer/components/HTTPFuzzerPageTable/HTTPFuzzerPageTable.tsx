@@ -989,26 +989,23 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
       }
     }, [currentSelectItem, currentSelectShowType])
 
+    const requestRawValue = useMemo(
+      () => (currentSelectItem?.RequestRaw && Uint8ArrayToString(currentSelectItem.RequestRaw)) || '',
+      [currentSelectItem?.RequestRaw],
+    )
+    const responseRawValue = useMemo(
+      () => (currentSelectItem?.ResponseRaw && Uint8ArrayToString(currentSelectItem.ResponseRaw)) || '',
+      [currentSelectItem?.ResponseRaw],
+    )
     const originReqOrResValue = useMemo(() => {
-      const value = currentSelectShowType === 'request' ? currentSelectItem?.RequestRaw : currentSelectItem?.ResponseRaw
-      return (value && Uint8ArrayToString(value)) || ''
-    }, [currentSelectShowType, currentSelectItem?.RequestRaw, currentSelectItem?.ResponseRaw])
+      return currentSelectShowType === 'request' ? requestRawValue : responseRawValue
+    }, [currentSelectShowType, requestRawValue, responseRawValue])
 
     const contextMenuPacket = useMemo(() => {
-      let peerValue: string = ''
-      if (currentSelectShowType === 'response') {
-        if (currentSelectItem?.RequestRaw) {
-          peerValue = Uint8ArrayToString(currentSelectItem?.RequestRaw)
-        }
-      } else {
-        if (currentSelectItem?.ResponseRaw) {
-          peerValue = Uint8ArrayToString(currentSelectItem?.ResponseRaw)
-        }
-      }
       return {
-        peerValue: peerValue,
+        peerValue: currentSelectShowType === 'response' ? requestRawValue : responseRawValue,
       }
-    }, [currentSelectShowType, currentSelectItem?.RequestRaw, currentSelectItem?.ResponseRaw])
+    }, [currentSelectShowType, requestRawValue, responseRawValue])
 
     const copyUrl = useMemoizedFn(() => {
       if (currentSelectItem?.RequestRaw) {
@@ -1174,7 +1171,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                 }}
                 isAddOverlayWidget={showResponseInfoSecondEditor}
                 contextMenu={responseEditorRightMenu}
-                webFuzzerValue={Uint8ArrayToString(currentSelectItem?.RequestRaw || new Uint8Array())}
+                webFuzzerValue={requestRawValue}
                 extraEditorProps={{
                   isShowSelectRangeMenu: true,
                 }}

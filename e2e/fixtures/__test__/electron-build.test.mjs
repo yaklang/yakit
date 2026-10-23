@@ -350,11 +350,7 @@ describe('Electron bundle contract', () => {
     async (name) => {
       const exposed = {}
       const ipcRenderer = Object.assign(new EventEmitter(), { send: vi.fn(), invoke: vi.fn(), sendSync: vi.fn() })
-      const process = Object.assign(new EventEmitter(), {
-        argv: [],
-        getHeapStatistics: () => ({ usedHeapSize: 1024, heapSizeLimit: 2048, totalAvailableSize: 1024 }),
-        getBlinkMemoryInfo: () => ({ allocated: 1024, total: 2048 }),
-      })
+      const process = Object.assign(new EventEmitter(), { argv: [] })
       const window = { addEventListener: vi.fn() }
       vm.runInNewContext(await readFile(path.join(output, `preload/${name}.js`), 'utf8'), {
         require: (id) => {

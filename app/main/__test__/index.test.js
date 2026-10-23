@@ -38,7 +38,7 @@ const loadIndex = (platform, opts = {}) => {
       exit: calls.appExit,
       quit: vi.fn(),
       relaunch: vi.fn(),
-      commandLine: { hasSwitch: () => false, getSwitchValue: () => '', removeSwitch: vi.fn() },
+      commandLine: { hasSwitch: () => false, getSwitchValue: () => '', appendSwitch: vi.fn(), removeSwitch: vi.fn() },
       getPath: vi.fn(),
       setPath: vi.fn(),
     },
@@ -115,7 +115,13 @@ const loadIndex = (platform, opts = {}) => {
   vm.runInNewContext(fs.readFileSync(path.resolve('app/main/index.js'), 'utf8'), sandbox)
   // whenReady 永不 resolve，手动注册全局 IPC 捕获 app-exit handler
   sandbox.registerGlobalIPC()
-  return { appExitHandler: ipcHandlers.get('app-exit'), timers, calls, dialog: electron.dialog }
+  return {
+    appExitHandler: ipcHandlers.get('app-exit'),
+    timers,
+    calls,
+    dialog: electron.dialog,
+    commandLine: electron.app.commandLine,
+  }
 }
 
 // 让确认框返回可控 Promise，返回用于触发用户选择的 resolve 函数
@@ -129,6 +135,11 @@ const deferDialog = (dialog) => {
 const flushMicrotasks = () => new Promise((resolve) => setImmediate(resolve))
 
 describe('app-exit scheduling', () => {
+  it('registers enable-precise-memory-info for page-heap sampling', () => {
+    const { commandLine } = loadIndex('linux')
+    expect(commandLine.appendSwitch).toHaveBeenCalledWith('enable-precise-memory-info')
+  })
+
   it('defers cleanup to a macrotask with a 100 ms delay on linux', async () => {
     const { appExitHandler, timers, calls } = loadIndex('linux')
     await appExitHandler({}, { showCloseMessageBox: false })

@@ -1712,10 +1712,12 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
       flushFirstResponse()
     }
 
-    const releaseQueue: FuzzerResponse[] = []
+    // 淘汰行在表格节流刷新前仍可能挂在界面上，字节需保底存活一段时间，避免点到旧行时编辑器内容为空
+    const RELEASE_GRACE_MS = 2000
+    const releaseQueue: { item: FuzzerResponse; at: number }[] = []
     let releaseTimer: NodeJS.Timeout | null = null
     const scheduleRelease = (item: FuzzerResponse) => {
-      releaseQueue.push(item)
+      releaseQueue.push({ item, at: Date.now() })
       if (!releaseTimer) {
         releaseTimer = setInterval(() => {
           if (releaseQueue.length === 0) {
@@ -1723,13 +1725,16 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
             releaseTimer = null
             return
           }
-          // 每次释放 20 条旧数据
-          for (let i = 0; i < 20 && releaseQueue.length > 0; i++) {
-            const obj = releaseQueue.shift()!
-            obj.RequestRaw = null as unknown as Uint8Array
-            obj.ResponseRaw = null as unknown as Uint8Array
+          // 只释放已过保护期的行（队列头未到期即全部未到期）；批量随积压自适应，积压越深清得越快
+          const now = Date.now()
+          let batch = Math.max(50, Math.ceil(releaseQueue.length / 5))
+          while (batch > 0 && releaseQueue.length > 0 && now - releaseQueue[0].at >= RELEASE_GRACE_MS) {
+            const { item } = releaseQueue.shift()!
+            item.RequestRaw = null as unknown as Uint8Array
+            item.ResponseRaw = null as unknown as Uint8Array
+            batch--
           }
-        }, 1000)
+        }, 500)
       }
     }
 
@@ -3168,6 +3173,12 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     })
   })
 
+  const defaultHttpResponse = useMemo(
+    () =>
+      configKeepAlive ? Uint8ArrayToString(multipleReturnsHttpResponse.ResponseRaw || new Uint8Array()) || '' : '',
+    [configKeepAlive, multipleReturnsHttpResponse.ResponseRaw],
+  )
+
   return (
     <>
       <div className={styles['http-fuzzer-body']} ref={fuzzerRef}>
@@ -3191,13 +3202,9 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                     visible={advancedConfigShowVisible}
                     onInsertYakFuzzer={onInsertYakFuzzerFun}
                     onValuesChange={onGetFormValue}
-                    defaultHttpResponse={
-                      Uint8ArrayToString(multipleReturnsHttpResponse.ResponseRaw || new Uint8Array()) || ''
-                    }
+                    defaultHttpResponse={defaultHttpResponse}
                     webFuzzerValue={requestRef.current}
-                    outsideShowResponseMatcherAndExtraction={
-                      onlyOneResponse && !!Uint8ArrayToString(httpResponse.ResponseRaw)
-                    }
+                    outsideShowResponseMatcherAndExtraction={onlyOneResponse && !!httpResponse.ResponseRaw?.length}
                     onShowResponseMatcherAndExtraction={onShowResponseMatcherAndExtraction}
                     inViewportCurrent={inViewport === true}
                     id={props.id}
