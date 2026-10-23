@@ -66,6 +66,7 @@ const MCPHistory: React.FC = React.memo(() => {
   const [status, setStatus] = useState<HistoryStatus>('success')
   const [leftVisible, setLeftVisible] = useState(true)
   const [loading, setLoading] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
   const [histories, setHistories] = useState<MCPToolCallHistorySummary[]>([])
   const [total, setTotal] = useState(0)
   const [selected, setSelected] = useState<MCPToolCallHistorySummary>()
@@ -108,6 +109,7 @@ const MCPHistory: React.FC = React.memo(() => {
       if (requestID === requestIDRef.current) {
         loadingRef.current = false
         setLoading(false)
+        setRefreshing(false)
       }
     }
   })
@@ -433,6 +435,7 @@ const MCPHistory: React.FC = React.memo(() => {
                 disabled={loading}
                 onClick={() => {
                   pageRef.current = 1
+                  setRefreshing(true)
                   query(true)
                 }}
               />
@@ -454,7 +457,11 @@ const MCPHistory: React.FC = React.memo(() => {
             />
           </div>
           <div className={styles['history-list']}>
-            {histories.length === 0 && !loading ? (
+            {refreshing ? (
+              <div className={styles['history-list-loading']}>
+                <YakitSpin spinning />
+              </div>
+            ) : histories.length === 0 && !loading ? (
               <YakitEmpty title={t('MCPHistory.emptyList')} />
             ) : (
               <RollingLoadList<MCPToolCallHistorySummary>

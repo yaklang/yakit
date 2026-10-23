@@ -118,6 +118,8 @@ describe('AIMCP 服务器列表', () => {
     render(<AIMCP />)
     await screen.findByText('YakitEmpty.noData')
     expect(screen.queryByText(server.Name)).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'AIMCP.addMcp' }))
+    expect(showYakitModal).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ width: 600 }))
   })
 
   it('分组可折叠与展开，不重新查询列表', async () => {
@@ -140,11 +142,13 @@ describe('AIMCP 服务器列表', () => {
     expect(await screen.findByText('AIMCP.disableConfirm')).toBeInTheDocument()
     expect(grpcUpdateMCPServer).not.toHaveBeenCalled()
     fireEvent.click(screen.getByRole('button', { name: 'YakitButton.ok' }))
-    await waitFor(() =>
+    await waitFor(() => {
       expect(grpcUpdateMCPServer).toHaveBeenCalledExactlyOnceWith(
         expect.objectContaining({ ID: server.ID, Enable: false }),
-      ),
-    )
+      )
+      // 停用立刻查询详情，不等待启用那次的延迟
+      expect(getMCPServersById).toHaveBeenCalledExactlyOnceWith(server.ID)
+    })
     expect(within(group('disabledGroup')).getByText(server.Name)).toBeInTheDocument()
     expect(grpcGetAllMCPServers).toHaveBeenCalledTimes(1)
     expect(screen.queryByText('AIMCP.toolList')).not.toBeInTheDocument()
@@ -182,7 +186,43 @@ describe('AIMCP 服务器列表', () => {
     expect(screen.queryByText(server.Name)).not.toBeInTheDocument()
   })
 
-  it('启用后自动打开该服务器的工具列表', async () => {
+  it('启用服务器没有工具时展示暂无数据和刷新', async () => {
+    vi.mocked(getMCPServersById).mockResolvedValue({ ...server, Tools: [] })
+    render(<AIMCP />)
+    fireEvent.click(await screen.findByText(server.Name))
+    expect(await screen.findByText('YakitEmpty.noData')).toBeInTheDocument()
+    const nameNode = screen.getByTitle(server.Name)
+    expect(nameNode).toHaveTextContent(server.Name)
+    expect(nameNode.parentElement).toContainElement(screen.getByText('AIMCP.toolList'))
+    expect(screen.queryByText('YakitEmpty.noMoreData')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'AIMCP.enableTools' })).not.toBeInTheDocument()
+    fireEvent.click(await screen.findByRole('button', { name: 'YakitButton.refresh' }))
+    await waitFor(() => expect(getMCPServersById).toHaveBeenCalledTimes(2))
+  })
+
+  it('工具详情返回前不展示暂无数据', async () => {
+    let resolveTools!: (value: MCPServer) => void
+    vi.mocked(getMCPServersById).mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveTools = resolve
+        }),
+    )
+    render(<AIMCP />)
+    fireEvent.click(await screen.findByText(server.Name))
+    expect(await screen.findByText('AIMCP.toolList')).toBeInTheDocument()
+    expect(screen.queryByText('YakitEmpty.noData')).not.toBeInTheDocument()
+    await act(async () => {
+      resolveTools({
+        ...server,
+        Tools: [{ Name: 'echo tool', Description: 'echo desc', Params: [] }],
+      })
+    })
+    expect(await screen.findByText('echo tool')).toBeInTheDocument()
+    expect(screen.queryByText('YakitEmpty.noData')).not.toBeInTheDocument()
+  })
+
+  it('启用后延迟一秒再查询详情，且不打开工具列表', async () => {
     vi.mocked(grpcGetAllMCPServers).mockResolvedValueOnce(responseFor([disabledServer]))
     vi.mocked(getMCPServersById).mockResolvedValue({
       ...disabledServer,
@@ -190,14 +230,24 @@ describe('AIMCP 服务器列表', () => {
       Tools: [{ Name: 'echo tool', Description: 'echo desc', Params: [] }],
     })
     render(<AIMCP />)
+    const started = Date.now()
     fireEvent.click(await screen.findByRole('switch', { name: 'YakitButton.enable' }))
-    await screen.findByText('AIMCP.toolList')
-    expect(grpcUpdateMCPServer).toHaveBeenCalledExactlyOnceWith(
-      expect.objectContaining({ ID: disabledServer.ID, Enable: true }),
+    await waitFor(() =>
+      expect(grpcUpdateMCPServer).toHaveBeenCalledExactlyOnceWith(
+        expect.objectContaining({ ID: disabledServer.ID, Enable: true }),
+      ),
     )
-    expect(await screen.findByText('echo tool')).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: 'YakitButton.back' }))
-    expect(await screen.findByText(disabledServer.Name)).toBeInTheDocument()
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 500))
+    })
+    expect(getMCPServersById).not.toHaveBeenCalled()
+    expect(screen.queryByText('AIMCP.toolList')).not.toBeInTheDocument()
+    await waitFor(() => expect(getMCPServersById).toHaveBeenCalledExactlyOnceWith(disabledServer.ID), {
+      timeout: 2000,
+    })
+    expect(Date.now() - started).toBeGreaterThanOrEqual(900)
+    expect(screen.queryByText('echo tool')).not.toBeInTheDocument()
+    expect(await screen.findByRole('switch', { name: 'YakitButton.deactivated' })).toBeInTheDocument()
   })
 
   it('启用结果晚于打开其他服务器返回时不覆盖当前工具页', async () => {
@@ -230,7 +280,8 @@ describe('AIMCP 服务器列表', () => {
     // 用户此时点开另一台服务器(sse server)的工具页
     fireEvent.click(screen.getByText(server.Name))
     await screen.findByText('tool-b')
-    // A 的启用结果迟到返回，不得把当前工具页覆盖为 A
+    // 启用详情要等 1 秒才发出；迟到返回后不得把当前工具页覆盖为 A
+    await waitFor(() => expect(getMCPServersById).toHaveBeenCalledWith(disabledServer.ID), { timeout: 2000 })
     await act(async () => {
       resolveEnableA(enabledA)
     })
@@ -418,16 +469,20 @@ describe('AIMCP 服务器列表', () => {
     expect(screen.getByText(server.Name)).toBeInTheDocument()
   })
 
-  it('编辑保存为启用态后直接打开工具列表，不再刷新列表', async () => {
-    vi.mocked(grpcGetAllMCPServers).mockResolvedValueOnce(responseFor([disabledServer]))
+  it('编辑保存为启用态后刷新列表且不打开工具列表', async () => {
+    const renamed = { ...disabledServer, Name: 'renamed server', Enable: true }
+    vi.mocked(grpcGetAllMCPServers)
+      .mockResolvedValueOnce(responseFor([disabledServer]))
+      .mockResolvedValueOnce(responseFor([renamed]))
     render(<AIMCP />)
     fireEvent.click(await screen.findByRole('button', { name: 'YakitButton.edit' }))
     const form = modalForm()
     await act(async () => {
-      form.props.onCancel({ ...disabledServer, Name: 'renamed server', Enable: true })
+      form.props.onCancel(renamed)
     })
-    await screen.findByText('AIMCP.toolList')
-    expect(grpcGetAllMCPServers).toHaveBeenCalledTimes(1)
+    await waitFor(() => expect(grpcGetAllMCPServers).toHaveBeenCalledTimes(2))
+    expect(screen.queryByText('AIMCP.toolList')).not.toBeInTheDocument()
+    expect(within(group('runningGroup')).getByText(renamed.Name)).toBeInTheDocument()
   })
 
   it('编辑保存未启用时仅刷新列表', async () => {

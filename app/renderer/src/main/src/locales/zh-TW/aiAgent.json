@@ -797,6 +797,7 @@
     "enableTools": "啟用工具",
     "description": "描述",
     "paramIntro": "引數介紹",
+    "addMcp": "新增 MCP",
     "addMcpServer": "新增MCP Server",
     "mcpServerConfig": "MCP伺服器配置",
     "editMcp": "修改MCP",
@@ -807,7 +808,7 @@
     "toolFetchFailed": "工具獲取失敗",
     "toolCount": "{{count}}個工具",
     "disableConfirm": "確定要停用 {{name}} 嗎？",
-    "runningGroup": "運行中",
+    "runningGroup": "啟用中",
     "disabledGroup": "已停用"
   },
   "AIMCPForm": {
