@@ -1,5 +1,5 @@
 import { KeyToIcon } from '@/pages/yakRunner/FileTree/icon'
-import { FolderOpenOutlined, FolderOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { FolderOpenOutlined, FolderOutlined, SearchOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { type FC, useEffect, useMemo, useRef, useState, type MouseEvent } from 'react'
 import styles from './FileTreeSystemItem.module.scss'
 import { onOpenLocalFileByPath } from '@/pages/notepadManage/notepadManage/utils'
@@ -12,6 +12,7 @@ import type { AIMentionCommandParams } from '../../aiMilkdownInput/aiMilkdownMen
 import emiter from '@/utils/eventBus/eventBus'
 import { customFolderStore } from '../store/useCustomFolder'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import type { InputRef } from 'antd'
 import { useMemoizedFn } from 'ahooks'
 import {
@@ -69,6 +70,7 @@ const FileTreeSystemItem: FC<FileTreeSystemItemProps> = ({
   setChecked,
   selected,
   setSelected,
+  onRootSearch,
 }) => {
   const { t, i18nRefresh } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const inputRef = useRef<InputRef>(null)
@@ -323,6 +325,14 @@ const FileTreeSystemItem: FC<FileTreeSystemItemProps> = ({
     })
   })
 
+  const showRootSearch = !!onRootSearch && isOpen && data.isFolder && data.depth === 1 && !isInput
+
+  const onClickRootSearch = useMemoizedFn((e: MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    onRootSearch?.(data.path)
+  })
+
   return (
     <div className={styles['file-tree-system-item']} onContextMenu={onContextMenu}>
       {checkable && (
@@ -360,8 +370,19 @@ const FileTreeSystemItem: FC<FileTreeSystemItemProps> = ({
           />
         </div>
       ) : (
-        <span>{data.name}</span>
+        <span className={styles['file-tree-name']}>{data.name}</span>
       )}
+      {showRootSearch ? (
+        <YakitButton
+          type="text2"
+          size="small"
+          className={styles['root-search-btn']}
+          title={t('YakitInput.search')}
+          data-testid="file-tree-root-search"
+          icon={<SearchOutlined color="currentColor" />}
+          onClick={onClickRootSearch}
+        />
+      ) : null}
     </div>
   )
 }

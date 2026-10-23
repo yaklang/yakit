@@ -1314,3 +1314,9 @@ const LanguageIds: Record<string, string> = {
   prolog: '_f_prolog',
   groovy: '_f_groovy',
 }
+
+/** 按文件名后缀取文件树 icon key（无后缀 / 未知后缀用 FileDefault） */
+export const getFileIconByName = (name: string): string => {
+  const suffix = name.includes('.') ? name.split('.').pop() || '' : ''
+  return suffix ? FileSuffix[suffix] || FileDefault : FileDefault
+}

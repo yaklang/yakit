@@ -1,5 +1,5 @@
 import type { FileNodeProps } from '@/pages/yakRunner/FileTree/FileTreeType'
-import { useEffect, useState, type FC } from 'react'
+import { useEffect, useMemo, useState, type FC } from 'react'
 import styles from './FilePreview.module.scss'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
@@ -12,8 +12,12 @@ import { yakitNotify } from '@/utils/notification'
 import type { FileInfo } from '../type'
 import { getLocalFileName } from '@/components/MilkdownEditor/CustomFile/utils'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import type { AIAgentFilePreviewHighlight } from '@/pages/ai-agent/aiChatContent/type'
 
-const FilePreview: FC<{ data?: FileNodeProps }> = ({ data }) => {
+const FilePreview: FC<{ data?: FileNodeProps; highlights?: AIAgentFilePreviewHighlight[] }> = ({
+  data,
+  highlights,
+}) => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const path = data?.path ?? ''
 
@@ -37,7 +41,7 @@ const FilePreview: FC<{ data?: FileNodeProps }> = ({ data }) => {
       const file = await getLocalFileName(path)
       setFileInfo({ path, size, isPlainText, content, language: monacaLanguageType(file.suffix) })
     } catch (err) {
-      yakitNotify('error', `Failed to load file:${err}`)
+      yakitNotify('error', t('FilePreview.loadFailed', { error: String(err) }))
     } finally {
       setLoading(false)
     }
@@ -50,6 +54,10 @@ const FilePreview: FC<{ data?: FileNodeProps }> = ({ data }) => {
       fetchFileInfo(path)
     }
   }, [path])
+
+  const highLightFind = useMemo(() => highlights || [], [highlights])
+  // 仅按 path 挂载编辑器：高亮变化走 highLightFind 更新装饰，避免同文件点不同行整实例重挂卡顿
+  const editorKey = fileInfo?.path || 'empty-editor'
 
   return (
     <div className={styles['file-preview']}>
@@ -66,11 +74,14 @@ const FilePreview: FC<{ data?: FileNodeProps }> = ({ data }) => {
           />
         ) : (
           <YakitEditor
-            key={fileInfo?.path || 'empty-editor'}
+            key={editorKey}
             value={fileInfo?.content}
             readOnly
             editorOperationRecord="YAK_RUNNNER_EDITOR_RECORF"
             type={fileInfo?.language === 'yak' ? 'yak' : 'plaintext'}
+            highLightFind={highLightFind}
+            highLightFindClass="hight-light-file-search-hit"
+            isPositionHighLightCursor={highLightFind.length > 0}
           />
         )}
       </YakitSpin>

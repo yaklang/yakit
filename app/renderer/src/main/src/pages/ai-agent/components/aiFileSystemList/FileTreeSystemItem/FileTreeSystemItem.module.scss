@@ -7,9 +7,11 @@
   gap: 2px;
   height: 22px;
   border-radius: 4px;
+  min-width: 0;
 
   .file-tree-input-wrapper {
     flex: 1;
+    min-width: 0;
     padding: 0 4px;
 
     .file-tree-input {
@@ -26,25 +28,55 @@
     }
   }
 
-  span {
+  .file-tree-name {
+    flex: 1;
+    min-width: 0;
     font-size: 12px;
+    line-height: 16px;
     color: var(--Colors-Use-Neutral-Text-1-Title);
     @include mixin.text-ellipsis(1, false, false, true);
   }
 
   img {
+    display: block;
+    flex-shrink: 0;
     width: 16px;
     height: 16px;
   }
 
   .folder-icon {
+    display: inline-flex;
     flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
     width: 16px;
     height: 16px;
+    line-height: 0;
 
     svg {
+      display: block;
       width: 16px;
       height: 16px;
     }
   }
+
+  .root-search-btn {
+    flex-shrink: 0;
+    margin-left: auto;
+    margin-right: 8px;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  &:hover .root-search-btn,
+  .root-search-btn:focus-visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+/* 仅悬浮显示，选中不常驻 */
+:global(.ant-tree-treenode:hover) .root-search-btn {
+  opacity: 1;
+  pointer-events: auto;
 }

@@ -95,6 +95,8 @@ function useFileTree(params: UseFileTreeParams) {
   // 文件树节点详情(不包含children数据)
   const nodeDetailMap = useRef<Map<string, FileNodeProps>>(new Map())
   const setNodeDetailMap = useMemoizedFn((node: FileNodeProps) => {
+    // 目录不可点选：写在建节点处，避免渲染前整树遍历打标
+    if (node.isFolder) node.selectable = false
     nodeDetailMap.current.set(node.path, { ...node, children: undefined })
   })
   const deleteNodeDetailMap = useMemoizedFn((path: string) => {

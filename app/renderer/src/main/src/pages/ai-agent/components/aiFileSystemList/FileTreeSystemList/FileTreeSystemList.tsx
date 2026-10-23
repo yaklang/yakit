@@ -38,6 +38,7 @@ const FileTreeSystemList = forwardRef<FileTreeSystemListRef, FileTreeSystemListP
     setSelected,
     onTreeDragStart,
     onTreeDragEnd,
+    onRootSearch,
     isShowRightMenu,
     treeMenuData,
     handleTreeDropdown,
@@ -184,6 +185,7 @@ const FileTreeSystemList = forwardRef<FileTreeSystemListRef, FileTreeSystemListP
         setChecked={(c) => setCheckedKeys?.(c, nodeData)}
         selected={selected}
         setSelected={setSelected}
+        onRootSearch={onRootSearch}
       />
     )
   })
@@ -209,6 +211,7 @@ const FileTreeSystemList = forwardRef<FileTreeSystemListRef, FileTreeSystemListP
           setExpandedKeys(keys as string[])
         }}
         onSelect={(_, { node }) => {
+          if (node.isFolder) return
           setSelected(node)
           if (node.isLeaf) {
             const checked = !!checkedKeys?.find((ele) => ele?.path === node.path)

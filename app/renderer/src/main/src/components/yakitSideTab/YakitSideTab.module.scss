@@ -64,6 +64,17 @@
 }
 .tab-wrap-vertical {
   flex-direction: row;
+  min-width: 0;
+  // 左侧竖向 tab：避免被右侧内容（如文件树 200% 滑动轨）挤压或盖住
+  > .yakit-side-tab {
+    flex-shrink: 0;
+    z-index: 1;
+  }
+  > :not(.yakit-side-tab) {
+    flex: 1 1 0;
+    min-width: 0;
+    overflow: hidden;
+  }
 }
 
 .yakit-side-tab {

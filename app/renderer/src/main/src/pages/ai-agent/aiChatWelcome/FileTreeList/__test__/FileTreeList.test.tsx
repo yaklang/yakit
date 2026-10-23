@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ReactNode } from 'react'
 import type * as ZustandModule from 'zustand'
@@ -20,6 +20,11 @@ vi.mock('@/i18n/useI18nNamespaces', () => ({
 }))
 vi.mock('../../AIChatWelcomeSideSetting', () => ({
   SideSettingButton: () => null,
+}))
+vi.mock('../FileTreeSearchView/FileTreeSearchView', () => ({
+  default: ({ scopePreset, scopePathPreset }: { scopePreset?: string; scopePathPreset?: string }) => (
+    <div data-testid="file-tree-search-view" data-scope={scopePreset ?? ''} data-scope-path={scopePathPreset ?? ''} />
+  ),
 }))
 vi.mock('@/utils/eventBus/eventBus', () => ({ default: { emit } }))
 vi.mock('@/utils/notification', () => ({ yakitNotify: vi.fn() }))
@@ -44,16 +49,23 @@ vi.mock('../../FileTreeDrop/FileTreeDrop', () => ({
   ),
 }))
 vi.mock('../../../components/aiFileSystemList/FileTreeSystemList/FileTreeSystemList', () => ({
-  default: ({ path, setSelected, onTreeDragStart, onTreeDragEnd }: FileTreeSystemListProps) => {
+  default: ({ path, setSelected, onTreeDragStart, onTreeDragEnd, onRootSearch }: FileTreeSystemListProps) => {
     return (
-      <button
-        draggable
-        onDragStart={onTreeDragStart}
-        onDragEnd={onTreeDragEnd}
-        onClick={() => setSelected({ path, name: path, isFolder: false } as FileNodeProps)}
-      >
-        {path}
-      </button>
+      <div>
+        <button
+          draggable
+          onDragStart={onTreeDragStart}
+          onDragEnd={onTreeDragEnd}
+          onClick={() => setSelected({ path, name: path, isFolder: false } as FileNodeProps)}
+        >
+          {path}
+        </button>
+        {onRootSearch ? (
+          <button data-testid={`file-tree-root-search-${path}`} onClick={() => onRootSearch(path)}>
+            root-search
+          </button>
+        ) : null}
+      </div>
     )
   },
 }))
@@ -62,6 +74,7 @@ beforeEach(() => {
   vi.clearAllMocks()
   session.id = 'session-1'
   aiPaths.splice(0, aiPaths.length, { path: 'ai-output', isFolder: true })
+  openedPaths.splice(0, openedPaths.length, { path: 'opened-file.txt', isFolder: false })
   vi.stubGlobal(
     'ResizeObserver',
     class {
@@ -117,7 +130,7 @@ describe('文件系统侧栏', () => {
     await waitFor(() => expect(within(aiTitle).getByText('1')).toBeInTheDocument())
   })
 
-  it('切换到没有文件的新会话后总数归零', async () => {
+  it('切换到没有文件的新会话后隐藏 AI Artifacts 分区', async () => {
     aiPaths.push({ path: 'report.txt', isFolder: false })
     const result = render(<FileTreeList setSelected={vi.fn()} />)
     await waitFor(() =>
@@ -126,10 +139,9 @@ describe('文件系统侧栏', () => {
     session.id = 'empty-session'
     aiPaths.splice(0)
     result.rerender(<FileTreeList setSelected={vi.fn()} />)
-    await waitFor(() =>
-      expect(within(screen.getByText('FileTreeSystem.aiArtifacts').parentElement!).getByText('0')).toBeInTheDocument(),
-    )
+    await waitFor(() => expect(screen.queryByText('FileTreeSystem.aiArtifacts')).not.toBeInTheDocument())
     expect(screen.queryByRole('button', { name: 'ai-output' })).not.toBeInTheDocument()
+    expect(screen.getByText('FileTreeSystem.myOpenedFiles')).toBeInTheDocument()
   })
 
   it('头部独立于分屏，两个打开操作位于我打开的文件标题栏', async () => {
@@ -146,6 +158,94 @@ describe('文件系统侧栏', () => {
     expect(openFileFolder).toHaveBeenLastCalledWith(false)
     fireEvent.click(within(openedHeader).getByRole('button', { name: 'YakitButton.openFolder' }))
     expect(openFileFolder).toHaveBeenLastCalledWith(true)
+  })
+
+  it('标题栏展示搜索 icon', () => {
+    render(<FileTreeList setSelected={vi.fn()} />)
+    expect(screen.getByTestId('file-tree-header-search')).toBeInTheDocument()
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
+  })
+
+  it('分区标题搜索进入对应范围：AI→ai文件夹，打开的文件→用户文件夹', async () => {
+    render(<FileTreeList setSelected={vi.fn()} />)
+    await screen.findByRole('button', { name: 'opened-file.txt' })
+
+    const aiHeader = screen.getByText('FileTreeSystem.aiArtifacts').parentElement!.parentElement!
+    fireEvent.click(within(aiHeader).getByTestId('file-tree-title-search'))
+    const searchView = screen.getByTestId('file-tree-search-view')
+    expect(screen.getByTestId('file-tree-view-track')).toHaveAttribute('data-show-second', 'true')
+    expect(searchView).toHaveAttribute('data-scope', 'ai')
+
+    fireEvent.click(screen.getByRole('button', { name: 'YakitButton.close' }))
+    expect(screen.getByTestId('file-tree-view-track')).toHaveAttribute('data-show-second', 'false')
+
+    const openedHeader = screen.getByText('FileTreeSystem.myOpenedFiles').parentElement!.parentElement!
+    fireEvent.click(within(openedHeader).getByTestId('file-tree-title-search'))
+    expect(screen.getByTestId('file-tree-view-track')).toHaveAttribute('data-show-second', 'true')
+    expect(screen.getByTestId('file-tree-search-view')).toHaveAttribute('data-scope', 'user')
+  })
+
+  it('我打开的文件根节点搜索进入用户范围并带上该路径', async () => {
+    openedPaths.splice(0, openedPaths.length, { path: 'qweq', isFolder: true })
+    render(<FileTreeList setSelected={vi.fn()} />)
+    await screen.findByRole('button', { name: 'qweq' })
+
+    // AI Artifacts 根不展示根搜索
+    expect(screen.queryByTestId('file-tree-root-search-ai-output')).not.toBeInTheDocument()
+    fireEvent.click(screen.getByTestId('file-tree-root-search-qweq'))
+
+    const searchView = screen.getByTestId('file-tree-search-view')
+    expect(screen.getByTestId('file-tree-view-track')).toHaveAttribute('data-show-second', 'true')
+    expect(searchView).toHaveAttribute('data-scope', 'user')
+    expect(searchView).toHaveAttribute('data-scope-path', 'qweq')
+  })
+
+  it('点击搜索切换到空白搜索界面，关闭后回到文件树且保留分屏', async () => {
+    const { container } = render(<FileTreeList setSelected={vi.fn()} />)
+    await screen.findByRole('button', { name: 'opened-file.txt' })
+    const searchView = screen.getByTestId('file-tree-search-view')
+    const split = container.querySelector<HTMLElement>('[data-split-view-id]')!
+    const sash = split.firstElementChild!.firstElementChild as HTMLElement
+    await waitFor(() => expect(sash.style.top).toBe('160px'))
+
+    expect(searchView.closest('[aria-hidden="true"]')).toBeTruthy()
+    expect(split.closest('[aria-hidden="false"]')).toBeTruthy()
+
+    fireEvent.mouseDown(sash, { clientX: 150, clientY: 160 })
+    fireEvent.mouseMove(split, { clientX: 150, clientY: 220 })
+    await waitFor(() => expect(sash.style.top).toBe('220px'))
+    fireEvent.mouseUp(document)
+
+    const track = screen.getByTestId('file-tree-view-track')
+    expect(track).toHaveAttribute('data-show-second', 'false')
+
+    // 切换搜索会触发父级重渲；越过 useThrottleEffect(200ms) trailing，
+    // 旧依赖 [elements] 会把 sash 重置为 defaultSizes(160px)，新依赖 [elements.length] 应保持 220px
+    fireEvent.click(screen.getByTestId('file-tree-header-search'))
+    expect(track).toHaveAttribute('data-show-second', 'true')
+    expect(searchView.closest('[aria-hidden="false"]')).toBeTruthy()
+    expect(split.closest('[aria-hidden="true"]')).toBeTruthy()
+    expect(searchView).toHaveAttribute('data-scope', 'all')
+    expect(screen.getByText('YakitInput.search')).toBeInTheDocument()
+    expect(screen.queryByText('AITabs.fileSystem')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('file-tree-header-search')).not.toBeInTheDocument()
+    // 左右滑动切换，文件树不卸载
+    expect(screen.getByText('FileTreeSystem.aiArtifacts')).toBeInTheDocument()
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 250))
+    })
+    expect(sash.style.top).toBe('220px')
+
+    fireEvent.click(screen.getByRole('button', { name: 'YakitButton.close' }))
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 250))
+    })
+    expect(track).toHaveAttribute('data-show-second', 'false')
+    expect(searchView.closest('[aria-hidden="true"]')).toBeTruthy()
+    expect(split.closest('[aria-hidden="false"]')).toBeTruthy()
+    expect(screen.getByText('AITabs.fileSystem')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'opened-file.txt' })).toBeInTheDocument()
+    expect(sash.style.top).toBe('220px')
   })
 
   it('拖动真实 SplitView 分隔线调整两块高度，文件选择和拖拽回调仍生效', async () => {

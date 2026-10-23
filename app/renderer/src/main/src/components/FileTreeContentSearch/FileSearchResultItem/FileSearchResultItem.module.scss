@@ -1,0 +1,104 @@
+.result-file {
+  margin-bottom: 8px;
+}
+
+.result-file-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  border-radius: 4px;
+
+  // 挂在容器上，不与 YakitButton hover 抢优先级
+  &:hover {
+    background-color: var(--Colors-Use-Neutral-Bg-Hover);
+  }
+}
+
+.result-file-chevron {
+  display: inline-flex;
+  transition: transform 0.15s ease;
+
+  svg {
+    width: 12px;
+    height: 12px;
+  }
+}
+
+.result-file-chevron-collapsed {
+  transform: rotate(-90deg);
+}
+
+.result-file-main {
+  flex: 1;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  padding: 4px 8px 4px 0;
+  border-radius: 4px;
+  text-align: left;
+}
+
+.result-file-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.result-file-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.result-file-count {
+  flex-shrink: 0;
+}
+
+.result-line {
+  width: 100%;
+  height: auto;
+  display: inline-flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 8px;
+  padding: 2px 8px 2px 22px;
+  border-radius: 4px;
+  text-align: left;
+
+  &:hover {
+    background-color: var(--Colors-Use-Neutral-Bg-Hover) !important;
+  }
+}
+
+.result-line-no {
+  flex-shrink: 0;
+  min-width: 24px;
+  text-align: right;
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  font-size: 12px;
+  line-height: 18px;
+  user-select: none;
+}
+
+.result-line-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--Colors-Use-Neutral-Text-2-Primary);
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.result-line-hit {
+  background-color: var(--yakit-colors-Yellow-40);
+}

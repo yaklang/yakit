@@ -75,6 +75,44 @@ const submit = async (name: string) => {
 }
 
 describe('FileTreeSystemItem（启用 React Compiler）', () => {
+  it('我打开的文件根文件夹展示搜索按钮并可回调路径', () => {
+    const onRootSearch = vi.fn()
+    render(
+      <FileTreeSystemItem
+        watchToken="watch"
+        isOpen
+        data={{ ...base, name: 'qweq', path: '/tmp/qweq', parent: null, isFolder: true, depth: 1 }}
+        setSelected={vi.fn()}
+        onRootSearch={onRootSearch}
+      />,
+    )
+    fireEvent.click(screen.getByTestId('file-tree-root-search'))
+    expect(onRootSearch).toHaveBeenCalledWith('/tmp/qweq')
+  })
+
+  it('非根或非打开列表不展示根搜索按钮', () => {
+    const onRootSearch = vi.fn()
+    const { rerender } = render(
+      <FileTreeSystemItem
+        watchToken="watch"
+        isOpen
+        data={{ ...base, isFolder: true, depth: 2 }}
+        setSelected={vi.fn()}
+        onRootSearch={onRootSearch}
+      />,
+    )
+    expect(screen.queryByTestId('file-tree-root-search')).not.toBeInTheDocument()
+    rerender(
+      <FileTreeSystemItem
+        watchToken="watch"
+        data={{ ...base, isFolder: true, depth: 1 }}
+        setSelected={vi.fn()}
+        onRootSearch={onRootSearch}
+      />,
+    )
+    expect(screen.queryByTestId('file-tree-root-search')).not.toBeInTheDocument()
+  })
+
   it('收到新的重命名请求时重置输入，普通重渲染保留正在编辑的内容', () => {
     const props = { watchToken: 'watch', setSelected: vi.fn() }
     const { rerender } = render(<FileTreeSystemItem {...props} data={base} />)

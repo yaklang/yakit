@@ -80,12 +80,13 @@ import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { getMapFileDetail, removeMapFileDetail, setMapFileDetail } from '../FileTreeMap/FileMap'
 import { getMapFolderDetail, setMapFolderDetail } from '../FileTreeMap/ChildMap'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
-import { openFolder } from '../RunnerFileTree/RunnerFileTree'
+import { openFolder } from '../RunnerFileTree/openFolder'
 import type { JumpToEditorProps } from '../BottomEditorDetails/BottomEditorDetailsType'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import type { OtherMenuListProps } from '@/components/yakitUI/YakitEditor/YakitEditorType'
 import { fetchCursorContent, fetchSelectionRange } from '@/components/yakitUI/YakitEditor/editorUtils'
 import { useYakRunnerAiAttachRef } from '../YakRunnerAiAttachContext'
+import { getRunnerEditorHighlightProps } from './runnerTabHighlightProps'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -1340,8 +1341,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
           type={editorInfo?.language}
           value={editorInfo?.code || ''}
           setValue={setYakitEditorValue}
-          highLightText={editorInfo?.highLightRange ? [editorInfo?.highLightRange] : undefined}
-          highLightClass="hight-light-yak-runner-color"
+          {...getRunnerEditorHighlightProps(editorInfo?.highLightRange)}
           contextMenu={rightContextMenu}
         />
       )}

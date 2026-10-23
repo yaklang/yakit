@@ -1,0 +1,185 @@
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useMemoizedFn } from 'ahooks'
+import { v4 as uuidv4 } from 'uuid'
+import { yakitNotify } from '@/utils/notification'
+import i18n from '@/i18n/i18n'
+import { FileTreeSearchType, type FileTreeSearchTypeValue } from '../constants'
+import {
+  cancelGrpcSearchFileContent,
+  FILE_SEARCH_UNSUPPORTED_ENGINE,
+  grpcSearchFileContent,
+  mergeFileSearchItems,
+} from '../utils'
+import type { FileSearchFileItem } from '../type'
+
+const t = i18n.getFixedT(null, 'aiAgent')
+
+export interface UseFileContentSearchOptions {
+  /** 搜索根路径列表（展示 / hasSearchPath） */
+  roots: { path: string }[]
+  /**
+   * Enter 搜索时解析根路径（优先于静态 roots）。
+   * AI 侧异步范围时传入，避免用到切范围后尚未更新的旧/空 roots。
+   */
+  resolveRoots?: () => Promise<{ path: string }[]> | { path: string }[]
+}
+
+/**
+ * @name 文件内容搜索（通用）
+ * @description 按 roots / resolveRoots 调用 RequestYakURL op=search；
+ * Enter 手动搜；搜索类型 / roots 变化且有关键字时自动重搜
+ */
+export const useFileContentSearch = (options: UseFileContentSearchOptions) => {
+  const { roots, resolveRoots } = options
+  const [searchType, setSearchType] = useState<FileTreeSearchTypeValue>(FileTreeSearchType.Keyword)
+  const [keyword, setKeyword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [searched, setSearched] = useState(false)
+  const [results, setResults] = useState<FileSearchFileItem[]>([])
+  const requestIdRef = useRef(0)
+  const searchTokensRef = useRef<string[]>([])
+  /** roots 首次从空到有值只做初始化，不触发自动重搜 */
+  const rootsReadyRef = useRef(false)
+
+  const rootsKey = useMemo(() => roots.map((item) => item.path).join('\0'), [roots])
+  const hasSearchPath = useMemo(() => roots.some((item) => !!item.path?.trim()), [rootsKey])
+
+  const cancelInFlight = useMemoizedFn(() => {
+    const tokens = searchTokensRef.current
+    searchTokensRef.current = []
+    tokens.forEach((token) => {
+      void cancelGrpcSearchFileContent(token)
+    })
+  })
+
+  const onCancelSearch = useMemoizedFn(() => {
+    if (!loading) return
+    cancelInFlight()
+    requestIdRef.current += 1
+    setLoading(false)
+  })
+
+  /** 关闭搜索面板时清空关键字与结果，并作废进行中请求 */
+  const onReset = useMemoizedFn(() => {
+    cancelInFlight()
+    requestIdRef.current += 1
+    setKeyword('')
+    setResults([])
+    setSearched(false)
+    setLoading(false)
+  })
+
+  const runSearchWithPaths = useMemoizedFn((text: string, paths: string[], requestId: number) => {
+    if (paths.length === 0) {
+      searchTokensRef.current = []
+      setResults([])
+      setSearched(true)
+      setLoading(false)
+      return
+    }
+    const tokens = paths.map(() => uuidv4())
+    searchTokensRef.current = tokens
+    setLoading(true)
+    setSearched(true)
+    Promise.allSettled(
+      paths.map((path, index) =>
+        grpcSearchFileContent({
+          path,
+          keyword: text,
+          regex: searchType === FileTreeSearchType.Regexp,
+          token: tokens[index],
+        }),
+      ),
+    ).then((all) => {
+      if (requestId !== requestIdRef.current) return
+      searchTokensRef.current = []
+      setLoading(false)
+      const items: FileSearchFileItem[] = []
+      let firstError = ''
+      all.forEach((settled) => {
+        if (settled.status === 'fulfilled') items.push(...settled.value)
+        else if (!firstError) {
+          firstError = settled.reason instanceof Error ? settled.reason.message : String(settled.reason ?? '')
+        }
+      })
+      setResults(mergeFileSearchItems(items))
+      if (firstError) {
+        const message =
+          firstError === FILE_SEARCH_UNSUPPORTED_ENGINE
+            ? t('FileTreeSearch.engineUnsupported')
+            : `${t('FileTreeSearch.searchFailed')}: ${firstError}`
+        yakitNotify('error', message)
+      }
+    })
+  })
+
+  const onSearch = useMemoizedFn((value?: string) => {
+    const text = value ?? keyword
+    cancelInFlight()
+    const requestId = ++requestIdRef.current
+    setResults([])
+
+    if (text.length === 0) {
+      setLoading(false)
+      setSearched(false)
+      return
+    }
+
+    setLoading(true)
+    setSearched(true)
+
+    const applyPaths = (list: { path: string }[]) => {
+      if (requestId !== requestIdRef.current) return
+      const paths = list.map((item) => item.path?.trim()).filter(Boolean) as string[]
+      runSearchWithPaths(text, paths, requestId)
+    }
+
+    if (!resolveRoots) {
+      applyPaths(roots)
+      return
+    }
+
+    Promise.resolve(resolveRoots())
+      .then(applyPaths)
+      .catch((err) => {
+        if (requestId !== requestIdRef.current) return
+        searchTokensRef.current = []
+        setLoading(false)
+        setResults([])
+        const message = err instanceof Error ? err.message : String(err ?? '')
+        yakitNotify('error', `${t('FileTreeSearch.searchFailed')}: ${message}`)
+      })
+  })
+
+  // 搜索类型或范围 roots 变化后，有关键字则自动重搜（不监听 keyword，避免输入过程触发）
+  useEffect(() => {
+    if (!rootsReadyRef.current) {
+      if (rootsKey) rootsReadyRef.current = true
+      return
+    }
+    if (keyword.length === 0) return
+    onSearch()
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 仅 searchType / roots 变化时重搜
+  }, [searchType, rootsKey])
+
+  useEffect(() => {
+    return () => {
+      cancelInFlight()
+      requestIdRef.current += 1
+    }
+  }, [cancelInFlight])
+
+  return {
+    keyword,
+    setKeyword,
+    searchType,
+    setSearchType,
+    loading,
+    searched,
+    hasSearchPath,
+    results,
+    onSearch,
+    onCancelSearch,
+    onReset,
+  }
+}

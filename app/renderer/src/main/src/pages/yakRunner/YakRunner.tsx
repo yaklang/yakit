@@ -29,6 +29,7 @@ import {
   saveYakRunnerUnsavedFile,
   updateAreaFileInfo,
 } from './utils'
+import { clearFileSearchHighlights } from './clearFileSearchHighlights'
 import type { AreaInfoProps, OpenFileByPathProps, YakRunnerHistoryProps, YakRunnerProps } from './YakRunnerType'
 import { failed, success, yakitNotify } from '@/utils/notification'
 import YakRunnerContext, { type YakRunnerContextDispatcher, type YakRunnerContextStore } from './hooks/YakRunnerContext'
@@ -333,6 +334,13 @@ const YakRunnerWorkbench: React.FC<YakRunnerProps> = (props) => {
 
   // 是否正在读取中
   const isReadingRef = useRef<boolean>(false)
+  /** 搜索结束后清空已打开文件上的搜索高亮 */
+  const onClearFileSearchHighlightsFun = useMemoizedFn(() => {
+    const next = clearFileSearchHighlights(areaInfo, activeFile)
+    if (next.areaChanged) setAreaInfo(next.areaInfo)
+    if (next.activeChanged) setActiveFile(next.activeFile)
+  })
+
   const onOpenFileByPathFun = useMemoizedFn(async (data) => {
     try {
       const { params, isHistory } = JSON.parse(data) as OpenFileByPathProps
@@ -480,6 +488,8 @@ const YakRunnerWorkbench: React.FC<YakRunnerProps> = (props) => {
     emiter.on('onRefreshTree', onRefreshTreeFun)
     // 通过路径打开文件
     emiter.on('onOpenFileByPath', onOpenFileByPathFun)
+    // 搜索结束后清空搜索高亮
+    emiter.on('onClearFileSearchHighlights', onClearFileSearchHighlightsFun)
     // 通过缓存文件路径读取文件内容
     emiter.on('onGetCodeByPathCache', onGetCodeByPathCacheFun)
     // 监听一级页面关闭事件
@@ -488,6 +498,7 @@ const YakRunnerWorkbench: React.FC<YakRunnerProps> = (props) => {
       emiter.off('onOpenFileTree', onOpenFileTreeFun)
       emiter.off('onRefreshTree', onRefreshTreeFun)
       emiter.off('onOpenFileByPath', onOpenFileByPathFun)
+      emiter.off('onClearFileSearchHighlights', onClearFileSearchHighlightsFun)
       emiter.off('onGetCodeByPathCache', onGetCodeByPathCacheFun)
       emiter.off('onCloseYakRunner', onCloseYakRunnerFun)
     }

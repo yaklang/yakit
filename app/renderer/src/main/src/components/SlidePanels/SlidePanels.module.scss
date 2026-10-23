@@ -1,0 +1,35 @@
+/* absolute 避免 width:200% 撑大 flex min-content，导致侧栏盖住左侧竖向 tab */
+.root {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.track {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  width: 200%;
+  height: 100%;
+  transform: translateX(0);
+  transition: transform 0.25s ease;
+}
+
+.track-second {
+  transform: translateX(-50%);
+}
+
+.panel {
+  width: 50%;
+  height: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  &[aria-hidden='true'] {
+    pointer-events: none;
+  }
+}

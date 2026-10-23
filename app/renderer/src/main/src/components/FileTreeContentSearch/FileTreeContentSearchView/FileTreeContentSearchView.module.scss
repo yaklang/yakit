@@ -1,0 +1,87 @@
+.file-tree-search-view {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.search-bar {
+  flex-shrink: 0;
+  padding: 8px 12px 0;
+}
+
+.combination-search {
+  :global {
+    .ant-space-compact {
+      align-items: stretch;
+    }
+  }
+}
+
+.scope-bar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 4px 12px 0;
+}
+
+.scope-bar-extra {
+  // 短文案时宽度随内容，Tag 紧挨下拉；超长时再收缩省略
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+
+  // Dropdown 触发器外包一层时仍能收缩并省略长文件名
+  :global(.ant-dropdown-trigger),
+  > * {
+    max-width: 100%;
+    min-width: 0;
+  }
+}
+
+.scope-result-total {
+  flex-shrink: 0;
+}
+
+.results {
+  flex: 1;
+  min-height: 0;
+  margin-top: 8px;
+  overflow-y: auto;
+  padding: 0 4px 8px 12px;
+  display: flex;
+  flex-direction: column;
+}
+
+.loading {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.loading-spin {
+  width: auto;
+  height: auto;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+}
+
+.empty {
+  padding-top: 24px;
+}
