@@ -10,4 +10,6 @@ export type HistoryEventProps = {
   onGetOtherPageAdvancedSearchDataEvent: string
   /** History 高级设置变更框选开关 */
   onTableDragSelectEnabledChange: string
+  /** HTTPFlowTable 屏蔽列表已写入远端，其它页签标记脏再拉 */
+  onHTTPFlowTableShieldDataChanged?: string
 }

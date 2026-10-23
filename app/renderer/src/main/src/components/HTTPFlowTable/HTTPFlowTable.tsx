@@ -1145,6 +1145,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   }, [onGetOtherPageAdvancedSearchData, updateAdvancedSearch])
   const handleShieldDataUpdate = useMemoizedFn(() => {
     setRemoteValue(HTTP_FLOW_TABLE_SHIELD_DATA, JSON.stringify(shieldData))
+    emiter.emit('onHTTPFlowTableShieldDataChanged', '')
     const lastPickData = shieldData.data.slice(-SHIELD_MAX_LIMIT)
     const { shieldIds, shieldHosts } = splitHTTPFlowTableShieldData(lastPickData)
 
@@ -1175,6 +1176,16 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     if (!inViewport) return
     if (shieldListLoadedRef.current) return
     getShieldList()
+  }, [inViewport])
+  useEffect(() => {
+    const onShieldDataChanged = () => {
+      shieldListLoadedRef.current = false
+      if (inViewport) getShieldList()
+    }
+    emiter.on('onHTTPFlowTableShieldDataChanged', onShieldDataChanged)
+    return () => {
+      emiter.off('onHTTPFlowTableShieldDataChanged', onShieldDataChanged)
+    }
   }, [inViewport])
   useEffect(() => {
     if (inViewport) {
