@@ -2,7 +2,6 @@ import type React from 'react'
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import MCPHistory from '../MCPHistory'
-import styles from '../MCPHistory.module.scss'
 import {
   grpcDeleteMCPToolCallHistory,
   grpcGetMCPToolCallHistoryDetail,
@@ -128,12 +127,12 @@ describe('MCPHistory 调用历史', () => {
     fireEvent.click(screen.getByTitle('YakitButton.refresh'))
     expect(screen.queryByText('encode-tool')).not.toBeInTheDocument()
     expect(screen.queryByText('MCPHistory.emptyList')).not.toBeInTheDocument()
-    expect(document.querySelector(`.${styles['history-list-loading']}`)).toBeInTheDocument()
+    expect(document.querySelector('.ant-spin-spinning')).toBeInTheDocument()
     await act(async () => {
       resolveRefresh(responseFor([summary(3, 'refreshed-tool')]))
     })
     expect(await screen.findByText('refreshed-tool')).toBeInTheDocument()
-    expect(document.querySelector(`.${styles['history-list-loading']}`)).not.toBeInTheDocument()
+    expect(document.querySelector('.ant-spin-spinning')).not.toBeInTheDocument()
   })
 
   it('默认按成功状态查询第一页', async () => {
