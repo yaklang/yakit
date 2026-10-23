@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
+import vm from 'node:vm'
 import { EventEmitter } from 'node:events'
 import { createRequire } from 'node:module'
 import {
@@ -17,6 +18,47 @@ import {
 } from '../rendererDiagnostics'
 
 const require = createRequire(import.meta.url)
+
+describe('MEMORY_PAGE_SCRIPT', () => {
+  const sample = (performance) => vm.runInNewContext(MEMORY_PAGE_SCRIPT, { performance })
+
+  it('reads performance.memory and rounds bytes to KiB', () => {
+    const memory = {
+      usedJSHeapSize: 90 * 1024 + 512,
+      jsHeapSizeLimit: 256 * 1024,
+    }
+    let reads = 0
+    expect(
+      sample({
+        get memory() {
+          reads += 1
+          return memory
+        },
+      }),
+    ).toEqual({ usedHeapKB: 91, heapLimitKB: 256 })
+    expect(reads).toBe(1)
+    expect(sample({ memory: { usedJSHeapSize: 0, jsHeapSizeLimit: 1024 } })).toEqual({
+      usedHeapKB: 0,
+      heapLimitKB: 1,
+    })
+  })
+
+  it('returns null when the page heap API is missing', () => {
+    expect(sample(undefined)).toBeNull()
+    expect(sample({})).toBeNull()
+    expect(sample({ memory: null })).toBeNull()
+    expect(sample({ memory: undefined })).toBeNull()
+  })
+
+  it('returns null for non-finite usage or a non-positive heap limit', () => {
+    const jsHeapSizeLimit = 4096
+    expect(sample({ memory: { usedJSHeapSize: Number.NaN, jsHeapSizeLimit } })).toBeNull()
+    expect(sample({ memory: { usedJSHeapSize: Number.POSITIVE_INFINITY, jsHeapSizeLimit } })).toBeNull()
+    expect(sample({ memory: { usedJSHeapSize: undefined, jsHeapSizeLimit } })).toBeNull()
+    expect(sample({ memory: { usedJSHeapSize: 2048, jsHeapSizeLimit: 0 } })).toBeNull()
+    expect(sample({ memory: { usedJSHeapSize: 2048, jsHeapSizeLimit: -1024 } })).toBeNull()
+  })
+})
 
 describe('renderer diagnostics', () => {
   let root
