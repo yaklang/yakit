@@ -2,6 +2,8 @@ export type AIReActEventProps = {
   /**string>{AIAgentTriggerEventInfo} */
   onReActChatEvent: string
   switchAIActTab?: string
+  /** 文件内容搜索结束后清空已打开预览上的搜索高亮（无 payload） */
+  clearAIFilePreviewSearchHighlights?: string
   /**
    * string>{AIAgentTriggerEventInfo}
    */

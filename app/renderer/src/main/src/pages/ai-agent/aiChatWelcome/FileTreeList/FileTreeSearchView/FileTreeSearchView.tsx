@@ -8,6 +8,7 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
   FileTreeContentSearchView,
   resolveOpenHighlights,
+  useClearFileSearchHighlights,
   type FileSearchFileItem,
   type FileSearchLine,
   type FileTreeSearchEmptyContext,
@@ -294,6 +295,10 @@ const FileTreeSearchView: React.FC<FileTreeSearchViewProps> = ({
     })
   })
 
+  const { onSearchSettled } = useClearFileSearchHighlights(!!active, () => {
+    emiter.emit('clearAIFilePreviewSearchHighlights')
+  })
+
   // 空态与工具栏共用 scopeMenu；切范围后 roots 变化触发自动重搜
   const emptyDescription = useMemo(
     () =>
@@ -343,6 +348,7 @@ const FileTreeSearchView: React.FC<FileTreeSearchViewProps> = ({
       roots={roots}
       resolveRoots={resolveRoots}
       onOpen={onOpenFile}
+      onSearchSettled={onSearchSettled}
       toolbarExtra={toolbarExtra}
       emptyDescription={emptyDescription}
       data-testid="file-tree-search-view"

@@ -1,6 +1,6 @@
 import { act, renderHook, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import type { FileSearchFileItem } from '../type'
+import type { FileSearchFileItem } from '../../type'
 
 const { mockSearch, mockCancel, mockNotify } = vi.hoisted(() => ({
   mockSearch: vi.fn(),
@@ -12,7 +12,7 @@ vi.mock('@/utils/notification', () => ({ yakitNotify: mockNotify }))
 vi.mock('@/i18n/i18n', () => ({
   default: { getFixedT: () => (key: string) => key, on: vi.fn(), off: vi.fn() },
 }))
-vi.mock('../utils', async (importOriginal) => {
+vi.mock('../../utils', async (importOriginal) => {
   const actual = (await importOriginal()) as Record<string, unknown>
   return {
     ...actual,
@@ -249,5 +249,32 @@ describe('useFileContentSearch 竞态', () => {
       resolveFirst([sampleItem('stale.txt')])
     })
     expect(mockNotify).not.toHaveBeenCalled()
+  })
+
+  it('onReset 清空关键字与结果，并作废进行中请求', async () => {
+    let resolveFirst!: (value: FileSearchFileItem[]) => void
+    mockSearch.mockImplementationOnce(
+      () =>
+        new Promise<FileSearchFileItem[]>((resolve) => {
+          resolveFirst = resolve
+        }),
+    )
+
+    const { result } = renderHook(() => useFileContentSearch({ roots: [{ path: 'ai-output' }] }))
+    act(() => result.current.setKeyword('hello'))
+    act(() => result.current.onSearch('hello'))
+    expect(result.current.loading).toBe(true)
+
+    act(() => result.current.onReset())
+    expect(result.current.keyword).toBe('')
+    expect(result.current.results).toEqual([])
+    expect(result.current.searched).toBe(false)
+    expect(result.current.loading).toBe(false)
+    expect(mockCancel).toHaveBeenCalled()
+
+    await act(async () => {
+      resolveFirst([sampleItem('stale.txt')])
+    })
+    expect(result.current.results).toEqual([])
   })
 })

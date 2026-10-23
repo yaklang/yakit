@@ -823,6 +823,35 @@ describe('AIChatWorkspace 菜单切换', () => {
     })
   })
 
+  it('搜索结束后清空已打开预览上的高亮', async () => {
+    function Harness() {
+      const [filePreviewData, setFilePreviewData] = React.useState<
+        { name: string; path: string; isFolder?: boolean } | undefined
+      >()
+      return (
+        <AIChatWorkspace filePreviewData={filePreviewData as never} setFilePreviewData={setFilePreviewData as never} />
+      )
+    }
+    render(<Harness />)
+
+    await act(async () => {
+      emiter.emit(
+        'switchAIActTab',
+        JSON.stringify({
+          key: AITabsEnum.File_Preview,
+          value: '/tmp/a.txt',
+          highlights: [{ startLineNumber: 1, startColumn: 1, endLineNumber: 1, endColumn: 2 }],
+        }),
+      )
+    })
+    await waitFor(() => expect(screen.getByTestId('file-preview')).toHaveAttribute('data-highlights', '1'))
+
+    await act(async () => {
+      emiter.emit('clearAIFilePreviewSearchHighlights')
+    })
+    await waitFor(() => expect(screen.getByTestId('file-preview')).toHaveAttribute('data-highlights', '0'))
+  })
+
   it.each([
     { key: AITabsEnum.HTTP, testId: 'http-flows', ids: 'httpRunTimeIDs', update: 'httpTabUpdate', show: 'httpTabShow' },
     { key: AITabsEnum.Risk, testId: 'risks', ids: 'riskRunTimeIDs', update: 'riskTabUpdate', show: 'riskTabShow' },

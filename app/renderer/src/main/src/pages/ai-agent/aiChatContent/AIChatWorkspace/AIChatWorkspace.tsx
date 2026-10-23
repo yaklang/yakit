@@ -187,6 +187,15 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
     })
   })
 
+  /** 搜索结束后清空预览上的搜索高亮 */
+  const onClearFilePreviewSearchHighlights = useMemoizedFn(() => {
+    setTabs((current) =>
+      current.map((tab) =>
+        tab.type === AITabsEnum.File_Preview && tab.fileHighlights?.length ? { ...tab, fileHighlights: [] } : tab,
+      ),
+    )
+  })
+
   const onOpenTaskDetail = useMemoizedFn((data: string) => {
     let info: AIAgentTriggerEventInfo
     try {
@@ -234,9 +243,11 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
     if (!inViewPort) return
     emiter.on('switchAIActTab', onSwitchAIAgentTab)
     emiter.on('actionAITaskContentTab', onOpenTaskDetail)
+    emiter.on('clearAIFilePreviewSearchHighlights', onClearFilePreviewSearchHighlights)
     return () => {
       emiter.off('switchAIActTab', onSwitchAIAgentTab)
       emiter.off('actionAITaskContentTab', onOpenTaskDetail)
+      emiter.off('clearAIFilePreviewSearchHighlights', onClearFilePreviewSearchHighlights)
     }
   }, [inViewPort])
 

@@ -167,10 +167,10 @@
     z-index: -1;
   }
 
-  // AI 文件搜索预览命中：加深对比度（不用 z-index:-1，避免被当前行背景盖住）
+  // 文件内容搜索命中：Yellow，与鼠标选中 Warning 区分（不用 z-index:-1，避免被当前行背景盖住）
   .hight-light-file-search-hit {
-    background-color: var(--yakit-colors-Warning-40);
-    color: var(--Colors-Use-Error-Primary);
+    background-color: var(--yakit-colors-Yellow-40);
+    color: var(--yakit-colors-Yellow-80);
   }
 }
 

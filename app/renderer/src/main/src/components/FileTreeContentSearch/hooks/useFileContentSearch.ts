@@ -3,14 +3,14 @@ import { useMemoizedFn } from 'ahooks'
 import { v4 as uuidv4 } from 'uuid'
 import { yakitNotify } from '@/utils/notification'
 import i18n from '@/i18n/i18n'
-import { FileTreeSearchType, type FileTreeSearchTypeValue } from './constants'
+import { FileTreeSearchType, type FileTreeSearchTypeValue } from '../constants'
 import {
   cancelGrpcSearchFileContent,
   FILE_SEARCH_UNSUPPORTED_ENGINE,
   grpcSearchFileContent,
   mergeFileSearchItems,
-} from './utils'
-import type { FileSearchFileItem } from './type'
+} from '../utils'
+import type { FileSearchFileItem } from '../type'
 
 const t = i18n.getFixedT(null, 'aiAgent')
 
@@ -56,6 +56,16 @@ export const useFileContentSearch = (options: UseFileContentSearchOptions) => {
     if (!loading) return
     cancelInFlight()
     requestIdRef.current += 1
+    setLoading(false)
+  })
+
+  /** 关闭搜索面板时清空关键字与结果，并作废进行中请求 */
+  const onReset = useMemoizedFn(() => {
+    cancelInFlight()
+    requestIdRef.current += 1
+    setKeyword('')
+    setResults([])
+    setSearched(false)
     setLoading(false)
   })
 
@@ -170,5 +180,6 @@ export const useFileContentSearch = (options: UseFileContentSearchOptions) => {
     results,
     onSearch,
     onCancelSearch,
+    onReset,
   }
 }

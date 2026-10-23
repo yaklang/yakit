@@ -422,6 +422,29 @@ describe('FileTreeSearchView', () => {
 
     await waitFor(() => expect(screen.getByText('FileTreeSearch.emptyNoResult')).toBeInTheDocument())
     expect(screen.getByTestId('file-tree-search-view-result-total')).toHaveTextContent('0')
+    expect(emit).toHaveBeenCalledWith('clearAIFilePreviewSearchHighlights')
+  })
+
+  it('关闭搜索面板时清空预览高亮', () => {
+    const { rerender } = render(<FileTreeSearchView active />)
+    emit.mockClear()
+    rerender(<FileTreeSearchView active={false} />)
+    expect(emit).toHaveBeenCalledWith('clearAIFilePreviewSearchHighlights')
+  })
+
+  it('关闭搜索面板后再打开：关键字与结果已清空', async () => {
+    const { rerender } = render(<FileTreeSearchView active />)
+    searchByEnter('hello')
+    await waitFor(() => expect(screen.getByTestId('file-tree-search-view-result-total')).toBeInTheDocument())
+    expect(screen.getByRole('searchbox')).toHaveValue('hello')
+    expect(screen.getByTestId('file-tree-search-result-item')).toBeInTheDocument()
+
+    rerender(<FileTreeSearchView active={false} />)
+    rerender(<FileTreeSearchView active />)
+
+    expect(screen.getByRole('searchbox')).toHaveValue('')
+    expect(screen.queryByTestId('file-tree-search-view-result-total')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('file-tree-search-result-item')).not.toBeInTheDocument()
   })
 
   it('加载中隐藏命中总数 Tag，结束后再显示', async () => {

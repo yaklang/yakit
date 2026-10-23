@@ -5,8 +5,8 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { ChevronDownOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { getFileIconByName, KeyToIcon } from '@/pages/yakRunner/FileTree/icon'
-import { clipLineAroundMatches, splitLineByMatches } from './utils'
-import type { FileSearchFileItem, FileSearchLine } from './type'
+import { clipLineAroundMatches, splitLineByMatches } from '../utils'
+import type { FileSearchFileItem, FileSearchLine } from '../type'
 import styles from './FileSearchResultItem.module.scss'
 
 interface FileSearchResultItemProps {

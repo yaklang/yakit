@@ -5,15 +5,15 @@ import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import FileSearchResultItem from './FileSearchResultItem'
-import { useFileContentSearch } from './useFileContentSearch'
+import FileSearchResultItem from '../FileSearchResultItem/FileSearchResultItem'
+import { useFileContentSearch } from '../hooks/useFileContentSearch'
 import {
   FileTreeSearchType,
   SEARCH_CANCEL_VISIBLE_MS,
   SEARCH_INPUT_FOCUS_DELAY_MS,
   type FileTreeSearchTypeValue,
-} from './constants'
-import type { FileSearchFileItem, FileSearchLine } from './type'
+} from '../constants'
+import type { FileSearchFileItem, FileSearchLine } from '../type'
 import styles from './FileTreeContentSearchView.module.scss'
 
 export interface FileTreeSearchEmptyContext {
@@ -34,6 +34,8 @@ export interface FileTreeContentSearchViewProps {
   toolbarExtra?: ReactNode
   /** 自定义空态；不传则用默认 hint / noResult；也可按搜索态动态返回 */
   emptyDescription?: ReactNode | ((ctx: FileTreeSearchEmptyContext) => ReactNode)
+  /** 一次搜索结束（非 loading 且已搜过）时回调 */
+  onSearchSettled?: () => void
   'data-testid'?: string
   /** 结果列表 testid，默认 `${data-testid}-results` */
   resultsTestId?: string
@@ -58,6 +60,7 @@ const FileTreeContentSearchView: FC<FileTreeContentSearchViewProps> = ({
   onOpen,
   toolbarExtra,
   emptyDescription,
+  onSearchSettled,
   'data-testid': dataTestId = 'file-tree-content-search-view',
   resultsTestId,
   loadingTestId,
@@ -75,14 +78,27 @@ const FileTreeContentSearchView: FC<FileTreeContentSearchViewProps> = ({
     results,
     onSearch,
     onCancelSearch,
+    onReset,
   } = useFileContentSearch({ roots, resolveRoots })
   const [showCancel, setShowCancel] = useState(false)
+  const wasActiveRef = useRef(false)
 
   useEffect(() => {
     if (!active) return
     const timer = window.setTimeout(() => focusSearchInput(rootRef.current), SEARCH_INPUT_FOCUS_DELAY_MS)
     return () => window.clearTimeout(timer)
   }, [active])
+
+  // 关闭搜索面板（回到文件树）时清空关键字与结果
+  useEffect(() => {
+    if (active) {
+      wasActiveRef.current = true
+      return
+    }
+    if (!wasActiveRef.current) return
+    wasActiveRef.current = false
+    onReset()
+  }, [active, onReset])
 
   useEffect(() => {
     if (!loading) {
@@ -92,6 +108,11 @@ const FileTreeContentSearchView: FC<FileTreeContentSearchViewProps> = ({
     const timer = window.setTimeout(() => setShowCancel(true), SEARCH_CANCEL_VISIBLE_MS)
     return () => window.clearTimeout(timer)
   }, [loading])
+
+  useEffect(() => {
+    if (loading || !searched) return
+    onSearchSettled?.()
+  }, [loading, searched, results, onSearchSettled])
 
   const searchTypeOptions = useMemo(
     () => [

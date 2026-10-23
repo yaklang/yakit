@@ -3,6 +3,7 @@ import { useMemoizedFn } from 'ahooks'
 import {
   FileTreeContentSearchView,
   resolveOpenHighlights,
+  useClearFileSearchHighlights,
   type FileSearchFileItem,
   type FileSearchLine,
 } from '@/components/FileTreeContentSearch'
@@ -31,11 +32,16 @@ export const RunnerFileTreeSearchView: FC<RunnerFileTreeSearchViewProps> = ({ ac
     emiter.emit('onOpenFileByPath', JSON.stringify(OpenFileByPathParams))
   })
 
+  const { onSearchSettled } = useClearFileSearchHighlights(active, () => {
+    emiter.emit('onClearFileSearchHighlights')
+  })
+
   return (
     <FileTreeContentSearchView
       active={active}
       roots={roots}
       onOpen={onOpenFile}
+      onSearchSettled={onSearchSettled}
       data-testid="runner-file-tree-search-view"
     />
   )
