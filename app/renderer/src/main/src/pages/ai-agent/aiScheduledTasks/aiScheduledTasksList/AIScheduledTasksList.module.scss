@@ -21,6 +21,12 @@
 }
 
 .schedule-group-collapse {
+  & > :global(.ant-collapse-item.ant-collapse-item-active) {
+    background: var(--Colors-Use-Basic-Background);
+  }
+  & > :global(.ant-collapse-item) > :global(.ant-collapse-header:hover) {
+    background: var(--Colors-Use-Basic-Background);
+  }
   & > :global(.ant-collapse-item) {
     :global {
       .ant-collapse-header {

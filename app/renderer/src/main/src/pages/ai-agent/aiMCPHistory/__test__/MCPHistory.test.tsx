@@ -2,6 +2,7 @@ import type React from 'react'
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import MCPHistory from '../MCPHistory'
+import styles from '../MCPHistory.module.scss'
 import {
   grpcDeleteMCPToolCallHistory,
   grpcGetMCPToolCallHistoryDetail,
@@ -114,6 +115,27 @@ afterEach(() => {
 })
 
 describe('MCPHistory 调用历史', () => {
+  it('点击刷新时在列表顶部水平展示加载中', async () => {
+    render(<MCPHistory />)
+    await screen.findByText('encode-tool')
+    let resolveRefresh!: (value: ReturnType<typeof responseFor>) => void
+    vi.mocked(grpcQueryMCPToolCallHistory).mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveRefresh = resolve
+        }),
+    )
+    fireEvent.click(screen.getByTitle('YakitButton.refresh'))
+    expect(screen.queryByText('encode-tool')).not.toBeInTheDocument()
+    expect(screen.queryByText('MCPHistory.emptyList')).not.toBeInTheDocument()
+    expect(document.querySelector(`.${styles['history-list-loading']}`)).toBeInTheDocument()
+    await act(async () => {
+      resolveRefresh(responseFor([summary(3, 'refreshed-tool')]))
+    })
+    expect(await screen.findByText('refreshed-tool')).toBeInTheDocument()
+    expect(document.querySelector(`.${styles['history-list-loading']}`)).not.toBeInTheDocument()
+  })
+
   it('默认按成功状态查询第一页', async () => {
     render(<MCPHistory />)
     expect(await screen.findByText('encode-tool')).toBeInTheDocument()

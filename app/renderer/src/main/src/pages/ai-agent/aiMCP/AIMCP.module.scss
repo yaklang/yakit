@@ -41,6 +41,16 @@
       white-space: nowrap;
       text-overflow: ellipsis;
     }
+    .ai-mcp-tool-list-name {
+      min-width: 0;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+    .ai-mcp-tool-list-label {
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
     .info-icon {
       flex-shrink: 0;
       svg {
@@ -344,6 +354,12 @@
 .ai-tool-list-container {
   height: 100%;
   min-height: 0;
+}
+.ai-tool-list-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
 }
 .ai-tool-list {
   padding: 0 12px 12px;

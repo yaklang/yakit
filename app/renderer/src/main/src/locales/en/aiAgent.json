@@ -797,6 +797,7 @@
     "enableTools": "Enable Tools",
     "description": "Description",
     "paramIntro": "Parameter Introduction",
+    "addMcp": "Add MCP",
     "addMcpServer": "Add MCP Server",
     "mcpServerConfig": "MCP Server Configuration",
     "editMcp": "Edit MCP",

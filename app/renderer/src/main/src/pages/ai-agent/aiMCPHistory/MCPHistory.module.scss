@@ -81,6 +81,19 @@
     }
   }
 
+  .history-list-loading {
+    display: flex;
+    flex: none;
+    justify-content: center;
+    width: 100%;
+
+    :global(.ant-spin) {
+      width: auto;
+      height: auto;
+      flex: none;
+    }
+  }
+
   .history-list {
     display: flex;
     flex: 1;
@@ -205,9 +218,9 @@
 
   .detail-header {
     display: flex;
-    flex: 0 0 44px;
+    flex: 0 0 35px;
     align-items: center;
-    height: 44px;
+    height: 35px;
     padding: 0 12px;
   }
 

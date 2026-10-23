@@ -92,7 +92,10 @@ const AIMCPToolList: React.FC<AIMCPToolListProps> = React.memo((props) => {
   const [mcpItem, setMCPItem] = useState<MCPServer>(item)
   const [loading, setLoading] = useState<boolean>(false)
   const [updateLoading, setUpdateLoading] = useState<boolean>(false)
+  // 列表数据不含工具。首次详情返回前不展示空状态，避免先闪「暂无数据」再换成工具列表
+  const [toolLoaded, setToolLoaded] = useState(false)
   useEffect(() => {
+    setToolLoaded(false)
     getMcpItem()
   }, [item.ID])
   const getMcpItem = useMemoizedFn(() => {
@@ -108,6 +111,7 @@ const AIMCPToolList: React.FC<AIMCPToolListProps> = React.memo((props) => {
       .finally(() =>
         setTimeout(() => {
           setLoading(false)
+          setToolLoaded(true)
         }, 200),
       )
   })
@@ -142,7 +146,10 @@ const AIMCPToolList: React.FC<AIMCPToolListProps> = React.memo((props) => {
     <div className={styles['ai-mcp-list-wrapper']}>
       <div className={styles['ai-mcp-list-header']}>
         <div className={styles['ai-mcp-list-header-left']}>
-          <span>{t('AIMCP.toolList')}</span>
+          <span className={styles['ai-mcp-tool-list-name']} title={mcpItem.Name}>
+            {mcpItem.Name}
+          </span>
+          <span className={styles['ai-mcp-tool-list-label']}>{t('AIMCP.toolList')}</span>
           <Tooltip title={t('AIMCP.protocolInfo')}>
             <QuestionMarkCircleOutlined className={styles['info-icon']} color="currentColor" />
           </Tooltip>
@@ -157,24 +164,45 @@ const AIMCPToolList: React.FC<AIMCPToolListProps> = React.memo((props) => {
       </div>
       <div className={styles['ai-tool-list-container']}>
         {mcpItem.Enable ? (
-          <RollingLoadList<MCPServerTool>
-            data={toolLis}
-            renderRow={(rowData: MCPServerTool, index: number) => {
-              return (
-                <React.Fragment key={rowData.Name}>
-                  <AIMCPToolItem toolItem={rowData} />
-                </React.Fragment>
-              )
-            }}
-            classNameRow={styles['ai-tool-list-item']}
-            classNameList={styles['ai-tool-list']}
-            defItemHeight={76}
-            rowKey="Name"
-            loadMoreData={() => {}}
-            page={1}
-            hasMore={false}
-            loading={false}
-          />
+          <>
+            {toolLis.length > 0 ? (
+              <RollingLoadList<MCPServerTool>
+                data={toolLis}
+                renderRow={(rowData: MCPServerTool, index: number) => {
+                  return (
+                    <React.Fragment key={rowData.Name}>
+                      <AIMCPToolItem toolItem={rowData} />
+                    </React.Fragment>
+                  )
+                }}
+                classNameRow={styles['ai-tool-list-item']}
+                classNameList={styles['ai-tool-list']}
+                defItemHeight={76}
+                rowKey="Name"
+                loadMoreData={() => {}}
+                page={1}
+                hasMore={false}
+                loading={false}
+              />
+            ) : toolLoaded ? (
+              <YakitEmpty title={t('YakitEmpty.noData')}>
+                <div className={styles['ai-mcp-tool-empty-btns']}>
+                  <YakitButton
+                    type="outline1"
+                    icon={<RefreshOutlined color="currentColor" />}
+                    loading={loading}
+                    onClick={getMcpItem}
+                  >
+                    {t('YakitButton.refresh')}
+                  </YakitButton>
+                </div>
+              </YakitEmpty>
+            ) : (
+              <div className={styles['ai-tool-list-empty']}>
+                <YakitSpin spinning />
+              </div>
+            )}
+          </>
         ) : (
           <YakitEmpty title={t('YakitEmpty.noData')} description={t('AIMCP.disabledRefreshTools')}>
             <div className={styles['ai-mcp-tool-empty-btns']}>
@@ -464,7 +492,15 @@ const AIMCPList: React.FC<AIMCPListProps> = React.memo((props) => {
               )
             })}
             {showEnd && <div className={styles['list-end']}>{t('YakitEmpty.end_of_list')}</div>}
-            {!loading && response.MCPServers.length === 0 && <YakitEmpty title={t('YakitEmpty.noData')} />}
+            {!loading && response.MCPServers.length === 0 && (
+              <YakitEmpty title={t('YakitEmpty.noData')}>
+                <div className={styles['ai-mcp-tool-empty-btns']}>
+                  <YakitButton type="outline1" icon={<PlusSmOutlined color="currentColor" />} onClick={handleNewAIMCP}>
+                    {t('AIMCP.addMcp')}
+                  </YakitButton>
+                </div>
+              </YakitEmpty>
+            )}
           </div>
         </YakitSpin>
       </div>
@@ -500,13 +536,20 @@ const AIMCPListItem: React.FC<AIMCPListItemProps> = React.memo((props) => {
           // 启用期间用户已打开其他服务器（本卡片随列表卸载）时，迟到的结果不再覆盖当前工具页
           if (!aliveRef.current) return
           onSetData(server)
-          if (enable) setCurrentMCP(server)
         }
-        getMCPServersById(item.ID)
-          .then(openToolList)
-          .catch(() => {
-            openToolList({ ...item, Enable: enable })
-          })
+        const loadServer = () =>
+          getMCPServersById(item.ID)
+            .then(openToolList)
+            .catch(() => {
+              openToolList({ ...item, Enable: enable })
+            })
+        // 启用后后端还在异步拉取工具，立刻查询容易拿到失败结果
+        if (!enable) return loadServer()
+        return new Promise<void>((resolve) => {
+          setTimeout(() => {
+            loadServer().finally(resolve)
+          }, 1000)
+        })
       })
       .finally(() =>
         setTimeout(() => {
@@ -529,10 +572,6 @@ const AIMCPListItem: React.FC<AIMCPListItemProps> = React.memo((props) => {
           onCancel={(saved) => {
             m.destroy()
             if (!saved) return
-            if ('ID' in saved && saved.Enable) {
-              setCurrentMCP({ ...item, ...saved })
-              return
-            }
             onRefresh()
           }}
         />
