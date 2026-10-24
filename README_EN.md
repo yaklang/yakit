@@ -1,165 +1,202 @@
-# YAKIT — A Cyber Security All-in-One Platform Based on Yak Language
 
-<!-- cspell:ignore imgs cdsl CDSL gongneng webfuzzer fuzztag WeChat pentesting backdoors -->
+# 🛡️ YAKIT — Cyber Security All-in-One Platform (English Edition)
 
-[![Yakit](imgs/head.jpg)](https://yaklang.io/)
+An Interactive Penetration Testing Workbench Powered by the Yaklang Security Programming Language (`CDSL`)
 
-[![Open pull requests](https://img.shields.io/github/issues-pr/yaklang/yakit)](https://github.com/yaklang/yakit/pulls)
-[![Downloads](https://img.shields.io/github/downloads/yaklang/yakit/total)](https://github.com/yaklang/yakit/releases)
-[![Contributors](https://img.shields.io/github/contributors-anon/yaklang/yakit)](https://github.com/yaklang/yakit/graphs/contributors)
-[![Latest release](https://img.shields.io/github/release/yaklang/yakit)](https://github.com/yaklang/yakit/releases/)
-[![Issues](https://img.shields.io/github/issues-raw/yaklang/yakit)](https://github.com/yaklang/yakit/issues)
-[![Stars](https://img.shields.io/github/stars/yaklang/yakit)](https://github.com/yaklang/yakit/discussions)
-[![License](https://img.shields.io/github/license/yaklang/yakit)](https://github.com/yaklang/yakit/blob/master/LICENSE.md)
+[![Build & Release (English)](https://github.com/professoxrmoriarty/yakit/actions/workflows/release-en.yml/badge.svg)](https://github.com/professoxrmoriarty/yakit/actions/workflows/release-en.yml)
+[![Sync Upstream & Translate](https://github.com/professoxrmoriarty/yakit/actions/workflows/sync-upstream.yml/badge.svg)](https://github.com/professoxrmoriarty/yakit/actions/workflows/sync-upstream.yml)
+[![Latest Release](https://img.shields.io/github/v/release/professoxrmoriarty/yakit?label=English%20Release)](https://github.com/professoxrmoriarty/yakit/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/professoxrmoriarty/yakit/total)](https://github.com/professoxrmoriarty/yakit/releases)
+[![License](https://img.shields.io/github/license/professoxrmoriarty/yakit)](LICENSE.md)
 
+[Download English Installers](https://github.com/professoxrmoriarty/yakit/releases/latest) •
 [Whitepaper](https://yaklang.oss-cn-beijing.aliyuncs.com/yakit-technical-white-paper.pdf) •
-[Official documentation](https://yaklang.io/products/intro/) •
-[Issue feedback](https://github.com/yaklang/yakit/issues) •
-[Official website](https://yaklang.io/) •
-[Community](#community) •
+[Official Website (EN)](https://yaklang.com/en/) •
+[Official Documentation](https://yaklang.io/products/intro/) •
+[Issue Feedback](https://github.com/professoxrmoriarty/yakit/issues) •
 [Architecture](#architecture)
 
-:book: Language: [English](https://github.com/yaklang/yakit/blob/master/README-EN.md) •
-[中文](https://github.com/yaklang/yakit/blob/master/README.md)
+---
+
+## 📥 Download English Edition Installers
+
+Pre-built installers with **English (`en`) enabled by default** (including translated UI, `.yak` plugins, and PoC YAML metadata) are published automatically on the [Releases Page](https://github.com/professoxrmoriarty/yakit/releases/latest):
+
+| Operating System | Architecture | Package Format | Download |
+| :--- | :--- | :--- | :--- |
+| **Windows** | x64 (`amd64`) | `.exe` (NSIS Installer) | [Latest Windows `.exe`](https://github.com/professoxrmoriarty/yakit/releases/latest) |
+| **macOS** | Apple Silicon (`arm64`) & Intel (`x64`) | `.dmg` | [Latest macOS `.dmg`](https://github.com/professoxrmoriarty/yakit/releases/latest) |
+| **Linux** | x64 (`amd64`) & `arm64` | `.AppImage` | [Latest Linux `.AppImage`](https://github.com/professoxrmoriarty/yakit/releases/latest) |
 
 ---
 
 ## Introduction
 
-Security integration is a reform of security operations and management for enterprises in the new normal. It is also a top priority for enterprises in the new normal.
+Security integration represents a major evolution in enterprise security operations and offensive testing workflows.
 
-Based on the concept of security integration, the Yaklang.io team has developed Yaklang, a vertical language in the security field. For some products/tools that cannot be natively integrated into the Yak platform, Yaklang can be used to rewrite their "high-quality substitutes." For ecologically complete and widely recognized products, Yaklang can directly compile and integrate them, making necessary modifications to the source code for better compatibility with the Yaklang language. For security practitioners who do not want to write code, Yakit provides a suitable GUI for all capabilities in Yaklang. As the versions evolve, the GUI will become more mature.
-![Yakit CDSL](imgs/yakit-cdsl.png)
+Built around the concept of unified security engineering, the Yaklang team created **Yaklang**—a vertical Domain-Specific Language (CDSL) purpose-built for cybersecurity:
 
-In order to make Yaklang's security capabilities more relevant to practical use, we have developed a gRPC server for Yak and built a client called Yakit using this server.
+- For tools that cannot be natively integrated, Yaklang provides clean, high-performance native rewrites.
+- For mature open-source security ecosystems, Yaklang directly compiles and integrates them at the engine level.
+- For security practitioners who prefer visual workflows without writing code, **Yakit** provides a full-featured graphical workbench connected to the Yaklang engine over gRPC.
+
+<img width="5620" height="2034" alt="Untitled diagram-2026-10-24-230050" src="https://github.com/user-attachments/assets/281c4565-e8be-4092-9df8-8ed1e732d70d" />
+
+
+---
 
 ## Architecture
 
-![Yakit architecture](imgs/yakit-arch.jpg)
+<img width="8190" height="4289" alt="Untitled diagram-2026-10-24-230442" src="https://github.com/user-attachments/assets/04da4dea-b8e7-4a13-8672-8e06597f5477" />
 
-## Core technologies: CDSL
 
-CDSL, which stands for CyberSecurity Domain Specific Language, is a specialized programming language in the field of cybersecurity. We have developed a stack virtual machine to handle the runtime state of this Turing-complete language. Our aim is to integrate security capabilities and achieve a unified underlying platform through the use of CDSL.
+---
 
-To make our self-developed CDSL language more aligned with practical usage scenarios, we have created a gRPC server for Yaklang. Using this gRPC server as a foundation, we have built the Yakit client.
+## Core Technologies: CDSL
 
-In practice, Yakit's graphical user interface (GUI) allows users to control the capabilities of the engine. The gRPC server of Yakit enables convenient and efficient deployment options. It is platform-agnostic, providing users with the flexibility to choose between remote deployment or running it directly on their local machines.
+**CDSL (CyberSecurity Domain-Specific Language)** is a Turing-complete language engineered specifically for security research and automation, backed by a custom stack virtual machine.
 
-![Yakit features](imgs/yakit-gongneng.png)
+By exposing the Yaklang runtime through a platform-agnostic `yak grpc` server, Yakit decouples the user interface from the execution engine—allowing operators to run the engine locally on their workstation or remotely on cloud VPS and internal pivot hosts.
 
-1. It can completely replace BurpSuite as a MITM interception platform.
-2. It provides a unique and user-friendly GUI for difficult-to-replicate MITM passive scanning.
-3. It allows embedding Yaklang scripts for dynamic debugging of traffic and executing code on the fly.
-4. It is the world's first visual Web Fuzzer, a powerful tool for conducting comprehensive web vulnerability testing.
-5. Yakit Plugin Store: A marketplace where users can find and install various Yakit plugins.
-6. It enables the execution of custom Yaklang scripts or plugins at any step of penetration testing.
-   ... ...
+<img width="4804" height="2994" alt="Untitled diagram-2026-10-24-230556" src="https://github.com/user-attachments/assets/1d9197f9-4241-4bcc-a676-f0e06e488337" />
 
-Overview of Security Capabilities：
 
-![Yaklang security capabilities](imgs/yaklang-caps.jpg)
+1. **Complete MITM Replacement**: Full request/response interception, certificate generation, HTTP history, and packet editing comparable to Burp Suite.
+2. **Passive Vulnerability Scanning**: Friendly visual configuration for real-time MITM passive vulnerability detection.
+3. **HotPatch Dynamic Scripting**: Embed Yaklang scripts directly into proxy pipelines to sign, decrypt, or mutate traffic on the fly.
+4. **Visual Web Fuzzer**: Interactive HTTP replay and fuzzing without tedious dictionary setup.
+5. **Yakit Plugin Store**: Install, manage, and author security extensions across every stage of penetration testing.
+6. **Custom Script Execution**: Run standalone `.yak` scripts or full GUI plugins anywhere in the testing lifecycle.
+
+### Overview of Security Capabilities
+
+| Capability Domain | Built-in Modules & Engine Support |
+| --- | --- |
+| **Web & Traffic Testing** | MITM Proxy, HTTP History, Web Fuzzer, Fuzztag Generator, WebCrawler, Passive Scanner |
+| **Reconnaissance & Mapping** | Stateless SYN Scan, Nmap Service Fingerprinting, Subdomain Enumeration, Directory Brute Force |
+| **Vulnerability & Exploitation** | Native Nuclei YAML Engine, Yak PoC Framework, SQLi/XSS/SSRF/RCE Checkers, JDK-Free Java Deserialization |
+| **Post-Exploitation & OOB** | Single-Port Protocol Multiplexing, Interactive Reverse Shell, OOB Server (HTTP/LDAP/RMI/DNS/ICMP), Intranet Bridge |
+| **Engineering & Analysis** | Codec CyberChef-Style Pipeline, Yak SSA & SyntaxFlow Static Analysis, AI-Assisted Scripting |
+
+---
 
 ## Specialized Technologies
 
-### MITM Interactive Hijacking
+### MITM Interactive Interception
 
-The MITM (Man-in-the-Middle) Console in Yakit can fully replace BurpSuite and perform all operations, including downloading and installing certificates, hijacking requests and responses, and editing intercepted packets. It provides a smooth workflow that involves hijacking, history tracking, and using tools like Repeater and Intruder. Users can intercept data, view historical data in the history section, select packets for further analysis, and send them to the Web Fuzzer for Repeater or Intruder operations. In addition to these typical use cases, the MITM module in Yakit offers more flexible features such as plugin-based passive scanning, hot reloading, packet substitution, and tagging.
+The MITM Console in Yakit handles TLS certificate installation, live request/response interception, packet modification, history filtering, and one-click forwarding to Web Fuzzer. Beyond standard proxy workflows, it supports **plugin-driven passive scanning**, **HotPatch live traffic mutation**, **auto-replacement rules**, and **traffic tagging**.
 
-The underlying principle of Yakit's MITM module is to start an HTTP proxy that automatically forwards traffic. When a user initiates a manual hijack, the automatic forwarding is stopped, and the request is blocked and popped out of the stack. The module then performs tasks such as Gzip decoding, chunk processing, and decoding to make the request human-readable, which is then displayed to the user. Users can view, modify, or replay requests as needed. During replay, the Yakit engine repairs the user-constructed HTTP request to ensure its validity. Yak's engine has a custom-built HTTP library, allowing users to customize malformed requests and responses, which can be useful in exploiting vulnerabilities in specific scenarios.
+Under the hood, Yakit runs a custom HTTP proxy stack that automatically handles Gzip decompression, chunked transfer decoding, and character encoding normalization for clean inspection. During packet replay, Yaklang's custom HTTP library automatically repairs protocol framing—while still allowing deliberate malformed packets when exploiting parser-level vulnerabilities.
 
-![Yakit MITM console](imgs/yakit-mitm.png)
+<img width="6142" height="2805" alt="Untitled diagram-2026-10-24-230649" src="https://github.com/user-attachments/assets/62dc14e4-70e2-48be-b182-333cc01c9f7b" />
+
 
 ### Web Application Interactive Traffic Replay and Fuzz Testing
 
-The Web Fuzzer module supports user-defined HTTP raw request sending. To make it user-friendly and intuitive, Yakit's backend performs several tasks. It ensures that the necessary information for data transmission and parsing in the HTTP raw request is repaired and completed. For example, Yakit fixes CRLF, completes the Content-Type, handles chunked transfer encoding, adds the missing boundary, corrects the Content-Length, and so on. This allows users to focus on the data-related information without worrying about the underlying intricacies of the HTTP protocol.
-![Web Fuzzer](imgs/webfuzzer.png)
+The **Web Fuzzer** module accepts raw HTTP requests and automatically repairs protocol mechanics behind the scenes—fixing `CRLF` line endings, completing `Content-Type` headers, handling chunked encoding, adding multipart boundaries, and recalculating `Content-Length` automatically so testers can focus purely on payload logic.
 
 ### Fuzztag
 
-The Web Fuzzer module supports seamless integration of functionalities such as Host collision, Intruder, and directory brute-forcing through Fuzz tags. For example, in a single parameter brute-forcing scenario, let's take the user ID as an example. You can use the {{int(1-10)}} tag to automatically generate a range of IDs for brute-forcing. In scenarios where multiple parameters need to be brute-forced, the Cartesian product of the parameters is used for the brute-forcing. This eliminates the need to select the brute-forcing method and import dictionaries, reducing user operation steps and aligning with user habits compared to BurpSuite's Intruder module.
+Web Fuzzer unifies Intruder-style brute-forcing, Host header collision testing, and directory discovery directly inside raw packets using inline **Fuzztags**:
 
-In addition to generating parameters using tags, the Web Fuzzer module also supports importing external dictionaries. For example: {{file(/tmp/username.txt)}}. In more complex data scenarios, the Web Fuzzer module allows the insertion of hot-loaded tags. For example, if you need to brute-force ID numbers from a specific region, you can directly insert Yak scripts in the Web Fuzzer module to generate the data for brute-forcing. In contrast, BurpSuite's Intruder module would require writing code to generate dictionaries and then importing them into the Intruder module.
-![Fuzztag](imgs/fuzztag.png)
+- **Range & Mutation Tags**: Insert `{{int(1-10)}}` directly into a parameter (e.g., `GET /api/user?id={{int(1-10)}}`) to dynamically generate sequences without configuring separate payload tabs.
+- **Multi-Parameter Cartesian Fuzzing**: Place multiple tags across headers, paths, or bodies to automatically execute Cartesian product fuzzing.
+- **External Wordlists & Dynamic Scripts**: Load wordlists inline via `{{file(/tmp/username.txt)}}` or invoke live HotPatch Yak functions to generate region-specific IDs, timestamps, or signed tokens on the fly.
 
-You can refer to the following for more information about Fuzztag： [Fuzztag](https://yaklang.com/docs/newforyak/fuzztag)
+```http
+POST /api/v1/login HTTP/1.1
+Host: target.example.com
+Content-Type: application/json
 
-### Reverse Connection Technique and Application Protocol Multiplexing Technique
+{
+  "username": "{{file(/opt/wordlists/users.txt)}}",
+  "otp_code": "{{int(000000-999999)}}",
+  "signature": "{{yak(signPayload)}}"
+}
 
-Many vulnerability exploitation scenarios require reverse connections to different protocol services. Traditional exploitation tools require setting up separate ports for each service on a public-facing server. For example, in the case of LDAP-based vulnerabilities, one would need to start an HTTP service, an LDAP service, and then send the attack request to complete the exploitation process. Traditional services require unique ports for each service. However, Yaklang's Port Protocol Multiplexing technique allows listening on a single port and identifying the protocol of incoming requests to respond accordingly. The advantage of Yaklang's Port Protocol Multiplexing is not only resource-saving and convenient for manual testing, but also the ability to manually implement various protocols by handcrafting protocol headers. This allows flexible construction of different protocol packets, including the ability to create malformed protocols for vulnerability exploitation or carry data through protocols such as DNS or ICMP, which can be used for backdoor persistence or bypassing certain TCP-based vulnerabilities without going out to the network.
+```
 
-Meanwhile, Yakit implements a reverse connection module based on the Port Protocol Multiplexing technique, which includes features such as Reverse Shell, reverse connection exploitation, and reverse connection detection. The Reverse Shell feature allows listening on a specified port as the receiver for reverse shells. Once a reverse shell is received, it can be used to control the remote server, similar to SSH. In traditional penetration testing scenarios, tools like Nc are used to listen on ports, but they may encounter issues with certain keys like backspace or arrow keys. The reverse shell experience provided by Yakit is similar to native SSH, addressing these limitations. The reverse connection exploitation feature allows setting payloads for different protocols based on a listening port. When a request is received, the protocol is automatically identified, and the corresponding payload is returned to achieve vulnerability exploitation. The reverse connection detection feature provides detection for TCP, DNSLog, and ICMP reverse connections, which can be used for command execution detection.
-![Reverse connection module](imgs/reverse.png)
+Learn more in the official guide: [Fuzztag Documentation](https://yaklang.com/docs/newforyak/fuzztag)
+
+### Reverse Connection & Port Protocol Multiplexing
+
+Traditional exploitation often requires opening separate public ports for HTTP payload hosting, LDAP/RMI JNDI listeners, and netcat reverse shells. Yaklang's **Port Protocol Multiplexing** allows listening on a **single port** that inspects incoming bytes, identifies the underlying protocol automatically, and routes the connection to the matching handler.
+
+<img width="3679" height="1784" alt="Untitled diagram-2026-10-24-230732" src="https://github.com/user-attachments/assets/2c6f20f8-59be-4142-b09a-7574a86f15b9" />
+
+
+- **SSH-Like Reverse Shell**: Eliminates classic `nc` terminal issues (broken backspace, arrow keys, or Ctrl+C killing the session) by providing an interactive PTY-like shell experience.
+- **Multi-Protocol Exploitation & OOB Detection**: Automatically responds to HTTP, LDAP, RMI, TCP, DNSLog, and ICMP callbacks for blind RCE and SSRF verification.
+
+---
 
 ## How to Use
 
-- You can visit the [official website](https://yaklang.com/) to download and install Yakit.
+- **English Edition Releases**: Download ready-to-run Windows `.exe`, macOS `.dmg`, and Linux `.AppImage` installers from [GitHub Releases](https://github.com/professoxrmoriarty/yakit/releases/latest).
+- **Official Documentation**: Visit the [Yaklang Documentation](https://yaklang.io/products/intro/) and [Official English Site](https://yaklang.com/en/).
+- **Technical Resources**:
+- [Yakit Technical Methodology](https://yaklang.io/products/article/yakit-technical-study/methodology)
+- [Yakit Technical Whitepaper (PDF)](https://yaklang.oss-cn-beijing.aliyuncs.com/yakit-technical-white-paper.pdf)
 
-- You can refer to our [official documentation](https://yaklang.io/products/intro/) to learn and use Yakit.
-
-For more technical content, you can check:
-
-[Technical articles](https://yaklang.io/products/article/yakit-technical-study/methodology)
-
-[Whitepaper](https://yaklang.oss-cn-beijing.aliyuncs.com/yakit-technical-white-paper.pdf)
+---
 
 ## Development Setup
 
 Prerequisites:
 
-- Node.js 22.22.x (recommended) and Yarn 1.x
-- Git
+- **Node.js 22.x** (recommended) and **Yarn 1.x**
+- **Git**
 - Windows, macOS, or Linux
 
 Steps:
 
-1. Install all three packages (root Electron + both renderers)
+1. Install all three workspaces (root Electron + Main renderer + Link renderer):
 
-     ```bash
-     yarn cli install
-     ```
+```bash
+yarn cli install
 
-2. Start development (start both renderers, then Electron)
+```
 
-     ```bash
-     yarn cli start -v yakit   # starts both renderers (:3000 + :5173)
-     yarn cli electron         # after both ports are ready
-     # or: yarn cli dev -v yakit
-     ```
+1. Launch development mode:
 
-See [`cli/README.md`](cli/README.md) for the full command list (`install` / `start` / `build` / `pack` / `electron` / `dev`), edition flags, and npm/pnpm equivalents.
+```bash
+yarn cli start -v yakit   # starts both renderers (:3000 + :5173)
+yarn cli electron         # launch Electron after both ports are ready
+# Or run everything in a single command:
+yarn cli dev -v yakit
 
-## Community
+```
 
-If you have any constructive feedback or bug reports regarding our product, we welcome everyone to raise an issue.
+1. Build & package unsigned local installers:
 
-You can also contact us through our official WeChat account for inquiries or to explore business licensing and partnership opportunities.
+```bash
+yarn cli build -v yakit
+yarn cli pack -s win -v yakit   # options: win | mac | linux | mwl
 
-If you would like to join our community for discussions or have questions to communicate with our technical team, please contact us and add our operations WeChat ID.
+```
 
-WeChat ID of the staff member:
+See [`cli/README.md`](cli/README.md) for the complete CLI reference (`install`, `start`, `build`, `pack`, `electron`, `dev`).
 
-![Staff WeChat ID](imgs/wechat2.png)
+---
 
-WeChat official account:
+## Community & Feedback
 
-![WeChat official account](imgs/wechat1.jpeg)
+- **Bug Reports & Feature Requests (English Fork)**: Open an issue in [professoxrmoriarty/yakit/issues](https://github.com/professoxrmoriarty/yakit/issues).
+- **Upstream Discussions & Core Engine**: Visit [yaklang/yakit Discussions](https://github.com/yaklang/yakit/discussions).
 
-## Stargazers over time
+---
 
-[![Stargazers over time](https://starchart.cc/yaklang/yakit.svg)](https://starchart.cc/yaklang/yakit)
+## Stargazers Over Time
+
+---
 
 ## Disclaimer
 
-1. This tool is only for legally authorized enterprise security construction behaviors and personal learning behaviors. If you need to test the usability of this tool, please build a virtual environment by yourself.
+1. This tool is intended strictly for legally authorized enterprise security assessments, defensive research, and personal educational use in isolated lab environments.
+2. Before conducting any penetration testing, ensure full compliance with local laws and regulations and obtain explicit written authorization from the target owner. Never scan or test unauthorized targets.
+3. Reverse engineering, decompiling, tampering with the software to implant backdoors, or distributing malware using this platform is strictly prohibited.
+4. Commercial deployment of Yakit requires official authorization from the upstream copyright holders.
 
-2. When using this tool for pentesting, you should ensure that the behavior complies with local laws and regulations and has obtained sufficient authorization. Do not scan unauthorized targets.
+By installing or using this software, you acknowledge that you have read, understood, and agreed to be bound by these terms, and you assume sole legal responsibility for your actions.
 
-3. Reverse engineering, decompiling, attempting to decipher the source code, implanting backdoors to spread malware, etc. on this software are prohibited.
-
-4. If you need to use Yakit for commercial purposes, please ensure that you have obtained official authorization; otherwise, we will hold you accountable for any related responsibilities.
-
-If you have any illegal behavior when using this tool, you shall bear the corresponding consequences by yourself, and we will not bear any legal and joint responsibility.
-
-Before installing and using this tool, please read carefully and fully understand the terms
-
-Unless you have fully read, fully understood, and accepted all the terms of this agreement, please do not install and use this tool. Your use behavior or your acceptance of this Agreement in any other express or implied manner shall be deemed to have been read and agreed to be bound by this Agreement
+---
