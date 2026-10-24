@@ -55,6 +55,8 @@ jobs:
         run: |
           mkdir -p /tmp/backup/workflows
           cp -r .github/workflows/* /tmp/backup/workflows/ 2>/dev/null || true
+          cp README_EN.md /tmp/backup/README_EN.md 2>/dev/null || true
+          cp README_LEGACY.md /tmp/backup/README_LEGACY.md 2>/dev/null || true
           if [ -f ".github/security_glossary.json" ]; then
             cp .github/security_glossary.json /tmp/backup/security_glossary.json
           fi
@@ -93,6 +95,14 @@ jobs:
           fi
           if [ -f "README_EN.md" ]; then
             cp README_EN.md README.md
+          fi
+          if [ -f "/tmp/backup/README_EN.md" ]; then
+            cp /tmp/backup/README_EN.md README_EN.md
+            cp /tmp/backup/README_EN.md README.md
+            cp /tmp/backup/README_EN.md README-EN.md
+          fi
+          if [ -f "/tmp/backup/README_LEGACY.md" ]; then
+            cp /tmp/backup/README_LEGACY.md README_LEGACY.md
           fi
 
       - name: 5. Setup Node.js & Python
