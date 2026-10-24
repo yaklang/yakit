@@ -1,45 +1,60 @@
-name: Sync Upstream & Auto-Translate (Full Stack PoC & Plugin Edition)
+name: Sync Upstream, Auto-Translate & Auto-Release (English Edition)
 
 on:
+  # ၆ နာရီခြား တစ်ကြိမ် Upstream Release အသစ် ရှိ/မရှိ စစ်ဆေးပြီး Auto-Sync လုပ်ရန်
   schedule:
-    - cron: '0 2 * * *'
+    - cron: '0 */6 * * *'
+  # စိတ်ကြိုက်အချိန်တွင် Manual နှိပ်၍ Run နိုင်ရန်
   workflow_dispatch:
     inputs:
-      create_release_tag:
-        description: 'Sync ပြီးပါက Release Tag အသစ် တစ်ခါတည်း ထုတ်မည်လား? (true/false)'
+      force_release:
+        description: 'Upstream Release အသစ်မရှိလည်း လက်ရှိကုဒ်ဖြင့် English Release အတင်းထုတ်မည်လား?'
+        type: boolean
         required: false
-        default: 'false'
+        default: false
 
 permissions:
   contents: write
+  actions: write
 
 env:
   UPSTREAM_REPO: "https://github.com/yaklang/yakit.git"
-  UPSTREAM_BRANCH: "main"
+  UPSTREAM_BRANCH: "master"
   TARGET_BRANCH: "english-edition"
 
 jobs:
   sync-and-translate:
+    name: Sync Upstream & Translate to English
     runs-on: ubuntu-latest
+    outputs:
+      should_release: ${{ steps.check_release.outputs.should_release }}
+      release_tag: ${{ steps.check_release.outputs.release_tag }}
     steps:
       - name: 1. Checkout Fork Repository
         uses: actions/checkout@v4
         with:
-          ref: ${{ env.TARGET_BRANCH }}
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: 2. Configure Git & Fetch Upstream
+      - name: 2. Configure Git, Fetch Upstream & Prepare Target Branch
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git remote add upstream ${{ env.UPSTREAM_REPO }} || true
-          git fetch upstream ${{ env.UPSTREAM_BRANCH }} --tags
+          git remote add upstream "${{ env.UPSTREAM_REPO }}" || git remote set-url upstream "${{ env.UPSTREAM_REPO }}"
+          git fetch upstream "${{ env.UPSTREAM_BRANCH }}" --tags
+          git fetch origin --prune --tags
+
+          # english-edition branch ရှိပြီးသားဆိုလျှင် ၎င်းကိုယူမည်၊ မရှိသေးပါက အသစ်ဆောက်မည်
+          if git show-ref --verify --quiet "refs/remotes/origin/${{ env.TARGET_BRANCH }}"; then
+            git checkout -B "${{ env.TARGET_BRANCH }}" "origin/${{ env.TARGET_BRANCH }}"
+          else
+            git checkout -B "${{ env.TARGET_BRANCH }}" "upstream/${{ env.UPSTREAM_BRANCH }}"
+          fi
 
       - name: 3. Merge Upstream Changes Cleanly
         run: |
-          mkdir -p /tmp/backup
-          cp -r .github/workflows /tmp/backup/workflows
+          mkdir -p /tmp/backup/workflows
+          cp -r .github/workflows/* /tmp/backup/workflows/ 2>/dev/null || true
           if [ -f ".github/security_glossary.json" ]; then
             cp .github/security_glossary.json /tmp/backup/security_glossary.json
           fi
@@ -47,20 +62,21 @@ jobs:
             cp .i18n_cache.json /tmp/backup/.i18n_cache.json
           fi
 
-          if ! git merge upstream/${{ env.UPSTREAM_BRANCH }} -X theirs --allow-unrelated-histories --no-edit; then
+          if ! git merge "upstream/${{ env.UPSTREAM_BRANCH }}" -X theirs --allow-unrelated-histories --no-edit; then
             git status --porcelain | awk '$1=="DU" || $1=="UD" {print $2}' | xargs -r git rm -f
             git checkout --theirs . || true
             git add -A
-            git commit --no-edit || true
+            git commit -m "chore(sync): resolve conflicts taking upstream changes" || true
           fi
 
+          # မိမိ၏ Custom Workflows နှင့် Glossary ဖိုင်များကို ပြန်ထည့်မည် (/tmp/backup လမ်းကြောင်းအမှန်ဖြင့်)
           mkdir -p .github/workflows
-          cp -r /tmp/backup/workflows/* .github/workflows/
+          cp -r /tmp/backup/workflows/* .github/workflows/ 2>/dev/null || true
           if [ -f "/tmp/backup/security_glossary.json" ]; then
-            cp .tmp/backup/security_glossary.json .github/security_glossary.json
+            cp /tmp/backup/security_glossary.json .github/security_glossary.json
           fi
           if [ -f "/tmp/backup/.i18n_cache.json" ]; then
-            cp .tmp/backup/.i18n_cache.json .i18n_cache.json
+            cp /tmp/backup/.i18n_cache.json .i18n_cache.json
           fi
 
           if [ -n "$(git status --porcelain)" ]; then
@@ -79,10 +95,10 @@ jobs:
             cp README_EN.md README.md
           fi
 
-      - name: 5. Setup Node.js & TypeScript Compiler
+      - name: 5. Setup Node.js & Python
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: 6. Install tsc, PyYAML & Translation Dependencies
         run: |
@@ -115,7 +131,6 @@ jobs:
           def has_zh(text):
               return bool(zh_char_re.search(str(text)))
 
-          # Load Glossary
           exact_glossary = {}
           inline_glossary = {}
           post_fix_patterns = []
@@ -133,7 +148,6 @@ jobs:
 
           sorted_inline_keys = sorted(inline_glossary.keys(), key=len, reverse=True)
 
-          # Load Cache
           cache = {}
           if os.path.exists(CACHE_FILE):
               try:
@@ -225,9 +239,7 @@ jobs:
                           cache[orig] = post_process_glossary(pre_p)
                   time.sleep(0.5)
 
-          # ==========================================
           # 1. Sync & Translate JSON Locales
-          # ==========================================
           def collect_json_zh(zh_obj, en_obj, collected):
               for k, v in zh_obj.items():
                   if isinstance(v, dict):
@@ -281,9 +293,7 @@ jobs:
                       with open(en_path, 'w', encoding='utf-8') as f:
                           json.dump(en_data, f, ensure_ascii=False, indent=2)
 
-          # =======================================================
           # 2. Scan & Translate Source Files (.ts, .tsx, .yak)
-          # =======================================================
           TOKEN_RE = re.compile(
               r'(//[^\n]*|/\*[\s\S]*?\*/)'
               r"|('(?:\\.|[^'\\\n])*')"
@@ -299,7 +309,7 @@ jobs:
               if not os.path.exists(base_dir):
                   continue
               for root, dirs, files in os.walk(base_dir):
-                  dirs[:] = [d for d in dirs if d not in {'node_modules', 'dist', 'locales', '__tests__'}]
+                  dirs[:] = [d for d in dirs if d not in {'node_modules', 'dist', 'locales', '__tests__', 'release'}]
                   for file in files:
                       if file.endswith(('.ts', '.tsx', '.yak')) and not file.endswith('.d.ts'):
                           full_path = os.path.join(root, file)
@@ -378,14 +388,12 @@ jobs:
                   with open(full_path, 'w', encoding='utf-8') as f:
                       f.write(new_content)
 
-          # =======================================================
-          # 3. Scan & Translate PoC YAML Templates (Nuclei / Yakit)
-          # =======================================================
+          # 3. Scan & Translate PoC YAML Templates (.github ကို ချန်လှပ်ထားသည်)
           yaml_files = []
           yaml_zh_strings = set()
 
           for root, dirs, files in os.walk("."):
-              dirs[:] = [d for d in dirs if d not in {'node_modules', 'dist', '.git', 'app'}]
+              dirs[:] = [d for d in dirs if d not in {'node_modules', 'dist', '.git', '.github', 'app', 'release', 'bins', 'cli'}]
               for file in files:
                   if file.endswith(('.yml', '.yaml')):
                       full_path = os.path.join(root, file)
@@ -401,7 +409,6 @@ jobs:
                       try:
                           data = yaml.safe_load(raw_yaml)
                           if isinstance(data, dict):
-                              # Vulnerability Name, Title, Description, Solution နှင့် Tags များကို စစ်ဆေးမည်
                               for field in ['name', 'description', 'solution', 'title', 'summary', 'author', 'reference', 'vuln-id']:
                                   val = data.get(field)
                                   if isinstance(val, str) and has_zh(val):
@@ -414,7 +421,6 @@ jobs:
                                       if isinstance(val, str) and has_zh(val):
                                           yaml_zh_strings.add(val)
                                       elif isinstance(val, dict):
-                                          # Classification အတွင်းရှိ cve-id သို့မဟုတ် vuln details များကိုပါ စစ်မည်
                                           for sub_k, sub_v in val.items():
                                               if isinstance(sub_v, str) and has_zh(sub_v):
                                                   yaml_zh_strings.add(sub_v)
@@ -441,12 +447,11 @@ jobs:
                   info_block = data.get('info')
                   if isinstance(info_block, dict):
                       for field in ['name', 'description', 'solution', 'author', 'summary']:
-                      v_info = info_block.get(field)
+                          v_info = info_block.get(field)
                           if isinstance(v_info, str) and v_info in cache:
                               info_block[field] = cache[v_info]
                               modified = True
 
-                      # Classification block အတွင်းရှိ တရုတ်စာများကိုပါ အစားထိုးမည်
                       class_block = info_block.get('classification')
                       if isinstance(class_block, dict):
                           for sub_k, sub_v in class_block.items():
@@ -477,7 +482,7 @@ jobs:
           const { execFileSync } = require('child_process');
           const ts = require('typescript');
 
-          const upstreamRef = `upstream/${process.env.UPSTREAM_BRANCH || 'main'}`;
+          const upstreamRef = `upstream/${process.env.UPSTREAM_BRANCH || 'master'}`;
           const revertedRecords = [];
 
           function git(args) {
@@ -572,41 +577,65 @@ jobs:
           }
 
           if (process.env.GITHUB_STEP_SUMMARY) {
-            let md = `### 🛡️ Full-Stack Translation Safety Check Report\n\n`;
+            let md = `### Full-Stack Translation Safety Check Report\n\n`;
             md += `- **Scanned TypeScript/Plugin Files:** ${tsFiles.length}\n`;
-            md += `- **Scanned JSON Locales & YAML PoCs:** ${jsonFiles.length}\n`;
+            md += `- **Scanned JSON Locales:** ${jsonFiles.length}\n`;
             md += `- **Auto-Reverted Files:** ${revertedRecords.length}\n\n`;
-            if (revertedRecords.length > 0) {
-              md += `| File | Error Code | Diagnostic | Recovery Action |\n`;
-              md += `| :--- | :--- | :--- | :--- |\n`;
-              for (const r of revertedRecords) {
-                md += `| \`${r.file}\` | \`${r.code}\` | ${r.reason.replace(/\|/g, '\\|')} | ${r.action} |\n`;
-              }
-            }
             fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, md);
           }
           EOF
 
-      - name: 9. Commit and Push Verified Changes
+      - name: 9. Commit and Push Verified English Edition
         run: |
           if [ -n "$(git status --porcelain)" ]; then
             git add -A
-            git commit -m "chore(i18n): translate UI, TS/Yak plugins and PoC YAML metadata with glossary"
+            git commit -m "chore(i18n): sync upstream and translate UI, plugins & PoC metadata to English"
           fi
+          git push -u origin "${{ env.TARGET_BRANCH }}"
 
-          AHEAD_COUNT=$(git rev-list --count origin/${{ env.TARGET_BRANCH }}..HEAD 2>/dev/null || echo "1")
-          if [ "$AHEAD_COUNT" -gt 0 ]; then
-            git push origin ${{ env.TARGET_BRANCH }}
-            echo "Successfully pushed $AHEAD_COUNT verified commit(s)."
-          else
-            echo "Already up-to-date with upstream."
-          fi
-
-      - name: 10. Create Release Tag (Optional)
-        if: github.event.inputs.create_release_tag == 'true'
+      - name: 10. Detect New Upstream Release & Prepare Tag
+        id: check_release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          LATEST_TAG=$(git describe --tags upstream/${{ env.UPSTREAM_BRANCH }} --abbrev=0 2>/dev/null || echo "v1.0.0")
-          NEW_TAG="${LATEST_TAG}-en.$(date +%Y%m%d)"
-          git tag -f "$NEW_TAG"
-          git push origin "$NEW_TAG" --force
-          echo "Created and pushed tag: $NEW_TAG"
+          # မူရင်း yaklang/yakit ၏ နောက်ဆုံးထွက် Official Release Tag ကို စစ်ဆေးခြင်း
+          UPSTREAM_LATEST=$(gh api repos/yaklang/yakit/releases/latest --jq '.tag_name' 2>/dev/null || true)
+          if [ -z "$UPSTREAM_LATEST" ] || [ "$UPSTREAM_LATEST" == "null" ]; then
+            UPSTREAM_LATEST=$(git tag -l "v*" --sort=-creatordate | grep -v -- "-en" | head -n 1)
+          fi
+
+          if [ -z "$UPSTREAM_LATEST" ]; then
+            UPSTREAM_LATEST="v$(date +'%Y.%m.%d')"
+          fi
+
+          EN_TAG="${UPSTREAM_LATEST}-en"
+          echo "Latest Upstream Release: ${UPSTREAM_LATEST} -> Target English Tag: ${EN_TAG}"
+
+          # မိမိ Fork Repo ၏ Releases ထဲတွင် ၎င်း English Tag ထုတ်ပြီးသား ရှိ/မရှိ စစ်မည်
+          RELEASE_EXISTS="false"
+          if gh release view "${EN_TAG}" --repo "${{ github.repository }}" >/dev/null 2>&1; then
+            RELEASE_EXISTS="true"
+          fi
+
+          if [ "${RELEASE_EXISTS}" == "false" ] || [ "${{ inputs.force_release }}" == "true" ]; then
+            echo "New upstream release detected (or forced)! Creating tag ${EN_TAG}..."
+            git tag -f "${EN_TAG}"
+            git push origin "${EN_TAG}" --force
+            echo "should_release=true" >> "$GITHUB_OUTPUT"
+            echo "release_tag=${EN_TAG}" >> "$GITHUB_OUTPUT"
+          else
+            echo "English release ${EN_TAG} already exists. Skipping build."
+            echo "should_release=false" >> "$GITHUB_OUTPUT"
+            echo "release_tag=${EN_TAG}" >> "$GITHUB_OUTPUT"
+          fi
+
+  # Upstream Release အသစ်တွေ့သည်နှင့် release-en.yml ကို တိုက်ရိုက်လှမ်းနှိုးပြီး Build လုပ်ပေးမည့်အဆင့်
+  trigger-english-build:
+    name: Auto-Trigger Multi-OS English Release
+    needs: sync-and-translate
+    if: needs.sync-and-translate.outputs.should_release == 'true'
+    uses: ./.github/workflows/release-en.yml
+    with:
+      tag_name: ${{ needs.sync-and-translate.outputs.release_tag }}
+      target_ref: ${{ needs.sync-and-translate.outputs.release_tag }}
+    secrets: inherit
