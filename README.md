@@ -1,9 +1,26 @@
 
-# 🛡️ Yakit (English Edition)
+<div align="center">
 
-[![Build & Release English Edition](https://github.com/professoxrmoriarty/yakit/actions/workflows/release-en.yml/badge.svg)](https://github.com/professoxrmoriarty/yakit/actions/workflows/release-en.yml)
-[![Sync Upstream & Auto-Translate](https://github.com/professoxrmoriarty/yakit/actions/workflows/sync-upstream.yml/badge.svg)](https://github.com/professoxrmoriarty/yakit/actions/workflows/sync-upstream.yml)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+# 🛡️ YAKIT — Cyber Security All-in-One Platform (English Edition)
+
+**An Interactive Penetration Testing Workbench Powered by the Yaklang Security Programming Language (CDSL)**
+
+[![Build & Release (English)](https://github.com/professoxrmoriarty/yakit/actions/workflows/release-en.yml/badge.svg)](https://github.com/professoxrmoriarty/yakit/actions/workflows/release-en.yml)
+[![Sync Upstream & Translate](https://github.com/professoxrmoriarty/yakit/actions/workflows/sync-upstream.yml/badge.svg)](https://github.com/professoxrmoriarty/yakit/actions/workflows/sync-upstream.yml)
+[![Latest Release](https://img.shields.io/github/v/release/professoxrmoriarty/yakit?label=English%20Release)](https://github.com/professoxrmoriarty/yakit/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/professoxrmoriarty/yakit/total)](https://github.com/professoxrmoriarty/yakit/releases)
+[![License](https://img.shields.io/github/license/professoxrmoriarty/yakit)](LICENSE.md)
+
+[Download English Installers](https://github.com/professoxrmoriarty/yakit/releases/latest) •
+[Whitepaper](https://yaklang.oss-cn-beijing.aliyuncs.com/yakit-technical-white-paper.pdf) •
+[Official Website (EN)](https://yaklang.com/en/) •
+[Official Documentation](https://yaklang.io/products/intro/) •
+[Issue Feedback](https://github.com/professoxrmoriarty/yakit/issues) •
+[Architecture](#architecture)
+
+</div>
+
+---
 
 > **Yakit English Edition** is an automated fork of the powerful cyber security ALL-IN-ONE platform [yaklang/yakit](https://github.com/yaklang/yakit). This repository automatically syncs with the upstream master branch every 6 hours, translates all UI locales (`zh` to `en`), security plugins (`.yak`), and vulnerability PoC YAML metadata into professional English using an advanced glossary-backed translation engine, and delivers fully compiled cross-platform installers.
 
@@ -18,15 +35,46 @@
 
 ---
 
-## 📥 Download Installers
+## 📥 Download English Edition Installers
 
-Get the latest native application installers directly from the [Releases Page](../../releases/latest):
+Pre-built installers with **English (`en`) enabled by default** (including translated UI, `.yak` plugins, and PoC YAML metadata) are published automatically on the [Releases Page](https://github.com/professoxrmoriarty/yakit/releases/latest):
 
-| Platform | Architecture | File Format | Download Link |
+| Operating System | Architecture | Package Format | Download |
 | :--- | :--- | :--- | :--- |
-| **Windows** | x64 / x86_64 | `.exe` (NSIS Installer) | [Download Latest (.exe)](../../releases/latest) |
-| **macOS** | Apple Silicon (M1/M2/M3/M4) & Intel | `.dmg` | [Download Latest (.dmg)](../../releases/latest) |
-| **Linux** | x64 | `.AppImage` | [Download Latest (.AppImage)](../../releases/latest) |
+| **Windows** | x64 (`amd64`) | `.exe` (NSIS Installer) | [Latest Windows `.exe`](https://github.com/professoxrmoriarty/yakit/releases/latest) |
+| **macOS** | Apple Silicon (`arm64`) & Intel (`x64`) | `.dmg` | [Latest macOS `.dmg`](https://github.com/professoxrmoriarty/yakit/releases/latest) |
+| **Linux** | x64 (`amd64`) & `arm64` | `.AppImage` | [Latest Linux `.AppImage`](https://github.com/professoxrmoriarty/yakit/releases/latest) |
+
+---
+
+## Introduction
+
+Security integration represents a major evolution in enterprise security operations and offensive testing workflows.
+
+Built around the concept of unified security engineering, the Yaklang team created **Yaklang**—a vertical Domain-Specific Language (CDSL) purpose-built for cybersecurity:
+- For tools that cannot be natively integrated, Yaklang provides clean, high-performance native rewrites.
+- For mature open-source security ecosystems, Yaklang directly compiles and integrates them at the engine level.
+- For security practitioners who prefer visual workflows without writing code, **Yakit** provides a full-featured graphical workbench connected to the Yaklang engine over gRPC.
+
+---
+
+## 🔧 Development Setup
+
+Prerequisites:
+
+* Node.js 22.22.x (recommended) and Yarn 1.x
+* Git
+* Windows, macOS, or Linux
+
+Steps:
+
+1. Clone the repository:
+
+   ```bash
+   git clone https://github.com/professoxrmoriarty/yakit.git
+   cd yakit
+   git checkout english-edition  # Switch to English branch
+   ```
 
 ---
 
