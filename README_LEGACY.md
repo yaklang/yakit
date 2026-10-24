@@ -1,84 +1,106 @@
 
-## 1. YAK语言简介
+# Yakit & Yaklang — Legacy Overview (English Edition)
 
-一群拥有丰富网络安全从业经验的工程师，对现有的通用编程语言感到不满——他们想要的是一个开源的语言，它要具备Golang的高并发执行能力；要像Python一样**语法简单**；要是个**脚本语言**，这样可以快速分发给同伴；要可以一次编写直接执行，而不要安装第三方库；要原生**具备网络安全专用能力**，如端口探测、SYN无状态扫描、Nmap的服务指纹，并以函数形式扩展提供；还有，它应该是**图灵完备**的，**易于学习**的……
+</div>
 
-所以，Yak 语言诞生了！
+## 1. Introduction to the Yak Language
 
-YAK是国际上首个为网络安全而生的“领域特定语言（Domain Specific Language）”，提供了非常强大的安全能力。Yak是绝大部分 “数据描述语言/容器语言” 的超集，宿主语言采用Golang，具备Go语言所有能力与库生态，具备自己的VSCode插件等。Yak语法可自定义，是一门图灵完备的脚本语言，完全**国产**。通过函数提供各类底层安全能力，包括端口扫描、指纹识别、poc框架、shell管理、MITM劫持、强大的插件系统等。
+A group of seasoned cybersecurity engineers grew frustrated with the limitations of general-purpose programming languages in offensive security—they wanted an open-source language with **Go's high-concurrency performance**, **Python's clean and simple syntax**, and the portability of a **zero-dependency scripting language** that could be shared and executed immediately without installing third-party packages. Above all, it needed **built-in native security primitives**—such as port probing, stateless SYN scanning, and Nmap service fingerprinting—exposed directly as standard functions in a **Turing-complete**, easy-to-learn language.
 
-## 2. YAKIT单兵工具简介
+That vision gave birth to **Yaklang**!
 
-Yakit是基于Yak语言开发的网络安全单兵工具，旨在打造一个覆盖渗透测试全流程的网络安全工具库。
+**Yak** is the world's first **Cybersecurity Domain-Specific Language (DSL)**. Hosted on Go, it inherits Go's concurrency model and library ecosystem while acting as a superset of common data-description languages, complete with dedicated VS Code tooling. Yak exposes low-level offensive and defensive capabilities directly as built-in functions, including port scanning, service fingerprinting, PoC frameworks, shell management, MITM interception, and an extensible plugin architecture.
 
-受限于Yak使用形式，用户必须学习 Yak 语言并同时具备对安全的一定理解。为了让 Yak 本身的安全能力更容易被大家接受和使用，我们为Yak编写了gRPC服务器，并使用这个服务器构建了一个客户端：Yakit，通过界面化GUI的形式，降低大家使用Yak的门槛。
+---
 
+## 2. Introduction to the Yakit Standalone Workbench
 
-### 2.1 Burpsuite 的年轻中国挑战者
+**Yakit** is an all-in-one cybersecurity workbench built on top of Yaklang, designed to cover the entire penetration testing lifecycle in a single graphical interface.
 
-Burpsuite几乎成为全球WEB安全从业者必装的安全测试工具，然而十余年来尚无一个可替代的解决方案。破解版被投毒风险高、商业版太贵、插件难写、依赖java等等问题逐渐显露。我们团队基于yak顺手实现了BurpSuite的核心功能，期望给所有的从业者一个新的选择。完全替代并不是我们终极目标，替代并超越，切实降低门槛，提升从业者工作效率，才是我们的追求。
+While CLI scripting in Yaklang is powerful, writing code raises the barrier to entry for day-to-day testing. To make Yaklang's native capabilities accessible to every security practitioner, we built a decoupled `yak grpc` server and paired it with the **Yakit GUI client**.
 
-当前，我们已经实现了BurpSuite常用的功能，包括拦截并修改请求/返回报文、history模块、repeater模块、intruder模块，并且在我们的fuzz模块中创新性的实现了GUI标签fuzz，具备更好的可扩展性。
+---
 
-**HTTP History**：
+### 2.1 A Modern Challenger to Burp Suite
 
-![image-20220106162406937](./imgs/image-20220106162406937.png)
+For over a decade, Burp Suite has been a staple for web security practitioners, yet common pain points persist: cracked builds carry high malware/supply-chain risks, commercial licenses are expensive, extensions can be cumbersome to write, and heavy Java runtime dependencies complicate deployment. Built on Yaklang, Yakit implements and extends core web proxy workflows to offer security engineers a fast, modern alternative.
 
-**WEB Fuzzer:**
+Yakit includes request/response interception and tampering, **HTTP History**, **Repeater**, **Intruder**, and an innovative **GUI Fuzztag** engine inside **Web Fuzzer** for rapid vulnerability testing.
 
-![image-20220106162442487](./imgs/image-20220106162442487.png)
-
-**被动漏洞检测系统：**
-
-![image-20220106165619622](./imgs/image-20220106165619622.png)
+<img width="2521" height="4189" alt="Untitled diagram-2026-10-24-231648" src="https://github.com/user-attachments/assets/81e09bbc-8438-44f7-a180-b2daefe4d2ea" />
 
 
-### 2.2 Poc/Exp超集
+---
 
-在实战安全测试过程中，我们经常面临一个需求，即已知对方使用了weblogic/struts2等，需要一键检测是否存在指定漏洞，然而这么简单的需求我们当下却要打开各种专用工具不停切换，甚至为了安装某个工具而不得不切换Windows/Linux，或者安装一堆复杂的依赖。在yakit上，我们将致力于提供一站式的解决方案，您只需要输入目标，点击开始检测按钮，即可快速得到结果。
+### 2.2 Comprehensive PoC / Exploit Superset
 
-![image-20220106162908302](./imgs/image-20220106162908302.png)
+During real-world engagements, identifying a target running frameworks like WebLogic or Struts2 typically forces testers to switch between dozens of standalone scripts, OS environments, or conflicting Python/Java dependencies just to verify known CVEs. Yakit consolidates this into a **one-stop detection workflow**: enter the target URL/IP, select the module or tag, and click **Start Scan**.
 
-为了快速提升poc的检测能力，我们在yak语言中原生集成了nuclei(MIT协议)，当然，在插件模块中，你可以基于yak/yaml编写各种你想要的检测能力，并将插件快速展示到左侧菜单栏中。**快来跟我们一起完善Yakit插件吧**
+<img width="2806" height="1679" alt="Untitled diagram-2026-10-24-231802" src="https://github.com/user-attachments/assets/49dc757d-dc58-4a6a-bcf5-5d1308199636" />
 
-### 2.3 ”地表最强“的插件系统
 
-作为一个单兵工具平台，自然离不开可快速扩展的插件系统。理论上一个带界面的插件，编写者需要对前端、后台都比较熟悉，这增大了开发者的进入门槛。与其他平台不同的是，我们在设计时，插件核心代码全部用yak实现，并且可以通过yakit库实现与界面的交互，除此之外，为了配得上”地表最强“，您还可以参考以下文章的描述：
+Yakit natively embeds the **Nuclei** engine (MIT License) inside Yaklang while allowing security researchers to author custom `.yak` or `.yaml` checks in the Plugin System and pin them directly to the sidebar menu.
 
-[插件设计思路](https://www.yaklang.io/products/professional/yak-script-system)
+---
 
-[插件编写指南](https://www.yaklang.io/products/professional/yakit-plugin-how-to)
+### 2.3 Next-Generation Full-Stack Plugin System
 
-![img](./imgs/image-20220106162406945.png)
+A modern security workbench thrives on extensibility. Traditionally, building a GUI-enabled security plugin requires both frontend (HTML/JS/CSS) and backend expertise. In Yakit, **100% of plugin logic and interactive UI bindings are written directly in Yaklang** using `yakit` UI helper libraries—eliminating frontend boilerplate so security researchers can publish visual tools in minutes.
 
-### 2.4 Teamserver设计
+* [Plugin Architecture Concepts](https://www.yaklang.io/products/professional/yak-script-system)
+* [Plugin Authoring Guide](https://www.yaklang.io/products/professional/yakit-plugin-how-to)
 
-由于 Yak 核心引擎与 Yakit 的分离式安装，Yakit 仅仅作为一个客户端而存在，Yakit 的使用理所当然就应该存在两种模式。
+<img width="1799" height="1679" alt="Untitled diagram-2026-10-24-231832" src="https://github.com/user-attachments/assets/a4b924a4-4ada-497e-9ba9-5a1ed78f8f1e" />
 
-1. 本地模式：默认启动一个随机端口的 `yak grpc` 服务器
 
-2. 远程模式：
+---
 
-   ```
-   yak grpc
-   ```
+### 2.4 Decoupled Teamserver & Intranet Bridge Design
 
-   可以启动在任何平台 / 任何网络位置，包括
+Because the core `yak` engine and the `Yakit` desktop GUI are completely decoupled, Yakit supports flexible deployment topologies:
 
-   * 远端托管主机 ECS/VPS
+1. **Local Mode**: Automatically spawns a local `yak grpc` engine on a random port out of the box.
+2. **Remote Mode**: Run `yak grpc` on any platform or network boundary, including:
 
-   * 本地个人 PC
+* Cloud VPS / ECS instances
+* Dedicated testing workstations
+* Internal segmented lab hosts
 
-   * 内网环境
+1. **Bridge Mode**: Maps internal network engines back to a public relay via reverse tunneling—allowing operators to perform intranet lateral movement directly from the Yakit GUI without manually configuring external port forwarders like `frp`.
 
-除此以外，我们还创新性的加入了brige模式，可方便的将内网通过反弹模式映射到公网，在这种模式下，我们不在需要安装frp之类的端口转发工具，而是在一个GUI界面下，执行内网横向移动操作，极大的提升了测试效率。
+<img width="5058" height="619" alt="Untitled diagram-2026-10-24-231931" src="https://github.com/user-attachments/assets/17e79698-80c4-457e-a7aa-f162a32bbfb8" />
 
-![image-20220106203601893](./imgs/image-20220106203601893.png)
 
-### 2.5 原生的JAVA反序列化能力支持
+---
 
-在当下环境，我们要检测java反序列化漏洞，在生成payload阶段，我们通常需要借助[ysoserial](https://github.com/frohoff/ysoserial)，然而这种解决方案不仅需要安装java环境，还甚至需要安装指定版本的java才行。而yakit则使用yak原生实现了java反序列化协议的支持，如此一来，我们即可方便的通过编写yak脚本快速对目标进行测试。
+### 2.5 Native Java Deserialization Support (JDK-Free)
 
-![image-20220106204618700](./imgs/image-20220106204618700.png)
+Testing Java deserialization vulnerabilities traditionally relies on tools like [ysoserial](https://github.com/frohoff/ysoserial), which require installing specific legacy JDK versions and managing JVM flags. **Yaklang implements the Java Object Serialization protocol natively in Go/Yak**, allowing testers to generate gadget chains, inspect serialized streams, and mutate Java objects directly from `.yak` scripts with **zero Java/JDK dependencies**.
 
-该部分的使用详情请参见文章[”新年献礼：使用 Yakit 打破 Java 序列化协议语言隔离“](https://mp.weixin.qq.com/s/HdUARJFQu3WMWvvqs9VGyg )
+<img width="3835" height="619" alt="Untitled diagram-2026-10-24-231958" src="https://github.com/user-attachments/assets/0e9457b4-791b-4ea0-bb60-3c257e7bf5c3" />
+
+
+---
+
+### 3. Keep Both English READMEs Safe During Auto-Sync
+
+In `.github/workflows/sync-upstream.yml`, update **Step 3** and **Step 4** slightly so upstream merges never overwrite your English `README.md`, `README-EN.md`, or `README_LEGACY.md`:
+
+```yaml
+      # Inside Step 3 (Backup before git merge):
+      cp README_EN.md /tmp/backup/README_EN.md 2>/dev/null || true
+      cp README_LEGACY.md /tmp/backup/README_LEGACY.md 2>/dev/null || true
+
+      # Inside Step 4 (Restore after git merge):
+      if [ -f "/tmp/backup/README_EN.md" ]; then
+        cp /tmp/backup/README_EN.md README_EN.md
+        cp /tmp/backup/README_EN.md README.md
+        cp /tmp/backup/README_EN.md README-EN.md
+      fi
+      if [ -f "/tmp/backup/README_LEGACY.md" ]; then
+        cp /tmp/backup/README_LEGACY.md README_LEGACY.md
+      fi
+
+```
+
+---
