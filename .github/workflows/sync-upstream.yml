@@ -634,8 +634,17 @@ jobs:
     name: Auto-Trigger Multi-OS English Release
     needs: sync-and-translate
     if: needs.sync-and-translate.outputs.should_release == 'true'
-    uses: ./.github/workflows/release-en.yml
-    with:
-      tag_name: ${{ needs.sync-and-translate.outputs.release_tag }}
-      target_ref: ${{ needs.sync-and-translate.outputs.release_tag }}
-    secrets: inherit
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - name: Dispatch English release workflow
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ needs.sync-and-translate.outputs.release_tag }}
+        run: >-
+          gh workflow run release-en.yml
+          --repo "${{ github.repository }}"
+          --ref "$RELEASE_TAG"
+          --field tag_name="$RELEASE_TAG"
+          --field target_ref="$RELEASE_TAG"
