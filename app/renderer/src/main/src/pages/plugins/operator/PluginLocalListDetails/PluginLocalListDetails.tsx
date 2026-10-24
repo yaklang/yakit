@@ -71,10 +71,10 @@ export const PluginLocalListDetails: React.FC<PluginLocalListDetailsProps> = Rea
 
     const [loading, setLoading] = useState<boolean>(false)
     const [hasMore, setHasMore] = useState<boolean>(true)
-    const [response, dispatch] = useReducer(pluginLocalReducer, initialLocalState)
+ const [response, dispatch] = useReducer(pluginLocalReducer, initialLocalState)
 
-    /** 是否为初次加载 */
-    const isLoadingRef = useRef<boolean>(true)
+ /** 是否为初次加载 */
+ const isLoadingRef = useRef<boolean>(true)
     const privateDomainRef = useRef<string>('') // 私有域地址
     const pluginListRef = useRef<HTMLDivElement>(null)
 

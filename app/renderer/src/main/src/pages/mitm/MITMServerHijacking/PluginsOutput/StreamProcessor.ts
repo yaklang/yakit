@@ -46,13 +46,13 @@ export class StreamProcessorManager {
   processors = new Map<string, StreamProcessor>()
   // 插件名 -> 更新状态映射
   updates = new Map<string, StreamUpdateState>()
-  // 是否存在任意插件有未消费的新数据，用于全局更新提示
-  hasUpdate = false
+ // 是否存在任意插件有未消费的新数据，用于全局更新提示
+ hasUpdate = false
 
-  private lastNotify = 0 // 上次通知时间
-  private notifyInterval = 1000 // 通知最小间隔(ms)
-  private scheduled = false // 通知调度标记
-  listeners = new Set<() => void>() // 订阅 UI 更新的回调集
+ private lastNotify = 0 // 上次通知时间
+ private notifyInterval = 1000 // 通知最小间隔(ms)
+ private scheduled = false // 通知调度标记
+ listeners = new Set<() => void>() // 订阅 UI 更新的回调集
 
   /**
    * 订阅更新回调，返回解绑函数
@@ -240,14 +240,14 @@ export class StreamProcessor {
   progressKVPair = new Map<string, number>()
   // card
   cardKVPair = new Map<string, HoldGRPCStreamProps.CacheCard>()
-  // 前置tabs
-  topTabs: HoldGRPCStreamProps.InfoTab[] = []
-  // 后置tabs
-  endTabs: HoldGRPCStreamProps.InfoTab[] = []
-  // tabInfo-website
-  tabWebsite?: StreamResult.WebSite
-  // tabInfo-table
-  tabTable = new Map<string, HoldGRPCStreamProps.CacheTable>()
+ // 前置tabs
+ topTabs: HoldGRPCStreamProps.InfoTab[] = []
+ // 后置tabs
+ endTabs: HoldGRPCStreamProps.InfoTab[] = []
+ // tabInfo-website
+ tabWebsite?: StreamResult.WebSite
+ // tabInfo-table
+ tabTable = new Map<string, HoldGRPCStreamProps.CacheTable>()
   // tabInfo-text
   tabsText = new Map<string, string>()
   // logs

@@ -583,7 +583,7 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
                         size="large"
                       >
                         <YakitSelect.Option value="mitm">MITM</YakitSelect.Option>
-                        <YakitSelect.Option value="port-scan">端口扫描</YakitSelect.Option>
+                        <YakitSelect.Option value="port-scan">Port Scan</YakitSelect.Option>
                       </YakitSelect>
                     </Form.Item>
                   )}

@@ -53,8 +53,8 @@ export const YakitVirtualList = <T extends any>(props: YakitVirtualListProps<T>)
 
   const containerRef = useRef<HTMLDivElement>(null)
   const wrapperRef = useRef<HTMLDivElement>(null)
-  // 动态行高缓存
-  const [rowHeights, setRowHeights] = useState<Map<number, number>>(new Map())
+ // 动态行高缓存
+ const [rowHeights, setRowHeights] = useState<Map<number, number>>(new Map())
   const { expandedRowRender, expandedRowKeys = [], onExpend, setExpandedKeys } = expandable || {}
 
   // 当 data 变化时，重置高度缓存（避免使用错误的高度）

@@ -78,8 +78,8 @@ export const PluginDebug: React.FC<PluginDebugProps> = memo((props) => {
 
   /** --------------- 合并代码 Start --------------- */
   const [diffShow, setDiffShow] = useState<boolean>(false)
-  // 强制更新对比器显示内容
-  const triggerDiffUpdate = useRef<boolean>(false)
+ // 强制更新对比器显示内容
+ const triggerDiffUpdate = useRef<boolean>(false)
   // 编辑器语言
   const diffLanguage = useMemo(() => {
     return GetPluginLanguage(pluginType)

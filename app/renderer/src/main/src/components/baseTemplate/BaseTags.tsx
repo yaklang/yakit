@@ -17,10 +17,10 @@ export const TagsList: React.FC<TagsListProps> = React.memo((props) => {
   const { data, ellipsis, className, size, ...otherProps } = props
   const tagListRef = useRef<any>(null)
   const tagEllipsis = useRef<any>(null)
-  // 展示数据源
-  const [dataSource, setDataSource] = useState<string[]>([])
-  // 省略后隐藏项
-  const [ellipsisTags, setEllipsisTags, getEllipsisTags] = useGetState<string[]>([])
+ // 展示数据源
+ const [dataSource, setDataSource] = useState<string[]>([])
+ // 省略后隐藏项
+ const [ellipsisTags, setEllipsisTags, getEllipsisTags] = useGetState<string[]>([])
   useEffect(() => {
     // 省略模式 动态计算
     if (ellipsis) {

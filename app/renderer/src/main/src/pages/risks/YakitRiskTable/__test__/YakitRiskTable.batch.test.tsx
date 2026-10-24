@@ -7,7 +7,7 @@ import { YakitRiskTable } from '../YakitRiskTable'
 import { DISPOSAL_STATUS_OPTIONS } from '../constants'
 
 const rows: Risk[] = [
-  { Id: 11, Hash: 'risk-11', IP: '127.0.0.1', Title: 'risk 11', RiskType: 'SQL注入', CreatedAt: 1 },
+  { Id: 11, Hash: 'risk-11', IP: '127.0.0.1', Title: 'risk 11', RiskType: 'SQL Injection', CreatedAt: 1 },
   { Id: 22, Hash: 'risk-22', IP: '127.0.0.2', Title: 'risk 22', RiskType: 'XSS', CreatedAt: 2 },
 ]
 
@@ -248,7 +248,7 @@ const query: QueryRisksRequest = {
   IsRead: '',
   Title: '',
   Ids: [],
-  RiskTypeList: ['SQL注入'],
+  RiskTypeList: ['SQL Injection'],
   SeverityList: [],
   TagList: [],
   IPList: [],
@@ -336,8 +336,8 @@ describe('YakitRiskTable 批量操作', () => {
     mocks.enterprise = enterprise
     mocks.queryRiskTypes.mockResolvedValue([
       { Name: 'info', Verbose: '', Total: 3 },
-      { Name: 'sqli', Verbose: 'SQL注入', Total: 2 },
-      { Name: 'sqli-other', Verbose: 'SQL注入', Total: 1 },
+      { Name: 'sqli', Verbose: 'SQL Injection', Total: 2 },
+      { Name: 'sqli-other', Verbose: 'SQL Injection', Total: 1 },
       { Name: 'custom', Verbose: '   ', Total: 1 },
       { Name: '', Verbose: '', Total: 1 },
     ])
@@ -345,7 +345,7 @@ describe('YakitRiskTable 批量操作', () => {
     const filters = mocks.columns.find((column) => column.dataKey === 'RiskTypeVerbose').filterProps.filters
     expect(filters).toEqual([
       { value: 'info', label: 'info', total: 3 },
-      { value: 'SQL注入', label: 'SQL注入', total: 3 },
+      { value: 'SQL Injection', label: 'SQL Injection', total: 3 },
       { value: 'custom', label: 'custom', total: 1 },
     ])
   })
@@ -395,7 +395,7 @@ describe('YakitRiskTable 批量操作', () => {
     if (mode === 'single') {
       const column = mocks.columns.find((item) => item.dataKey === 'RiskTypeVerbose')
       const cell = render(column.render('', rows[0]))
-      fireEvent.click(cell.getByText('SQL注入'))
+      fireEvent.click(cell.getByText('SQL Injection'))
       formProps = mocks.showModal.mock.calls[0][0].content.props
     } else {
       fireEvent.click(screen.getByRole('button', { name: 'select-first' }))
@@ -436,7 +436,7 @@ describe('YakitRiskTable 批量操作', () => {
     fireEvent.click(screen.getByRole('button', { name: 'select-second' }))
 
     const formProps = openBatchEdit()
-    await formProps.onSave({ RiskType: 'SQL注入', SeverityScore: 8.8, Tags: '确认' })
+    await formProps.onSave({ RiskType: 'SQL Injection', SeverityScore: 8.8, Tags: '确认' })
 
     expect(mocks.batchSetRiskTags).toHaveBeenCalledTimes(1)
     const request = mocks.batchSetRiskTags.mock.calls[0][0]
@@ -462,7 +462,7 @@ describe('YakitRiskTable 批量操作', () => {
     fireEvent.click(screen.getByRole('button', { name: 'select-first' }))
     const typeColumn = mocks.columns.find((column) => column.dataKey === 'RiskTypeVerbose')
     const cell = render(typeColumn.render('', rows[0]))
-    fireEvent.click(cell.getByText('SQL注入'))
+    fireEvent.click(cell.getByText('SQL Injection'))
     const editProps = mocks.showModal.mock.calls[0][0].content.props
     await act(async () => {
       await editProps.onSave({ ...rows[0], RiskType: 'SSRF', SeverityScore: 8.8, Tags: '确认', TagReason: '已核实' })
@@ -525,7 +525,7 @@ describe('YakitRiskTable 批量操作', () => {
       expect.objectContaining({
         Search: 'needle',
         Network: '10.0.0.0/8',
-        RiskType: 'SQL注入',
+        RiskType: 'SQL Injection',
         IsRead: 'false',
       }),
     )
@@ -537,7 +537,7 @@ describe('YakitRiskTable 批量操作', () => {
     fireEvent.click(screen.getByRole('button', { name: 'select-first' }))
 
     const formProps = openBatchEdit()
-    await expect(formProps.onSave({ RiskType: 'SQL注入', SeverityScore: 4, Tags: '确认' })).rejects.toThrow(
+    await expect(formProps.onSave({ RiskType: 'SQL Injection', SeverityScore: 4, Tags: '确认' })).rejects.toThrow(
       'save failed',
     )
 
@@ -587,7 +587,7 @@ describe('YakitRiskTable 批量操作', () => {
     await waitFor(() => expect(mocks.deleteRisk).toHaveBeenCalledTimes(1))
     const request = mocks.deleteRisk.mock.calls[0][0]
     expect(request).toEqual({
-      Filter: expect.objectContaining({ Search: 'needle', Network: '10.0.0.0/8', RiskType: 'SQL注入' }),
+      Filter: expect.objectContaining({ Search: 'needle', Network: '10.0.0.0/8', RiskType: 'SQL Injection' }),
     })
     expect(request).not.toHaveProperty('Ids')
   })
@@ -649,7 +649,7 @@ describe('YakitRiskTable 批量操作', () => {
     fireEvent.click(screen.getByRole('button', { name: 'batch-modify' }))
     const formProps = mocks.showModal.mock.calls[0][0].content.props
     expect(formProps.batchCount).toBe(101)
-    await formProps.onSave({ RiskType: 'SQL注入', SeverityScore: 7.5, Tags: '确认' })
+    await formProps.onSave({ RiskType: 'SQL Injection', SeverityScore: 7.5, Tags: '确认' })
 
     const request = mocks.batchSetRiskTags.mock.calls[0][0]
     expect(request).toHaveProperty('Filter')

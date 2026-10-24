@@ -13,9 +13,8 @@ type UiExpandTuple = [boolean, Dispatch<SetStateAction<boolean>>, () => void]
  * 从指定 chatStore 订阅展开态，写操作统一走 ChatMultiSessionController。
  * 订阅粒度仅为 uiExpandMap[token]，其它 token 变更不会触发本组件重渲染。
  */
-export function useUiExpandFromStore(
-  sessionId: string,
-  store: StoreApi<ChatStoreState>,
+export function useUiExpandFromStore(sessionId: string,
+ store: StoreApi<ChatStoreState>,
   token: string,
   defaultExpand: boolean,
 ): UiExpandTuple {

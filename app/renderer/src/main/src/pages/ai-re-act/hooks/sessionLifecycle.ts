@@ -10,10 +10,10 @@ export class SessionLifecycle {
   started = false
   /** 当前连接按接收顺序处理事件的链尾，end 等待它后才刷最终快照。 */
   events: Promise<void> = Promise.resolve()
-  /** 建联前清理任务；结束及删除必须等它退出，避免迟到清理影响下一轮。 */
-  preparation: Promise<void> = Promise.resolve()
-  /** 同一次收尾只执行一次，重复 end / dispose 共享结果。 */
-  ending?: Promise<void>
+ /** 建联前清理任务；结束及删除必须等它退出，避免迟到清理影响下一轮。 */
+ preparation: Promise<void> = Promise.resolve()
+ /** 同一次收尾只执行一次，重复 end / dispose 共享结果。 */
+ ending?: Promise<void>
   /** 保存首次处理或持久化失败，供历史恢复及关闭判断是否真正保存成功。 */
   error?: unknown
 }

@@ -4,9 +4,9 @@ export type useVirtualTableHookParams<T, DataT, DataKey extends string> = {
   // 表格容器ref
   tableBoxRef: React.MutableRefObject<any>
   // 表格ref
-  tableRef: React.MutableRefObject<any>
+ tableRef: React.MutableRefObject<any>
   // 表格容器ref
-  boxHeightRef: React.MutableRefObject<any>
+ boxHeightRef: React.MutableRefObject<any>
   // 请求接口
   grpcFun: (params: ParamsTProps) => Promise<DataResponseProps<DataT, DataKey>>
   // 默认请求参数

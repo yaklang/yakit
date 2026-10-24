@@ -7,7 +7,7 @@ vi.mock('@/i18n/useI18nNamespaces', () => ({
     t: (key: string) => {
       if (key === 'SettingsPage.item.general') return '通用'
       if (key === 'SettingsPage.item.appearance') return '外观'
-      if (key === 'SettingsPage.item.reverse') return '反连'
+      if (key === 'SettingsPage.item.reverse') return 'Reverse Connection'
       if (key === 'SettingsPage.item.right-click-plugins') return '右键插件管理'
       return key
     },
@@ -50,7 +50,7 @@ describe('SettingsContent', () => {
 
   it('hideOuterTitle 的 reverse 不渲染外层标题', () => {
     render(<SettingsContent anchor="reverse" />)
-    expect(screen.queryByText('反连')).not.toBeInTheDocument()
+    expect(screen.queryByText('Reverse Connection')).not.toBeInTheDocument()
     expect(screen.getByTestId('panel-reverse')).toBeInTheDocument()
   })
 

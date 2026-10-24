@@ -19,7 +19,7 @@ const item: MCPToolConfig = {
   ServerName: '',
   Enable: true,
   Description: 'scan ports',
-  DescriptionI18n: { Zh: '端口扫描', En: 'port scan' },
+  DescriptionI18n: { Zh: 'Port Scan', En: 'port scan' },
   Params: [
     { Name: 'target', Type: 'string', Description: '目标', Default: '', Required: true },
     { Name: 'ports', Type: 'string', Description: '端口', Default: '80', Required: false },
@@ -30,7 +30,7 @@ describe('AIMCPToolDetailPopover', () => {
   it('展示工具名、i18n 描述和参数列表', () => {
     render(<AIMCPToolDetailPopover item={item} />)
     expect(screen.getByText('port_scan')).toBeInTheDocument()
-    expect(screen.getByText('端口扫描')).toBeInTheDocument()
+    expect(screen.getByText('Port Scan')).toBeInTheDocument()
     expect(screen.getByText('target')).toBeInTheDocument()
     expect(screen.getByText('ports')).toBeInTheDocument()
     expect(screen.getByText('目标')).toBeInTheDocument()

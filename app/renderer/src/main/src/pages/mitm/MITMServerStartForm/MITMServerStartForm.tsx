@@ -127,9 +127,9 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
   const [isUseDefRules, setIsUseDefRules] = useState<boolean>(false)
   const [advancedFormVisible, setAdvancedFormVisible] = useState<boolean>(false)
 
-  // 高级配置 关闭后存的最新的form值
-  // 性能优化：advancedValue 仅在 execStartMITM 回调中读取，不在 JSX 中渲染，改为 ref
-  const advancedValueRef = useRef<AdvancedConfigurationFromValue>()
+ // 高级配置 关闭后存的最新的form值
+ // 性能优化：advancedValue 仅在 execStartMITM 回调中读取，不在 JSX 中渲染，改为 ref
+ const advancedValueRef = useRef<AdvancedConfigurationFromValue>()
 
   const ruleButtonRef = useRef<any>()
   const advancedFormRef = useRef<any>()

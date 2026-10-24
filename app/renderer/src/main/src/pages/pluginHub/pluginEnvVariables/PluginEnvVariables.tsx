@@ -167,8 +167,8 @@ export const PluginEnvVariables: React.FC<PluginEnvVariablesProps> = memo((props
   // 旧环境变量信息
   const oldEnvInfo = useRef<PluginEnvInfo>()
 
-  // 双击编辑
-  const inputRef = useRef<InputRef>(null)
+ // 双击编辑
+ const inputRef = useRef<InputRef>(null)
   const [activeEditKey, setActiveEditKey] = useState<string>()
   const [envValue, setEnvValue] = useState<string>('')
   const handleInitDouble = useMemoizedFn(() => {

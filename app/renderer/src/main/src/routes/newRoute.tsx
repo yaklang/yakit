@@ -359,7 +359,7 @@ export const YakitRouteToPageInfo: Record<
     describeUi: 'YakitRoute.bruteForceDescription',
   },
   'plugin-hub': {
-    label: '插件仓库',
+    label: 'Plugin Store',
     labelUi: 'YakitRoute.pluginHub',
     describeUi: 'YakitRoute.massiveYakitPluginsOne-ClickDownload',
   },
@@ -389,7 +389,7 @@ export const YakitRouteToPageInfo: Record<
     describeUi: 'YakitRoute.fuzzPayLoadDeserialization',
   },
   ReverseServer_New: {
-    label: '反连服务器',
+    label: 'Reverse Server',
     labelUi: 'YakitRoute.reverseServer',
     describeUi: 'YakitRoute.simultaneouslyProvideHTTP/RMI/HTTPSReverseConnectionsOnOnePort',
   },
@@ -456,7 +456,7 @@ export const YakitRouteToPageInfo: Record<
   'beta-vulinbox-manager': { label: 'Vulinbox 管理器', labelUi: 'YakitRoute.vulinboxManager' },
   'beta-diagnose-network': { label: '网络异常诊断', labelUi: 'YakitRoute.networkDiagnosis' },
   'plugin-audit': { label: '插件管理', labelUi: 'YakitRoute.pluginManagement' },
-  '**beta-debug-traffic-analize': { label: '流量分析', labelUi: 'YakitRoute.trafficAnalysis' },
+  '**beta-debug-traffic-analize': { label: 'Traffic Analysis', labelUi: 'YakitRoute.trafficAnalysis' },
   'beta-webshell-manager': { label: '网站管理', labelUi: 'YakitRoute.websiteManagement' },
   'beta-webshell-opt': { label: 'WebShell 实例', labelUi: 'YakitRoute.webShellInstance' },
   data_statistics: { label: '数据统计', labelUi: 'YakitRoute.dataStatistics' },
@@ -1141,7 +1141,7 @@ export const RouteToPageItem = withRouteToPage(RouteToPage)
 
 /** @name 菜单中内定插件的插件名称(不是展示名称) */
 export enum ResidentPluginName {
-  SubDomainCollection = '子域名收集',
+  SubDomainCollection = 'Subdomain Enumeration',
   BasicCrawler = '基础爬虫',
   DirectoryScanning = '综合目录扫描与爆破',
 }
@@ -1376,7 +1376,7 @@ export const getPublicRouteMenu = (softMode: SoftMode) => {
               { page: YakitRoute.PoC, ...YakitRouteToPageInfo[YakitRoute.PoC] },
               {
                 page: YakitRoute.Plugin_OP,
-                label: '子域名收集',
+                label: 'Subdomain Enumeration',
                 labelUi: 'YakitRoute.subdomainCollection',
                 yakScripName: ResidentPluginName.SubDomainCollection,
               },
@@ -1398,7 +1398,7 @@ export const getPublicRouteMenu = (softMode: SoftMode) => {
                   },
                   {
                     page: YakitRoute.Plugin_OP,
-                    label: '目录扫描',
+                    label: 'Directory Scan',
                     labelUi: 'YakitRoute.directoryScan',
                     yakScripName: ResidentPluginName.DirectoryScanning,
                   },
@@ -1423,7 +1423,7 @@ export const getPublicRouteMenu = (softMode: SoftMode) => {
           },
           {
             page: undefined,
-            label: '反连',
+            label: 'Reverse Connection',
             labelUi: 'YakitRoute.reverseConnection',
             children: [
               {
@@ -1504,7 +1504,7 @@ export const getPublicRouteMenu = (softMode: SoftMode) => {
               { page: YakitRoute.PoC, ...YakitRouteToPageInfo[YakitRoute.PoC] },
               {
                 page: YakitRoute.Plugin_OP,
-                label: '子域名收集',
+                label: 'Subdomain Enumeration',
                 labelUi: 'YakitRoute.subdomainCollection',
                 yakScripName: ResidentPluginName.SubDomainCollection,
               },
@@ -1526,7 +1526,7 @@ export const getPublicRouteMenu = (softMode: SoftMode) => {
                   },
                   {
                     page: YakitRoute.Plugin_OP,
-                    label: '目录扫描',
+                    label: 'Directory Scan',
                     labelUi: 'YakitRoute.directoryScan',
                     yakScripName: ResidentPluginName.DirectoryScanning,
                   },
@@ -1627,8 +1627,8 @@ export const PublicCommonPlugins: PublicRouteMenuProps[] = [
   },
   {
     page: undefined,
-    label: '子域名收集',
-    children: ['子域名收集&漏洞扫描', 'IP批量查询', '主动指纹探测', 'ICP备案查询', '瞅一下'].map((item) => {
+    label: 'Subdomain Enumeration',
+    children: ['Subdomain Enumeration & Vulnerability Scan', 'IP批量查询', '主动指纹探测', 'ICP备案查询', '瞅一下'].map((item) => {
       return { page: YakitRoute.Plugin_OP, label: item, yakScripName: item }
     }),
   },
@@ -1764,7 +1764,7 @@ export const getExtraMenu: (softMode: SoftMode) => ExtraMenuItem[] = (softMode) 
               },
               {
                 page: undefined,
-                label: '反连',
+                label: 'Reverse Connection',
                 labelUi: 'YakitRoute.reverseConnection',
                 children: [
                   {
@@ -1805,7 +1805,7 @@ export const getExtraMenu: (softMode: SoftMode) => ExtraMenuItem[] = (softMode) 
                   { page: YakitRoute.PoC, ...YakitRouteToPageInfo[YakitRoute.PoC] },
                   {
                     page: YakitRoute.Plugin_OP,
-                    label: '子域名收集',
+                    label: 'Subdomain Enumeration',
                     labelUi: 'YakitRoute.subdomainCollection',
                     yakScripName: ResidentPluginName.SubDomainCollection,
                   },
@@ -1827,7 +1827,7 @@ export const getExtraMenu: (softMode: SoftMode) => ExtraMenuItem[] = (softMode) 
                       },
                       {
                         page: YakitRoute.Plugin_OP,
-                        label: '目录扫描',
+                        label: 'Directory Scan',
                         labelUi: 'YakitRoute.directoryScan',
                         yakScripName: ResidentPluginName.DirectoryScanning,
                       },
@@ -1880,7 +1880,7 @@ export const getExtraMenu: (softMode: SoftMode) => ExtraMenuItem[] = (softMode) 
             children: [
               {
                 page: undefined,
-                label: '反连',
+                label: 'Reverse Connection',
                 labelUi: 'YakitRoute.reverseConnection',
                 children: [
                   {
@@ -1942,7 +1942,7 @@ export const getFixedPluginIcon = (name: string) => {
   switch (name) {
     case '基础爬虫':
       return <PrivateOutlineBasicCrawlerIcon />
-    case '子域名收集':
+    case 'Subdomain Enumeration':
       return <PrivateOutlineSubDomainCollectionIcon />
     case '综合目录扫描与爆破':
       return <PrivateOutlineDirectoryScanningIcon />
@@ -1955,7 +1955,7 @@ export const getFixedPluginHoverIcon = (name: string) => {
   switch (name) {
     case '基础爬虫':
       return <PrivateSolidBasicCrawlerIcon />
-    case '子域名收集':
+    case 'Subdomain Enumeration':
       return <PrivateSolidSubDomainCollectionIcon />
     case '综合目录扫描与爆破':
       return <PrivateSolidDirectoryScanningIcon />
@@ -1968,7 +1968,7 @@ export const getFixedPluginDescribe = (name: string) => {
   switch (name) {
     case '基础爬虫':
       return '通过爬虫可快速了解网站的整体架构'
-    case '子域名收集':
+    case 'Subdomain Enumeration':
       return ''
     case '综合目录扫描与爆破':
       return '带有内置字典的综合目录扫描与爆破'
@@ -2256,7 +2256,7 @@ export const PrivateExpertRouteMenu: PrivateRouteMenuProps[] = isIRify()
           PrivateAllMenus[YakitRoute.Mod_ScanPort],
           {
             page: YakitRoute.Plugin_OP,
-            label: '子域名收集',
+            label: 'Subdomain Enumeration',
             icon: getFixedPluginIcon(ResidentPluginName.SubDomainCollection),
             hoverIcon: getFixedPluginHoverIcon(ResidentPluginName.SubDomainCollection),
             describe: getFixedPluginDescribe(ResidentPluginName.SubDomainCollection),
@@ -2264,7 +2264,7 @@ export const PrivateExpertRouteMenu: PrivateRouteMenuProps[] = isIRify()
           },
           {
             page: YakitRoute.Plugin_OP,
-            label: '目录扫描',
+            label: 'Directory Scan',
             icon: getFixedPluginIcon(ResidentPluginName.DirectoryScanning),
             hoverIcon: getFixedPluginHoverIcon(ResidentPluginName.DirectoryScanning),
             describe: getFixedPluginDescribe(ResidentPluginName.DirectoryScanning),
@@ -2286,7 +2286,7 @@ export const PrivateExpertRouteMenu: PrivateRouteMenuProps[] = isIRify()
       },
       {
         page: undefined,
-        label: '反连',
+        label: 'Reverse Connection',
         labelUi: 'YakitRoute.reverseConnection',
         children: routeToChildren([
           YakitRoute.ShellReceiver,
@@ -2347,7 +2347,7 @@ export const PrivateScanRouteMenu: PrivateRouteMenuProps[] = [
       PrivateAllMenus[YakitRoute.Mod_ScanPort],
       {
         page: YakitRoute.Plugin_OP,
-        label: '子域名收集',
+        label: 'Subdomain Enumeration',
         icon: getFixedPluginIcon(ResidentPluginName.SubDomainCollection),
         hoverIcon: getFixedPluginHoverIcon(ResidentPluginName.SubDomainCollection),
         describe: getFixedPluginDescribe(ResidentPluginName.SubDomainCollection),
@@ -2355,7 +2355,7 @@ export const PrivateScanRouteMenu: PrivateRouteMenuProps[] = [
       },
       {
         page: YakitRoute.Plugin_OP,
-        label: '目录扫描',
+        label: 'Directory Scan',
         icon: getFixedPluginIcon(ResidentPluginName.DirectoryScanning),
         hoverIcon: getFixedPluginHoverIcon(ResidentPluginName.DirectoryScanning),
         describe: getFixedPluginDescribe(ResidentPluginName.DirectoryScanning),

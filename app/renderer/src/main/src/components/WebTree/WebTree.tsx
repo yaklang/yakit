@@ -53,18 +53,18 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
   const { t, i18n } = useI18nNamespaces(['yakitUi'])
 
   const [treeLoading, setTreeLoading] = useState<boolean>(false)
-  // 未搜索情况时的网站树
-  const [webTreeData, setWebTreeData] = useState<TreeNode[]>([])
-  // 已搜索情况时的网站树
-  const [searchWebTreeData, setSearchWebTreeData] = useState<TreeNode[]>([])
-  /** 判断当前是否为已搜索的情况 */
-  const searchTreeFlag = useRef<boolean>(false)
+ // 未搜索情况时的网站树
+ const [webTreeData, setWebTreeData] = useState<TreeNode[]>([])
+ // 已搜索情况时的网站树
+ const [searchWebTreeData, setSearchWebTreeData] = useState<TreeNode[]>([])
+ /** 判断当前是否为已搜索的情况 */
+ const searchTreeFlag = useRef<boolean>(false)
 
   const [searchValue, setSearchValue, getSearchValue] = useGetSetState<string>('')
   const [expandedKeys, setExpandedKeys] = useState<TreeKey[]>([]) // 展开树节点key集合
-  const [selectedKeys, setSelectedKeys, getSelectedKeys] = useGetSetState<TreeKey[]>([]) // select树节点key集合
-  const [selectedNodes, setSelectedNodes] = useGetSetState<TreeNode[]>([]) // select树节点数据集合
-  const webTreeRef = useRef<any>()
+ const [selectedKeys, setSelectedKeys, getSelectedKeys] = useGetSetState<TreeKey[]>([]) // select树节点key集合
+ const [selectedNodes, setSelectedNodes] = useGetSetState<TreeNode[]>([]) // select树节点数据集合
+ const webTreeRef = useRef<any>()
   const [inViewport] = useInViewport(webTreeRef)
 
   useImperativeHandle(ref, () => ({

@@ -682,10 +682,10 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
   const { areaInfo, activeFile } = useStore()
   const { setAreaInfo, setActiveFile } = useDispatcher()
   const [editorInfo, setEditorInfo] = useState<FileDetailInfo>()
-  // 编辑器实例
-  const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
-  // 是否允许展示二进制
-  const [allowBinary, setAllowBinary] = useState<boolean>(false)
+ // 编辑器实例
+ const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
+ // 是否允许展示二进制
+ const [allowBinary, setAllowBinary] = useState<boolean>(false)
 
   const nowPathRef = useRef<string>()
   useEffect(() => {

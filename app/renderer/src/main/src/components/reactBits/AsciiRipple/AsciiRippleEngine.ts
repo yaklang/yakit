@@ -340,18 +340,18 @@ export const createRippleEngine = (
       endRow: currentEnd,
     }
     if (firstRow > lastRow) return
-    // 只重绘新旧波纹覆盖的行，其他背景像素保持不动。
-    ctx.save()
-    ctx.beginPath()
-    ctx.rect(0, firstRow * lineH, cw, (lastRow - firstRow + 1) * lineH)
-    ctx.clip()
-    ctx.clearRect(0, 0, cw, ch)
-    const hot: HotCell[] = []
-    ctx.globalAlpha = 1
-    ctx.drawImage(background.canvas, 0, 0, cw, ch)
-    ctx.globalAlpha = p.textOpacity
-    ctx.fillStyle = p.ramps.up[0]
-    for (let r = startRow; active && r <= endRow; r++) {
+ // 只重绘新旧波纹覆盖的行，其他背景像素保持不动。
+ ctx.save()
+ ctx.beginPath()
+ ctx.rect(0, firstRow * lineH, cw, (lastRow - firstRow + 1) * lineH)
+ ctx.clip()
+ ctx.clearRect(0, 0, cw, ch)
+ const hot: HotCell[] = []
+ ctx.globalAlpha = 1
+ ctx.drawImage(background.canvas, 0, 0, cw, ch)
+ ctx.globalAlpha = p.textOpacity
+ ctx.fillStyle = p.ramps.up[0]
+ for (let r = startRow; active && r <= endRow; r++) {
       const row = base[r]
       const cy = r * lineH + lineH / 2
       let line = lines[r].slice(0, startColumn)

@@ -62,8 +62,7 @@ export const resolveParentFolderIds = (parent: Pick<ProjectDescription, 'Id' | '
 export const canCreateSubFolder = (folder: Pick<ProjectDescription, 'FolderId'>) => +folder.FolderId === 0
 
 /** 新建/导入成功后的目录：undefined 留在当前目录，[] 回根目录，否则进入所选文件夹 */
-export const getSubmitFolderState = (
-  folders: Pick<ProjectDescription, 'Id' | 'ProjectName'>[] | undefined,
+export const getSubmitFolderState = (folders: Pick<ProjectDescription, 'Id' | 'ProjectName'>[] | undefined,
   params: ProjectParamsProp,
 ): { files?: Pick<ProjectDescription, 'Id' | 'ProjectName' | 'FolderId'>[]; params: ProjectParamsProp } => {
   const Pagination = { ...params.Pagination, Page: 1 }

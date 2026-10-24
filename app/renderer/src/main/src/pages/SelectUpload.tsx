@@ -39,10 +39,10 @@ const SelectUpload: React.FC<SelectUploadProps> = (props) => {
 
   const [data, setData, getData] = useGetState<FileProjectInfoProps[]>([])
 
-  /** @name 导出实体项目文件过程是否产生错误(如果产生错误，阻止通道结束后的上传操作) */
-  const hasErrorRef = useRef<boolean>(false)
-  // 是否取消
-  const isCancle = useRef<boolean>(false)
+ /** @name 导出实体项目文件过程是否产生错误(如果产生错误，阻止通道结束后的上传操作) */
+ const hasErrorRef = useRef<boolean>(false)
+ // 是否取消
+ const isCancle = useRef<boolean>(false)
 
   const uploadFile = useMemoizedFn(async () => {
     if (isCancle.current) return

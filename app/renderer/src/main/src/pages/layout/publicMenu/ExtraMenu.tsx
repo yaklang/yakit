@@ -37,9 +37,9 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
   const [visibleImport, setVisibleImport] = useState<boolean>(false)
   const [loadPluginMode, setLoadPluginMode] = useState<LoadPluginMode>('giturl')
   const [importMenuShow, setImportMenuShow] = useState<boolean>(false)
-  const [form] = Form.useForm()
-  // HAR 导入 stream token，仅进度组件使用，不参与渲染
-  const importHistoryharTokenRef = useRef<string>('')
+ const [form] = Form.useForm()
+ // HAR 导入 stream token，仅进度组件使用，不参与渲染
+ const importHistoryharTokenRef = useRef<string>('')
   const harImportPathRef = useRef<string>('')
   const [percentVisible, setPercentVisible] = useState<boolean>(false)
   const importMenuSelect = useMemoizedFn((type: string) => {

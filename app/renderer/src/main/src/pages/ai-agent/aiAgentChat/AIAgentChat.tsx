@@ -59,10 +59,10 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo(() => {
   const aiReActChatRef = useRef<AIChatContentRefProps>(null)
   const aiChatWelcomeRef = useRef<AIChatContentRefProps>(null)
 
-  // 插件并发构建流 hooks
-  const [, api] = useMultipleHoldGRPCStream()
+ // 插件并发构建流 hooks
+ const [, api] = useMultipleHoldGRPCStream()
 
-  const [mode, setMode] = useState<AIAgentChatMode>('welcome')
+ const [mode, setMode] = useState<AIAgentChatMode>('welcome')
 
   const startChat = useStartAIChat()
 
@@ -149,15 +149,15 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo(() => {
   //#region 使用 AI-Forge 模板/Tool 相关逻辑
   const [activeTool, setActiveTool] = useState<AITool>()
   const [replaceToolShow, setReplaceToolShow] = useState<boolean>(false)
-  // 是否直接替换当前使用的tool，而不出现二次确认框
-  const [replaceToolNoPrompt, setReplaceToolNoPrompt] = useState(false)
+ // 是否直接替换当前使用的tool，而不出现二次确认框
+ const [replaceToolNoPrompt, setReplaceToolNoPrompt] = useState(false)
 
-  const [activeForge, setActiveForge] = useState<AIForge>()
+ const [activeForge, setActiveForge] = useState<AIForge>()
   const [replaceShow, setReplaceShow] = useState<boolean>(false)
-  // 是否直接替换当前使用的forge模板，而不出现二次确认框
-  const [replaceForgeNoPrompt, setReplaceForgeNoPrompt] = useState(false)
+ // 是否直接替换当前使用的forge模板，而不出现二次确认框
+ const [replaceForgeNoPrompt, setReplaceForgeNoPrompt] = useState(false)
 
-  const wrapperRef = useRef<HTMLDivElement>(null)
+ const wrapperRef = useRef<HTMLDivElement>(null)
   const [inViewPort = true] = useInViewport(wrapperRef)
   const replaceForge = useRef<AIForge>()
   const replaceTool = useRef<AITool>()

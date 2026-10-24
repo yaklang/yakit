@@ -44,8 +44,8 @@ export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({ knowle
   const [form] = Form.useForm()
   const [indexingEntries, setIndexingEntries] = useState<Set<number>>(new Set())
 
-  // 搜索知识条目
-  const searchEntries = useMemoizedFn(async (params?: Partial<SearchKnowledgeEntryParams>) => {
+ // 搜索知识条目
+ const searchEntries = useMemoizedFn(async (params?: Partial<SearchKnowledgeEntryParams>) => {
     if (!knowledgeBase) {
       setEntries([])
       setTotal(0)

@@ -365,8 +365,8 @@ const RoleOperationForm: React.FC<RoleOperationFormProp> = (props) => {
   ]
 
   const [selectedAll, setSelectedAll] = useState<boolean>(false)
-  // 受控模式控制浮层
-  const [open, setOpen] = useState<boolean>(false)
+ // 受控模式控制浮层
+ const [open, setOpen] = useState<boolean>(false)
 
   useEffect(() => {
     if (roleInfo) {

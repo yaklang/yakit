@@ -659,10 +659,10 @@ export interface ChatStoreState {
   uiExpandMap: Record<string, boolean>
   // #endregion
 
-  /** UI上的头部的card横向滚动列表数据 */
-  card: AIAgentGrpcApi.AIInfoCard[]
-  /** 工具卡片相关的文件数据 */
-  execFileRecord: Map<string, AIYakExecFileRecord[]>
+ /** UI上的头部的card横向滚动列表数据 */
+ card: AIAgentGrpcApi.AIInfoCard[]
+ /** 工具卡片相关的文件数据 */
+ execFileRecord: Map<string, AIYakExecFileRecord[]>
   /** 文件操作列表 */
   yakExecResultLogs: StreamResult.Log[]
 
@@ -708,9 +708,8 @@ export interface ChatStoreState {
   /** 更新risk数据 */
   updateRiskData: () => void
 
-  /** 精准字段级数据修改(除去列表数据外的其他数据) */
-  updateState: (
-    partial: Partial<
+ /** 精准字段级数据修改(除去列表数据外的其他数据) */
+ updateState: (partial: Partial<
       Omit<
         ChatStoreState,
         | 'httpFuzzRequestUpdate'

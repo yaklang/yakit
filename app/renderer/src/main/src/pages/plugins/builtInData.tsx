@@ -52,7 +52,7 @@ export const pluginTypeToName: Record<string, PluginTypeInfoProps> = {
     language: 'yak',
   },
   'port-scan': {
-    name: 'Yak-端口扫描',
+    name: 'Yak- Port Scan',
     description: '该插件会对目标进行端口扫描，再对扫描的指纹结果做进一步的处理，常用场景先指纹识别，再 Poc 检测',
     icon: <SolidPluginProtScanIcon />,
     color: 'success',

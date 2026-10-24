@@ -39,7 +39,7 @@ export const packetScanDefaultValue: { Verbose: string; VerboseUi?: string; Keyw
   { Verbose: 'IIS', Keyword: 'IIS' },
   { Verbose: 'Nginx', Keyword: 'Nginx' },
   { Verbose: 'Shiro', Keyword: 'Shiro' },
-  { Verbose: 'SQL注入', VerboseUi: 'HTTPFlowTable.RowContextMenu.sQLInjection', Keyword: 'SQL注入' },
+  { Verbose: 'SQL Injection', VerboseUi: 'HTTPFlowTable.RowContextMenu.sQLInjection', Keyword: 'SQL Injection' },
 ]
 
 export const GetPacketScanByCursorMenuItem = (id: number): ByCursorMenuItemProps => {

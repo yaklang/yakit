@@ -75,8 +75,8 @@ export const FileTree: React.FC<FileTreeProps> = memo((props) => {
 
   const [isDownCtrlCmd, setIsDownCtrlCmd] = useState<boolean>(false)
 
-  // 复制 粘贴
-  const [copyPath, setCopyPath] = useState<string>('')
+ // 复制 粘贴
+ const [copyPath, setCopyPath] = useState<string>('')
 
   useEffect(() => {
     // 滚动文件树
@@ -286,8 +286,8 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = memo((props) => {
   const { t, i18nRefresh } = useI18nNamespaces(['yakRunner', 'yakitUi'])
   // 是否为输入模式
   const [isInput, setInput] = useState<boolean>(false)
-  // 是否为编辑（用于默认选中文件名）
-  const isEditRef = useRef<boolean>(false)
+ // 是否为编辑（用于默认选中文件名）
+ const isEditRef = useRef<boolean>(false)
   const [value, setValue] = useState<string>(info.name)
   const inputRef = useRef<any>(null)
 

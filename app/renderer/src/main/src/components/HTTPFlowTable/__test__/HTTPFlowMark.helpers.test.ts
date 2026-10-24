@@ -21,15 +21,15 @@ describe('mergeHTTPFlowDetailMark', () => {
     const current = {
       Id: 7,
       RequestString: 'complete request',
-      IssueType: 'SQL注入',
-      Severity: '低危',
+      IssueType: 'SQL Injection',
+      Severity: 'Low',
       Status: '待修复',
       StatusReason: 'old note',
     } as HTTPFlow
     const incoming = {
       Id: 7,
       IssueType: 'XSS',
-      Severity: '高危',
+      Severity: 'High',
       Status: '已修复',
       StatusReason: 'new note',
     } as HTTPFlow
@@ -37,14 +37,14 @@ describe('mergeHTTPFlowDetailMark', () => {
     expect(mergeHTTPFlowDetailMark(current, incoming)).toEqual({
       ...current,
       IssueType: 'XSS',
-      Severity: '高危',
+      Severity: 'High',
       Status: '已修复',
       StatusReason: 'new note',
     })
   })
 
   it('preserves detail state for a different flow id', () => {
-    const current = { Id: 7, IssueType: 'SQL注入' } as HTTPFlow
+    const current = { Id: 7, IssueType: 'SQL Injection' } as HTTPFlow
     const incoming = { Id: 8, IssueType: 'XSS' } as HTTPFlow
 
     expect(mergeHTTPFlowDetailMark(current, incoming)).toBe(current)

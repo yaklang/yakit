@@ -72,8 +72,8 @@ const NotepadManageOnline: React.FC<NotepadOnlineProps> = React.memo((props) => 
 
   const [batchDownInfo, setBatchDownInfo] = useState<SaveDialogResponse>()
 
-  // 搜索条件
-  const [search, setSearch] = useState<SearchParamsProps>({ keyword: '', userName: '', type: 'keyword' })
+ // 搜索条件
+ const [search, setSearch] = useState<SearchParamsProps>({ keyword: '', userName: '', type: 'keyword' })
 
   const totalRef = useRef<number>(0)
   const notepadRef = useRef<HTMLDivElement>(null)

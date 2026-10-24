@@ -167,12 +167,12 @@ export const resizedSplitSize: (params: ResizedSplitSizeParams) => SplitViewPosi
 
   const { width, height, left, top } = ps[ps.length - 1]
   const oldLong = isVertical ? height + top : width + left
-  const oldViewLong = ps.reduce((prev, current) => prev + (isVertical ? current.height : current.width), 0)
+  const oldViewLong = ps.reduce((prev, current) => prev + (isVertical? current.height: current.width), 0)
 
-  const offsetLong = resizeLong - oldLong
-  // 每块屏的定位
-  let location = 0
-  for (let i = 0; i < ps.length; i++) {
+ const offsetLong = resizeLong - oldLong
+ // 每块屏的定位
+ let location = 0
+ for (let i = 0; i < ps.length; i++) {
     const itemLong = isVertical ? ps[i].height : ps[i].width
     const newItemLong = itemLong + offsetLong * (itemLong / oldViewLong)
 

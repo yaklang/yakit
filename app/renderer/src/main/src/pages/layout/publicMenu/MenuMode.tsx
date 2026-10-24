@@ -266,7 +266,7 @@ export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
           </div>
         </>
       )}
-      {mode === '反连' && (
+      {mode === 'Reverse Connection' && (
         <>
           <div className={styles['parent-menu-wrapper']} onClick={() => onMenu(YakitRoute.DNSLog)}>
             <div className={styles['childs-menu-wrapper']}>

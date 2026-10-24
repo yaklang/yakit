@@ -13,7 +13,7 @@ vi.mock('@/i18n/useI18nNamespaces', () => ({
         'SettingsPage.item.general': '通用',
         'SettingsPage.item.appearance': '外观',
         'SettingsPage.item.shortcut-key': '快捷键',
-        'SettingsPage.item.reverse': '反连',
+        'SettingsPage.item.reverse': 'Reverse Connection',
         'SettingsPage.item.system-proxy': '系统代理',
         'SettingsPage.item.global-config': '全局配置',
         'SettingsPage.item.right-click-plugins': '右键插件',

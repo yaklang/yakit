@@ -60,8 +60,8 @@ export default function useHttpVirtualTableHook<
   } = props
 
   const [params, setParams] = useState<ParamsTProps>(defaultParams)
-  // 表格展示的完整数据
-  const [data, setData] = useState<DataT[]>([])
+ // 表格展示的完整数据
+ const [data, setData] = useState<DataT[]>([])
   const [pagination, setPagination] = useState<VirtualPaging>({
     limit: OFFSET_LIMIT,
     order: 'desc',
@@ -69,30 +69,30 @@ export default function useHttpVirtualTableHook<
     page: 1,
   })
   const [isRefresh, setIsRefresh] = useState<boolean>(false)
-  // 最新一条数据ID
-  const maxIdRef = useRef<number>(0)
-  // 最后一条数据ID
-  const minIdRef = useRef<number>(0)
-  // 接口是否正在请求
-  const isGrpcRef = useRef<boolean>(false)
+ // 最新一条数据ID
+ const maxIdRef = useRef<number>(0)
+ // 最后一条数据ID
+ const minIdRef = useRef<number>(0)
+ // 接口是否正在请求
+ const isGrpcRef = useRef<boolean>(false)
   const [total, setTotal] = useState<number>(0)
-  // 是否循环接口
-  const [isLoop, setIsLoop] = useState<boolean>(false)
-  // 表格排序
-  const sortRef = useRef<SortProps>(defSort)
+ // 是否循环接口
+ const [isLoop, setIsLoop] = useState<boolean>(false)
+ // 表格排序
+ const sortRef = useRef<SortProps>(defSort)
   const [loading, setLoading] = useState(false)
   const [offsetData, setOffsetData, getOffsetData] = useGetState<DataT[]>([])
-  // 设置是否自动刷新
-  const idRef = useRef<NodeJS.Timeout>()
-  // stopT 后避免被内部逻辑(滚动/布局)再次开启轮询
-  const loopPausedRef = useRef<boolean>(false)
-  // 表格是否可见
-  const [inViewport] = useInViewport(tableBoxRef)
-  // 是否允许更改endLoop
-  const isAllowSetEndLoopRef = useRef<boolean>(false)
+ // 设置是否自动刷新
+ const idRef = useRef<NodeJS.Timeout>()
+ // stopT 后避免被内部逻辑(滚动/布局)再次开启轮询
+ const loopPausedRef = useRef<boolean>(false)
+ // 表格是否可见
+ const [inViewport] = useInViewport(tableBoxRef)
+ // 是否允许更改endLoop
+ const isAllowSetEndLoopRef = useRef<boolean>(false)
 
-  // 方法请求
-  const getDataByGrpc = useMemoizedFn((query: ParamsTProps<{}>, type: 'top' | 'bottom' | 'update' | 'offset') => {
+ // 方法请求
+ const getDataByGrpc = useMemoizedFn((query: ParamsTProps<{}>, type: 'top' | 'bottom' | 'update' | 'offset') => {
     if (isGrpcRef.current) return
     isGrpcRef.current = true
     let finalParams: ParamsTProps = {

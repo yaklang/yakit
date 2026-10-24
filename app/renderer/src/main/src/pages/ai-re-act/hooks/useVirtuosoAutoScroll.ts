@@ -11,13 +11,13 @@ interface UseVirtuosoAutoScrollProps {
 }
 const useVirtuosoAutoScroll = ({ total, isPrependingRef, historyLoading }: UseVirtuosoAutoScrollProps) => {
   const virtuosoRef = useRef<VirtuosoHandle>(null)
-  const isAtBottomRef = useRef(true)
-  /** 用户正在主动滚动（wheel / touch / keyboard） */
-  const userScrollingRef = useRef(false)
-  const userScrollTimerRef = useRef<ReturnType<typeof setTimeout>>()
+ const isAtBottomRef = useRef(true)
+ /** 用户正在主动滚动（wheel / touch / keyboard） */
+ const userScrollingRef = useRef(false)
+ const userScrollTimerRef = useRef<ReturnType<typeof setTimeout>>()
   const scrollerElRef = useRef<HTMLElement | null>(null)
-  /** 用户当前阅读的消息及其相对视口位置；新的用户操作会取消旧位置校正。 */
-  const historyAnchorRef = useRef<{ token: string; offset: number } | null>(null)
+ /** 用户当前阅读的消息及其相对视口位置；新的用户操作会取消旧位置校正。 */
+ const historyAnchorRef = useRef<{ token: string; offset: number } | null>(null)
 
   /** 按稳定消息 token 记录位置，避免前插后数组下标变化导致定位到另一条消息。 */
   const captureHistoryAnchor = useMemoizedFn(() => {

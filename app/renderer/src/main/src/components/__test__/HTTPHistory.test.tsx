@@ -14,7 +14,7 @@ const bridge = vi.hoisted(() => ({
 
 const flowMark = vi.hoisted(() => ({
   handlers: new Map<string, ReturnType<typeof vi.fn>>(),
-  payload: { Ids: [40], IssueType: 'SQL注入', Severity: '低危', Status: '确认', StatusReason: '已核实' },
+  payload: { Ids: [40], IssueType: 'SQL Injection', Severity: 'Low', Status: '确认', StatusReason: '已核实' },
 }))
 
 vi.hoisted(() => {

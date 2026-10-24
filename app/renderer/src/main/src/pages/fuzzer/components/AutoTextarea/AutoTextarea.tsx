@@ -9,8 +9,8 @@ interface AutoTextareaProps {
   placeholder?: string
   value?: string
   onChange?: (e: React.ChangeEvent<HTMLTextAreaElement>) => void
-  /** React 19 下 Form.Item 会把 ref 当普通 prop 注入，需解构避免覆盖内部 textareaRef */
-  ref?: React.Ref<HTMLTextAreaElement>
+ /** React 19 下 Form.Item 会把 ref 当普通 prop 注入，需解构避免覆盖内部 textareaRef */
+ ref?: React.Ref<HTMLTextAreaElement>
 }
 export const AutoTextarea: React.FC<AutoTextareaProps> = React.memo((props) => {
   const { onChange, className = '', autoSizeOnMount = false, ref, ...restProps } = props

@@ -65,7 +65,7 @@ vi.mock('@/components/yakitUI/YakitInput/YakitInput', () => ({
 }))
 vi.mock('@/i18n/useI18nNamespaces', () => ({
   useI18nNamespaces: () => ({
-    t: (key: string) => (key === 'HTTPFlowTable.markOptions.SQL注入' ? 'SQL injection' : key),
+    t: (key: string) => (key === 'HTTPFlowTable.markOptions. SQL Injection' ? 'SQL injection' : key),
   }),
 }))
 vi.mock('../HTTPFlowMark.utils', () => ({
@@ -98,8 +98,8 @@ describe('FlowMarkEditForm', () => {
   it('initializes a single edit from the current record', () => {
     const info = {
       Id: 7,
-      IssueType: 'SQL注入',
-      Severity: '高危',
+      IssueType: 'SQL Injection',
+      Severity: 'High',
       Status: '待修复',
       StatusReason: '待确认',
     } as HTTPFlow
@@ -107,8 +107,8 @@ describe('FlowMarkEditForm', () => {
     render(<FlowMarkEditForm info={info} ids={[7]} />)
 
     expect(mocks.formProps?.initialValues).toEqual({
-      IssueType: 'SQL注入',
-      Severity: '高危',
+      IssueType: 'SQL Injection',
+      Severity: 'High',
       Status: '待修复',
       StatusReason: '待确认',
     })
@@ -136,7 +136,7 @@ describe('FlowMarkEditForm', () => {
     const onClose = vi.fn()
     render(
       <FlowMarkEditForm
-        info={{ IssueType: 'SQL注入', Severity: '高危', Status: '确认', StatusReason: 'old' }}
+        info={{ IssueType: 'SQL Injection', Severity: 'High', Status: '确认', StatusReason: 'old' }}
         ids={[7]}
         onSuccess={onSuccess}
         onClose={onClose}
@@ -162,10 +162,10 @@ describe('FlowMarkEditForm', () => {
 
   it('translates labels while preserving the API values', async () => {
     render(<FlowMarkEditForm ids={[7]} />)
-    expect(screen.getByRole('option', { name: 'SQL injection' })).toHaveValue('SQL注入')
-    await mocks.formProps?.onFinish({ IssueType: 'SQL注入' })
+    expect(screen.getByRole('option', { name: 'SQL injection' })).toHaveValue('SQL Injection')
+    await mocks.formProps?.onFinish({ IssueType: 'SQL Injection' })
     expect(mocks.apiBatchSetHTTPFlowIssueFields).toHaveBeenCalledWith(
-      expect.objectContaining({ SetIssueType: 'SQL注入' }),
+      expect.objectContaining({ SetIssueType: 'SQL Injection' }),
     )
   })
 
@@ -180,7 +180,7 @@ describe('FlowMarkEditForm', () => {
     const onClose = vi.fn()
     render(<FlowMarkEditForm batch ids={[7, 8]} onSuccess={onSuccess} onClose={onClose} />)
 
-    mocks.formProps?.onFinish({ Severity: '高危', StatusReason: '  investigate  ' })
+    mocks.formProps?.onFinish({ Severity: 'High', StatusReason: '  investigate  ' })
     expect(onSuccess).not.toHaveBeenCalled()
     expect(onClose).not.toHaveBeenCalled()
 
@@ -188,7 +188,7 @@ describe('FlowMarkEditForm', () => {
     await waitFor(() =>
       expect(onSuccess).toHaveBeenCalledWith({
         Ids: [7, 8],
-        Severity: '高危',
+        Severity: 'High',
         StatusReason: 'investigate',
       }),
     )

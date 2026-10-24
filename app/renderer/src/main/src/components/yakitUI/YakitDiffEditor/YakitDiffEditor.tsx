@@ -40,8 +40,8 @@ export const YakitDiffEditor: React.FC<YakitDiffEditorProps> = memo((props) => {
   const leftEditorRef = useRef<monacoEditor.editor.ITextModel>()
   const rightEditorRef = useRef<monacoEditor.editor.ITextModel>()
 
-  // 构建右键菜单数据
-  const rightContextMenu = useMemo<YakitMenuItemType[]>(
+ // 构建右键菜单数据
+ const rightContextMenu = useMemo<YakitMenuItemType[]>(
     () => [
       {
         key: 'font-size',

@@ -224,7 +224,7 @@ describe('YakitRiskEditForm 验证人回填', () => {
       expect(mocks.initialValues.repair_time).toBe(moment().unix())
       mocks.finishValues.mockReturnValue({
         ...mocks.initialValues,
-        risk_type: 'SQL注入',
+        risk_type: 'SQL Injection',
         cvss: 7,
         disposal_status: ['已修复'],
         verifier: 'uid-1',
@@ -249,7 +249,7 @@ describe('YakitRiskEditForm 验证人回填', () => {
 
   it.each([undefined, 2])('CVSS 回车不保存或关闭，点击确定仍保存（批量数 %s）', async (batchCount) => {
     const user = userEvent.setup()
-    mocks.finishValues.mockReturnValue({ risk_type: 'SQL注入', cvss: 7, disposal_status: ['待验证'] })
+    mocks.finishValues.mockReturnValue({ risk_type: 'SQL Injection', cvss: 7, disposal_status: ['待验证'] })
     const onSave = vi.fn().mockResolvedValue(undefined)
     const onClose = vi.fn()
     render(<YakitRiskEditForm info={{ Hash: '' } as never} batchCount={batchCount} onSave={onSave} onClose={onClose} />)
@@ -321,7 +321,7 @@ describe('YakitRiskEditForm 验证人回填', () => {
 
   it('保存已修复风险时映射验证人与修复字段', async () => {
     mocks.finishValues.mockReturnValue({
-      risk_type: '命令执行',
+      risk_type: 'Command Execution',
       cvss: 8.8,
       disposal_status: ['已修复'],
       verifier: 'uid-1',
@@ -340,8 +340,8 @@ describe('YakitRiskEditForm 验证人回填', () => {
 
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({
-        RiskType: '命令执行',
-        RiskTypeVerbose: '命令执行',
+        RiskType: 'Command Execution',
+        RiskTypeVerbose: 'Command Execution',
         SeverityScore: 8.8,
         Tags: '已修复',
         Verifier: '张三',
@@ -355,7 +355,7 @@ describe('YakitRiskEditForm 验证人回填', () => {
 
   it('保存非已修复风险时清除旧验证人与修复字段', async () => {
     mocks.finishValues.mockReturnValue({
-      risk_type: '命令执行',
+      risk_type: 'Command Execution',
       cvss: 4.2,
       disposal_status: ['待处理'],
       verifier: 'old-uid',
@@ -387,7 +387,7 @@ describe('YakitRiskEditForm 验证人回填', () => {
   })
 
   it('批量保存等待接口完成再关闭，重复提交不会发出第二次请求', async () => {
-    mocks.finishValues.mockReturnValue({ risk_type: 'SQL注入', cvss: 0, disposal_status: [] })
+    mocks.finishValues.mockReturnValue({ risk_type: 'SQL Injection', cvss: 0, disposal_status: [] })
     const pending = deferred<void>()
     const onSave = vi.fn(() => pending.promise)
     const onClose = vi.fn()
@@ -404,7 +404,7 @@ describe('YakitRiskEditForm 验证人回填', () => {
   })
 
   it('批量保存失败保留弹窗，重试成功后关闭', async () => {
-    mocks.finishValues.mockReturnValue({ risk_type: 'SQL注入', cvss: 5, disposal_status: ['确认'] })
+    mocks.finishValues.mockReturnValue({ risk_type: 'SQL Injection', cvss: 5, disposal_status: ['确认'] })
     const onSave = vi.fn().mockRejectedValueOnce(new Error('保存失败')).mockResolvedValueOnce(undefined)
     const onClose = vi.fn()
     render(<YakitRiskEditForm info={{} as never} batchCount={2} onSave={onSave} onClose={onClose} />)
@@ -419,8 +419,8 @@ describe('YakitRiskEditForm 验证人回填', () => {
 
   it.each([
     [{ cvss: 5 }, 'YakitRiskEditForm.risk_type_required'],
-    [{ risk_type: 'SQL注入' }, 'YakitRiskEditForm.cvss_required'],
-    [{ risk_type: 'SQL注入', cvss: 11 }, 'YakitRiskEditForm.cvss_range'],
+    [{ risk_type: 'SQL Injection' }, 'YakitRiskEditForm.cvss_required'],
+    [{ risk_type: 'SQL Injection', cvss: 11 }, 'YakitRiskEditForm.cvss_range'],
   ])('批量编辑校验必填类型和 CVSS 范围 %j', (values, error) => {
     mocks.finishValues.mockReturnValue(values)
     const onSave = vi.fn()
@@ -437,7 +437,7 @@ describe('YakitRiskDetails 处置入口', () => {
   const risk = {
     Id: 1,
     Hash: 'risk-hash',
-    RiskType: 'SQL注入',
+    RiskType: 'SQL Injection',
     Severity: 'high',
     Request: new Uint8Array([1]),
   } as never

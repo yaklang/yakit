@@ -90,8 +90,8 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
   const [isShowUpdate, setIsShowUpdate] = useState<boolean>(false)
 
   const [isExpand, setIsExpand] = useState<boolean>(true)
-  /**额外参数弹出框 */
-  const [extraParamsVisible, setExtraParamsVisible] = useState<boolean>(false)
+ /**额外参数弹出框 */
+ const [extraParamsVisible, setExtraParamsVisible] = useState<boolean>(false)
   const [extraParamsValue, setExtraParamsValue] = useState<PluginExecuteExtraFormValue>({
     ...defPluginExecuteFormValue,
   })
@@ -709,9 +709,9 @@ export const FormContentItemByType: React.FC<FormContentItemByTypeProps> = React
           renderType={item.cacheHistoryDataKey ? 'autoComplete' : undefined}
         />
       )
-    // 其他基础类型
-    default:
-      return (
+ // 其他基础类型
+ default:
+ return (
         <OutputFormComponentsByType
           item={item}
           extraSetting={extraSetting}

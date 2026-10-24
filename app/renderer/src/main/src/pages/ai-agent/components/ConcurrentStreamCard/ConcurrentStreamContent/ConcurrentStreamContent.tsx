@@ -24,12 +24,12 @@ const ConcurrentStreamContent: FC<ConcurrentStreamContentProps> = memo(({ childr
 
   /** 当前渲染起始下标，初始从末尾 PAGE_SIZE 处开始，新增元素始终可见 */
   const [startIndex, setStartIndex] = useState(() => Math.max(0, childrenTokens.length - PAGE_SIZE))
-  /** 加载更多时保存旧滚动高度，用于恢复位置 */
-  const prevScrollHeightRef = useRef<number>(0)
+ /** 加载更多时保存旧滚动高度，用于恢复位置 */
+ const prevScrollHeightRef = useRef<number>(0)
   const loadingMoreRef = useRef<boolean>(false)
-  const startIndexLatest = useLatest(startIndex)
-  /** 用户是否在底部附近，用于决定新元素到来时是否跟随滚动 */
-  const isAtBottomRef = useRef<boolean>(true)
+ const startIndexLatest = useLatest(startIndex)
+ /** 用户是否在底部附近，用于决定新元素到来时是否跟随滚动 */
+ const isAtBottomRef = useRef<boolean>(true)
   const isFirstMountRef = useRef(true)
 
   const getScrollEl = useMemoizedFn(() => scrollContainerRef?.current ?? scrollRef.current)

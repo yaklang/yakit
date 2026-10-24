@@ -540,12 +540,12 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
   } = props
 
   const hTTPFlowRealTimeTableAndEditorRef = useRef<HTMLDivElement>(null)
-  const [internalInViewport] = useInViewport(hTTPFlowRealTimeTableAndEditorRef)
-  const inViewport = inViewportOverride ?? internalInViewport
+ const [internalInViewport] = useInViewport(hTTPFlowRealTimeTableAndEditorRef)
+ const inViewport = inViewportOverride?? internalInViewport
 
-  // History Id 用于区分每个history控件
-  // 性能优化：historyId 初始化后永不变（setHistoryId 从未调用），改为 ref 避免占 useState slot
-  const historyIdRef = useRef<string>(uuidv4())
+ // History Id 用于区分每个history控件
+ // 性能优化：historyId 初始化后永不变（setHistoryId 从未调用），改为 ref 避免占 useState slot
+ const historyIdRef = useRef<string>(uuidv4())
   const historyId = historyIdRef.current
   const [highlightSearch, setHighlightSearch] = useState('')
 

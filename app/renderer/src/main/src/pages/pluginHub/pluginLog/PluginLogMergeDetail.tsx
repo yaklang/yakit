@@ -72,18 +72,18 @@ export const PluginLogMergeDetail: React.FC<PluginLogMergeDetailProps> = memo((p
 
   /** ----------  申请合并插件信息 Start ---------- */
   const [loading, setLoading] = useState<boolean>(false)
-  // pr修改的数据
-  const [prInfo, setPRInfo] = useState<API.PluginsAuditDetailResponse>()
+ // pr修改的数据
+ const [prInfo, setPRInfo] = useState<API.PluginsAuditDetailResponse>()
 
-  // 旧源码
-  const oldCode = useRef<string>('')
+ // 旧源码
+ const oldCode = useRef<string>('')
   // 新源码
   const [newCode, setNewCode] = useState<string>('')
 
   // 旧基础信息
   const oldBase = useRef<YakitPluginBaseInfo>()
-  // 新基础信息
-  const newBase = useRef<YakitPluginBaseInfo>()
+ // 新基础信息
+ const newBase = useRef<YakitPluginBaseInfo>()
   const formRef = useRef<PluginBaseInfoFormRefProps>(null)
 
   // 插件类型
@@ -755,7 +755,7 @@ const PluginBaseInfoForm: React.FC<PluginBaseInfoFormProps> = memo(
               disabled={allDisabled}
             >
               <YakitSelect.Option value="mitm">MITM</YakitSelect.Option>
-              <YakitSelect.Option value="port-scan">端口扫描</YakitSelect.Option>
+              <YakitSelect.Option value="port-scan">Port Scan</YakitSelect.Option>
             </YakitSelect>
           </Form.Item>
         )}

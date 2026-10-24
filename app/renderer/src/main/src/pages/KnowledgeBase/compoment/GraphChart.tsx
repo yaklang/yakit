@@ -33,8 +33,8 @@ const GraphChart: FC<GraphChartProps> = ({ graphData, onNodeClick }) => {
   const { theme } = useTheme()
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
 
-  /** ref 类型补齐 */
-  const chartRef = useRef<ReactECharts | null>(null)
+ /** ref 类型补齐 */
+ const chartRef = useRef<ReactECharts | null>(null)
 
   const backgroundColor = getCssVar('--Colors-Use-Basic-Background')
   const textColor = getCssVar('--Colors-Use-Neutral-Text-3-Secondary')

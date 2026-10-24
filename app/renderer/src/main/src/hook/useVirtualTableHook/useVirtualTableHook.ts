@@ -162,8 +162,8 @@ export default function useVirtualTableHook<
     resolveVirtualTableServerPushActive(serverPushStatus, additionalServerPushActiveRef.current)
 
   const [params, setParams] = useState<ParamsTProps>(defaultParams)
-  // 表格展示的完整数据
-  const [data, setData] = useState<DataT[]>([])
+ // 表格展示的完整数据
+ const [data, setData] = useState<DataT[]>([])
   const [pagination, setPagination] = useState<VirtualPaging>({
     Limit: OFFSET_LIMIT,
     Order: 'desc',
@@ -171,12 +171,12 @@ export default function useVirtualTableHook<
     Page: 1,
   })
   const [isRefresh, setIsRefresh] = useState<boolean>(false)
-  // 最新一条数据ID
-  const maxIdRef = useRef<number>(0)
-  // 最后一条数据ID
-  const minIdRef = useRef<number>(0)
-  // 接口是否正在请求
-  const isGrpcRef = useRef<boolean>(false)
+ // 最新一条数据ID
+ const maxIdRef = useRef<number>(0)
+ // 最后一条数据ID
+ const minIdRef = useRef<number>(0)
+ // 接口是否正在请求
+ const isGrpcRef = useRef<boolean>(false)
   // Full refresh/reset invalidates older async responses so they cannot write
   // a stale viewport back after the table has already moved to a new query.
   const queryEpochRef = useRef(0)
@@ -187,22 +187,22 @@ export default function useVirtualTableHook<
   const viewportReconcilePendingRef = useRef(false)
   const flushViewportReconcileRef = useRef<() => void>(() => {})
   const [total, setTotal] = useState<number>(0)
-  // 是否循环接口
-  const [isLoop, setIsLoop] = useState<boolean>(preferServerPush ? false : !isServerPushActive())
-  // 表格排序
-  const sortRef = useRef<SortProps>(createDefaultSort())
+ // 是否循环接口
+ const [isLoop, setIsLoop] = useState<boolean>(preferServerPush? false:!isServerPushActive())
+ // 表格排序
+ const sortRef = useRef<SortProps>(createDefaultSort())
   const [loading, setLoading] = useState(false)
   const [offsetData, setOffsetData, getOffsetData] = useGetState<DataT[]>([])
-  // 设置是否自动刷新
-  const idRef = useRef<NodeJS.Timeout>()
-  // stopT 后避免被内部逻辑(滚动/布局)再次开启轮询
-  const loopPausedRef = useRef<boolean>(false)
-  const observedServerPushRef = useRef(serverPushStatus)
-  // 表格是否可见
-  const [internalInViewport] = useInViewport(tableBoxRef)
-  const inViewport = inViewportProp ?? internalInViewport
-  // 是否允许更改endLoop
-  const isAllowSetEndLoopRef = useRef<boolean>(false)
+ // 设置是否自动刷新
+ const idRef = useRef<NodeJS.Timeout>()
+ // stopT 后避免被内部逻辑(滚动/布局)再次开启轮询
+ const loopPausedRef = useRef<boolean>(false)
+ const observedServerPushRef = useRef(serverPushStatus)
+ // 表格是否可见
+ const [internalInViewport] = useInViewport(tableBoxRef)
+ const inViewport = inViewportProp?? internalInViewport
+ // 是否允许更改endLoop
+ const isAllowSetEndLoopRef = useRef<boolean>(false)
   const previousQueryInViewportRef = useRef<boolean>(inViewport === true)
   const hasQueriedViewportRef = useRef(false)
   const lastAutomaticQueryParamsRef = useRef<ParamsTProps>()

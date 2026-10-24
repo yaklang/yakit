@@ -5,8 +5,8 @@ import highlightStyles from './aiChatItemHighlight.module.scss'
 
 interface UseChatStreamLocateHighlightProps {
   scrollToIndex: (index: number, behavior?: 'auto' | 'smooth') => void
-  /** 列表根节点，缩小 data-index 查询范围，避免命中同页其他 Virtuoso（如时间线） */
-  listRootRef?: React.RefObject<HTMLElement | null>
+ /** 列表根节点，缩小 data-index 查询范围，避免命中同页其他 Virtuoso（如时间线） */
+ listRootRef?: React.RefObject<HTMLElement | null>
 }
 
 const HIGHLIGHT_CLASS = highlightStyles['item-wrapper-highlighted']

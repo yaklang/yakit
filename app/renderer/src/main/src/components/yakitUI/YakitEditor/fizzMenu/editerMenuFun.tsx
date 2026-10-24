@@ -43,13 +43,13 @@ export interface EditerMenuFunParams {
   overLine: number
   getShowActionBar: () => boolean
   execAutoDecodeCallback?: () => void
-  /** 编辑器信息 ref（长宽等） */
-  editorInfoRef: React.MutableRefObject<any>
+ /** 编辑器信息 ref（长宽等） */
+ editorInfoRef: React.MutableRefObject<any>
   /** 定时消失的定时器 */
-  fizzSelectTimeoutIdRef: React.MutableRefObject<NodeJS.Timeout | undefined>
+ fizzSelectTimeoutIdRef: React.MutableRefObject<NodeJS.Timeout | undefined>
   fizzRangeTimeoutIdRef: React.MutableRefObject<NodeJS.Timeout | undefined>
   /** 鼠标位置记录 refs */
-  downPosYRef: React.MutableRefObject<number | undefined>
+ downPosYRef: React.MutableRefObject<number | undefined>
   upPosYRef: React.MutableRefObject<number | undefined>
   onScrollTopRef: React.MutableRefObject<number | undefined>
 
@@ -85,9 +85,7 @@ export const editerMenuFun = (params: EditerMenuFunParams) => {
   } = params
 
   // 编辑器点击弹窗的唯一Id
-  const selectId: string = `monaco.fizz.select.widget-${uuidv4()}`
-  // 编辑器选中弹窗的唯一Id
-  const rangeId: string = `monaco.fizz.range.widget-${uuidv4()}`
+  const selectId: string = `monaco.fizz.select.widget-${uuidv4()}`// 编辑器选中弹窗的唯一Id  const rangeId: string =`monaco.fizz.range.widget-${uuidv4()}`
 
   // 插入标签
   const insertLabelFun = (v: QueryFuzzerLabelResponseProps) => {
@@ -400,8 +398,8 @@ export const editerMenuFun = (params: EditerMenuFunParams) => {
             const { top, bottom, left, right } = editorContainerInfo
             // 通过判断编辑器长宽限制是否显示 (宽度小于250或者长度小于200则不展示)
             const isShowByLimit = right - left > 250 && bottom - top > 200
-            // 判断焦点位置
-            const isTopHalf = focusY < (top + bottom) / 2
+ // 判断焦点位置
+ const isTopHalf = focusY < (top + bottom) / 2
             const isLeftHalf = focusX < (left + right) / 2
             // 行高
             // const lineHeight = editor.getOption(monaco.editor.EditorOption.lineHeight)

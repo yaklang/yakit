@@ -20,9 +20,9 @@ export const BuiltInTags: string[] = [
   '主流第三方服务',
   '信息收集',
   '数据处理',
-  '暴力破解',
-  '指纹识别',
-  '目录爆破',
+  'Brute Force',
+  'Fingerprinting',
+  'Directory Brute Force',
   '加解密工具',
   '威胁情报',
   '空间引擎',
@@ -31,9 +31,9 @@ export const BuiltInTags: string[] = [
 
 /** @name Risk信息风险等级对应Tag组件颜色 */
 export const RiskLevelToTag: Record<string, { color: string; name: string }> = {
-  critical: { color: 'serious', name: '严重' },
-  high: { color: 'danger', name: '高危' },
-  warning: { color: 'info', name: '中危' },
-  low: { color: 'yellow', name: '低危' },
-  info: { color: 'success', name: '信息' },
+  critical: { color: 'serious', name: 'Critical' },
+  high: { color: 'danger', name: 'High' },
+  warning: { color: 'info', name: 'Medium' },
+  low: { color: 'yellow', name: 'Low' },
+  info: { color: 'success', name: 'Info' },
 }

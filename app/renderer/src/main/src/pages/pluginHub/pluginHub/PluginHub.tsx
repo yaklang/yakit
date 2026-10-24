@@ -68,8 +68,8 @@ const PluginHub: React.FC<PluginHubProps> = memo(() => {
   // 回收站页面时，隐藏详情页
   const [hiddenDetail, setHiddenDetail] = useState<boolean>(false)
 
-  /** ---------- 详情组件逻辑 Start ---------- */
-  const detailRef = useRef<PluginHubDetailRefProps>(null)
+ /** ---------- 详情组件逻辑 Start ---------- */
+ const detailRef = useRef<PluginHubDetailRefProps>(null)
   const sendPluginDetail = useMemoizedFn((info: PluginToDetailInfo) => {
     setTimeout(() => {
       if (detailRef && detailRef.current) {

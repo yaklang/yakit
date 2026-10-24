@@ -83,18 +83,18 @@ export const Base64HexFuzztagModal: React.FC<Base64HexFuzztagModalProps> = (prop
 
   // 原始字节（用于提交时计算改动），不修改
   const originalRef = useRef<Uint8Array>(initialData)
-  // 工作字节缓冲（HEX 模式原地编辑它）；复制一份避免污染原始数据
-  const dataRef = useRef<Uint8Array>(new Uint8Array(initialData))
+ // 工作字节缓冲（HEX 模式原地编辑它）；复制一份避免污染原始数据
+ const dataRef = useRef<Uint8Array>(new Uint8Array(initialData))
 
-  // 默认文本编辑器；但内容不可打印(无 previewText)时默认 HEX，避免文本模式 UTF-8 往返损坏二进制数据
-  const [editorType, setEditorType] = useState<EditorType>(() => (entry.previewText ? 'text' : 'hex'))
+ // 默认文本编辑器；但内容不可打印(无 previewText)时默认 HEX，避免文本模式 UTF-8 往返损坏二进制数据
+ const [editorType, setEditorType] = useState<EditorType>(() => (entry.previewText ? 'text' : 'hex'))
   const [text, setText] = useState<string>(() => decodeText(initialData))
-  // 文本模式下的 textarea：经 resizableTextArea.textArea 取原生节点读选区
-  const textRef = useRef<TextAreaRef>(null)
-  // HEX 编辑器挂载 key：每次切到 HEX 时自增，强制以最新 dataRef.current 重新挂载
-  const [hexMountKey, setHexMountKey] = useState<number>(0)
-  // 文字→HEX 时带入的字节选区（带入即会在 HEX 挂载后弹出编辑面板）
-  const [hexInitialSel, setHexInitialSel] = useState<[number, number] | undefined>(undefined)
+ // 文本模式下的 textarea：经 resizableTextArea.textArea 取原生节点读选区
+ const textRef = useRef<TextAreaRef>(null)
+ // HEX 编辑器挂载 key：每次切到 HEX 时自增，强制以最新 dataRef.current 重新挂载
+ const [hexMountKey, setHexMountKey] = useState<number>(0)
+ // 文字→HEX 时带入的字节选区（带入即会在 HEX 挂载后弹出编辑面板）
+ const [hexInitialSel, setHexInitialSel] = useState<[number, number] | undefined>(undefined)
   const [hostVersion, setHostVersion] = useState<number>(0)
 
   const bytePreview = useMemo(() => {

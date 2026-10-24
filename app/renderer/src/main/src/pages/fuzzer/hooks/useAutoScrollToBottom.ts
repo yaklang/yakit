@@ -41,12 +41,12 @@ export const useChunkAutoScrollToBottom = (
   // 随机分块传输发送的请求 body）不应被追加到响应编辑器，否则会出现
   // 「开启分块传输后响应回显请求 body」的 bug。缺省 Direction 按响应处理（兼容旧后端）。
   const responseChunks = useMemo(() => (chunkedData || []).filter(isResponseChunkedData), [chunkedData])
-  // 编辑器引用
-  const editorRef = useRef<IMonacoEditor>()
-  // 用户是否手动滚动过
-  const userHasScrolledRef = useRef<boolean>(false)
-  // 滚动事件监听器的清理函数
-  const scrollDisposableRef = useRef<IDisposable>()
+ // 编辑器引用
+ const editorRef = useRef<IMonacoEditor>()
+ // 用户是否手动滚动过
+ const userHasScrolledRef = useRef<boolean>(false)
+ // 滚动事件监听器的清理函数
+ const scrollDisposableRef = useRef<IDisposable>()
 
   // 流是否加载中
   const isStreamLoad = useMemo(() => {
@@ -135,8 +135,8 @@ export const useChunkAutoScrollToBottom = (
 
   // 记录上次追加内容的结束位置
   const addStreamIndexRef = useRef<number>()
-  // Monaco流式加载内容
-  const addStreamContentRef = useRef<RandomChunkedResponse[]>([])
+ // Monaco流式加载内容
+ const addStreamContentRef = useRef<RandomChunkedResponse[]>([])
   const timeRef = useRef<NodeJS.Timeout>()
   const appendText = useMemoizedFn(() => {
     const editor = editorRef.current

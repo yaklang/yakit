@@ -31,9 +31,9 @@ const AIConcurrentStream: React.FC<AIConcurrentStreamProps> = memo(({ windowId }
   const [contentVersion, setContentVersion] = useState(0)
   const [loading, setLoading] = useState<boolean>(true)
 
-  // rawData/execFileRecord/childrenTokens 用 ref 存储，更新不触发渲染；
-  // 组件及子组件的重渲染由 contentVersion（renderNum）驱动
-  const rawDataRef = useRef<Map<string, AIChatQSData>>(new Map())
+ // rawData/execFileRecord/childrenTokens 用 ref 存储，更新不触发渲染；
+ // 组件及子组件的重渲染由 contentVersion（renderNum）驱动
+ const rawDataRef = useRef<Map<string, AIChatQSData>>(new Map())
   const execFileRecordRef = useRef<Map<string, AIYakExecFileRecord[]>>(new Map())
   const childrenTokensRef = useRef<string[]>([])
 

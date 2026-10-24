@@ -221,8 +221,8 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = () => {
     proxyConfig: { Routes = [], Endpoints = [] },
   } = useProxy()
   const originGlobalConfigRef = useRef<GlobalNetworkConfig>(cloneDeep(defaultParams))
-  /** ---------- 是否删除私密插件逻辑 Start ---------- */
-  const [isDelPrivatePlugin, setIsDelPrivatePlugin] = useState<boolean>(false)
+ /** ---------- 是否删除私密插件逻辑 Start ---------- */
+ const [isDelPrivatePlugin, setIsDelPrivatePlugin] = useState<boolean>(false)
   useEffect(() => {
     getLocalValue(LocalGVS.IsDeletePrivatePluginsOnLogout).then((v: boolean) => {
       setIsDelPrivatePlugin(!!v)
@@ -1071,8 +1071,8 @@ export const NTMLConfig: React.FC<NTMLConfigProps> = (props) => {
   const [currentItem, setCurrentItem] = useState<DataProps>()
   const [modalStatus, setModalStatus] = useState<boolean>(false)
   const [isEdit, setIsEdit] = useState<boolean>(false)
-  // initData 初始数据 用于校验数据是否改变
-  const initData = useRef<DataProps[]>([])
+ // initData 初始数据 用于校验数据是否改变
+ const initData = useRef<DataProps[]>([])
 
   useEffect(() => {
     const newData = params.AuthInfos.map((item) => ({ id: uuidv4(), Disabled: item.Forbidden, ...item }))

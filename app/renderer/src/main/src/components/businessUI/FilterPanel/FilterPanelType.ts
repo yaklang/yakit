@@ -29,10 +29,10 @@ export interface FilterPanelProps {
   visible: boolean
   /** 设置是否可见 */
   setVisible: (show: boolean) => any
-  /** 选中数据 */
-  selecteds: Record<string, API.PluginsSearchData[]>
+ /** 选中数据 */
+ selecteds: Record<string, API.PluginsSearchData[]>
   /** 选中数据回调 */
-  onSelect: (value: Record<string, API.PluginsSearchData[]>) => any
+ onSelect: (value: Record<string, API.PluginsSearchData[]>) => any
   /** 数据展示列表 */
   groupList: FilterPanelGroupItem[]
   /** 数据为空时的提示信息 */

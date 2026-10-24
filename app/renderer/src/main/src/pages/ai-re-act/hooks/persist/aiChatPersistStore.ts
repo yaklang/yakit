@@ -27,14 +27,14 @@ import type {
  */
 export class AIChatPersistStore {
   private dbPromise: Promise<IDBDatabase> | null = null
-  /** 本次主渲染端加载的清库屏障；成功后保留，close / 组件重挂不重复清库 */
-  private startupClearPromise: Promise<void> | null = null
+ /** 本次主渲染端加载的清库屏障；成功后保留，close / 组件重挂不重复清库 */
+ private startupClearPromise: Promise<void> | null = null
 
-  /**
-   * 打开（或复用）数据库连接；首次调用时建库建表。
-   * 首次打开清空三张缓存表；所有读写等待清理事务提交，失败允许下次重试。
-   */
-  async open(): Promise<IDBDatabase> {
+ /**
+ * 打开（或复用）数据库连接；首次调用时建库建表。
+ * 首次打开清空三张缓存表；所有读写等待清理事务提交，失败允许下次重试。
+ */
+ async open(): Promise<IDBDatabase> {
     if (!this.dbPromise) {
       this.dbPromise = this.openDatabase()
         .then((db) => {

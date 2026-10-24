@@ -75,11 +75,11 @@ export function useTypedStream(options: UseTypedStreamOptions): UseTypedStreamRe
   const [displayed, setDisplayed] = useState<string>(() => getContent())
   const [isTyping, setIsTyping] = useState<boolean>(false)
 
-  // refs：避免在自驱动定时器闭包里依赖会变的 state，消除 effect 抖动与重复订阅
-  const finishedRef = useRef(false) // 流已结束 → 排空后停止
-  const displayedLenRef = useRef(0) // 已显示长度（与 displayed 同步，供闭包读取）
-  const typingRef = useRef(false) // isTyping 的 ref 镜像，切换时才 setState
-  const timerRef = useRef<number | null>(null) // 打字单步定时器
+ // refs：避免在自驱动定时器闭包里依赖会变的 state，消除 effect 抖动与重复订阅
+ const finishedRef = useRef(false) // 流已结束 → 排空后停止
+ const displayedLenRef = useRef(0) // 已显示长度（与 displayed 同步，供闭包读取）
+ const typingRef = useRef(false) // isTyping 的 ref 镜像，切换时才 setState
+ const timerRef = useRef<number | null>(null) // 打字单步定时器
 
   // getter 用 ref 承载：防御性同步最新闭包，使本 hook 不受父组件重渲染时机影响
   const getContentRef = useRef(getContent)

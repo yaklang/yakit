@@ -50,13 +50,13 @@ const AIToolPage: React.FC<AIToolProps> = React.memo((props) => {
   // 列表无条件下的总数
   const [listTotal, setListTotal] = useState<number>(0)
 
-  // 搜索条件
-  const [keyWord, setKeyWord] = useState<string>('')
+ // 搜索条件
+ const [keyWord, setKeyWord] = useState<string>('')
   const [loading, setLoading] = useState<boolean>(false)
   const [allChecked, setAllChecked] = useState<boolean>(false)
 
-  // 是否为获取列表第一页的加载状态
-  const isInitLoading = useRef<boolean>(false)
+ // 是否为获取列表第一页的加载状态
+ const isInitLoading = useRef<boolean>(false)
   const hasMore = useRef<boolean>(true)
 
   const toolRef = useRef<HTMLDivElement>(null)

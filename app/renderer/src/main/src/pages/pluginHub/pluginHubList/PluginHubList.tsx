@@ -105,8 +105,8 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
   })
   const activeRef = useRef<PluginSourceType>(active)
   const [show, setShow] = useState<boolean>(true)
-  // 无详情页的列表tab类型
-  const noDetailTabs = useRef<PluginSourceType[]>(['recycle', 'setting'])
+ // 无详情页的列表tab类型
+ const noDetailTabs = useRef<PluginSourceType[]>(['recycle', 'setting'])
   // 控制各个列表的初始渲染变量，存在列表对应类型，则代表列表UI已经被渲染
   const rendered = useRef<Set<string>>(new Set())
   const [activeHidden, setActiveHidden] = useState<boolean>(false)

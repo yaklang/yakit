@@ -21,7 +21,7 @@ interface MITMCertificateDownloadModalProps {
 export const MITMCertificateDownloadModal: React.FC<MITMCertificateDownloadModalProps> = React.memo((props) => {
   const { visible, setVisible } = props
   const [isGMState, setIsGMState] = useState<boolean>(false) // 是否为国密证书
-  const [caCerts, setCaCerts] = useState<CaCertData>({
+ const [caCerts, setCaCerts] = useState<CaCertData>({
     CaCerts: new Uint8Array(),
     LocalFile: '',
   })

@@ -27,7 +27,7 @@ export interface SessionStatusState {
   /** 各 session 的删除状态，按 sessionId 索引 */
   deleteStatuses: Map<string, SessionDeleteStatus>
   /** 正在批量删除的 source 集合 */
-  deletingSources: Set<AISource>
+ deletingSources: Set<AISource>
   /** 设置多个 session 的删除状态（Controller deleteSessions 内部调用） */
   setSessionsDeleteStatus: (sessionIds: string[], status: SessionDeleteStatus) => void
   /** 标记某些 source 进入/退出批量删除 */

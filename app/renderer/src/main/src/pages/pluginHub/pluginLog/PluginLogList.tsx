@@ -28,12 +28,12 @@ export const PluginLogList: React.FC<PluginLogListProps> = memo((props) => {
   const { triggerRefresh, getContainer, type, plugin, onReply, onRefreshTotals, callbackTotal } = props
 
   const wrapperRef = useRef<HTMLDivElement>(null)
-  const [inViewport = true] = useInViewport(wrapperRef)
+ const [inViewport = true] = useInViewport(wrapperRef)
 
-  // 请求列表偏移量 ID
-  const beforeId = useRef<number>(0)
-  // 全部列表的总 total
-  const total = useRef<number>(0)
+ // 请求列表偏移量 ID
+ const beforeId = useRef<number>(0)
+ // 全部列表的总 total
+ const total = useRef<number>(0)
   const [loading, setLoading] = useState<boolean>(false)
   const [response, setResponse] = useState<API.PluginsLogsResponse>({
     data: [],
@@ -365,69 +365,7 @@ export const PluginLogList: React.FC<PluginLogListProps> = memo((props) => {
         {response.data.map((item, index) => {
           return (
             <PluginLogOpt
-              key={`${item.id}-${item.updated_at}`}
-              plugin={plugin}
-              latestAudit={latestAuditInfo.current}
-              info={item}
-              hiddenLine={index === response.data.length - 1}
-              callback={typeCallback}
-            />
-          )
-        })}
-
-        {loading && (
-          <div className={styles['list-loading']}>
-            <YakitSpin wrapperClassName={styles['loading-style']} spinning={true} tip="加载中...">
-              <div style={{ minHeight: 100 }} /> {/* 占位 */}
-            </YakitSpin>
-          </div>
-        )}
-        {!loading && !hasMore.current && <div className={styles['list-bottom']}>已经到底啦～</div>}
-      </div>
-
-      {/* 合并信息展示框 */}
-      {showMerge && (
-        <PluginLogMergeDetail
-          getContainer={document.getElementById(getContainer || '') || undefined}
-          uuid={plugin.uuid}
-          id={activeLogId.current}
-          visible={showMerge}
-          callback={handleCallbackMerge}
-        />
-      )}
-
-      {/* code代码对比框 */}
-      <PluginLogCodeDiff uuid={plugin.uuid} id={activeLogId.current} visible={showCode} setVisible={handleCancelCode} />
-
-      {/* 删除评论|回复二次确认框 */}
-      <YakitHint
-        getContainer={document.getElementById(getContainer || '') || undefined}
-        wrapClassName={styles['plugin-log-del-comment-hit']}
-        visible={delCommentShow}
-        title="删除评论"
-        content="是否确认要删除该条评论"
-        okButtonProps={{ loading: delCommentLoading }}
-        onOk={handleDelCommentOK}
-        onCancel={handleDelCommentClose}
-      />
-
-      {/* 回复的引用预览 */}
-      {replyInfo.current && (
-        <YakitModal
-          getContainer={document.getElementById(getContainer || '') || undefined}
-          title="评论详情"
-          type="white"
-          open={showQuotation}
-          centered={true}
-          footer={null}
-          onCancel={handleCancelShowQuotaion}
-        >
-          <div className={styles['preview-reply']}>
-            <div className={styles['header-wrapper']}>
-              <AuthorImg src={replyInfo.current.parentComment?.headImg || UnLogin} />
-              <div className={styles['author-name']}>{replyInfo.current.parentComment?.userName}</div>
-              {replyRoleTag()}
-              <div className={styles['log-time']}>{` · ${formatTimestamp(
+              key={`${item.id}-${item.updated_at}`}  plugin={plugin}  latestAudit={latestAuditInfo.current}  info={item}  hiddenLine={index === response.data.length - 1}  callback={typeCallback}  />)  })}   {loading && (<div className={styles['list-loading']}>  <YakitSpin wrapperClassName={styles['loading-style']} spinning={true} tip="加载中...">  <div style={{ minHeight: 100 }} /> {/* 占位 */}  </YakitSpin>  </div>)}  {!loading &&!hasMore.current && <div className={styles['list-bottom']}>已经到底啦～</div>}  </div>   {/* 合并信息展示框 */}  {showMerge && (<PluginLogMergeDetail  getContainer={document.getElementById(getContainer || '') || undefined}  uuid={plugin.uuid}  id={activeLogId.current}  visible={showMerge}  callback={handleCallbackMerge}  />)}   {/* code代码对比框 */}  <PluginLogCodeDiff uuid={plugin.uuid} id={activeLogId.current} visible={showCode} setVisible={handleCancelCode} />   {/* 删除评论|回复二次确认框 */}  <YakitHint  getContainer={document.getElementById(getContainer || '') || undefined}  wrapClassName={styles['plugin-log-del-comment-hit']}  visible={delCommentShow}  title="删除评论"  content="是否确认要删除该条评论"  okButtonProps={{ loading: delCommentLoading }}  onOk={handleDelCommentOK}  onCancel={handleDelCommentClose}  />   {/* 回复的引用预览 */}  {replyInfo.current && (<YakitModal  getContainer={document.getElementById(getContainer || '') || undefined}  title="评论详情"  type="white"  open={showQuotation}  centered={true}  footer={null}  onCancel={handleCancelShowQuotaion}  >  <div className={styles['preview-reply']}>  <div className={styles['header-wrapper']}>  <AuthorImg src={replyInfo.current.parentComment?.headImg || UnLogin} />  <div className={styles['author-name']}>{replyInfo.current.parentComment?.userName}</div>  {replyRoleTag()}  <div className={styles['log-time']}>{` · ${formatTimestamp(
                 replyInfo.current.parentComment?.updated_at || 0,
               )}`}</div>
             </div>

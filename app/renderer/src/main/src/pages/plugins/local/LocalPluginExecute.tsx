@@ -41,10 +41,10 @@ export const LocalPluginExecute: React.FC<LocalPluginExecuteProps> = React.memo(
   const [executeStatus, setExecuteStatus] = useState<ExpandAndRetractExcessiveState>('default')
   const [runtimeId, setRuntimeId] = useState<string>('')
   const [downLoading, setDownLoading] = useState<boolean>(false)
-  /** 最近使用回显的配置 + 结果 */
-  const [cachedRecord, setCachedRecord] = useState<PluginLastExecuteRecord>()
-  /** 当前这次执行：开始时记下，结束/停止/关页时写入引擎 */
-  const pendingRef = useRef<{ pluginName: string; config: PluginExecuteCacheConfig; runtimeId: string }>()
+ /** 最近使用回显的配置 + 结果 */
+ const [cachedRecord, setCachedRecord] = useState<PluginLastExecuteRecord>()
+ /** 当前这次执行：开始时记下，结束/停止/关页时写入引擎 */
+ const pendingRef = useRef<{ pluginName: string; config: PluginExecuteCacheConfig; runtimeId: string }>()
 
   const tokenRef = useRef<string>(randomString(40))
 

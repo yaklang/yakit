@@ -122,9 +122,9 @@ const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) =
   const [searchType, setSearchType] = useState<string>('')
 
   const [isRefresh, setIsRefresh] = useState<boolean>(false) // 刷新表格，滚动至0
-  const [loading, setLoading] = useState(false)
-  // 抽屉
-  const cvePageRef = useRef<any>()
+ const [loading, setLoading] = useState(false)
+ // 抽屉
+ const cvePageRef = useRef<any>()
   const [inViewport] = useInViewport(cvePageRef)
   const [visible, setVisible] = useState<boolean>(false)
   const [drawerData, setDrawerData] = useState<WebShellDetail>()

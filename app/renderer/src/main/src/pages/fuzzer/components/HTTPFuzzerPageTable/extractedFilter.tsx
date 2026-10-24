@@ -19,8 +19,8 @@ const ExtractedFilter: React.FC<ExtractedFilterProps> = memo((props) => {
   const { onSearch } = props
   const { t, i18n } = useI18nNamespaces(['history', 'webFuzzer', 'yakitUi'])
   const [show, setShow] = useState<boolean>(false)
-  // 提取数据搜索
-  const [extractedSearchVal, setExtractedSearchVal] = useState<string>('')
+ // 提取数据搜索
+ const [extractedSearchVal, setExtractedSearchVal] = useState<string>('')
   const [extractedMatchType, setExtractedMatchType] = useState<'includes' | 'notIncludes'>('includes')
   const [extractedNotEmpty, setExtractedNotEmpty] = useState<boolean>(false)
   const handleSearch = () => {

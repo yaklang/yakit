@@ -122,13 +122,12 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
   const progressKVPair = useRef<Map<string, number>>(new Map<string, number>())
   // card
   const cardKVPair = useRef<Map<string, HoldGRPCStreamProps.CacheCard>>(
-    new Map<string, HoldGRPCStreamProps.CacheCard>(),
-  )
+    new Map<string, HoldGRPCStreamProps.CacheCard>(),)
 
-  // 前置tabs
-  const topTabs = useRef<HoldGRPCStreamProps.InfoTab[]>([])
-  // 后置tabs
-  const endTabs = useRef<HoldGRPCStreamProps.InfoTab[]>([])
+ // 前置tabs
+ const topTabs = useRef<HoldGRPCStreamProps.InfoTab[]>([])
+ // 后置tabs
+ const endTabs = useRef<HoldGRPCStreamProps.InfoTab[]>([])
 
   // tabInfo-website
   const tabWebsite = useRef<StreamResult.WebSite>()

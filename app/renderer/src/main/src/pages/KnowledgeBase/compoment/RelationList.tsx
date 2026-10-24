@@ -57,24 +57,7 @@ const RelationList: React.FC<RelationListProps> = ({ form, disabled }) => {
                                 <div {...provided.dragHandleProps}>
                                   <DragSortSolid className={styles['draggable-icon']} color="currentColor" />
                                 </div>
-                                <Item key={`concept-${id}`} name={[field.name, 'concept']} style={{ marginBottom: 8 }}>
-                                  <YakitSelect
-                                    placeholder="选择概念"
-                                    disabled={disabled}
-                                    options={[
-                                      {
-                                        value: 'concept:schema混淆',
-                                        label: 'concept:schema混淆',
-                                      },
-                                      {
-                                        value: 'concept:schema错误',
-                                        label: 'concept:schema错误',
-                                      },
-                                    ]}
-                                  />
-                                </Item>
-                                <Item
-                                  key={`relation-${id}`}
+                                <Item key={`concept-${id}`} name={[field.name, 'concept']} style={{ marginBottom: 8 }}>  <YakitSelect  placeholder="选择概念"  disabled={disabled}  options={[{  value: 'concept:schema混淆',  label: 'concept:schema混淆',  },  {  value: 'concept:schema错误',  label: 'concept:schema错误',  },  ]}  />  </Item>  <Item  key={`relation-${id}`}
                                   name={[field.name, 'relation']}
                                   style={{ marginBottom: 0 }}
                                 >

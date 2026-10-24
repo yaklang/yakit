@@ -25,8 +25,8 @@ const AIChildWindowGroupStreamCard: FC<AIChildWindowGroupStreamCardProps> = memo
   const { rawData, renderNum } = useAIConcurrentStreamStore()
   const { ref: containerRef, isFocus } = useClickFocus<HTMLDivElement>()
 
-  // 按 token + renderNum 缓存该 group 的子节点，避免每次渲染都全量 forEach
-  const childItemTokens = useCreation<string[]>(() => {
+ // 按 token + renderNum 缓存该 group 的子节点，避免每次渲染都全量 forEach
+ const childItemTokens = useCreation<string[]>(() => {
     if (!rawData) return []
     const items: string[] = []
     rawData.forEach((value) => {
