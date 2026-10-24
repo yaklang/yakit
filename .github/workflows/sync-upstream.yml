@@ -102,7 +102,11 @@ jobs:
 
       - name: 6. Install tsc, PyYAML & Translation Dependencies
         run: |
+<<<<<<< HEAD
+          npm install -g typescript@5
+=======
           npm install -g typescript
+>>>>>>> origin/master
           python3 -m pip install --upgrade pip deep-translator PyYAML
 
       - name: 7. Translate UI, Source Files, PoC YAMLs & .yak Plugins
@@ -476,11 +480,20 @@ jobs:
           UPSTREAM_BRANCH: ${{ env.UPSTREAM_BRANCH }}
         run: |
           export NODE_PATH="$(npm root -g)"
+<<<<<<< HEAD
+          node --input-type=commonjs - << 'EOF'
+          const fs = require('fs');
+          const path = require('path');
+          const { execFileSync } = require('child_process');
+          const tsModule = require('typescript');
+          const ts = tsModule.default || tsModule;
+=======
           node - << 'EOF'
           const fs = require('fs');
           const path = require('path');
           const { execFileSync } = require('child_process');
           const ts = require('typescript');
+>>>>>>> origin/master
 
           const upstreamRef = `upstream/${process.env.UPSTREAM_BRANCH || 'master'}`;
           const revertedRecords = [];
@@ -587,6 +600,10 @@ jobs:
 
       - name: 9. Commit and Push Verified English Edition
         run: |
+<<<<<<< HEAD
+          git add -f .i18n_cache.json .github/ 2>/dev/null || true
+=======
+>>>>>>> origin/master
           if [ -n "$(git status --porcelain)" ]; then
             git add -A
             git commit -m "chore(i18n): sync upstream and translate UI, plugins & PoC metadata to English"
@@ -634,8 +651,25 @@ jobs:
     name: Auto-Trigger Multi-OS English Release
     needs: sync-and-translate
     if: needs.sync-and-translate.outputs.should_release == 'true'
+<<<<<<< HEAD
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - name: Dispatch English release workflow
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ needs.sync-and-translate.outputs.release_tag }}
+        run: >-
+          gh workflow run release-en.yml
+          --repo "${{ github.repository }}"
+          --ref "$RELEASE_TAG"
+          --field tag_name="$RELEASE_TAG"
+          --field target_ref="$RELEASE_TAG"
+=======
     uses: ./.github/workflows/release-en.yml
     with:
       tag_name: ${{ needs.sync-and-translate.outputs.release_tag }}
       target_ref: ${{ needs.sync-and-translate.outputs.release_tag }}
     secrets: inherit
+>>>>>>> origin/master
