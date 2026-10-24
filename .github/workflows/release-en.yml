@@ -1,0 +1,229 @@
+name: Build and Release Yakit (English Edition)
+
+on:
+  # ၁။ sync-upstream.yml မှ Upstream Release အသစ်တွေ့တိုင်း တိုက်ရိုက်လှမ်းခေါ်နိုင်ရန်
+  workflow_call:
+    inputs:
+      tag_name:
+        type: string
+        required: true
+      target_ref:
+        type: string
+        required: false
+        default: 'english-edition'
+
+  # ၂။ Local မှ v* Tag ကိုယ်တိုင် Push တင်သည့်အခါ အလုပ်လုပ်ရန်
+  push:
+    tags:
+      - 'v*'
+
+  # ၃။ GitHub Actions UI မှ Manual စမ်းသပ်နှိပ်နိုင်ရန်
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Release Tag အမည် (ဥပမာ v1.4.9-1016-en)'
+        required: false
+        default: ''
+      target_ref:
+        description: 'Build လုပ်မည့် Branch (ပုံမှန် english-edition)'
+        required: false
+        default: 'english-edition'
+
+permissions:
+  contents: write
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # အဆင့် (၁) - Official CDN မှ နောက်ဆုံးထွက် Yak Engine Binary များကို ဆွဲယူခြင်း
+  # ---------------------------------------------------------------------------
+  prepare-engine:
+    name: Fetch Yak Engine Binaries
+    runs-on: ubuntu-latest
+    outputs:
+      yak_version: ${{ steps.fetch_bins.outputs.yak_version }}
+    steps:
+      - name: Download Latest Yak Engine
+        id: fetch_bins
+        run: |
+          mkdir -p bins
+          CDN_PRIMARY="https://yaklang.oss-accelerate.aliyuncs.com/yak"
+          CDN_FALLBACK="https://oss-qn.yaklang.com/yak"
+
+          curl -fsSL --retry 3 "${CDN_PRIMARY}/latest/version.txt" -o bins/engine-version.txt || \
+          curl -fsSL --retry 3 "${CDN_FALLBACK}/latest/version.txt" -o bins/engine-version.txt
+
+          YAK_VER=$(tr -d '[:space:]' < bins/engine-version.txt)
+          echo "yak_version=${YAK_VER}" >> "$GITHUB_OUTPUT"
+
+          for BIN in \
+            yak_windows_amd64.exe \
+            yak_darwin_amd64 \
+            yak_darwin_arm64 \
+            yak_linux_amd64 \
+            yak_linux_arm64; do
+            curl -fsSL --retry 3 "${CDN_PRIMARY}/${YAK_VER}/${BIN}" -o "bins/${BIN}" || \
+            curl -fsSL --retry 3 "${CDN_FALLBACK}/${YAK_VER}/${BIN}" -o "bins/${BIN}"
+          done
+
+          chmod +x bins/yak_darwin_* bins/yak_linux_*
+          zip -j bins/yak_windows_normal_amd64.zip bins/yak_windows_amd64.exe
+          ls -lh bins/
+
+      - name: Upload Engine Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: yak-engine-bins
+          path: bins/
+          retention-days: 1
+
+  # ---------------------------------------------------------------------------
+  # အဆင့် (၂) - Windows (.exe), macOS (.dmg), Linux (.AppImage) ပြိုင်တူ Build ခြင်း
+  # ---------------------------------------------------------------------------
+  build-matrix:
+    name: Build English Edition (${{ matrix.platform }})
+    needs: prepare-engine
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            platform: win
+          - os: ubuntu-latest
+            platform: linux
+          - os: macos-latest
+            platform: mac
+
+    env:
+      CI: "true"
+      NODE_OPTIONS: "--max-old-space-size=8192"
+      CSC_IDENTITY_AUTO_DISCOVERY: "false"
+
+    steps:
+      - name: 1. Determine Checkout Ref
+        id: ref_select
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            TARGET="${GITHUB_REF_NAME}"
+          elif [[ -n "${{ inputs.target_ref }}" ]]; then
+            TARGET="${{ inputs.target_ref }}"
+          else
+            TARGET="english-edition"
+          fi
+          echo "ref=${TARGET}" >> "$GITHUB_OUTPUT"
+
+      - name: 2. Checkout English Edition Code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.ref_select.outputs.ref }}
+          fetch-depth: 1
+
+      - name: 3. Setup Node.js 22 & Yarn
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: 4. Ensure Yarn is Installed
+        run: yarn --version || npm install -g yarn
+
+      - name: 5. Install Linux System Dependencies
+        if: matrix.platform == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libfuse2t64 rpm || sudo apt-get install -y libfuse2 rpm
+
+      - name: 6. Restore Yak Engine Binaries
+        uses: actions/download-artifact@v4
+        with:
+          name: yak-engine-bins
+          path: bins/
+
+      - name: 7. Enforce English Default Language Safeguard (i18n.ts)
+        run: |
+          I18N_FILE="app/renderer/src/main/src/i18n/i18n.ts"
+          if [ -f "$I18N_FILE" ]; then
+            sed -i.bak "s/lng:.*'zh'/lng: localStorage.getItem('i18nextLng') || 'en'/g" "$I18N_FILE"
+            sed -i.bak "s/fallbackLng:.*'zh'/fallbackLng: 'en'/g" "$I18N_FILE"
+            rm -f "${I18N_FILE}.bak"
+          fi
+
+      - name: 8. Install, Build & Package via Yakit Unified CLI
+        run: |
+          chmod +x bins/yak_darwin_* bins/yak_linux_* 2>/dev/null || true
+          yarn config set network-timeout 300000
+
+          if [ -f "cli/cli.mjs" ]; then
+            yarn cli install
+            yarn cli build -v yakit
+            yarn cli pack -s ${{ matrix.platform }} -v yakit
+          else
+            yarn install
+            yarn build-renders
+            yarn pack-${{ matrix.platform }}
+          fi
+
+      - name: 9. Upload OS Installer Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Yakit-English-${{ matrix.platform }}
+          path: |
+            release/*.exe
+            release/*.dmg
+            release/*.AppImage
+            !release/*unpacked*
+          if-no-files-found: error
+          retention-days: 3
+
+  # ---------------------------------------------------------------------------
+  # အဆင့် (၃) - OS အားလုံး၏ Installer များကို GitHub Releases သို့ စုပေါင်းတင်ပေးခြင်း
+  # ---------------------------------------------------------------------------
+  publish-release:
+    name: Publish English Release
+    needs: [prepare-engine, build-matrix]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download All OS Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: Yakit-English-*
+          path: release-assets
+          merge-multiple: true
+
+      - name: Resolve Final Release Tag
+        id: resolve_tag
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            FINAL_TAG="${GITHUB_REF_NAME}"
+          elif [[ -n "${{ inputs.tag_name }}" ]]; then
+            FINAL_TAG="${{ inputs.tag_name }}"
+          else
+            FINAL_TAG="v$(date +'%Y.%m.%d')-en"
+          fi
+          echo "tag=${FINAL_TAG}" >> "$GITHUB_OUTPUT"
+          ls -lh release-assets/
+
+      - name: Publish to GitHub Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.resolve_tag.outputs.tag }}
+          target_commitish: english-edition
+          name: "Yakit English Edition (${{ steps.resolve_tag.outputs.tag }})"
+          body: |
+            ### Yakit English Edition — ${{ steps.resolve_tag.outputs.tag }}
+            * **Default Language:** English (`en`) out of the box (UI, Plugins & Vulnerability PoC YAML metadata translated).
+            * **Bundled Yak Engine:** `${{ needs.prepare-engine.outputs.yak_version }}`
+            * **Supported Platforms:** Windows (`.exe`), macOS Apple Silicon & Intel (`.dmg`), Linux x64/arm64 (`.AppImage`).
+            * **Unsigned Installer Note:**
+              * **Windows:** SmartScreen တက်လာပါက `More info` → `Run anyway` ကို နှိပ်ပါ။
+              * **macOS:** `sudo xattr -rd com.apple.quarantine /Applications/Yakit.app` ကို Run ၍ ဖွင့်ပါ။
+          draft: false
+          prerelease: false
+          files: |
+            release-assets/*.exe
+            release-assets/*.dmg
+            release-assets/*.AppImage
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
