@@ -68,8 +68,8 @@ const AIScheduledTasks: React.FC<AIScheduledTasksProps> = React.memo((props) => 
   // 保留关键词变化期间的防抖计时，仅在视口变化或卸载时取消待执行查询。
   useEffect(() => () => cancelGetList(), [inViewPort, cancelGetList])
 
-  // 侧栏通过 width:0 折叠，重新展开时主动刷新。
-  const prevVisibleRef = useRef<boolean>(undefined)
+ // 侧栏通过 width:0 折叠，重新展开时主动刷新。
+ const prevVisibleRef = useRef<boolean>(undefined)
   useEffect(() => {
     const prev = prevVisibleRef.current
     prevVisibleRef.current = visible

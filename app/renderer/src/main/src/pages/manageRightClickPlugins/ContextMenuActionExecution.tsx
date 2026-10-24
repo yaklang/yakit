@@ -128,10 +128,10 @@ export const ContextMenuActionExecution: React.FC<{ executionID: string; mode: C
       [execution?.action.Params],
     )
     const extraParamsGroup: YakExtraParamProps[] = useMemo(() => ParamsToGroupByGroupName(customParams), [customParams])
-    // #endregion
+ // #endregion
 
-    // #region 插件详情（源码 Tab / 编辑弹窗 / 头部作者与更新时间）
-    const [plugin, setPlugin] = useState<YakScript | null>(null)
+ // #region 插件详情（源码 Tab / 编辑弹窗 / 头部作者与更新时间）
+ const [plugin, setPlugin] = useState<YakScript | null>(null)
     const [pluginLoading, setPluginLoading] = useState(false)
     const [editHint, setEditHint] = useState(false)
     const pageWrapperRef = useRef<HTMLElement>()

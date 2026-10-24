@@ -13,8 +13,8 @@ export interface AIChatContentProps {
   onAfterSubmit?: () => void
   showFreeChat?: boolean
   setShowFreeChat?: (visible: boolean) => void
-  /** 提供聊天布局容器供外部定位右侧面板；传入后不再渲染内置右侧面板。 */
-  rightPanelLayoutRef?: React.RefCallback<HTMLDivElement>
+ /** 提供聊天布局容器供外部定位右侧面板；传入后不再渲染内置右侧面板。 */
+ rightPanelLayoutRef?: React.RefCallback<HTMLDivElement>
 }
 
 /** 文件预览高亮区间；与 FileSearchEditorHighlight 同一结构 */

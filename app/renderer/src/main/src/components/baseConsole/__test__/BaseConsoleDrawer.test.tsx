@@ -141,16 +141,16 @@ describe('BaseConsoleDrawer', () => {
   it('切换停靠方向（left→right→bottom）时 EngineConsole 实例不重建', () => {
     const props = defaultProps()
     const { rerender } = render(<BaseConsoleDrawer {...props} />)
-    expect(engineConsoleMounts.mounted).toBe(1)
-    expect(engineConsoleMounts.unmounted).toBe(0)
+ expect(engineConsoleMounts.mounted).toBe(1)
+ expect(engineConsoleMounts.unmounted).toBe(0)
 
-    // 用户在抽屉内把停靠侧从 left 切到 right：父组件用新 direction 重渲染抽屉
-    rerender(<BaseConsoleDrawer {...props} direction="right" />)
-    expect(engineConsoleMounts.mounted).toBe(1)
-    expect(engineConsoleMounts.unmounted).toBe(0)
+ // 用户在抽屉内把停靠侧从 left 切到 right：父组件用新 direction 重渲染抽屉
+ rerender(<BaseConsoleDrawer {...props} direction="right" />)
+ expect(engineConsoleMounts.mounted).toBe(1)
+ expect(engineConsoleMounts.unmounted).toBe(0)
 
-    // 再切到底部停靠，终端实例仍不应重建
-    rerender(<BaseConsoleDrawer {...props} direction="bottom" />)
+ // 再切到底部停靠，终端实例仍不应重建
+ rerender(<BaseConsoleDrawer {...props} direction="bottom" />)
     expect(engineConsoleMounts.mounted).toBe(1)
     expect(engineConsoleMounts.unmounted).toBe(0)
   })

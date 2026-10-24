@@ -29,8 +29,8 @@ export const AIBottomDetails: React.FC<AIBottomDetailsProps> = (props) => {
   const [terminaFont, setTerminaFont] = useState<DefaultTerminaSettingProps>(defaultTerminalFont)
   const [popoverVisible, setPopoverVisible] = useState<boolean>(false)
   const terminalRef = useRef<any>(null)
-  // 终端路径
-  const folderPathRef = useRef<string>('')
+ // 终端路径
+ const folderPathRef = useRef<string>('')
   // 终端大小
   const terminalSizeRef = useRef<{ row: number; col: number }>()
 

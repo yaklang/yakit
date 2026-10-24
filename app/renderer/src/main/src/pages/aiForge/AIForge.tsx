@@ -44,16 +44,16 @@ const AIForgePage: React.FC<AIForgeProps> = React.memo((props) => {
   // 列表无条件下的总数
   const [listTotal, setListTotal] = useState<number>(0)
 
-  // 搜索条件
-  const [search, setSearch] = useState<string>('')
+ // 搜索条件
+ const [search, setSearch] = useState<string>('')
   const [loading, setLoading] = useState<boolean>(false)
   const [allChecked, setAllChecked] = useState<boolean>(false)
 
   const batchExportRef = useRef<BatchExportAIforgeRef>(null)
   const importRef = useRef<ImportAIforgeRef>(null)
 
-  // 是否为获取列表第一页的加载状态
-  const isInitLoading = useRef<boolean>(false)
+ // 是否为获取列表第一页的加载状态
+ const isInitLoading = useRef<boolean>(false)
   const hasMore = useRef<boolean>(true)
 
   const forgeRef = useRef<HTMLDivElement>(null)

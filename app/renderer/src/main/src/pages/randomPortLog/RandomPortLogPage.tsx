@@ -123,50 +123,7 @@ export const RandomPortLogPage: React.FC<RandomPortLogPageProp> = (props) => {
                 <YakitTag
                   enableCopy={true}
                   color="success"
-                  copyText={`nc ${externalAddr.replaceAll(':', ' ')}`}
-                ></YakitTag>
-              </Space>
-            </>
-          ) : (
-            <YakitSpin />
-          )}
-        </Col>
-        <Col>
-          {randomPort > 0 && !loading ? (
-            <YakitTag enableCopy={true} color="purple" copyText={randomPort + ''}></YakitTag>
-          ) : (
-            <YakitSpin />
-          )}
-        </Col>
-      </Row>
-      <div style={{ marginTop: 15 }}>
-        <TableVirtualResize<RandomPortTriggerNotification>
-          isRefresh={loading}
-          titleHeight={0.01}
-          renderTitle={<></>}
-          renderKey="RemoteAddr"
-          data={notification}
-          loading={loading}
-          columns={[
-            {
-              title: '随机反连端口',
-              dataKey: 'LocalPort',
-            },
-            {
-              title: '远端地址',
-              dataKey: 'RemoteAddr',
-              render: (text) => <YakitCopyText showText={text} />,
-            },
-            {
-              title: '同主机其他连接(一分钟内)',
-              dataKey: 'CurrentRemoteCachedConnectionCount',
-              render: (text) => <span>{text || 1}</span>,
-            },
-            {
-              title: '同端口历史(一分钟内)',
-              dataKey: 'LocalPortCachedHistoryConnectionCount',
-              render: (text, r) => (
-                <Tooltip title={`对当前端口(${r.LocalPort})来说，除了当前连接，还有${text || 1}个来自其他远端的连接`}>
+                  copyText={`nc ${externalAddr.replaceAll(':', ' ')}`}  ></YakitTag>  </Space>  </>): (<YakitSpin />)}  </Col>  <Col>  {randomPort > 0 &&!loading? (<YakitTag enableCopy={true} color="purple" copyText={randomPort + ''}></YakitTag>): (<YakitSpin />)}  </Col>  </Row>  <div style={{ marginTop: 15 }}>  <TableVirtualResize<RandomPortTriggerNotification>  isRefresh={loading}  titleHeight={0.01}  renderTitle={<></>}  renderKey="RemoteAddr"  data={notification}  loading={loading}  columns={[{  title: '随机 Reverse Connection 端口',  dataKey: 'LocalPort',  },  {  title: '远端地址',  dataKey: 'RemoteAddr',  render: (text) => <YakitCopyText showText={text} />,  },  {  title: '同主机其他连接(一分钟内)',  dataKey: 'CurrentRemoteCachedConnectionCount',  render: (text) => <span>{text || 1}</span>,  },  {  title: '同端口历史(一分钟内)',  dataKey: 'LocalPortCachedHistoryConnectionCount',  render: (text, r) => (<Tooltip title={`对当前端口(${r.LocalPort})来说，除了当前连接，还有${text || 1}个来自其他远端的连接`}>
                   <a
                     href="#"
                     onClick={(e) => {

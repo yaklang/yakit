@@ -38,15 +38,15 @@ const WebFuzzerCasualReplaceReviewOverlay = memo(function WebFuzzerCasualReplace
   const [draftIncoming, setDraftIncoming] = useState(incoming)
   /** 与 `diff` 行级块一致，避免 Monaco getLineChanges 拆块导致只合了一小段 */
   const hunks = useMemo(() => computeCasualLineHunks(reviewBaseline, draftIncoming), [reviewBaseline, draftIncoming])
-  /** 控制全部接受元数据预览卡片显示：仅当悬浮在按钮或卡片时显示 */
-  const [showAcceptMeta, setShowAcceptMeta] = useState(false)
-  const acceptMetaHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  /** 无差异时避免重复触发 onApplyRound(done) */
-  const autoDoneRef = useRef(false)
-  const hunksRef = useRef(hunks)
-  const reviewBaselineRef = useRef(reviewBaseline)
-  const draftIncomingRef = useRef(draftIncoming)
-  const prevIncomingRef = useRef<string | null>(null)
+ /** 控制全部接受元数据预览卡片显示：仅当悬浮在按钮或卡片时显示 */
+ const [showAcceptMeta, setShowAcceptMeta] = useState(false)
+ const acceptMetaHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+ /** 无差异时避免重复触发 onApplyRound(done) */
+ const autoDoneRef = useRef(false)
+ const hunksRef = useRef(hunks)
+ const reviewBaselineRef = useRef(reviewBaseline)
+ const draftIncomingRef = useRef(draftIncoming)
+ const prevIncomingRef = useRef<string | null>(null)
 
   const handleAcceptMetaEnter = useMemoizedFn(() => {
     if (acceptMetaHideTimerRef.current) {

@@ -432,10 +432,10 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
     const enableEndpointWatch = Form.useWatch('enable_endpoint', form)
     const reasoningEffortWatch = Form.useWatch('ReasoningEffort', form)
     const [effortProbing, setEffortProbing] = useState<boolean>(false)
-    // 扩展思考强度探测结果：undefined=未探测；[]=探测过但不支持；非空=探测到支持的档位
-    const [probedExtendedEfforts, setProbedExtendedEfforts] = useState<string[] | undefined>(undefined)
-    // model/Type 变化后置 true：已有探测数据保留（不清空），但下拉列表回退为基础档位，下次打开下拉框重新探测
-    const [effortProbeDirty, setEffortProbeDirty] = useState<boolean>(false)
+ // 扩展思考强度探测结果：undefined=未探测；[]=探测过但不支持；非空=探测到支持的档位
+ const [probedExtendedEfforts, setProbedExtendedEfforts] = useState<string[] | undefined>(undefined)
+ // model/Type 变化后置 true：已有探测数据保留（不清空），但下拉列表回退为基础档位，下次打开下拉框重新探测
+ const [effortProbeDirty, setEffortProbeDirty] = useState<boolean>(false)
     const headers = Form.useWatch('Headers', form) || []
     const [visibleHTTPHeader, setVisibleHTTPHeader] = useState<boolean>(false)
     const headerItemRef = useRef<HTTPHeader>()

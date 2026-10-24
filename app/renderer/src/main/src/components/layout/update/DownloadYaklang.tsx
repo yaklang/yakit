@@ -33,22 +33,22 @@ export const DownloadYaklang: React.FC<DownloadYaklangProps> = React.memo((props
   /** 常见问题弹窗是否展示 */
   const [qsShow, setQSShow] = useState<boolean>(false)
 
-  /** 是否置顶 */
-  const [isTop, setIsTop] = useState<0 | 1 | 2>(0)
+ /** 是否置顶 */
+ const [isTop, setIsTop] = useState<0 | 1 | 2>(0)
 
   const [disabled, setDisabled] = useState(true)
   const [bounds, setBounds] = useState({ left: 0, top: 0, bottom: 0, right: 0 })
   const draggleRef = useRef<HTMLDivElement>(null)
 
-  /** 远端yaklang引擎版本 */
-  const yakLangVersion = useRef<string>('')
+ /** 远端yaklang引擎版本 */
+ const yakLangVersion = useRef<string>('')
   /** 下载进度条数据 */
   const [downloadProgress, setDownloadProgress, getDownloadProgress] = useGetState<DownloadingState>()
 
-  // 是否中断下载进程
-  const isBreakRef = useRef<boolean>(false)
-  // 执行中途是否失败
-  const [isFailed, setIsFailed] = useState<boolean>(false)
+ // 是否中断下载进程
+ const isBreakRef = useRef<boolean>(false)
+ // 执行中途是否失败
+ const [isFailed, setIsFailed] = useState<boolean>(false)
 
   const fetchVersion = useMemoizedFn(() => {
     let isTry: boolean = false // 是否需要重试

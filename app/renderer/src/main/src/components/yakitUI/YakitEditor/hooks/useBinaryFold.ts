@@ -43,8 +43,8 @@ export const useBinaryFold = (params: UseBinaryFoldParams): UseBinaryFoldResult 
   const foldBinaryEnabled = foldBinaryCapable && foldBinaryOpen && type === 'http'
   // 侧表：占位 id -> 原始标签信息；handleBinaryChange 据此 expand 还原真实文本
   const binaryFoldEntriesRef = useRef<Map<string, BinaryFuzztagEntry>>(new Map())
-  // 占位范围（仿 privacyMaskRangesRef），用于点击命中打开 HEX 编辑弹窗
-  const binaryFoldRangesRef = useRef<{ id: string; range: monaco.Range; ordinal: number }[]>([])
+ // 占位范围（仿 privacyMaskRangesRef），用于点击命中打开 HEX 编辑弹窗
+ const binaryFoldRangesRef = useRef<{ id: string; range: monaco.Range; ordinal: number }[]>([])
   // "被修改"记录：按编辑器中第 N 个二进制标签(文档顺序的序号)记录，只记是否改过(布尔)。
   // 与内容/占位 id 解耦，保证复制粘贴出去的永远是纯内容、不含任何改动元数据。
   const binaryModifiedOrdinalsRef = useRef<Set<number>>(new Set())

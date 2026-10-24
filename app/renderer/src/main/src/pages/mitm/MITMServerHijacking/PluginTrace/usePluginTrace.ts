@@ -12,10 +12,10 @@ function usePluginTrace(params: PluginTraceParams) {
   const { pluginTraceRefFun, onStart, onError, onEnd } = params
   const { t, i18n } = useI18nNamespaces(['mitm'])
   const [isInitTrace, setIsInitTrace] = useState<boolean>(true) // 是否显示初始追踪界面
-  const [startLoading, setStartLoading] = useState<boolean>(false) // 开始按钮loading
-  const [tracing, setTracing, getTracing] = useGetSetState<boolean>(false) // 是否正在追踪
-  const [stopLoading, setStopLoading] = useState<boolean>(false) // 停止按钮loading
-  const pluginTraceStatsRef = useRef<PluginTraceStats>({
+ const [startLoading, setStartLoading] = useState<boolean>(false) // 开始按钮loading
+ const [tracing, setTracing, getTracing] = useGetSetState<boolean>(false) // 是否正在追踪
+ const [stopLoading, setStopLoading] = useState<boolean>(false) // 停止按钮loading
+ const pluginTraceStatsRef = useRef<PluginTraceStats>({
     TotalTraces: 0,
     RunningTraces: 0,
     FailedTraces: 0,

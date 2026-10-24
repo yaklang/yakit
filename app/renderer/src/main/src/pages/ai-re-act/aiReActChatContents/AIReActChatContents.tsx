@@ -267,8 +267,7 @@ const AIReActChatContentsList: React.FC<AIReActChatContentsPProps> = React.memo(
         item,
         context: _context,
         ...props
-      }: ItemProps<ReActChatRenderElement> & ContextProp<VirtuosoReadyContext>) => (
-        // 保留 data-known-size 等测量属性，避免重复测量已知高度。
+      }: ItemProps<ReActChatRenderElement> & ContextProp<VirtuosoReadyContext>) => (// 保留 data-known-size 等测量属性，避免重复测量已知高度。
         <div {...props} data-chat-token={item.token} className={styles['item-wrapper']}>
           <div className={styles['item-inner']}>{children}</div>
         </div>

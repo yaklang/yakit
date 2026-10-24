@@ -127,8 +127,8 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
   const userinfo = useStore((s) => s.userInfo)
   const isLogin = useMemo(() => userinfo.isLogin, [userinfo])
 
-  // 私有域
-  const privateDomain = useRef<string>('')
+ // 私有域
+ const privateDomain = useRef<string>('')
   const fetchPrivateDomain = useMemoizedFn((callback?: () => void) => {
     getRemoteValue(getRemoteHttpSettingGV())
       .then((res) => {
@@ -145,23 +145,23 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
 
   /** ---------- 列表相关变量 Start ---------- */
   const [loading, setLoading] = useState<boolean>(false)
-  // 是否为获取列表第一页的加载状态
-  const isInitLoading = useRef<boolean>(false)
+ // 是否为获取列表第一页的加载状态
+ const isInitLoading = useRef<boolean>(false)
   const hasMore = useRef<boolean>(true)
 
-  // 列表无条件下的总数
-  const [listTotal, setListTotal] = useState<number>(0)
+ // 列表无条件下的总数
+ const [listTotal, setListTotal] = useState<number>(0)
 
   const [filterGroup, setFilterGroup] = useState<PluginGroupList[]>([])
 
-  // 列表数据
-  const [response, dispatch] = useReducer(pluginLocalReducer, initialLocalState)
-  // 全选
-  const [allChecked, setAllChecked] = useState<boolean>(false)
-  // 选中插件
-  const [selectList, setSelectList] = useState<YakScript[]>([])
-  // 搜索条件
-  const [search, setSearch, getSearch] = useGetSetState<PluginSearchParams>(
+ // 列表数据
+ const [response, dispatch] = useReducer(pluginLocalReducer, initialLocalState)
+ // 全选
+ const [allChecked, setAllChecked] = useState<boolean>(false)
+ // 选中插件
+ const [selectList, setSelectList] = useState<YakScript[]>([])
+ // 搜索条件
+ const [search, setSearch, getSearch] = useGetSetState<PluginSearchParams>(
     cloneDeep({ ...defaultSearch, ...externalSearchParams }),
   )
   const [filters, setFilters, getFilters] = useGetSetState<PluginFilterParams>(cloneDeep(defaultFilter))
@@ -351,8 +351,8 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
 
   // 是否出现二次确认框
   const delHintCache = useRef<boolean>(false)
-  // 出发二次确认框的操作源
-  const delHintSource = useRef<'batch' | 'single'>('single')
+ // 出发二次确认框的操作源
+ const delHintSource = useRef<'batch' | 'single'>('single')
   const [delHint, setDelHint] = useState<boolean>(false)
   const onOpenDelHint = useMemoizedFn((source: 'batch' | 'single') => {
     if (delHint) return

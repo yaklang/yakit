@@ -125,11 +125,11 @@ describe('AIWelcomeAsciiRipple', () => {
     if (reason === 'hidden') mocks.visibility = 'hidden'
     else mocks.inViewport = false
     rerender(<AIWelcomeAsciiRipple targetRef={{ current: target }} />)
-    expect(latestProps().interactive).toBe(false)
-    expect(mocks.calm).toHaveBeenCalledOnce()
+ expect(latestProps().interactive).toBe(false)
+ expect(mocks.calm).toHaveBeenCalledOnce()
 
-    // 仍不可见的重渲染不重复清空。
-    rerender(<AIWelcomeAsciiRipple targetRef={{ current: target }} />)
+ // 仍不可见的重渲染不重复清空。
+ rerender(<AIWelcomeAsciiRipple targetRef={{ current: target }} />)
     expect(mocks.calm).toHaveBeenCalledOnce()
 
     mocks.visibility = 'visible'

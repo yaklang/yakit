@@ -19,8 +19,8 @@ const FileTreeList: React.FC<FileTreeListProps> = ({ selected, setSelected }) =>
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const [isSearchView, setIsSearchView] = useState(false)
   const [searchScope, setSearchScope] = useState<FileTreeSearchScopeValue>(FileTreeSearchScope.All)
-  /** 进入搜索时预设的单路径（如根节点搜索） */
-  const [searchScopePath, setSearchScopePath] = useState<string>()
+ /** 进入搜索时预设的单路径（如根节点搜索） */
+ const [searchScopePath, setSearchScopePath] = useState<string>()
 
   const openSearch = (scope: FileTreeSearchScopeValue = FileTreeSearchScope.All, path?: string) => {
     setSearchScope(scope)

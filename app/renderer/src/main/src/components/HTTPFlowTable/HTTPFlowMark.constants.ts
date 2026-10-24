@@ -2,22 +2,22 @@ import type { YakQueryHTTPFlowRequest } from '@/utils/yakQueryHTTPFlow'
 
 /** 流量标记：问题类型 */
 export const FLOW_PROBLEM_TYPE_OPTIONS = [
-  'SQL注入',
+  'SQL Injection',
   'XSS',
   'SSRF',
-  '未授权访问',
+  'Unauthorized Access',
   'CSRF',
   '文件上传漏洞',
-  '文件包含',
+  'File Inclusion',
   '反序列化漏洞',
-  '目录遍历',
+  'Directory Traversal',
 ] as const
 
 /** 流量标记：严重程度 */
-export const FLOW_SEVERITY_OPTIONS = ['低危', '中危', '高危', '严重'] as const
+export const FLOW_SEVERITY_OPTIONS = ['Low', 'Medium', 'High', 'Critical'] as const
 
 /** 流量标记：处置状态 */
-export const FLOW_DISPOSAL_STATUS_OPTIONS = ['确认', '误报', '待修复', '已修复'] as const
+export const FLOW_DISPOSAL_STATUS_OPTIONS = ['确认', 'False Positive', '待修复', '已修复'] as const
 
 /** BatchSetHTTPFlowIssueFields 请求（对齐 proto Set* 字段） */
 export interface BatchSetHTTPFlowIssueFieldsRequest {

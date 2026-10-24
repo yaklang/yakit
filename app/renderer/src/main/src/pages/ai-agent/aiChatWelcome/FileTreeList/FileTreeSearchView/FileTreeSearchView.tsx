@@ -96,10 +96,10 @@ const FileTreeSearchView: React.FC<FileTreeSearchViewProps> = ({
   const [scopeOpen, setScopeOpen] = useState(false)
   const [emptyScopeOpen, setEmptyScopeOpen] = useState(false)
   const [scope, setScope] = useState<FileTreeSearchScopeValue>(FileTreeSearchScope.All)
-  /** UserFolder 下指定单个已打开路径；多文件二级菜单选中时使用 */
-  const [userScopePath, setUserScopePath] = useState<string>()
-  /** CurrentOpen 下指定单个预览文件路径 */
-  const [currentOpenPath, setCurrentOpenPath] = useState<string>()
+ /** UserFolder 下指定单个已打开路径；多文件二级菜单选中时使用 */
+ const [userScopePath, setUserScopePath] = useState<string>()
+ /** CurrentOpen 下指定单个预览文件路径 */
+ const [currentOpenPath, setCurrentOpenPath] = useState<string>()
   const [roots, setRoots] = useState<{ path: string }[]>([])
 
   // 仅在进入搜索面板时应用 preset，避免面板内改范围被父级旧值冲掉

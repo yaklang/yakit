@@ -236,20 +236,20 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
   const [hookScriptNameSearch, setHookScriptNameSearch] = useState<string>('')
   const [triggerSearch, setTriggerSearch] = useState<boolean>(false)
   const [isHooksSearch, setIsHooksSearch] = useState<boolean>(false)
-  /**
-   * 选中的插件组
-   */
-  const [selectGroup, setSelectGroup] = useState<YakFilterRemoteObj[]>([])
+ /**
+ * 选中的插件组
+ */
+ const [selectGroup, setSelectGroup] = useState<YakFilterRemoteObj[]>([])
 
   const [script, setScript] = useState<YakScript>(HotLoadDefaultData)
 
-  // 性能优化：使用模块级空 Map 常量，避免每次渲染创建 new Map()
-  const [hooks, handlers] = useMap<string, boolean>(emptyBoolMap) // 当前hooks的插件名
-  const [hooksID, handlersID] = useMap<string, boolean>(emptyBoolMap) // 当前hooks的插件id
-  const [loading, setLoading] = useState(false)
+ // 性能优化：使用模块级空 Map 常量，避免每次渲染创建 new Map()
+ const [hooks, handlers] = useMap<string, boolean>(emptyBoolMap) // 当前hooks的插件名
+ const [hooksID, handlersID] = useMap<string, boolean>(emptyBoolMap) // 当前hooks的插件id
+ const [loading, setLoading] = useState(false)
 
-  // 是否允许获取默认勾选值
-  const isDefaultCheck = useRef<boolean>(false)
+ // 是否允许获取默认勾选值
+ const isDefaultCheck = useRef<boolean>(false)
 
   const compareHasParamsCheckList = useCampare(hasParamsCheckList)
   useEffect(() => {
@@ -643,7 +643,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
                       })
                   }}
                 >
-                  热加载
+                  HotPatch
                 </YakitButton>
               )}
               {isFullScreen ? (

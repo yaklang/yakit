@@ -145,7 +145,7 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
   ]
 
   const [netInterfaceList, setNetInterfaceList] = useState<SelectOptionProps[]>([]) // 代理代表
-  const globalNetworkConfig = useRef<GlobalNetworkConfig>()
+ const globalNetworkConfig = useRef<GlobalNetworkConfig>()
   useEffect(() => {
     ipcRenderer.invoke('GetGlobalNetworkConfig', {}).then((rsp: GlobalNetworkConfig) => {
       globalNetworkConfig.current = rsp

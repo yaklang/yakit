@@ -50,9 +50,8 @@ export const isSameAction = (
 ) => a.PluginUUID === b.PluginUUID && a.ActionID === b.ActionID
 
 /** 按唯一标识给列表项打补丁（无匹配则原样返回） */
-export const patchAction = (
-  list: ContextMenuAction[],
-  target: Pick<ContextMenuAction, 'PluginUUID' | 'ActionID'>,
+export const patchAction = (list: ContextMenuAction[],
+ target: Pick<ContextMenuAction, 'PluginUUID' | 'ActionID'>,
   patch: Partial<ContextMenuAction>,
 ) => list.map((i) => (isSameAction(i, target) ? { ...i, ...patch } : i))
 

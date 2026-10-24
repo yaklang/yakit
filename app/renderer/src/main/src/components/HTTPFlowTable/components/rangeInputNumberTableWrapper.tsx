@@ -27,8 +27,8 @@ export const RangeInputNumberTableWrapper: React.FC<RangeInputNumberTableWrapper
   const { t, i18n } = useI18nNamespaces(['history', 'yakitUi'])
   const [show, setShow] = useState<boolean>(false)
 
-  // valueChanged判断用户输入值 点击其他区域触发筛选列表
-  const [_, setValueChanged, getValueChanged] = useGetSetState<boolean>(false)
+ // valueChanged判断用户输入值 点击其他区域触发筛选列表
+ const [_, setValueChanged, getValueChanged] = useGetSetState<boolean>(false)
 
   const onChangeValued = useMemoizedFn(() => {
     setValueChanged(true)

@@ -26,10 +26,10 @@ const { YakitPanel } = YakitCollapse
 export const WebShellViewer: React.FC<WebShellManagerViewerProp> = (props) => {
   const [params, setParams] = useState<QueryWebShellRequest>(defQueryWebShellRequest)
   const [advancedQuery, setAdvancedQuery] = useState<boolean>(true)
-  const [loading, setLoading] = useState(false)
-  const [available, setAvailable] = useState(false)
-  // 第一次进入
-  const [isFirstEnter, setFirstEnter] = useState<boolean>(false)
+ const [loading, setLoading] = useState(false)
+ const [available, setAvailable] = useState(false)
+ // 第一次进入
+ const [isFirstEnter, setFirstEnter] = useState<boolean>(false)
   const WebShellFirstViewer = 'WebShellFirstViewer'
   useEffect(() => {
     onIsCVEDatabaseReady()

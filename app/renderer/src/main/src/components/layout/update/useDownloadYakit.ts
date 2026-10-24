@@ -22,8 +22,8 @@ export const useDownloadYakit = (props: useDownloadYakitProps) => {
   const { t } = useI18nNamespaces(['yakitUi', 'layout'])
   // 是否中断下载进程
   const isBreakRef = useRef<boolean>(false)
-  /** 下载进度条数据 */
-  const [downloadProgress, setDownloadProgress, getDownloadProgress] = useGetState<DownloadingState>()
+ /** 下载进度条数据 */
+ const [downloadProgress, setDownloadProgress, getDownloadProgress] = useGetState<DownloadingState>()
 
   /**
    * 1. 获取最新软件版本号，并下载

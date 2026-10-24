@@ -72,8 +72,8 @@ const TitleBar: FC = () => {
 
   const close = () => yakitChildWindow.close()
 
-  /** 双击 header 空白处时触发 */
-  const handleDoubleClick = (e: MouseEvent<HTMLDivElement>) => {
+ /** 双击 header 空白处时触发 */
+ const handleDoubleClick = (e: MouseEvent<HTMLDivElement>) => {
     const target = e.target as HTMLElement
     if (target.closest('svg') || target.classList.contains(styles['icon-divider'])) return
     maximizeRestore()

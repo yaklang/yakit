@@ -26,10 +26,10 @@ export interface PluginsContainerProps {
   visible: boolean
   /** 设置是否可见 */
   setVisible: (show: boolean) => any
-  /** 选中数据 */
-  selecteds: Record<string, API.PluginsSearchData[]>
+ /** 选中数据 */
+ selecteds: Record<string, API.PluginsSearchData[]>
   /** 选中数据回调 */
-  onSelect: (value: Record<string, API.PluginsSearchData[]>) => any
+ onSelect: (value: Record<string, API.PluginsSearchData[]>) => any
   /** 数据展示列表 */
   groupList: FilterPanelGroupItem[]
   /** ClassName */
@@ -57,12 +57,12 @@ export interface PluginDetailsProps<T> {
   checked: boolean
   /** 设置全选框 */
   onCheck: (value: boolean) => any
-  /** 插件总数 */
-  total: number
-  /** 已勾选插件数量 */
-  selected: number
-  /** 搜索列表属性 */
-  listProps: RollingLoadListProps<T>
+ /** 插件总数 */
+ total: number
+ /** 已勾选插件数量 */
+ selected: number
+ /** 搜索列表属性 */
+ listProps: RollingLoadListProps<T>
   /** 返回事件 */
   onBack: () => any
   children: ReactNode

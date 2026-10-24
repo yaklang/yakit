@@ -37,8 +37,8 @@ export const DownloadYakit: React.FC<DownloadYakitProps> = React.memo((props) =>
   /** 常见问题弹窗是否展示 */
   const [qsShow, setQSShow] = useState<boolean>(false)
 
-  /** 是否置顶 */
-  const [isTop, setIsTop] = useState<0 | 1 | 2>(0)
+ /** 是否置顶 */
+ const [isTop, setIsTop] = useState<0 | 1 | 2>(0)
 
   const [disabled, setDisabled] = useState(true)
   const [bounds, setBounds] = useState({ left: 0, top: 0, bottom: 0, right: 0 })

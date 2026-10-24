@@ -107,8 +107,8 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
   const [processLoading, setProcessLoading] = useState<boolean>(false)
   const [processList, setProcessList] = useState<ProcessItem[]>([])
   const [curProcess, setCurProcess] = useState<string[]>([])
-  // 性能优化：queryparamsStr 仅在 useEffect([processVisible]) 中读取，不作为依赖、不在 JSX 中，改为 ref
-  const queryparamsStrRef = useRef<string>('')
+ // 性能优化：queryparamsStr 仅在 useEffect([processVisible]) 中读取，不作为依赖、不在 JSX 中，改为 ref
+ const queryparamsStrRef = useRef<string>('')
   const renderProcessList = useMemo(() => {
     return searchProcessVal
       ? processList.filter((item) => item.process.toLocaleLowerCase().includes(searchProcessVal.toLocaleLowerCase()))

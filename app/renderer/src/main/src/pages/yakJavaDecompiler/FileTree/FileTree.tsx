@@ -30,8 +30,8 @@ export const FileTree: React.FC<FileTreeProps> = memo((props) => {
 
   const [isDownCtrlCmd, setIsDownCtrlCmd] = useState<boolean>(false)
 
-  // 复制 粘贴
-  const [copyPath, setCopyPath] = useState<string>('')
+ // 复制 粘贴
+ const [copyPath, setCopyPath] = useState<string>('')
 
   useEffect(() => {
     // 滚动文件树

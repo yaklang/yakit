@@ -196,9 +196,9 @@ const KnowledgeBase: FC = () => {
           </YakitSpin>
         )
 
-      // 正常进入知识库页面
-      default:
-        return (
+ // 正常进入知识库页面
+ default:
+ return (
           <KnowledgeBaseContent
             ref={contentRef}
             knowledgeBaseID={knowledgeBaseID}

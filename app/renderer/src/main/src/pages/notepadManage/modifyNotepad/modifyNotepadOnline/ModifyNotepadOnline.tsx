@@ -83,14 +83,14 @@ const ModifyNotepadOnline: React.FC<ModifyNotepadOnlineProps> = React.memo((prop
 
   const [downItemLoading, setDownItemLoading] = useState<boolean>(false)
   const [loading, setLoading] = useState<boolean>(false) // 编辑器ws是否连接上
-  const [notepadLoading, setNotepadLoading] = useState<boolean>(true)
+ const [notepadLoading, setNotepadLoading] = useState<boolean>(true)
 
   const [onlineUsers, setOnlineUsers] = useState<CollabUserInfo[]>([])
 
   const [tabName, setTabName] = useState<string>(initTabName())
   const [composedTabName, setComposedTabName] = useState<string>(initTabName()) // 不会保存拼音的中间状态
 
-  const [editor, setEditor] = useState<EditorMilkdownProps>()
+ const [editor, setEditor] = useState<EditorMilkdownProps>()
   const [notepadDetail, setNotepadDetail] = useState<API.GetNotepadList>({
     id: 0,
     created_at: moment().unix(),

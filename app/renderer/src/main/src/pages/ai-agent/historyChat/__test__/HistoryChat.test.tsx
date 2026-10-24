@@ -334,9 +334,9 @@ describe('HistoryChat 删除与多开刷新', () => {
     const aiSource: AISource[] = ['ai']
     mocks.viewport.visible = false
     const embedded = render(<HistoryChat aiSource={aiSource} embedded />)
-    mocks.dispatcher.loadHistoryData.mockClear() // 排除挂载时的那次刷新
-    mocks.viewport.visible = true
-    embedded.rerender(<HistoryChat aiSource={aiSource} embedded className="visible" />)
+ mocks.dispatcher.loadHistoryData.mockClear() // 排除挂载时的那次刷新
+ mocks.viewport.visible = true
+ embedded.rerender(<HistoryChat aiSource={aiSource} embedded className="visible" />)
     expect(mocks.dispatcher.loadHistoryData).not.toHaveBeenCalled()
   })
 })

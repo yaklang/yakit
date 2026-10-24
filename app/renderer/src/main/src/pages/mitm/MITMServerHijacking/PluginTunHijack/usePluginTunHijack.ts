@@ -23,11 +23,11 @@ export const tunSessionStateDefault: TunSessionStateProps = {
 const usePluginTunHijack = (params: PluginTunHijackParams) => {
   const { PluginName, onError, onEnd, setRuntimeId } = params
   const tokenRef = useRef<string>(randomString(40))
-  /** 主动取消时主进程不会再转发 end，需本地收尾；并避免与自然 onEnd 重复清理 */
-  const isManualCancelRef = useRef<boolean>(false)
+ /** 主动取消时主进程不会再转发 end，需本地收尾；并避免与自然 onEnd 重复清理 */
+ const isManualCancelRef = useRef<boolean>(false)
 
-  /** 是否在执行中 */
-  const [isExecuting, setIsExecuting] = useSafeState<boolean>(false)
+ /** 是否在执行中 */
+ const [isExecuting, setIsExecuting] = useSafeState<boolean>(false)
   const [streamInfo, debugPluginStreamEvent] = useHoldGRPCStream({
     taskName: 'debug-plugin',
     apiKey: 'DebugPlugin',

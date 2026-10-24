@@ -244,10 +244,10 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
     /** ---------- 删除插件的二次确认 Start ---------- */
     // 本地删除二次提示是否展示
     const delLocalHintCache = useRef<boolean>(false)
-    // 线上删除二次提示是否展示
-    const delOnlineHintCache = useRef<boolean>(false)
-    // 来源
-    const delSource = useRef<string>('')
+ // 线上删除二次提示是否展示
+ const delOnlineHintCache = useRef<boolean>(false)
+ // 来源
+ const delSource = useRef<string>('')
     // 缓存的 remote-key 值
     const delHintCacheKey = useRef<string>('')
     const [delHint, setDelHint] = useState<boolean>(false)

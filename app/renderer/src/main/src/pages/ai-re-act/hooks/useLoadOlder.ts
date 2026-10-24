@@ -53,18 +53,18 @@ const useLoadOlder = (chatType: ChatListRenderType, listRootRef: RefObject<HTMLD
    */
   const processing = useStore(store, (s) => s.currentChatStatus.status === AITaskStatus.inProgress)
 
-  /** 上次 startIndex（数组下标），用于判断滚动方向 */
-  const lastStartIndexRef = useRef(-1)
+ /** 上次 startIndex（数组下标），用于判断滚动方向 */
+ const lastStartIndexRef = useRef(-1)
 
-  // #region 向上加载（触顶 + firstItemIndex 前插补偿 + 处理中排队）
-  const [firstItemIndex, setFirstItemIndex] = useState(PREPEND_OFFSET)
+ // #region 向上加载（触顶 + firstItemIndex 前插补偿 + 处理中排队）
+ const [firstItemIndex, setFirstItemIndex] = useState(PREPEND_OFFSET)
 
-  const isPrependingRef = useRef(false)
-  const atTopRef = useRef(false)
-  const wasLoadingRef = useRef(false)
-  const wasProcessingRef = useRef(false)
-  /** 本次补载使用的游标；回执未推进游标时不自动重试，等待用户再次触顶。 */
-  const requestedOffsetRef = useRef<number | null>(null)
+ const isPrependingRef = useRef(false)
+ const atTopRef = useRef(false)
+ const wasLoadingRef = useRef(false)
+ const wasProcessingRef = useRef(false)
+ /** 本次补载使用的游标；回执未推进游标时不自动重试，等待用户再次触顶。 */
+ const requestedOffsetRef = useRef<number | null>(null)
 
   // 排队锁
   const pendingRequestRef = useRef(false)
@@ -249,10 +249,10 @@ const useLoadOlder = (chatType: ChatListRenderType, listRootRef: RefObject<HTMLD
     if (!elements.length) return new Set()
 
     const keep = new Set<string>()
-    // 视窗 + 向前预取(LOAD_AHEAD) + 向后保留(KEEP_BEHIND)
-    const lo = Math.max(0, startIndex - LOAD_AHEAD)
-    const hi = Math.min(elements.length - 1, endIndex + KEEP_BEHIND)
-    for (let i = lo; i <= hi; i++) {
+ // 视窗 + 向前预取(LOAD_AHEAD) + 向后保留(KEEP_BEHIND)
+ const lo = Math.max(0, startIndex - LOAD_AHEAD)
+ const hi = Math.min(elements.length - 1, endIndex + KEEP_BEHIND)
+ for (let i = lo; i <= hi; i++) {
       const el = elements[i]
       if (!el) continue
       for (const tok of expandTokens(el)) keep.add(tok)

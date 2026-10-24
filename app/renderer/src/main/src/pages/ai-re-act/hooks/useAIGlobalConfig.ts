@@ -35,8 +35,8 @@ interface UseAIGlobalConfigData {
 interface UseAIGlobalConfigEvents {
   /** 刷新，会设置全局变量中的值和ref */
   onRefresh: (isShowLoading?: boolean) => void
-  /** 设置到数据库和全局变量中 */
-  setAIGlobalConfig: (data: Partial<AIGlobalConfig>) => Promise<void>
+ /** 设置到数据库和全局变量中 */
+ setAIGlobalConfig: (data: Partial<AIGlobalConfig>) => Promise<void>
   /** 获取最新的值,不会设置全局变量中的值,会设置ref */
   getLastAIGlobalConfig: () => Promise<AIGlobalConfig>
   /** 企业版登录后获取服务端 AI 配置并合并到本地配置 */

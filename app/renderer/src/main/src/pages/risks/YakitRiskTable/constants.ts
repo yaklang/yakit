@@ -25,15 +25,15 @@ export const defQueryRisksRequest: QueryRisksRequest = {
 }
 
 export const DEFAULT_RISK_TYPE_OPTIONS = [
-  'SQL注入',
+  'SQL Injection',
   'XSS',
   'SSRF',
-  '未授权访问',
+  'Unauthorized Access',
   'CSRF',
   '文件上传漏洞',
-  '文件包含',
+  'File Inclusion',
   '反序列化漏洞',
-  '目录遍历',
+  'Directory Traversal',
 ]
 
 /** 处置状态预设（可多选、可自定义输入）；value 存库中文不变 */
@@ -43,7 +43,7 @@ export const DISPOSAL_STATUS_OPTIONS = [
   { value: '待验证', labelKey: 'YakitRiskEditForm.pending_verify' },
   { value: '确认', labelKey: 'YakitRiskEditForm.confirmed' },
   { value: '已修复', labelKey: 'YakitRiskEditForm.repaired' },
-  { value: '误报', labelKey: 'YakitRiskEditForm.false_positive' },
+  { value: 'False Positive', labelKey: 'YakitRiskEditForm.false_positive' },
   { value: '关闭', labelKey: 'YakitRiskEditForm.closed' },
 ] as const
 

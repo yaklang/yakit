@@ -55,10 +55,10 @@ export const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
 
   /** ---------- 二进制展示配置 Start ---------- */
   const [binaryDisplayEnabled, setBinaryDisplayEnabled] = useState<boolean>(propBinaryDisplayEnabled)
-  /** ---------- 二进制展示配置 End ---------- */
+ /** ---------- 二进制展示配置 End ---------- */
 
-  /** ---------- 自定义列 Start ---------- */
-  const [curColumnsAll, setCurColumnsAll] = useState<ColumnAllInfoItem[]>([])
+ /** ---------- 自定义列 Start ---------- */
+ const [curColumnsAll, setCurColumnsAll] = useState<ColumnAllInfoItem[]>([])
   useEffect(() => {
     try {
       setCurColumnsAll(JSONParseLog(columnsAllStr))

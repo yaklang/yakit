@@ -332,8 +332,8 @@ export const NewCodecEditorBody: React.FC<NewCodecEditorBodyProps> = (props) => 
 
   // 编辑器实例
   const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
-  // 编辑器焦点状态
-  const [editorFocus, setEditorFocus] = useState<boolean>(false)
+ // 编辑器焦点状态
+ const [editorFocus, setEditorFocus] = useState<boolean>(false)
   // 编辑器
   useEffect(() => {
     if (reqEditor) {

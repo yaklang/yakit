@@ -218,8 +218,8 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
     }, [mitmContent.mitmStore.version])
     // 内容替代模块
     const [rules, setRules] = useState<MITMContentReplacerRule[]>([])
-    // 性能优化：originalRules/originalWhiteList 仅在 onClose 中比较，不在 JSX 中渲染，改为 ref
-    const originalRulesRef = useRef<MITMContentReplacerRule[]>([])
+ // 性能优化：originalRules/originalWhiteList 仅在 onClose 中比较，不在 JSX 中渲染，改为 ref
+ const originalRulesRef = useRef<MITMContentReplacerRule[]>([])
 
     const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
     const [isAllSelect, setIsAllSelect] = useState<boolean>(false)

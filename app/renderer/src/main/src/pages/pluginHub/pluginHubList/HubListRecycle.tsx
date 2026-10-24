@@ -53,21 +53,21 @@ export const HubListRecycle: React.FC<HubListRecycleProps> = memo(() => {
 
   /** ---------- 列表相关变量 Start ---------- */
   const [loading, setLoading] = useState<boolean>(false)
-  // 是否为获取列表第一页的加载状态
-  const isInitLoading = useRef<boolean>(false)
+ // 是否为获取列表第一页的加载状态
+ const isInitLoading = useRef<boolean>(false)
   const hasMore = useRef<boolean>(true)
 
-  // 列表无条件下的总数
-  const [listTotal, setListTotal] = useState<number>(0)
+ // 列表无条件下的总数
+ const [listTotal, setListTotal] = useState<number>(0)
 
-  // 列表数据
-  const [response, dispatch] = useReducer(pluginOnlineReducer, initialOnlineState)
-  // 全选
-  const [allChecked, setAllChecked] = useState<boolean>(false)
-  // 选中插件
-  const [selectList, setSelectList] = useState<YakitPluginOnlineDetail[]>([])
-  // 搜索条件
-  const [search, setSearch, getSearch] = useGetSetState<PluginSearchParams>(cloneDeep(defaultSearch))
+ // 列表数据
+ const [response, dispatch] = useReducer(pluginOnlineReducer, initialOnlineState)
+ // 全选
+ const [allChecked, setAllChecked] = useState<boolean>(false)
+ // 选中插件
+ const [selectList, setSelectList] = useState<YakitPluginOnlineDetail[]>([])
+ // 搜索条件
+ const [search, setSearch, getSearch] = useGetSetState<PluginSearchParams>(cloneDeep(defaultSearch))
 
   const showIndex = useRef<number>(0)
   const setShowIndex = useMemoizedFn((index: number) => {
@@ -238,8 +238,8 @@ export const HubListRecycle: React.FC<HubListRecycleProps> = memo(() => {
 
   // 是否出现二次确认框
   const delHintCache = useRef<boolean>(false)
-  // 出发二次确认框的操作源
-  const delHintSource = useRef<'batch' | 'single'>('single')
+ // 出发二次确认框的操作源
+ const delHintSource = useRef<'batch' | 'single'>('single')
   const [delHint, setDelHint] = useState<boolean>(false)
   const onOpenDelHint = useMemoizedFn((source: 'batch' | 'single') => {
     if (delHint) return

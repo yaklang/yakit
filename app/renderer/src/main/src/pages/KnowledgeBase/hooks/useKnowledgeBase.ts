@@ -29,8 +29,8 @@ interface KnowledgeBaseStoreProps {
   /** 清空所有知识库 */
   clearAll: () => void
 
-  /** 编辑知识库 */
-  editKnowledgeBase: (id: string, data: Partial<KnowledgeBaseItem>) => void
+ /** 编辑知识库 */
+ editKnowledgeBase: (id: string, data: Partial<KnowledgeBaseItem>) => void
 }
 
 const normalizeToArray = <T>(value: T | T[]): T[] => {

@@ -196,9 +196,9 @@ const NewPortScanExtraParams: React.FC<NewPortScanExtraParamsProps> = React.memo
             <ScanOtherSettingsPanel key="其他配置" />
           </>
         )
-      // all SYN+指纹
-      default:
-        return (
+ // all SYN+指纹
+ default:
+ return (
           <>
             {synCollapseNode()}
             <FingerprintSettingsPanel key="指纹扫描配置" />
@@ -250,7 +250,7 @@ export const NetworkCardSettingsPanel: React.FC<NetworkCardSettingsPanelProps> =
   const { visible, key, ...restProps } = props
   const [netInterfaceList, setNetInterfaceList] = useState<SelectOptionProps[]>([]) // 代理代表
 
-  const globalNetworkConfig = useRef<GlobalNetworkConfig | undefined>(cloneDeep(defaultParams))
+ const globalNetworkConfig = useRef<GlobalNetworkConfig | undefined>(cloneDeep(defaultParams))
   const form = Form.useFormInstance()
   useEffect(() => {
     if (!visible) return

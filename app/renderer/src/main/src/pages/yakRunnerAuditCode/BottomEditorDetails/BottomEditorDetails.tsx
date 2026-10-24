@@ -45,8 +45,8 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
   const { setAuditRule } = useDispatcher()
   // 不再重新加载的元素
   const [showType, setShowType] = useState<ShowItemType[]>([])
-  // monaco输入内容
-  const [ruleEditor, setRuleEditor] = useState<string>('')
+ // monaco输入内容
+ const [ruleEditor, setRuleEditor] = useState<string>('')
   const ruleEditorRef = useRef(ruleEditor)
   // 展示所需的BugHash
   const [bugHash, setBugHash] = useState<string>('')
