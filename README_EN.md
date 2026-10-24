@@ -78,11 +78,11 @@ Licensed under the [Apache 2.0 License](https://www.google.com/search?q=LICENSE)
 
 ---
 
+## Manually Check GitHub Actions Workflows
 
-<SuggestionsGroup message="ဆက်လက်လုပ်ဆောင်လိုသည့် အခြားအချက်များ ရှိပါက -">
-  <Elicitation label="security_glossary.json ထဲကို ဝေါဟာရအသစ်တွေ ထပ်ဖြည့်ပေးပါ" query="security_glossary.json ထဲမှာ Red Team နဲ့ Web Pentest ဆိုင်ရာ တရုတ်-အင်္ဂလိပ် ဝေါဟာရအသစ်တွေ ပိုစုံအောင် ထပ်ထည့်ပေးပါ။"/>
-  <Elicitation label="GitHub Actions workflows တွေကို Test လုပ်နည်း ရှင်းပြပါ" query="sync-upstream.yml နဲ့ release-en.yml တွေ အလုပ်လုပ်မလုပ် GitHub Actions tab မှာ ဘယ်လို Manual စစ်ဆေးရမလဲ ရှင်းပြပါ။"/>
-</SuggestionsGroup>
+1. Open the repository on GitHub and select the **Actions** tab.
+2. Select **Sync Upstream & Auto-Translate** or **Build & Release English Edition** in the workflow list.
+3. Review the latest run. To start a manual run, select **Run workflow** if the button is available, choose the branch, and confirm.
+4. Open the run and inspect each job's logs. A successful run shows a green check; investigate any failed step in its log.
 
-<FollowUp label="GitHub Actions workflows တွေ အလုပ်လုပ်မလုပ် Manual စစ်ဆေးနည်းနဲ့ Test လုပ်နည်းကို ရှင်းပြရမလား?" query="ဟုတ်ကဲ့၊ GitHub Actions workflows တွေ အလုပ်လုပ်မလုပ် Manual စစ်ဆေးနည်းနဲ့ Test လုပ်နည်းကို ရှင်းပြပေးပါ။"/>
-
+The **Run workflow** button is available only when the workflow supports `workflow_dispatch` and the repository permits manual runs. The sync workflow may change repository files, so review its results before merging or publishing them.
