@@ -102,7 +102,7 @@ jobs:
 
       - name: 6. Install tsc, PyYAML & Translation Dependencies
         run: |
-          npm install -g typescript
+          npm install -g typescript@5
           python3 -m pip install --upgrade pip deep-translator PyYAML
 
       - name: 7. Translate UI, Source Files, PoC YAMLs & .yak Plugins
@@ -476,11 +476,12 @@ jobs:
           UPSTREAM_BRANCH: ${{ env.UPSTREAM_BRANCH }}
         run: |
           export NODE_PATH="$(npm root -g)"
-          node - << 'EOF'
+          node --input-type=commonjs - << 'EOF'
           const fs = require('fs');
           const path = require('path');
           const { execFileSync } = require('child_process');
-          const ts = require('typescript');
+          const tsModule = require('typescript');
+          const ts = tsModule.default || tsModule;
 
           const upstreamRef = `upstream/${process.env.UPSTREAM_BRANCH || 'master'}`;
           const revertedRecords = [];
@@ -587,6 +588,7 @@ jobs:
 
       - name: 9. Commit and Push Verified English Edition
         run: |
+          git add -f .i18n_cache.json .github/ 2>/dev/null || true
           if [ -n "$(git status --porcelain)" ]; then
             git add -A
             git commit -m "chore(i18n): sync upstream and translate UI, plugins & PoC metadata to English"
