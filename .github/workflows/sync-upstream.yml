@@ -1,14 +1,12 @@
 name: Sync Upstream, Auto-Translate & Auto-Release (English Edition)
 
 on:
-  # Check for new upstream releases and sync automatically every six hours.
   schedule:
     - cron: '0 */6 * * *'
-  # Allow manual runs at any time.
   workflow_dispatch:
     inputs:
       force_release:
-        description: 'Force an English release from the current code even if there is no new upstream release?'
+        description: 'Release အသစ် အတင်းထုတ်မည်လား? (true ရွေးပါ)'
         type: boolean
         required: false
         default: false
@@ -33,110 +31,112 @@ jobs:
       - name: 1. Checkout Fork Repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 1
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: 2. Configure Git, Fetch Upstream & Prepare Target Branch
+      - name: 2. Configure Git & Cleanly Sync Upstream Master
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git remote add upstream "${{ env.UPSTREAM_REPO }}" || git remote set-url upstream "${{ env.UPSTREAM_REPO }}"
-          git fetch upstream "${{ env.UPSTREAM_BRANCH }}" --tags
-          git fetch origin --prune --tags
-          
-          # Use the existing english-edition branch, or create it if it does not exist.
-          if git show-ref --verify --quiet "refs/remotes/origin/${{ env.TARGET_BRANCH }}"; then
-            git checkout -B "${{ env.TARGET_BRANCH }}" "origin/${{ env.TARGET_BRANCH }}"
-          else
-            git checkout -B "${{ env.TARGET_BRANCH }}" "upstream/${{ env.UPSTREAM_BRANCH }}"
-          fi
 
-      - name: 3. Merge Upstream Changes Cleanly
-        run: |
+          # လက်ရှိ Repo ထဲရှိ မိမိ၏ Custom ဖိုင်များကို အရင်ဆုံး သိမ်းဆည်းထားခြင်း
           mkdir -p /tmp/backup/workflows
           cp -r .github/workflows/* /tmp/backup/workflows/ 2>/dev/null || true
-          cp README_EN.md /tmp/backup/README_EN.md 2>/dev/null || true
-          cp README_LEGACY.md /tmp/backup/README_LEGACY.md 2>/dev/null || true
           if [ -f ".github/security_glossary.json" ]; then
             cp .github/security_glossary.json /tmp/backup/security_glossary.json
           fi
           if [ -f ".i18n_cache.json" ]; then
             cp .i18n_cache.json /tmp/backup/.i18n_cache.json
           fi
-
-          if ! git merge "upstream/${{ env.UPSTREAM_BRANCH }}" -X theirs --allow-unrelated-histories --no-edit; then
-            git status --porcelain | awk '$1=="DU" || $1=="UD" {print $2}' | xargs -r git rm -f
-            git checkout --theirs . || true
-            git add -A
-            git commit -m "chore(sync): resolve conflicts taking upstream changes" || true
+          if [ -f "README_EN.md" ]; then
+            cp README_EN.md /tmp/backup/README_EN.md
+          fi
+          if [ -f "README_LEGACY.md" ]; then
+            cp README_LEGACY.md /tmp/backup/README_LEGACY.md
           fi
 
-          # Restore custom workflows and glossary files from the backup.
+          # Tag conflict (exit code 1) လုံးဝမဖြစ်စေရန် --no-tags ဖြင့် ဆွဲယူခြင်း
+          git remote add upstream "${{ env.UPSTREAM_REPO }}" 2>/dev/null || git remote set-url upstream "${{ env.UPSTREAM_REPO }}"
+          git fetch --no-tags --depth=1 upstream "${{ env.UPSTREAM_BRANCH }}:refs/remotes/upstream/${{ env.UPSTREAM_BRANCH }}"
+          git fetch --no-tags --depth=1 origin "${{ env.TARGET_BRANCH }}:refs/remotes/origin/${{ env.TARGET_BRANCH }}" 2>/dev/null || true
+
+          # english-edition ရှိပြီးသားဆိုလျှင် ဘာသာပြန် Cache ကို ယူပြီး upstream/master ကုဒ်အသန့်ဖြင့် ပြန်တည်ဆောက်ခြင်း
+          if git show-ref --verify --quiet "refs/remotes/origin/${{ env.TARGET_BRANCH }}"; then
+            git show "origin/${{ env.TARGET_BRANCH }}:.i18n_cache.json" > /tmp/backup/.i18n_cache_json_prev 2>/dev/null || true
+            if [ -s "/tmp/backup/.i18n_cache_json_prev" ]; then
+              cp /tmp/backup/.i18n_cache_json_prev /tmp/backup/.i18n_cache.json
+            fi
+            git checkout -B "${{ env.TARGET_BRANCH }}" "origin/${{ env.TARGET_BRANCH }}"
+            git rm -rf --quiet . || true
+            git checkout "refs/remotes/upstream/${{ env.UPSTREAM_BRANCH }}" -- .
+          else
+            git checkout -B "${{ env.TARGET_BRANCH }}" "refs/remotes/upstream/${{ env.UPSTREAM_BRANCH }}"
+          fi
+
+          # မူရင်း Repo မှ Workflow အဟောင်းများကို ဖယ်ရှားပြီး မိမိ၏ Custom ဖိုင်များ ပြန်ထည့်ခြင်း
+          rm -rf .github/workflows/*
           mkdir -p .github/workflows
           cp -r /tmp/backup/workflows/* .github/workflows/ 2>/dev/null || true
           if [ -f "/tmp/backup/security_glossary.json" ]; then
             cp /tmp/backup/security_glossary.json .github/security_glossary.json
           fi
-          if [ -f "/tmp/backup/.i18n_cache.json" ]; then
+          if [ -f "/tmp/backup/.i18n_cache.json" ] && [ -s "/tmp/backup/.i18n_cache.json" ]; then
             cp /tmp/backup/.i18n_cache.json .i18n_cache.json
           fi
-
-          if [ -n "$(git status --porcelain)" ]; then
-            git add .github/ .i18n_cache.json 2>/dev/null || true
-            git commit -m "chore(sync): merge upstream yaklang/yakit" || true
+          if [ -f "/tmp/backup/README_EN.md" ]; then
+            cp /tmp/backup/README_EN.md README_EN.md
+            cp /tmp/backup/README_EN.md README.md
+            cp /tmp/backup/README_EN.md README-EN.md
+          fi
+          if [ -f "/tmp/backup/README_LEGACY.md" ]; then
+            cp /tmp/backup/README_LEGACY.md README_LEGACY.md
           fi
 
-      - name: 4. Enforce English Default Language in i18n.ts
-        run: |
-          # Main UI နှင့် Startup ဝင်းဒိုးရှိ i18n config အားလုံးကို English (en) သို့ ပြောင်းခြင်း
-          for I18N_FILE in \
-            "app/renderer/src/main/src/i18n/i18n.ts" \
-            "app/renderer/engine-link-startup/src/i18n/i18n.ts" \
-            "app/renderer/engine-link-startup/src/i18n.ts"; do
-            if [ -f "$I18N_FILE" ]; then
-              sed -i "s/lng:.*'zh'/lng: localStorage.getItem('i18nextLng') || 'en'/g" "$I18N_FILE"
-              sed -i "s/fallbackLng:.*'zh'/fallbackLng: 'en'/g" "$I18N_FILE"
-            fi
-          done
-
-          # Startup HTML ဖိုင်များရှိ "正在加载中" ကို "Loading..." သို့ ပြောင်းခြင်း
-          for HTML_FILE in \
-            "app/renderer/src/main/index.html" \
-            "app/renderer/engine-link-startup/index.html"; do
-            if [ -f "$HTML_FILE" ]; then
-              sed -i "s/正在加载中/Loading.../g" "$HTML_FILE"
-            fi
-          done
-
-      - name: 5. Setup Node.js & Python
-        uses: actions/setup-node@v4
+      - name: 3. Setup Python for Safe i18n Localization
+        uses: actions/setup-python@v5
         with:
-          node-version: '22'
+          python-version: '3.11'
 
-      - name: 6. Install tsc, PyYAML & Translation Dependencies
+      - name: 4. Install Translation Dependencies
         run: |
-          npm install -g typescript@5
           python3 -m pip install --upgrade pip deep-translator PyYAML
 
-      - name: 7. Translate UI, Source Files, PoC YAMLs & .yak Plugins
+      - name: 5. Enforce English Default UI & Safely Translate JSON Locales
         run: |
           python3 - << 'EOF'
           import os
           import re
           import json
           import time
-          import yaml
           from deep_translator import GoogleTranslator
 
-          # Main UI နှင့် Engine Startup ဝင်းဒိုး (၂) ခုလုံး၏ Locale လမ်းကြောင်းများ
-          LOCALE_PAIRS = [
-              ("app/renderer/src/main/public/locales/zh", "app/renderer/src/main/public/locales/en"),
-              ("app/renderer/engine-link-startup/public/locales/zh", "app/renderer/engine-link-startup/public/locales/en"),
-              ("app/renderer/engine-link-startup/src/locales/zh", "app/renderer/engine-link-startup/src/locales/en"),
-          ]
+          # ၁။ Main UI နှင့် Startup ဝင်းဒိုးရှိ i18n.ts များကို English (en) သို့ ပြောင်းခြင်း
+          for root, _, files in os.walk("app/renderer"):
+              if "node_modules" in root:
+                  continue
+              for f in files:
+                  full = os.path.join(root, f)
+                  if f in ("i18n.ts", "i18n.js") or (root.endswith("i18n") and f.endswith((".ts", ".js"))):
+                      with open(full, "r", encoding="utf-8") as fp:
+                          txt = fp.read()
+                      new_txt = re.sub(r"(lng\s*:\s*)([^,\n]*?)'zh(-CN)?'", r"\1localStorage.getItem('i18nextLng') || 'en'", txt)
+                      new_txt = re.sub(r"(fallbackLng\s*:\s*)'zh(-CN)?'", r"\1'en'", new_txt)
+                      if new_txt != txt:
+                          with open(full, "w", encoding="utf-8") as fp:
+                              fp.write(new_txt)
+                          print(f"Patched default language in: {full}")
+                  elif f == "index.html":
+                      with open(full, "r", encoding="utf-8") as fp:
+                          html = fp.read()
+                      new_html = html.replace("正在加载中", "Loading...")
+                      if new_html != html:
+                          with open(full, "w", encoding="utf-8") as fp:
+                              fp.write(new_html)
+                          print(f"Patched startup loading text in: {full}")
+
+          # ၂။ Locale JSON ဖိုင်များကိုသာ ဘေးကင်းစွာ ဘာသာပြန်ခြင်း (.ts/.tsx ကုဒ်များကို လုံးဝမထိပါ)
           CACHE_FILE = ".i18n_cache.json"
           GLOSSARY_FILE = ".github/security_glossary.json"
-
           translator = GoogleTranslator(source='zh-CN', target='en')
           zh_char_re = re.compile(r'[\u4e00-\u9fff]')
           placeholder_re = re.compile(r'(\{\{.*?\}\}|\{[0-9a-zA-Z_]+\})')
@@ -165,7 +165,6 @@ jobs:
               except Exception:
                   cache = {}
 
-          # {{variable}} ကွင်းစကွင်းပိတ်များ မပျက်စီးအောင် ကာကွယ်၍ ဘာသာပြန်သည့် စနစ်
           def safe_translate_one(orig):
               stripped = orig.strip()
               if stripped in exact_glossary:
@@ -195,9 +194,10 @@ jobs:
 
           def batch_translate(texts):
               new_items = [t for t in texts if t not in cache and has_zh(t)]
+              print(f"New Chinese strings to translate: {len(new_items)}")
               for idx, item in enumerate(new_items):
                   cache[item] = safe_translate_one(item)
-                  if idx % 25 == 0 and idx > 0:
+                  if idx % 30 == 0 and idx > 0:
                       time.sleep(0.4)
 
           def collect_json(zh_obj, en_obj, bucket):
@@ -223,9 +223,15 @@ jobs:
                           changed = True
               return changed
 
-          for zh_dir, en_dir in LOCALE_PAIRS:
-              if not os.path.exists(zh_dir):
+          locale_pairs = []
+          for root, dirs, _ in os.walk("app/renderer"):
+              if "node_modules" in root:
                   continue
+              if os.path.basename(root) == "zh" and os.path.basename(os.path.dirname(root)) == "locales":
+                  en_dir = os.path.join(os.path.dirname(root), "en")
+                  locale_pairs.append((root, en_dir))
+
+          for zh_dir, en_dir in locale_pairs:
               os.makedirs(en_dir, exist_ok=True)
               bucket = set()
               pairs = []
@@ -249,189 +255,61 @@ jobs:
               batch_translate(list(bucket))
               for en_p, zh_d, en_d in pairs:
                   if apply_json(zh_d, en_d):
+                      out_str = json.dumps(en_d, ensure_ascii=False, indent=2)
+                      json.loads(out_str)  # JSON မှန်ကန်ကြောင်း တစ်ခါတည်း စစ်ဆေးခြင်း
                       with open(en_p, 'w', encoding='utf-8') as f:
-                          json.dump(en_d, f, ensure_ascii=False, indent=2)
+                          f.write(out_str)
 
           with open(CACHE_FILE, 'w', encoding='utf-8') as f:
               json.dump(cache, f, ensure_ascii=False, indent=2)
           EOF
 
-      - name: 8. Safety Check (tsc Syntax & JSON Validation + Auto-Revert)
-        env:
-          UPSTREAM_BRANCH: ${{ env.UPSTREAM_BRANCH }}
-        run: |
-          export NODE_PATH="$(npm root -g)"
-          node --input-type=commonjs - << 'EOF'
-          const fs = require('fs');
-          const path = require('path');
-          const { execFileSync } = require('child_process');
-          const tsModule = require('typescript');
-          const ts = tsModule.default || tsModule;
-
-          const upstreamRef = `upstream/${process.env.UPSTREAM_BRANCH || 'master'}`;
-          const revertedRecords = [];
-
-          function git(args) {
-            return execFileSync('git', args, { encoding: 'utf8' }).trim();
-          }
-
-          function revertFile(relPath, tierRef) {
-            try {
-              git(['cat-file', '-e', `${tierRef}:${relPath}`]);
-              git(['checkout', tierRef, '--', relPath]);
-              return `Reverted to ${tierRef}`;
-            } catch {
-              try {
-                git(['cat-file', '-e', `${upstreamRef}:${relPath}`]);
-                git(['checkout', upstreamRef, '--', relPath]);
-                return `Reverted to ${upstreamRef}`;
-              } catch {
-                if (fs.existsSync(relPath)) fs.unlinkSync(relPath);
-                return 'Removed corrupt untracked file';
-              }
-            }
-          }
-
-          const rawFiles = git(['ls-files', '--modified', '--others', '--exclude-standard']);
-          const changedFiles = rawFiles
-            ? rawFiles.split('\n').map(s => s.trim()).filter(f => f && fs.existsSync(f))
-            : [];
-
-          const jsonFiles = changedFiles.filter(f => f.endsWith('.json'));
-          const tsFiles = changedFiles.filter(f => (f.endsWith('.ts') || f.endsWith('.tsx')) && !f.endsWith('.d.ts'));
-
-          for (const jf of jsonFiles) {
-            try {
-              JSON.parse(fs.readFileSync(jf, 'utf8'));
-            } catch (err) {
-              const action = revertFile(jf, 'HEAD');
-              revertedRecords.push({ file: jf, code: 'JSON_ERR', reason: err.message, action });
-            }
-          }
-
-          function checkTsSyntax(filesToCheck) {
-            if (filesToCheck.length === 0) return new Map();
-            const compilerOptions = {
-              target: ts.ScriptTarget.ESNext,
-              module: ts.ModuleKind.ESNext,
-              jsx: ts.JsxEmit.Preserve,
-              experimentalDecorators: true,
-              allowJs: true,
-              noEmit: true,
-              noResolve: true,
-              skipLibCheck: true,
-              types: []
-            };
-
-            const absMap = new Map();
-            const absList = [];
-            for (const rel of filesToCheck) {
-              if (fs.existsSync(rel)) {
-                const abs = path.resolve(rel);
-                absMap.set(abs, rel);
-                absList.push(abs);
-              }
-            }
-
-            const program = ts.createProgram(absList, compilerOptions);
-            const brokenMap = new Map();
-
-            for (const [abs, rel] of absMap.entries()) {
-              const sourceFile = program.getSourceFile(abs);
-              if (!sourceFile) continue;
-              const diagnostics = program.getSyntacticDiagnostics(sourceFile);
-              if (diagnostics.length > 0) {
-                const d = diagnostics[0];
-                const { line, character } = sourceFile.getLineAndCharacterOfPosition(d.start || 0);
-                const msg = ts.flattenDiagnosticMessageText(d.messageText, ' ');
-                brokenMap.set(rel, { code: `TS${d.code}`, reason: `Line ${line + 1}:${character + 1} - ${msg}` });
-              }
-            }
-            return brokenMap;
-          }
-
-          const pass1Broken = checkTsSyntax(tsFiles);
-          for (const [rel, info] of pass1Broken.entries()) {
-            const action = revertFile(rel, 'HEAD');
-            revertedRecords.push({ file: rel, code: info.code, reason: info.reason, action });
-          }
-
-          const pass2Broken = checkTsSyntax(tsFiles);
-          for (const [rel, info] of pass2Broken.entries()) {
-            const action = revertFile(rel, upstreamRef);
-            revertedRecords.push({ file: rel, code: info.code, reason: info.reason, action });
-          }
-
-          if (process.env.GITHUB_STEP_SUMMARY) {
-            let md = `### Full-Stack Translation Safety Check Report\n\n`;
-            md += `- **Scanned TypeScript/Plugin Files:** ${tsFiles.length}\n`;
-            md += `- **Scanned JSON Locales:** ${jsonFiles.length}\n`;
-            md += `- **Auto-Reverted Files:** ${revertedRecords.length}\n\n`;
-            fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, md);
-          }
-          EOF
-
-      - name: 9. Commit and Push Verified English Edition
+      - name: 6. Commit and Push Verified English Edition
         run: |
           git add -f .i18n_cache.json .github/ 2>/dev/null || true
-          if [ -n "$(git status --porcelain)" ]; then
-            git add -A
-            git commit -m "chore(i18n): sync upstream and translate UI, plugins & PoC metadata to English"
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m "chore(i18n): sync upstream master and update English locales safely"
           fi
-          git push -u origin "${{ env.TARGET_BRANCH }}"
+          git push -u origin "${{ env.TARGET_BRANCH }}" --force
 
-      - name: 10. Detect New Upstream Release & Prepare Tag
+      - name: 7. Detect New Upstream Release & Prepare Tag
         id: check_release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Check the latest official release tag from yaklang/yakit.
           UPSTREAM_LATEST=$(gh api repos/yaklang/yakit/releases/latest --jq '.tag_name' 2>/dev/null || true)
           if [ -z "$UPSTREAM_LATEST" ] || [ "$UPSTREAM_LATEST" == "null" ]; then
-            UPSTREAM_LATEST=$(git tag -l "v*" --sort=-creatordate | grep -v -- "-en" | head -n 1)
+            UPSTREAM_LATEST=$(gh api 'repos/yaklang/yakit/releases?per_page=1' --jq '.[0].tag_name' 2>/dev/null || true)
           fi
-
-          if [ -z "$UPSTREAM_LATEST" ]; then
+          if [ -z "$UPSTREAM_LATEST" ] || [ "$UPSTREAM_LATEST" == "null" ]; then
             UPSTREAM_LATEST="v$(date +'%Y.%m.%d')"
           fi
 
           EN_TAG="${UPSTREAM_LATEST}-en"
-          echo "Latest Upstream Release: ${UPSTREAM_LATEST} -> Target English Tag: ${EN_TAG}"
+          echo "Upstream Release: ${UPSTREAM_LATEST} -> Target Tag: ${EN_TAG}"
 
-          # Check whether this English tag has already been released in the fork.
           RELEASE_EXISTS="false"
           if gh release view "${EN_TAG}" --repo "${{ github.repository }}" >/dev/null 2>&1; then
             RELEASE_EXISTS="true"
           fi
 
           if [ "${RELEASE_EXISTS}" == "false" ] || [ "${{ inputs.force_release }}" == "true" ]; then
-            echo "New upstream release detected (or forced)! Creating tag ${EN_TAG}..."
-            git tag -f "${EN_TAG}"
-            git push origin "${EN_TAG}" --force
+            git tag -f "${EN_TAG}" HEAD
+            git push origin "refs/tags/${EN_TAG}" --force
             echo "should_release=true" >> "$GITHUB_OUTPUT"
             echo "release_tag=${EN_TAG}" >> "$GITHUB_OUTPUT"
           else
-            echo "English release ${EN_TAG} already exists. Skipping build."
             echo "should_release=false" >> "$GITHUB_OUTPUT"
             echo "release_tag=${EN_TAG}" >> "$GITHUB_OUTPUT"
           fi
 
-  # Trigger release-en.yml to build when a new upstream release is detected.
   trigger-english-build:
     name: Auto-Trigger Multi-OS English Release
     needs: sync-and-translate
     if: needs.sync-and-translate.outputs.should_release == 'true'
-    runs-on: ubuntu-latest
-    permissions:
-      actions: write
-    steps:
-      - name: Dispatch English release workflow
-        env:
-          GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ needs.sync-and-translate.outputs.release_tag }}
-        run: >-
-          gh workflow run release-en.yml
-          --repo "${{ github.repository }}"
-          --ref "$RELEASE_TAG"
-          --field tag_name="$RELEASE_TAG"
-          --field target_ref="$RELEASE_TAG"
+    uses: ./.github/workflows/release-en.yml
+    with:
+      tag_name: ${{ needs.sync-and-translate.outputs.release_tag }}
+      target_ref: ${{ needs.sync-and-translate.outputs.release_tag }}
+    secrets: inherit
