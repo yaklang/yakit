@@ -1,7 +1,6 @@
 name: Build and Release Yakit (English Edition)
 
 on:
-  # ၁။ sync-upstream.yml မှ Upstream Release အသစ်တွေ့တိုင်း တိုက်ရိုက်လှမ်းခေါ်နိုင်ရန်
   workflow_call:
     inputs:
       tag_name:
@@ -12,12 +11,10 @@ on:
         required: false
         default: 'english-edition'
 
-  # ၂။ Local မှ v* Tag ကိုယ်တိုင် Push တင်သည့်အခါ အလုပ်လုပ်ရန်
   push:
     tags:
       - 'v*'
 
-  # ၃။ GitHub Actions UI မှ Manual စမ်းသပ်နှိပ်နိုင်ရန်
   workflow_dispatch:
     inputs:
       tag_name:
@@ -34,7 +31,7 @@ permissions:
 
 jobs:
   # ---------------------------------------------------------------------------
-  # အဆင့် (၁) - Official CDN မှ နောက်ဆုံးထွက် Yak Engine Binary များကို ဆွဲယူခြင်း
+  # အဆင့် (၁) - Official CDN မှ Yak Engine များကို ဆွဲယူပြီး Artifact တင်ပေးခြင်း
   # ---------------------------------------------------------------------------
   prepare-engine:
     name: Fetch Yak Engine Binaries
@@ -42,7 +39,7 @@ jobs:
     outputs:
       yak_version: ${{ steps.fetch_bins.outputs.yak_version }}
     steps:
-      - name: Download Latest Yak Engine (Exact Official Layout)
+      - name: 1. Download Latest Yak Engine (Exact Official Layout)
         id: fetch_bins
         run: |
           mkdir -p bins
@@ -55,7 +52,6 @@ jobs:
           YAK_VER=$(tr -d '[:space:]' < bins/engine-version.txt)
           echo "yak_version=${YAK_VER}" >> "$GITHUB_OUTPUT"
 
-          # ပုံမှန် Engine Binary များ ဆွဲယူခြင်း
           for BIN in \
             yak_windows_amd64.exe \
             yak_darwin_amd64 \
@@ -66,11 +62,11 @@ jobs:
             curl -fsSL --retry 3 "${CDN_FALLBACK}/${YAK_VER}/${BIN}" -o "bins/${BIN}"
           done
 
-          # မူရင်း Yakit သတ်မှတ်ချက်အတိုင်း (-j မပါဘဲ) bins/ လမ်းကြောင်းပါ ထည့်ချုံ့ပြီး မူရင်း .exe ကို ဖျက်ခြင်း
+          # Windows Normal Engine Zip (bins/ လမ်းကြောင်းပါဝင်သော မူရင်းပုံစံအမှန်)
           zip bins/yak_windows_normal_amd64.zip bins/yak_windows_amd64.exe
           rm -f bins/yak_windows_amd64.exe
 
-          # Windows Legacy Engine ကိုပါ တွဲဖက်ဆွဲယူချုံ့ပေးထားခြင်း (Engine စစ်ဆေးချိန် မရပ်စေရန်)
+          # Windows Legacy Engine Zip
           if curl -fsSL --retry 3 "${CDN_PRIMARY}/${YAK_VER}/yak_windows-legacy_amd64.exe" -o "bins/yak_windows_amd64.exe" || \
              curl -fsSL --retry 3 "${CDN_FALLBACK}/${YAK_VER}/yak_windows-legacy_amd64.exe" -o "bins/yak_windows_amd64.exe"; then
             zip bins/yak_windows_legacy_amd64.zip bins/yak_windows_amd64.exe
@@ -79,6 +75,15 @@ jobs:
 
           chmod +x bins/yak_darwin_* bins/yak_linux_*
           ls -lh bins/
+
+      # ယခင် ပြုတ်ကျန်ခဲ့သော Artifact ပြန်တင်ပေးသည့် အဆင့် (မပါမဖြစ် လိုအပ်သည်)
+      - name: 2. Upload Engine Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: yak-engine-bins
+          path: bins/
+          if-no-files-found: error
+          retention-days: 3
 
   # ---------------------------------------------------------------------------
   # အဆင့် (၂) - Windows (.exe), macOS (.dmg), Linux (.AppImage) ပြိုင်တူ Build ခြင်း
@@ -145,23 +150,40 @@ jobs:
           name: yak-engine-bins
           path: bins/
 
-      - name: 7. Enforce English Default Language Safeguard (i18n.ts)
+      - name: 7. Enforce English Default Language Safeguard
         run: |
-          I18N_FILE="app/renderer/src/main/src/i18n/i18n.ts"
-          if [ -f "$I18N_FILE" ]; then
-            sed -i.bak "s/lng:.*'zh'/lng: localStorage.getItem('i18nextLng') || 'en'/g" "$I18N_FILE"
-            sed -i.bak "s/fallbackLng:.*'zh'/fallbackLng: 'en'/g" "$I18N_FILE"
-            rm -f "${I18N_FILE}.bak"
-          fi
+          node -e '
+            const fs = require("fs");
+            const i18nFiles = [
+              "app/renderer/src/main/src/i18n/i18n.ts",
+              "app/renderer/engine-link-startup/src/i18n/i18n.ts",
+              "app/renderer/engine-link-startup/src/i18n.ts"
+            ];
+            for (const f of i18nFiles) {
+              if (fs.existsSync(f)) {
+                let s = fs.readFileSync(f, "utf8");
+                s = s.replace(/(lng\s*:\s*)([^,\n]*?)\x27zh(-CN)?\x27/g, "$1localStorage.getItem(\x27i18nextLng\x27) || \x27en\x27");
+                s = s.replace(/(fallbackLng\s*:\s*)\x27zh(-CN)?\x27/g, "$1\x27en\x27");
+                fs.writeFileSync(f, s, "utf8");
+              }
+            }
+            for (const h of ["app/renderer/src/main/index.html", "app/renderer/engine-link-startup/index.html"]) {
+              if (fs.existsSync(h)) {
+                let s = fs.readFileSync(h, "utf8").replace(/正在加载中/g, "Loading...");
+                fs.writeFileSync(h, s, "utf8");
+              }
+            }
+          '
 
       - name: 8. Install, Build & Package via Yakit Unified CLI
         run: |
           chmod +x bins/yak_darwin_* bins/yak_linux_* 2>/dev/null || true
+          ls -lh bins/
           yarn config set network-timeout 300000
 
           if [ -f "cli/cli.mjs" ]; then
             yarn cli install
-            yarn cli build -v yakit
+            yarn cli build -v yakit --devtools
             yarn cli pack -s ${{ matrix.platform }} -v yakit
           else
             yarn install
@@ -177,26 +199,30 @@ jobs:
             release/*.exe
             release/*.dmg
             release/*.AppImage
+            dist/*.exe
+            dist/*.dmg
+            dist/*.AppImage
             !release/*unpacked*
+            !dist/*unpacked*
           if-no-files-found: error
           retention-days: 3
 
   # ---------------------------------------------------------------------------
-  # အဆင့် (၃) - OS အားလုံး၏ Installer များကို GitHub Releases သို့ စုပေါင်းတင်ပေးခြင်း
+  # အဆင့် (၃) - OS အားလုံး၏ Installer များကို GitHub Releases သို့ တင်ပေးခြင်း
   # ---------------------------------------------------------------------------
   publish-release:
     name: Publish English Release
     needs: [prepare-engine, build-matrix]
     runs-on: ubuntu-latest
     steps:
-      - name: Download All OS Artifacts
+      - name: 1. Download All OS Artifacts
         uses: actions/download-artifact@v4
         with:
           pattern: Yakit-English-*
           path: release-assets
           merge-multiple: true
 
-      - name: Resolve Final Release Tag
+      - name: 2. Resolve Final Release Tag
         id: resolve_tag
         run: |
           if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
@@ -209,15 +235,14 @@ jobs:
           echo "tag=${FINAL_TAG}" >> "$GITHUB_OUTPUT"
           ls -lh release-assets/
 
-      - name: Publish to GitHub Releases
+      - name: 3. Publish to GitHub Releases
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.resolve_tag.outputs.tag }}
-          target_commitish: english-edition
           name: "Yakit English Edition (${{ steps.resolve_tag.outputs.tag }})"
           body: |
             ### Yakit English Edition — ${{ steps.resolve_tag.outputs.tag }}
-            * **Default Language:** English (`en`) out of the box (UI, Plugins & Vulnerability PoC YAML metadata translated).
+            * **Default Language:** English (`en`) enabled out of the box.
             * **Bundled Yak Engine:** `${{ needs.prepare-engine.outputs.yak_version }}`
             * **Supported Platforms:** Windows (`.exe`), macOS Apple Silicon & Intel (`.dmg`), Linux x64/arm64 (`.AppImage`).
             * **Unsigned Installer Note:**
