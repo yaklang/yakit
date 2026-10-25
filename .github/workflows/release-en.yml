@@ -42,7 +42,7 @@ jobs:
     outputs:
       yak_version: ${{ steps.fetch_bins.outputs.yak_version }}
     steps:
-      - name: Download Latest Yak Engine
+      - name: Download Latest Yak Engine (Exact Official Layout)
         id: fetch_bins
         run: |
           mkdir -p bins
@@ -55,6 +55,7 @@ jobs:
           YAK_VER=$(tr -d '[:space:]' < bins/engine-version.txt)
           echo "yak_version=${YAK_VER}" >> "$GITHUB_OUTPUT"
 
+          # ပုံမှန် Engine Binary များ ဆွဲယူခြင်း
           for BIN in \
             yak_windows_amd64.exe \
             yak_darwin_amd64 \
@@ -65,16 +66,19 @@ jobs:
             curl -fsSL --retry 3 "${CDN_FALLBACK}/${YAK_VER}/${BIN}" -o "bins/${BIN}"
           done
 
-          chmod +x bins/yak_darwin_* bins/yak_linux_*
-          zip -j bins/yak_windows_normal_amd64.zip bins/yak_windows_amd64.exe
-          ls -lh bins/
+          # မူရင်း Yakit သတ်မှတ်ချက်အတိုင်း (-j မပါဘဲ) bins/ လမ်းကြောင်းပါ ထည့်ချုံ့ပြီး မူရင်း .exe ကို ဖျက်ခြင်း
+          zip bins/yak_windows_normal_amd64.zip bins/yak_windows_amd64.exe
+          rm -f bins/yak_windows_amd64.exe
 
-      - name: Upload Engine Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: yak-engine-bins
-          path: bins/
-          retention-days: 1
+          # Windows Legacy Engine ကိုပါ တွဲဖက်ဆွဲယူချုံ့ပေးထားခြင်း (Engine စစ်ဆေးချိန် မရပ်စေရန်)
+          if curl -fsSL --retry 3 "${CDN_PRIMARY}/${YAK_VER}/yak_windows-legacy_amd64.exe" -o "bins/yak_windows_amd64.exe" || \
+             curl -fsSL --retry 3 "${CDN_FALLBACK}/${YAK_VER}/yak_windows-legacy_amd64.exe" -o "bins/yak_windows_amd64.exe"; then
+            zip bins/yak_windows_legacy_amd64.zip bins/yak_windows_amd64.exe
+            rm -f bins/yak_windows_amd64.exe
+          fi
+
+          chmod +x bins/yak_darwin_* bins/yak_linux_*
+          ls -lh bins/
 
   # ---------------------------------------------------------------------------
   # အဆင့် (၂) - Windows (.exe), macOS (.dmg), Linux (.AppImage) ပြိုင်တူ Build ခြင်း
@@ -227,3 +231,20 @@ jobs:
             release-assets/*.AppImage
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+
+      - name: 8. Install, Build & Package via Yakit Unified CLI
+        run: |
+          chmod +x bins/yak_darwin_* bins/yak_linux_* 2>/dev/null || true
+          yarn config set network-timeout 300000
+
+          if [ -f "cli/cli.mjs" ]; then
+            yarn cli install
+            yarn cli build -v yakit --devtools
+            yarn cli pack -s ${{ matrix.platform }} -v yakit
+          else
+            yarn install
+            yarn build-renders
+            yarn pack-${{ matrix.platform }}
+          fi
+
