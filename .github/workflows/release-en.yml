@@ -231,20 +231,3 @@ jobs:
             release-assets/*.AppImage
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-
-      - name: 8. Install, Build & Package via Yakit Unified CLI
-        run: |
-          chmod +x bins/yak_darwin_* bins/yak_linux_* 2>/dev/null || true
-          yarn config set network-timeout 300000
-
-          if [ -f "cli/cli.mjs" ]; then
-            yarn cli install
-            yarn cli build -v yakit --devtools
-            yarn cli pack -s ${{ matrix.platform }} -v yakit
-          else
-            yarn install
-            yarn build-renders
-            yarn pack-${{ matrix.platform }}
-          fi
-
