@@ -22,7 +22,7 @@ if (useI18nInline) {
 
   i18n.use(initReactI18next).init({
     resources, // 仅含中文
-    lng: 'zh',
+    lng: localStorage.getItem('i18nextLng') || 'en',
     fallbackLng: false,
     initAsync: false,
     ns: Object.keys(resources.zh) as I18nNamespace[],
@@ -41,7 +41,7 @@ if (useI18nInline) {
     )
     .use(initReactI18next)
     .init({
-      lng: 'zh',
+      lng: localStorage.getItem('i18nextLng') || 'en',
       fallbackLng: false,
       supportedLngs: ['zh', 'en', 'zh-TW'],
       load: 'currentOnly',
