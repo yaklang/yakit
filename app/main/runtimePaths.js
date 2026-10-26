@@ -7,7 +7,6 @@ const appRootPath = (...parts) => path.join(appRoot, ...parts)
 const appResourcePath = (...parts) => appRootPath('app', ...parts)
 const sourceResources = {
   screenshots: ['screenshots', 'lib'],
-  'child-window': ['handlers', 'openNewChildWindow'],
   vendor: ['handlers', 'libs'],
 }
 const resourcePath = (group, ...parts) => {
