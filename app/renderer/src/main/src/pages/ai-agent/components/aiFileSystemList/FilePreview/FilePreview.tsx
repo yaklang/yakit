@@ -15,6 +15,7 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import type { AIAgentFilePreviewHighlight } from '@/pages/ai-agent/aiChatContent/type'
 import emiter from '@/utils/eventBus/eventBus'
 import type { YakitIMonacoEditor } from '@/components/yakitUI/YakitEditor/YakitEditorType'
+import { revealSearchHitOnEditor } from '@/components/FileTreeContentSearch'
 
 const FilePreview: FC<{ data?: FileNodeProps; highlights?: AIAgentFilePreviewHighlight[] }> = ({
   data,
@@ -63,19 +64,7 @@ const FilePreview: FC<{ data?: FileNodeProps; highlights?: AIAgentFilePreviewHig
   const editorRef = useRef<YakitIMonacoEditor>()
 
   const onRevealSearchHit = useMemoizedFn((data: string) => {
-    try {
-      const {
-        path: hitPath,
-        lineNumber,
-        column,
-      } = JSON.parse(data) as {
-        path: string
-        lineNumber: number
-        column: number
-      }
-      if (!editorRef.current || path !== hitPath) return
-      editorRef.current.revealPositionInCenter({ lineNumber, column })
-    } catch (error) {}
+    revealSearchHitOnEditor(editorRef.current, path, data)
   })
 
   useEffect(() => {

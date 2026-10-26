@@ -87,6 +87,7 @@ import type { OtherMenuListProps } from '@/components/yakitUI/YakitEditor/YakitE
 import { fetchCursorContent, fetchSelectionRange } from '@/components/yakitUI/YakitEditor/editorUtils'
 import { useYakRunnerAiAttachRef } from '../YakRunnerAiAttachContext'
 import { getRunnerEditorHighlightProps } from './runnerTabHighlightProps'
+import { revealSearchHitOnEditor } from '@/components/FileTreeContentSearch'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -1235,15 +1236,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
   })
 
   const onRevealSearchHitFun = useMemoizedFn((data: string) => {
-    try {
-      const { path, lineNumber, column } = JSON.parse(data) as {
-        path: string
-        lineNumber: number
-        column: number
-      }
-      if (!reqEditor || editorInfo?.path !== path) return
-      reqEditor.revealPositionInCenter({ lineNumber, column })
-    } catch (error) {}
+    revealSearchHitOnEditor(reqEditor, editorInfo?.path, data)
   })
 
   useEffect(() => {
