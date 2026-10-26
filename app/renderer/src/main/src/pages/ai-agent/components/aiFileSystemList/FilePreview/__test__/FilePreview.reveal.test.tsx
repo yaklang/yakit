@@ -38,9 +38,19 @@ vi.mock('@/components/yakitUI/YakitSpin/YakitSpin', () => ({
   YakitSpin: ({ children }: { children: unknown }) => children,
 }))
 vi.mock('@/components/yakitUI/YakitEditor/YakitEditor', () => ({
-  YakitEditor: ({ editorDidMount }: { editorDidMount?: (editor: { revealPositionInCenter: () => void }) => void }) => {
-    editorDidMount?.({ revealPositionInCenter })
-    return <div data-testid="yakit-editor" />
+  YakitEditor: (props: {
+    editorDidMount?: (editor: { revealPositionInCenter: () => void }) => void
+    highLightFindClass?: string
+    isPositionHighLightCursor?: boolean
+  }) => {
+    props.editorDidMount?.({ revealPositionInCenter })
+    return (
+      <div
+        data-testid="yakit-editor"
+        data-highlight-class={props.highLightFindClass}
+        data-position-cursor={String(!!props.isPositionHighLightCursor)}
+      />
+    )
   },
 }))
 
@@ -53,6 +63,15 @@ beforeEach(() => {
 })
 
 describe('FilePreview revealAIFilePreviewSearchHit', () => {
+  it('搜索命中与 Yak Runner 相同：file-search-hit 并开启定位', async () => {
+    render(
+      <FilePreview data={file} highlights={[{ startLineNumber: 1, startColumn: 1, endLineNumber: 1, endColumn: 4 }]} />,
+    )
+    const editor = await screen.findByTestId('yakit-editor')
+    expect(editor).toHaveAttribute('data-highlight-class', 'hight-light-file-search-hit')
+    expect(editor).toHaveAttribute('data-position-cursor', 'true')
+  })
+
   it('收到同路径命中事件时滚动编辑器', async () => {
     render(<FilePreview data={file} highlights={[]} />)
     await screen.findByTestId('yakit-editor')
