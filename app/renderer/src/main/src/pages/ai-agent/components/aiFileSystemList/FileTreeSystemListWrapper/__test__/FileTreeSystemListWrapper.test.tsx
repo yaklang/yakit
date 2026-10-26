@@ -65,7 +65,7 @@ describe('FileTreeSystemListWrapper（启用 React Compiler）', () => {
     expect(tree).not.toHaveAttribute('data-selected')
   })
 
-  it('只统计合并后的 uniquePaths 中的文件，排除目录及被合并的文件路径', async () => {
+  it('统计原始 path 中的文件，包含被目录合并或重复的文件条目', async () => {
     mergePaths.mockResolvedValueOnce(paths)
     render(
       <FileTreeSystemListWrapper
@@ -77,7 +77,22 @@ describe('FileTreeSystemListWrapper（启用 React Compiler）', () => {
     )
     const title = screen.getByText('AI Artifacts').parentElement!
     await screen.findByTestId('report.txt')
+    expect(within(title).getByText('3')).toBeInTheDocument()
+    expect(screen.queryByTestId('artifacts/nested.txt')).not.toBeInTheDocument()
+  })
+
+  it('path 变化但合并后的 uniquePaths 不变时仍更新计数', async () => {
+    mergePaths.mockResolvedValue(paths)
+    const props = { variant: 'sidebar' as const, title: 'AI Artifacts', setSelected: vi.fn() }
+    const { rerender } = render(<FileTreeSystemListWrapper {...props} path={paths} />)
+    await screen.findByTestId('report.txt')
+    const title = screen.getByText('AI Artifacts').parentElement!
     expect(within(title).getByText('1')).toBeInTheDocument()
+
+    rerender(
+      <FileTreeSystemListWrapper {...props} path={[...paths, { path: 'artifacts/nested.txt', isFolder: false }]} />,
+    )
+    expect(within(title).getByText('2')).toBeInTheDocument()
     expect(screen.queryByTestId('artifacts/nested.txt')).not.toBeInTheDocument()
   })
 

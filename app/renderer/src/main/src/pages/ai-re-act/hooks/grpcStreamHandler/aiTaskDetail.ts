@@ -194,7 +194,6 @@ const handleSkillList: AIMessageHandler = ({ res, store, rawData }) => {
   const { skills } = JSON.parse(ipcContent) as
     | AIAgentGrpcApi.SkillLoadedResponse
     | AIAgentGrpcApi.SkillAvailableResponse
-  console.log(res.NodeId, 'handleSkillList-skills', skills)
   const loadState = res.NodeId === 'skill_loaded' ? 'loaded' : 'metadata'
   const incomingNames = new Set(skills.map((skill) => skill.name))
   const otherSkills = rawData.skills.filter(

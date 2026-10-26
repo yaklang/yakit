@@ -72,11 +72,11 @@ const FileTreeSystemListWrapper: FC<FileTreeSystemListWrapperProps> = ({
     if (!showFileCount) return undefined
 
     let count = 0
-    for (const item of uniquePaths) {
+    for (const item of path) {
       if (item.isFolder === false) count += 1
     }
     return count
-  }, [showFileCount, uniquePaths])
+  }, [showFileCount, path])
 
   // 多根路径时保持内容自适应 + 外层滚动；仅单根时撑满并启用 Tree 虚拟滚动
   const listFillHeight = fillHeight && uniquePaths.length === 1
