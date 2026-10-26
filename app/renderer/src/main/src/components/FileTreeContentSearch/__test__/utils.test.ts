@@ -104,8 +104,9 @@ describe('resolveOpenHighlights', () => {
     },
   }
 
-  it('点命中行只用该行', () => {
-    expect(resolveOpenHighlights(fileItem.searchResult.results[0], fileItem)).toEqual([
+  it('点命中行仍带全部命中，并把该行放前面', () => {
+    expect(resolveOpenHighlights(fileItem.searchResult.results[1], fileItem)).toEqual([
+      { startLineNumber: 2, startColumn: 1, endLineNumber: 2, endColumn: 6 },
       { startLineNumber: 1, startColumn: 1, endLineNumber: 1, endColumn: 6 },
     ])
   })

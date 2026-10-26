@@ -2,7 +2,7 @@ import React, { memo, useEffect, useMemo, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
 import type { OpenedFileProps, OpenFolderDraggerProps, RunnerFileTreeProps } from './RunnerFileTreeType'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { PlusCircleOutlined, RefreshOutlined, XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { PlusCircleOutlined, RefreshOutlined, SearchOutlined, XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 
 import type { FileNodeMapProps, FileNodeProps, FileTreeListProps } from '../FileTree/FileTreeType'
 import { FileDefault, FileSuffix, KeyToIcon } from '../../yakRunner/FileTree/icon'
@@ -10,6 +10,8 @@ import useStore from '../hooks/useStore'
 import useDispatcher from '../hooks/useDispatcher'
 import useYakRunnerStoreRefs from '../hooks/useYakRunnerStoreRefs'
 import { FileTree } from '../FileTree/FileTree'
+import { RunnerFileTreeSearchView } from './RunnerFileTreeSearchView'
+import { SlidePanels } from '@/components/SlidePanels/SlidePanels'
 
 import classNames from 'classnames'
 import styles from './RunnerFileTree.module.scss'
@@ -105,8 +107,14 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
   const storeRefs = useYakRunnerStoreRefs()
 
   const [historyList, setHistoryList] = useState<YakRunnerHistoryProps[]>([])
+  const [isSearchView, setIsSearchView] = useState(false)
   // 选中的文件或文件夹
   const [foucsedKey, setFoucsedKey] = React.useState<string>('')
+
+  const searchRoots = useMemo(
+    () => fileTree.map((item) => ({ path: item.path })).filter((item) => !!item.path),
+    [fileTree],
+  )
   // 将文件详情注入文件树结构中 并 根据foldersMap修正其子项
   const initFileTree = useMemoizedFn((data: FileTreeListProps[], depth: number) => {
     return data.map((item) => {
@@ -676,48 +684,77 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
         <div className={styles['file-tree']}>
           <div className={styles['file-tree-container']}>
             <div className={styles['file-tree-header']}>
-              <div className={styles['title-style']}>{t('RunnerFileTree.fileList')}</div>
+              <div className={styles['title-style']}>
+                {isSearchView ? t('YakitInput.search') : t('RunnerFileTree.fileList')}
+              </div>
               <div className={styles['extra']}>
-                <Tooltip title={t('RunnerFileTree.refreshExplorer')}>
+                {isSearchView ? (
                   <YakitButton
                     type="text2"
-                    disabled={fileTree.length === 0}
-                    icon={<RefreshOutlined color="currentColor" />}
-                    onClick={() => {
-                      emiter.emit('onAiCodeAuditRefreshTree')
-                    }}
+                    title={t('YakitButton.close')}
+                    aria-label={t('YakitButton.close')}
+                    icon={<XOutlined color="currentColor" />}
+                    onClick={() => setIsSearchView(false)}
                   />
-                </Tooltip>
-                <YakitDropdownMenu
-                  menu={{
-                    data: menuData,
-                    onClick: ({ key, keyPath }) => menuSelect(key, keyPath),
-                  }}
-                  dropdown={{
-                    trigger: ['click'],
-                    placement: 'bottomLeft',
-                  }}
-                >
-                  <YakitButton type="text2" icon={<PlusCircleOutlined color="currentColor" />} />
-                </YakitDropdownMenu>
+                ) : (
+                  <YakitButton
+                    type="text2"
+                    title={t('YakitInput.search')}
+                    aria-label={t('YakitInput.search')}
+                    data-testid="ai-code-audit-file-tree-header-search"
+                    icon={<SearchOutlined color="currentColor" />}
+                    onClick={() => setIsSearchView(true)}
+                  />
+                )}
+                {!isSearchView && (
+                  <>
+                    <Tooltip title={t('RunnerFileTree.refreshExplorer')}>
+                      <YakitButton
+                        type="text2"
+                        disabled={fileTree.length === 0}
+                        icon={<RefreshOutlined color="currentColor" />}
+                        onClick={() => {
+                          emiter.emit('onAiCodeAuditRefreshTree')
+                        }}
+                      />
+                    </Tooltip>
+                    <YakitDropdownMenu
+                      menu={{
+                        data: menuData,
+                        onClick: ({ key, keyPath }) => menuSelect(key, keyPath),
+                      }}
+                      dropdown={{
+                        trigger: ['click'],
+                        placement: 'bottomLeft',
+                      }}
+                    >
+                      <YakitButton type="text2" icon={<PlusCircleOutlined color="currentColor" />} />
+                    </YakitDropdownMenu>
+                  </>
+                )}
               </div>
             </div>
 
-            <div className={styles['file-tree-tree']}>
-              <div className={styles['tree-body']}>
-                <FileTree
-                  folderPath={fileTree.length > 0 ? fileTree[0].path : ''}
-                  data={fileDetailTree}
-                  storeRefs={storeRefs}
-                  onLoadData={onLoadData}
-                  onSelect={onSelectFileTree}
-                  foucsedKey={foucsedKey}
-                  setFoucsedKey={setFoucsedKey}
-                  expandedKeys={expandedKeys}
-                  setExpandedKeys={setExpandedKeys}
-                />
-              </div>
-            </div>
+            <SlidePanels
+              showSecond={isSearchView}
+              data-testid="ai-code-audit-file-tree-view-track"
+              first={
+                <div className={styles['tree-body']}>
+                  <FileTree
+                    folderPath={fileTree.length > 0 ? fileTree[0].path : ''}
+                    data={fileDetailTree}
+                    storeRefs={storeRefs}
+                    onLoadData={onLoadData}
+                    onSelect={onSelectFileTree}
+                    foucsedKey={foucsedKey}
+                    setFoucsedKey={setFoucsedKey}
+                    expandedKeys={expandedKeys}
+                    setExpandedKeys={setExpandedKeys}
+                  />
+                </div>
+              }
+              second={<RunnerFileTreeSearchView active={isSearchView} roots={searchRoots} />}
+            />
           </div>
         </div>
       </div>

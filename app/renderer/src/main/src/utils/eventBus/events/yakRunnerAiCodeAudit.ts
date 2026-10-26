@@ -31,6 +31,10 @@ export type YakRunnerAiCodeAuditEventProps = {
   onAiCodeAuditOperationFileTree: string
   // 通过路径打开文件
   onAiCodeAuditOpenFileByPath: string
+  /** 搜索命中行：已打开的编辑器滚到该位置（同区间再点也能定位） */
+  onAiCodeAuditRevealSearchHit: string
+  /** 文件内容搜索结束后清空已打开文件上的搜索高亮（无 payload） */
+  onAiCodeAuditClearFileSearchHighlights?: string
   // 打开临时文件
   onAiCodeAuditOpenTemporaryFile: string
   // 通过缓存文件路径读取文件内容

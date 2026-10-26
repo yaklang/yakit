@@ -31,6 +31,8 @@ export type YakRunnerEventProps = {
   onOperationFileTree: string
   // 通过路径打开文件
   onOpenFileByPath: string
+  /** 搜索命中行：已打开的编辑器滚到该位置（同区间再点也能定位） */
+  onRevealSearchHit: string
   /** 文件内容搜索结束后清空已打开文件上的搜索高亮（无 payload） */
   onClearFileSearchHighlights?: string
   // 通过缓存文件路径读取文件内容

@@ -1234,10 +1234,24 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     } catch (error) {}
   })
 
+  const onRevealSearchHitFun = useMemoizedFn((data: string) => {
+    try {
+      const { path, lineNumber, column } = JSON.parse(data) as {
+        path: string
+        lineNumber: number
+        column: number
+      }
+      if (!reqEditor || editorInfo?.path !== path) return
+      reqEditor.revealPositionInCenter({ lineNumber, column })
+    } catch (error) {}
+  })
+
   useEffect(() => {
     emiter.on('onJumpEditorDetail', onJumpEditorDetailFun)
+    emiter.on('onRevealSearchHit', onRevealSearchHitFun)
     return () => {
       emiter.off('onJumpEditorDetail', onJumpEditorDetailFun)
+      emiter.off('onRevealSearchHit', onRevealSearchHitFun)
     }
   }, [])
 

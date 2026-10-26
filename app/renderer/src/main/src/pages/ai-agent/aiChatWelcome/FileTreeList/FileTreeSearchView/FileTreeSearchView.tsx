@@ -284,6 +284,13 @@ const FileTreeSearchView: React.FC<FileTreeSearchViewProps> = ({
     const highlights = resolveOpenHighlights(line, fileItem)
     // 先开预览，树选中降到 transition，减少点击瞬间主线程争用
     emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.File_Preview, value: path, highlights }))
+    const hit = highlights[0]
+    if (hit) {
+      emiter.emit(
+        'revealAIFilePreviewSearchHit',
+        JSON.stringify({ path, lineNumber: hit.startLineNumber, column: hit.startColumn }),
+      )
+    }
     startTransition(() => {
       setSelected?.({
         parent: null,

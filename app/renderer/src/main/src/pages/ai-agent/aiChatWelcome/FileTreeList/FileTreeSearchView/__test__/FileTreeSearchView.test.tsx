@@ -314,8 +314,13 @@ describe('FileTreeSearchView', () => {
         highlights: [
           { startLineNumber: 3, startColumn: 1, endLineNumber: 3, endColumn: 6 },
           { startLineNumber: 3, startColumn: 13, endLineNumber: 3, endColumn: 16 },
+          { startLineNumber: 9, startColumn: 1, endLineNumber: 9, endColumn: 4 },
         ],
       }),
+    )
+    expect(emit).toHaveBeenCalledWith(
+      'revealAIFilePreviewSearchHit',
+      JSON.stringify({ path: 'ai-output/demo.txt', lineNumber: 3, column: 1 }),
     )
     expect(setSelected).toHaveBeenCalledWith(
       expect.objectContaining({ path: 'ai-output/demo.txt', name: 'demo.txt', isFolder: false }),

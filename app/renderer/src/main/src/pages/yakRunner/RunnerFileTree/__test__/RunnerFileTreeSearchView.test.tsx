@@ -66,48 +66,51 @@ beforeEach(() => {
   emit.mockReset()
 })
 
+const allHits = [
+  { startLineNumber: 3, startColumn: 1, endLineNumber: 3, endColumn: 6 },
+  { startLineNumber: 3, startColumn: 13, endLineNumber: 3, endColumn: 16 },
+  { startLineNumber: 9, startColumn: 1, endLineNumber: 9, endColumn: 4 },
+]
+
+const openPayload = {
+  params: {
+    path: 'project/demo.txt',
+    name: 'demo.txt',
+    parent: null,
+    highLightRange: allHits,
+  },
+}
+
+const revealPayload = JSON.stringify({ path: 'project/demo.txt', lineNumber: 3, column: 1 })
+
 describe('RunnerFileTreeSearchView', () => {
-  it('点文件头打开时 highLightRange 含全部命中', () => {
+  it('点文件头打开时 highLightRange 含全部命中，并请求滚动到首个命中', () => {
     render(<RunnerFileTreeSearchView roots={[{ path: 'project' }]} active />)
 
     fireEvent.click(screen.getByTestId('open-file-header'))
 
-    expect(emit).toHaveBeenCalledWith(
-      'onOpenFileByPath',
-      JSON.stringify({
-        params: {
-          path: 'project/demo.txt',
-          name: 'demo.txt',
-          parent: null,
-          highLightRange: [
-            { startLineNumber: 3, startColumn: 1, endLineNumber: 3, endColumn: 6 },
-            { startLineNumber: 3, startColumn: 13, endLineNumber: 3, endColumn: 16 },
-            { startLineNumber: 9, startColumn: 1, endLineNumber: 9, endColumn: 4 },
-          ],
-        },
-      }),
-    )
+    expect(emit).toHaveBeenCalledWith('onOpenFileByPath', JSON.stringify(openPayload))
+    expect(emit).toHaveBeenCalledWith('onRevealSearchHit', revealPayload)
   })
 
-  it('点命中行打开时 highLightRange 仅含该行命中', () => {
+  it('点命中行打开时 highLightRange 含该文件全部命中，并请求滚动', () => {
     render(<RunnerFileTreeSearchView roots={[{ path: 'project' }]} active />)
 
     fireEvent.click(screen.getByTestId('open-file-line'))
 
-    expect(emit).toHaveBeenCalledWith(
-      'onOpenFileByPath',
-      JSON.stringify({
-        params: {
-          path: 'project/demo.txt',
-          name: 'demo.txt',
-          parent: null,
-          highLightRange: [
-            { startLineNumber: 3, startColumn: 1, endLineNumber: 3, endColumn: 6 },
-            { startLineNumber: 3, startColumn: 13, endLineNumber: 3, endColumn: 16 },
-          ],
-        },
-      }),
-    )
+    expect(emit).toHaveBeenCalledWith('onOpenFileByPath', JSON.stringify(openPayload))
+    expect(emit).toHaveBeenCalledWith('onRevealSearchHit', revealPayload)
+  })
+
+  it('同一行再点一次仍发出滚动事件', () => {
+    render(<RunnerFileTreeSearchView roots={[{ path: 'project' }]} active />)
+
+    fireEvent.click(screen.getByTestId('open-file-line'))
+    fireEvent.click(screen.getByTestId('open-file-line'))
+
+    const revealCalls = emit.mock.calls.filter((call) => call[0] === 'onRevealSearchHit')
+    expect(revealCalls).toHaveLength(2)
+    expect(revealCalls[1][1]).toBe(revealPayload)
   })
 
   it('搜索结束后发出清空搜索高亮事件', () => {
