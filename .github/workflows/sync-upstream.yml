@@ -1,14 +1,12 @@
 name: Sync Upstream, Auto-Translate & Auto-Release (English Edition)
 
 on:
-  # ၆ နာရီခြား တစ်ကြိမ် Upstream Release အသစ် ရှိ/မရှိ စစ်ဆေးပြီး Auto-Sync လုပ်ရန်
   schedule:
     - cron: '0 */6 * * *'
-  # စိတ်ကြိုက်အချိန်တွင် Manual နှိပ်၍ Run နိုင်ရန်
   workflow_dispatch:
     inputs:
       force_release:
-        description: 'Upstream Release အသစ်မရှိလည်း လက်ရှိကုဒ်ဖြင့် English Release အတင်းထုတ်မည်လား?'
+        description: 'Release အသစ် အတင်းထုတ်မည်လား? (true ရွေးပါ)'
         type: boolean
         required: false
         default: false
@@ -33,26 +31,15 @@ jobs:
       - name: 1. Checkout Fork Repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 1
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: 2. Configure Git, Fetch Upstream & Prepare Target Branch
+      - name: 2. Configure Git & Cleanly Sync Upstream Master
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git remote add upstream "${{ env.UPSTREAM_REPO }}" || git remote set-url upstream "${{ env.UPSTREAM_REPO }}"
-          git fetch upstream "${{ env.UPSTREAM_BRANCH }}" --tags
-          git fetch origin --prune --tags
 
-          # english-edition branch ရှိပြီးသားဆိုလျှင် ၎င်းကိုယူမည်၊ မရှိသေးပါက အသစ်ဆောက်မည်
-          if git show-ref --verify --quiet "refs/remotes/origin/${{ env.TARGET_BRANCH }}"; then
-            git checkout -B "${{ env.TARGET_BRANCH }}" "origin/${{ env.TARGET_BRANCH }}"
-          else
-            git checkout -B "${{ env.TARGET_BRANCH }}" "upstream/${{ env.UPSTREAM_BRANCH }}"
-          fi
-
-      - name: 3. Merge Upstream Changes Cleanly
-        run: |
+          # လက်ရှိ Repo ထဲရှိ မိမိ၏ Custom ဖိုင်များကို အရင်ဆုံး သိမ်းဆည်းထားခြင်း
           mkdir -p /tmp/backup/workflows
           cp -r .github/workflows/* /tmp/backup/workflows/ 2>/dev/null || true
           if [ -f ".github/security_glossary.json" ]; then
@@ -61,84 +48,104 @@ jobs:
           if [ -f ".i18n_cache.json" ]; then
             cp .i18n_cache.json /tmp/backup/.i18n_cache.json
           fi
-
-          if ! git merge "upstream/${{ env.UPSTREAM_BRANCH }}" -X theirs --allow-unrelated-histories --no-edit; then
-            git status --porcelain | awk '$1=="DU" || $1=="UD" {print $2}' | xargs -r git rm -f
-            git checkout --theirs . || true
-            git add -A
-            git commit -m "chore(sync): resolve conflicts taking upstream changes" || true
+          if [ -f "README_EN.md" ]; then
+            cp README_EN.md /tmp/backup/README_EN.md
+          fi
+          if [ -f "README_LEGACY.md" ]; then
+            cp README_LEGACY.md /tmp/backup/README_LEGACY.md
           fi
 
-          # မိမိ၏ Custom Workflows နှင့် Glossary ဖိုင်များကို ပြန်ထည့်မည် (/tmp/backup လမ်းကြောင်းအမှန်ဖြင့်)
+          # Tag conflict (exit code 1) လုံးဝမဖြစ်စေရန် --no-tags ဖြင့် ဆွဲယူခြင်း
+          git remote add upstream "${{ env.UPSTREAM_REPO }}" 2>/dev/null || git remote set-url upstream "${{ env.UPSTREAM_REPO }}"
+          git fetch --no-tags --depth=1 upstream "${{ env.UPSTREAM_BRANCH }}:refs/remotes/upstream/${{ env.UPSTREAM_BRANCH }}"
+          git fetch --no-tags --depth=1 origin "${{ env.TARGET_BRANCH }}:refs/remotes/origin/${{ env.TARGET_BRANCH }}" 2>/dev/null || true
+
+          # english-edition ရှိပြီးသားဆိုလျှင် ဘာသာပြန် Cache ကို ယူပြီး upstream/master ကုဒ်အသန့်ဖြင့် ပြန်တည်ဆောက်ခြင်း
+          if git show-ref --verify --quiet "refs/remotes/origin/${{ env.TARGET_BRANCH }}"; then
+            git show "origin/${{ env.TARGET_BRANCH }}:.i18n_cache.json" > /tmp/backup/.i18n_cache_json_prev 2>/dev/null || true
+            if [ -s "/tmp/backup/.i18n_cache_json_prev" ]; then
+              cp /tmp/backup/.i18n_cache_json_prev /tmp/backup/.i18n_cache.json
+            fi
+            git checkout -B "${{ env.TARGET_BRANCH }}" "origin/${{ env.TARGET_BRANCH }}"
+            git rm -rf --quiet . || true
+            git checkout "refs/remotes/upstream/${{ env.UPSTREAM_BRANCH }}" -- .
+          else
+            git checkout -B "${{ env.TARGET_BRANCH }}" "refs/remotes/upstream/${{ env.UPSTREAM_BRANCH }}"
+          fi
+
+          # မူရင်း Repo မှ Workflow အဟောင်းများကို ဖယ်ရှားပြီး မိမိ၏ Custom ဖိုင်များ ပြန်ထည့်ခြင်း
+          rm -rf .github/workflows/*
           mkdir -p .github/workflows
           cp -r /tmp/backup/workflows/* .github/workflows/ 2>/dev/null || true
           if [ -f "/tmp/backup/security_glossary.json" ]; then
             cp /tmp/backup/security_glossary.json .github/security_glossary.json
           fi
-          if [ -f "/tmp/backup/.i18n_cache.json" ]; then
+          if [ -f "/tmp/backup/.i18n_cache.json" ] && [ -s "/tmp/backup/.i18n_cache.json" ]; then
             cp /tmp/backup/.i18n_cache.json .i18n_cache.json
           fi
-
-          if [ -n "$(git status --porcelain)" ]; then
-            git add .github/ .i18n_cache.json 2>/dev/null || true
-            git commit -m "chore(sync): merge upstream yaklang/yakit" || true
+          if [ -f "/tmp/backup/README_EN.md" ]; then
+            cp /tmp/backup/README_EN.md README_EN.md
+            cp /tmp/backup/README_EN.md README.md
+            cp /tmp/backup/README_EN.md README-EN.md
+          fi
+          if [ -f "/tmp/backup/README_LEGACY.md" ]; then
+            cp /tmp/backup/README_LEGACY.md README_LEGACY.md
           fi
 
-      - name: 4. Enforce English Default Language in i18n.ts
-        run: |
-          I18N_FILE="app/renderer/src/main/src/i18n/i18n.ts"
-          if [ -f "$I18N_FILE" ]; then
-            sed -i "s/lng:.*'zh'/lng: localStorage.getItem('i18nextLng') || 'en'/g" "$I18N_FILE"
-            sed -i "s/fallbackLng:.*'zh'/fallbackLng: 'en'/g" "$I18N_FILE"
-          fi
-          if [ -f "README_EN.md" ]; then
-            cp README_EN.md README.md
-          fi
-
-      - name: 5. Setup Node.js & Python
-        uses: actions/setup-node@v4
+      - name: 3. Setup Python for Safe i18n Localization
+        uses: actions/setup-python@v5
         with:
-          node-version: '22'
+          python-version: '3.11'
 
-      - name: 6. Install tsc, PyYAML & Translation Dependencies
+      - name: 4. Install Translation Dependencies
         run: |
-<<<<<<< HEAD
-          npm install -g typescript@5
-=======
-          npm install -g typescript
->>>>>>> origin/master
           python3 -m pip install --upgrade pip deep-translator PyYAML
 
-      - name: 7. Translate UI, Source Files, PoC YAMLs & .yak Plugins
+      - name: 5. Enforce English Default UI & Safely Translate JSON Locales
         run: |
           python3 - << 'EOF'
           import os
           import re
           import json
           import time
-          import yaml
           from deep_translator import GoogleTranslator
 
-          ZH_DIR = "app/renderer/src/main/public/locales/zh"
-          EN_DIR = "app/renderer/src/main/public/locales/en"
-          SRC_DIRS = ["app/renderer/src", "app/main", "pocs", "plugins", "app/plugin"]
+          # ၁။ Main UI နှင့် Startup ဝင်းဒိုးရှိ i18n.ts များကို English (en) သို့ ပြောင်းခြင်း
+          for root, _, files in os.walk("app/renderer"):
+              if "node_modules" in root:
+                  continue
+              for f in files:
+                  full = os.path.join(root, f)
+                  if f in ("i18n.ts", "i18n.js") or (root.endswith("i18n") and f.endswith((".ts", ".js"))):
+                      with open(full, "r", encoding="utf-8") as fp:
+                          txt = fp.read()
+                      new_txt = re.sub(r"(lng\s*:\s*)([^,\n]*?)'zh(-CN)?'", r"\1localStorage.getItem('i18nextLng') || 'en'", txt)
+                      new_txt = re.sub(r"(fallbackLng\s*:\s*)'zh(-CN)?'", r"\1'en'", new_txt)
+                      if new_txt != txt:
+                          with open(full, "w", encoding="utf-8") as fp:
+                              fp.write(new_txt)
+                          print(f"Patched default language in: {full}")
+                  elif f == "index.html":
+                      with open(full, "r", encoding="utf-8") as fp:
+                          html = fp.read()
+                      new_html = html.replace("正在加载中", "Loading...")
+                      if new_html != html:
+                          with open(full, "w", encoding="utf-8") as fp:
+                              fp.write(new_html)
+                          print(f"Patched startup loading text in: {full}")
+
+          # ၂။ Locale JSON ဖိုင်များကိုသာ ဘေးကင်းစွာ ဘာသာပြန်ခြင်း (.ts/.tsx ကုဒ်များကို လုံးဝမထိပါ)
           CACHE_FILE = ".i18n_cache.json"
           GLOSSARY_FILE = ".github/security_glossary.json"
-          META_KEY = "__glossary_snapshot__"
-
-          IGNORE_STRINGS = {"微软雅黑", "宋体", "黑体", "苹方", "楷体", "仿宋"}
-
           translator = GoogleTranslator(source='zh-CN', target='en')
           zh_char_re = re.compile(r'[\u4e00-\u9fff]')
-          multi_space_re = re.compile(r' {2,}')
+          placeholder_re = re.compile(r'(\{\{.*?\}\}|\{[0-9a-zA-Z_]+\})')
 
           def has_zh(text):
               return bool(zh_char_re.search(str(text)))
 
           exact_glossary = {}
           inline_glossary = {}
-          post_fix_patterns = []
-
           if os.path.exists(GLOSSARY_FILE):
               with open(GLOSSARY_FILE, 'r', encoding='utf-8') as f:
                   g_data = json.load(f)
@@ -147,10 +154,8 @@ jobs:
                       exact_glossary.update(mapping)
                       inline_glossary.update(mapping)
               exact_glossary.update(g_data.get("exact_only", {}))
-              for pat, repl in g_data.get("post_fixes", {}).items():
-                  post_fix_patterns.append((re.compile(pat, re.IGNORECASE), repl))
 
-          sorted_inline_keys = sorted(inline_glossary.keys(), key=len, reverse=True)
+          sorted_inline = sorted(inline_glossary.keys(), key=len, reverse=True)
 
           cache = {}
           if os.path.exists(CACHE_FILE):
@@ -160,516 +165,155 @@ jobs:
               except Exception:
                   cache = {}
 
-          prev_snapshot = cache.get(META_KEY, {}) if isinstance(cache.get(META_KEY), dict) else {}
-          current_snapshot = {**inline_glossary, **exact_glossary}
-
-          changed_terms = [
-              zh_k for zh_k, en_v in current_snapshot.items()
-              if prev_snapshot.get(zh_k) != en_v
-          ]
-
-          if changed_terms:
-              for k in list(cache.keys()):
-                  if k != META_KEY and any(term in k for term in changed_terms):
-                      del cache[k]
-
-          def pre_process_glossary(text):
-              stripped = text.strip()
+          def safe_translate_one(orig):
+              stripped = orig.strip()
               if stripped in exact_glossary:
-                  return exact_glossary[stripped], False
-              out = text
-              for zh_term in sorted_inline_keys:
-                  if zh_term in out:
-                      out = out.replace(zh_term, f" {inline_glossary[zh_term]} ")
-              out = multi_space_re.sub(' ', out).strip()
-              return out, has_zh(out)
+                  return exact_glossary[stripped]
 
-          def post_process_glossary(text):
-              out = text
-              for regex, repl in post_fix_patterns:
-                  out = regex.sub(repl, out)
-              out = re.sub(r'\s+([,.:;!?)])', r'\1', out)
-              out = re.sub(r'([(\[])\s+', r'\1', out)
-              return multi_space_re.sub(' ', out).strip()
+              tokens = []
+              def mask_fn(m):
+                  tokens.append(m.group(0))
+                  return f"__PH{len(tokens)-1}__"
+
+              masked = placeholder_re.sub(mask_fn, orig)
+              for zh_k in sorted_inline:
+                  if zh_k in masked:
+                      masked = masked.replace(zh_k, f" {inline_glossary[zh_k]} ")
+
+              if has_zh(masked):
+                  for _ in range(3):
+                      try:
+                          masked = translator.translate(masked) or masked
+                          break
+                      except Exception:
+                          time.sleep(1.2)
+
+              for idx, tok in enumerate(tokens):
+                  masked = re.sub(rf'__PH{idx}__', tok, masked, flags=re.IGNORECASE)
+              return re.sub(r' {2,}', ' ', masked).strip()
 
           def batch_translate(texts):
-              unique_new = [
-                  t for t in texts
-                  if t not in cache and has_zh(t) and t.strip() not in IGNORE_STRINGS
-              ]
-              if not unique_new:
-                  return
+              new_items = [t for t in texts if t not in cache and has_zh(t)]
+              print(f"New Chinese strings to translate: {len(new_items)}")
+              for idx, item in enumerate(new_items):
+                  cache[item] = safe_translate_one(item)
+                  if idx % 30 == 0 and idx > 0:
+                      time.sleep(0.4)
 
-              mt_queue = []
-              for orig in unique_new:
-                  pre_text, needs_mt = pre_process_glossary(orig)
-                  if not needs_mt:
-                      cache[orig] = post_process_glossary(pre_text)
-                  else:
-                      mt_queue.append((orig, pre_text))
-
-              if not mt_queue:
-                  return
-
-              BATCH_SIZE = 35
-              for i in range(0, len(mt_queue), BATCH_SIZE):
-                  batch = mt_queue[i:i + BATCH_SIZE]
-                  single_line = [(o, p) for o, p in batch if "\n" not in p]
-                  multi_line = [(o, p) for o, p in batch if "\n" in p]
-
-                  if single_line:
-                      joined = "\n".join(p for _, p in single_line)
-                      for _ in range(3):
-                          try:
-                              trans_joined = translator.translate(joined)
-                              results = trans_joined.split("\n")
-                              if len(results) == len(single_line):
-                                  for (orig, _), res in zip(single_line, results):
-                                      cache[orig] = post_process_glossary(res)
-                                  break
-                              else:
-                                  for orig, pre_p in single_line:
-                                      res = translator.translate(pre_p) or pre_p
-                                      cache[orig] = post_process_glossary(res)
-                                  break
-                          except Exception:
-                              time.sleep(1.5)
-
-                  for orig, pre_p in multi_line:
-                      try:
-                          res = translator.translate(pre_p) or pre_p
-                          cache[orig] = post_process_glossary(res)
-                      except Exception:
-                          cache[orig] = post_process_glossary(pre_p)
-                  time.sleep(0.5)
-
-          # 1. Sync & Translate JSON Locales
-          def collect_json_zh(zh_obj, en_obj, collected):
+          def collect_json(zh_obj, en_obj, bucket):
               for k, v in zh_obj.items():
                   if isinstance(v, dict):
-                      collect_json_zh(v, en_obj.get(k, {}) if isinstance(en_obj.get(k), dict) else {}, collected)
-                  elif isinstance(v, str):
-                      if (k not in en_obj or has_zh(en_obj.get(k, "")) or v in changed_terms) and has_zh(v):
-                          collected.add(v)
+                      collect_json(v, en_obj.get(k, {}) if isinstance(en_obj.get(k), dict) else {}, bucket)
+                  elif isinstance(v, str) and has_zh(v):
+                      if k not in en_obj or has_zh(en_obj.get(k, "")):
+                          bucket.add(v)
 
-          def apply_json_zh(zh_obj, en_obj):
+          def apply_json(zh_obj, en_obj):
               changed = False
               for k, v in zh_obj.items():
                   if isinstance(v, dict):
                       if k not in en_obj or not isinstance(en_obj[k], dict):
                           en_obj[k] = {}
                           changed = True
-                      if apply_json_zh(v, en_obj[k]):
+                      if apply_json(v, en_obj[k]):
                           changed = True
                   elif isinstance(v, str) and has_zh(v):
-                      if k not in en_obj or has_zh(en_obj[k]) or any(t in v for t in changed_terms):
-                          new_val = cache.get(v, v)
-                          if en_obj.get(k) != new_val:
-                              en_obj[k] = new_val
-                              changed = True
+                      translated = cache.get(v)
+                      if k not in en_obj:
+                          en_obj[k] = translated or v
+                          changed = True
+                      elif translated and has_zh(en_obj[k]) and translated != en_obj[k] and not has_zh(translated):
+                          en_obj[k] = translated
+                          changed = True
               return changed
 
-          if os.path.exists(ZH_DIR):
-              os.makedirs(EN_DIR, exist_ok=True)
-              json_zh_strings = set()
-              json_pairs = []
+          locale_pairs = []
+          for root, dirs, _ in os.walk("app/renderer"):
+              if "node_modules" in root:
+                  continue
+              if os.path.basename(root) == "zh" and os.path.basename(os.path.dirname(root)) == "locales":
+                  en_dir = os.path.join(os.path.dirname(root), "en")
+                  locale_pairs.append((root, en_dir))
 
-              for fname in sorted(os.listdir(ZH_DIR)):
+          for zh_dir, en_dir in locale_pairs:
+              os.makedirs(en_dir, exist_ok=True)
+              bucket = set()
+              pairs = []
+              for fname in sorted(os.listdir(zh_dir)):
                   if not fname.endswith(".json"):
                       continue
-                  zh_path = os.path.join(ZH_DIR, fname)
-                  en_path = os.path.join(EN_DIR, fname)
-                  with open(zh_path, 'r', encoding='utf-8') as f:
-                      zh_data = json.load(f)
-                  en_data = {}
-                  if os.path.exists(en_path):
+                  zh_p = os.path.join(zh_dir, fname)
+                  en_p = os.path.join(en_dir, fname)
+                  with open(zh_p, 'r', encoding='utf-8') as f:
+                      zh_d = json.load(f)
+                  en_d = {}
+                  if os.path.exists(en_p):
                       try:
-                          with open(en_path, 'r', encoding='utf-8') as f:
-                              en_data = json.load(f)
+                          with open(en_p, 'r', encoding='utf-8') as f:
+                              en_d = json.load(f)
                       except Exception:
-                          en_data = {}
-                  collect_json_zh(zh_data, en_data, json_zh_strings)
-                  json_pairs.append((en_path, zh_data, en_data))
+                          en_d = {}
+                  collect_json(zh_d, en_d, bucket)
+                  pairs.append((en_p, zh_d, en_d))
 
-              batch_translate(list(json_zh_strings))
-              for en_path, zh_data, en_data in json_pairs:
-                  if apply_json_zh(zh_data, en_data):
-                      with open(en_path, 'w', encoding='utf-8') as f:
-                          json.dump(en_data, f, ensure_ascii=False, indent=2)
+              batch_translate(list(bucket))
+              for en_p, zh_d, en_d in pairs:
+                  if apply_json(zh_d, en_d):
+                      out_str = json.dumps(en_d, ensure_ascii=False, indent=2)
+                      json.loads(out_str)  # JSON မှန်ကန်ကြောင်း တစ်ခါတည်း စစ်ဆေးခြင်း
+                      with open(en_p, 'w', encoding='utf-8') as f:
+                          f.write(out_str)
 
-          # 2. Scan & Translate Source Files (.ts, .tsx, .yak)
-          TOKEN_RE = re.compile(
-              r'(//[^\n]*|/\*[\s\S]*?\*/)'
-              r"|('(?:\\.|[^'\\\n])*')"
-              r'|("(?:\\.|[^"\\\n])*")'
-              r'|(`(?:\\.|[^`\\$])*`)'
-              r'|(>[^<>{}`"\']*?[\u4e00-\u9fff]+[^<>{}`"\']*?<)'
-          )
-
-          source_files = []
-          source_zh_strings = set()
-
-          for base_dir in SRC_DIRS:
-              if not os.path.exists(base_dir):
-                  continue
-              for root, dirs, files in os.walk(base_dir):
-                  dirs[:] = [d for d in dirs if d not in {'node_modules', 'dist', 'locales', '__tests__', 'release'}]
-                  for file in files:
-                      if file.endswith(('.ts', '.tsx', '.yak')) and not file.endswith('.d.ts'):
-                          full_path = os.path.join(root, file)
-                          try:
-                              with open(full_path, 'r', encoding='utf-8') as f:
-                                  content = f.read()
-                          except Exception:
-                              continue
-
-                          if not has_zh(content):
-                              continue
-
-                          file_has_target = False
-                          for m in TOKEN_RE.finditer(content):
-                              comment, sq, dq, tl, jsx = m.groups()
-                              if comment:
-                                  continue
-                              token = sq or dq or tl
-                              if token and has_zh(token):
-                                  inner = token[1:-1]
-                                  if inner.strip() not in IGNORE_STRINGS:
-                                      source_zh_strings.add(inner)
-                                      file_has_target = True
-                              elif jsx and has_zh(jsx):
-                                  inner = jsx[1:-1].strip()
-                                  if inner and inner not in IGNORE_STRINGS:
-                                      source_zh_strings.add(inner)
-                                      file_has_target = True
-
-                          if file_has_target:
-                              source_files.append(full_path)
-
-          batch_translate(list(source_zh_strings))
-
-          def sanitize_for_quote(text, quote_char):
-              text = text.replace('\r', ' ').replace('\n', ' ')
-              if quote_char == "'":
-                  text = text.replace("\\'", "'").replace("'", "\\'")
-              elif quote_char == '"':
-                  text = text.replace('\\"', '"').replace('"', '\\"')
-              elif quote_char == '`':
-                  text = text.replace('`', "'").replace('${', '\\${')
-              return text
-
-          for full_path in source_files:
-              with open(full_path, 'r', encoding='utf-8') as f:
-                  content = f.read()
-
-              def replacer(m):
-                  comment, sq, dq, tl, jsx = m.groups()
-                  if comment:
-                      return comment
-                  token = sq or dq or tl
-                  if token:
-                      if not has_zh(token):
-                          return token
-                      quote_char = token[0]
-                      inner = token[1:-1]
-                      if inner.strip() in IGNORE_STRINGS or inner not in cache:
-                          return token
-                      trans = sanitize_for_quote(cache[inner], quote_char)
-                      return f"{quote_char}{trans}{quote_char}"
-                  if jsx:
-                      inner_raw = jsx[1:-1]
-                      inner_stripped = inner_raw.strip()
-                      if not inner_stripped or inner_stripped not in cache:
-                          return jsx
-                      trans = cache[inner_stripped].replace('<', '&lt;').replace('>', '&gt;')
-                      leading_ws = inner_raw[:len(inner_raw) - len(inner_raw.lstrip())]
-                      trailing_ws = inner_raw[len(inner_raw.rstrip()):]
-                      return f">{leading_ws}{trans}{trailing_ws}<"
-                  return m.group(0)
-
-              new_content = TOKEN_RE.sub(replacer, content)
-              if new_content != content:
-                  with open(full_path, 'w', encoding='utf-8') as f:
-                      f.write(new_content)
-
-          # 3. Scan & Translate PoC YAML Templates (.github ကို ချန်လှပ်ထားသည်)
-          yaml_files = []
-          yaml_zh_strings = set()
-
-          for root, dirs, files in os.walk("."):
-              dirs[:] = [d for d in dirs if d not in {'node_modules', 'dist', '.git', '.github', 'app', 'release', 'bins', 'cli'}]
-              for file in files:
-                  if file.endswith(('.yml', '.yaml')):
-                      full_path = os.path.join(root, file)
-                      try:
-                          with open(full_path, 'r', encoding='utf-8') as f:
-                              raw_yaml = f.read()
-                      except Exception:
-                          continue
-
-                      if not has_zh(raw_yaml):
-                          continue
-
-                      try:
-                          data = yaml.safe_load(raw_yaml)
-                          if isinstance(data, dict):
-                              for field in ['name', 'description', 'solution', 'title', 'summary', 'author', 'reference', 'vuln-id']:
-                                  val = data.get(field)
-                                  if isinstance(val, str) and has_zh(val):
-                                      yaml_zh_strings.add(val)
-
-                              info_block = data.get('info')
-                              if isinstance(info_block, dict):
-                                  for field in ['name', 'description', 'solution', 'author', 'summary', 'classification']:
-                                      val = info_block.get(field)
-                                      if isinstance(val, str) and has_zh(val):
-                                          yaml_zh_strings.add(val)
-                                      elif isinstance(val, dict):
-                                          for sub_k, sub_v in val.items():
-                                              if isinstance(sub_v, str) and has_zh(sub_v):
-                                                  yaml_zh_strings.add(sub_v)
-                              yaml_files.append(full_path)
-                      except Exception:
-                          continue
-
-          batch_translate(list(yaml_zh_strings))
-
-          for full_path in yaml_files:
-              try:
-                  with open(full_path, 'r', encoding='utf-8') as f:
-                      data = yaml.safe_load(f)
-                  if not isinstance(data, dict):
-                      continue
-
-                  modified = False
-                  for field in ['name', 'description', 'solution', 'title', 'summary', 'author', 'reference', 'vuln-id']:
-                      val = data.get(field)
-                      if isinstance(val, str) and val in cache:
-                          data[field] = cache[val]
-                          modified = True
-
-                  info_block = data.get('info')
-                  if isinstance(info_block, dict):
-                      for field in ['name', 'description', 'solution', 'author', 'summary']:
-                          v_info = info_block.get(field)
-                          if isinstance(v_info, str) and v_info in cache:
-                              info_block[field] = cache[v_info]
-                              modified = True
-
-                      class_block = info_block.get('classification')
-                      if isinstance(class_block, dict):
-                          for sub_k, sub_v in class_block.items():
-                              if isinstance(sub_v, str) and sub_v in cache:
-                                  class_block[sub_k] = cache[sub_v]
-                                  modified = True
-
-                  if modified:
-                      with open(full_path, 'w', encoding='utf-8') as f:
-                          yaml.safe_dump(data, f, allow_unicode=False, sort_keys=False)
-                      print(f"Updated Vulnerability PoC YAML: {full_path}")
-              except Exception as e:
-                  print(f"Error processing Vulnerability YAML {full_path}: {e}")
-
-          cache[META_KEY] = current_snapshot
           with open(CACHE_FILE, 'w', encoding='utf-8') as f:
               json.dump(cache, f, ensure_ascii=False, indent=2)
           EOF
 
-      - name: 8. Safety Check (tsc Syntax & JSON Validation + Auto-Revert)
-        env:
-          UPSTREAM_BRANCH: ${{ env.UPSTREAM_BRANCH }}
+      - name: 6. Commit and Push Verified English Edition
         run: |
-          export NODE_PATH="$(npm root -g)"
-<<<<<<< HEAD
-          node --input-type=commonjs - << 'EOF'
-          const fs = require('fs');
-          const path = require('path');
-          const { execFileSync } = require('child_process');
-          const tsModule = require('typescript');
-          const ts = tsModule.default || tsModule;
-=======
-          node - << 'EOF'
-          const fs = require('fs');
-          const path = require('path');
-          const { execFileSync } = require('child_process');
-          const ts = require('typescript');
->>>>>>> origin/master
-
-          const upstreamRef = `upstream/${process.env.UPSTREAM_BRANCH || 'master'}`;
-          const revertedRecords = [];
-
-          function git(args) {
-            return execFileSync('git', args, { encoding: 'utf8' }).trim();
-          }
-
-          function revertFile(relPath, tierRef) {
-            try {
-              git(['cat-file', '-e', `${tierRef}:${relPath}`]);
-              git(['checkout', tierRef, '--', relPath]);
-              return `Reverted to ${tierRef}`;
-            } catch {
-              try {
-                git(['cat-file', '-e', `${upstreamRef}:${relPath}`]);
-                git(['checkout', upstreamRef, '--', relPath]);
-                return `Reverted to ${upstreamRef}`;
-              } catch {
-                if (fs.existsSync(relPath)) fs.unlinkSync(relPath);
-                return 'Removed corrupt untracked file';
-              }
-            }
-          }
-
-          const rawFiles = git(['ls-files', '--modified', '--others', '--exclude-standard']);
-          const changedFiles = rawFiles
-            ? rawFiles.split('\n').map(s => s.trim()).filter(f => f && fs.existsSync(f))
-            : [];
-
-          const jsonFiles = changedFiles.filter(f => f.endsWith('.json'));
-          const tsFiles = changedFiles.filter(f => (f.endsWith('.ts') || f.endsWith('.tsx')) && !f.endsWith('.d.ts'));
-
-          for (const jf of jsonFiles) {
-            try {
-              JSON.parse(fs.readFileSync(jf, 'utf8'));
-            } catch (err) {
-              const action = revertFile(jf, 'HEAD');
-              revertedRecords.push({ file: jf, code: 'JSON_ERR', reason: err.message, action });
-            }
-          }
-
-          function checkTsSyntax(filesToCheck) {
-            if (filesToCheck.length === 0) return new Map();
-            const compilerOptions = {
-              target: ts.ScriptTarget.ESNext,
-              module: ts.ModuleKind.ESNext,
-              jsx: ts.JsxEmit.Preserve,
-              experimentalDecorators: true,
-              allowJs: true,
-              noEmit: true,
-              noResolve: true,
-              skipLibCheck: true,
-              types: []
-            };
-
-            const absMap = new Map();
-            const absList = [];
-            for (const rel of filesToCheck) {
-              if (fs.existsSync(rel)) {
-                const abs = path.resolve(rel);
-                absMap.set(abs, rel);
-                absList.push(abs);
-              }
-            }
-
-            const program = ts.createProgram(absList, compilerOptions);
-            const brokenMap = new Map();
-
-            for (const [abs, rel] of absMap.entries()) {
-              const sourceFile = program.getSourceFile(abs);
-              if (!sourceFile) continue;
-              const diagnostics = program.getSyntacticDiagnostics(sourceFile);
-              if (diagnostics.length > 0) {
-                const d = diagnostics[0];
-                const { line, character } = sourceFile.getLineAndCharacterOfPosition(d.start || 0);
-                const msg = ts.flattenDiagnosticMessageText(d.messageText, ' ');
-                brokenMap.set(rel, { code: `TS${d.code}`, reason: `Line ${line + 1}:${character + 1} - ${msg}` });
-              }
-            }
-            return brokenMap;
-          }
-
-          const pass1Broken = checkTsSyntax(tsFiles);
-          for (const [rel, info] of pass1Broken.entries()) {
-            const action = revertFile(rel, 'HEAD');
-            revertedRecords.push({ file: rel, code: info.code, reason: info.reason, action });
-          }
-
-          const pass2Broken = checkTsSyntax(tsFiles);
-          for (const [rel, info] of pass2Broken.entries()) {
-            const action = revertFile(rel, upstreamRef);
-            revertedRecords.push({ file: rel, code: info.code, reason: info.reason, action });
-          }
-
-          if (process.env.GITHUB_STEP_SUMMARY) {
-            let md = `### Full-Stack Translation Safety Check Report\n\n`;
-            md += `- **Scanned TypeScript/Plugin Files:** ${tsFiles.length}\n`;
-            md += `- **Scanned JSON Locales:** ${jsonFiles.length}\n`;
-            md += `- **Auto-Reverted Files:** ${revertedRecords.length}\n\n`;
-            fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, md);
-          }
-          EOF
-
-      - name: 9. Commit and Push Verified English Edition
-        run: |
-<<<<<<< HEAD
           git add -f .i18n_cache.json .github/ 2>/dev/null || true
-=======
->>>>>>> origin/master
-          if [ -n "$(git status --porcelain)" ]; then
-            git add -A
-            git commit -m "chore(i18n): sync upstream and translate UI, plugins & PoC metadata to English"
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m "chore(i18n): sync upstream master and update English locales safely"
           fi
-          git push -u origin "${{ env.TARGET_BRANCH }}"
+          git push -u origin "${{ env.TARGET_BRANCH }}" --force
 
-      - name: 10. Detect New Upstream Release & Prepare Tag
+      - name: 7. Detect New Upstream Release & Prepare Tag
         id: check_release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # မူရင်း yaklang/yakit ၏ နောက်ဆုံးထွက် Official Release Tag ကို စစ်ဆေးခြင်း
           UPSTREAM_LATEST=$(gh api repos/yaklang/yakit/releases/latest --jq '.tag_name' 2>/dev/null || true)
           if [ -z "$UPSTREAM_LATEST" ] || [ "$UPSTREAM_LATEST" == "null" ]; then
-            UPSTREAM_LATEST=$(git tag -l "v*" --sort=-creatordate | grep -v -- "-en" | head -n 1)
+            UPSTREAM_LATEST=$(gh api 'repos/yaklang/yakit/releases?per_page=1' --jq '.[0].tag_name' 2>/dev/null || true)
           fi
-
-          if [ -z "$UPSTREAM_LATEST" ]; then
+          if [ -z "$UPSTREAM_LATEST" ] || [ "$UPSTREAM_LATEST" == "null" ]; then
             UPSTREAM_LATEST="v$(date +'%Y.%m.%d')"
           fi
 
           EN_TAG="${UPSTREAM_LATEST}-en"
-          echo "Latest Upstream Release: ${UPSTREAM_LATEST} -> Target English Tag: ${EN_TAG}"
+          echo "Upstream Release: ${UPSTREAM_LATEST} -> Target Tag: ${EN_TAG}"
 
-          # မိမိ Fork Repo ၏ Releases ထဲတွင် ၎င်း English Tag ထုတ်ပြီးသား ရှိ/မရှိ စစ်မည်
           RELEASE_EXISTS="false"
           if gh release view "${EN_TAG}" --repo "${{ github.repository }}" >/dev/null 2>&1; then
             RELEASE_EXISTS="true"
           fi
 
           if [ "${RELEASE_EXISTS}" == "false" ] || [ "${{ inputs.force_release }}" == "true" ]; then
-            echo "New upstream release detected (or forced)! Creating tag ${EN_TAG}..."
-            git tag -f "${EN_TAG}"
-            git push origin "${EN_TAG}" --force
+            git tag -f "${EN_TAG}" HEAD
+            git push origin "refs/tags/${EN_TAG}" --force
             echo "should_release=true" >> "$GITHUB_OUTPUT"
             echo "release_tag=${EN_TAG}" >> "$GITHUB_OUTPUT"
           else
-            echo "English release ${EN_TAG} already exists. Skipping build."
             echo "should_release=false" >> "$GITHUB_OUTPUT"
             echo "release_tag=${EN_TAG}" >> "$GITHUB_OUTPUT"
           fi
 
-  # Upstream Release အသစ်တွေ့သည်နှင့် release-en.yml ကို တိုက်ရိုက်လှမ်းနှိုးပြီး Build လုပ်ပေးမည့်အဆင့်
   trigger-english-build:
     name: Auto-Trigger Multi-OS English Release
     needs: sync-and-translate
     if: needs.sync-and-translate.outputs.should_release == 'true'
-<<<<<<< HEAD
-    runs-on: ubuntu-latest
-    permissions:
-      actions: write
-    steps:
-      - name: Dispatch English release workflow
-        env:
-          GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ needs.sync-and-translate.outputs.release_tag }}
-        run: >-
-          gh workflow run release-en.yml
-          --repo "${{ github.repository }}"
-          --ref "$RELEASE_TAG"
-          --field tag_name="$RELEASE_TAG"
-          --field target_ref="$RELEASE_TAG"
-=======
     uses: ./.github/workflows/release-en.yml
     with:
       tag_name: ${{ needs.sync-and-translate.outputs.release_tag }}
       target_ref: ${{ needs.sync-and-translate.outputs.release_tag }}
     secrets: inherit
->>>>>>> origin/master
