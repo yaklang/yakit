@@ -108,42 +108,10 @@ async function resolveEntry(base) {
   return candidates[0]
 }
 
-// 子窗口主题独立于渲染端生成；只复用参数和内容校验均通过的上次主进程产物。
-export async function buildChildWindowTheme(outputDir, previousOutputDir = path.join(repoRoot, 'dist/electron')) {
-  const mainColor = '#F17F30'
-  const colorEntry = require.resolve('@yakit-libs/color/node')
-  const { version: colorVersion } = require(path.resolve(path.dirname(colorEntry), '../package.json'))
-  const relativePath = 'resources/child-window/theme.css'
-  const output = path.join(outputDir, relativePath)
-  let cached
-  try {
-    const { theme } = JSON.parse(await readFile(path.join(previousOutputDir, 'build-info.json'), 'utf8'))
-    if (theme?.mainColor === mainColor && theme.colorVersion === colorVersion) {
-      const css = await readFile(path.join(previousOutputDir, relativePath))
-      if (createHash('sha256').update(css).digest('hex') === theme.sha256) cached = { css, theme }
-    }
-  } catch (error) {
-    if (error.code !== 'ENOENT' && !(error instanceof SyntaxError)) throw error
-  }
-  await mkdir(path.dirname(output), { recursive: true })
-  if (cached) {
-    await writeFile(output, cached.css)
-    console.log('[electron-build] theme: cached')
-    return cached.theme
-  }
-  require('@yakit-libs/color/node').writeThemeCss({ mainColor, output })
-  const sha256 = createHash('sha256')
-    .update(await readFile(output))
-    .digest('hex')
-  console.log('[electron-build] theme: generated')
-  return { mainColor, colorVersion, sha256 }
-}
-
-// 原生模块、独立窗口页面及 vendor 文件保留文件形态，复制到统一的资源目录。
+// 原生模块及 vendor 文件保留文件形态，复制到统一的资源目录。
 async function copyResources(outputDir) {
   const copies = [
     ['app/main/screenshots/lib', 'screenshots'],
-    ['app/main/handlers/openNewChildWindow/index.html', 'child-window/index.html'],
     ['app/main/handlers/libs', 'vendor'],
   ]
   for (const [source, target] of copies) {
@@ -159,6 +127,9 @@ export async function validateRendererArtifacts(root = repoRoot) {
     'app/renderer/pages/main/index.html',
     'app/renderer/pages/main/yakit-aux.html',
     'app/renderer/pages/main/theme.css',
+    'app/renderer/pages/main/child-window/loading.html',
+    'app/renderer/pages/main/child-window/loading.css',
+    'app/renderer/pages/main/child-window/loading.js',
     'app/renderer/engine-link-startup/dist/index.html',
     'app/renderer/electron/electron.html',
     'app/protos/grpc.proto',
@@ -217,10 +188,9 @@ export async function buildElectron({ mode = 'production' } = {}) {
       metadata[name] = result.metafile
     }
     await copyResources(staging)
-    const theme = await buildChildWindowTheme(staging)
     await writeFile(
       path.join(staging, 'build-info.json'),
-      JSON.stringify({ mode, version: manifest.version, hashes, theme }, null, 2) + '\n',
+      JSON.stringify({ mode, version: manifest.version, hashes }, null, 2) + '\n',
     )
     await writeFile(path.join(staging, 'metafile.json'), JSON.stringify(metadata, null, 2) + '\n')
     // 所有入口和资源准备完成后才替换正式目录，同时清除上次构建遗留的文件。

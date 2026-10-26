@@ -55,7 +55,7 @@ function analyzerPlugin(): Plugin | null {
  */
 const ANTD_COMPONENT_STYLE_RE = /(^|[\\/])antd[\\/](es|lib)[\\/][\w-]+[\\/]style([\\/](index\.(less|css)|css(\.js)?))?$/
 
-/** public/theme.css 已从版本库移除，dev/build 启动时重新生成（含子窗口副本） */
+/** public/theme.css 已从版本库移除，dev/build 启动时重新生成 */
 function generateThemeCssPlugin(): Plugin {
   return {
     name: 'generate-theme-css',

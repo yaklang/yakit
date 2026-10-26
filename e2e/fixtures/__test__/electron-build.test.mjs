@@ -11,7 +11,6 @@ import { cp, mkdtemp, mkdir, readFile, rm, symlink, writeFile } from 'node:fs/pr
 import path from 'node:path'
 import vm from 'node:vm'
 import {
-  buildChildWindowTheme,
   buildElectron,
   checkRegistry,
   codeOptions,
@@ -47,7 +46,7 @@ async function bundleFixture(entry, name, options = {}) {
 }
 
 describe('Electron bundle contract', () => {
-  it('builds with only root dependencies and main sources, then reuses its own theme', async () => {
+  it('builds with only root dependencies and main sources without renderer resources', async () => {
     const isolated = path.join(temporary, 'standalone')
     await mkdir(path.join(isolated, 'scripts'), { recursive: true })
     for (const file of [
@@ -66,46 +65,17 @@ describe('Electron bundle contract', () => {
     const cold = await execFileAsync(process.execPath, ['scripts/build-electron.mjs', '--mode', 'production'], {
       cwd: isolated,
     })
-    expect(cold.stdout).toContain('theme: generated')
-    const cssPath = path.join(isolated, 'dist/electron/resources/child-window/theme.css')
-    const css = await readFile(cssPath, 'utf8')
-    expect(css).toBe(require('@yakit-libs/color/css').generateThemeCss('#F17F30'))
+    expect(cold.stdout).toContain('[electron-build] production:')
     const warm = await execFileAsync(process.execPath, ['scripts/build-electron.mjs', '--mode', 'development'], {
       cwd: isolated,
     })
-    expect(warm.stdout).toContain('theme: cached')
-    expect(await readFile(cssPath, 'utf8')).toBe(css)
+    expect(warm.stdout).toContain('[electron-build] development:')
     expect(await exists(path.join(isolated, 'app/renderer'))).toBe(false)
-    expect(await exists(path.join(isolated, 'app/main/handlers/openNewChildWindow/theme.css'))).toBe(false)
+    expect(await exists(path.join(isolated, 'dist/electron/resources/child-window'))).toBe(false)
+    expect(JSON.parse(await readFile(path.join(isolated, 'dist/electron/build-info.json'), 'utf8'))).not.toHaveProperty(
+      'theme',
+    )
   }, 30000)
-
-  it.each(['valid', 'missing-css', 'corrupt-css', 'color', 'version', 'invalid-metadata'])(
-    'validates the %s theme cache before reusing it',
-    async (state) => {
-      const previous = path.join(temporary, `theme-cache-${state}`)
-      const next = path.join(temporary, `theme-next-${state}`)
-      const info = await buildChildWindowTheme(previous, path.join(temporary, 'no-cache'))
-      const cssPath = path.join(previous, 'resources/child-window/theme.css')
-      const css = await readFile(cssPath, 'utf8')
-      const theme = { ...info }
-      if (state === 'missing-css') await rm(cssPath)
-      if (state === 'corrupt-css') await writeFile(cssPath, 'stale theme')
-      if (state === 'color') theme.mainColor = '#000000'
-      if (state === 'version') theme.colorVersion = '0.0.0'
-      await writeFile(
-        path.join(previous, 'build-info.json'),
-        state === 'invalid-metadata' ? '{' : JSON.stringify({ theme }),
-      )
-      const generate = vi.spyOn(require('@yakit-libs/color/node'), 'writeThemeCss')
-      try {
-        expect(await buildChildWindowTheme(next, previous)).toEqual(info)
-        expect(generate).toHaveBeenCalledTimes(state === 'valid' ? 0 : 1)
-        expect(await readFile(path.join(next, 'resources/child-window/theme.css'), 'utf8')).toBe(css)
-      } finally {
-        generate.mockRestore()
-      }
-    },
-  )
 
   it('creates compressed production entries and removes stale development files', async () => {
     const source = await readFile(path.join(output, 'main/index.js'), 'utf8')
@@ -481,6 +451,9 @@ const rendererResources = [
   'app/renderer/pages/main/index.html',
   'app/renderer/pages/main/yakit-aux.html',
   'app/renderer/pages/main/theme.css',
+  'app/renderer/pages/main/child-window/loading.html',
+  'app/renderer/pages/main/child-window/loading.css',
+  'app/renderer/pages/main/child-window/loading.js',
   'app/renderer/engine-link-startup/dist/index.html',
   'app/renderer/electron/electron.html',
   'app/protos/grpc.proto',
@@ -508,7 +481,6 @@ async function createPackFixture() {
   }
   await mkdir(path.join(root, 'app/main/screenshots/lib'), { recursive: true })
   await writeFixtureFile(root, 'app/main/handlers/libs/fixture.js', 'module.exports = {}\n')
-  await writeFixtureFile(root, 'app/main/handlers/openNewChildWindow/index.html', '<html></html>')
   for (const file of rendererResources) await writeFixtureFile(root, file)
   return {
     root,
