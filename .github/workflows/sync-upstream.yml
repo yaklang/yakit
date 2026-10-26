@@ -218,8 +218,12 @@ jobs:
                       if apply_json(v, en_obj[k]):
                           changed = True
                   elif isinstance(v, str) and has_zh(v):
-                      if k not in en_obj or has_zh(en_obj.get(k, "")):
-                          en_obj[k] = cache.get(v, v)
+                      translated = cache.get(v)
+                      if k not in en_obj:
+                          en_obj[k] = translated or v
+                          changed = True
+                      elif translated and has_zh(en_obj[k]) and translated != en_obj[k] and not has_zh(translated):
+                          en_obj[k] = translated
                           changed = True
               return changed
 
