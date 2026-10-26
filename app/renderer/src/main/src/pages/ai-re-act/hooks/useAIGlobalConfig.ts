@@ -24,6 +24,30 @@ const AI_MODEL_CONFIG_KEYS = [
 let saveQueue: Promise<unknown> = Promise.resolve()
 let saveEpoch = 0
 
+/** int64/double 为空字符串时，SetAIGlobalConfig 无法序列化 */
+const fixEmptyNumber = (config: AIGlobalConfig): AIGlobalConfig => {
+  const next = cloneDeep(config)
+  next.GlobalWeight = next.GlobalWeight || 0
+  const numberFields = ['MaxTokens', 'Temperature', 'TopP', 'TopK', 'FrequencyPenalty'] as const
+  for (const key of AI_MODEL_CONFIG_KEYS) {
+    next[key] = (next[key] || []).map((model) => {
+      const provider = model.Provider ? { ...model.Provider } : model.Provider
+      if (provider) {
+        for (const field of numberFields) {
+          if ((provider[field] as unknown) === '') delete provider[field]
+        }
+      }
+      return {
+        ...model,
+        ProviderId: model.ProviderId || '0',
+        Provider: provider,
+        ExtraParams: model.ExtraParams || [],
+      }
+    })
+  }
+  return next
+}
+
 interface UseAIGlobalConfigData {
   aiGlobalConfig: AIGlobalConfig
   queryLoading: boolean
@@ -103,7 +127,7 @@ function useAIGlobalConfig(params) {
       ...useAIGlobalConfigStore.getState().aiGlobalConfig,
       ...data,
     }
-    const snapshot = cloneDeep(next)
+    const snapshot = fixEmptyNumber(next)
     aiGlobalConfigRef.current = snapshot
     setConfig(snapshot)
     setUpdateLoading(true)
