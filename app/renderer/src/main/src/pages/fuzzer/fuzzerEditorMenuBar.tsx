@@ -40,14 +40,31 @@ export interface FuzzerEditorMenuGroup {
   items: FuzzerEditorMenuItem[]
 }
 
-/** 菜单条出现后的显隐与 5 秒无操作关闭。三个 Fuzzer 菜单共用。 */
+/**
+ * 菜单条出现后的显隐与 5 秒无操作关闭。点击菜单 / 选中菜单 / 只读选中菜单三个入口共用。
+ *
+ * 行为概要：
+ * - 挂载后先 `boxHidden=true` 约 300ms，再显示，减轻弹层闪一下。
+ * - 同时启动 5 秒定时器；到期调用 `close`（关掉 Monaco content widget）。
+ * - 鼠标进入菜单清定时器；离开再开 5 秒。拖拽中触发的 leave 不重启定时器。
+ * - InsertTag 等面板拖拽：`setPanelDragging(true)` 暂停自动关闭，并采样指针；
+ *   松手后用 `elementsFromPoint` 判断是否仍在 `[data-menu-bar]` / `[data-menu-panel]` 上，
+ *   仍在则当悬停，不在则重新开 5 秒。未采到真实坐标时不用 (0,0) 做命中，避免误关。
+ *
+ * @param close 真正关掉菜单的回调（由外层 closeFizz*Widget 提供）
+ * @param timeoutIdRef 外层持有的定时器 id，便于别处也能清/重启；不传则不启用定时关闭
+ * @param enabled false 时不启定时器（例如某些只读场景）
+ */
 export const useFuzzerEditorMenuAutoClose = (
   close: () => void,
   timeoutIdRef?: { current?: ReturnType<typeof setTimeout> | undefined },
   enabled = true,
 ) => {
+  /** 为 true 时菜单 CSS 隐藏；300ms 后翻成 false 再显示 */
   const [boxHidden, setBoxHidden] = useState(true)
+  /** 面板内正在拖拽（如 InsertTag），为 true 时禁止启动关闭定时器 */
   const draggingRef = useRef(false)
+  /** 指针是否在菜单/面板上；拖拽松手后会按 hit-test 校正 */
   const hoveredRef = useRef(false)
   /** 拖拽期间记录指针位置：hello-pangea 常在 drag 中触发 mouseLeave，松手时 hovered 不可靠 */
   const lastPointerRef = useRef({ x: 0, y: 0 })
@@ -57,6 +74,7 @@ export const useFuzzerEditorMenuAutoClose = (
   const pointerUpHandlerRef = useRef<((e: PointerEvent) => void) | null>(null)
   const pointerCancelHandlerRef = useRef<((e: PointerEvent) => void) | null>(null)
 
+  /** 清掉 pending 的 5 秒关闭定时器 */
   const clearCloseTimeout = useMemoizedFn(() => {
     if (!enabled || !timeoutIdRef) return
     if (timeoutIdRef.current) {
@@ -65,6 +83,7 @@ export const useFuzzerEditorMenuAutoClose = (
     }
   })
 
+  /** 重新开 5 秒关闭；拖拽中直接跳过 */
   const startCloseTimeout = useMemoizedFn(() => {
     if (!enabled || !timeoutIdRef) return
     if (draggingRef.current) return
@@ -74,6 +93,7 @@ export const useFuzzerEditorMenuAutoClose = (
     }, 5 * 1000)
   })
 
+  /** 卸掉拖拽期间挂在 window 上的 pointer 监听 */
   const stopPointerTracking = useMemoizedFn(() => {
     if (pointerMoveHandlerRef.current) {
       window.removeEventListener('pointermove', pointerMoveHandlerRef.current)
@@ -89,7 +109,11 @@ export const useFuzzerEditorMenuAutoClose = (
     }
   })
 
-  /** InsertTag 等面板拖拽时暂停自动关闭；松手后用 elementsFromPoint 判断是否仍在菜单上 */
+  /**
+   * InsertTag 等面板拖拽时由面板 `onDraggingChange` 调用。
+   * true：暂停自动关闭，并开始采样指针坐标。
+   * false：结束采样；若采到过坐标则 hit-test 菜单，决定保持悬停还是开 5 秒关闭。
+   */
   const setPanelDragging = useMemoizedFn((dragging: boolean) => {
     draggingRef.current = dragging
     if (dragging) {
@@ -114,7 +138,7 @@ export const useFuzzerEditorMenuAutoClose = (
     }
     stopPointerTracking()
     clearCloseTimeout()
-    // 未采到真实坐标时 lastPointer 可能仍是 (0,0)；勿 hit-test，保持关闭暂停（hovered 可保持或置 true）
+    // 未采到真实坐标时 lastPointer 可能仍是 (0,0)；勿 hit-test，保持关闭暂停（当悬停）
     if (!pointerSampledRef.current) {
       hoveredRef.current = true
       return
@@ -129,6 +153,7 @@ export const useFuzzerEditorMenuAutoClose = (
               return el ? [el] : []
             })()
         : []
+    // 指针下任一节点落在工具条或展开面板内 → 仍算悬停，不关
     const overMenu = nodes.some((n) => (n as Element).closest?.('[data-menu-bar],[data-menu-panel]'))
     if (overMenu) {
       hoveredRef.current = true
@@ -138,17 +163,20 @@ export const useFuzzerEditorMenuAutoClose = (
     startCloseTimeout()
   })
 
+  /** 绑到菜单根节点：进入则取消自动关闭 */
   const onMouseEnter = useMemoizedFn(() => {
     hoveredRef.current = true
     clearCloseTimeout()
   })
 
+  /** 绑到菜单根节点：离开则开 5 秒关闭；拖拽中的假 leave 忽略 */
   const onMouseLeave = useMemoizedFn(() => {
     hoveredRef.current = false
     if (!draggingRef.current) startCloseTimeout()
   })
 
   useEffect(() => {
+    // 一挂载就计时；同时延迟显示，避免 content widget 定位前闪一下
     startCloseTimeout()
     const showId = setTimeout(() => {
       setBoxHidden(false)
@@ -161,11 +189,13 @@ export const useFuzzerEditorMenuAutoClose = (
   }, [])
 
   return {
+    /** true 时调用方应用隐藏样式 */
     boxHidden,
     onMouseEnter,
     onMouseLeave,
     clearCloseTimeout,
     startCloseTimeout,
+    /** 交给面板 onDraggingChange */
     setPanelDragging,
   }
 }

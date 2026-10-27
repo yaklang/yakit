@@ -1,10 +1,11 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import type * as FuzzerEditorMenuLayout from '../fuzzerEditorMenuLayout'
 
 const anchoredCalls: Array<{ open: boolean; openId?: string; reveal: boolean }> = []
 
 vi.mock('../fuzzerEditorMenuLayout', async (importOriginal) => {
-  const mod = await importOriginal<typeof import('../fuzzerEditorMenuLayout')>()
+  const mod = await importOriginal<typeof FuzzerEditorMenuLayout>()
   return {
     ...mod,
     useMenuBarLayout: () => true,

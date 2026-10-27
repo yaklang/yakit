@@ -1,11 +1,32 @@
 import { useLayoutEffect, useRef, useState, type CSSProperties, type RefObject } from 'react'
 import { useMemoizedFn } from 'ahooks'
 
+/**
+ * Fuzzer 编辑器浮层菜单的布局纯逻辑（工具条 + 下拉面板）。
+ *
+ * 和 `editerMenuFun.tsx` 的分工：
+ * - editerMenuFun：Monaco content widget 这一层——把菜单 DOM 挂到光标旁
+ *   （getPosition / preference / menuAnchorSize 报宽 0 防 Monaco 推 left）。
+ * - 本文件：菜单已经挂上之后，在编辑器可视矩形里二次对齐——
+ *   工具条用 marginLeft 贴光标并避免出边；下拉面板用 placeMenuPanel 摆进宿主。
+ *
+ * 目标（选区菜单只调显示，不改插入/编解码功能；标签数量不固定，宽高按当前渲染测量）：
+ * 1. 编辑器放不下整条文案时只显示图标
+ * 2. 放得下时显示图标和文案
+ * 3. 下拉面板完整落在编辑器可视区域内
+ * 4. 光标在左/中/上优先向右/下展开，在右/下优先向左/上展开；这一侧更挤时改用更空的一侧
+ */
+
+/** 光标相对编辑器可视区的大致方位，来自外层量到的 editorInfo.direction */
 export interface CountDirectionProps {
   x?: 'middle' | 'left' | 'right'
   y?: 'bottom' | 'top'
 }
 
+/**
+ * 打开菜单时外层塞进 content widget 的几何快照。
+ * top/bottom/left/right 等是编辑器相关矩形；focus* / lineHeight / scrollTop 给浮层（如智能解码）用。
+ */
 export interface EditorDetailInfoProps {
   direction: CountDirectionProps
   top: number
@@ -18,27 +39,21 @@ export interface EditorDetailInfoProps {
   scrollTop: number
 }
 
-/**
- * 选区菜单只调整显示，不改插入、编码、解码这些功能。
- * 标签数量不固定，宽度和面板位置都按当前渲染出来的标签测量。
- * 1. 编辑器放不下整条文案时只显示图标
- * 2. 放得下时显示图标和文案
- * 3. 下拉面板完整落在编辑器可视区域内
- * 4. 光标在左/中/上优先向右/下展开，在右/下优先向左/上展开；这一侧更挤时改用更空的一侧
- */
-
+/** 面板与编辑器边缘、滚动条之间至少留这么多像素 */
 const MENU_PANEL_MAX_WIDTH = 360
 const MENU_PANEL_MAX_HEIGHT = 320
 export const MENU_PANEL_EDGE = 8
 /** 面板与工具条之间的空隙，上下展开共用 */
 export const MENU_PANEL_GAP = 1
 
+/** editorInfo.left/right 推算出的内容区宽度（非 DOM 实测） */
 const editorContentWidth = (editorInfo?: EditorDetailInfoProps) => {
   const left = editorInfo?.left ?? 0
   const right = editorInfo?.right ?? 0
   return Math.max(0, right - left)
 }
 
+/** 从 editorInfo 抽出摆放浮层常用的盒子字段 */
 const editorBox = (editorInfo?: EditorDetailInfoProps) => {
   const top = editorInfo?.top ?? 0
   const bottom = editorInfo?.bottom ?? 0
@@ -52,13 +67,16 @@ const editorBox = (editorInfo?: EditorDetailInfoProps) => {
   }
 }
 
-/** 当前工具条里的标签，顺序和数量变了都要重新量宽度 */
+/** 当前工具条里的标签 id 签名；顺序或数量变了都要重新量「带文案时的宽度」 */
 const menuItemSignature = (bar: HTMLElement) =>
   Array.from(bar.querySelectorAll('[data-menu-item]'))
     .map((el) => el.getAttribute('data-menu-item') || '')
     .join('\n')
 
-/** 智能解码浮层用的宽高。下拉菜单改由 placeMenuPanel 按实际空白摆放 */
+/**
+ * 智能解码等「非锚点下拉」浮层用的宽高/方位样式。
+ * 工具条下拉面板改由 placeMenuPanel 按实际空白摆放，不要再走这里。
+ */
 export const getMenuPanelStyle = (
   editorInfo?: EditorDetailInfoProps,
   options?: { alignLeftOffset?: number },
@@ -79,6 +97,7 @@ export const getMenuPanelStyle = (
   return style
 }
 
+/** 编辑器代码区在屏幕坐标下的可用矩形（已扣 minimap / 滚动条） */
 interface HostBox {
   hostLeft: number
   hostRight: number
@@ -89,6 +108,7 @@ interface HostBox {
 /**
  * 量编辑器里代码实际露出来的矩形（屏幕坐标）。
  * 右边界避开 minimap 和竖向滚动条，底边避开横向滚动条，避免浮层被盖住。
+ * hostRef 可能是 monaco 祖先（如 .yakit-editor-wrapper），找不到就 querySelector 往下找。
  */
 export const readEditorHostBox = (node: HTMLElement): HostBox => {
   // hostRef may be an ancestor of monaco (e.g. .yakit-editor-wrapper); fall back to querySelector
@@ -124,11 +144,13 @@ export const readEditorHostBox = (node: HTMLElement): HostBox => {
   return { hostLeft: rect.left, hostRight, hostTop: rect.top, hostBottom }
 }
 
+/** 工具条当前已写入的 marginLeft（px 数值） */
 const currentBarMargin = (bar: HTMLElement) => parseFloat(bar.style.marginLeft) || 0
 
 /**
  * 在一条横轴上把盒子贴着锚点放进编辑器。
  * 光标在右优先向左长，在左/中优先向右长；这一侧放不下且另一侧更空时换边，最后再夹进可视区域。
+ * 默认两侧都留 EDGE；只有锚点落在贴边 EDGE 带里时才取消该侧顶开，避免整条被夹出视口。
  */
 const placeHorizontal = (
   anchorLeft: number,
@@ -156,7 +178,7 @@ const placeHorizontal = (
 }
 
 /**
- * 工具条相对光标的 marginLeft。
+ * 工具条相对光标的 marginLeft（二次对齐，发生在 Monaco widget 锚点之后）。
  * 光标是一个点：向右长时左边贴着光标，向左长时右边贴着光标。不用 transform。
  */
 const desiredEditorBarMargin = (bar: HTMLElement, direction?: CountDirectionProps) => {
@@ -165,6 +187,7 @@ const desiredEditorBarMargin = (bar: HTMLElement, direction?: CountDirectionProp
   if (rect.width <= 0 || rect.height <= 0) return current
   const host = readEditorHostBox(bar)
   if (host.hostRight <= host.hostLeft) return current
+  // 去掉已有 margin 得到「Monaco 留下的光标锚点」屏幕 x
   const caret = rect.left - current
   const { viewLeft } = placeHorizontal(
     caret,
@@ -177,7 +200,10 @@ const desiredEditorBarMargin = (bar: HTMLElement, direction?: CountDirectionProp
   return viewLeft - caret
 }
 
-/** Monaco 改浮层 left/top 时，从工具条往上盯到 overflow-guard 的 style，变了就重算位置。 */
+/**
+ * Monaco 改浮层 left/top 时，从工具条往上盯到 overflow-guard 的 style，变了就重算位置。
+ * 返回 disconnect 函数，卸载时调用。
+ */
 const watchStyleUntilOverflowGuard = (start: HTMLElement | null, onChange: () => void) => {
   if (!start) return () => undefined
   const mutation = new MutationObserver(onChange)
@@ -189,6 +215,7 @@ const watchStyleUntilOverflowGuard = (start: HTMLElement | null, onChange: () =>
   return () => mutation.disconnect()
 }
 
+/** 浅比较面板定位相关字段，避免无意义 setState */
 const panelStyleSame = (prev: CSSProperties, next: CSSProperties) =>
   prev.left === next.left &&
   prev.right === next.right &&
@@ -199,7 +226,7 @@ const panelStyleSame = (prev: CSSProperties, next: CSSProperties) =>
   prev.maxHeight === next.maxHeight &&
   prev.visibility === next.visibility
 
-/** 把起点收进 [min, max]，保证面板整块落在编辑器里 */
+/** 把起点收进 [min, max]，保证尺寸为 size 的盒子整块落在区间内 */
 const clampStart = (start: number, size: number, minEdge: number, maxEdge: number) => {
   const minStart = minEdge
   const maxStart = Math.max(minEdge, maxEdge - size)
@@ -260,8 +287,9 @@ export const clampTopBesideAnchor = (
 }
 
 /**
- * 按当前按钮在编辑器里的位置摆面板。
- * 宽度跟内容走，上限 360。这一侧放不下时，挪到编辑器里还有空的一侧。
+ * 按当前按钮在编辑器里的位置摆下拉面板，返回应写到面板上的 CSS。
+ * 宽度跟内容走，上限 360；这一侧放不下时挪到更空的一侧。
+ * 若工具条 margin 尚未写上，先按即将发生的位移（pendingShift）摆，避免面板和按钮错开。
  */
 export const placeMenuPanel = (
   parentEl: HTMLElement,
@@ -278,6 +306,7 @@ export const placeMenuPanel = (
   const barRect = bar?.getBoundingClientRect()
   const anchorLeft = anchor.left + pendingShift
   const anchorRight = anchor.right + pendingShift
+  // 竖直锚点优先用整条工具条，避免点某个按钮时面板贴着按钮上下跳
   const anchorTop = barRect?.top ?? anchor.top
   const anchorBottom = barRect?.bottom ?? anchor.bottom
   const parentLeft = parent.left + pendingShift
@@ -296,6 +325,7 @@ export const placeMenuPanel = (
 
   let panelWidth = 0
   let panelHeight = 0
+  /** 临时改面板 style 量真实宽高，量完写回，避免 max-content 留在节点上触发 Observer 空转 */
   const measurePanel = (heightCap: number) => {
     if (!panelEl) {
       panelWidth = 0
@@ -370,7 +400,14 @@ export const placeMenuPanel = (
   }
 }
 
-/** 下拉打开后，跟着按钮和编辑器的位置把面板摆进可视区域 */
+/**
+ * 下拉打开后，跟着按钮和编辑器的位置把面板摆进可视区域。
+ * - ResizeObserver：面板尺寸变了重摆
+ * - MutationObserver：内容/拖拽标记变了重摆
+ * - watchStyleUntilOverflowGuard：Monaco 挪 widget 时重摆
+ * - 面板带 data-menu-panel-dragging 时暂停重摆并断开尺寸监听，松手后再挂上算一次
+ * - reveal=false 时只测量不显示，避免 waitReady 内容变高后从下翻到上闪一下
+ */
 export const useAnchoredMenuPanel = (
   open: boolean,
   parentRef: RefObject<HTMLElement | null>,
@@ -444,9 +481,9 @@ export const useAnchoredMenuPanel = (
 
 /**
  * 管整条工具条要不要显示文字，以及条要贴在光标哪一侧。
- * 编辑器太窄时只留图标；够宽再把文案加回来。
- * 左右位移跟下面的面板同一套规则，用 marginLeft，不用 transform。
- * active 为 false 时不动这层（外面已经管过 showLabel / 位置），避免嵌套工具条时挪两次。
+ * - 编辑器太窄时只留图标；够宽再把文案加回来（用 labeledWidthRef 记住「带文案时的宽度」）。
+ * - 左右位移跟面板同一套 placeHorizontal 规则，写 marginLeft，不用 transform。
+ * - active 为 false 时不动这层（外面已经管过 showLabel / 位置），避免嵌套工具条时挪两次。
  */
 export const useMenuBarLayout = (
   barRef: RefObject<HTMLDivElement | null>,
@@ -455,6 +492,7 @@ export const useMenuBarLayout = (
   direction?: CountDirectionProps,
 ) => {
   const [showLabel, setShowLabel] = useState(true)
+  /** 最近一次「显示文案」时量到的条宽；语言或菜单项签名变了会清零重测 */
   const labeledWidthRef = useRef(0)
   const signatureRef = useRef('')
 

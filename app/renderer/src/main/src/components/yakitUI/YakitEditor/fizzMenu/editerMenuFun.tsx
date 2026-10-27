@@ -125,19 +125,30 @@ export const editerMenuFun = (params: EditerMenuFunParams) => {
   let selectRoot: Root | null = null
   let rangeRoot: Root | null = null
 
-  // Monaco 会按整段宽度把浮层 left 推进视口，光标在右侧时工具条会离开点击处。
-  // 宽度报 0，left 就留在光标上；上下仍按真实高度，和面板一样选择展开方向。
+  /**
+   * menuAnchorSize：给 content widget 的 beforeRender。
+   * Monaco 会按整段宽度把浮层 left 推进视口，光标在右侧时工具条会离开点击处。
+   * 宽度报 0，left 就留在光标上；高度仍报菜单条真实高度，供上下展开计算。
+   */
   const menuAnchorSize = (domNode: HTMLElement | null) => {
     const bar = domNode?.querySelector('[data-menu-bar]') as HTMLElement | null
     if (!bar) return null
     return { width: 0, height: bar.offsetHeight || 0 }
   }
+  /**
+   * menuAnchorPreference：给 getPosition 的 preference。
+   * 按 editorInfo.direction.y 决定优先在光标上方还是下方展开；没有方向时用 whenUnset。
+   */
   const menuAnchorPreference = (whenUnset: number[]) => {
     const y = editorInfoRef.current?.direction?.y
     if (y === 'bottom') return [1, 2]
     if (y === 'top') return [2, 1]
     return whenUnset
   }
+  /**
+   * watchMenuAnchorHeight：监听菜单根节点高度变化（展开子项等），rAF 后 layoutContentWidget 重新贴齐。
+   * 关闭菜单时需 disconnect observer 并取消 pending frame（见 closeFizz*Widget）。
+   */
   const watchMenuAnchorHeight = (
     domNode: HTMLElement,
     holder: { anchorObserver: ResizeObserver | null; anchorFrame?: number | null },
