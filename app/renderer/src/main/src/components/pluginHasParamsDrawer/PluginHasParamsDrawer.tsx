@@ -22,6 +22,7 @@ import { ChevronUpOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import classNames from 'classnames'
 import { CheckSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
+import { isNil } from 'lodash'
 import styles from './PluginHasParamsDrawer.module.scss'
 
 interface PluginHasParamsDrawerProps {
@@ -136,7 +137,7 @@ const PluginHasParamsDrawer = React.memo((props: PluginHasParamsDrawerProps) => 
                       const saveParams: CustomPluginExecuteFormValue = { ...values }
                       const execParams: YakExecutorParam[] = []
                       Object.keys(saveParams).forEach((key) => {
-                        if (saveParams[key] !== false) {
+                        if (!isNil(saveParams[key])) {
                           execParams.push({ Key: key, Value: saveParams[key] })
                         }
                       })
@@ -259,7 +260,7 @@ export const PluginHasParamsModal = React.memo((props: PluginHasParamsModalProps
           const saveParams: CustomPluginExecuteFormValue = { ...values }
           const execParams: YakExecutorParam[] = []
           Object.keys(saveParams).forEach((key) => {
-            if (saveParams[key] !== false) {
+            if (!isNil(saveParams[key])) {
               execParams.push({ Key: key, Value: saveParams[key] })
             }
           })
