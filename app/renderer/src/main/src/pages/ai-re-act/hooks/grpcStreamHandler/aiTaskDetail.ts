@@ -225,6 +225,7 @@ const handleAvailableSkills: AIMessageHandler = ({ res, store, rawData }) => {
     | AIAgentGrpcApi.SkillAvailableErrorResponse
   if ('error' in response) {
     // 错误响应也结束面板的数据等待，保留已有列表和分页信息供重试。
+    rawData.availableSkills.error = response.error
     store.getState().updateStateCount('availableSkillsUpdate')
     yakitNotify('error', 'handleAvailableSkills:' + response.error)
     return

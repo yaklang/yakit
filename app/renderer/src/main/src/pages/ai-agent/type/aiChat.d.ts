@@ -142,7 +142,7 @@ export interface AIAgentChatData {
   /** 当前会话的全部已加载技能及后端总数 */
   loadedSkills: Omit<AIAgentGrpcApi.SkillLoadedResponse, 'skills'> & { skills: AISkillListItem[] }
   /** 当前会话已获取的未加载技能及后端分页信息 */
-  availableSkills: Omit<AIAgentGrpcApi.SkillAvailableResponse, 'skills'> & { skills: AISkillListItem[] }
+  availableSkills: Omit<AIAgentGrpcApi.SkillAvailableResponse, 'skills'> & { skills: AISkillListItem[]; error?: string }
   /** 按技能名称缓存当前会话的详情 */
   skillDetails: Map<string, AIAgentGrpcApi.SkillDetail>
   /** 系统流信息(isSystem=true&type=stream) */

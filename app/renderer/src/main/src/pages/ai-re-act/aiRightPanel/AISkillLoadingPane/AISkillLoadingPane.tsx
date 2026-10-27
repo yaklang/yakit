@@ -45,6 +45,7 @@ export const AISkillLoadingPane: FC<AISkillLoadingPaneProps> = ({ loadState, onT
   const contentRef = useRef<HTMLDivElement>(null)
   const waitingAvailableDataRef = useRef(false)
   const requestedQueryRef = useRef('')
+  const requestedPageRef = useRef(1)
   const loadMorePendingRef = useRef(false)
   const refreshPendingRef = useRef(false)
   const [inViewport] = useInViewport(contentRef)
@@ -68,10 +69,12 @@ export const AISkillLoadingPane: FC<AISkillLoadingPaneProps> = ({ loadState, onT
 
   useEffect(() => {
     waitingAvailableDataRef.current = false
+    if (rawData.availableSkills.error) loadMorePendingRef.current = false
   }, [availableSkillsUpdate, sessionId])
 
   useEffect(() => {
     requestedQueryRef.current = ''
+    requestedPageRef.current = 1
     loadMorePendingRef.current = false
     refreshPendingRef.current = false
   }, [sessionId])
@@ -95,6 +98,7 @@ export const AISkillLoadingPane: FC<AISkillLoadingPaneProps> = ({ loadState, onT
     if (!sent) return false
     waitingAvailableDataRef.current = true
     requestedQueryRef.current = query
+    requestedPageRef.current = page
     setLoadingMore(page > 1)
     if (page > 1) markLoadMoreSending(syncId)
     else markAvailableSending(syncId)
@@ -103,7 +107,10 @@ export const AISkillLoadingPane: FC<AISkillLoadingPaneProps> = ({ loadState, onT
   })
 
   const onLoadMore = useMemoizedFn(() => {
-    const { page, has_more } = rawData.availableSkills
+    const { page, has_more, error } = rawData.availableSkills
+    // 搜索第一页失败后停止自动翻页，等待用户再次搜索或刷新。
+    if (error && requestedPageRef.current === 1 && query === requestedQueryRef.current && !refreshPendingRef.current)
+      return
     const queryChanged = query !== requestedQueryRef.current
     if (!sessionId || (!refreshPendingRef.current && !queryChanged && !has_more)) return
     if (sendBlocked || availableLoading || loadMoreSyncLoading || addLoading) {
@@ -119,6 +126,10 @@ export const AISkillLoadingPane: FC<AISkillLoadingPaneProps> = ({ loadState, onT
     refreshPendingRef.current = true
     loadMorePendingRef.current = false
     onAddSkill(name)
+  })
+
+  const onRetryAvailable = useMemoizedFn(() => {
+    if (!waitingAvailableDataRef.current) onLoadMore()
   })
 
   const onRefresh = useMemoizedFn(() => {
@@ -138,6 +149,11 @@ export const AISkillLoadingPane: FC<AISkillLoadingPaneProps> = ({ loadState, onT
         SyncID: loadedSyncId,
       },
     })
+  })
+
+  const onSearch = useMemoizedFn((value: string) => {
+    setKeyword(value)
+    if (!isLoaded && value.trim() === query) onRefresh()
   })
 
   useEffect(() => {
@@ -167,7 +183,7 @@ export const AISkillLoadingPane: FC<AISkillLoadingPaneProps> = ({ loadState, onT
           aria-label={t('AISkillLoadingPane.searchPlaceholder')}
           value={keyword}
           onChange={(event) => setKeyword(event.target.value)}
-          onSearch={setKeyword}
+          onSearch={onSearch}
           size="large"
         />
         {isLoaded && <AISkillSortButton sortOrder={sortOrder} onChange={setSortOrder} />}
@@ -195,6 +211,9 @@ export const AISkillLoadingPane: FC<AISkillLoadingPaneProps> = ({ loadState, onT
           addLoading={addLoading}
           addingSkill={addingSkill}
           onEndReached={isLoaded ? undefined : onLoadMore}
+          onRetry={
+            isLoaded || !rawData.availableSkills.error || requestedPageRef.current === 1 ? undefined : onRetryAvailable
+          }
           refreshLoading={refreshLoading}
           loadingMore={!isLoaded && loadingMore}
           hasMore={isLoaded ? undefined : rawData.availableSkills.has_more}

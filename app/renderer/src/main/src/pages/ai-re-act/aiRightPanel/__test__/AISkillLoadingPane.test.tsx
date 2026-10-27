@@ -112,10 +112,10 @@ const createDirectory = (count: number) => {
     aiTaskDetailDataHandlers.skill_available(request)
     store.setState({ availableSkillsUpdate: request.store.getState().availableSkillsUpdate })
   }
-  const fail = (syncId: string) => {
+  const fail = (syncId: string, query = '') => {
     request.res = makeGrpcJsonRes(
       'structured',
-      { skills: [], query: '', error: 'failed to read skill directory' },
+      { skills: [], query, error: 'failed to read skill directory' },
       { NodeId: 'skill_available', IsSync: true, SyncID: syncId },
     )
     aiTaskDetailDataHandlers.skill_available(request)
@@ -274,8 +274,16 @@ describe('AISkillLoadingPane session skills', () => {
     expect(names()).toEqual(previous.skills.map((skill) => skill.name))
     expect(onSend).toHaveBeenCalledTimes(1)
 
-    if (recovery === 'pagination') act(() => virtuosoList.mock.lastCall![0].endReached())
-    else if (recovery === 'refresh') fireEvent.click(screen.getByRole('button', { name: 'YakitButton.refresh' }))
+    if (recovery === 'pagination') {
+      // 同一末索引和数据引用不会再次触发 Virtuoso endReached。
+      fireEvent.scroll(screen.getByTestId('skill-virtuoso'))
+      expect(onSend).toHaveBeenCalledTimes(1)
+      const list = screen.getByRole('list')
+      Object.defineProperties(list, { scrollHeight: { value: 400 }, clientHeight: { value: 200 } })
+      fireEvent.scroll(list, { target: { scrollTop: 100 } })
+      fireEvent.scroll(list, { target: { scrollTop: 200 } })
+      await act(async () => vi.advanceTimersByTimeAsync(200))
+    } else if (recovery === 'refresh') fireEvent.click(screen.getByRole('button', { name: 'YakitButton.refresh' }))
     else fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'scan' } })
     expect(onSend).toHaveBeenCalledTimes(2)
     expect(JSON.parse(onSend.mock.lastCall![0].params.SyncJsonInput)).toEqual({
@@ -286,6 +294,53 @@ describe('AISkillLoadingPane session skills', () => {
     await finishPage(directory, 'data-first')
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'YakitButton.refresh' })).not.toBeDisabled()
+  })
+
+  it.each([
+    { hasMore: true, order: 'receipt-first', retry: 'refresh' },
+    { hasMore: true, order: 'error-first', retry: 'search' },
+    { hasMore: false, order: 'receipt-first', retry: 'search' },
+    { hasMore: false, order: 'error-first', retry: 'refresh' },
+  ])('新搜索失败后停止自动翻页，再次 $retry 从第一页重试：$hasMore $order', async ({ hasMore, order, retry }) => {
+    const directory = createDirectory(125)
+    const current = sessions.get('session-1')!
+    current.availableSkills = { ...current.availableSkills, page: 3, has_more: hasMore }
+    const previousSkills = current.availableSkills.skills
+    render(<AISkillLoadingPane loadState="metadata" />)
+    fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'scan' } })
+    const syncId = onSend.mock.lastCall![0].params.SyncID
+    expect(JSON.parse(onSend.mock.lastCall![0].params.SyncJsonInput)).toMatchObject({ query: 'scan', page: 1 })
+    // 在途触底留下的分页意图，也不能在新搜索失败后自动续用旧页码。
+    fireEvent.scroll(screen.getByTestId('skill-virtuoso'))
+    if (order === 'receipt-first') {
+      act(() => acknowledge(syncId))
+      await act(async () => vi.advanceTimersByTimeAsync(300))
+      act(() => directory.fail(syncId, 'scan'))
+    } else {
+      act(() => directory.fail(syncId, 'scan'))
+      act(() => acknowledge(syncId))
+      await act(async () => vi.advanceTimersByTimeAsync(300))
+    }
+    expect(current.availableSkills.page).toBe(3)
+    expect(current.availableSkills.skills).toBe(previousSkills)
+    fireEvent.scroll(screen.getByTestId('skill-virtuoso'))
+    const list = screen.getByRole('list')
+    Object.defineProperties(list, { scrollHeight: { value: 400 }, clientHeight: { value: 200 } })
+    fireEvent.scroll(list, { target: { scrollTop: 100 } })
+    fireEvent.scroll(list, { target: { scrollTop: 200 } })
+    await act(async () => vi.advanceTimersByTimeAsync(500))
+    expect(onSend).toHaveBeenCalledTimes(1)
+    expect(screen.getByRole('button', { name: 'YakitButton.refresh' })).not.toBeDisabled()
+
+    if (retry === 'refresh') fireEvent.click(screen.getByRole('button', { name: 'YakitButton.refresh' }))
+    else fireEvent.keyDown(screen.getByRole('searchbox'), { key: 'Enter', code: 'Enter', keyCode: 13 })
+    expect(onSend).toHaveBeenCalledTimes(2)
+    expect(JSON.parse(onSend.mock.lastCall![0].params.SyncJsonInput)).toMatchObject({ query: 'scan', page: 1 })
+    await finishPage(directory, 'data-first')
+    expect(current.availableSkills.page).toBe(1)
+    fireEvent.scroll(screen.getByTestId('skill-virtuoso'))
+    expect(onSend).toHaveBeenCalledTimes(3)
+    expect(JSON.parse(onSend.mock.lastCall![0].params.SyncJsonInput)).toMatchObject({ query: 'scan', page: 2 })
   })
 
   it('末页数据早于回执到达时，完成同步后才结束底部 loading', async () => {

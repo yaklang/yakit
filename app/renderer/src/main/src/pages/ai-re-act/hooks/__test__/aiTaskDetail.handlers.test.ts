@@ -186,6 +186,7 @@ describe('aiTaskDetail handlers', () => {
     aiTaskDetailDataHandlers.skill_available(req)
 
     expect(req.rawData.availableSkills).toBe(previous)
+    expect(req.rawData.availableSkills.error).toBe('failed to read skill directory')
     expect(req.rawData.skillDetails.get('existing')).toBe(detail)
     expect(req.store.getState().availableSkillsUpdate).toBe(1)
     expect(req.store.getState().loadedSkillsUpdate).toBe(0)
@@ -199,6 +200,7 @@ describe('aiTaskDetail handlers', () => {
     aiTaskDetailDataHandlers.skill_available(req)
     expect(req.rawData.availableSkills.page).toBe(2)
     expect(req.rawData.availableSkills.skills.map((skill) => skill.name)).toEqual(['existing', 'retry'])
+    expect(req.rawData.availableSkills.error).toBeUndefined()
     expect(req.store.getState().availableSkillsUpdate).toBe(2)
     expect(yakitNotify).toHaveBeenCalledTimes(1)
   })

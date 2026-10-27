@@ -17,6 +17,7 @@ export interface AISkillListProps {
   addLoading?: boolean
   addingSkill?: string
   onEndReached?: () => void
+  onRetry?: () => void
   refreshLoading?: boolean
   loadingMore?: boolean
   hasMore?: boolean

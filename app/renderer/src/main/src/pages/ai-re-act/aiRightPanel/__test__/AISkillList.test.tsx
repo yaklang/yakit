@@ -1,5 +1,5 @@
-import { fireEvent, render as renderComponent, screen } from '@testing-library/react'
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
+import { act, fireEvent, render as renderComponent, screen } from '@testing-library/react'
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ReactElement, ReactNode } from 'react'
 import { VirtuosoMockContext } from 'react-virtuoso'
 import type { AISkillListItem } from '../AISkillLoadingPane/aiSkillList/type'
@@ -87,6 +87,40 @@ afterAll(() => vi.unstubAllGlobals())
 const getVirtualList = () => screen.getByRole('list').querySelector('[data-virtuoso-scroller]')
 
 describe('AISkillList', () => {
+  describe('触底重试节流', () => {
+    beforeEach(() => vi.useFakeTimers())
+    afterEach(() => {
+      vi.clearAllTimers()
+      vi.useRealTimers()
+    })
+
+    it('连续滚动在节流尾调用中重试触底，loading 收缩不会自动重试', () => {
+      const onRetry = vi.fn()
+      const data = createSkills(1)
+      const { rerender } = render(<AISkillList source="right-panel" data={data} loadState="metadata" loadingMore />)
+      const list = screen.getByRole('list')
+      Object.defineProperties(list, {
+        scrollHeight: { value: 436, configurable: true },
+        clientHeight: { value: 200 },
+      })
+      fireEvent.scroll(list, { target: { scrollTop: 150 } })
+      act(() => vi.advanceTimersByTime(10))
+      fireEvent.scroll(list, { target: { scrollTop: 236 } })
+      rerender(<AISkillList source="right-panel" data={data} loadState="metadata" onRetry={onRetry} />)
+      Object.defineProperty(list, 'scrollHeight', { value: 400 })
+      fireEvent.scroll(list, { target: { scrollTop: 200 } })
+      act(() => vi.advanceTimersByTime(200))
+      expect(onRetry).not.toHaveBeenCalled()
+
+      fireEvent.scroll(list, { target: { scrollTop: 100 } })
+      fireEvent.scroll(list, { target: { scrollTop: 150 } })
+      fireEvent.scroll(list, { target: { scrollTop: 200 } })
+      expect(onRetry).not.toHaveBeenCalled()
+      act(() => vi.advanceTimersByTime(200))
+      expect(onRetry).toHaveBeenCalledTimes(1)
+    })
+  })
+
   it('刷新时滚动到顶部，追加分页数据时保留滚动位置', () => {
     const data = createSkills(20)
     const { rerender } = render(<AISkillList source="right-panel" data={data} loadState="metadata" />)
