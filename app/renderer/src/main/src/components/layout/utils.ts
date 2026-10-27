@@ -135,11 +135,11 @@ interface StartUploadProps {
 }
 
 export const useUploadInfoByEnpriTrace = () => {
-  const { userInfo } = useStore()
   const { setEeSystemConfig } = useEeSystemConfig()
   const startUpload = useMemoizedFn(async (params: StartUploadProps): Promise<API.SystemConfigList[] | undefined> => {
     const { isAutoUploadProject, isUploadSyncData, isUpdateGlobalConfig } = params || {}
-    const { isLogin, token } = userInfo
+    // 登录刚写入 store 时组件还没重渲染，必须读当前值，不能用本次渲染的 userInfo
+    const { isLogin, token } = useStore.getState().userInfo
     if (isEnpriTrace()) {
       // 登录根据配置参数判断是否自动上传项目
       // 退出登录不需要去中止正在上传的项目；线上接口会抛错；因为循环跑接口，所以抛错信息很能很多(已告知产品)

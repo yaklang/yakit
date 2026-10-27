@@ -1,7 +1,7 @@
 import { act, renderHook, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { AIModelPolicyEnum, defaultAIGlobalConfig } from '@/pages/ai-agent/defaultConstant'
-import { grpcGetAIGlobalConfig, grpcSetAIGlobalConfig } from '@/pages/ai-agent/aiModelList/utils'
+import { grpcGetAIGlobalConfig, grpcSetAIGlobalConfig, type AIGlobalConfig } from '@/pages/ai-agent/aiModelList/utils'
 import { useAIGlobalConfigStore } from '@/store/aiGlobalConfig'
 import useAIGlobalConfig from '../useAIGlobalConfig'
 
@@ -197,5 +197,51 @@ describe('useAIGlobalConfig', () => {
     await act(async () => finishSave(null))
     await waitFor(() => expect(getMock).toHaveBeenCalledTimes(1))
     expect(useAIGlobalConfigStore.getState().aiGlobalConfig).toEqual(savedConfig)
+  })
+
+  it('保存时清洗空数字字段并兜底必填字段', async () => {
+    const dirtyConfig = {
+      ...defaultAIGlobalConfig,
+      GlobalWeight: '',
+      IntelligentModels: [
+        {
+          ProviderId: '',
+          Provider: { Type: 'openai', MaxTokens: '', Temperature: '', TopP: '', TopK: '', FrequencyPenalty: '' },
+          ModelName: 'model-empty',
+          ExtraParams: undefined,
+        },
+        {
+          ProviderId: '7',
+          Provider: { Type: 'openai', MaxTokens: 0, Temperature: 0.7, TopP: 0, TopK: 64, FrequencyPenalty: 0 },
+          ModelName: 'model-valid',
+          ExtraParams: [],
+        },
+      ],
+    } as unknown as AIGlobalConfig
+
+    const { result } = renderHook(() => useAIGlobalConfig())
+    await act(async () => {
+      await result.current[1].setAIGlobalConfig(dirtyConfig)
+    })
+
+    expect(setMock).toHaveBeenCalledTimes(1)
+    const saved = setMock.mock.calls[0][0]
+    // 空字符串数字字段删除、必填字段兜底
+    expect(saved.GlobalWeight).toBe(0)
+    expect(saved.IntelligentModels[0]).toEqual({
+      ProviderId: '0',
+      Provider: { Type: 'openai' },
+      ModelName: 'model-empty',
+      ExtraParams: [],
+    })
+    // 有效数字（含 0）原样保留
+    expect(saved.IntelligentModels[1]).toEqual({
+      ProviderId: '7',
+      Provider: { Type: 'openai', MaxTokens: 0, Temperature: 0.7, TopP: 0, TopK: 64, FrequencyPenalty: 0 },
+      ModelName: 'model-valid',
+      ExtraParams: [],
+    })
+    // store 收到的是清洗后的快照
+    expect(useAIGlobalConfigStore.getState().aiGlobalConfig).toEqual(saved)
   })
 })
