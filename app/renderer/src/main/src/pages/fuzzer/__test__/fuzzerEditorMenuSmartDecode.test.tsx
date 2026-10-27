@@ -1,6 +1,7 @@
-import { act, cleanup, render, waitFor } from '@testing-library/react'
+import { act, cleanup, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createRef, type ReactElement } from 'react'
+import type { EditorDetailInfoProps } from '../fuzzerEditorMenuLayout'
 
 const dragHandlers: {
   onStart?: (e: unknown, data: { x: number; y: number }) => void
@@ -56,7 +57,7 @@ vi.mock('@/i18n/useI18nNamespaces', () => ({
 
 vi.mock('@/components/yakitUI/YakitButton/YakitButton', () => ({
   YakitButton: ({ onClick, icon }: { onClick?: () => void; icon?: React.ReactNode }) => (
-    <button type="button" data-testid="close-btn" onClick={onClick}>
+    <button type="button" data-testid="smart-decode-close" onClick={onClick}>
       {icon}
     </button>
   ),
@@ -74,7 +75,13 @@ const hostBox = {
   hostBottom: 650,
 }
 
-const findPanel = () => document.body.querySelector('[class*="smart-decode-float-layer"]') as HTMLElement | null
+/** scss 在部分 vitest 配置下会被 stub 成 {}，不能依赖 CSS module 类名 */
+const findPanel = () => {
+  const close = screen.queryByTestId('smart-decode-close')
+  if (!close) return null
+  // 结构：panel > menu-drag > close-btn
+  return close.parentElement?.parentElement ?? null
+}
 
 const paintPanelBox = (el: HTMLElement, left: number, top: number, width: number, height: number) => {
   Object.defineProperty(el, 'offsetWidth', { configurable: true, value: width })
@@ -110,12 +117,16 @@ describe('SmartDecodeFloatPanel three-state layout', () => {
     document.body.innerHTML = ''
   })
 
-  const editorInfo = () => ({
+  const editorInfo = (): EditorDetailInfoProps => ({
     left: hostBox.hostLeft,
     top: hostBox.hostTop,
     right: hostBox.hostRight,
     bottom: hostBox.hostBottom,
-    direction: { x: 'left' as const, y: 'top' as const },
+    focusX: 240,
+    focusY: 210,
+    lineHeight: 19,
+    scrollTop: 0,
+    direction: { x: 'left', y: 'top' },
   })
 
   const mount = (anchor = { left: 200, top: 200, right: 280, bottom: 220, width: 80, height: 20 }) => {

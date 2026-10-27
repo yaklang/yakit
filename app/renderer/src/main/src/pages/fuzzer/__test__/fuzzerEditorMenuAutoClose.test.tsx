@@ -177,5 +177,3 @@ describe('useFuzzerEditorMenuAutoClose', () => {
     expect(cancelRemoves.length).toBeGreaterThanOrEqual(1)
   })
 })
-
-// SmartDecodeFloatPanel 全量 RTL 套件偏重，本轮以 layout + autoClose 覆盖最高价值测试发现；后续可补。
