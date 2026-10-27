@@ -12,7 +12,9 @@ import { useWelcomePanelStats } from '@/pages/ai-agent/aiChatWelcome/hooks/useWe
 import classNames from 'classnames'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { timeDiffWithMoment } from '@/utils/timeUtil'
-import { AISourceEnum, type AIAgentGrpcApi } from '../hooks/grpcApi'
+import { AISourceEnum, AISkillLoadStateEnum } from '../hooks/grpcApi'
+import type { AIAgentGrpcApi } from '../hooks/grpcApi'
+import type { AISkillLoadState } from './AISkillLoadingPane/type'
 import emiter from '@/utils/eventBus/eventBus'
 import { useStore as useUserStore } from '@/store'
 import { NetWorkApi } from '@/services/fetch'
@@ -530,7 +532,7 @@ const PaneSlot: React.FC<{
   onClose: () => void
 }> = React.memo(({ pane, small, onClose }) => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
-  const [skillLoadState, setSkillLoadState] = useState<'loaded' | 'metadata'>('loaded')
+  const [skillLoadState, setSkillLoadState] = useState<AISkillLoadState>(AISkillLoadStateEnum.Loaded)
   const [skillTotal, setSkillTotal] = useState(0)
 
   const renderTitle = () => {
@@ -547,10 +549,10 @@ const PaneSlot: React.FC<{
               size="small"
               value={skillLoadState}
               options={[
-                { label: t('AISkillLoadingPane.loaded'), value: 'loaded' },
-                { label: t('AISkillLoadingPane.available'), value: 'metadata' },
+                { label: t('AISkillLoadingPane.loaded'), value: AISkillLoadStateEnum.Loaded },
+                { label: t('AISkillLoadingPane.available'), value: AISkillLoadStateEnum.Metadata },
               ]}
-              onChange={(value) => setSkillLoadState(value as 'loaded' | 'metadata')}
+              onChange={(value) => setSkillLoadState(value as AISkillLoadState)}
             />
             <YakitTag size="small" fullRadius border={false} className={styles['skill-total']}>
               {skillTotal}

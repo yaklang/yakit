@@ -1,4 +1,5 @@
 import type React from 'react'
+import type * as OutlineIcons from '@yakit-libs/yakit-ui-icons/outline'
 import { createContext, useContext, useEffect } from 'react'
 import { render, screen, fireEvent, waitFor, act, cleanup, within } from '@testing-library/react'
 import { YakitRoute } from '@/enums/yakitRoute'
@@ -10,6 +11,13 @@ import type { ExportAILogsModal as ExportAILogsModalComponent } from '@/pages/ai
 import { apiRiskFieldGroup } from '@/pages/risks/YakitRiskTable/utils'
 import emiter from '@/utils/eventBus/eventBus'
 import type * as AIRightPanelModule from '../AIRightPanel'
+
+// 当前安装的图标包缺少这两个装饰图标；保留其余真实导出以验证面板交互。
+vi.mock('@yakit-libs/yakit-ui-icons/outline', async (importOriginal) => ({
+  ...(await importOriginal<typeof OutlineIcons>()),
+  ExportOutlined: () => null,
+  FlowOutlined: () => null,
+}))
 
 const viewportState = vi.hoisted(() => ({ visible: true }))
 const ViewportContext = createContext<boolean | undefined>(undefined)

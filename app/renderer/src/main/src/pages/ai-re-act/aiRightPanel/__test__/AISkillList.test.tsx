@@ -2,6 +2,7 @@ import { fireEvent, render as renderComponent, screen } from '@testing-library/r
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import type { ReactElement, ReactNode } from 'react'
 import { VirtuosoMockContext } from 'react-virtuoso'
+import type { AISkillListItem } from '../AISkillLoadingPane/aiSkillList/type'
 import type { PlanItemDetailsData } from '@/pages/ai-re-act/hooks/aiRender'
 import { AITaskSkillList } from '@/pages/ai-agent/chatTemplate/aiTaskExecutionDetails/aiTaskSkillList/AITaskSkillList'
 import { AISkillList } from '../AISkillLoadingPane/aiSkillList/AISkillList'
@@ -55,11 +56,18 @@ const render = (ui: ReactElement) =>
     ),
   })
 
-const createSkills = (count: number): PlanItemDetailsData['skills']['dynamic'] =>
+const createTaskSkills = (count: number): PlanItemDetailsData['skills']['dynamic'] =>
   Array.from({ length: count }, (_, index) => ({
     name: `skill-${index}`,
     description: 'description',
     category: 'skill',
+    skill_load_state: 'loaded',
+  }))
+
+const createSkills = (count: number): AISkillListItem[] =>
+  Array.from({ length: count }, (_, index) => ({
+    name: `skill-${index}`,
+    description: 'description',
     skill_load_state: 'loaded',
   }))
 
@@ -108,7 +116,7 @@ describe('AISkillList', () => {
   it.each([1, 3, 12])('任务详情通过虚拟列表展示 %i 项技能', (count) => {
     const skills: PlanItemDetailsData['skills'] = {
       fixed: [],
-      dynamic: createSkills(count),
+      dynamic: createTaskSkills(count),
     }
     render(<AITaskSkillList taskId="task-1" skills={skills} />)
     expect(getVirtualList()).toBeInTheDocument()
@@ -119,7 +127,7 @@ describe('AISkillList', () => {
     const skills: PlanItemDetailsData['skills'] = {
       fixed: [],
       dynamic: [
-        ...createSkills(3),
+        ...createTaskSkills(3),
         { name: 'available', description: '', category: 'skill', skill_load_state: 'metadata' },
       ],
     }

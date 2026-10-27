@@ -2,6 +2,23 @@ import { describe, it, expect, vi } from 'vitest'
 import { aiTaskDetailDataHandlers } from '../grpcStreamHandler/aiTaskDetail'
 import { makeGrpcJsonRes, makeHandlerRequest } from './fixtures'
 import { AIToDoListStatusEnum } from '@/pages/ai-agent/defaultConstant'
+import type { AIAgentGrpcApi } from '../grpcApi'
+import type { AISkillListItem } from '../../aiRightPanel/AISkillLoadingPane/aiSkillList/type'
+
+const makeSkillEntry = (
+  name: string,
+  loadState: 'loaded' | 'metadata',
+  description = '',
+): AIAgentGrpcApi.SkillListEntry => ({
+  name,
+  verbose_name: `${name} title`,
+  description,
+  type: 'skill',
+  stage: loadState,
+  position: 'SemiDynamic',
+  is_fixed: false,
+  data: { skill_load_state: loadState, token_count: 0 },
+})
 
 vi.mock('../persist/contentPersistHelper', () => ({
   persistIndependentItem: vi.fn(),
@@ -43,37 +60,47 @@ describe('aiTaskDetail handlers', () => {
   })
 
   it.each([
-    ['skill_loaded', 'loaded', {}],
-    ['skill_available', 'metadata', { page: 1, page_size: 100, has_more: true }],
-  ] as const)('%s 转换清单并只替换对应分组，保留零 Token', (nodeId, loadState, pagination) => {
-    const skills = [{ name: 'new', description: 'review', data: { token_count: 0 } }]
-    const req = makeHandlerRequest({
-      res: makeGrpcJsonRes('structured', { skills, total: 132, ...pagination }, { NodeId: nodeId, IsSync: true }),
-    })
-    const otherState = loadState === 'loaded' ? 'metadata' : 'loaded'
-    const otherSkill = { name: 'other', description: '', skill_load_state: otherState } as const
-    req.rawData.skills = [{ name: 'old', description: '', skill_load_state: loadState }, otherSkill]
-    aiTaskDetailDataHandlers[nodeId](req)
-    expect(req.rawData.skills).toEqual([
-      otherSkill,
-      { name: 'new', description: 'review', skill_load_state: loadState, token_count: 0 },
-    ])
-    expect(req.store.getState().skillsUpdate).toBe(1)
+    ['skill_loaded', 'loaded', 'loadedSkills', 'availableSkills', {}],
+    ['skill_available', 'metadata', 'availableSkills', 'loadedSkills', { page: 1, page_size: 100, has_more: true }],
+  ] as const)(
+    '%s 独立保存清单、后端总数及分页信息，保留零 Token',
+    (nodeId, loadState, field, otherField, pagination) => {
+      const skills = [makeSkillEntry('new', loadState, 'review')]
+      const req = makeHandlerRequest({
+        res: makeGrpcJsonRes('structured', { skills, total: 132, ...pagination }, { NodeId: nodeId, IsSync: true }),
+      })
+      const otherState = loadState === 'loaded' ? 'metadata' : 'loaded'
+      const otherSkill: AISkillListItem = { name: 'other', description: '', skill_load_state: otherState }
+      req.rawData[field].skills = [{ name: 'old', description: '', skill_load_state: loadState }]
+      req.rawData[otherField].skills = [otherSkill]
+      const otherGroup = req.rawData[otherField]
+      aiTaskDetailDataHandlers[nodeId](req)
+      expect(req.rawData[field]).toEqual({
+        skills: [{ name: 'new', description: 'review', skill_load_state: loadState, token_count: 0 }],
+        total: 132,
+        ...pagination,
+      })
+      expect(req.rawData[otherField]).toBe(otherGroup)
+      expect(req.store.getState()[nodeId === 'skill_loaded' ? 'availableSkillsUpdate' : 'loadedSkillsUpdate']).toBe(0)
+      expect(req.store.getState()[nodeId === 'skill_loaded' ? 'loadedSkillsUpdate' : 'availableSkillsUpdate']).toBe(1)
 
-    req.res = makeGrpcJsonRes('structured', { skills: [], total: 0, ...pagination }, { NodeId: nodeId })
-    aiTaskDetailDataHandlers[nodeId](req)
-    expect(req.rawData.skills).toEqual([otherSkill])
-    expect(req.store.getState().skillsUpdate).toBe(2)
-  })
+      req.res = makeGrpcJsonRes('structured', { skills: [], total: 0, ...pagination }, { NodeId: nodeId })
+      aiTaskDetailDataHandlers[nodeId](req)
+      expect(req.rawData[field].skills).toEqual([])
+      expect(req.rawData[field].total).toBe(0)
+      expect(req.rawData[otherField]).toBe(otherGroup)
+      expect(req.store.getState()[nodeId === 'skill_loaded' ? 'loadedSkillsUpdate' : 'availableSkillsUpdate']).toBe(2)
+    },
+  )
 
   it.each([
     ['skill_loaded', 'skill_available'],
     ['skill_available', 'skill_loaded'],
   ] as const)('%s 与 %s 乱序返回保留两组数据，重复同步不重复追加', (first, second) => {
     const payloads = {
-      skill_loaded: { skills: [{ name: 'loaded', description: 'loaded skill' }], total: 1 },
+      skill_loaded: { skills: [makeSkillEntry('loaded', 'loaded', 'loaded skill')], total: 1 },
       skill_available: {
-        skills: [{ name: 'available', description: 'available skill' }],
+        skills: [makeSkillEntry('available', 'metadata', 'available skill')],
         page: 1,
         page_size: 100,
         total: 132,
@@ -87,27 +114,85 @@ describe('aiTaskDetail handlers', () => {
     req.res = makeGrpcJsonRes('structured', payloads[second], { NodeId: second })
     aiTaskDetailDataHandlers[second](req)
     aiTaskDetailDataHandlers[second](req)
-    expect(req.rawData.skills).toEqual(
-      expect.arrayContaining([
-        { name: 'loaded', description: 'loaded skill', skill_load_state: 'loaded' },
-        { name: 'available', description: 'available skill', skill_load_state: 'metadata' },
-      ]),
-    )
-    expect(req.rawData.skills).toHaveLength(2)
+    expect(req.rawData.loadedSkills).toEqual({
+      total: 1,
+      skills: [{ name: 'loaded', description: 'loaded skill', skill_load_state: 'loaded', token_count: 0 }],
+    })
+    expect(req.rawData.availableSkills).toEqual({
+      ...payloads.skill_available,
+      skills: [{ name: 'available', description: 'available skill', skill_load_state: 'metadata', token_count: 0 }],
+    })
+  })
+
+  it('未加载技能后续页追加并按名称去重，第一页刷新替换旧列表', () => {
+    const req = makeHandlerRequest({ res: makeGrpcJsonRes('structured', {}, { NodeId: 'skill_available' }) })
+    const receivePage = (page: number, names: string[], hasMore: boolean) => {
+      req.res = makeGrpcJsonRes(
+        'structured',
+        {
+          skills: names.map((name) => makeSkillEntry(name, 'metadata', `page-${page}`)),
+          page,
+          page_size: 100,
+          total: 132,
+          has_more: hasMore,
+        },
+        { NodeId: 'skill_available' },
+      )
+      aiTaskDetailDataHandlers.skill_available(req)
+    }
+    receivePage(1, ['first', 'duplicate'], true)
+    receivePage(2, ['duplicate', 'last'], false)
+    expect(req.rawData.availableSkills).toEqual({
+      skills: [
+        { name: 'first', description: 'page-1', skill_load_state: 'metadata', token_count: 0 },
+        { name: 'duplicate', description: 'page-2', skill_load_state: 'metadata', token_count: 0 },
+        { name: 'last', description: 'page-2', skill_load_state: 'metadata', token_count: 0 },
+      ],
+      page: 2,
+      page_size: 100,
+      total: 132,
+      has_more: false,
+    })
+    receivePage(2, ['last'], false)
+    expect(req.rawData.availableSkills.skills).toHaveLength(3)
+    receivePage(1, ['refreshed'], true)
+    expect(req.rawData.availableSkills.skills.map((skill) => skill.name)).toEqual(['refreshed'])
+    expect(req.rawData.availableSkills.page).toBe(1)
+  })
+
+  it('未加载技能忽略跳页响应，不丢失已获取的分页数据', () => {
+    const req = makeHandlerRequest({
+      res: makeGrpcJsonRes(
+        'structured',
+        {
+          skills: [makeSkillEntry('out-of-order', 'metadata')],
+          page: 3,
+          page_size: 100,
+          total: 132,
+          has_more: false,
+        },
+        { NodeId: 'skill_available' },
+      ),
+    })
+    const previousPage = req.rawData.availableSkills.page
+    aiTaskDetailDataHandlers.skill_available(req)
+    expect(req.rawData.availableSkills.skills).toEqual([])
+    expect(req.rawData.availableSkills.page).toBe(previousPage)
+    expect(req.store.getState().loadedSkillsUpdate).toBe(0)
+    expect(req.store.getState().availableSkillsUpdate).toBe(0)
   })
 
   it.each([
     [false, 'skill_loaded', 'loaded'],
     [true, 'skill_available', 'metadata'],
-  ] as const)('%s 的缓存收到 %s 时清除状态不匹配的详情并移动分组', (loaded, nodeId, loadState) => {
+  ] as const)('%s 的缓存收到 %s 时清除状态不匹配的详情', (loaded, nodeId, loadState) => {
     const req = makeHandlerRequest({
       res: makeGrpcJsonRes(
         'structured',
-        { skills: [{ name: 'changed', description: '' }], total: 1 },
+        { skills: [makeSkillEntry('changed', loadState)], total: 1, page: 1, page_size: 100, has_more: false },
         { NodeId: nodeId },
       ),
     })
-    req.rawData.skills = [{ name: 'changed', description: '', skill_load_state: loaded ? 'loaded' : 'metadata' }]
     const unchanged = { name: 'unchanged', loaded: true, prompt_content: '保留内容' }
     req.rawData.skillDetails.set('changed', { name: 'changed', loaded })
     req.rawData.skillDetails.set('unchanged', unchanged)
@@ -116,18 +201,25 @@ describe('aiTaskDetail handlers', () => {
 
     aiTaskDetailDataHandlers[nodeId](req)
 
-    expect(req.rawData.skills).toEqual([{ name: 'changed', description: '', skill_load_state: loadState }])
+    const group = nodeId === 'skill_loaded' ? req.rawData.loadedSkills : req.rawData.availableSkills
+    expect(group.skills).toEqual([{ name: 'changed', description: '', skill_load_state: loadState, token_count: 0 }])
     expect(req.rawData.skillDetails.has('changed')).toBe(false)
     expect(req.rawData.skillDetails.get('unchanged')).toBe(unchanged)
     expect(otherSession.rawData.skillDetails.has('changed')).toBe(true)
-    expect(req.store.getState().skillsUpdate).toBe(1)
+    expect(req.store.getState()[nodeId === 'skill_loaded' ? 'loadedSkillsUpdate' : 'availableSkillsUpdate']).toBe(1)
   })
 
   it.each(['skill_loaded', 'skill_available'] as const)('%s 保留加载状态相同的详情缓存', (nodeId) => {
     const req = makeHandlerRequest({
       res: makeGrpcJsonRes(
         'structured',
-        { skills: [{ name: 'unchanged', description: '' }], total: 1 },
+        {
+          skills: [makeSkillEntry('unchanged', nodeId === 'skill_loaded' ? 'loaded' : 'metadata')],
+          total: 1,
+          page: 1,
+          page_size: 100,
+          has_more: false,
+        },
         { NodeId: nodeId },
       ),
     })
@@ -147,8 +239,10 @@ describe('aiTaskDetail handlers', () => {
     })
     aiTaskDetailDataHandlers.skill_loaded(req)
     aiTaskDetailDataHandlers.skill_available(req)
-    expect(req.rawData.skills).toEqual([])
-    expect(req.store.getState().skillsUpdate).toBe(0)
+    expect(req.rawData.loadedSkills.skills).toEqual([])
+    expect(req.rawData.availableSkills.skills).toEqual([])
+    expect(req.store.getState().loadedSkillsUpdate).toBe(0)
+    expect(req.store.getState().availableSkillsUpdate).toBe(0)
   })
 
   it('capability_inventory 按加载状态重新分类两组技能，保留字段并兼容缺失状态', () => {

@@ -123,6 +123,9 @@ export const DefaultAIQuestionQueues: AIQuestionQueues = {
   data: [],
 }
 
+/** 未加载技能默认分页条数 */
+export const DEFAULT_SKILL_PAGE_SIZE = 50
+
 /** 记忆列表默认值 */
 export const DefaultMemoryList: AIAgentGrpcApi.MemoryEntryList = {
   memories: [],

@@ -1,3 +1,4 @@
+import { AISkillLoadStateEnum } from '@/pages/ai-re-act/hooks/grpcApi'
 import type { FC } from 'react'
 import { lazy, Suspense, useState } from 'react'
 import { Tooltip } from 'antd'
@@ -17,7 +18,7 @@ const AISkillListItem: FC<AISkillListItemProps> = ({ source, skill, loadState, o
 
   const renderExtra = () => {
     const tokenCount =
-      loadState === 'loaded' ? (
+      loadState === AISkillLoadStateEnum.Loaded ? (
         <Tooltip title={t('AISkillLoadingPane.contextSize')}>
           <span className={styles['token-count']}>{skill.token_count ?? '—'}</span>
         </Tooltip>
@@ -27,7 +28,7 @@ const AISkillListItem: FC<AISkillListItemProps> = ({ source, skill, loadState, o
       case 'task-details':
         return tokenCount
       case 'right-panel':
-        if (loadState === 'metadata') {
+        if (loadState === AISkillLoadStateEnum.Metadata) {
           return (
             <Tooltip title={t('YakitButton.add')}>
               <YakitButton

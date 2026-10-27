@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import type { VirtuosoProps } from 'react-virtuoso'
-import type { AISkillListItem } from '@/pages/ai-re-act/aiRightPanel/AISkillLoadingPane/aiSkillList/type'
+import type * as OutlineIcons from '@yakit-libs/yakit-ui-icons/outline'
+import type { AISkillListProps } from '@/pages/ai-re-act/aiRightPanel/AISkillLoadingPane/aiSkillList/type'
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createStore } from 'zustand/vanilla'
@@ -49,6 +50,12 @@ vi.mock('@/i18n/useI18nNamespaces', () => ({
       return i18nState.refresh
     },
   }),
+}))
+
+// 本地图标包尚未导出该装饰图标，保留真实任务及技能组件验证。
+vi.mock('@yakit-libs/yakit-ui-icons/outline', async (importOriginal) => ({
+  ...(await importOriginal<typeof OutlineIcons>()),
+  SquareGanttChartOutlined: () => <svg aria-hidden="true" />,
 }))
 
 // 保留真实的数据读取、更新通知和快照逻辑，只隔离会话来源及无关子组件。
@@ -100,7 +107,7 @@ vi.mock('@/pages/plugins/operator/horizontalScrollCard/HorizontalScrollCard', ()
   ),
 }))
 vi.mock('react-virtuoso', () => ({
-  Virtuoso: ({ data, itemContent }: VirtuosoProps<AISkillListItem, unknown>) => (
+  Virtuoso: ({ data, itemContent }: VirtuosoProps<AISkillListProps['data'][number], unknown>) => (
     <div data-testid="virtuoso-list">
       {data?.map((item, index) => (
         <div key={item.name}>{itemContent?.(index, item, undefined)}</div>
@@ -210,6 +217,8 @@ describe('AITaskExecutionDetails 技能列表', () => {
       { name: 'middle', description: '', category: 'skill', skill_load_state: 'loaded', token_count: 20 },
       { name: 'large', description: '', category: 'skill', skill_load_state: 'loaded', token_count: 30 },
       { name: 'small', description: '', category: 'skill', skill_load_state: 'loaded', token_count: 10 },
+      { name: 'available-large', description: '', category: 'skill', skill_load_state: 'metadata', token_count: 30 },
+      { name: 'available-small', description: '', category: 'skill', skill_load_state: 'metadata', token_count: 10 },
     ]
     render(<AITaskExecutionDetails taskId="task-sort" />)
     const names = () =>
@@ -218,6 +227,10 @@ describe('AITaskExecutionDetails 技能列表', () => {
         .map((row) => row.querySelector('[title]')?.textContent)
     expect(names()).toEqual(['middle', 'large', 'small'])
     fireEvent.click(screen.getByRole('button', { name: 'AISkillLoadingPane.sortByTokens' }))
+    expect(names()).toEqual(['small', 'middle', 'large'])
+    fireEvent.click(screen.getByRole('radio', { name: 'AISkillLoadingPane.available' }))
+    expect(names()).toEqual(['available-large', 'available-small'])
+    fireEvent.click(screen.getByRole('radio', { name: 'AISkillLoadingPane.loaded' }))
     expect(names()).toEqual(['small', 'middle', 'large'])
     fireEvent.click(screen.getByRole('button', { name: 'AISkillLoadingPane.sortByTokensAscending' }))
     expect(names()).toEqual(['large', 'middle', 'small'])
