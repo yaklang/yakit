@@ -621,7 +621,7 @@ export const updateAreaFileInfo = (areaInfo: AreaInfoProps[], data: OptionalFile
   return newAreaInfo
 }
 
-export { clearFileSearchHighlights } from './clearFileSearchHighlights'
+export { clearFileSearchHighlights, stripPersistedFileSearchHighlights } from './clearFileSearchHighlights'
 
 /**
  * @name 更新分栏数据里某些节点file数据为被删除待保存状态

@@ -29,7 +29,7 @@ import {
   saveYakRunnerUnsavedFile,
   updateAreaFileInfo,
 } from './utils'
-import { clearFileSearchHighlights } from './clearFileSearchHighlights'
+import { clearFileSearchHighlights, stripPersistedFileSearchHighlights } from './clearFileSearchHighlights'
 import type { AreaInfoProps, OpenFileByPathProps, YakRunnerHistoryProps, YakRunnerProps } from './YakRunnerType'
 import { failed, success, yakitNotify } from '@/utils/notification'
 import YakRunnerContext, { type YakRunnerContextDispatcher, type YakRunnerContextStore } from './hooks/YakRunnerContext'
@@ -558,8 +558,9 @@ const YakRunnerWorkbench: React.FC<YakRunnerProps> = (props) => {
     try {
       const historyData = await getYakRunnerLastAreaFile()
       if (historyData?.activeFile && historyData.areaInfo) {
-        setActiveFile(historyData.activeFile)
-        setAreaInfo(historyData.areaInfo)
+        const persist = stripPersistedFileSearchHighlights(historyData.areaInfo, historyData.activeFile)
+        setActiveFile(persist.activeFile)
+        setAreaInfo(persist.areaInfo)
         setIsUnShow(false)
       }
     } catch (error) {}
@@ -626,7 +627,8 @@ const YakRunnerWorkbench: React.FC<YakRunnerProps> = (props) => {
           delete newActiveFile.code
         }
       }
-      setYakRunnerLastAreaFile(newAreaInfo, newActiveFile)
+      const persist = stripPersistedFileSearchHighlights(newAreaInfo, newActiveFile)
+      setYakRunnerLastAreaFile(persist.areaInfo, persist.activeFile)
     },
     [activeFile?.path, areaKey],
     { wait: 300 },

@@ -21,6 +21,7 @@ import {
   setAreaFileActive,
   updateAreaFileInfo,
   clearFileSearchHighlights,
+  stripPersistedFileSearchHighlights,
 } from '../yakRunner/utils'
 import {
   getIrifyAiCodeAuditLastAreaFile,
@@ -620,8 +621,9 @@ export const YakRunnerIrifyAiCodeAudit: React.FC<YakRunnerProps> = () => {
     try {
       const historyData = await getIrifyAiCodeAuditLastAreaFile()
       if (historyData?.activeFile && historyData.areaInfo) {
-        setActiveFile(historyData.activeFile)
-        setAreaInfo(historyData.areaInfo)
+        const persist = stripPersistedFileSearchHighlights(historyData.areaInfo, historyData.activeFile)
+        setActiveFile(persist.activeFile)
+        setAreaInfo(persist.areaInfo)
         setIsUnShow(false)
       }
     } catch (error) {}
@@ -688,7 +690,8 @@ export const YakRunnerIrifyAiCodeAudit: React.FC<YakRunnerProps> = () => {
           delete newActiveFile.code
         }
       }
-      setIrifyAiCodeAuditLastAreaFile(newAreaInfo, newActiveFile)
+      const persist = stripPersistedFileSearchHighlights(newAreaInfo, newActiveFile)
+      setIrifyAiCodeAuditLastAreaFile(persist.areaInfo, persist.activeFile)
     },
     [activeFile?.path, areaKey],
     { wait: 300 },

@@ -34,3 +34,9 @@ export const clearFileSearchHighlights = (
     activeChanged,
   }
 }
+
+/** 写入/读出上次打开文件历史时去掉搜索高亮，避免重启工程后关键字仍高亮 */
+export const stripPersistedFileSearchHighlights = (areaInfo: AreaInfoProps[], activeFile?: FileDetailInfo) => {
+  const next = clearFileSearchHighlights(areaInfo, activeFile)
+  return { areaInfo: next.areaInfo, activeFile: next.activeFile }
+}
