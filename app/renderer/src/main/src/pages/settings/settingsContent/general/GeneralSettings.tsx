@@ -5,7 +5,7 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitAutoComplete, defYakitAutoCompleteRef } from '@/components/yakitUI/YakitAutoComplete/YakitAutoComplete'
 import type { YakitAutoCompleteRefProps } from '@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
-import { fetchEnv, getRemoteConfigBaseUrlGV, getRemoteHttpSettingGV } from '@/utils/envfile'
+import { getRemoteConfigBaseUrlGV, getRemoteHttpSettingGV, isEnpriTrace } from '@/utils/envfile'
 import { JSONParseLog } from '@/utils/tool'
 import { loginOut } from '@/utils/login'
 import { failed, success, warn } from '@/utils/notification'
@@ -25,8 +25,6 @@ interface PluginSourceProfile {
   user_name: string
   pwd: string
 }
-
-const isYakitEE = fetchEnv() === 'yakitEE'
 
 const formatSize = (bytes: number): string => {
   if (bytes === 0) return '0 B'
@@ -283,7 +281,7 @@ export const GeneralSettings: React.FC = () => {
                   ref={httpHistoryRef}
                   cacheHistoryDataKey={getRemoteConfigBaseUrlGV()}
                   initValue={defaultHttpUrl}
-                  isCacheDefaultValue={!isYakitEE}
+                  isCacheDefaultValue={!isEnpriTrace()}
                   placeholder={t('ConfigPrivateDomain.enterPrivateDomain')}
                   disabled={pluginSourceLocked}
                   onBlur={persistPluginSource}
@@ -300,7 +298,7 @@ export const GeneralSettings: React.FC = () => {
                 <YakitAutoComplete
                   ref={httpProxyRef}
                   cacheHistoryDataKey={CacheDropDownGV.ConfigProxy}
-                  isCacheDefaultValue={!isYakitEE}
+                  isCacheDefaultValue={!isEnpriTrace()}
                   placeholder={t('ConfigPrivateDomain.setProxy')}
                   disabled={pluginSourceLocked}
                   onBlur={persistPluginSource}

@@ -19,7 +19,7 @@ const mocks = vi.hoisted(() => ({
   getOnlineProfile: vi.fn(),
 }))
 
-// GeneralSettings 在模块顶层用 fetchEnv() 冻结 isYakitEE，各用例须先设 edition 再 resetModules 重导入
+// isEnpriTrace 按 edition 判定 yakitEE / irifyEE，各用例须先设 edition 再 resetModules 重导入
 const env = vi.hoisted(() => ({ edition: 'yakit' }))
 
 vi.mock('@/i18n/useI18nNamespaces', () => ({
@@ -43,6 +43,7 @@ vi.mock('@/utils/kv', () => ({
 
 vi.mock('@/utils/envfile', () => ({
   fetchEnv: () => env.edition,
+  isEnpriTrace: () => env.edition === 'yakitEE' || env.edition === 'irifyEE',
   getRemoteConfigBaseUrlGV: () => 'private-domain-history',
   getRemoteHttpSettingGV: () => 'http-setting',
 }))
@@ -157,8 +158,8 @@ describe('GeneralSettings', () => {
     })
   }, 20000)
 
-  it('yakitEE 空历史值延迟返回时，私有域与代理保留配置回填值', async () => {
-    env.edition = 'yakitEE'
+  it.each(['yakitEE', 'irifyEE'])('%s 空历史值延迟返回时，私有域与代理保留配置回填值', async (edition) => {
+    env.edition = edition
     const history = { private: deferred(), proxy: deferred() }
     mocks.getRemoteValue.mockImplementation((key: string) => {
       if (key === PRIVATE_DOMAIN_KEY) return history.private.promise
@@ -173,8 +174,8 @@ describe('GeneralSettings', () => {
     await expectFieldValues(container, BACKFILL.BaseUrl, BACKFILL.Proxy)
   })
 
-  it('yakitEE 过期历史值延迟返回时，私有域与代理保留配置回填值', async () => {
-    env.edition = 'yakitEE'
+  it.each(['yakitEE', 'irifyEE'])('%s 过期历史值延迟返回时，私有域与代理保留配置回填值', async (edition) => {
+    env.edition = edition
     const history = { private: deferred(), proxy: deferred() }
     mocks.getRemoteValue.mockImplementation((key: string) => {
       if (key === PRIVATE_DOMAIN_KEY) return history.private.promise
