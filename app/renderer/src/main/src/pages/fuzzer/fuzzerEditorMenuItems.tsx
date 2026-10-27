@@ -755,9 +755,15 @@ export const SmartDecodeFloatPanel = (props: SmartDecodeFloatPanelProps) => {
     marginTop: 0,
   })
   const [dragBounds, setDragBounds] = useState({ left: 0, top: 0, bottom: 0, right: 0 })
+  /** 挂到编辑器宿主而非 body：切 tab 时宿主 display:none，浮层一起藏，不会盖住其他页 */
+  const [portalEl, setPortalEl] = useState<HTMLElement | null>(null)
   const menuHeight = getMenuPanelStyle(editorInfo).maxHeight as number
 
   const resolveHostEl = useMemoizedFn(() => hostRef?.current ?? null)
+
+  useLayoutEffect(() => {
+    setPortalEl(resolveHostEl())
+  }, [hostRef])
 
   const readHostRect = useMemoizedFn(() => {
     const host = resolveHostEl()
@@ -959,6 +965,8 @@ export const SmartDecodeFloatPanel = (props: SmartDecodeFloatPanelProps) => {
     sessionDraggingRef.current = false
   })
 
+  if (!portalEl) return null
+
   return createPortal(
     <ReactDraggable
       nodeRef={nodeRef}
@@ -989,6 +997,6 @@ export const SmartDecodeFloatPanel = (props: SmartDecodeFloatPanelProps) => {
         </div>
       </div>
     </ReactDraggable>,
-    document.body,
+    portalEl,
   )
 }

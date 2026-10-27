@@ -147,6 +147,14 @@ describe('SmartDecodeFloatPanel three-state layout', () => {
     return { ...view, hostRef, host }
   }
 
+  it('挂到 hostRef 而非 document.body，切 tab 的 display:none 能一起藏', async () => {
+    const { host } = mount()
+    await waitFor(() => expect(findPanel()).toBeTruthy())
+    const panel = findPanel()!
+    expect(host.contains(panel)).toBe(true)
+    expect(panel.parentElement === document.body).toBe(false)
+  })
+
   it('未拖时 fitInHost：contentReady 后设 fixed left/top', async () => {
     const { rerender, hostRef } = mount()
     await waitFor(() => expect(findPanel()).toBeTruthy())

@@ -5,6 +5,7 @@ import {
   MENU_PANEL_GAP,
   pickVerticalHeightBudget,
   readEditorHostBox,
+  menuBarClippedByHost,
   verticalRoomsBesideAnchor,
 } from '../fuzzerEditorMenuLayout'
 
@@ -115,8 +116,31 @@ describe('fuzzerEditorMenuLayout vertical helpers', () => {
 
       const box = readEditorHostBox(wrapper)
       expect(box.hostLeft).toBe(10)
+      expect(box.clipLeft).toBe(10)
       expect(box.hostTop).toBe(20)
       expect(box.hostRight).toBe(310)
+      expect(box.hostBottom).toBe(420)
+    })
+
+    it('行号槽在 scrollable 左侧时，hostLeft 取 overflow-guard，clipLeft 取 scrollable（下拉不伸进行号槽）', () => {
+      const wrapper = document.createElement('div')
+      const guard = document.createElement('div')
+      guard.className = 'overflow-guard'
+      const scrollable = document.createElement('div')
+      scrollable.className = 'monaco-scrollable-element'
+      guard.appendChild(scrollable)
+      wrapper.appendChild(guard)
+      document.body.appendChild(wrapper)
+
+      // scrollable 从行号槽右侧开始；guard 含整块编辑器
+      stubRect(guard, { left: 40, top: 20, right: 540, bottom: 420 })
+      stubRect(scrollable, { left: 100, top: 20, right: 500, bottom: 420 })
+
+      const box = readEditorHostBox(wrapper)
+      expect(box.hostLeft).toBe(40)
+      expect(box.clipLeft).toBe(100)
+      expect(box.hostTop).toBe(20)
+      expect(box.hostRight).toBe(500)
       expect(box.hostBottom).toBe(420)
     })
 
@@ -141,5 +165,21 @@ describe('fuzzerEditorMenuLayout vertical helpers', () => {
       expect(box.hostRight).toBe(420)
       expect(box.hostLeft).toBe(0)
     })
+  })
+})
+
+describe('menuBarClippedByHost', () => {
+  const host = { hostLeft: 100, clipLeft: 100, hostTop: 50, hostRight: 500, hostBottom: 400 }
+
+  it('完全在宿主内时不算剪切', () => {
+    expect(menuBarClippedByHost({ left: 120, top: 80, right: 300, bottom: 110 }, host)).toBe(false)
+  })
+
+  it('左边越出宿主时算剪切', () => {
+    expect(menuBarClippedByHost({ left: 90, top: 80, right: 300, bottom: 110 }, host)).toBe(true)
+  })
+
+  it('顶边越出宿主时算剪切', () => {
+    expect(menuBarClippedByHost({ left: 120, top: 40, right: 300, bottom: 70 }, host)).toBe(true)
   })
 })
