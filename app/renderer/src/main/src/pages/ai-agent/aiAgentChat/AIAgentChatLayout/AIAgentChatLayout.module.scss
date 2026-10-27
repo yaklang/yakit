@@ -39,15 +39,19 @@
   height: 100%;
   // 面板预留宽度（含间距），供欢迎页和自由对话继承。
   --ai-right-panel-slot-width: 0px;
+  --ai-right-panel-chat-slot-width: 0px;
 
   &[data-ai-shared-right-panel='true'] {
     // 正常模式：301px 面板 + 24px 间距。
     --ai-right-panel-slot-width: 325px;
+    // 聊天区另外预留 8px 滚动条和 8px gutter，面板与内容最小间距为 8px。
+    --ai-right-panel-chat-slot-width: 305px;
   }
 
   &[data-ai-shared-right-panel='true']:has(> .right-panel-frame [data-ai-right-panel-small='true']) {
     // 小屏模式：41px 面板 + 20px 间距。
     --ai-right-panel-slot-width: 61px;
+    --ai-right-panel-chat-slot-width: 45px;
   }
 }
 
