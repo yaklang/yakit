@@ -61,6 +61,7 @@ vi.mock('../../hooks/useCurrentSessionId', () => ({
   default: () => store.getState().sessionId,
 }))
 vi.mock('@/pages/ai-agent/useContext/useDispatcher', () => ({ default: () => ({ onSend }) }))
+vi.mock('@/utils/notification', () => ({ yakitNotify: vi.fn() }))
 vi.mock('@/i18n/useI18nNamespaces', () => ({ useI18nNamespaces: () => ({ t: (key: string) => key }) }))
 
 const { AISkillLoadingPane } = await compileReactModule<typeof AISkillLoadingPaneModule>(
@@ -111,8 +112,17 @@ const createDirectory = (count: number) => {
     aiTaskDetailDataHandlers.skill_available(request)
     store.setState({ availableSkillsUpdate: request.store.getState().availableSkillsUpdate })
   }
+  const fail = (syncId: string) => {
+    request.res = makeGrpcJsonRes(
+      'structured',
+      { skills: [], query: '', error: 'failed to read skill directory' },
+      { NodeId: 'skill_available', IsSync: true, SyncID: syncId },
+    )
+    aiTaskDetailDataHandlers.skill_available(request)
+    store.setState({ availableSkillsUpdate: request.store.getState().availableSkillsUpdate })
+  }
   deliver(1)
-  return { available, loaded, deliver }
+  return { available, loaded, deliver, fail }
 }
 
 const finishPage = async (directory: ReturnType<typeof createDirectory>, order: string) => {
@@ -228,6 +238,53 @@ describe('AISkillLoadingPane session skills', () => {
       store.setState({ availableSkillsUpdate: 1 })
     })
     expect(screen.getByRole('status')).toHaveTextContent('YakitEmpty.noMoreData')
+    expect(screen.getByRole('button', { name: 'YakitButton.refresh' })).not.toBeDisabled()
+  })
+
+  it.each([
+    { order: 'receipt-first', recovery: 'pagination' },
+    { order: 'receipt-first', recovery: 'refresh' },
+    { order: 'receipt-first', recovery: 'search' },
+    { order: 'error-first', recovery: 'pagination' },
+    { order: 'error-first', recovery: 'refresh' },
+    { order: 'error-first', recovery: 'search' },
+  ])('分页错误无 page 时结束 loading 并允许 $recovery：$order', async ({ order, recovery }) => {
+    const directory = createDirectory(125)
+    const current = sessions.get('session-1')!
+    const previous = current.availableSkills
+    render(<AISkillLoadingPane loadState="metadata" />)
+    fireEvent.scroll(screen.getByTestId('skill-virtuoso'))
+    const syncId = onSend.mock.lastCall![0].params.SyncID
+    expect(JSON.parse(onSend.mock.lastCall![0].params.SyncJsonInput).page).toBe(2)
+    expect(screen.getByRole('status')).toHaveTextContent('YakitSpin.loadMore')
+    if (order === 'receipt-first') {
+      act(() => acknowledge(syncId))
+      await act(async () => vi.advanceTimersByTimeAsync(300))
+      expect(screen.getByRole('status')).toHaveTextContent('YakitSpin.loadMore')
+      act(() => directory.fail(syncId))
+    } else {
+      act(() => directory.fail(syncId))
+      expect(screen.getByRole('status')).toHaveTextContent('YakitSpin.loadMore')
+      act(() => acknowledge(syncId))
+      await act(async () => vi.advanceTimersByTimeAsync(300))
+    }
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'YakitButton.refresh' })).not.toBeDisabled()
+    expect(current.availableSkills).toBe(previous)
+    expect(names()).toEqual(previous.skills.map((skill) => skill.name))
+    expect(onSend).toHaveBeenCalledTimes(1)
+
+    if (recovery === 'pagination') act(() => virtuosoList.mock.lastCall![0].endReached())
+    else if (recovery === 'refresh') fireEvent.click(screen.getByRole('button', { name: 'YakitButton.refresh' }))
+    else fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'scan' } })
+    expect(onSend).toHaveBeenCalledTimes(2)
+    expect(JSON.parse(onSend.mock.lastCall![0].params.SyncJsonInput)).toEqual({
+      page: recovery === 'pagination' ? 2 : 1,
+      page_size: DEFAULT_SKILL_PAGE_SIZE,
+      query: recovery === 'search' ? 'scan' : '',
+    })
+    await finishPage(directory, 'data-first')
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'YakitButton.refresh' })).not.toBeDisabled()
   })
 

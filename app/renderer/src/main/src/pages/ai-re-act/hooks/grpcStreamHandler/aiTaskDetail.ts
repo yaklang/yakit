@@ -4,6 +4,7 @@ import { AISkillLoadStateEnum } from '../grpcApi'
 import type { AISkillListItem } from '../../aiRightPanel/AISkillLoadingPane/aiSkillList/type'
 import type { AISkillLoadState } from '../../aiRightPanel/AISkillLoadingPane/type'
 import { Uint8ArrayToString } from '@/utils/str'
+import { yakitNotify } from '@/utils/notification'
 import { handleTodoListData } from '../utils'
 import cloneDeep from 'lodash/cloneDeep'
 import isArray from 'lodash/isArray'
@@ -219,7 +220,15 @@ const handleLoadedSkills: AIMessageHandler = ({ res, store, rawData }) => {
 const handleAvailableSkills: AIMessageHandler = ({ res, store, rawData }) => {
   if (res.Type !== 'structured' || res.NodeId !== 'skill_available') return
 
-  const response = JSON.parse(Uint8ArrayToString(res.Content)) as AIAgentGrpcApi.SkillAvailableResponse
+  const response = JSON.parse(Uint8ArrayToString(res.Content)) as
+    | AIAgentGrpcApi.SkillAvailableResponse
+    | AIAgentGrpcApi.SkillAvailableErrorResponse
+  if ('error' in response) {
+    // 错误响应也结束面板的数据等待，保留已有列表和分页信息供重试。
+    store.getState().updateStateCount('availableSkillsUpdate')
+    yakitNotify('error', 'handleAvailableSkills:' + response.error)
+    return
+  }
   const { skills, page } = response
   // 首次同步/刷新从第一页重建，后续只接收相邻页，避免重复或乱序响应回退分页。
   if (page !== 1 && page !== rawData.availableSkills.page + 1) return

@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { aiTaskDetailDataHandlers } from '../grpcStreamHandler/aiTaskDetail'
 import { makeGrpcJsonRes, makeHandlerRequest } from './fixtures'
 import { AIToDoListStatusEnum } from '@/pages/ai-agent/defaultConstant'
+import { yakitNotify } from '@/utils/notification'
 import type { AIAgentGrpcApi } from '../grpcApi'
 import type { AISkillListItem } from '../../aiRightPanel/AISkillLoadingPane/aiSkillList/type'
 
@@ -23,6 +24,8 @@ const makeSkillEntry = (
 vi.mock('../persist/contentPersistHelper', () => ({
   persistIndependentItem: vi.fn(),
 }))
+
+vi.mock('@/utils/notification', () => ({ yakitNotify: vi.fn() }))
 
 describe('aiTaskDetail handlers', () => {
   it('skill_detail 按名称缓存完整详情，替换同名结果并保留业务错误，不新增通知计数', () => {
@@ -158,6 +161,46 @@ describe('aiTaskDetail handlers', () => {
     receivePage(1, ['refreshed'], true)
     expect(req.rawData.availableSkills.skills.map((skill) => skill.name)).toEqual(['refreshed'])
     expect(req.rawData.availableSkills.page).toBe(1)
+  })
+
+  it.each([{}, { page: 1 }])('未加载技能错误回包 %j 保留分页和详情并通知完成，可重试原页', (pagination) => {
+    vi.mocked(yakitNotify).mockClear()
+    const req = makeHandlerRequest({
+      res: makeGrpcJsonRes(
+        'structured',
+        { skills: [], query: '', error: 'failed to read skill directory', ...pagination },
+        { NodeId: 'skill_available', IsSync: true, SyncID: 'failed-page' },
+      ),
+    })
+    req.rawData.availableSkills = {
+      skills: [{ name: 'existing', description: '', skill_load_state: 'metadata' }],
+      total: 132,
+      page: 1,
+      page_size: 100,
+      has_more: true,
+    }
+    const previous = req.rawData.availableSkills
+    const detail = { name: 'existing', loaded: false, skill_md: '# existing' }
+    req.rawData.skillDetails.set('existing', detail)
+
+    aiTaskDetailDataHandlers.skill_available(req)
+
+    expect(req.rawData.availableSkills).toBe(previous)
+    expect(req.rawData.skillDetails.get('existing')).toBe(detail)
+    expect(req.store.getState().availableSkillsUpdate).toBe(1)
+    expect(req.store.getState().loadedSkillsUpdate).toBe(0)
+    expect(yakitNotify).toHaveBeenCalledExactlyOnceWith('error', 'handleAvailableSkills:failed to read skill directory')
+
+    req.res = makeGrpcJsonRes(
+      'structured',
+      { skills: [makeSkillEntry('retry', 'metadata')], page: 2, page_size: 100, total: 132, has_more: false },
+      { NodeId: 'skill_available' },
+    )
+    aiTaskDetailDataHandlers.skill_available(req)
+    expect(req.rawData.availableSkills.page).toBe(2)
+    expect(req.rawData.availableSkills.skills.map((skill) => skill.name)).toEqual(['existing', 'retry'])
+    expect(req.store.getState().availableSkillsUpdate).toBe(2)
+    expect(yakitNotify).toHaveBeenCalledTimes(1)
   })
 
   it('未加载技能忽略跳页响应，不丢失已获取的分页数据', () => {

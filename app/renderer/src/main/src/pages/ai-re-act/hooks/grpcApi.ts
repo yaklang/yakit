@@ -837,6 +837,13 @@ export declare namespace AIAgentGrpcApi {
     has_more: boolean
   }
 
+  /** 可加载技能查询失败时返回错误，不携带分页信息 */
+  export interface SkillAvailableErrorResponse {
+    skills: SkillListEntry[]
+    query: string
+    error: string
+  }
+
   /** skill_detail 返回的技能详情；有 error 时展示后端错误 */
   export interface SkillDetail {
     name: string
