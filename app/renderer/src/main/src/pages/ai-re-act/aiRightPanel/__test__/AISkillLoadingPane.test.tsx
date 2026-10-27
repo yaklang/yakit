@@ -9,6 +9,8 @@ import type { AISkillListItem } from '../AISkillLoadingPane/aiSkillList/type'
 import type * as AISkillLoadingPaneModule from '../AISkillLoadingPane/AISkillLoadingPane'
 import { compileReactModule } from '@/utils/__test__/helpers/compileReactModule'
 import { DEFAULT_SKILL_PAGE_SIZE } from '../../hooks/defaultConstant'
+import { aiTaskDetailDataHandlers } from '../../hooks/grpcStreamHandler/aiTaskDetail'
+import { makeGrpcJsonRes, makeHandlerRequest } from '../../hooks/__test__/fixtures'
 
 const store = createStore(() => ({
   sessionId: 'session-1',
@@ -82,6 +84,50 @@ const acknowledge = (syncId: string) => {
   store.setState((state) => ({ syncIDUpdate: state.syncIDUpdate + 1 }))
 }
 const names = () => virtuosoList.mock.lastCall![0].data.map((skill: AISkillListItem) => skill.name)
+
+const createDirectory = (count: number) => {
+  const catalog = Array.from({ length: count }, (_, index) =>
+    createSkill(`scan-${String(index + 1).padStart(3, '0')}`, 'metadata'),
+  )
+  const loaded = new Set<string>()
+  const request = makeHandlerRequest({ res: makeGrpcJsonRes('structured', {}) })
+  sessions.set('session-1', request.rawData)
+  const available = () => catalog.filter((skill) => !loaded.has(skill.name))
+  const deliver = (page: number) => {
+    const remaining = available()
+    request.res = makeGrpcJsonRes(
+      'structured',
+      {
+        skills: remaining
+          .slice((page - 1) * DEFAULT_SKILL_PAGE_SIZE, page * DEFAULT_SKILL_PAGE_SIZE)
+          .map((skill) => ({ ...skill, data: { token_count: 0 } })),
+        total: remaining.length,
+        page,
+        page_size: DEFAULT_SKILL_PAGE_SIZE,
+        has_more: page * DEFAULT_SKILL_PAGE_SIZE < remaining.length,
+      },
+      { NodeId: 'skill_available' },
+    )
+    aiTaskDetailDataHandlers.skill_available(request)
+    store.setState({ availableSkillsUpdate: request.store.getState().availableSkillsUpdate })
+  }
+  deliver(1)
+  return { available, loaded, deliver }
+}
+
+const finishPage = async (directory: ReturnType<typeof createDirectory>, order: string) => {
+  const { SyncID, SyncJsonInput } = onSend.mock.lastCall![0].params
+  const { page } = JSON.parse(SyncJsonInput)
+  if (order === 'receipt-first') {
+    act(() => acknowledge(SyncID))
+    await act(async () => vi.advanceTimersByTimeAsync(300))
+    act(() => directory.deliver(page))
+  } else {
+    act(() => directory.deliver(page))
+    act(() => acknowledge(SyncID))
+    await act(async () => vi.advanceTimersByTimeAsync(300))
+  }
+}
 
 beforeEach(() => {
   vi.useFakeTimers()
@@ -880,18 +926,187 @@ describe('AISkillLoadingPane session skills', () => {
     expect(onSend.mock.lastCall![0].params.SyncType).toBe('skill_loaded_sync')
   })
 
-  it('添加结束只刷新当前未加载分组', async () => {
-    store.setState({ inViewport: true })
+  it.each(['receipt-first', 'data-first'])('添加完成立即刷新第一页，保留搜索且后续分页不漏项：%s', async (order) => {
+    const directory = createDirectory(125)
     render(<AISkillLoadingPane loadState="metadata" />)
-    act(() => acknowledge(onSend.mock.lastCall![0].params.SyncID))
-    await act(async () => vi.advanceTimersByTimeAsync(300))
+    fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'scan' } })
+    await finishPage(directory, order)
+    const list = screen.getByRole('list')
+    list.scrollTop = 180
     onSend.mockClear()
-    fireEvent.click(screen.getByRole('button', { name: 'YakitButton.add' }))
-    expect(onSend.mock.lastCall![0].params.SyncType).toBe('load_skill_sync')
+    fireEvent.click(screen.getAllByRole('button', { name: 'YakitButton.add' })[9])
+    directory.loaded.add('scan-010')
     act(() => acknowledge(onSend.mock.lastCall![0].params.SyncID))
     await act(async () => vi.advanceTimersByTimeAsync(300))
     expect(onSend).toHaveBeenCalledTimes(2)
-    expect(onSend.mock.lastCall![0].params.SyncType).toBe('skill_available_sync')
+    expect(JSON.parse(onSend.mock.lastCall![0].params.SyncJsonInput)).toEqual({
+      page: 1,
+      page_size: DEFAULT_SKILL_PAGE_SIZE,
+      query: 'scan',
+    })
+    expect(list.scrollTop).toBe(0)
+    await finishPage(directory, order)
+    expect(names()).toEqual(
+      directory
+        .available()
+        .slice(0, 50)
+        .map((skill) => skill.name),
+    )
+    expect(names()).toContain('scan-051')
+    expect(onSend).toHaveBeenCalledTimes(2)
+    fireEvent.scroll(screen.getByTestId('skill-virtuoso'))
+    expect(JSON.parse(onSend.mock.lastCall![0].params.SyncJsonInput).page).toBe(2)
+    await finishPage(directory, order)
+    expect(names()).toEqual(
+      directory
+        .available()
+        .slice(0, 100)
+        .map((skill) => skill.name),
+    )
+    expect(names()).toContain('scan-051')
+    expect(names()).not.toContain('scan-010')
+    expect(names()).toContain('scan-101')
+    expect(new Set(names()).size).toBe(100)
+    expect(list.scrollTop).toBe(0)
+    expect(screen.getByRole('searchbox')).toHaveValue('scan')
+    expect(onSend.mock.calls.slice(1).map(([call]) => JSON.parse(call.params.SyncJsonInput))).toEqual([
+      { page: 1, page_size: DEFAULT_SKILL_PAGE_SIZE, query: 'scan' },
+      { page: 2, page_size: DEFAULT_SKILL_PAGE_SIZE, query: 'scan' },
+    ])
+  })
+
+  it.each([
+    { order: 'receipt-first', pendingLoadMore: false },
+    { order: 'receipt-first', pendingLoadMore: true },
+    { order: 'data-first', pendingLoadMore: false },
+    { order: 'data-first', pendingLoadMore: true },
+  ])(
+    '添加后等待在途分页数据和回执再刷新，旧末页不阻止刷新：$order，待分页=$pendingLoadMore',
+    async ({ order, pendingLoadMore }) => {
+      const directory = createDirectory(100)
+      render(<AISkillLoadingPane loadState="metadata" />)
+      const list = screen.getByRole('list')
+      list.scrollTop = 180
+      fireEvent.scroll(screen.getByTestId('skill-virtuoso'))
+      const pageSyncId = onSend.mock.lastCall![0].params.SyncID
+      fireEvent.click(screen.getAllByRole('button', { name: 'YakitButton.add' })[9])
+      directory.loaded.add('scan-010')
+      if (pendingLoadMore) act(() => virtuosoList.mock.lastCall![0].endReached())
+      act(() => acknowledge(onSend.mock.lastCall![0].params.SyncID))
+      await act(async () => vi.advanceTimersByTimeAsync(300))
+      expect(onSend).toHaveBeenCalledTimes(2)
+      if (order === 'receipt-first') {
+        act(() => acknowledge(pageSyncId))
+        await act(async () => vi.advanceTimersByTimeAsync(300))
+        expect(onSend).toHaveBeenCalledTimes(2)
+        act(() => directory.deliver(2))
+      } else {
+        act(() => directory.deliver(2))
+        expect(onSend).toHaveBeenCalledTimes(2)
+        act(() => acknowledge(pageSyncId))
+        await act(async () => vi.advanceTimersByTimeAsync(300))
+      }
+      expect(onSend).toHaveBeenCalledTimes(3)
+      expect(JSON.parse(onSend.mock.lastCall![0].params.SyncJsonInput).page).toBe(1)
+      expect(list.scrollTop).toBe(0)
+      await finishPage(directory, order)
+      expect(names()).toEqual(
+        directory
+          .available()
+          .slice(0, 50)
+          .map((skill) => skill.name),
+      )
+      expect(onSend).toHaveBeenCalledTimes(3)
+      fireEvent.scroll(screen.getByTestId('skill-virtuoso'))
+      expect(JSON.parse(onSend.mock.lastCall![0].params.SyncJsonInput).page).toBe(2)
+      await finishPage(directory, order)
+      expect(names()).toEqual(directory.available().map((skill) => skill.name))
+      expect(names()).toContain('scan-051')
+      expect(names()).not.toContain('scan-010')
+      expect(new Set(names()).size).toBe(99)
+      expect(list.scrollTop).toBe(0)
+      expect(screen.getByRole('status')).toHaveTextContent('YakitEmpty.noMoreData')
+      expect(onSend).toHaveBeenCalledTimes(4)
+    },
+  )
+
+  it('添加后等待旧分页期间修改搜索词，旧请求完成后仅查询新关键词第一页', async () => {
+    const directory = createDirectory(125)
+    render(<AISkillLoadingPane loadState="metadata" />)
+    fireEvent.scroll(screen.getByTestId('skill-virtuoso'))
+    const pageSyncId = onSend.mock.lastCall![0].params.SyncID
+    fireEvent.click(screen.getAllByRole('button', { name: 'YakitButton.add' })[9])
+    directory.loaded.add('scan-010')
+    act(() => acknowledge(onSend.mock.lastCall![0].params.SyncID))
+    await act(async () => vi.advanceTimersByTimeAsync(300))
+    fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'other' } })
+    expect(onSend).toHaveBeenCalledTimes(2)
+    act(() => directory.deliver(2))
+    act(() => acknowledge(pageSyncId))
+    await act(async () => vi.advanceTimersByTimeAsync(300))
+    expect(JSON.parse(onSend.mock.lastCall![0].params.SyncJsonInput)).toEqual({
+      page: 1,
+      page_size: DEFAULT_SKILL_PAGE_SIZE,
+      query: 'other',
+    })
+    expect(onSend).toHaveBeenCalledTimes(3)
+  })
+
+  it('添加后等待旧分页期间切换会话，旧响应不向新会话续发分页', async () => {
+    const directory = createDirectory(125)
+    render(<AISkillLoadingPane loadState="metadata" />)
+    fireEvent.scroll(screen.getByTestId('skill-virtuoso'))
+    const pageSyncId = onSend.mock.lastCall![0].params.SyncID
+    fireEvent.click(screen.getAllByRole('button', { name: 'YakitButton.add' })[9])
+    directory.loaded.add('scan-010')
+    act(() => acknowledge(onSend.mock.lastCall![0].params.SyncID))
+    await act(async () => vi.advanceTimersByTimeAsync(300))
+    sessions.set('session-2', {
+      loadedSkills: { skills: [], total: 0 },
+      skillDetails: new Map(),
+      availableSkills: {
+        skills: [createSkill('new-session-skill', 'metadata')],
+        total: 1,
+        page: 1,
+        page_size: DEFAULT_SKILL_PAGE_SIZE,
+        has_more: false,
+      },
+    })
+    act(() => store.setState({ sessionId: 'session-2' }))
+    act(() => directory.deliver(2))
+    act(() => acknowledge(pageSyncId))
+    await act(async () => vi.advanceTimersByTimeAsync(300))
+    expect(onSend).toHaveBeenCalledTimes(2)
+    expect(names()).toEqual(['new-session-skill'])
+    expect(screen.getByRole('status')).toHaveTextContent('YakitEmpty.noMoreData')
+  })
+
+  it('添加后的自动刷新发送被拒绝时可手动刷新重试', async () => {
+    const directory = createDirectory(125)
+    render(<AISkillLoadingPane loadState="metadata" />)
+    const list = screen.getByRole('list')
+    list.scrollTop = 180
+    fireEvent.click(screen.getAllByRole('button', { name: 'YakitButton.add' })[9])
+    directory.loaded.add('scan-010')
+    onSend.mockReturnValueOnce(false)
+    act(() => acknowledge(onSend.mock.lastCall![0].params.SyncID))
+    await act(async () => vi.advanceTimersByTimeAsync(300))
+    expect(onSend).toHaveBeenCalledTimes(2)
+    expect(onSend.mock.results.at(-1)?.value).toBe(false)
+    expect(JSON.parse(onSend.mock.lastCall![0].params.SyncJsonInput).page).toBe(1)
+    expect(list.scrollTop).toBe(180)
+    expect(screen.getByRole('button', { name: 'YakitButton.refresh' })).not.toBeDisabled()
+    fireEvent.click(screen.getByRole('button', { name: 'YakitButton.refresh' }))
+    expect(onSend).toHaveBeenCalledTimes(3)
+    expect(JSON.parse(onSend.mock.lastCall![0].params.SyncJsonInput).page).toBe(1)
+    await finishPage(directory, 'data-first')
+    expect(names()).toEqual(
+      directory
+        .available()
+        .slice(0, 50)
+        .map((skill) => skill.name),
+    )
+    expect(list.scrollTop).toBe(0)
   })
 
   it('两个独立更新计数器分别驱动对应分组数据，更新不会触发查询', () => {

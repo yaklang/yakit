@@ -46,6 +46,7 @@ export const AISkillLoadingPane: FC<AISkillLoadingPaneProps> = ({ loadState, onT
   const waitingAvailableDataRef = useRef(false)
   const requestedQueryRef = useRef('')
   const loadMorePendingRef = useRef(false)
+  const refreshPendingRef = useRef(false)
   const [inViewport] = useInViewport(contentRef)
   const skillGroup = isLoaded ? rawData.loadedSkills : rawData.availableSkills
 
@@ -72,6 +73,7 @@ export const AISkillLoadingPane: FC<AISkillLoadingPaneProps> = ({ loadState, onT
   useEffect(() => {
     requestedQueryRef.current = ''
     loadMorePendingRef.current = false
+    refreshPendingRef.current = false
   }, [sessionId])
 
   useEffect(() => {
@@ -96,20 +98,27 @@ export const AISkillLoadingPane: FC<AISkillLoadingPaneProps> = ({ loadState, onT
     setLoadingMore(page > 1)
     if (page > 1) markLoadMoreSending(syncId)
     else markAvailableSending(syncId)
+    if (page === 1 && !addLoading) refreshPendingRef.current = false
     return true
   })
 
   const onLoadMore = useMemoizedFn(() => {
     const { page, has_more } = rawData.availableSkills
     const queryChanged = query !== requestedQueryRef.current
-    if (!sessionId || (!queryChanged && !has_more)) return
+    if (!sessionId || (!refreshPendingRef.current && !queryChanged && !has_more)) return
     if (sendBlocked || availableLoading || loadMoreSyncLoading || addLoading) {
-      loadMorePendingRef.current = true
+      if (!refreshPendingRef.current) loadMorePendingRef.current = true
       return
     }
     // 等待请求页的数据更新，SyncID 回执不代表分页数据已到达。
     if (waitingAvailableDataRef.current) return
-    loadMorePendingRef.current = !requestAvailablePage(queryChanged ? 1 : page + 1)
+    loadMorePendingRef.current = !requestAvailablePage(refreshPendingRef.current || queryChanged ? 1 : page + 1)
+  })
+
+  const onAdd = useMemoizedFn((name: string) => {
+    refreshPendingRef.current = true
+    loadMorePendingRef.current = false
+    onAddSkill(name)
   })
 
   const onRefresh = useMemoizedFn(() => {
@@ -132,12 +141,12 @@ export const AISkillLoadingPane: FC<AISkillLoadingPaneProps> = ({ loadState, onT
   })
 
   useEffect(() => {
-    if (inViewport && !addLoading) onRefresh()
-  }, [inViewport, addLoading, sessionId, isLoaded])
+    if (inViewport) onRefresh()
+  }, [inViewport, sessionId, isLoaded])
 
   useEffect(() => {
     if (isLoaded || sendBlocked || availableLoading || loadMoreSyncLoading || addLoading) return
-    if (loadMorePendingRef.current || query !== requestedQueryRef.current) onLoadMore()
+    if (refreshPendingRef.current || loadMorePendingRef.current || query !== requestedQueryRef.current) onLoadMore()
   }, [
     sendBlocked,
     availableLoading,
@@ -182,7 +191,7 @@ export const AISkillLoadingPane: FC<AISkillLoadingPaneProps> = ({ loadState, onT
           key={`${sessionId}:${loadState}:${keyword}`}
           data={list}
           loadState={loadState}
-          onAdd={onAddSkill}
+          onAdd={onAdd}
           addLoading={addLoading}
           addingSkill={addingSkill}
           onEndReached={isLoaded ? undefined : onLoadMore}
