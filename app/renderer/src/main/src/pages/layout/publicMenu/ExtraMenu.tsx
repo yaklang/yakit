@@ -156,7 +156,6 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
           <>
             <YakitPopover
               classNames={{ root: styles['menu-popover'] }}
-              styles={{ root: { paddingTop: 2 } }}
               placement={'bottom'}
               trigger={'click'}
               content={importMenu}
@@ -256,7 +255,6 @@ export const OrdinaryMenu: React.FC<OrdinaryMenuProps> = React.memo((props) => {
         <YakitPopover
           key={itemKey}
           classNames={{ root: classNames(styles['menu-popover'], styles['menu-popover-no-arrow']) }}
-          styles={{ root: { paddingTop: 2 } }}
           placement="bottomRight"
           trigger="click"
           content={

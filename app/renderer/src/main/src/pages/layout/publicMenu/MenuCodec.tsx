@@ -183,7 +183,6 @@ export const MenuCodec: React.FC<MenuCodecProps> = React.memo((props) => {
       <div className={styles['func-btn-body']}>
         <YakitPopover
           classNames={{ root: styles['codec-menu-popover'] }}
-          styles={{ root: { paddingTop: 2 } }}
           placement="bottomLeft"
           content={decodeMenu}
           open={codeShow}
@@ -198,7 +197,6 @@ export const MenuCodec: React.FC<MenuCodecProps> = React.memo((props) => {
         </YakitPopover>
         <YakitPopover
           classNames={{ root: styles['codec-menu-popover'] }}
-          styles={{ root: { paddingTop: 2 } }}
           placement="bottomLeft"
           content={codeMenu}
           open={decodeShow}
