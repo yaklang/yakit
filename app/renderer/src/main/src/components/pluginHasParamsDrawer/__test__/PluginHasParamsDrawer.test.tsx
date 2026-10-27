@@ -61,13 +61,26 @@ import PluginHasParamsDrawer, { PluginHasParamsModal } from '../PluginHasParamsD
 
 const requiredParams: YakParamProps[] = [
   { Field: 'b1', FieldVerbose: '布尔参数', TypeVerbose: 'boolean', DefaultValue: '', Help: '' },
+  { Field: 'n1', FieldVerbose: '数字参数', TypeVerbose: 'uint', DefaultValue: '', Help: '' },
+  { Field: 'empty', FieldVerbose: '空字符串', TypeVerbose: 'string', DefaultValue: '', Help: '' },
   { Field: 's1', FieldVerbose: '空值参数', TypeVerbose: 'string', DefaultValue: '', Help: '' },
   { Field: 's2', FieldVerbose: '未触碰参数', TypeVerbose: 'string', DefaultValue: '', Help: '' },
 ]
-// s1 的 null 不在 CustomPluginExecuteFormValue 联合类型内，用于覆盖运行时对 null 的防御分支
-const initFormValue = { b1: false, s1: null } as unknown as CustomPluginExecuteFormValue
+// null / undefined 是自有属性，isNil 会丢掉；false、0、'' 不是 nil，必须留下
+const initFormValue = {
+  b1: false,
+  n1: 0,
+  empty: '',
+  s1: null,
+  s2: undefined,
+} as unknown as CustomPluginExecuteFormValue
+const keptParams = [
+  { Key: 'b1', Value: false },
+  { Key: 'n1', Value: 0 },
+  { Key: 'empty', Value: '' },
+]
 
-describe('插件执行参数过滤（false 透传 / undefined 与 null 丢弃）', () => {
+describe('插件执行参数过滤（isNil 只丢弃 null 与 undefined）', () => {
   beforeAll(() => {
     if (!window.matchMedia) {
       window.matchMedia = (() => ({
@@ -89,7 +102,7 @@ describe('插件执行参数过滤（false 透传 / undefined 与 null 丢弃）
   })
   afterEach(cleanup)
 
-  it('Drawer 确定后 false 布尔参数透传、null 与 undefined 参数被排除', async () => {
+  it('Drawer 确定后保留 false、0 与空字符串，排除 null 与 undefined', async () => {
     const onOkParamsDrawer = vi.fn()
     render(
       <PluginHasParamsDrawer
@@ -108,10 +121,10 @@ describe('插件执行参数过滤（false 透传 / undefined 与 null 丢弃）
 
     fireEvent.click(screen.getByText('YakitButton.ok'))
     await waitFor(() => expect(onOkParamsDrawer).toHaveBeenCalledTimes(1), { timeout: 4000 })
-    expect(onOkParamsDrawer).toHaveBeenCalledWith([{ Key: 'b1', Value: false }])
+    expect(onOkParamsDrawer).toHaveBeenCalledWith(keptParams)
   })
 
-  it('Modal 保存后 false 布尔参数透传、null 与 undefined 参数被排除', async () => {
+  it('Modal 保存后保留 false、0 与空字符串，排除 null 与 undefined', async () => {
     const onOkParamsModal = vi.fn()
     render(
       <PluginHasParamsModal
@@ -128,6 +141,6 @@ describe('插件执行参数过滤（false 透传 / undefined 与 null 丢弃）
 
     fireEvent.click(screen.getByText('YakitButton.save'))
     await waitFor(() => expect(onOkParamsModal).toHaveBeenCalledTimes(1), { timeout: 4000 })
-    expect(onOkParamsModal).toHaveBeenCalledWith(true, false, [{ Key: 'b1', Value: false }])
+    expect(onOkParamsModal).toHaveBeenCalledWith(true, false, keptParams)
   })
 })

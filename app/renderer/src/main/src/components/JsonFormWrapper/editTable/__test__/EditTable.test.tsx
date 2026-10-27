@@ -68,6 +68,38 @@ describe('EditTable 编辑回填', () => {
     expect(inputs[1]).toHaveValue('默认B')
   })
 
+  it('编辑行时缺失字段回填 false、0 与空字符串默认值', async () => {
+    const onChange = vi.fn()
+    const columnSchema: ColumnSchemaProps = {
+      items: {
+        properties: {
+          a: { type: 'string', title: '列A' },
+          flag: { type: 'boolean', title: '开关', default: false },
+          count: { type: 'string', title: '数量', default: 0 },
+          note: { type: 'string', title: '备注', default: '' },
+        },
+        require: [],
+      },
+    }
+    const { container } = render(
+      <EditTable columnSchema={columnSchema} uiSchema={{}} value={[{ a: 'z' }]} onChange={onChange} />,
+    )
+
+    await waitFor(() => expect(screen.getByText('z')).toBeTruthy())
+    fireEvent.doubleClick(screen.getByText('z').closest('tr') as HTMLElement)
+
+    await waitFor(() => expect(getRowInputs(container).length).toBe(4))
+    const inputs = getRowInputs(container)
+    expect(inputs[0]).toHaveValue('z')
+    expect(inputs[1]).not.toBeChecked()
+    expect(inputs[2]).toHaveValue('0')
+    expect(inputs[3]).toHaveValue('')
+
+    fireEvent(inputs[0], new FocusEvent('focusout', { bubbles: true }))
+    await waitFor(() => expect(onChange).toHaveBeenCalled(), { timeout: 2000 })
+    expect(onChange).toHaveBeenCalledWith([expect.objectContaining({ a: 'z', flag: false, count: 0, note: '' })])
+  })
+
   it('失焦保存后再编辑其他行，表单不残留上一行已改数据', async () => {
     const columnSchema: ColumnSchemaProps = {
       items: {

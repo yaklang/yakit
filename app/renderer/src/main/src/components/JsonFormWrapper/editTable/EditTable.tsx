@@ -120,7 +120,7 @@ interface PropertiesProps {
   [key: string]: {
     type: CellTypeProps
     title: string
-    default?: string
+    default?: string | number | boolean
     enum?: string[]
     description?: string
   }
@@ -251,9 +251,9 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
           width: widthObj?.[key],
         })
 
-        // 默认值赋值
-        if (properties[key]?.default) {
-          defObj[key] = properties[key]?.default
+        // false / 0 / '' 也是合法默认值，只排除未声明的 undefined
+        if (properties[key]?.default !== undefined) {
+          defObj[key] = properties[key].default
         }
       })
       setDefaultObj(defObj)
