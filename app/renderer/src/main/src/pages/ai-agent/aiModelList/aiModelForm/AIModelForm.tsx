@@ -111,7 +111,8 @@ export const getModelLabelByModelType = (t: (key: string) => string, type: AIMod
   }
 }
 export const buildAIConfigHealthCheckConfig = (values): ThirdPartyApplicationConfig => {
-  if (values.Type === YAK_SCRIPT_PROVIDER) return { Type: values.Type, Script: values.script }
+  if (values.Type === YAK_SCRIPT_PROVIDER)
+    return { Type: values.Type, Script: values.script, EnableNativeToolCalling: !!values.enable_native_tool_calling }
   const config: ThirdPartyApplicationConfig = {
     Type: values.Type || '',
     APIKey: values.api_key || '',
@@ -147,6 +148,7 @@ export const buildAIConfigHealthCheckConfig = (values): ThirdPartyApplicationCon
     'Headers',
     'ExtraParams',
     'script',
+    'enable_native_tool_calling',
     'webhook_url',
     'api_key_id', //测试不需要传这个给后端
     // 表单内部字段，不传给后端
@@ -172,7 +174,12 @@ export const buildAIConfigHealthCheckConfig = (values): ThirdPartyApplicationCon
 }
 
 export const buildAIConfigHealthCheckFormValues = (config: ThirdPartyApplicationConfig) => {
-  if (config.Type === YAK_SCRIPT_PROVIDER) return { Type: config.Type, script: config.Script ?? '' }
+  if (config.Type === YAK_SCRIPT_PROVIDER)
+    return {
+      Type: config.Type,
+      script: config.Script ?? '',
+      enable_native_tool_calling: !!config.EnableNativeToolCalling,
+    }
   return {
     Type: config.Type ?? '',
     api_key: config.APIKey ?? '',
@@ -212,7 +219,8 @@ const numberFields: Array<keyof ThirdPartyApplicationConfig> = [
 ]
 type NumberFieldKey = (typeof numberFields)[number]
 export const formValueToAIConfigProvider = (res): ThirdPartyApplicationConfig => {
-  if (res.Type === YAK_SCRIPT_PROVIDER) return { Type: res.Type, Script: res.script }
+  if (res.Type === YAK_SCRIPT_PROVIDER)
+    return { Type: res.Type, Script: res.script, EnableNativeToolCalling: !!res.enable_native_tool_calling }
   const date: ThirdPartyApplicationConfig = {
     Type: res.Type,
     APIKey: res.api_key,

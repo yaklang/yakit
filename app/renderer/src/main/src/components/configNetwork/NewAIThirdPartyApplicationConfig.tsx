@@ -373,6 +373,9 @@ const AIThirdPartyConfigReadonlyPanel: React.FC<AIThirdPartyConfigReadonlyPanelP
       {defaultItems.map((item) => renderFieldByTemplate(item))}
       {typeVal === YAK_SCRIPT_PROVIDER && (
         <>
+          <Form.Item label={t('ConfigNetworkPage.nativeToolCalling')}>
+            <YakitSwitch checked={!!merged.enable_native_tool_calling} disabled />
+          </Form.Item>
           <div className={styles['model-script-readonly']}>
             <span>{t('ConfigNetworkPage.modelScript')}</span>
             <YakitInput.TextArea readOnly value={merged.script ?? ''} autoSize={{ minRows: 6, maxRows: 12 }} />
@@ -418,6 +421,7 @@ export interface AIThirdPartyApplicationConfig {
   Headers?: KVPair[]
   ExtraParams?: KVPair[]
   script?: string
+  enable_native_tool_calling?: boolean
   /** 探测到的扩展思考强度（表单内部字段，由 NewAIThirdPartyApplicationConfigBase 自动写入） */
   _ProbedExtendedEfforts?: string[]
   /** 是否已对 xhigh/max 做过探测（表单内部字段） */
@@ -771,6 +775,7 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
 
     const initialValues = useMemo(() => {
       const copyFormValues = {
+        enable_native_tool_calling: false,
         ...formValues,
         script: formValues.script ?? providerExample,
       }

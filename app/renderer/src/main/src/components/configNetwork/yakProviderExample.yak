@@ -3,9 +3,12 @@
 // provider.ReadSSE(reader, callback(event, data)): decodes SSE only, not JSON.
 // provider.Retry(req, reason, retryAfter): marks failure; the host waits/retries.
 // provider.IsTransientError(err): checks temporary network failures.
-// req contains invocation data only: Context, RequestID, Prompt, RawMessages.
+// req contains invocation data only: Context, RequestID, Prompt, RawMessages, Tools, ToolChoice.
 // All endpoint, authentication, model and timeout choices belong to this source.
-// Output: return non-empty text OR emit(text)~ and return nil; never both.
+// Output: return text OR emit(text)~ and return nil; never both.
+// Native calls: enable the provider switch and return {content, tool_calls, finish_reason}.
+// tool_calls use {id, type:"function", function:{name, arguments:"JSON object"}}.
+// The host validates all calls before delivering them; never emit raw tool JSON.
 // emit accepts model content only. There is no separate reasoning emitter.
 // Errors: return error(...), never error text as a successful answer.
 // Set business options in this script. Rate/retry/debug are engine settings.
@@ -30,11 +33,18 @@ chat = func(req, emit) {
     timeoutSeconds = 240
     proxy = ""
     headers = {}
+    native = len(req.Tools) > 0
+    // This template uses complete JSON for native calls; custom SSE adapters must assemble deltas.
+    if native { mode = "json" }
     payload = {
         "model": model,
         "messages": [{"role": "user", "content": req.Prompt}],
         "stream": mode == "sse",
         "n": 1,
+    }
+    if native {
+        payload["tools"] = req.Tools
+        if req.ToolChoice != nil { payload["tool_choice"] = req.ToolChoice }
     }
     options = [poc.json(payload), poc.context(req.Context), poc.timeout(timeoutSeconds),
         poc.retryTimes(0), poc.redirectTimes(0), poc.save(false)]
@@ -70,10 +80,18 @@ chat = func(req, emit) {
         choices = json.New(body["choices"])~
         assert choices.IsArray() && len(body["choices"]) == 1, "Expected one completion choice"
         choice = body["choices"][0]
-        assert choice["finish_reason"] == "stop", "Completion did not finish normally"
         assert choice["message"] != nil, "Missing completion message"
-        assert choice["message"]["tool_calls"] == nil && choice["message"]["function_call"] == nil, "Native tool calls are unsupported by this example"
+        assert choice["message"]["function_call"] == nil, "Legacy function_call is unsupported"
         assert choice["message"]["refusal"] == nil || choice["message"]["refusal"] == "", "Model refused the request"
+        if native {
+            content = choice["message"]["content"]
+            if content == nil { content = "" }
+            calls = choice["message"]["tool_calls"]
+            if calls == nil { calls = [] }
+            return {"content": content, "tool_calls": calls, "finish_reason": choice["finish_reason"]}
+        }
+        assert choice["finish_reason"] == "stop", "Completion did not finish normally"
+        assert choice["message"]["tool_calls"] == nil, "Unexpected native calls in text mode"
         result = choice["message"]["content"]
     } else {
         // 3b. ReadSSE only decodes the envelope. This callback owns the LLM schema.

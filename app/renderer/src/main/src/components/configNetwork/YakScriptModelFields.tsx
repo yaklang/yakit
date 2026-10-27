@@ -1,6 +1,7 @@
 import type React from 'react'
 import { lazy, Suspense } from 'react'
 import { Form } from 'antd'
+import { YakitSwitch } from '../yakitUI/YakitSwitch/YakitSwitch'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import styles from './ConfigNetworkPage.module.scss'
 
@@ -26,6 +27,14 @@ export const YakScriptModelFields: React.FC<{ disabled?: boolean }> = ({ disable
   const { t } = useI18nNamespaces(['configNetwork'])
   return (
     <>
+      <Form.Item
+        label={t('ConfigNetworkPage.nativeToolCalling')}
+        name="enable_native_tool_calling"
+        valuePropName="checked"
+        extra={t('ConfigNetworkPage.nativeToolCallingHelp')}
+      >
+        <YakitSwitch disabled={disabled} />
+      </Form.Item>
       <Form.Item
         label={t('ConfigNetworkPage.modelScript')}
         name="script"

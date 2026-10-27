@@ -3456,6 +3456,8 @@ message ThirdPartyApplicationConfig {
   optional bool EnableThinkingOpt = 24;
   // yak-script: the complete provider implementation; connection and model options live in the source.
   string Script = 25;
+  // yak-script: opt into native tool_calls; false uses text actions.
+  bool EnableNativeToolCalling = 26;
 }
 
 message DiagnoseNetworkRequest {

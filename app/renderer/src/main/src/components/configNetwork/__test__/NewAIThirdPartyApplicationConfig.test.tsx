@@ -92,7 +92,7 @@ beforeEach(() => {
 
 describe('Yak script model configuration', () => {
   const script = 'chat = func(req, emit) { return "hello" }'
-  const provider = { Type: 'yak-script', Script: script }
+  const provider = { Type: 'yak-script', Script: script, EnableNativeToolCalling: false }
 
   it('adds a script model with the default editor template through the real save flow', async () => {
     render(<AIModelForm onClose={vi.fn()} />)
@@ -102,6 +102,7 @@ describe('Yak script model configuration', () => {
     fireEvent.change(screen.getByRole('textbox', { name: 'ConfigNetworkPage.scriptConfigName' }), {
       target: { value: 'script-model' },
     })
+    expect(screen.getByRole('switch', { name: 'ConfigNetworkPage.nativeToolCalling' })).not.toBeChecked()
     const editor = await screen.findByLabelText('yak-model-script')
     expect((editor as HTMLTextAreaElement).value).toContain('provider.ReadSSE')
     expect(screen.queryByText('ConfigNetworkPage.scriptTemplate')).not.toBeInTheDocument()
@@ -110,11 +111,15 @@ describe('Yak script model configuration', () => {
     await waitFor(() => expect(mocks.save).toHaveBeenCalledOnce())
     const saved = mocks.save.mock.calls[0][0].IntelligentModels[0]
     expect(saved.ModelName).toBe('script-model')
-    expect(saved.Provider).toEqual({ Type: 'yak-script', Script: expect.stringContaining('provider.ReadSSE') })
+    expect(saved.Provider).toEqual({
+      Type: 'yak-script',
+      Script: expect.stringContaining('provider.ReadSSE'),
+      EnableNativeToolCalling: false,
+    })
     expect(mocks.invoke).not.toHaveBeenCalled()
   })
 
-  it('round-trips only script source without connection fields', async () => {
+  it('round-trips script and protocol switch without connection fields', async () => {
     const ref = createRef<{ form: FormInstance }>()
     render(
       <NewAIThirdPartyApplicationConfigBase
@@ -137,7 +142,11 @@ describe('Yak script model configuration', () => {
     const saved = formValueToAIConfigProvider(values)
     expect(saved).toEqual(provider)
     expect(buildAIConfigHealthCheckConfig(values)).toEqual(provider)
-    expect(buildAIConfigHealthCheckFormValues(saved)).toEqual({ Type: 'yak-script', script })
+    expect(buildAIConfigHealthCheckFormValues(saved)).toEqual({
+      Type: 'yak-script',
+      script,
+      enable_native_tool_calling: false,
+    })
     for (const label of ['ApiKey', 'BaseURL', 'Endpoint', 'Header', 'ConfigNetworkPage.scriptTimeout']) {
       expect(screen.queryByLabelText(label)).not.toBeInTheDocument()
     }
@@ -173,7 +182,8 @@ describe('Yak script model configuration', () => {
     })
   })
 
-  it.each([false, true])('tests and saves the edited effective script (move tier=%s)', async (moveTier) => {
+  it.each([false, true])('tests and saves the edited script and switch (native=%s)', async (enableNative) => {
+    const moveTier = enableNative
     const edited = 'chat = func(req, emit) { emit("edited"); return nil }'
     const item = {
       ModelName: 'my-script',
@@ -188,6 +198,7 @@ describe('Yak script model configuration', () => {
     const editor = await screen.findByLabelText('yak-model-script')
     expect(editor).toHaveValue(script)
     fireEvent.change(editor, { target: { value: edited } })
+    if (enableNative) fireEvent.click(screen.getByRole('switch', { name: 'ConfigNetworkPage.nativeToolCalling' }))
     if (moveTier) {
       fireEvent.mouseDown(screen.getByRole('combobox', { name: 'ConfigNetworkPage.modelType' }))
       fireEvent.click(await screen.findByTitle('ConfigNetworkPage.lightweightModel'))
@@ -196,14 +207,14 @@ describe('Yak script model configuration', () => {
     await waitFor(() => expect(mocks.save).toHaveBeenCalledOnce())
     expect(mocks.healthCheck).toHaveBeenCalledWith(
       expect.objectContaining({
-        Config: { Type: 'yak-script', Script: edited },
+        Config: { Type: 'yak-script', Script: edited, EnableNativeToolCalling: enableNative },
       }),
     )
     const config = mocks.save.mock.calls[0][0]
     const saved = (moveTier ? config.LightweightModels : config.IntelligentModels)[0]
     if (moveTier) expect(config.IntelligentModels).toEqual([])
     expect(saved.ExtraParams).toEqual([])
-    expect(saved.Provider).toEqual({ Type: 'yak-script', Script: edited })
+    expect(saved.Provider).toEqual({ Type: 'yak-script', Script: edited, EnableNativeToolCalling: enableNative })
     expect(onClose).toHaveBeenCalledOnce()
     unmount()
     render(
@@ -214,9 +225,13 @@ describe('Yak script model configuration', () => {
       />,
     )
     expect(await screen.findByLabelText('yak-model-script')).toHaveValue(edited)
+    expect(screen.getByRole('switch', { name: 'ConfigNetworkPage.nativeToolCalling' })).toHaveAttribute(
+      'aria-checked',
+      String(enableNative),
+    )
   })
 
-  it('shows source only in the read-only view', () => {
+  it('shows source and disabled protocol switch in the read-only view', () => {
     render(
       <NewAIThirdPartyApplicationConfigBase
         readOnly
@@ -228,6 +243,7 @@ describe('Yak script model configuration', () => {
       />,
     )
     expect(screen.getByDisplayValue(script)).toBeInTheDocument()
+    expect(screen.getByRole('switch')).toBeDisabled()
     expect(screen.queryByText('ConfigNetworkPage.advancedConfigTitle')).not.toBeInTheDocument()
     expect(screen.queryByText('ConfigNetworkPage.scriptTimeout')).not.toBeInTheDocument()
   })
