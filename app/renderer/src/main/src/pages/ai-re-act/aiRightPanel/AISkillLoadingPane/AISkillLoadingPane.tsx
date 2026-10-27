@@ -31,13 +31,15 @@ export const AISkillLoadingPane: FC<AISkillLoadingPaneProps> = ({ loadState, onT
   const { onSend } = useAIAgentDispatcher()
   const { loading: loadedLoading, markSending: markLoadedSending } = useSyncLoadingState()
   const { loading: availableLoading, markSending: markAvailableSending } = useSyncLoadingState()
-  const refreshLoading = isLoaded ? loadedLoading : availableLoading
+  const { loading: loadMoreSyncLoading, markSending: markLoadMoreSending } = useSyncLoadingState()
   const { addLoading, addingSkill, onAddSkill } = useSkillLoading()
   const loadedSkillsUpdate = useStore(store, (state) => state.loadedSkillsUpdate)
   const availableSkillsUpdate = useStore(store, (state) => state.availableSkillsUpdate)
   const sendBlocked = useStore(store, (state) => state.initLoading || state.grpcLoadMoreLoading)
   const [keyword, setKeyword] = useState('')
   const [sortOrder, setSortOrder] = useState<AISkillSortOrder>()
+  const [loadingMore, setLoadingMore] = useState(false)
+  const refreshLoading = isLoaded ? loadedLoading : availableLoading
   const query = keyword.trim()
 
   const contentRef = useRef<HTMLDivElement>(null)
@@ -72,6 +74,10 @@ export const AISkillLoadingPane: FC<AISkillLoadingPaneProps> = ({ loadState, onT
     loadMorePendingRef.current = false
   }, [sessionId])
 
+  useEffect(() => {
+    if (!loadMoreSyncLoading && !waitingAvailableDataRef.current) setLoadingMore(false)
+  }, [loadMoreSyncLoading, availableSkillsUpdate])
+
   const requestAvailablePage = useMemoizedFn((page: number) => {
     const syncId = randomString(8)
     const sent = onSend({
@@ -87,7 +93,9 @@ export const AISkillLoadingPane: FC<AISkillLoadingPaneProps> = ({ loadState, onT
     if (!sent) return false
     waitingAvailableDataRef.current = true
     requestedQueryRef.current = query
-    markAvailableSending(syncId)
+    setLoadingMore(page > 1)
+    if (page > 1) markLoadMoreSending(syncId)
+    else markAvailableSending(syncId)
     return true
   })
 
@@ -95,7 +103,7 @@ export const AISkillLoadingPane: FC<AISkillLoadingPaneProps> = ({ loadState, onT
     const { page, has_more } = rawData.availableSkills
     const queryChanged = query !== requestedQueryRef.current
     if (!sessionId || (!queryChanged && !has_more)) return
-    if (sendBlocked || availableLoading || addLoading) {
+    if (sendBlocked || availableLoading || loadMoreSyncLoading || addLoading) {
       loadMorePendingRef.current = true
       return
     }
@@ -105,7 +113,7 @@ export const AISkillLoadingPane: FC<AISkillLoadingPaneProps> = ({ loadState, onT
   })
 
   const onRefresh = useMemoizedFn(() => {
-    if (!sessionId || refreshLoading) return
+    if (!sessionId || refreshLoading || (!isLoaded && loadingMore)) return
     if (!isLoaded) {
       if (requestAvailablePage(1)) loadMorePendingRef.current = false
       return
@@ -128,9 +136,18 @@ export const AISkillLoadingPane: FC<AISkillLoadingPaneProps> = ({ loadState, onT
   }, [inViewport, addLoading, sessionId, isLoaded])
 
   useEffect(() => {
-    if (isLoaded || sendBlocked || availableLoading || addLoading) return
+    if (isLoaded || sendBlocked || availableLoading || loadMoreSyncLoading || addLoading) return
     if (loadMorePendingRef.current || query !== requestedQueryRef.current) onLoadMore()
-  }, [sendBlocked, availableLoading, addLoading, availableSkillsUpdate, sessionId, isLoaded, keyword])
+  }, [
+    sendBlocked,
+    availableLoading,
+    loadMoreSyncLoading,
+    addLoading,
+    availableSkillsUpdate,
+    sessionId,
+    isLoaded,
+    keyword,
+  ])
 
   return (
     <div className={styles['content']} ref={contentRef}>
@@ -151,7 +168,7 @@ export const AISkillLoadingPane: FC<AISkillLoadingPaneProps> = ({ loadState, onT
             aria-label={t('YakitButton.refresh')}
             icon={<RefreshOutlined />}
             loading={refreshLoading}
-            disabled={refreshLoading}
+            disabled={refreshLoading || (!isLoaded && loadingMore)}
             onClick={() => {
               rawData.skillDetails.clear()
               onRefresh()
@@ -169,6 +186,9 @@ export const AISkillLoadingPane: FC<AISkillLoadingPaneProps> = ({ loadState, onT
           addLoading={addLoading}
           addingSkill={addingSkill}
           onEndReached={isLoaded ? undefined : onLoadMore}
+          refreshLoading={refreshLoading}
+          loadingMore={!isLoaded && loadingMore}
+          hasMore={isLoaded ? undefined : rawData.availableSkills.has_more}
         />
       </YakitSpin>
     </div>

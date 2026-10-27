@@ -87,6 +87,51 @@ afterAll(() => vi.unstubAllGlobals())
 const getVirtualList = () => screen.getByRole('list').querySelector('[data-virtuoso-scroller]')
 
 describe('AISkillList', () => {
+  it('刷新时滚动到顶部，追加分页数据时保留滚动位置', () => {
+    const data = createSkills(20)
+    const { rerender } = render(<AISkillList source="right-panel" data={data} loadState="metadata" />)
+    const list = screen.getByRole('list')
+    list.scrollTop = 180
+    rerender(<AISkillList source="right-panel" data={data} loadState="metadata" refreshLoading />)
+    expect(list.scrollTop).toBe(0)
+
+    rerender(<AISkillList source="right-panel" data={data} loadState="metadata" />)
+    list.scrollTop = 180
+    rerender(<AISkillList source="right-panel" data={data} loadState="metadata" loadingMore />)
+    expect(list.scrollTop).toBe(180)
+    rerender(<AISkillList source="right-panel" data={createSkills(40)} loadState="metadata" />)
+    expect(list.scrollTop).toBe(180)
+  })
+
+  it('分页底部依次展示加载中和暂无更多数据', () => {
+    const data = createSkills(2)
+    const { rerender } = render(<AISkillList source="right-panel" data={data} loadState="metadata" hasMore />)
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
+
+    rerender(<AISkillList source="right-panel" data={data} loadState="metadata" hasMore loadingMore />)
+    expect(screen.getByRole('status')).toHaveTextContent('YakitSpin.loadMore')
+    expect(screen.getByRole('status').querySelector('.anticon-loading')).toBeInTheDocument()
+    expect(screen.queryByText('YakitEmpty.noMoreData')).not.toBeInTheDocument()
+
+    rerender(<AISkillList source="right-panel" data={data} loadState="metadata" hasMore={false} />)
+    expect(screen.getByRole('status')).toHaveTextContent('YakitEmpty.noMoreData')
+    expect(screen.queryByText('YakitSpin.loadMore')).not.toBeInTheDocument()
+  })
+
+  it('末页仍在加载时优先展示 loading', () => {
+    render(<AISkillList source="right-panel" data={createSkills(1)} loadState="metadata" hasMore={false} loadingMore />)
+    expect(screen.getByRole('status')).toHaveTextContent('YakitSpin.loadMore')
+    expect(screen.queryByText('YakitEmpty.noMoreData')).not.toBeInTheDocument()
+  })
+
+  it('非分页列表和空列表不显示分页底部状态', () => {
+    const { rerender } = render(<AISkillList source="right-panel" data={createSkills(1)} loadState="loaded" />)
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
+    rerender(<AISkillList source="right-panel" data={[]} loadState="metadata" hasMore={false} />)
+    expect(screen.getByText('empty')).toBeInTheDocument()
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
+  })
+
   it('任务详情中的可加载技能不提供操作按钮', () => {
     const onAdd = vi.fn()
     render(<AISkillList source="task-details" data={createSkills(1)} loadState="metadata" onAdd={onAdd} />)

@@ -8,6 +8,7 @@ import type { AIAgentChatData } from '@/pages/ai-agent/type/aiChat'
 import type { AISkillListItem } from '../AISkillLoadingPane/aiSkillList/type'
 import type * as AISkillLoadingPaneModule from '../AISkillLoadingPane/AISkillLoadingPane'
 import { compileReactModule } from '@/utils/__test__/helpers/compileReactModule'
+import { DEFAULT_SKILL_PAGE_SIZE } from '../../hooks/defaultConstant'
 
 const store = createStore(() => ({
   sessionId: 'session-1',
@@ -127,6 +128,150 @@ afterEach(() => {
 })
 
 describe('AISkillLoadingPane session skills', () => {
+  it.each(['loaded', 'metadata'] as const)('%s 刷新成功发送后回到顶部，收到数据后保持顶部', (loadState) => {
+    render(<AISkillLoadingPane loadState={loadState} />)
+    const list = screen.getByRole('list')
+    list.scrollTop = 180
+    fireEvent.click(screen.getByRole('button', { name: 'YakitButton.refresh' }))
+    expect(onSend).toHaveBeenCalledTimes(1)
+    expect(list.scrollTop).toBe(0)
+    act(() => {
+      const current = sessions.get('session-1')!
+      if (loadState === 'metadata') {
+        current.availableSkills = {
+          ...current.availableSkills,
+          page: 1,
+          skills: [createSkill('new-skill', 'metadata')],
+        }
+        store.setState({ availableSkillsUpdate: 1 })
+      } else {
+        current.loadedSkills = { skills: [createSkill('new-skill', 'loaded')], total: 1 }
+        store.setState({ loadedSkillsUpdate: 1 })
+      }
+    })
+    expect(list.scrollTop).toBe(0)
+  })
+
+  it('未加载刷新发送被拒绝时保留滚动位置', () => {
+    onSend.mockReturnValueOnce(false)
+    render(<AISkillLoadingPane loadState="metadata" />)
+    const list = screen.getByRole('list')
+    list.scrollTop = 180
+    fireEvent.click(screen.getByRole('button', { name: 'YakitButton.refresh' }))
+    expect(onSend).toHaveBeenCalledTimes(1)
+    expect(list.scrollTop).toBe(180)
+  })
+
+  it('加载更多只显示底部 loading，回执提前到达时等待数据，末页显示暂无更多数据', async () => {
+    render(<AISkillLoadingPane loadState="metadata" />)
+    fireEvent.scroll(screen.getByTestId('skill-virtuoso'))
+    expect(screen.getByRole('status')).toHaveTextContent('YakitSpin.loadMore')
+    await act(async () => vi.advanceTimersByTimeAsync(100))
+    expect(screen.getByRole('list').closest('.ant-spin-container')).not.toHaveClass('ant-spin-blur')
+    expect(screen.getByRole('button', { name: 'YakitButton.refresh' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'YakitButton.refresh' })).not.toHaveClass('ant-btn-loading')
+    fireEvent.click(screen.getByRole('button', { name: 'YakitButton.refresh' }))
+    expect(onSend).toHaveBeenCalledTimes(1)
+    act(() => acknowledge(onSend.mock.lastCall![0].params.SyncID))
+    await act(async () => vi.advanceTimersByTimeAsync(300))
+    expect(screen.getByRole('status')).toHaveTextContent('YakitSpin.loadMore')
+    expect(screen.getByRole('button', { name: 'YakitButton.refresh' })).not.toHaveClass('ant-btn-loading')
+    act(() => {
+      const current = sessions.get('session-1')!
+      current.availableSkills = { ...current.availableSkills, page: 2, has_more: false }
+      store.setState({ availableSkillsUpdate: 1 })
+    })
+    expect(screen.getByRole('status')).toHaveTextContent('YakitEmpty.noMoreData')
+    expect(screen.getByRole('button', { name: 'YakitButton.refresh' })).not.toBeDisabled()
+  })
+
+  it('末页数据早于回执到达时，完成同步后才结束底部 loading', async () => {
+    render(<AISkillLoadingPane loadState="metadata" />)
+    fireEvent.scroll(screen.getByTestId('skill-virtuoso'))
+    act(() => {
+      const current = sessions.get('session-1')!
+      current.availableSkills = { ...current.availableSkills, page: 2, has_more: false }
+      store.setState({ availableSkillsUpdate: 1 })
+    })
+    expect(screen.getByRole('status')).toHaveTextContent('YakitSpin.loadMore')
+    expect(screen.getByRole('list').closest('.ant-spin-container')).not.toHaveClass('ant-spin-blur')
+    act(() => acknowledge(onSend.mock.lastCall![0].params.SyncID))
+    await act(async () => vi.advanceTimersByTimeAsync(300))
+    expect(screen.getByRole('status')).toHaveTextContent('YakitEmpty.noMoreData')
+  })
+
+  it('刷新使用列表遮罩，分页发送被拒绝时不展示底部 loading', async () => {
+    onSend.mockReturnValueOnce(false)
+    render(<AISkillLoadingPane loadState="metadata" />)
+    fireEvent.scroll(screen.getByTestId('skill-virtuoso'))
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'YakitButton.refresh' }))
+    await act(async () => vi.advanceTimersByTimeAsync(100))
+    expect(screen.getByRole('list').closest('.ant-spin-container')).toHaveClass('ant-spin-blur')
+    expect(screen.getByRole('button', { name: 'YakitButton.refresh' })).toHaveClass('ant-btn-loading')
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
+  })
+
+  it('已加载分组的刷新回执不结束未加载分组的分页 loading', async () => {
+    const result = render(<AISkillLoadingPane loadState="metadata" />)
+    fireEvent.scroll(screen.getByTestId('skill-virtuoso'))
+    result.rerender(<AISkillLoadingPane loadState="loaded" />)
+    fireEvent.click(screen.getByRole('button', { name: 'YakitButton.refresh' }))
+    expect(screen.getByRole('button', { name: 'YakitButton.refresh' })).toHaveClass('ant-btn-loading')
+    act(() => acknowledge(onSend.mock.lastCall![0].params.SyncID))
+    await act(async () => vi.advanceTimersByTimeAsync(300))
+    expect(screen.getByRole('button', { name: 'YakitButton.refresh' })).not.toHaveClass('ant-btn-loading')
+    result.rerender(<AISkillLoadingPane loadState="metadata" />)
+    expect(screen.getByRole('status')).toHaveTextContent('YakitSpin.loadMore')
+    expect(screen.getByRole('button', { name: 'YakitButton.refresh' })).not.toHaveClass('ant-btn-loading')
+    expect(onSend).toHaveBeenCalledTimes(2)
+  })
+
+  it('切换到已加载分组时不展示未加载分组的分页 loading', () => {
+    const result = render(<AISkillLoadingPane loadState="metadata" />)
+    fireEvent.scroll(screen.getByTestId('skill-virtuoso'))
+    expect(screen.getByRole('status')).toHaveTextContent('YakitSpin.loadMore')
+    result.rerender(<AISkillLoadingPane loadState="loaded" />)
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
+    expect(screen.getByRole('list').closest('.ant-spin-container')).not.toHaveClass('ant-spin-blur')
+    result.rerender(<AISkillLoadingPane loadState="metadata" />)
+    expect(screen.getByRole('status')).toHaveTextContent('YakitSpin.loadMore')
+  })
+
+  it('分页完成后还有数据时隐藏底部 loading，不自动请求下一页', async () => {
+    render(<AISkillLoadingPane loadState="metadata" />)
+    fireEvent.scroll(screen.getByTestId('skill-virtuoso'))
+    act(() => {
+      const current = sessions.get('session-1')!
+      current.availableSkills = { ...current.availableSkills, page: 2 }
+      store.setState({ availableSkillsUpdate: 1 })
+      acknowledge(onSend.mock.lastCall![0].params.SyncID)
+    })
+    await act(async () => vi.advanceTimersByTimeAsync(300))
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
+    expect(onSend).toHaveBeenCalledTimes(1)
+  })
+
+  it('分页期间切换会话新建页面，不沿用旧 loading 或阻止新会话刷新', async () => {
+    const result = render(<AISkillLoadingPane loadState="metadata" />)
+    fireEvent.scroll(screen.getByTestId('skill-virtuoso'))
+    act(() => acknowledge(onSend.mock.lastCall![0].params.SyncID))
+    await act(async () => vi.advanceTimersByTimeAsync(300))
+    expect(screen.getByRole('status')).toHaveTextContent('YakitSpin.loadMore')
+    result.unmount()
+    sessions.set('session-2', structuredClone(sessions.get('session-1')!))
+    act(() => store.setState({ sessionId: 'session-2', inViewport: true }))
+    render(<AISkillLoadingPane loadState="metadata" />)
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
+    expect(onSend).toHaveBeenCalledTimes(2)
+    expect(onSend.mock.lastCall![0].token).toBe('session-2')
+    expect(JSON.parse(onSend.mock.lastCall![0].params.SyncJsonInput)).toEqual({
+      page: 1,
+      page_size: DEFAULT_SKILL_PAGE_SIZE,
+      query: '',
+    })
+  })
+
   it('未加载分组直接使用后端结果，保留模糊搜索命中项与返回顺序', () => {
     const current = sessions.get('session-1')!
     current.availableSkills = {
@@ -204,7 +349,7 @@ describe('AISkillLoadingPane session skills', () => {
       token: 'session-1',
       params: {
         SyncType: 'skill_available_sync',
-        SyncJsonInput: JSON.stringify({ page: 2, page_size: 50, query: '' }),
+        SyncJsonInput: JSON.stringify({ page: 2, page_size: DEFAULT_SKILL_PAGE_SIZE, query: '' }),
       },
     })
     act(() => acknowledge(onSend.mock.lastCall![0].params.SyncID))
@@ -217,7 +362,9 @@ describe('AISkillLoadingPane session skills', () => {
     })
     act(() => virtuosoList.mock.lastCall![0].endReached())
     expect(onSend).toHaveBeenCalledTimes(2)
-    expect(onSend.mock.lastCall![0].params.SyncJsonInput).toBe(JSON.stringify({ page: 3, page_size: 50, query: '' }))
+    expect(onSend.mock.lastCall![0].params.SyncJsonInput).toBe(
+      JSON.stringify({ page: 3, page_size: DEFAULT_SKILL_PAGE_SIZE, query: '' }),
+    )
     act(() => {
       acknowledge(onSend.mock.lastCall![0].params.SyncID)
       sessions.get('session-1')!.availableSkills = { ...sessions.get('session-1')!.availableSkills, has_more: false }
@@ -299,7 +446,9 @@ describe('AISkillLoadingPane session skills', () => {
     const syncType = loadState === 'loaded' ? 'skill_loaded_sync' : 'skill_available_sync'
     expect(onSend.mock.lastCall![0].params.SyncType).toBe(syncType)
     if (loadState === 'metadata') {
-      expect(onSend.mock.lastCall![0].params.SyncJsonInput).toBe(JSON.stringify({ page: 1, page_size: 50, query: '' }))
+      expect(onSend.mock.lastCall![0].params.SyncJsonInput).toBe(
+        JSON.stringify({ page: 1, page_size: DEFAULT_SKILL_PAGE_SIZE, query: '' }),
+      )
     }
     const refresh = screen.getByRole('button', { name: 'YakitButton.refresh' })
     expect(refresh).toBeDisabled()
@@ -365,7 +514,9 @@ describe('AISkillLoadingPane session skills', () => {
     })
     await act(async () => vi.advanceTimersByTimeAsync(300))
     expect(onSend).toHaveBeenCalledTimes(2)
-    expect(onSend.mock.lastCall![0].params.SyncJsonInput).toBe(JSON.stringify({ page: 2, page_size: 50, query: '' }))
+    expect(onSend.mock.lastCall![0].params.SyncJsonInput).toBe(
+      JSON.stringify({ page: 2, page_size: DEFAULT_SKILL_PAGE_SIZE, query: '' }),
+    )
   })
 
   it('从后续页刷新时等待第一页数据，回执提前到达也不使用旧页码翻页', async () => {
@@ -384,7 +535,7 @@ describe('AISkillLoadingPane session skills', () => {
     expect(onSend).toHaveBeenCalledTimes(2)
     expect(JSON.parse(onSend.mock.lastCall![0].params.SyncJsonInput)).toEqual({
       page: 2,
-      page_size: 50,
+      page_size: DEFAULT_SKILL_PAGE_SIZE,
       query: '',
     })
   })
@@ -414,7 +565,7 @@ describe('AISkillLoadingPane session skills', () => {
     expect(onSend).toHaveBeenCalledTimes(1)
     expect(JSON.parse(onSend.mock.lastCall![0].params.SyncJsonInput)).toEqual({
       page: 1,
-      page_size: 50,
+      page_size: DEFAULT_SKILL_PAGE_SIZE,
       query: 'last-match',
     })
   })
@@ -425,7 +576,7 @@ describe('AISkillLoadingPane session skills', () => {
     expect(names()).toEqual(['available-skill'])
     expect(onSend).toHaveBeenCalledTimes(1)
     expect(onSend.mock.lastCall![0].params.SyncJsonInput).toBe(
-      JSON.stringify({ page: 1, page_size: 50, query: 'last-match' }),
+      JSON.stringify({ page: 1, page_size: DEFAULT_SKILL_PAGE_SIZE, query: 'last-match' }),
     )
     act(() => {
       sessions.get('session-1')!.availableSkills = { ...sessions.get('session-1')!.availableSkills, page: 1 }
@@ -438,7 +589,7 @@ describe('AISkillLoadingPane session skills', () => {
     act(() => virtuosoList.mock.lastCall![0].endReached())
     expect(onSend).toHaveBeenCalledTimes(2)
     expect(onSend.mock.lastCall![0].params.SyncJsonInput).toBe(
-      JSON.stringify({ page: 2, page_size: 50, query: 'last-match' }),
+      JSON.stringify({ page: 2, page_size: DEFAULT_SKILL_PAGE_SIZE, query: 'last-match' }),
     )
     act(() => {
       sessions.get('session-1')!.availableSkills = {
@@ -463,7 +614,7 @@ describe('AISkillLoadingPane session skills', () => {
     result.rerender(<AISkillLoadingPane loadState="metadata" />)
     expect(onSend).toHaveBeenCalledTimes(2)
     expect(onSend.mock.lastCall![0].params.SyncJsonInput).toBe(
-      JSON.stringify({ page: 1, page_size: 50, query: 'missing' }),
+      JSON.stringify({ page: 1, page_size: DEFAULT_SKILL_PAGE_SIZE, query: 'missing' }),
     )
     act(() => acknowledge(onSend.mock.lastCall![0].params.SyncID))
     await act(async () => vi.advanceTimersByTimeAsync(300))
@@ -476,7 +627,7 @@ describe('AISkillLoadingPane session skills', () => {
     act(() => virtuosoList.mock.lastCall![0].endReached())
     expect(onSend).toHaveBeenCalledTimes(3)
     expect(onSend.mock.lastCall![0].params.SyncJsonInput).toBe(
-      JSON.stringify({ page: 2, page_size: 50, query: 'missing' }),
+      JSON.stringify({ page: 2, page_size: DEFAULT_SKILL_PAGE_SIZE, query: 'missing' }),
     )
   })
 
@@ -492,7 +643,11 @@ describe('AISkillLoadingPane session skills', () => {
     await act(async () => vi.advanceTimersByTimeAsync(300))
     fireEvent.change(screen.getByRole('searchbox'), { target: { value: query } })
     expect(onSend).toHaveBeenCalledTimes(2)
-    expect(JSON.parse(onSend.mock.lastCall![0].params.SyncJsonInput)).toEqual({ page: 1, page_size: 50, query })
+    expect(JSON.parse(onSend.mock.lastCall![0].params.SyncJsonInput)).toEqual({
+      page: 1,
+      page_size: DEFAULT_SKILL_PAGE_SIZE,
+      query,
+    })
   })
 
   it('加载期间关键词连续变化，当前请求完成后从第一页查询最新关键词', async () => {
@@ -512,7 +667,7 @@ describe('AISkillLoadingPane session skills', () => {
     expect(onSend).toHaveBeenCalledTimes(2)
     expect(JSON.parse(onSend.mock.lastCall![0].params.SyncJsonInput)).toEqual({
       page: 1,
-      page_size: 50,
+      page_size: DEFAULT_SKILL_PAGE_SIZE,
       query: 'latest-query',
     })
   })
@@ -524,7 +679,11 @@ describe('AISkillLoadingPane session skills', () => {
     expect(screen.getByRole('button', { name: 'YakitButton.refresh' })).not.toBeDisabled()
     act(() => virtuosoList.mock.lastCall![0].endReached())
     expect(onSend).toHaveBeenCalledTimes(2)
-    expect(JSON.parse(onSend.mock.lastCall![0].params.SyncJsonInput)).toEqual({ page: 2, page_size: 50, query: '' })
+    expect(JSON.parse(onSend.mock.lastCall![0].params.SyncJsonInput)).toEqual({
+      page: 2,
+      page_size: DEFAULT_SKILL_PAGE_SIZE,
+      query: '',
+    })
   })
 
   it.each(['initLoading', 'grpcLoadMoreLoading'] as const)(
@@ -540,7 +699,11 @@ describe('AISkillLoadingPane session skills', () => {
       act(() => store.setState({ [loading]: false }))
       expect(onSend).toHaveBeenCalledTimes(attempts + 1)
       expect(onSend.mock.results.at(-1)?.value).toBe(true)
-      expect(JSON.parse(onSend.mock.lastCall![0].params.SyncJsonInput)).toEqual({ page: 2, page_size: 50, query: '' })
+      expect(JSON.parse(onSend.mock.lastCall![0].params.SyncJsonInput)).toEqual({
+        page: 2,
+        page_size: DEFAULT_SKILL_PAGE_SIZE,
+        query: '',
+      })
       act(() => {
         const current = sessions.get('session-1')!
         current.availableSkills = { ...current.availableSkills, page: 2 }
@@ -563,13 +726,21 @@ describe('AISkillLoadingPane session skills', () => {
       fireEvent.click(screen.getByRole('button', { name: 'YakitButton.refresh' }))
       expect(onSend).toHaveBeenCalledTimes(1)
       expect(onSend.mock.results[0].value).toBe(false)
-      expect(JSON.parse(onSend.mock.lastCall![0].params.SyncJsonInput)).toEqual({ page: 1, page_size: 50, query: '' })
+      expect(JSON.parse(onSend.mock.lastCall![0].params.SyncJsonInput)).toEqual({
+        page: 1,
+        page_size: DEFAULT_SKILL_PAGE_SIZE,
+        query: '',
+      })
       fireEvent.scroll(list)
       expect(onSend).toHaveBeenCalledTimes(1)
       act(() => store.setState({ [loading]: false }))
       expect(onSend).toHaveBeenCalledTimes(2)
       expect(onSend.mock.results.at(-1)?.value).toBe(true)
-      expect(JSON.parse(onSend.mock.lastCall![0].params.SyncJsonInput)).toEqual({ page: 2, page_size: 50, query: '' })
+      expect(JSON.parse(onSend.mock.lastCall![0].params.SyncJsonInput)).toEqual({
+        page: 2,
+        page_size: DEFAULT_SKILL_PAGE_SIZE,
+        query: '',
+      })
     },
   )
 
@@ -589,7 +760,11 @@ describe('AISkillLoadingPane session skills', () => {
     onSend.mockReturnValueOnce(true)
     fireEvent.click(screen.getByRole('button', { name: 'YakitButton.refresh' }))
     expect(onSend).toHaveBeenCalledTimes(1)
-    expect(JSON.parse(onSend.mock.lastCall![0].params.SyncJsonInput)).toEqual({ page: 1, page_size: 50, query: '' })
+    expect(JSON.parse(onSend.mock.lastCall![0].params.SyncJsonInput)).toEqual({
+      page: 1,
+      page_size: DEFAULT_SKILL_PAGE_SIZE,
+      query: '',
+    })
     act(() => {
       const current = sessions.get('session-1')!
       current.availableSkills = { ...current.availableSkills, skills: [createSkill('refreshed-skill', 'metadata')] }
@@ -615,7 +790,11 @@ describe('AISkillLoadingPane session skills', () => {
     act(() => store.setState({ grpcLoadMoreLoading: false }))
     expect(onSend).toHaveBeenCalledTimes(2)
     expect(onSend.mock.results.at(-1)?.value).toBe(true)
-    expect(JSON.parse(onSend.mock.lastCall![0].params.SyncJsonInput)).toEqual({ page: 2, page_size: 50, query: '' })
+    expect(JSON.parse(onSend.mock.lastCall![0].params.SyncJsonInput)).toEqual({
+      page: 2,
+      page_size: DEFAULT_SKILL_PAGE_SIZE,
+      query: '',
+    })
   })
 
   it.each(['initLoading', 'grpcLoadMoreLoading'] as const)('%s 结束时没有待分页意图则不发请求', (loading) => {
@@ -633,7 +812,11 @@ describe('AISkillLoadingPane session skills', () => {
     onSend.mockClear()
     act(() => store.setState({ grpcLoadMoreLoading: false }))
     expect(onSend).toHaveBeenCalledTimes(1)
-    expect(JSON.parse(onSend.mock.lastCall![0].params.SyncJsonInput)).toEqual({ page: 1, page_size: 50, query: 'scan' })
+    expect(JSON.parse(onSend.mock.lastCall![0].params.SyncJsonInput)).toEqual({
+      page: 1,
+      page_size: DEFAULT_SKILL_PAGE_SIZE,
+      query: 'scan',
+    })
   })
 
   it('历史加载结束前切换会话，不把待分页请求补发到新会话', () => {
@@ -653,7 +836,11 @@ describe('AISkillLoadingPane session skills', () => {
     fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'scan' } })
     act(() => virtuosoList.mock.lastCall![0].endReached())
     expect(onSend).toHaveBeenCalledTimes(2)
-    expect(JSON.parse(onSend.mock.lastCall![0].params.SyncJsonInput)).toEqual({ page: 1, page_size: 50, query: 'scan' })
+    expect(JSON.parse(onSend.mock.lastCall![0].params.SyncJsonInput)).toEqual({
+      page: 1,
+      page_size: DEFAULT_SKILL_PAGE_SIZE,
+      query: 'scan',
+    })
   })
 
   it('发送被拒绝后修改关键词空白仍会重试第一页', () => {
@@ -662,7 +849,11 @@ describe('AISkillLoadingPane session skills', () => {
     fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'scan' } })
     fireEvent.change(screen.getByRole('searchbox'), { target: { value: ' scan ' } })
     expect(onSend).toHaveBeenCalledTimes(2)
-    expect(JSON.parse(onSend.mock.lastCall![0].params.SyncJsonInput)).toEqual({ page: 1, page_size: 50, query: 'scan' })
+    expect(JSON.parse(onSend.mock.lastCall![0].params.SyncJsonInput)).toEqual({
+      page: 1,
+      page_size: DEFAULT_SKILL_PAGE_SIZE,
+      query: 'scan',
+    })
   })
 
   it('可见面板切回仍在请求中的分组不重复刷新', () => {
