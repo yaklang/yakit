@@ -175,7 +175,11 @@ const FileTreeContentSearchView: FC<FileTreeContentSearchViewProps> = ({
       </div>
       {toolbarExtra || showResultTotal ? (
         <div className={styles['scope-bar']}>
-          {toolbarExtra ? <div className={styles['scope-bar-extra']}>{toolbarExtra}</div> : <div>全部</div>}
+          {toolbarExtra ? (
+            <div className={styles['scope-bar-extra']}>{toolbarExtra}</div>
+          ) : (
+            <div>{t('FileTreeSearch.all')}</div>
+          )}
           {showResultTotal ? (
             <YakitTag
               size="small"
