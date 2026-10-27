@@ -92,23 +92,14 @@ beforeEach(() => {
 
 describe('Yak script model configuration', () => {
   const script = 'chat = func(req, emit) { return "hello" }'
-  const provider = {
-    Type: 'yak-script',
-    APIKey: '',
-    BaseURL: 'https://model.example/v1',
-    ExtraParams: [
-      { Key: 'script', Value: script },
-      { Key: 'script_timeout_seconds', Value: '300' },
-      { Key: 'tenant', Value: 'keep' },
-    ],
-  }
+  const provider = { Type: 'yak-script', Script: script }
 
   it('adds a script model with the default editor template through the real save flow', async () => {
     render(<AIModelForm onClose={vi.fn()} />)
     fireEvent.change(await screen.findByRole('combobox', { name: 'ConfigNetworkPage.typeLabel' }), {
       target: { value: 'yak-script' },
     })
-    fireEvent.change(screen.getByRole('textbox', { name: 'ConfigNetworkPage.modelName' }), {
+    fireEvent.change(screen.getByRole('textbox', { name: 'ConfigNetworkPage.scriptConfigName' }), {
       target: { value: 'script-model' },
     })
     const editor = await screen.findByLabelText('yak-model-script')
@@ -118,22 +109,12 @@ describe('Yak script model configuration', () => {
     fireEvent.click(screen.getByRole('button', { name: 'AIModelList.confirmAddBtn' }))
     await waitFor(() => expect(mocks.save).toHaveBeenCalledOnce())
     const saved = mocks.save.mock.calls[0][0].IntelligentModels[0]
-    expect(saved).toMatchObject({
-      ModelName: 'script-model',
-      Provider: {
-        Type: 'yak-script',
-        APIType: '',
-        APIKey: '',
-        ExtraParams: expect.arrayContaining([
-          { Key: 'script', Value: expect.stringContaining('provider.ReadSSE') },
-          { Key: 'script_timeout_seconds', Value: '240' },
-        ]),
-      },
-    })
+    expect(saved.ModelName).toBe('script-model')
+    expect(saved.Provider).toEqual({ Type: 'yak-script', Script: expect.stringContaining('provider.ReadSSE') })
     expect(mocks.invoke).not.toHaveBeenCalled()
   })
 
-  it('round-trips script fields and unknown extras with an optional empty API key', async () => {
+  it('round-trips only script source without connection fields', async () => {
     const ref = createRef<{ form: FormInstance }>()
     render(
       <NewAIThirdPartyApplicationConfigBase
@@ -154,20 +135,25 @@ describe('Yak script model configuration', () => {
       values = await ref.current!.form.validateFields()
     })
     const saved = formValueToAIConfigProvider(values)
-    expect(saved).toMatchObject({ ...provider, ExtraParams: expect.arrayContaining(provider.ExtraParams) })
-    const health = buildAIConfigHealthCheckConfig(values)
-    expect(health.ExtraParams).toHaveLength(provider.ExtraParams.length + 1)
-    expect(health.ExtraParams).toEqual(
-      expect.arrayContaining([...provider.ExtraParams, { Key: 'model', Value: 'my-script' }]),
-    )
-    expect(buildAIConfigHealthCheckFormValues(saved)).toMatchObject({
-      script,
-      script_timeout_seconds: 300,
-    })
+    expect(saved).toEqual(provider)
+    expect(buildAIConfigHealthCheckConfig(values)).toEqual(provider)
+    expect(buildAIConfigHealthCheckFormValues(saved)).toEqual({ Type: 'yak-script', script })
+    for (const label of ['ApiKey', 'BaseURL', 'Endpoint', 'Header', 'ConfigNetworkPage.scriptTimeout']) {
+      expect(screen.queryByLabelText(label)).not.toBeInTheDocument()
+    }
+    expect(screen.queryByText('ConfigNetworkPage.advancedConfigTitle')).not.toBeInTheDocument()
+    expect(
+      formValueToAIConfigProvider({
+        ...values,
+        api_key: 'stale',
+        base_url: 'https://ignored.invalid',
+        ExtraParams: [{ Key: 'tenant', Value: 'ignored' }],
+      }),
+    ).toEqual(provider)
     expect(mocks.invoke).not.toHaveBeenCalled()
   })
 
-  it('validates nonempty scripts and timeout without a parameter field', async () => {
+  it('validates nonempty scripts without separate parameter or timeout fields', async () => {
     const ref = createRef<{ form: FormInstance }>()
     render(
       <NewAIThirdPartyApplicationConfigBase
@@ -180,12 +166,9 @@ describe('Yak script model configuration', () => {
     const form = ref.current!.form
     expect(screen.queryByLabelText('ConfigNetworkPage.scriptParams')).not.toBeInTheDocument()
     await act(async () => {
-      form.setFieldsValue({ script: '   ', script_timeout_seconds: 0 })
+      form.setFieldsValue({ script: '   ' })
       await expect(form.validateFields()).rejects.toMatchObject({
-        errorFields: expect.arrayContaining([
-          expect.objectContaining({ name: ['script'] }),
-          expect.objectContaining({ name: ['script_timeout_seconds'] }),
-        ]),
+        errorFields: expect.arrayContaining([expect.objectContaining({ name: ['script'] })]),
       })
     })
   })
@@ -213,21 +196,14 @@ describe('Yak script model configuration', () => {
     await waitFor(() => expect(mocks.save).toHaveBeenCalledOnce())
     expect(mocks.healthCheck).toHaveBeenCalledWith(
       expect.objectContaining({
-        Config: expect.objectContaining({
-          ExtraParams: expect.arrayContaining([{ Key: 'script', Value: edited }]),
-        }),
+        Config: { Type: 'yak-script', Script: edited },
       }),
     )
     const config = mocks.save.mock.calls[0][0]
     const saved = (moveTier ? config.LightweightModels : config.IntelligentModels)[0]
     if (moveTier) expect(config.IntelligentModels).toEqual([])
-    expect(saved.ExtraParams).toEqual([{ Key: 'unrelated', Value: 'keep' }])
-    expect(saved.Provider.ExtraParams).toEqual(
-      expect.arrayContaining([
-        { Key: 'script', Value: edited },
-        { Key: 'tenant', Value: 'keep' },
-      ]),
-    )
+    expect(saved.ExtraParams).toEqual([])
+    expect(saved.Provider).toEqual({ Type: 'yak-script', Script: edited })
     expect(onClose).toHaveBeenCalledOnce()
     unmount()
     render(
@@ -238,6 +214,22 @@ describe('Yak script model configuration', () => {
       />,
     )
     expect(await screen.findByLabelText('yak-model-script')).toHaveValue(edited)
+  })
+
+  it('shows source only in the read-only view', () => {
+    render(
+      <NewAIThirdPartyApplicationConfigBase
+        readOnly
+        formValues={{
+          ...buildAIConfigHealthCheckFormValues(provider),
+          model: 'my-script',
+          model_type: AIModelTypeEnum.TierIntelligent,
+        }}
+      />,
+    )
+    expect(screen.getByDisplayValue(script)).toBeInTheDocument()
+    expect(screen.queryByText('ConfigNetworkPage.advancedConfigTitle')).not.toBeInTheDocument()
+    expect(screen.queryByText('ConfigNetworkPage.scriptTimeout')).not.toBeInTheDocument()
   })
 
   it('clears script fields when switching back to an ordinary provider', async () => {

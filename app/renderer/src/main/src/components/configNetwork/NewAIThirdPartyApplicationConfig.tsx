@@ -174,11 +174,11 @@ const defaultAIFormItemsOfAI: (t: TFunction) => ThirdPartyAppConfigItemTemplate[
 }
 
 const isShowRequiredApiKey = (typeVal: string) => {
-  const Required = !['aibalance', 'comate', YAK_SCRIPT_PROVIDER].includes(typeVal)
+  const Required = !['aibalance', 'comate'].includes(typeVal)
   return {
     isRequired: Required,
     data: {
-      DefaultValue: typeVal === YAK_SCRIPT_PROVIDER ? '' : 'free-user',
+      DefaultValue: 'free-user',
       Desc: 'APIKey / Token',
       Extra: '',
       Name: 'api_key',
@@ -228,7 +228,9 @@ const buildDefaultAIFormItemsForType = (typeVal: string, t: TFunction) => {
                 options: aiModelTypeOptions(t).filter(({ value }) => value !== AIModelTypeEnum.TierVision),
               }),
             }
-          : item,
+          : item.Name === 'model'
+            ? { ...item, Verbose: t('ConfigNetworkPage.scriptConfigName') }
+            : item,
       )
   }
   const { isRequired, data } = isShowRequiredApiKey(typeVal)
@@ -285,16 +287,8 @@ const optionalAIFormItemsOfAI: (t: TFunction) => ThirdPartyAppConfigItemTemplate
 ]
 
 const buildOptionalAIFormItemsForType = (typeVal: string, enableEndpoint: boolean, t: TFunction) => {
+  if (typeVal === YAK_SCRIPT_PROVIDER) return []
   const newData = cloneDeep(optionalAIFormItemsOfAI(t))
-  if (typeVal === YAK_SCRIPT_PROVIDER) {
-    newData.forEach((item) => {
-      if (item.Name === 'base_url' || item.Name === 'endpoint') {
-        item.Desc = t('ConfigNetworkPage.scriptAddressHelp')
-        item.Placeholder =
-          item.Name === 'base_url' ? 'https://model.example/v1' : 'https://model.example/v1/chat/completions'
-      }
-    })
-  }
   const { isRequired, data } = isShowRequiredApiKey(typeVal)
   if (!isRequired) {
     newData.unshift(data)
@@ -383,33 +377,29 @@ const AIThirdPartyConfigReadonlyPanel: React.FC<AIThirdPartyConfigReadonlyPanelP
             <span>{t('ConfigNetworkPage.modelScript')}</span>
             <YakitInput.TextArea readOnly value={merged.script ?? ''} autoSize={{ minRows: 6, maxRows: 12 }} />
           </div>
-          {renderCopyRow(
-            'script_timeout_seconds',
-            t('ConfigNetworkPage.scriptTimeout'),
-            String(merged.script_timeout_seconds ?? 240),
-            String(merged.script_timeout_seconds ?? 240),
-          )}
         </>
       )}
-      <YakitCollapse
-        defaultActiveKey={['1']}
-        bordered={false}
-        className={styles['ai-third-party-application-config-collapse']}
-      >
-        <YakitCollapse.YakitPanel
-          header={
-            <div className={styles['panel-heard']}>
-              <span className={styles['title']}>{t('ConfigNetworkPage.advancedConfigTitle')}</span>
-              <span className={styles['tip']}>{t('ConfigNetworkPage.advancedConfigTip')}</span>
-            </div>
-          }
-          key="1"
-          forceRender={true}
+      {typeVal !== YAK_SCRIPT_PROVIDER && (
+        <YakitCollapse
+          defaultActiveKey={['1']}
+          bordered={false}
+          className={styles['ai-third-party-application-config-collapse']}
         >
-          {optionalItems.map((item) => renderFieldByTemplate(item))}
-          {renderCopyRow('Headers', 'Header', headersPack.display, headersPack.copy)}
-        </YakitCollapse.YakitPanel>
-      </YakitCollapse>
+          <YakitCollapse.YakitPanel
+            header={
+              <div className={styles['panel-heard']}>
+                <span className={styles['title']}>{t('ConfigNetworkPage.advancedConfigTitle')}</span>
+                <span className={styles['tip']}>{t('ConfigNetworkPage.advancedConfigTip')}</span>
+              </div>
+            }
+            key="1"
+            forceRender={true}
+          >
+            {optionalItems.map((item) => renderFieldByTemplate(item))}
+            {renderCopyRow('Headers', 'Header', headersPack.display, headersPack.copy)}
+          </YakitCollapse.YakitPanel>
+        </YakitCollapse>
+      )}
     </div>
   )
 })
@@ -428,7 +418,6 @@ export interface AIThirdPartyApplicationConfig {
   Headers?: KVPair[]
   ExtraParams?: KVPair[]
   script?: string
-  script_timeout_seconds?: number
   /** 探测到的扩展思考强度（表单内部字段，由 NewAIThirdPartyApplicationConfigBase 自动写入） */
   _ProbedExtendedEfforts?: string[]
   /** 是否已对 xhigh/max 做过探测（表单内部字段） */
@@ -756,13 +745,6 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
             )
           }
           if (item.Name === 'api_key') {
-            if (isScriptProvider) {
-              return (
-                <Form.Item {...formProps} extra={t('ConfigNetworkPage.scriptTokenHelp')}>
-                  <YakitInput.Password disabled={IsOnline} autoComplete="off" />
-                </Form.Item>
-              )
-            }
             if (IsOnline) {
               return (
                 <Form.Item {...formProps} hidden preserve>
@@ -789,7 +771,6 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
 
     const initialValues = useMemo(() => {
       const copyFormValues = {
-        script_timeout_seconds: 240,
         ...formValues,
         script: formValues.script ?? providerExample,
       }
@@ -922,61 +903,61 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
             <HiddenFormField />
           </Form.Item>
           {isScriptProvider && <YakScriptModelFields disabled={IsOnline} />}
-          <YakitCollapse
-            activeKey={activeKey}
-            onChange={onChangeCollapse}
-            bordered={false}
-            className={styles['ai-third-party-application-config-collapse']}
-          >
-            <YakitCollapse.YakitPanel
-              header={
-                <div className={styles['panel-heard']}>
-                  <span className={styles['title']}>{t('ConfigNetworkPage.advancedConfigTitle')}</span>
-                  <span className={styles['tip']}>{t('ConfigNetworkPage.advancedConfigTip')}</span>
-                </div>
-              }
-              key="1"
-              forceRender={true}
+          {!isScriptProvider && (
+            <YakitCollapse
+              activeKey={activeKey}
+              onChange={onChangeCollapse}
+              bordered={false}
+              className={styles['ai-third-party-application-config-collapse']}
             >
-              {/* 可选的表单项 */}
-              {renderOptionalFormItems()}
-              <Form.Item label={'Header'} name="Headers">
-                {(headers || []).map((i, index) => {
-                  return (
-                    <YakitTag
-                      key={index}
-                      onClick={() => {
-                        if (IsOnline) return
-                        headerItemRef.current = {
-                          Header: i.Key,
-                          Value: i.Value,
-                        }
-                        headerItemIndexRef.current = index
-                        setVisibleHTTPHeader(true)
-                      }}
-                      closable={!IsOnline}
-                      onClose={() => {
-                        onRemoveHeaders(index)
-                      }}
-                    >
-                      {i.Key}
-                    </YakitTag>
-                  )
-                })}
-                <YakitButton
-                  type={'outline1'}
-                  disabled={IsOnline}
-                  onClick={() => {
-                    headerItemRef.current = undefined
-                    headerItemIndexRef.current = undefined
-                    setVisibleHTTPHeader(true)
-                  }}
-                >
-                  {t('ConfigNetworkPage.addHeaderBtn')}
-                </YakitButton>
-              </Form.Item>
-            </YakitCollapse.YakitPanel>
-            {!isScriptProvider && (
+              <YakitCollapse.YakitPanel
+                header={
+                  <div className={styles['panel-heard']}>
+                    <span className={styles['title']}>{t('ConfigNetworkPage.advancedConfigTitle')}</span>
+                    <span className={styles['tip']}>{t('ConfigNetworkPage.advancedConfigTip')}</span>
+                  </div>
+                }
+                key="1"
+                forceRender={true}
+              >
+                {/* 可选的表单项 */}
+                {renderOptionalFormItems()}
+                <Form.Item label={'Header'} name="Headers">
+                  {(headers || []).map((i, index) => {
+                    return (
+                      <YakitTag
+                        key={index}
+                        onClick={() => {
+                          if (IsOnline) return
+                          headerItemRef.current = {
+                            Header: i.Key,
+                            Value: i.Value,
+                          }
+                          headerItemIndexRef.current = index
+                          setVisibleHTTPHeader(true)
+                        }}
+                        closable={!IsOnline}
+                        onClose={() => {
+                          onRemoveHeaders(index)
+                        }}
+                      >
+                        {i.Key}
+                      </YakitTag>
+                    )
+                  })}
+                  <YakitButton
+                    type={'outline1'}
+                    disabled={IsOnline}
+                    onClick={() => {
+                      headerItemRef.current = undefined
+                      headerItemIndexRef.current = undefined
+                      setVisibleHTTPHeader(true)
+                    }}
+                  >
+                    {t('ConfigNetworkPage.addHeaderBtn')}
+                  </YakitButton>
+                </Form.Item>
+              </YakitCollapse.YakitPanel>
               <YakitCollapse.YakitPanel
                 header={
                   <div className={styles['panel-heard']}>
@@ -1025,8 +1006,8 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
                   <YakitInputNumber min={0} max={2} step={0.1} />
                 </Form.Item>
               </YakitCollapse.YakitPanel>
-            )}
-          </YakitCollapse>
+            </YakitCollapse>
+          )}
         </Form>
         <div className={styles['config-footer']}>{footer}</div>
         <InputHTTPHeaderForm

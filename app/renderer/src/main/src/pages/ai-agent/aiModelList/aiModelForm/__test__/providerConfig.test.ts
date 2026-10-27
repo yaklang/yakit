@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { ThirdPartyApplicationConfig } from '@/components/configNetwork/ConfigNetworkPage'
-import { buildProviderExtraParams, providerToListAiModelConfig } from '../providerConfig'
+import { providerToListAiModelConfig } from '../providerConfig'
 
 describe('providerToListAiModelConfig', () => {
   it('preserves custom connection fields without sending provider extension parameters', () => {
@@ -76,21 +76,8 @@ describe('providerToListAiModelConfig', () => {
     expect(
       providerToListAiModelConfig({
         Type: 'yak-script',
-        ExtraParams: [
-          { Key: 'script', Value: 'chat = func(req, emit) { return "ok" }' },
-          { Key: 'script_timeout_seconds', Value: '300' },
-          { Key: 'model', Value: 'script-model' },
-        ],
+        Script: 'chat = func(req, emit) { return "ok" }',
       }),
     ).toBeUndefined()
-  })
-
-  it('leaves ordinary provider extension parameters untouched', () => {
-    const extras = [
-      { Key: 'script', Value: 'old' },
-      { Key: 'tenant', Value: 'keep' },
-    ]
-    expect(buildProviderExtraParams({ Type: 'openai', ExtraParams: extras })).toEqual(extras)
-    expect(extras).toHaveLength(2)
   })
 })

@@ -45,12 +45,7 @@ import { setRemoteValue } from '@/utils/kv'
 import { RemoteAIAgentGV } from '@/enums/aiAgent'
 import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
 import { normalizeReasoningEffort } from './reasoningEffort'
-import {
-  buildProviderExtraParams,
-  getYakScriptFormValues,
-  isYakScriptField,
-  YAK_SCRIPT_PROVIDER,
-} from './providerConfig'
+import { YAK_SCRIPT_PROVIDER } from './providerConfig'
 
 const defaultFormValues = {
   Type: '',
@@ -116,14 +111,15 @@ export const getModelLabelByModelType = (t: (key: string) => string, type: AIMod
   }
 }
 export const buildAIConfigHealthCheckConfig = (values): ThirdPartyApplicationConfig => {
+  if (values.Type === YAK_SCRIPT_PROVIDER) return { Type: values.Type, Script: values.script }
   const config: ThirdPartyApplicationConfig = {
     Type: values.Type || '',
     APIKey: values.api_key || '',
     Domain: values.domain || '',
     Proxy: values.proxy || '',
     NoHttps: !!values.no_https,
-    APIType: values.Type === YAK_SCRIPT_PROVIDER ? '' : values.api_type || '',
-    ExtraParams: buildProviderExtraParams(values).filter(({ Key }) => Key !== 'model'),
+    APIType: values.api_type || '',
+    ExtraParams: (values.ExtraParams ?? []).filter(({ Key }) => Key !== 'model'),
     BaseURL: values.base_url || '',
     Endpoint: values.endpoint || '',
     EnableEndpoint: !!values.enable_endpoint,
@@ -150,6 +146,7 @@ export const buildAIConfigHealthCheckConfig = (values): ThirdPartyApplicationCon
     'enable_endpoint',
     'Headers',
     'ExtraParams',
+    'script',
     'webhook_url',
     'api_key_id', //测试不需要传这个给后端
     // 表单内部字段，不传给后端
@@ -159,7 +156,7 @@ export const buildAIConfigHealthCheckConfig = (values): ThirdPartyApplicationCon
   ])
 
   Object.entries(values).forEach(([key, value]) => {
-    if (builtInFieldSet.has(key) || isYakScriptField(key)) return
+    if (builtInFieldSet.has(key)) return
     if (value === undefined || value === null || value === '') return
     config.ExtraParams?.push({
       Key: key,
@@ -175,6 +172,7 @@ export const buildAIConfigHealthCheckConfig = (values): ThirdPartyApplicationCon
 }
 
 export const buildAIConfigHealthCheckFormValues = (config: ThirdPartyApplicationConfig) => {
+  if (config.Type === YAK_SCRIPT_PROVIDER) return { Type: config.Type, script: config.Script ?? '' }
   return {
     Type: config.Type ?? '',
     api_key: config.APIKey ?? '',
@@ -187,7 +185,6 @@ export const buildAIConfigHealthCheckFormValues = (config: ThirdPartyApplication
     enable_endpoint: config.EnableEndpoint ?? false,
     Headers: config.Headers ?? [],
     ExtraParams: config.ExtraParams ?? [],
-    ...(config.Type === YAK_SCRIPT_PROVIDER ? getYakScriptFormValues(config.ExtraParams) : {}),
     MaxTokens: config?.MaxTokens,
     Temperature: config?.Temperature,
     TopP: config?.TopP,
@@ -214,15 +211,16 @@ const numberFields: Array<keyof ThirdPartyApplicationConfig> = [
   'FrequencyPenalty',
 ]
 type NumberFieldKey = (typeof numberFields)[number]
-export const formValueToAIConfigProvider = (res) => {
+export const formValueToAIConfigProvider = (res): ThirdPartyApplicationConfig => {
+  if (res.Type === YAK_SCRIPT_PROVIDER) return { Type: res.Type, Script: res.script }
   const date: ThirdPartyApplicationConfig = {
     Type: res.Type,
     APIKey: res.api_key,
-    APIType: res.Type === YAK_SCRIPT_PROVIDER ? '' : normalizeAIAPIType(res.api_type),
+    APIType: normalizeAIAPIType(res.api_type),
     Domain: res.domain,
     Proxy: res.proxy,
     NoHttps: res.no_https,
-    ExtraParams: buildProviderExtraParams(res),
+    ExtraParams: res.ExtraParams ?? [],
     BaseURL: res.base_url,
     Endpoint: res.endpoint,
     EnableEndpoint: res.enable_endpoint,
@@ -234,7 +232,6 @@ export const formValueToAIConfigProvider = (res) => {
     // WebhookURL: "",
     // Disabled: false
   }
-  if (res.Type === YAK_SCRIPT_PROVIDER) return date
   // 1. 单独处理特殊规则字段
   const reasoningEffort = parseValidStringOption(res.ReasoningEffort)
   if (reasoningEffort !== undefined) date.ReasoningEffort = reasoningEffort
@@ -371,14 +368,17 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
       const oldFileName = aiModelType ? getFileNameByModelType(aiModelType) : null
       if (!oldFileName) return
       const oldUpdateItem = newConfig[oldFileName][currentIndexInConfigRef.current]
-      const newUpdateItem: AIModelConfig = {
-        ...newItem,
-        ExtraParams: oldUpdateItem.ExtraParams,
-        Provider: {
-          ExtraParams: oldUpdateItem.Provider.ExtraParams,
-          ...newItem.Provider,
-        },
-      }
+      const newUpdateItem: AIModelConfig =
+        newItem.Provider.Type === YAK_SCRIPT_PROVIDER
+          ? newItem
+          : {
+              ...newItem,
+              ExtraParams: oldUpdateItem.ExtraParams,
+              Provider: {
+                ExtraParams: oldUpdateItem.Provider.ExtraParams,
+                ...newItem.Provider,
+              },
+            }
 
       if (aiModelType !== modelType) {
         const isHave = newConfig[fileName].find((i) => isEqualAIModel(i, newUpdateItem))

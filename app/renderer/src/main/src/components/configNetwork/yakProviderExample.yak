@@ -3,8 +3,8 @@
 // provider.ReadSSE(reader, callback(event, data)): decodes SSE only, not JSON.
 // provider.Retry(req, reason, retryAfter): marks failure; the host waits/retries.
 // provider.IsTransientError(err): checks temporary network failures.
-// req: Context, RequestID, Prompt, Model, BaseURL, Endpoint, EnableEndpoint,
-//      APIKey, Proxy, Headers, Timeout, RawMessages.
+// req contains invocation data only: Context, RequestID, Prompt, RawMessages.
+// All endpoint, authentication, model and timeout choices belong to this source.
 // Output: return non-empty text OR emit(text)~ and return nil; never both.
 // emit accepts model content only. There is no separate reasoning emitter.
 // Errors: return error(...), never error text as a successful answer.
@@ -24,25 +24,25 @@ chat = func(req, emit) {
     assert len(req.RawMessages) == 0, "This example accepts the complete req.Prompt only"
     mode = "json" // Change to "sse" for streaming Chat Completions.
     assert mode == "json" || mode == "sse", "response_mode must be json or sse"
-    assert req.Model != "", "Model must be the upstream model ID"
-    endpoint = req.Endpoint
-    if !req.EnableEndpoint || endpoint == "" {
-        // BaseURL includes the API prefix, e.g. https://model.example/v1.
-        endpoint = str.TrimRight(req.BaseURL, "/") + "/chat/completions"
-    }
+    endpoint = "https://model.example/v1/chat/completions"
+    model = "your-model-id"
+    apiKey = ""
+    timeoutSeconds = 240
+    proxy = ""
+    headers = {}
     payload = {
-        "model": req.Model,
+        "model": model,
         "messages": [{"role": "user", "content": req.Prompt}],
         "stream": mode == "sse",
         "n": 1,
     }
-    options = [poc.json(payload), poc.context(req.Context), poc.timeout(req.Timeout),
+    options = [poc.json(payload), poc.context(req.Context), poc.timeout(timeoutSeconds),
         poc.retryTimes(0), poc.redirectTimes(0), poc.save(false)]
-    if req.APIKey != "" {
-        options = append(options, poc.replaceHeader("Authorization", "Bearer " + req.APIKey))
+    if apiKey != "" {
+        options = append(options, poc.replaceHeader("Authorization", "Bearer " + apiKey))
     }
-    if req.Proxy != "" { options = append(options, poc.proxy(req.Proxy)) }
-    for key, value in req.Headers {
+    if proxy != "" { options = append(options, poc.proxy(proxy)) }
+    for key, value in headers {
         options = append(options, poc.replaceHeader(key, value))
     }
 

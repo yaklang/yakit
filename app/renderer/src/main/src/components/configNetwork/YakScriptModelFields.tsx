@@ -1,7 +1,6 @@
 import type React from 'react'
 import { lazy, Suspense } from 'react'
 import { Form } from 'antd'
-import { YakitInputNumber } from '../yakitUI/YakitInputNumber/YakitInputNumber'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import styles from './ConfigNetworkPage.module.scss'
 
@@ -34,15 +33,6 @@ export const YakScriptModelFields: React.FC<{ disabled?: boolean }> = ({ disable
         extra={t('ConfigNetworkPage.modelScriptHelp')}
       >
         <ScriptEditor disabled={disabled} />
-      </Form.Item>
-      <Form.Item
-        label={t('ConfigNetworkPage.scriptTimeout')}
-        name="script_timeout_seconds"
-        rules={[
-          { required: true, type: 'number', min: 1, max: 3600, message: t('ConfigNetworkPage.scriptTimeoutInvalid') },
-        ]}
-      >
-        <YakitInputNumber min={1} max={3600} precision={0} disabled={disabled} />
       </Form.Item>
     </>
   )

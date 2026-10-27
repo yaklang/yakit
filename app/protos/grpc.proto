@@ -3454,6 +3454,8 @@ message ThirdPartyApplicationConfig {
   optional double FrequencyPenalty = 22;
   optional string ReasoningEffort = 23;
   optional bool EnableThinkingOpt = 24;
+  // yak-script: the complete provider implementation; connection and model options live in the source.
+  string Script = 25;
 }
 
 message DiagnoseNetworkRequest {
