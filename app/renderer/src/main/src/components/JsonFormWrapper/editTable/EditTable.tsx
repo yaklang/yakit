@@ -280,7 +280,8 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
   const isEditing = useMemoizedFn((rowItem: Item) => rowItem._id === editingId)
 
   const onEdit = useMemoizedFn((record: Partial<Item> & { _id: React.Key }) => {
-    form.setFieldsValue({ ...record })
+    form.resetFields()
+    form.setFieldsValue({ ...defaultObj, ...record })
     setEditingId(record._id)
   })
 

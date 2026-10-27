@@ -136,7 +136,7 @@ const PluginHasParamsDrawer = React.memo((props: PluginHasParamsDrawerProps) => 
                       const saveParams: CustomPluginExecuteFormValue = { ...values }
                       const execParams: YakExecutorParam[] = []
                       Object.keys(saveParams).forEach((key) => {
-                        if (saveParams[key] !== false) {
+                        if (saveParams[key] !== undefined && saveParams[key] !== null) {
                           execParams.push({ Key: key, Value: saveParams[key] })
                         }
                       })
@@ -259,7 +259,7 @@ export const PluginHasParamsModal = React.memo((props: PluginHasParamsModalProps
           const saveParams: CustomPluginExecuteFormValue = { ...values }
           const execParams: YakExecutorParam[] = []
           Object.keys(saveParams).forEach((key) => {
-            if (saveParams[key] !== false) {
+            if (saveParams[key] !== undefined && saveParams[key] !== null) {
               execParams.push({ Key: key, Value: saveParams[key] })
             }
           })
