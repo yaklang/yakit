@@ -964,7 +964,13 @@
     "aiCallTokenLimit": "壓力 token 閾值",
     "aiCallTokenLimitDesc": "Token pressure limit，當 AI 對話的 token 數量超過這個限制時，需要警告",
     "userInteractLimit": "使用者互動上限",
-    "userInteractLimitDesc": "使用者互動的最大次數限制，超過這個次數，AI 將不再被允許問使用者問題"
+    "userInteractLimitDesc": "使用者互動的最大次數限制，超過這個次數，AI 將不再被允許問使用者問題",
+    "modelRPM": "模型呼叫頻率",
+    "modelRPMDesc": "目前引擎所有模型及重試共用限額：任意連續 60 秒最多發起指定次數。回應結束不返還額度，0 關閉主動限頻；排隊不占單次逾時，429 仍遵守 Retry-After。",
+    "retryForever": "無限重試",
+    "retryForeverDesc": "模型呼叫失敗或動作格式不合法時持續等待重試，可隨時停止。開啟後先收齊回應再交付，避免殘缺輸出進入 Agent。",
+    "networkDebug": "網路請求 Debug",
+    "networkDebugDesc": "模型 HTTP 請求、回應及耗時只寫入 aispace 檔案，不存入流量資料庫。會話匯出日誌附帶網路記錄；包含憑據及業務資料，排查後關閉。"
   },
   "AIChatWorkspace": {
     "close": "關閉",

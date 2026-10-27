@@ -72,34 +72,25 @@ describe('providerToListAiModelConfig', () => {
     expect(providerToListAiModelConfig()).toBeUndefined()
   })
 
-  it('flattens script settings for model metadata requests', () => {
-    const config = JSON.parse(
+  it('does not create a discovery request for script providers', () => {
+    expect(
       providerToListAiModelConfig({
         Type: 'yak-script',
         ExtraParams: [
           { Key: 'script', Value: 'chat = func(req, emit) { return "ok" }' },
-          { Key: 'script_params', Value: '{"cust_id":"test"}' },
           { Key: 'script_timeout_seconds', Value: '300' },
-          { Key: 'model', Value: 'qclaw-mock' },
+          { Key: 'model', Value: 'script-model' },
         ],
-      })!,
-    )
-    expect(config).toMatchObject({
-      script: expect.stringContaining('chat ='),
-      script_params: '{"cust_id":"test"}',
-      script_timeout_seconds: 300,
-      model: 'qclaw-mock',
-    })
+      }),
+    ).toBeUndefined()
   })
 
-  it('removes stale script fields for other providers without mutating unknown extras', () => {
+  it('leaves ordinary provider extension parameters untouched', () => {
     const extras = [
       { Key: 'script', Value: 'old' },
       { Key: 'tenant', Value: 'keep' },
     ]
-    expect(buildProviderExtraParams({ Type: 'openai', script: 'new', ExtraParams: extras })).toEqual([
-      { Key: 'tenant', Value: 'keep' },
-    ])
+    expect(buildProviderExtraParams({ Type: 'openai', ExtraParams: extras })).toEqual(extras)
     expect(extras).toHaveLength(2)
   })
 })

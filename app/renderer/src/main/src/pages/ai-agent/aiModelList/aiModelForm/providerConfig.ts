@@ -2,7 +2,7 @@ import type { ThirdPartyApplicationConfig } from '@/components/configNetwork/Con
 import type { KVPair } from '@/models/kv'
 
 export const YAK_SCRIPT_PROVIDER = 'yak-script'
-export const YAK_SCRIPT_FIELDS = ['script', 'script_params', 'script_timeout_seconds'] as const
+const YAK_SCRIPT_FIELDS = ['script', 'script_timeout_seconds'] as const
 
 export const isYakScriptField = (key: string) => YAK_SCRIPT_FIELDS.some((field) => field === key)
 
@@ -10,7 +10,6 @@ export const getYakScriptFormValues = (params: KVPair[] = []) => {
   const values = Object.fromEntries(params.map(({ Key, Value }) => [Key, Value]))
   return {
     script: values.script ?? '',
-    script_params: values.script_params ?? '{}',
     script_timeout_seconds: Number(values.script_timeout_seconds || 240),
   }
 }
@@ -19,16 +18,14 @@ export const buildProviderExtraParams = (values: {
   Type?: string
   ExtraParams?: KVPair[]
   script?: string
-  script_params?: string
   script_timeout_seconds?: number
 }): KVPair[] => {
+  if (values.Type !== YAK_SCRIPT_PROVIDER) return values.ExtraParams ?? []
   const params = (values.ExtraParams ?? []).filter(({ Key }) => !isYakScriptField(Key))
-  if (values.Type === YAK_SCRIPT_PROVIDER) {
-    YAK_SCRIPT_FIELDS.forEach((Key) => {
-      const value = values[Key]
-      if (value !== undefined && value !== null && value !== '') params.push({ Key, Value: String(value) })
-    })
-  }
+  YAK_SCRIPT_FIELDS.forEach((Key) => {
+    const value = values[Key]
+    if (value !== undefined && value !== null && value !== '') params.push({ Key, Value: String(value) })
+  })
   return params
 }
 
@@ -37,7 +34,8 @@ export const buildProviderExtraParams = (values: {
  * 统一所有 ListAiModel 调用点的字段映射，避免新增 proto 字段时遗漏。
  */
 export const providerToListAiModelConfig = (provider?: ThirdPartyApplicationConfig): string | undefined => {
-  if (!provider) return undefined
+  // 脚本模型的名称由用户填写；脚本 ABI 没有模型发现接口。
+  if (!provider || provider.Type === YAK_SCRIPT_PROVIDER) return undefined
   return JSON.stringify({
     Type: provider.Type ?? '',
     api_key: provider.APIKey ?? '',
@@ -49,11 +47,5 @@ export const providerToListAiModelConfig = (provider?: ThirdPartyApplicationConf
     endpoint: provider.Endpoint ?? '',
     enable_endpoint: !!provider.EnableEndpoint,
     Headers: provider.Headers ?? [],
-    ...(provider.Type === YAK_SCRIPT_PROVIDER
-      ? {
-          ...getYakScriptFormValues(provider.ExtraParams),
-          model: provider.ExtraParams?.find(({ Key }) => Key === 'model')?.Value ?? '',
-        }
-      : {}),
   })
 }

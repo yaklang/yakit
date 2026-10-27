@@ -1,0 +1,137 @@
+// Trusted adapter example. Contract: common/ai/yakscript/README.md.
+// Injected by the Go host (no import required):
+// provider.ReadSSE(reader, callback(event, data)): decodes SSE only, not JSON.
+// provider.Retry(req, reason, retryAfter): marks failure; the host waits/retries.
+// provider.IsTransientError(err): checks temporary network failures.
+// req: Context, RequestID, Prompt, Model, BaseURL, Endpoint, EnableEndpoint,
+//      APIKey, Proxy, Headers, Timeout, RawMessages.
+// Output: return non-empty text OR emit(text)~ and return nil; never both.
+// emit accepts model content only. There is no separate reasoning emitter.
+// Errors: return error(...), never error text as a successful answer.
+// Set business options in this script. Rate/retry/debug are engine settings.
+// Both modes buffer and validate the complete answer before returning it.
+// reasoning_content is intentionally not delivered: emit only supports content.
+
+decodeObject = func(raw) {
+    value, err = json.New(raw)
+    assert err == nil, "Chat Completions returned invalid JSON"
+    assert value.IsObject(), "Chat Completions expected a JSON object"
+    return value.Value()
+}
+
+chat = func(req, emit) {
+    // 1. Map the host request to this upstream's HTTP API.
+    assert len(req.RawMessages) == 0, "This example accepts the complete req.Prompt only"
+    mode = "json" // Change to "sse" for streaming Chat Completions.
+    assert mode == "json" || mode == "sse", "response_mode must be json or sse"
+    assert req.Model != "", "Model must be the upstream model ID"
+    endpoint = req.Endpoint
+    if !req.EnableEndpoint || endpoint == "" {
+        // BaseURL includes the API prefix, e.g. https://model.example/v1.
+        endpoint = str.TrimRight(req.BaseURL, "/") + "/chat/completions"
+    }
+    payload = {
+        "model": req.Model,
+        "messages": [{"role": "user", "content": req.Prompt}],
+        "stream": mode == "sse",
+        "n": 1,
+    }
+    options = [poc.json(payload), poc.context(req.Context), poc.timeout(req.Timeout),
+        poc.retryTimes(0), poc.redirectTimes(0), poc.save(false)]
+    if req.APIKey != "" {
+        options = append(options, poc.replaceHeader("Authorization", "Bearer " + req.APIKey))
+    }
+    if req.Proxy != "" { options = append(options, poc.proxy(req.Proxy)) }
+    for key, value in req.Headers {
+        options = append(options, poc.replaceHeader(key, value))
+    }
+
+    // 2. Classify HTTP failures. Retry marks a decision; the Go host schedules it.
+    response, _, requestError = poc.Post(endpoint, options...)
+    if requestError != nil {
+        if provider.IsTransientError(requestError) {
+            return provider.Retry(req, "Chat Completions connection temporarily unavailable", "")
+        }
+        return error("Chat Completions request failed; check endpoint, proxy and TLS")
+    }
+    status = response.GetStatusCode()
+    if status == 408 || status == 429 || status == 500 || status == 502 || status == 503 || status == 504 {
+        return provider.Retry(req, sprintf("Chat Completions HTTP %d", status), response.GetHeader("Retry-After"))
+    }
+    assert status == 200, sprintf("Chat Completions HTTP %d", status)
+    contentType = str.ToLower(response.GetHeader("Content-Type"))
+    result = ""
+
+    // 3a. Non-streaming JSON has choices[].message, not choices[].delta.
+    if mode == "json" {
+        assert str.HasPrefix(contentType, "application/json"), "Expected application/json"
+        body = decodeObject(response.GetBody())
+        assert body["error"] == nil, "Chat Completions returned an API error"
+        choices = json.New(body["choices"])~
+        assert choices.IsArray() && len(body["choices"]) == 1, "Expected one completion choice"
+        choice = body["choices"][0]
+        assert choice["finish_reason"] == "stop", "Completion did not finish normally"
+        assert choice["message"] != nil, "Missing completion message"
+        assert choice["message"]["tool_calls"] == nil && choice["message"]["function_call"] == nil, "Native tool calls are unsupported by this example"
+        assert choice["message"]["refusal"] == nil || choice["message"]["refusal"] == "", "Model refused the request"
+        result = choice["message"]["content"]
+    } else {
+        // 3b. ReadSSE only decodes the envelope. This callback owns the LLM schema.
+        assert str.HasPrefix(contentType, "text/event-stream"), "Expected text/event-stream"
+        seenDone, seenStop = false, false
+        parseError = provider.ReadSSE(str.NewReader(string(response.GetBody())), func(event, data) {
+            if event != "message" { return error("Unexpected Chat Completions SSE event") }
+            if data == "[DONE]" {
+                seenDone = true
+                return io.EOF
+            }
+            chunk = decodeObject(data)
+            if chunk["error"] != nil { return error("Chat Completions returned an API error") }
+            choices = json.New(chunk["choices"])~
+            if !choices.IsArray() { return error("Missing completion choices") }
+            // A usage-only chunk may follow the final choice.
+            if len(chunk["choices"]) == 0 {
+                if chunk["usage"] == nil { return error("Unexpected empty completion choices") }
+                return nil
+            }
+            if len(chunk["choices"]) != 1 || chunk["choices"][0]["index"] != 0 {
+                return error("Expected only completion choice zero")
+            }
+            if seenStop { return error("Completion choice arrived after finish_reason") }
+            choice = chunk["choices"][0]
+            deltaObject = json.New(choice["delta"])~
+            if !deltaObject.IsObject() { return error("Missing completion delta object") }
+            if choice["delta"]["tool_calls"] != nil || choice["delta"]["function_call"] != nil {
+                return error("Native tool calls are unsupported by this example")
+            }
+            if choice["delta"]["refusal"] != nil && choice["delta"]["refusal"] != "" {
+                return error("Model refused the request")
+            }
+            // Do not mix delta.reasoning_content / reasoning into model content.
+            part = choice["delta"]["content"]
+            if part != nil {
+                if typeof(part).String() != "string" { return error("Completion content must be text") }
+                result += part
+            }
+            if choice["finish_reason"] != nil {
+                if choice["finish_reason"] != "stop" { return error("Completion did not finish normally") }
+                seenStop = true
+            }
+            return nil
+        })
+        if parseError != nil {
+            if provider.IsTransientError(parseError) {
+                return provider.Retry(req, "Chat Completions SSE was truncated", "")
+            }
+            return parseError
+        }
+        if !seenDone || !seenStop {
+            return provider.Retry(req, "Chat Completions SSE missing completion markers", "")
+        }
+    }
+
+    // 4. Commit only normalized, validated content. @action validation is the Agent's job.
+    assert result != nil && typeof(result).String() == "string", "Completion content must be text"
+    assert str.TrimSpace(result) != "", "Model returned an empty answer"
+    return result
+}

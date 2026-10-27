@@ -95,36 +95,37 @@ describe('Yak script model configuration', () => {
   const provider = {
     Type: 'yak-script',
     APIKey: '',
-    BaseURL: 'http://127.0.0.1:18080',
+    BaseURL: 'https://model.example/v1',
     ExtraParams: [
       { Key: 'script', Value: script },
-      { Key: 'script_params', Value: '{"cust_id":"tenant-a"}' },
       { Key: 'script_timeout_seconds', Value: '300' },
       { Key: 'tenant', Value: 'keep' },
     ],
   }
 
-  it('adds a QClaw model from the template through the real save flow', async () => {
+  it('adds a script model with the default editor template through the real save flow', async () => {
     render(<AIModelForm onClose={vi.fn()} />)
     fireEvent.change(await screen.findByRole('combobox', { name: 'ConfigNetworkPage.typeLabel' }), {
       target: { value: 'yak-script' },
     })
-    fireEvent.click(await screen.findByRole('button', { name: 'ConfigNetworkPage.loadQClawMock' }))
+    fireEvent.change(screen.getByRole('textbox', { name: 'ConfigNetworkPage.modelName' }), {
+      target: { value: 'script-model' },
+    })
     const editor = await screen.findByLabelText('yak-model-script')
     expect((editor as HTMLTextAreaElement).value).toContain('provider.ReadSSE')
+    expect(screen.queryByText('ConfigNetworkPage.scriptTemplate')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'ConfigNetworkPage.loadProviderExample' })).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'AIModelList.confirmAddBtn' }))
     await waitFor(() => expect(mocks.save).toHaveBeenCalledOnce())
     const saved = mocks.save.mock.calls[0][0].IntelligentModels[0]
     expect(saved).toMatchObject({
-      ModelName: 'qclaw-mock',
+      ModelName: 'script-model',
       Provider: {
         Type: 'yak-script',
         APIType: '',
-        BaseURL: 'http://127.0.0.1:18080',
-        APIKey: 'qclaw-local-test',
+        APIKey: '',
         ExtraParams: expect.arrayContaining([
           { Key: 'script', Value: expect.stringContaining('provider.ReadSSE') },
-          { Key: 'script_params', Value: '{"cust_id":"memfit-local"}' },
           { Key: 'script_timeout_seconds', Value: '240' },
         ]),
       },
@@ -161,13 +162,12 @@ describe('Yak script model configuration', () => {
     )
     expect(buildAIConfigHealthCheckFormValues(saved)).toMatchObject({
       script,
-      script_params: '{"cust_id":"tenant-a"}',
       script_timeout_seconds: 300,
     })
     expect(mocks.invoke).not.toHaveBeenCalled()
   })
 
-  it('validates JSON objects, nonempty scripts and timeout before saving', async () => {
+  it('validates nonempty scripts and timeout without a parameter field', async () => {
     const ref = createRef<{ form: FormInstance }>()
     render(
       <NewAIThirdPartyApplicationConfigBase
@@ -175,17 +175,12 @@ describe('Yak script model configuration', () => {
         formValues={{ Type: 'yak-script', model_type: AIModelTypeEnum.TierIntelligent }}
       />,
     )
-    fireEvent.click(await screen.findByRole('button', { name: 'ConfigNetworkPage.loadQClawMock' }))
-    await screen.findByLabelText('yak-model-script')
+    const editor = await screen.findByLabelText('yak-model-script')
+    expect((editor as HTMLTextAreaElement).value).toContain('provider.ReadSSE')
     const form = ref.current!.form
-    for (const invalid of ['[]', 'null', '{broken']) {
-      await act(async () => {
-        form.setFieldsValue({ script_params: invalid })
-        await expect(form.validateFields()).rejects.toMatchObject({ errorFields: [{ name: ['script_params'] }] })
-      })
-    }
+    expect(screen.queryByLabelText('ConfigNetworkPage.scriptParams')).not.toBeInTheDocument()
     await act(async () => {
-      form.setFieldsValue({ script_params: '{}', script: '   ', script_timeout_seconds: 0 })
+      form.setFieldsValue({ script: '   ', script_timeout_seconds: 0 })
       await expect(form.validateFields()).rejects.toMatchObject({
         errorFields: expect.arrayContaining([
           expect.objectContaining({ name: ['script'] }),
@@ -196,15 +191,11 @@ describe('Yak script model configuration', () => {
   })
 
   it.each([false, true])('tests and saves the edited effective script (move tier=%s)', async (moveTier) => {
-    const oldScript = 'chat = func(req, emit) { return "model override" }'
     const edited = 'chat = func(req, emit) { emit("edited"); return nil }'
     const item = {
       ModelName: 'my-script',
       Provider: provider,
-      ExtraParams: [
-        { Key: 'script', Value: oldScript },
-        { Key: 'unrelated', Value: 'keep' },
-      ],
+      ExtraParams: [{ Key: 'unrelated', Value: 'keep' }],
     } as AIModelConfig
     mocks.config.IntelligentModels = [item]
     const onClose = vi.fn()
@@ -212,7 +203,7 @@ describe('Yak script model configuration', () => {
       <AIModelForm item={item} aiModelType={AIModelTypeEnum.TierIntelligent} onClose={onClose} />,
     )
     const editor = await screen.findByLabelText('yak-model-script')
-    expect(editor).toHaveValue(oldScript)
+    expect(editor).toHaveValue(script)
     fireEvent.change(editor, { target: { value: edited } })
     if (moveTier) {
       fireEvent.mouseDown(screen.getByRole('combobox', { name: 'ConfigNetworkPage.modelType' }))
@@ -249,7 +240,7 @@ describe('Yak script model configuration', () => {
     expect(await screen.findByLabelText('yak-model-script')).toHaveValue(edited)
   })
 
-  it('clears script parameters when switching back to an ordinary provider', async () => {
+  it('clears script fields when switching back to an ordinary provider', async () => {
     const ref = createRef<{ form: FormInstance }>()
     render(
       <NewAIThirdPartyApplicationConfigBase

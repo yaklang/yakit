@@ -28,7 +28,7 @@ import { YakitRoute } from '@/enums/yakitRoute'
 import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
-import { providerToListAiModelConfig } from '../aiModelForm/providerConfig'
+import { providerToListAiModelConfig, YAK_SCRIPT_PROVIDER } from '../aiModelForm/providerConfig'
 import { yakitNotify } from '@/utils/notification'
 import { getMainOperatorPageBodyContainer } from '@/utils/getMainOperatorPageBodyContainer'
 import { EnterpriseAIModelSelect } from './enterpriseAIModelSelect/EnterpriseAIModelSelect'
@@ -214,11 +214,14 @@ const CurrentAIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
   })
   const modelNameOptions = useCreation(
     () =>
-      modelNames.map((name) => ({
+      (selectIntelligentItem?.Provider.Type === YAK_SCRIPT_PROVIDER
+        ? [selectIntelligentItem.ModelName]
+        : modelNames
+      ).map((name) => ({
         label: <ModelNameOptionLabel name={name} />,
         value: name,
       })),
-    [modelNames],
+    [modelNames, selectIntelligentItem?.Provider.Type, selectIntelligentItem?.ModelName],
   )
   const isHaveData =
     aiDraftConfig.IntelligentModels.length > 0 ||
@@ -265,7 +268,7 @@ const CurrentAIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                       aria-label={t('YakitButton.refresh')}
                       icon={<RefreshOutlined color="currentColor" />}
                       loading={modelNamesLoading}
-                      disabled={!selectIntelligentItem || resetLoading || modelNamesLoading}
+                      disabled={!modelListConfig || resetLoading || modelNamesLoading}
                       onClick={onRefreshModelNameList}
                     />
                   </Tooltip>
@@ -285,7 +288,7 @@ const CurrentAIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                           <YakitButton
                             size="small"
                             type="text"
-                            disabled={!selectIntelligentItem || resetLoading || modelNamesLoading}
+                            disabled={!modelListConfig || resetLoading || modelNamesLoading}
                             onClick={onRefreshModelNameList}
                           >
                             {t('YakitButton.refresh')}

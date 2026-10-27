@@ -282,9 +282,6 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
         api_key_id: item.ProviderId,
         model: item.ModelName,
         ...buildAIConfigHealthCheckFormValues(item.Provider),
-        ...(item.Provider.Type === YAK_SCRIPT_PROVIDER
-          ? getYakScriptFormValues([...(item.Provider.ExtraParams ?? []), ...(item.ExtraParams ?? [])])
-          : {}),
         _ProbedExtendedEfforts: item.ProbedExtendedEfforts,
         _EffortProbed: item.EffortProbed,
       }
@@ -376,11 +373,7 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
       const oldUpdateItem = newConfig[oldFileName][currentIndexInConfigRef.current]
       const newUpdateItem: AIModelConfig = {
         ...newItem,
-        // 已编辑的脚本统一写入 Provider，移除模型级旧覆盖值，保留其他扩展参数。
-        ExtraParams:
-          oldUpdateItem.Provider.Type === YAK_SCRIPT_PROVIDER || newItem.Provider.Type === YAK_SCRIPT_PROVIDER
-            ? (oldUpdateItem.ExtraParams ?? []).filter(({ Key }) => !isYakScriptField(Key))
-            : oldUpdateItem.ExtraParams,
+        ExtraParams: oldUpdateItem.ExtraParams,
         Provider: {
           ExtraParams: oldUpdateItem.Provider.ExtraParams,
           ...newItem.Provider,
@@ -605,9 +598,6 @@ export const AIModelCheckResult: React.FC<AIModelCheckResultProps> = (props) => 
     let obj: AIThirdPartyApplicationConfig | undefined = undefined
     if (testResult?.RecommendConfig) {
       obj = buildAIConfigHealthCheckFormValues(testResult?.RecommendConfig)
-    }
-    if (obj) {
-      obj.ExtraParams = testResult?.RecommendConfig.ExtraParams || []
     }
     if (obj && aiModelType) {
       obj.model_type = aiModelType

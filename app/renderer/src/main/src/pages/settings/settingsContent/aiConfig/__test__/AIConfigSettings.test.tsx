@@ -7,12 +7,19 @@ import {
   serializeAIAgentChatSetting,
   type LoadAIAgentChatSettingResult,
 } from '@/pages/ai-agent/utils/aiAgentChatSettingCache'
-import { AIAgentSettingDefault } from '@/pages/ai-agent/defaultConstant'
+import { AIAgentSettingDefault, defaultAIGlobalConfig } from '@/pages/ai-agent/defaultConstant'
 import type { AIAgentSetting } from '@/pages/ai-agent/aiAgentType'
 import emiter from '@/utils/eventBus/eventBus'
 import { RemoteAIAgentGV } from '@/enums/aiAgent'
 import { setRemoteValue } from '@/utils/kv'
 import { AIConfigSettings } from '../AIConfigSettings'
+import { grpcGetAIGlobalConfig, grpcSetAIGlobalConfig } from '@/pages/ai-agent/aiModelList/utils'
+import { useAIGlobalConfigStore } from '@/store/aiGlobalConfig'
+
+vi.mock('@/pages/ai-agent/aiModelList/utils', () => ({
+  grpcGetAIGlobalConfig: vi.fn(),
+  grpcSetAIGlobalConfig: vi.fn(),
+}))
 
 vi.mock('@/utils/kv', () => ({
   getRemoteValue: vi.fn(async () => ''),
@@ -62,6 +69,15 @@ const waitLocked = async () => {
 describe('AIConfigSettings', () => {
   beforeEach(() => {
     cleanup()
+    vi.mocked(grpcGetAIGlobalConfig)
+      .mockReset()
+      .mockResolvedValue({ ...defaultAIGlobalConfig })
+    vi.mocked(grpcSetAIGlobalConfig).mockReset().mockResolvedValue(null)
+    useAIGlobalConfigStore.setState({
+      aiGlobalConfig: { ...defaultAIGlobalConfig },
+      isInit: false,
+      queryLoading: false,
+    })
     vi.mocked(setRemoteValue).mockClear()
     vi.mocked(loadAIAgentChatSetting).mockReset()
     vi.mocked(loadAIAgentChatSetting).mockResolvedValue(successLoad())
@@ -329,5 +345,75 @@ describe('AIConfigSettings', () => {
     })
     expect(persistAIAgentChatSetting).not.toHaveBeenCalled()
     expect(document.querySelector('[data-ai-config-ready="1"]')).toBeFalsy()
+  })
+  it('全局限频在确认输入后保存，响应配置与模型列表一起保留', async () => {
+    const original = {
+      ...defaultAIGlobalConfig,
+      RetryForever: true,
+      NetworkDebug: true,
+      ModelRequestsPerMinute: 3,
+    }
+    useAIGlobalConfigStore.setState({ aiGlobalConfig: original })
+    render(<AIConfigSettings />)
+    await waitReady()
+    const rpm = screen.getByRole('spinbutton', { name: 'AIChatSetting.modelRPM' })
+    expect(rpm).toHaveValue('3')
+    fireEvent.change(rpm, { target: { value: '12' } })
+    expect(grpcSetAIGlobalConfig).not.toHaveBeenCalled()
+    fireEvent.blur(rpm)
+    await waitFor(() =>
+      expect(grpcSetAIGlobalConfig).toHaveBeenCalledWith({
+        ...original,
+        ModelRequestsPerMinute: 12,
+      }),
+    )
+    expect(persistAIAgentChatSetting).not.toHaveBeenCalled()
+  })
+
+  it('无限重试和网络诊断写入全局配置而非会话设置，失败回滚', async () => {
+    render(<AIConfigSettings />)
+    await waitReady()
+    const retry = screen.getByRole('switch', { name: 'AIChatSetting.retryForever' })
+    const debug = screen.getByRole('switch', { name: 'AIChatSetting.networkDebug' })
+    fireEvent.click(retry)
+    await waitFor(() =>
+      expect(grpcSetAIGlobalConfig).toHaveBeenCalledWith(expect.objectContaining({ RetryForever: true })),
+    )
+    await waitFor(() => expect(debug).not.toBeDisabled())
+    vi.mocked(grpcGetAIGlobalConfig).mockResolvedValue({ ...defaultAIGlobalConfig, RetryForever: true })
+    vi.mocked(grpcSetAIGlobalConfig).mockRejectedValueOnce(new Error('fixture-save-failed'))
+    fireEvent.click(debug)
+    await waitFor(() =>
+      expect(grpcSetAIGlobalConfig).toHaveBeenLastCalledWith(
+        expect.objectContaining({ RetryForever: true, NetworkDebug: true }),
+      ),
+    )
+    await waitFor(() => expect(debug).toHaveAttribute('aria-checked', 'false'))
+    expect(retry).toHaveAttribute('aria-checked', 'true')
+    expect(persistAIAgentChatSetting).not.toHaveBeenCalled()
+  })
+
+  it('自动化分区重置会显式关闭三项全局控制', async () => {
+    useAIGlobalConfigStore.setState({
+      aiGlobalConfig: {
+        ...defaultAIGlobalConfig,
+        RetryForever: true,
+        NetworkDebug: true,
+        ModelRequestsPerMinute: 3,
+      },
+    })
+    render(<AIConfigSettings />)
+    await waitReady()
+    const header = screen.getByText('AIChatSetting.automation').parentElement!
+    fireEvent.click(within(header).getByRole('button'))
+    await waitFor(() =>
+      expect(grpcSetAIGlobalConfig).toHaveBeenCalledWith(
+        expect.objectContaining({
+          RetryForever: false,
+          NetworkDebug: false,
+          ModelRequestsPerMinute: 0,
+        }),
+      ),
+    )
   })
 })

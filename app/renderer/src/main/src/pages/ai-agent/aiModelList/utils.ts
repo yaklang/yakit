@@ -350,6 +350,9 @@ export const grpcListAiModel: APIFunc<ListAiModelRequest, ListAiModelResponse> =
   })
 }
 export interface AIGlobalConfig {
+  RetryForever: boolean
+  NetworkDebug: boolean
+  ModelRequestsPerMinute: number
   Enabled: boolean
   /** 是否让所有新会话只使用首个高质模型 */
   SingleModelMode: boolean

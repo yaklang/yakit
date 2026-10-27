@@ -26,11 +26,11 @@ import {
   buildAIConfigHealthCheckConfig,
 } from '@/pages/ai-agent/aiModelList/aiModelForm/AIModelForm'
 import {
-  getYakScriptFormValues,
   providerToListAiModelConfig,
   YAK_SCRIPT_PROVIDER,
 } from '@/pages/ai-agent/aiModelList/aiModelForm/providerConfig'
 import { YakScriptModelFields } from './YakScriptModelFields'
+import providerExample from './yakProviderExample.yak?raw'
 import {
   buildReasoningEffortOptions,
   effortProbeResultFromResponse,
@@ -290,7 +290,8 @@ const buildOptionalAIFormItemsForType = (typeVal: string, enableEndpoint: boolea
     newData.forEach((item) => {
       if (item.Name === 'base_url' || item.Name === 'endpoint') {
         item.Desc = t('ConfigNetworkPage.scriptAddressHelp')
-        item.Placeholder = item.Name === 'base_url' ? 'http://127.0.0.1:18080' : 'http://127.0.0.1:18080/api/v1/message'
+        item.Placeholder =
+          item.Name === 'base_url' ? 'https://model.example/v1' : 'https://model.example/v1/chat/completions'
       }
     })
   }
@@ -383,12 +384,6 @@ const AIThirdPartyConfigReadonlyPanel: React.FC<AIThirdPartyConfigReadonlyPanelP
             <YakitInput.TextArea readOnly value={merged.script ?? ''} autoSize={{ minRows: 6, maxRows: 12 }} />
           </div>
           {renderCopyRow(
-            'script_params',
-            t('ConfigNetworkPage.scriptParams'),
-            merged.script_params ?? '{}',
-            merged.script_params ?? '{}',
-          )}
-          {renderCopyRow(
             'script_timeout_seconds',
             t('ConfigNetworkPage.scriptTimeout'),
             String(merged.script_timeout_seconds ?? 240),
@@ -433,7 +428,6 @@ export interface AIThirdPartyApplicationConfig {
   Headers?: KVPair[]
   ExtraParams?: KVPair[]
   script?: string
-  script_params?: string
   script_timeout_seconds?: number
   /** 探测到的扩展思考强度（表单内部字段，由 NewAIThirdPartyApplicationConfigBase 自动写入） */
   _ProbedExtendedEfforts?: string[]
@@ -711,7 +705,7 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
             if (isScriptProvider) {
               return (
                 <Form.Item {...formProps} extra={t('ConfigNetworkPage.scriptModelNameHelp')}>
-                  <YakitInput placeholder="qclaw-mock" disabled={IsOnline} />
+                  <YakitInput placeholder="script-model" disabled={IsOnline} />
                 </Form.Item>
               )
             }
@@ -795,8 +789,9 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
 
     const initialValues = useMemo(() => {
       const copyFormValues = {
-        ...getYakScriptFormValues(formValues.Type === YAK_SCRIPT_PROVIDER ? formValues.ExtraParams : []),
+        script_timeout_seconds: 240,
         ...formValues,
+        script: formValues.script ?? providerExample,
       }
       const aiFormValues = copyFormValues as typeof copyFormValues & { api_type?: string }
       aiFormValues.api_type = normalizeAIAPIType(aiFormValues.api_type)

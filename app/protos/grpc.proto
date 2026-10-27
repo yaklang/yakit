@@ -9609,6 +9609,9 @@ message AIGlobalConfig {
   string AIPlanPrompt = 10;
   // Single-model routing takes precedence over tier selection without deleting tier lists.
   bool SingleModelMode = 11;
+  bool RetryForever = 12;
+  bool NetworkDebug = 13;
+  int64 ModelRequestsPerMinute = 14;
 }
 
 // Local Model Messages

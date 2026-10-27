@@ -428,6 +428,9 @@ export const AIModelTypeInterFileNameEnum: { [K in AIModelTypeFileName]: K } = {
 export const defaultAIGlobalConfig: AIGlobalConfig = {
   Enabled: false,
   SingleModelMode: false,
+  RetryForever: false,
+  NetworkDebug: false,
+  ModelRequestsPerMinute: 0,
   RoutingPolicy: AIModelPolicyEnum.PolicyAuto,
   DisableFallback: false,
   DefaultModelId: '',
