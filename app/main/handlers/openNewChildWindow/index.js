@@ -124,7 +124,6 @@ module.exports = {
         if (openedWindow.isDestroyed() || event.sender !== openedWindow.webContents) return
         // 校验通过后再移除，避免其他窗口的消息消耗 once 监听，同时保证只跳转一次。
         ipcMain.removeListener('ready-to-load-child', onReadyToLoad)
-        openedWindow.webContents.send('start-child-loading')
         if (isDev) {
           openedWindow.loadURL('http://127.0.0.1:3000/?window=child')
         } else {
@@ -160,11 +159,13 @@ module.exports = {
         }
       })
 
-      // 页面和主题统一由渲染端提供；加载前注册握手及生命周期监听。
+      // 复用 aux HTML 的静态加载模式；收到握手后仍进入原详情页，不启动 aux 应用。
       if (isDev) {
-        openedWindow.loadURL('http://127.0.0.1:3000/child-window/loading.html')
+        openedWindow.loadURL('http://127.0.0.1:3000/yakit-aux.html?mode=child-loading')
       } else {
-        openedWindow.loadFile(appResourcePath('renderer', 'pages', 'main', 'child-window', 'loading.html'))
+        openedWindow.loadFile(appResourcePath('renderer', 'pages', 'main', 'yakit-aux.html'), {
+          search: 'mode=child-loading',
+        })
       }
     })
   },

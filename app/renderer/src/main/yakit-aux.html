@@ -41,6 +41,19 @@
         box-sizing: border-box;
       }
 
+      body[data-mode='child-loading'] {
+        overflow: hidden;
+      }
+
+      body[data-mode='child-loading'] #initial-loading span {
+        margin-right: 0;
+        font-size: 24px;
+      }
+
+      body[data-mode='child-loading'] .initial-spinner {
+        display: none;
+      }
+
       @keyframes initial-spinner {
         0% {
           transform: rotate(0deg);
@@ -60,6 +73,6 @@
         <div class="initial-spinner"></div>
       </div>
     </div>
-    <script type="module" src="/src/auxWindow/aux-entry.tsx"></script>
+    <script type="module" src="/src/auxWindow/aux-bootstrap.ts"></script>
   </body>
 </html>
