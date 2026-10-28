@@ -328,3 +328,83 @@ describe('NewAIThirdPartyApplicationConfigBase model discovery', () => {
     },
   )
 })
+
+describe('Ordinary provider extension parameters', () => {
+  const extras = [
+    { Key: 'tenant', Value: 'tenant-a' },
+    { Key: 'api_version', Value: '2026-01-01' },
+    { Key: 'model', Value: 'stale-model' },
+  ]
+  const provider = { Type: 'openai', APIKey: 'fixture-key', ExtraParams: extras }
+
+  it('preserves unknown parameters through editing and saving, replacing the stale model in health checks', async () => {
+    const item: AIModelConfig = {
+      ProviderId: '',
+      ModelName: 'current-model',
+      Provider: provider,
+      ExtraParams: [{ Key: 'model-option', Value: 'keep' }],
+    }
+    mocks.config.IntelligentModels = [item]
+    const { unmount } = render(
+      <AIModelForm item={item} aiModelType={AIModelTypeEnum.TierIntelligent} onClose={vi.fn()} />,
+    )
+    await screen.findByRole('combobox', { name: 'ConfigNetworkPage.typeLabel' })
+    fireEvent.click(screen.getByRole('button', { name: 'AIModelList.testAndAddBtn' }))
+    await waitFor(() => expect(mocks.save).toHaveBeenCalledOnce())
+    const health = mocks.healthCheck.mock.calls[0][0].Config
+    expect(health.ExtraParams).toEqual(
+      expect.arrayContaining([
+        { Key: 'tenant', Value: 'tenant-a' },
+        { Key: 'api_version', Value: '2026-01-01' },
+      ]),
+    )
+    expect(health.ExtraParams.filter(({ Key }) => Key === 'model')).toEqual([{ Key: 'model', Value: 'current-model' }])
+    const saved = mocks.save.mock.calls[0][0].IntelligentModels[0]
+    expect(saved.Provider.ExtraParams).toEqual(extras)
+    expect(saved.ExtraParams).toEqual(item.ExtraParams)
+    expect(provider.ExtraParams).toEqual(extras)
+
+    unmount()
+    const ref = createRef<{ form: FormInstance }>()
+    render(
+      <NewAIThirdPartyApplicationConfigBase
+        ref={ref}
+        formValues={{
+          ...buildAIConfigHealthCheckFormValues(saved.Provider),
+          model: saved.ModelName,
+          model_type: AIModelTypeEnum.TierIntelligent,
+        }}
+      />,
+    )
+    expect(ref.current!.form.getFieldValue('ExtraParams')).toEqual(extras)
+    expect(formValueToAIConfigProvider(ref.current!.form.getFieldsValue()).ExtraParams).toEqual(extras)
+  })
+
+  it('clears nonempty extension parameters when changing providers and does not restore them when switching back', async () => {
+    const ref = createRef<{ form: FormInstance }>()
+    render(
+      <NewAIThirdPartyApplicationConfigBase
+        ref={ref}
+        formValues={{
+          ...buildAIConfigHealthCheckFormValues(provider),
+          model: 'current-model',
+          model_type: AIModelTypeEnum.TierIntelligent,
+        }}
+      />,
+    )
+    const type = await screen.findByRole('combobox', { name: 'ConfigNetworkPage.typeLabel' })
+    expect(ref.current!.form.getFieldValue('ExtraParams')).toEqual(extras)
+    fireEvent.change(type, { target: { value: 'yak-script' } })
+    await screen.findByLabelText('yak-model-script')
+    expect(ref.current!.form.getFieldValue('ExtraParams')).toEqual([])
+    fireEvent.change(type, { target: { value: 'openai' } })
+    await screen.findByText('Reasoning Effort')
+    const values = ref.current!.form.getFieldsValue()
+    expect(values.ExtraParams).toEqual([])
+    expect(formValueToAIConfigProvider(values).ExtraParams).toEqual([])
+    const health = buildAIConfigHealthCheckConfig({ ...values, model: 'new-model' })
+    expect(health.ExtraParams?.filter(({ Key }) => ['tenant', 'api_version', 'model'].includes(Key))).toEqual([
+      { Key: 'model', Value: 'new-model' },
+    ])
+  })
+})

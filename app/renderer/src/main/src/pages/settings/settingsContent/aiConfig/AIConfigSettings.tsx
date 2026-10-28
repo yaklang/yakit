@@ -86,12 +86,16 @@ export const AIConfigSettings: React.FC = () => {
   const welcomeAnimationDisabled = useWelcomeAnimationDisabled()
   const [globalState, globalEvents] = useAIGlobalConfig()
   const globalConfig = globalState.aiGlobalConfig
+  // store 初始值也是完整对象，必须等当前 hook 成功读到配置后才能写入。
+  const globalWriteDisabled =
+    !globalState.aiGlobalConfigRef.current || globalState.queryLoading || globalState.updateLoading
   const [modelRPM, setModelRPM] = useState<number | null>(0)
   useEffect(
     () => setModelRPM(Number(globalConfig?.ModelRequestsPerMinute || 0)),
     [globalConfig?.ModelRequestsPerMinute],
   )
   const saveGlobal = (patch: Parameters<typeof globalEvents.setAIGlobalConfig>[0]) => {
+    if (!readyRef.current || globalWriteDisabled) return
     void globalEvents.setAIGlobalConfig(patch).catch(() => undefined)
   }
   const resetGlobal = () => saveGlobal({ ModelRequestsPerMinute: 0, RetryForever: false, NetworkDebug: false })
@@ -173,7 +177,9 @@ export const AIConfigSettings: React.FC = () => {
           type="outline1"
           colors="danger"
           icon={<RotateCcwOutlined color="currentColor" />}
+          disabled={!ready || globalWriteDisabled}
           onClick={() => {
+            if (!readyRef.current || globalWriteDisabled) return
             applyAll(cloneDeep(AIAgentSettingDefault))
             resetGlobal()
           }}
@@ -314,7 +320,9 @@ export const AIConfigSettings: React.FC = () => {
           <YakitButton
             type="text2"
             icon={<RefreshOutlined color="currentColor" />}
+            disabled={!ready || globalWriteDisabled}
             onClick={() => {
+              if (!readyRef.current || globalWriteDisabled) return
               apply(automationReset)
               resetGlobal()
             }}
@@ -356,7 +364,7 @@ export const AIConfigSettings: React.FC = () => {
               max={60000}
               precision={0}
               value={modelRPM}
-              disabled={globalState.queryLoading || globalState.updateLoading}
+              disabled={!ready || globalWriteDisabled}
               onChange={(v) => setModelRPM(v === null ? null : Number(v))}
               onBlur={saveRPM}
               onPressEnter={saveRPM}
@@ -366,7 +374,7 @@ export const AIConfigSettings: React.FC = () => {
             <YakitSwitch
               aria-label={t('AIChatSetting.retryForever')}
               checked={!!globalConfig?.RetryForever}
-              disabled={globalState.queryLoading || globalState.updateLoading}
+              disabled={!ready || globalWriteDisabled}
               onChange={(v) => saveGlobal({ RetryForever: v })}
             />
           </SettingRow>
@@ -374,7 +382,7 @@ export const AIConfigSettings: React.FC = () => {
             <YakitSwitch
               aria-label={t('AIChatSetting.networkDebug')}
               checked={!!globalConfig?.NetworkDebug}
-              disabled={globalState.queryLoading || globalState.updateLoading}
+              disabled={!ready || globalWriteDisabled}
               onChange={(v) => saveGlobal({ NetworkDebug: v })}
             />
           </SettingRow>
