@@ -70,7 +70,6 @@ import { SmartDecodeFloatPanel } from '../fuzzerEditorMenuItems'
 
 const hostBox = {
   hostLeft: 100,
-  clipLeft: 100,
   hostTop: 50,
   hostRight: 900,
   hostBottom: 650,
@@ -103,7 +102,6 @@ const paintPanelBox = (el: HTMLElement, left: number, top: number, width: number
 describe('SmartDecodeFloatPanel three-state layout', () => {
   beforeEach(() => {
     hostBox.hostLeft = 100
-    hostBox.clipLeft = 100
     hostBox.hostTop = 50
     hostBox.hostRight = 900
     hostBox.hostBottom = 650

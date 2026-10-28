@@ -101,8 +101,6 @@ export const getMenuPanelStyle = (
 export interface HostBox {
   /** 含行号槽的左缘（智能解码拖拽可用；也是整编辑器左界） */
   hostLeft: number
-  /** 内容区 scrollable 左缘（对照字段；工具条/下拉横轴用 hostLeft） */
-  clipLeft: number
   hostRight: number
   hostTop: number
   hostBottom: number
@@ -126,19 +124,14 @@ export const readEditorHostBox = (node: HTMLElement): HostBox => {
     }
   }
   const base = scrollable ?? guard
-  if (!base) return { hostLeft: 0, clipLeft: 0, hostRight: 0, hostTop: 0, hostBottom: 0 }
+  if (!base) return { hostLeft: 0, hostRight: 0, hostTop: 0, hostBottom: 0 }
   const rect = base.getBoundingClientRect()
   // hostLeft：overflow-guard 左缘（含行号槽；整编辑器左界）
-  // clipLeft：scrollable 左缘（对照字段）
   const guardRect = guard?.getBoundingClientRect()
-  const scrollRect = scrollable?.getBoundingClientRect()
   let hostLeft = rect.left
   let hostTop = rect.top
   if (guardRect && guardRect.width > 0 && guardRect.left <= rect.left) hostLeft = guardRect.left
   if (guardRect && guardRect.height > 0 && guardRect.top <= rect.top) hostTop = guardRect.top
-  // clipLeft 取 scrollable 左缘，并夹到 ≥ hostLeft
-  let clipLeft = scrollRect && scrollRect.width > 0 ? scrollRect.left : hostLeft
-  if (clipLeft < hostLeft) clipLeft = hostLeft
   // hostRight：overflow-guard 右缘（含竖向滚动条与 minimap）
   let hostRight = rect.right
   if (guardRect && guardRect.width > 0 && guardRect.right >= rect.right) hostRight = guardRect.right
@@ -146,7 +139,7 @@ export const readEditorHostBox = (node: HTMLElement): HostBox => {
   // hostBottom：overflow-guard 底缘（含横向滚动条）
   if (guardRect && guardRect.height > 0 && guardRect.bottom >= rect.bottom) hostBottom = guardRect.bottom
   // 宿主含 gutter/minimap/滚动条，不收窄；浮层靠 allowEditorOverflow + z-index≥20 叠在滚动条上
-  return { hostLeft, clipLeft, hostRight, hostTop, hostBottom }
+  return { hostLeft, hostRight, hostTop, hostBottom }
 }
 
 /** 工具条当前已写入的 marginLeft（px 数值） */
@@ -578,6 +571,7 @@ export const useMenuBarLayout = (
       return
     }
     // 图标模式：以 caret 为锚、用有文案宽度试摆；连续两次 fits 再恢复文案
+    // 签名仅跟踪 ids/lang；图标模式下标签文案漂移不触发重测，属可接受残差
     const labeledW = labeledWidthRef.current
     const fits = menuBarLabeledFitsInHost(labeledW, caretX, host, preferLeft, rect.top, rect.bottom)
     if (fits) {

@@ -19,8 +19,11 @@ const editerMenuFunSrc = readFileSync(editerMenuFunPath, 'utf8')
 
 const blockBody = (className: string) => {
   const escaped = className.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-  const re = new RegExp('\\.' + escaped + '\\s*\\{([\\s\\S]*?)\\n\\}')
-  const m = scss.match(re)
+  // Prefer multi-line close (`\n}`) so nested SCSS rules do not truncate; fall back to
+  // first `}` for one-line / minified blocks (assumes no nested rules in that form).
+  const multi = new RegExp('\\.' + escaped + '\\s*\\{([\\s\\S]*?)\\n\\}')
+  const single = new RegExp('\\.' + escaped + '\\s*\\{([^}]*)\\}')
+  const m = scss.match(multi) || scss.match(single)
   expect(m, 'missing .' + className + ' block').toBeTruthy()
   return m![1]
 }
@@ -45,10 +48,8 @@ describe('HTTPFuzzerEditorMenu stacking contract (vs Monaco scrollbar ~11)', () 
   })
 
   it('SmartDecode float layer stays above normal panel (1050)', () => {
-    expect(scss).toMatch(/\.http-fuzzer-range-editor-menu\.smart-decode-float-layer\s*\{[^}]*z-index:\s*1050/)
-    expect(scss).toMatch(
-      /\.smart-decode-float-layer\s*,\s*\n\s*\.http-fuzzer-range-editor-menu\.smart-decode-float-layer/,
-    )
+    expect(scss).toMatch(/\.http-fuzzer-range-editor-menu\.smart-decode-float-layer\s*\{[\s\S]*?z-index:\s*1050/)
+    expect(scss).toMatch(/\.smart-decode-float-layer\s*,\s*\.http-fuzzer-range-editor-menu\.smart-decode-float-layer/)
   })
 
   it('editerMenuFun content widgets use allowEditorOverflow (overflowingContentWidgets)', () => {

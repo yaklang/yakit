@@ -118,13 +118,12 @@ describe('fuzzerEditorMenuLayout vertical helpers', () => {
 
       const box = readEditorHostBox(wrapper)
       expect(box.hostLeft).toBe(10)
-      expect(box.clipLeft).toBe(10)
       expect(box.hostTop).toBe(20)
       expect(box.hostRight).toBe(310)
       expect(box.hostBottom).toBe(420)
     })
 
-    it('行号槽在 scrollable 左侧时，hostLeft 取 overflow-guard，clipLeft 取 scrollable（横轴摆放用 hostLeft）', () => {
+    it('行号槽在 scrollable 左侧时，hostLeft 取 overflow-guard（横轴摆放用 hostLeft）', () => {
       const wrapper = document.createElement('div')
       const guard = document.createElement('div')
       guard.className = 'overflow-guard'
@@ -140,9 +139,8 @@ describe('fuzzerEditorMenuLayout vertical helpers', () => {
 
       const box = readEditorHostBox(wrapper)
       expect(box.hostLeft).toBe(40)
-      expect(box.clipLeft).toBe(100)
       expect(box.hostTop).toBe(20)
-      // hostRight 取 overflow-guard（含右侧 minimap/chrome）；clipLeft 为 scrollable 左缘
+      // hostRight 取 overflow-guard（含右侧 minimap/chrome）
       expect(box.hostRight).toBe(540)
       expect(box.hostBottom).toBe(420)
     })
@@ -168,7 +166,6 @@ describe('fuzzerEditorMenuLayout vertical helpers', () => {
       const box = readEditorHostBox(wrapper)
       expect(box.hostRight).toBe(500)
       expect(box.hostLeft).toBe(0)
-      expect(box.clipLeft).toBe(0)
     })
 
     it('minimap 存在时不收窄 hostRight（浮层可叠到 minimap）', () => {
@@ -237,13 +234,12 @@ describe('fuzzerEditorMenuLayout vertical helpers', () => {
       const box = readEditorHostBox(wrapper)
       expect(box.hostRight).toBe(500)
       expect(box.hostLeft).toBe(0)
-      expect(box.clipLeft).toBe(0)
     })
   })
 })
 
 describe('menuBarClippedByHost', () => {
-  const host = { hostLeft: 100, clipLeft: 100, hostTop: 50, hostRight: 500, hostBottom: 400 }
+  const host = { hostLeft: 100, hostTop: 50, hostRight: 500, hostBottom: 400 }
 
   it('完全在宿主内时不算剪切', () => {
     expect(menuBarClippedByHost({ left: 120, top: 80, right: 300, bottom: 110 }, host)).toBe(false)
@@ -267,7 +263,7 @@ describe('menuBarClippedByHost', () => {
 })
 
 describe('menuBarLabeledFitsInHost / placeHorizontal', () => {
-  const host = { hostLeft: 0, clipLeft: 0, hostTop: 0, hostRight: 800, hostBottom: 400 }
+  const host = { hostLeft: 0, hostTop: 0, hostRight: 800, hostBottom: 400 }
 
   it('选区靠右但宿主够宽 → 有文案可经左移放下', () => {
     const caretX = 750
@@ -297,7 +293,7 @@ describe('menuBarLabeledFitsInHost / placeHorizontal', () => {
   })
 
   it('有文案宽度超过整编辑器宿主 → 不能显示文案', () => {
-    const narrow = { hostLeft: 0, clipLeft: 0, hostTop: 0, hostRight: 200, hostBottom: 400 }
+    const narrow = { hostLeft: 0, hostTop: 0, hostRight: 200, hostBottom: 400 }
     expect(menuBarLabeledFitsInHost(400, 100, narrow, false)).toBe(false)
   })
 
