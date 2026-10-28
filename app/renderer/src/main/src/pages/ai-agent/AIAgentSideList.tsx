@@ -14,7 +14,6 @@ import type { FileNodeProps } from '@/pages/yakRunner/FileTree/FileTreeType'
 import { BrowserInstancesPanel } from './browserInstances/BrowserInstancesPanel'
 import HistoryChat from './historyChat/HistoryChat'
 import { AI_AGENT_HISTORY_AI_SOURCES } from '../ai-re-act/hooks/useGetChatDataStoreKey'
-import { SideSettingButton } from './aiChatWelcome/AIChatWelcomeSideSetting'
 import { clearPendingAIAgentTabSwitch, takePendingAIAgentTabSwitch } from './aiAgentTabNavigation'
 
 const AIMCP = React.lazy(() => import('./aiMCP/AIMCP'))
@@ -75,23 +74,10 @@ export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
     let content: ReactNode = <></>
     switch (key) {
       case AIAgentTabListEnum.Session:
-        content = (
-          <div className={styles['session-pane']}>
-            <HistoryChat
-              aiSource={AI_AGENT_HISTORY_AI_SOURCES}
-              title={t('AIRightPanel.sessionHistory')}
-              hidePinButton
-              headerActionsExtra={<SideSettingButton type="text2" />}
-            />
-          </div>
-        )
+        content = <HistoryChat aiSource={AI_AGENT_HISTORY_AI_SOURCES} title={t('AIRightPanel.sessionHistory')} />
         break
       case AIAgentTabListEnum.File:
-        content = (
-          <div className={styles['file-pane']}>
-            <FileTreeList selected={filePreviewData} setSelected={setFilePreviewData} />
-          </div>
-        )
+        content = <FileTreeList selected={filePreviewData} setSelected={setFilePreviewData} />
         break
       case AIAgentTabListEnum.Scheduled:
         content = (

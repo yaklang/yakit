@@ -21,15 +21,13 @@ import { useCreation, useDebounce, useInViewport, useMemoizedFn } from 'ahooks'
 import { getMCPServersById, grpcDeleteMCPServer, grpcGetAllMCPServers, grpcUpdateMCPServer } from './utils'
 import { YakitRoundCornerTag } from '@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { SideSettingButton } from '../aiChatWelcome/AIChatWelcomeSideSetting'
 import {
   CogOutlined,
   DesktopComputerOutlined,
   GlobeAltOutlined,
   PencilOutlined,
   PlayOutlined,
-  PlusSmOutlined,
-  QuestionMarkCircleOutlined,
+  PlusOutlined,
   RefreshOutlined,
   SearchOutlined,
   TrashOutlined,
@@ -56,6 +54,7 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { ToolSolid } from '@yakit-libs/yakit-ui-icons/solid'
+import AIAgentSideBox from '../components/aiAgentSideBox/AIAgentSideBox'
 
 const AIMCP: React.FC<AIMCPProps> = React.memo((props) => {
   const [listType, setListType] = useState<'mcp' | 'mcp-tool'>('mcp')
@@ -143,25 +142,29 @@ const AIMCPToolList: React.FC<AIMCPToolListProps> = React.memo((props) => {
     return mcpItem?.Tools || []
   }, [mcpItem?.Tools])
   return (
-    <div className={styles['ai-mcp-list-wrapper']}>
-      <div className={styles['ai-mcp-list-header']}>
-        <div className={styles['ai-mcp-list-header-left']}>
+    <AIAgentSideBox
+      className={styles['ai-mcp-list-wrapper']}
+      title={
+        <>
           <span className={styles['ai-mcp-tool-list-name']} title={mcpItem.Name}>
             {mcpItem.Name}
           </span>
           <span className={styles['ai-mcp-tool-list-label']}>{t('AIMCP.toolList')}</span>
-          <Tooltip title={t('AIMCP.protocolInfo')}>
-            <QuestionMarkCircleOutlined className={styles['info-icon']} color="currentColor" />
-          </Tooltip>
-          <YakitRoundCornerTag>{toolLis.length}</YakitRoundCornerTag>
-        </div>
-        <div className={styles['ai-mcp-list-header-right']}>
-          <SideSettingButton type="text2" />
-          <YakitButton type="text" icon={<ReplyOutlined color="currentColor" />} iconPosition="end" onClick={onBack}>
-            {t('YakitButton.back')}
-          </YakitButton>
-        </div>
-      </div>
+        </>
+      }
+      titleHint={t('AIMCP.protocolInfo')}
+      titleExtra={<YakitRoundCornerTag>{toolLis.length}</YakitRoundCornerTag>}
+      extra={
+        <YakitButton
+          type="text"
+          icon={<ReplyOutlined color="currentColor" size={16} />}
+          iconPosition="end"
+          onClick={onBack}
+        >
+          {t('YakitButton.back')}
+        </YakitButton>
+      }
+    >
       <div className={styles['ai-tool-list-container']}>
         {mcpItem.Enable ? (
           <>
@@ -226,7 +229,7 @@ const AIMCPToolList: React.FC<AIMCPToolListProps> = React.memo((props) => {
           </YakitEmpty>
         )}
       </div>
-    </div>
+    </AIAgentSideBox>
   )
 })
 
@@ -407,33 +410,32 @@ const AIMCPList: React.FC<AIMCPListProps> = React.memo((props) => {
   }, [response.MCPServers, i18nRefresh])
   const showEnd = !loading && response.MCPServers.length > 0
   return (
-    <div className={styles['ai-mcp-list-wrapper']} ref={mcpListRef}>
-      <div className={styles['ai-mcp-list-header']}>
-        <div className={styles['ai-mcp-list-header-left']}>
-          <span className={styles['ai-mcp-list-header-title']}>{t('AIMCP.mcpServerConfig')}</span>
-          <Tooltip title={t('AIMCP.protocolInfo')}>
-            <QuestionMarkCircleOutlined className={styles['info-icon']} color="currentColor" />
+    <AIAgentSideBox
+      ref={mcpListRef}
+      className={styles['ai-mcp-list-wrapper']}
+      title={t('AIMCP.mcpServerConfig')}
+      titleHint={t('AIMCP.protocolInfo')}
+      extra={
+        <>
+          <Tooltip title={t('SettingsPage.item.yak-mcp')}>
+            <YakitButton
+              type="text2"
+              onClick={openYakMcpSettings}
+              iconPosition="end"
+              icon={<CogOutlined color="currentColor" size={16} />}
+            />
           </Tooltip>
-        </div>
-        <div className={styles['ai-mcp-list-header-right']}>
-          <SideSettingButton type="text2" />
-          <YakitButton
-            type="text2"
-            className={styles['yak-mcp-entry']}
-            onClick={openYakMcpSettings}
-            iconPosition="end"
-            icon={<CogOutlined color="currentColor" />}
-          >
-            {t('SettingsPage.item.yak-mcp')}
-          </YakitButton>
-          <span className={styles['header-divider']} />
-          <YakitButton
-            icon={<PlusSmOutlined color="currentColor" />}
-            aria-label={t('AIMCP.addMcpServer')}
-            onClick={handleNewAIMCP}
-          />
-        </div>
-      </div>
+          <Tooltip title={t('AIMCP.addMcpServer')}>
+            <YakitButton
+              icon={<PlusOutlined color="currentColor" size={16} />}
+              aria-label={t('AIMCP.addMcpServer')}
+              type="text2"
+              onClick={handleNewAIMCP}
+            />
+          </Tooltip>
+        </>
+      }
+    >
       <div className={styles['ai-mcp-list-search']}>
         <YakitInput
           prefix={<SearchOutlined className={styles['search-icon']} color="currentColor" />}
@@ -495,7 +497,7 @@ const AIMCPList: React.FC<AIMCPListProps> = React.memo((props) => {
             {!loading && response.MCPServers.length === 0 && (
               <YakitEmpty title={t('YakitEmpty.noData')}>
                 <div className={styles['ai-mcp-tool-empty-btns']}>
-                  <YakitButton type="outline1" icon={<PlusSmOutlined color="currentColor" />} onClick={handleNewAIMCP}>
+                  <YakitButton type="outline1" icon={<PlusOutlined color="currentColor" />} onClick={handleNewAIMCP}>
                     {t('AIMCP.addMcp')}
                   </YakitButton>
                 </div>
@@ -504,7 +506,7 @@ const AIMCPList: React.FC<AIMCPListProps> = React.memo((props) => {
           </div>
         </YakitSpin>
       </div>
-    </div>
+    </AIAgentSideBox>
   )
 })
 

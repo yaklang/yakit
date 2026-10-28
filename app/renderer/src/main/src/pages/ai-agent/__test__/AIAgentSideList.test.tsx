@@ -69,11 +69,7 @@ vi.mock('../browserInstances/BrowserInstancesPanel', () => ({
   BrowserInstancesPanel: () => <div>浏览器实例</div>,
 }))
 vi.mock('../historyChat/HistoryChat', () => ({
-  default: ({ headerActionsExtra }: { headerActionsExtra?: React.ReactNode }) => (
-    <div data-testid="history-chat">
-      <header>{headerActionsExtra}</header>
-    </div>
-  ),
+  default: () => <div data-testid="history-chat">历史会话</div>,
 }))
 
 const SideList = () => {
