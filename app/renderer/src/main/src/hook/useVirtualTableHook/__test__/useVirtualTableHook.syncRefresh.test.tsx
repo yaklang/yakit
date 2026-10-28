@@ -151,19 +151,20 @@ describe('useVirtualTableHook bottom dedup', () => {
     })
     await waitForRelease()
 
-    act(() => {
+    // 触发并在 act 内等待响应提交：整页重复场景 expected 与旧窗口相同，
+    // 提交前断言会因 waitFor 首次同步检查通过而漏掉追加重复行的回归
+    await act(async () => {
       result.current[6].notifyPushUpdate()
     })
 
-    await waitFor(() => {
-      // 第二次调用恒为本次触底加载；不锁总次数，1s 后启动的兼容轮询定时器可能再插入调用
-      expect(grpcFun.mock.calls[1]?.[0]).toEqual(
-        expect.objectContaining({
-          Filter: defaultParams.Filter,
-          Pagination: expect.objectContaining({ Order: 'desc', BeforeId: 7 }),
-        }),
-      )
-      expect(result.current[1]).toEqual(expected)
-    })
+    // 第二次调用恒为本次触底加载；不锁总次数，1s 后启动的兼容轮询定时器可能再插入调用
+    expect(grpcFun.mock.calls[1]?.[0]).toEqual(
+      expect.objectContaining({
+        Filter: defaultParams.Filter,
+        Pagination: expect.objectContaining({ Order: 'desc', BeforeId: 7 }),
+      }),
+    )
+    // 响应已提交，此处断言提交后的窗口：整页重复不得把重复行追加进窗口
+    expect(result.current[1]).toEqual(expected)
   })
 })
