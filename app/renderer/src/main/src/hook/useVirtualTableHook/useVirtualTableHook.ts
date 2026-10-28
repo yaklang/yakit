@@ -364,7 +364,10 @@ export default function useVirtualTableHook<
             setTotal(rsp.Total)
             return
           }
-          setData((current) => [...current, ...newData])
+          setData((current) => {
+            const seen = new Set(current.map((row) => Number(row[idKey])))
+            return [...current, ...newData.filter((row) => !seen.has(Number(row[idKey])))]
+          })
           if (['desc', 'none'].includes(query.Pagination.Order)) {
             minIdRef.current = newData[newData.length - 1][responseKey.id]
           } else {

@@ -88,3 +88,82 @@ describe('useVirtualTableHook sync refresh', () => {
     )
   })
 })
+
+describe('useVirtualTableHook bottom dedup', () => {
+  // 触底几何：可视底部已越过 shouldLoadVirtualTableBottom 的 0.9 阈值
+  const bottomGeometry = { scrollTop: 80, clientHeight: 84, scrollHeight: 100 }
+
+  // 单飞守卫在响应提交 100ms 后才释放，需先等它松开再触发底部加载
+  const waitForRelease = async () => {
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 150))
+    })
+  }
+
+  it.each([
+    {
+      name: '触底追加过滤与当前窗口重复的行',
+      secondPage: [
+        { Id: 7, Status: 'old' },
+        { Id: 8, Status: 'new' },
+      ],
+      expected: [
+        { Id: 7, Status: 'old' },
+        { Id: 8, Status: 'new' },
+      ],
+      total: 2,
+    },
+    {
+      name: '触底整页重复时窗口保持不变',
+      secondPage: [{ Id: 7, Status: 'old' }],
+      expected: [{ Id: 7, Status: 'old' }],
+      total: 1,
+    },
+  ])('$name', async ({ secondPage, expected, total }) => {
+    const grpcFun = vi
+      .fn()
+      .mockResolvedValueOnce({
+        Data: [{ Id: 7, Status: 'old' }],
+        Pagination: defaultParams.Pagination,
+        Total: 1,
+      })
+      .mockResolvedValueOnce({ Data: secondPage, Pagination: defaultParams.Pagination, Total: total })
+      // 兜底空页：偶发的轮询定时器抢先触发时不污染调用计数
+      .mockResolvedValue({ Data: [], Pagination: defaultParams.Pagination, Total: total })
+
+    const tableBoxRef = { current: null }
+    const tableRef = { current: { containerRef: { ...bottomGeometry } } }
+    const boxHeightRef = { current: 84 }
+
+    const { result } = renderHook(() =>
+      useVirtualTableHook<ParamsTProps, TestRow, 'Data', 'Id'>({
+        tableBoxRef,
+        tableRef,
+        boxHeightRef,
+        grpcFun,
+        defaultParams,
+        inViewport: true,
+      }),
+    )
+
+    await waitFor(() => {
+      expect(result.current[1]).toEqual([{ Id: 7, Status: 'old' }])
+    })
+    await waitForRelease()
+
+    act(() => {
+      result.current[6].notifyPushUpdate()
+    })
+
+    await waitFor(() => {
+      // 第二次调用恒为本次触底加载；不锁总次数，1s 后启动的兼容轮询定时器可能再插入调用
+      expect(grpcFun.mock.calls[1]?.[0]).toEqual(
+        expect.objectContaining({
+          Filter: defaultParams.Filter,
+          Pagination: expect.objectContaining({ Order: 'desc', BeforeId: 7 }),
+        }),
+      )
+      expect(result.current[1]).toEqual(expected)
+    })
+  })
+})
