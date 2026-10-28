@@ -1,5 +1,5 @@
-import type React from 'react'
-import { memo, useEffect, useRef, useState } from 'react'
+import type { FC } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useStore } from 'zustand'
 import { Tooltip } from 'antd'
 import { useCreation, useInViewport, useMemoizedFn } from 'ahooks'
@@ -13,7 +13,8 @@ import { randomString } from '@/utils/randomUtil'
 import { useCurrentRawData, useCurrentStore } from '../../hooks/useCurrentDataBySession'
 import useCurrentSessionId from '../../hooks/useCurrentSessionId'
 import { useSyncLoadingState } from '../../hooks/useSyncLoadingState'
-import { AIInputEventSyncTypeEnum } from '../../hooks/grpcApi'
+import { AIInputEventSyncTypeEnum, AISkillLoadStateEnum } from '../../hooks/grpcApi'
+import { DEFAULT_SKILL_PAGE_SIZE } from '../../hooks/defaultConstant'
 import { AISkillList } from './aiSkillList/AISkillList'
 import { AISkillSortButton } from './aiSkillSortButton/AISkillSortButton'
 import { useSkillLoading } from './useSkillLoading'
@@ -21,7 +22,8 @@ import { getSkillList } from './utils'
 import type { AISkillLoadingPaneProps, AISkillSortOrder } from './type'
 import styles from './AISkillLoadingPane.module.scss'
 
-export const AISkillLoadingPane: React.FC<AISkillLoadingPaneProps> = memo(({ loadState, onTotalChange }) => {
+export const AISkillLoadingPane: FC<AISkillLoadingPaneProps> = ({ loadState, onTotalChange }) => {
+  const isLoaded = loadState === AISkillLoadStateEnum.Loaded
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const store = useCurrentStore()
   const rawData = useCurrentRawData()
@@ -29,26 +31,113 @@ export const AISkillLoadingPane: React.FC<AISkillLoadingPaneProps> = memo(({ loa
   const { onSend } = useAIAgentDispatcher()
   const { loading: loadedLoading, markSending: markLoadedSending } = useSyncLoadingState()
   const { loading: availableLoading, markSending: markAvailableSending } = useSyncLoadingState()
-  const refreshLoading = loadedLoading || availableLoading
+  const { loading: loadMoreSyncLoading, markSending: markLoadMoreSending } = useSyncLoadingState()
   const { addLoading, addingSkill, onAddSkill } = useSkillLoading()
-  const skillsUpdate = useStore(store, (state) => state.skillsUpdate)
+  const loadedSkillsUpdate = useStore(store, (state) => state.loadedSkillsUpdate)
+  const availableSkillsUpdate = useStore(store, (state) => state.availableSkillsUpdate)
+  const sendBlocked = useStore(store, (state) => state.initLoading || state.grpcLoadMoreLoading)
   const [keyword, setKeyword] = useState('')
   const [sortOrder, setSortOrder] = useState<AISkillSortOrder>()
+  const [loadingMore, setLoadingMore] = useState(false)
+  const refreshLoading = isLoaded ? loadedLoading : availableLoading
+  const query = keyword.trim()
 
   const contentRef = useRef<HTMLDivElement>(null)
+  const waitingAvailableDataRef = useRef(false)
+  const requestedQueryRef = useRef('')
+  const requestedPageRef = useRef(1)
+  const loadMorePendingRef = useRef(false)
+  const refreshPendingRef = useRef(false)
   const [inViewport] = useInViewport(contentRef)
+  const skillGroup = isLoaded ? rawData.loadedSkills : rawData.availableSkills
 
   const list = useCreation(
-    () => getSkillList({ skills: rawData.skills, loadState, keyword, sortOrder }),
-    [skillsUpdate, loadState, keyword, sortOrder],
+    () =>
+      isLoaded
+        ? getSkillList({
+            skills: skillGroup.skills,
+            keyword,
+            sortOrder,
+          })
+        : skillGroup.skills,
+    [loadedSkillsUpdate, availableSkillsUpdate, sessionId, skillGroup, isLoaded, keyword, sortOrder],
   )
 
   useEffect(() => {
-    onTotalChange?.(list.length)
-  }, [list.length, onTotalChange])
+    onTotalChange?.(skillGroup.total)
+  }, [skillGroup.total, onTotalChange])
+
+  useEffect(() => {
+    waitingAvailableDataRef.current = false
+    if (rawData.availableSkills.error) loadMorePendingRef.current = false
+  }, [availableSkillsUpdate, sessionId])
+
+  useEffect(() => {
+    requestedQueryRef.current = ''
+    requestedPageRef.current = 1
+    loadMorePendingRef.current = false
+    refreshPendingRef.current = false
+  }, [sessionId])
+
+  useEffect(() => {
+    if (!loadMoreSyncLoading && !waitingAvailableDataRef.current) setLoadingMore(false)
+  }, [loadMoreSyncLoading, availableSkillsUpdate])
+
+  const requestAvailablePage = useMemoizedFn((page: number) => {
+    const syncId = randomString(8)
+    const sent = onSend({
+      token: sessionId,
+      type: '',
+      params: {
+        IsSyncMessage: true,
+        SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_SKILL_AVAILABLE,
+        SyncID: syncId,
+        SyncJsonInput: JSON.stringify({ page, page_size: DEFAULT_SKILL_PAGE_SIZE, query }),
+      },
+    })
+    if (!sent) return false
+    waitingAvailableDataRef.current = true
+    requestedQueryRef.current = query
+    requestedPageRef.current = page
+    setLoadingMore(page > 1)
+    if (page > 1) markLoadMoreSending(syncId)
+    else markAvailableSending(syncId)
+    if (page === 1 && !addLoading) refreshPendingRef.current = false
+    return true
+  })
+
+  const onLoadMore = useMemoizedFn(() => {
+    const { page, has_more, error } = rawData.availableSkills
+    // 搜索第一页失败后停止自动翻页，等待用户再次搜索或刷新。
+    if (error && requestedPageRef.current === 1 && query === requestedQueryRef.current && !refreshPendingRef.current)
+      return
+    const queryChanged = query !== requestedQueryRef.current
+    if (!sessionId || (!refreshPendingRef.current && !queryChanged && !has_more)) return
+    if (sendBlocked || availableLoading || loadMoreSyncLoading || addLoading) {
+      if (!refreshPendingRef.current) loadMorePendingRef.current = true
+      return
+    }
+    // 等待请求页的数据更新，SyncID 回执不代表分页数据已到达。
+    if (waitingAvailableDataRef.current) return
+    loadMorePendingRef.current = !requestAvailablePage(refreshPendingRef.current || queryChanged ? 1 : page + 1)
+  })
+
+  const onAdd = useMemoizedFn((name: string) => {
+    refreshPendingRef.current = true
+    loadMorePendingRef.current = false
+    onAddSkill(name)
+  })
+
+  const onRetryAvailable = useMemoizedFn(() => {
+    if (!waitingAvailableDataRef.current) onLoadMore()
+  })
 
   const onRefresh = useMemoizedFn(() => {
-    if (!sessionId) return
+    if (!sessionId || refreshLoading || (!isLoaded && loadingMore)) return
+    if (!isLoaded) {
+      if (requestAvailablePage(1)) loadMorePendingRef.current = false
+      return
+    }
     const loadedSyncId = randomString(8)
     markLoadedSending(loadedSyncId)
     onSend({
@@ -60,23 +149,30 @@ export const AISkillLoadingPane: React.FC<AISkillLoadingPaneProps> = memo(({ loa
         SyncID: loadedSyncId,
       },
     })
-    const availableSyncId = randomString(8)
-    markAvailableSending(availableSyncId)
-    onSend({
-      token: sessionId,
-      type: '',
-      params: {
-        IsSyncMessage: true,
-        SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_SKILL_AVAILABLE,
-        SyncID: availableSyncId,
-        SyncJsonInput: JSON.stringify({ page: 1 }),
-      },
-    })
+  })
+
+  const onSearch = useMemoizedFn((value: string) => {
+    setKeyword(value)
+    if (!isLoaded && value.trim() === query) onRefresh()
   })
 
   useEffect(() => {
-    if (inViewport && !addLoading) onRefresh()
-  }, [inViewport, addLoading])
+    if (inViewport) onRefresh()
+  }, [inViewport, sessionId, isLoaded])
+
+  useEffect(() => {
+    if (isLoaded || sendBlocked || availableLoading || loadMoreSyncLoading || addLoading) return
+    if (refreshPendingRef.current || loadMorePendingRef.current || query !== requestedQueryRef.current) onLoadMore()
+  }, [
+    sendBlocked,
+    availableLoading,
+    loadMoreSyncLoading,
+    addLoading,
+    availableSkillsUpdate,
+    sessionId,
+    isLoaded,
+    keyword,
+  ])
 
   return (
     <div className={styles['content']} ref={contentRef}>
@@ -87,17 +183,17 @@ export const AISkillLoadingPane: React.FC<AISkillLoadingPaneProps> = memo(({ loa
           aria-label={t('AISkillLoadingPane.searchPlaceholder')}
           value={keyword}
           onChange={(event) => setKeyword(event.target.value)}
-          onSearch={setKeyword}
+          onSearch={onSearch}
           size="large"
         />
-        {loadState === 'loaded' && <AISkillSortButton sortOrder={sortOrder} onChange={setSortOrder} />}
+        {isLoaded && <AISkillSortButton sortOrder={sortOrder} onChange={setSortOrder} />}
         <Tooltip title={t('YakitButton.refresh')}>
           <YakitButton
             type="text2"
             aria-label={t('YakitButton.refresh')}
             icon={<RefreshOutlined />}
             loading={refreshLoading}
-            disabled={refreshLoading}
+            disabled={refreshLoading || (!isLoaded && loadingMore)}
             onClick={() => {
               rawData.skillDetails.clear()
               onRefresh()
@@ -111,11 +207,18 @@ export const AISkillLoadingPane: React.FC<AISkillLoadingPaneProps> = memo(({ loa
           key={`${sessionId}:${loadState}:${keyword}`}
           data={list}
           loadState={loadState}
-          onAdd={onAddSkill}
+          onAdd={onAdd}
           addLoading={addLoading}
           addingSkill={addingSkill}
+          onEndReached={isLoaded ? undefined : onLoadMore}
+          onRetry={
+            isLoaded || !rawData.availableSkills.error || requestedPageRef.current === 1 ? undefined : onRetryAvailable
+          }
+          refreshLoading={refreshLoading}
+          loadingMore={!isLoaded && loadingMore}
+          hasMore={isLoaded ? undefined : rawData.availableSkills.has_more}
         />
       </YakitSpin>
     </div>
   )
-})
+}

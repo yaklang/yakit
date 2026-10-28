@@ -24,7 +24,7 @@ import {
   AttachedResourceTypeEnum,
 } from '@/pages/ai-agent/defaultConstant'
 import cloneDeep from 'lodash/cloneDeep'
-import { DefaultMemoryList, DefaultTaskPlanEndGate } from './defaultConstant'
+import { DEFAULT_SKILL_PAGE_SIZE, DefaultMemoryList, DefaultTaskPlanEndGate } from './defaultConstant'
 import { grpcAIMessageHandlers } from './grpcStreamHandler/grpcAIOutputEventHandlers'
 import { genExecTasks, handleTaskPlanEnd, pushLogToOtherWindow } from './utils'
 import type { AIChatIPCStartParams, AIChatSendParams } from './type'
@@ -77,7 +77,8 @@ const genAIAgentChatData = (): AIAgentChatData => {
     httpFlowFuzzStatus: undefined,
     sessionTitle: '',
     memoryList: DefaultMemoryList,
-    skills: [],
+    loadedSkills: { skills: [], total: 0 },
+    availableSkills: { skills: [], total: 0, page: 1, page_size: DEFAULT_SKILL_PAGE_SIZE, has_more: false },
     skillDetails: new Map(),
     systemStream: '',
     yaklangCodeChange: undefined,
@@ -1607,7 +1608,7 @@ export class ChatMultiSessionController {
       IsSyncMessage: true,
       SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_SKILL_AVAILABLE,
       SyncID: uuidv4(),
-      SyncJsonInput: JSON.stringify({ page: 1 }),
+      SyncJsonInput: JSON.stringify({ page: 1, page_size: DEFAULT_SKILL_PAGE_SIZE }),
     })
 
     // 获取最新记忆列表数据, 并注册轮询定时器

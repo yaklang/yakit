@@ -8,6 +8,7 @@ import { grpcGetAIForge } from '@/pages/ai-agent/grpc'
 import { getCodeByPath, getPathJoin } from '@/pages/yakRunner/utils'
 import AISkillListItem from '../AISkillLoadingPane/aiSkillList/AISkillListItem/AISkillListItem'
 import AISkillDetails from '../AISkillLoadingPane/aiSkillList/AISkillDetails/AISkillDetails'
+import type { AISkillListItem as AISkillListItemData } from '../AISkillLoadingPane/aiSkillList/type'
 import type { AIAgentGrpcApi } from '../../hooks/grpcApi'
 import type { AIChatSendParams } from '../../hooks/type'
 import { createTestRawData, makeGrpcJsonRes, makeHandlerRequest } from '../../hooks/__test__/fixtures'
@@ -53,11 +54,17 @@ const createDeferred = <T,>() => {
   return { promise, resolve }
 }
 
+const skill: AISkillListItemData = {
+  name: 'skill',
+  description: 'description',
+  skill_load_state: 'metadata',
+}
+
 const renderItem = (source: 'task-details' | 'right-panel' = 'task-details') =>
   render(
     <AISkillListItem
       source={source}
-      skill={{ name: 'skill', description: 'description' }}
+      skill={skill}
       loadState="metadata"
       onAdd={vi.fn()}
       addLoading={false}
@@ -75,7 +82,7 @@ const receiveDetail = (detail: AIAgentGrpcApi.SkillDetail) => {
 
 beforeEach(() => {
   vi.resetAllMocks()
-  rawData.skills = []
+  rawData.loadedSkills = { skills: [], total: 0 }
   rawData.skillDetails.clear()
   meta.syncIDMap.clear()
   store.setState({ syncIDUpdate: 0 })
@@ -140,12 +147,7 @@ describe('AISkillListItem hover details', () => {
   it('查看可加载详情后添加技能，再次悬停会重新查询并展示已加载上下文', async () => {
     const { result } = renderHook(() => useSkillLoading())
     const first = render(
-      <AISkillListItem
-        source="right-panel"
-        skill={{ name: 'skill', description: '', skill_load_state: 'metadata' }}
-        loadState="metadata"
-        onAdd={result.current.onAddSkill}
-      />,
+      <AISkillListItem source="right-panel" skill={skill} loadState="metadata" onAdd={result.current.onAddSkill} />,
     )
     hoverItem()
     await waitFor(() => expect(onSend).toHaveBeenCalledTimes(1))
@@ -164,7 +166,18 @@ describe('AISkillListItem hover details', () => {
           res: makeGrpcJsonRes(
             'structured',
             {
-              skills: [{ name: 'skill', description: '', stage: 'loaded', data: { skill_load_state: 'loaded' } }],
+              skills: [
+                {
+                  name: 'skill',
+                  verbose_name: 'skill',
+                  description: '',
+                  type: 'skill',
+                  stage: 'loaded',
+                  position: 'SemiDynamic',
+                  is_fixed: false,
+                  data: { skill_load_state: 'loaded' },
+                },
+              ],
               total: 1,
             },
             { NodeId: 'skill_loaded' },
@@ -175,7 +188,9 @@ describe('AISkillListItem hover details', () => {
     first.unmount()
     onSend.mockClear()
 
-    render(<AISkillListItem source="right-panel" skill={rawData.skills[0]} loadState="loaded" />)
+    const loadedSkill = rawData.loadedSkills.skills[0]
+    expect(loadedSkill).toEqual({ name: 'skill', description: '', skill_load_state: 'loaded' })
+    render(<AISkillListItem source="right-panel" skill={loadedSkill} loadState="loaded" />)
     hoverItem()
     await waitFor(() => expect(onSend).toHaveBeenCalledTimes(1))
     expect(onSend.mock.lastCall![0].params.SyncType).toBe('skill_detail_sync')

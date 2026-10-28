@@ -3,3 +3,14 @@
   min-height: 0;
   overflow: auto;
 }
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 0;
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  font-size: 12px;
+  line-height: 20px;
+}

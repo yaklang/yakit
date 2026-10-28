@@ -1,7 +1,10 @@
 import type { AIMessageHandler } from '../type'
 import type { AIAgentGrpcApi } from '../grpcApi'
+import { AISkillLoadStateEnum } from '../grpcApi'
 import type { AISkillListItem } from '../../aiRightPanel/AISkillLoadingPane/aiSkillList/type'
+import type { AISkillLoadState } from '../../aiRightPanel/AISkillLoadingPane/type'
 import { Uint8ArrayToString } from '@/utils/str'
+import { yakitNotify } from '@/utils/notification'
 import { handleTodoListData } from '../utils'
 import cloneDeep from 'lodash/cloneDeep'
 import isArray from 'lodash/isArray'
@@ -73,7 +76,7 @@ const planItemDetailsToCapabilityFields = (payload: AIAgentGrpcApi.PlanItemDetai
 
   // 技能按加载状态分类，不沿用后端的 fixed/dynamic 位置。
   for (const skill of [...(fixed?.skills || []), ...(dynamic?.skills || [])]) {
-    if (skill.skill_load_state === 'loaded') {
+    if (skill.skill_load_state === AISkillLoadStateEnum.Loaded) {
       itemData.skills.fixed.push({
         ...skill,
         verbose_name: 'verbose_name' in skill ? skill.verbose_name : skill.name,
@@ -114,10 +117,10 @@ const capabilityInventoryItemsToPlanItemDetails = (
       case 'skill': {
         const skillLoadState =
           typeof item.data?.skill_load_state === 'string'
-            ? (item.data.skill_load_state as 'metadata' | 'loaded' | '')
-            : item.stage === 'loaded'
-              ? 'loaded'
-              : 'metadata'
+            ? (item.data.skill_load_state as AISkillLoadState | '')
+            : item.stage === AISkillLoadStateEnum.Loaded
+              ? AISkillLoadStateEnum.Loaded
+              : AISkillLoadStateEnum.Metadata
         const skill: AIAgentGrpcApi.PlanItemDetailsFixedItem & AIAgentGrpcApi.PlanItemDetailsDynamicSkillsItem = {
           ...base,
           category: 'skill',
@@ -187,31 +190,55 @@ const handleSkillDetail: AIMessageHandler = ({ res, rawData }) => {
   }
 }
 
-const handleSkillList: AIMessageHandler = ({ res, store, rawData }) => {
-  if (res.Type !== 'structured' || !['skill_loaded', 'skill_available'].includes(res.NodeId)) return
-
-  const ipcContent = Uint8ArrayToString(res.Content)
-  const { skills } = JSON.parse(ipcContent) as
-    | AIAgentGrpcApi.SkillLoadedResponse
-    | AIAgentGrpcApi.SkillAvailableResponse
-  console.log(res.NodeId, 'handleSkillList-skills', skills)
-  const loadState = res.NodeId === 'skill_loaded' ? 'loaded' : 'metadata'
-  const incomingNames = new Set(skills.map((skill) => skill.name))
-  const otherSkills = rawData.skills.filter(
-    (skill) => skill.skill_load_state !== loadState && !incomingNames.has(skill.name),
-  )
-  const incomingSkills: AISkillListItem[] = skills.map((skill) => {
-    const detail = rawData.skillDetails.get(skill.name)
-    if (detail && detail.loaded !== (loadState === 'loaded')) rawData.skillDetails.delete(skill.name)
+const mapSkillListItems = (
+  skills: AIAgentGrpcApi.SkillListEntry[],
+  loadState: AISkillLoadState,
+  skillDetails: Map<string, AIAgentGrpcApi.SkillDetail>,
+): AISkillListItem[] =>
+  skills.map((skill) => {
+    const detail = skillDetails.get(skill.name)
+    if (detail && detail.loaded !== (loadState === AISkillLoadStateEnum.Loaded)) skillDetails.delete(skill.name)
     return {
       name: skill.name,
       description: skill.description,
       skill_load_state: loadState,
-      token_count: skill.data?.token_count,
+      token_count: skill.data.token_count,
     }
   })
-  rawData.skills = [...otherSkills, ...incomingSkills]
-  store.getState().updateStateCount('skillsUpdate')
+
+const handleLoadedSkills: AIMessageHandler = ({ res, store, rawData }) => {
+  if (res.Type !== 'structured' || res.NodeId !== 'skill_loaded') return
+
+  const response = JSON.parse(Uint8ArrayToString(res.Content)) as AIAgentGrpcApi.SkillLoadedResponse
+  rawData.loadedSkills = {
+    ...response,
+    skills: mapSkillListItems(response.skills, AISkillLoadStateEnum.Loaded, rawData.skillDetails),
+  }
+  store.getState().updateStateCount('loadedSkillsUpdate')
+}
+
+const handleAvailableSkills: AIMessageHandler = ({ res, store, rawData }) => {
+  if (res.Type !== 'structured' || res.NodeId !== 'skill_available') return
+
+  const response = JSON.parse(Uint8ArrayToString(res.Content)) as
+    | AIAgentGrpcApi.SkillAvailableResponse
+    | AIAgentGrpcApi.SkillAvailableErrorResponse
+  if ('error' in response) {
+    // 错误响应也结束面板的数据等待，保留已有列表和分页信息供重试。
+    rawData.availableSkills.error = response.error
+    store.getState().updateStateCount('availableSkillsUpdate')
+    yakitNotify('error', 'handleAvailableSkills:' + response.error)
+    return
+  }
+  const { skills, page } = response
+  // 首次同步/刷新从第一页重建，后续只接收相邻页，避免重复或乱序响应回退分页。
+  if (page !== 1 && page !== rawData.availableSkills.page + 1) return
+  const list = new Map((page === 1 ? [] : rawData.availableSkills.skills).map((skill) => [skill.name, skill]))
+  for (const skill of mapSkillListItems(skills, AISkillLoadStateEnum.Metadata, rawData.skillDetails)) {
+    list.set(skill.name, skill)
+  }
+  rawData.availableSkills = { ...response, skills: [...list.values()] }
+  store.getState().updateStateCount('availableSkillsUpdate')
 }
 const handleCapabilityInventory: AIMessageHandler = (requestInfo) => {
   const { res, rawData, store } = requestInfo
@@ -412,8 +439,8 @@ const handleTaskSnapshot: AIMessageHandler = (requestInfo) => {
 /** 单条grpc流数据对应一个独立的UI数据 */
 export const aiTaskDetailDataHandlers = {
   skill_detail: handleSkillDetail,
-  skill_loaded: handleSkillList,
-  skill_available: handleSkillList,
+  skill_loaded: handleLoadedSkills,
+  skill_available: handleAvailableSkills,
   capability_inventory: handleCapabilityInventory,
   perception: handlePerception,
   current_task_todo_list_update: handleCurrentTaskTodoListUpdate,

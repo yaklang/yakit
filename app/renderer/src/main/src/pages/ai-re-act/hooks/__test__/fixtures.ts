@@ -2,7 +2,7 @@ import { SessionLifecycle } from '../sessionLifecycle'
 import cloneDeep from 'lodash/cloneDeep'
 import type { AIAgentChatData, AIAgentChatMetaData } from '@/pages/ai-agent/type/aiChat'
 import { AIAgentSettingDefault, AIModelTypeEnum } from '@/pages/ai-agent/defaultConstant'
-import { DefaultMemoryList, DefaultTaskPlanEndGate } from '../defaultConstant'
+import { DEFAULT_SKILL_PAGE_SIZE, DefaultMemoryList, DefaultTaskPlanEndGate } from '../defaultConstant'
 import { createChatStore } from '../chatStore'
 import type { AIMessageHandlerParams } from '../type'
 import type { AIOutputEvent, AIStartParams } from '../grpcApi'
@@ -21,7 +21,8 @@ export const createTestRawData = (): AIAgentChatData => {
     httpFlowFuzzStatus: undefined,
     sessionTitle: '',
     memoryList: DefaultMemoryList,
-    skills: [],
+    loadedSkills: { skills: [], total: 0 },
+    availableSkills: { skills: [], total: 0, page: 1, page_size: DEFAULT_SKILL_PAGE_SIZE, has_more: false },
     skillDetails: new Map(),
     systemStream: '',
     yaklangCodeChange: undefined,

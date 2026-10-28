@@ -1,7 +1,8 @@
-import { fireEvent, render as renderComponent, screen } from '@testing-library/react'
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
+import { act, fireEvent, render as renderComponent, screen } from '@testing-library/react'
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ReactElement, ReactNode } from 'react'
 import { VirtuosoMockContext } from 'react-virtuoso'
+import type { AISkillListItem } from '../AISkillLoadingPane/aiSkillList/type'
 import type { PlanItemDetailsData } from '@/pages/ai-re-act/hooks/aiRender'
 import { AITaskSkillList } from '@/pages/ai-agent/chatTemplate/aiTaskExecutionDetails/aiTaskSkillList/AITaskSkillList'
 import { AISkillList } from '../AISkillLoadingPane/aiSkillList/AISkillList'
@@ -55,11 +56,18 @@ const render = (ui: ReactElement) =>
     ),
   })
 
-const createSkills = (count: number): PlanItemDetailsData['skills']['dynamic'] =>
+const createTaskSkills = (count: number): PlanItemDetailsData['skills']['dynamic'] =>
   Array.from({ length: count }, (_, index) => ({
     name: `skill-${index}`,
     description: 'description',
     category: 'skill',
+    skill_load_state: 'loaded',
+  }))
+
+const createSkills = (count: number): AISkillListItem[] =>
+  Array.from({ length: count }, (_, index) => ({
+    name: `skill-${index}`,
+    description: 'description',
     skill_load_state: 'loaded',
   }))
 
@@ -79,6 +87,85 @@ afterAll(() => vi.unstubAllGlobals())
 const getVirtualList = () => screen.getByRole('list').querySelector('[data-virtuoso-scroller]')
 
 describe('AISkillList', () => {
+  describe('触底重试节流', () => {
+    beforeEach(() => vi.useFakeTimers())
+    afterEach(() => {
+      vi.clearAllTimers()
+      vi.useRealTimers()
+    })
+
+    it('连续滚动在节流尾调用中重试触底，loading 收缩不会自动重试', () => {
+      const onRetry = vi.fn()
+      const data = createSkills(1)
+      const { rerender } = render(<AISkillList source="right-panel" data={data} loadState="metadata" loadingMore />)
+      const list = screen.getByRole('list')
+      Object.defineProperties(list, {
+        scrollHeight: { value: 436, configurable: true },
+        clientHeight: { value: 200 },
+      })
+      fireEvent.scroll(list, { target: { scrollTop: 150 } })
+      act(() => vi.advanceTimersByTime(10))
+      fireEvent.scroll(list, { target: { scrollTop: 236 } })
+      rerender(<AISkillList source="right-panel" data={data} loadState="metadata" onRetry={onRetry} />)
+      Object.defineProperty(list, 'scrollHeight', { value: 400 })
+      fireEvent.scroll(list, { target: { scrollTop: 200 } })
+      act(() => vi.advanceTimersByTime(200))
+      expect(onRetry).not.toHaveBeenCalled()
+
+      fireEvent.scroll(list, { target: { scrollTop: 100 } })
+      fireEvent.scroll(list, { target: { scrollTop: 150 } })
+      fireEvent.scroll(list, { target: { scrollTop: 200 } })
+      expect(onRetry).not.toHaveBeenCalled()
+      act(() => vi.advanceTimersByTime(200))
+      expect(onRetry).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  it('刷新时滚动到顶部，追加分页数据时保留滚动位置', () => {
+    const data = createSkills(20)
+    const { rerender } = render(<AISkillList source="right-panel" data={data} loadState="metadata" />)
+    const list = screen.getByRole('list')
+    list.scrollTop = 180
+    rerender(<AISkillList source="right-panel" data={data} loadState="metadata" refreshLoading />)
+    expect(list.scrollTop).toBe(0)
+
+    rerender(<AISkillList source="right-panel" data={data} loadState="metadata" />)
+    list.scrollTop = 180
+    rerender(<AISkillList source="right-panel" data={data} loadState="metadata" loadingMore />)
+    expect(list.scrollTop).toBe(180)
+    rerender(<AISkillList source="right-panel" data={createSkills(40)} loadState="metadata" />)
+    expect(list.scrollTop).toBe(180)
+  })
+
+  it('分页底部依次展示加载中和暂无更多数据', () => {
+    const data = createSkills(2)
+    const { rerender } = render(<AISkillList source="right-panel" data={data} loadState="metadata" hasMore />)
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
+
+    rerender(<AISkillList source="right-panel" data={data} loadState="metadata" hasMore loadingMore />)
+    expect(screen.getByRole('status')).toHaveTextContent('YakitSpin.loadMore')
+    expect(screen.getByRole('status').querySelector('.anticon-loading')).toBeInTheDocument()
+    expect(screen.queryByText('YakitEmpty.noMoreData')).not.toBeInTheDocument()
+
+    rerender(<AISkillList source="right-panel" data={data} loadState="metadata" hasMore={false} />)
+    expect(screen.getByRole('status')).toHaveTextContent('YakitEmpty.noMoreData')
+    expect(screen.queryByText('YakitSpin.loadMore')).not.toBeInTheDocument()
+  })
+
+  it('末页仍在加载时优先展示 loading', () => {
+    render(<AISkillList source="right-panel" data={createSkills(1)} loadState="metadata" hasMore={false} loadingMore />)
+    expect(screen.getByRole('status')).toHaveTextContent('YakitSpin.loadMore')
+    expect(screen.queryByText('YakitEmpty.noMoreData')).not.toBeInTheDocument()
+  })
+
+  it('非分页列表和空列表不显示分页底部状态', () => {
+    const { rerender } = render(<AISkillList source="right-panel" data={createSkills(1)} loadState="loaded" />)
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
+    rerender(<AISkillList source="right-panel" data={[]} loadState="metadata" hasMore={false} />)
+    expect(screen.getByText('empty')).toBeInTheDocument()
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
+  })
+
   it('任务详情中的可加载技能不提供操作按钮', () => {
     const onAdd = vi.fn()
     render(<AISkillList source="task-details" data={createSkills(1)} loadState="metadata" onAdd={onAdd} />)
@@ -108,7 +195,7 @@ describe('AISkillList', () => {
   it.each([1, 3, 12])('任务详情通过虚拟列表展示 %i 项技能', (count) => {
     const skills: PlanItemDetailsData['skills'] = {
       fixed: [],
-      dynamic: createSkills(count),
+      dynamic: createTaskSkills(count),
     }
     render(<AITaskSkillList taskId="task-1" skills={skills} />)
     expect(getVirtualList()).toBeInTheDocument()
@@ -119,7 +206,7 @@ describe('AISkillList', () => {
     const skills: PlanItemDetailsData['skills'] = {
       fixed: [],
       dynamic: [
-        ...createSkills(3),
+        ...createTaskSkills(3),
         { name: 'available', description: '', category: 'skill', skill_load_state: 'metadata' },
       ],
     }

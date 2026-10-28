@@ -430,6 +430,13 @@ export enum AITaskStatus {
 }
 export type AITaskStatusType = `${AITaskStatus}`
 
+export enum AISkillLoadStateEnum {
+  /** 未加载 */
+  Metadata = 'metadata',
+  /** 已加载 */
+  Loaded = 'loaded',
+}
+
 export enum AINotifyType {
   notify429TypeRateLimited = 'rate_limited',
   notify429TypeQuotaExceeded = 'quota_exceeded',
@@ -725,7 +732,7 @@ export declare namespace AIAgentGrpcApi {
     verbose_name: string
     description: string
     category: 'tool' | 'mcp_server' | 'forge' | 'skill' | 'yak_plugin' | 'mcp'
-    skill_load_state?: 'metadata' | 'loaded' | ''
+    skill_load_state?: `${AISkillLoadStateEnum}` | ''
     /** 技能占用的上下文 Token 数 */
     token_count?: number
   }
@@ -750,7 +757,7 @@ export declare namespace AIAgentGrpcApi {
      * metadata:未加载
      * loaded: 已加载
      */
-    skill_load_state: 'metadata' | 'loaded' | ''
+    skill_load_state: `${AISkillLoadStateEnum}` | ''
     /** 技能占用的上下文 Token 数 */
     token_count?: number
   }
@@ -812,7 +819,7 @@ export declare namespace AIAgentGrpcApi {
     position: string
     is_fixed: boolean
     data: {
-      skill_load_state: string
+      skill_load_state: `${AISkillLoadStateEnum}` | ''
       token_count?: number
     }
   }
@@ -828,6 +835,13 @@ export declare namespace AIAgentGrpcApi {
     page: number
     page_size: number
     has_more: boolean
+  }
+
+  /** 可加载技能查询失败时返回错误，不携带分页信息 */
+  export interface SkillAvailableErrorResponse {
+    skills: SkillListEntry[]
+    query: string
+    error: string
   }
 
   /** skill_detail 返回的技能详情；有 error 时展示后端错误 */

@@ -12,6 +12,7 @@ import { grpcQueryAIEvent } from '@/pages/ai-agent/grpc'
 import { yakitNotify } from '@/utils/notification'
 import { AIChatQSDataTypeEnum } from '../aiRender'
 import { AISourceEnum } from '../grpcApi'
+import type { AIAgentGrpcApi } from '../grpcApi'
 import type { AIChatIPCStartParams } from '../type'
 import { AttachedResourceKeyEnum, AttachedResourceTypeEnum } from '@/pages/ai-agent/defaultConstant'
 
@@ -134,7 +135,7 @@ describe('frontend allocated session identity', () => {
           IsSyncMessage: true,
           SyncType: 'skill_available_sync',
           SyncID: expect.any(String),
-          SyncJsonInput: JSON.stringify({ page: 1 }),
+          SyncJsonInput: JSON.stringify({ page: 1, page_size: 50 }),
         }),
       ],
     ])
@@ -152,16 +153,17 @@ describe('frontend allocated session identity', () => {
       const second = await start('', 'second-tab', 'second-session')
       await emit(first, 'pong', 'first-session')
       await emit(second, 'pong', 'second-session')
-      const skills = [
+      const loadState = nodeId === 'skill_loaded' ? 'loaded' : 'metadata'
+      const skills: AIAgentGrpcApi.SkillListEntry[] = [
         {
           name: 'review',
           verbose_name: '审查',
           description: 'description',
           type: 'skill',
-          stage: 'metadata',
+          stage: loadState,
           position: 'SemiDynamic',
           is_fixed: false,
-          data: { skill_load_state: 'metadata' },
+          data: { skill_load_state: loadState, token_count: 1280 },
         },
       ]
       const listener = ipcRendererMock.on.mock.calls.find(([name]) => name === `${first}-data`)![1]
@@ -171,8 +173,8 @@ describe('frontend allocated session identity', () => {
           'structured',
           {
             skills,
-            total: skills.length,
-            ...(nodeId === 'skill_available' ? { page: 1, page_size: 100, has_more: false } : {}),
+            total: 132,
+            ...(nodeId === 'skill_available' ? { page: 1, page_size: 100, has_more: true } : {}),
           },
           {
             NodeId: nodeId,
@@ -182,16 +184,29 @@ describe('frontend allocated session identity', () => {
         ),
       )
       await tick()
-      expect(controller.ensureSession('first-session').rawData.skills).toEqual([
-        {
-          name: 'review',
-          description: 'description',
-          skill_load_state: nodeId === 'skill_loaded' ? 'loaded' : 'metadata',
-        },
-      ])
-      expect(controller.ensureSession('first-session').store.getState().skillsUpdate).toBe(1)
-      expect(controller.ensureSession('second-session').rawData.skills).toEqual([])
-      expect(controller.ensureSession('second-session').store.getState().skillsUpdate).toBe(0)
+      const field = nodeId === 'skill_loaded' ? 'loadedSkills' : 'availableSkills'
+      const otherField = nodeId === 'skill_loaded' ? 'availableSkills' : 'loadedSkills'
+      const updateField = nodeId === 'skill_loaded' ? 'loadedSkillsUpdate' : 'availableSkillsUpdate'
+      const otherUpdateField = nodeId === 'skill_loaded' ? 'availableSkillsUpdate' : 'loadedSkillsUpdate'
+      expect(controller.ensureSession('first-session').rawData[field]).toEqual({
+        total: 132,
+        ...(nodeId === 'skill_available' ? { page: 1, page_size: 100, has_more: true } : {}),
+        skills: [{ name: 'review', description: 'description', skill_load_state: loadState, token_count: 1280 }],
+      })
+      expect(controller.ensureSession('first-session').rawData[otherField].skills).toEqual([])
+      expect(controller.ensureSession('first-session').rawData[otherField].total).toBe(0)
+      expect(controller.ensureSession('first-session').store.getState()[updateField]).toBe(1)
+      expect(controller.ensureSession('first-session').store.getState()[otherUpdateField]).toBe(0)
+      expect(controller.ensureSession('second-session').rawData.loadedSkills).toEqual({ skills: [], total: 0 })
+      expect(controller.ensureSession('second-session').rawData.availableSkills).toEqual({
+        skills: [],
+        total: 0,
+        page: 1,
+        page_size: 50,
+        has_more: false,
+      })
+      expect(controller.ensureSession('second-session').store.getState().loadedSkillsUpdate).toBe(0)
+      expect(controller.ensureSession('second-session').store.getState().availableSkillsUpdate).toBe(0)
       await controller.handleSessionEnd('first-session')
       await controller.handleSessionEnd('second-session')
     },
@@ -460,7 +475,7 @@ describe('frontend allocated session identity', () => {
           IsSyncMessage: true,
           SyncType: 'skill_available_sync',
           SyncID: expect.any(String),
-          SyncJsonInput: JSON.stringify({ page: 1 }),
+          SyncJsonInput: JSON.stringify({ page: 1, page_size: 50 }),
         }),
       ],
     ])
