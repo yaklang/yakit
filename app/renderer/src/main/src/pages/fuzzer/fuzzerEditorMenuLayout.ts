@@ -97,11 +97,11 @@ export const getMenuPanelStyle = (
   return style
 }
 
-/** 编辑器可视区在屏幕坐标下的可用矩形（含行号槽；右/底已扣 minimap / 滚动条） */
+/** 编辑器可视区在屏幕坐标下的可用矩形（含行号槽、竖/横向滚动条、minimap） */
 export interface HostBox {
-  /** 含行号槽的左缘（智能解码拖拽可用） */
+  /** 含行号槽的左缘（智能解码拖拽可用；也是整编辑器左界） */
   hostLeft: number
-  /** 内容区实际 overflow 裁切左缘（工具条/下拉必须按这个夹，否则会被 scrollable 裁掉） */
+  /** 内容区 scrollable 左缘（对照字段；工具条/下拉横轴用 hostLeft） */
   clipLeft: number
   hostRight: number
   hostTop: number
@@ -109,7 +109,7 @@ export interface HostBox {
 }
 
 /**
- * 量编辑器可视区矩形（屏幕坐标）：左侧含行号槽，右/底避开 minimap 与滚动条。
+ * 量编辑器可视区矩形（屏幕坐标）：左侧含行号槽；右/底含竖向与横向滚动条及 minimap（浮层可叠放）。
  * hostRef / content widget 可能在 monaco 内外；找不到就往 .monaco-editor 里再找。
  */
 export const readEditorHostBox = (node: HTMLElement): HostBox => {
@@ -128,39 +128,24 @@ export const readEditorHostBox = (node: HTMLElement): HostBox => {
   const base = scrollable ?? guard
   if (!base) return { hostLeft: 0, clipLeft: 0, hostRight: 0, hostTop: 0, hostBottom: 0 }
   const rect = base.getBoundingClientRect()
-  // hostLeft：overflow-guard（含行号槽，给智能解码拖拽）
-  // clipLeft：scrollable 左缘（content widget / 下拉真正被 overflow 裁切的边）
+  // hostLeft：overflow-guard 左缘（含行号槽；整编辑器左界）
+  // clipLeft：scrollable 左缘（对照字段）
   const guardRect = guard?.getBoundingClientRect()
   const scrollRect = scrollable?.getBoundingClientRect()
   let hostLeft = rect.left
   let hostTop = rect.top
   if (guardRect && guardRect.width > 0 && guardRect.left <= rect.left) hostLeft = guardRect.left
   if (guardRect && guardRect.height > 0 && guardRect.top <= rect.top) hostTop = guardRect.top
-  // 工具条/面板在 scrollable 内，必须按 scrollable 左缘夹，不能伸进行号槽
+  // clipLeft 取 scrollable 左缘，并夹到 ≥ hostLeft
   let clipLeft = scrollRect && scrollRect.width > 0 ? scrollRect.left : hostLeft
   if (clipLeft < hostLeft) clipLeft = hostLeft
+  // hostRight：overflow-guard 右缘（含竖向滚动条与 minimap）
   let hostRight = rect.right
+  if (guardRect && guardRect.width > 0 && guardRect.right >= rect.right) hostRight = guardRect.right
   let hostBottom = rect.bottom
-  const minimap = guard?.querySelector(':scope > .minimap') as HTMLElement | null
-  if (minimap) {
-    const cover = minimap.getBoundingClientRect()
-    if (cover.width > 8 && cover.left > rect.left + 8 && cover.left < hostRight) hostRight = cover.left
-  }
-  // 竖向滚动条 track 隐藏时可能仍占满宽，只在真实窄条时收右边界
-  const vertical = scrollable?.querySelector(':scope > .scrollbar.vertical') as HTMLElement | null
-  if (vertical) {
-    const cover = vertical.getBoundingClientRect()
-    if (cover.width < 48 && cover.width > 2 && cover.left > rect.left + 8 && cover.left < hostRight) {
-      hostRight = cover.left
-    }
-  }
-  const horizontal = scrollable?.querySelector(':scope > .scrollbar.horizontal') as HTMLElement | null
-  if (horizontal) {
-    const cover = horizontal.getBoundingClientRect()
-    if (cover.height < 48 && cover.height > 2 && cover.top > rect.top + 8 && cover.top < hostBottom) {
-      hostBottom = cover.top
-    }
-  }
+  // hostBottom：overflow-guard 底缘（含横向滚动条）
+  if (guardRect && guardRect.height > 0 && guardRect.bottom >= rect.bottom) hostBottom = guardRect.bottom
+  // 宿主含 gutter/minimap/滚动条，不收窄；浮层靠 allowEditorOverflow + z-index≥20 叠在滚动条上
   return { hostLeft, clipLeft, hostRight, hostTop, hostBottom }
 }
 
@@ -172,7 +157,7 @@ const currentBarMargin = (bar: HTMLElement) => parseFloat(bar.style.marginLeft) 
  * 光标在右优先向左长，在左/中优先向右长；这一侧放不下且另一侧更空时换边，最后再夹进可视区域。
  * 默认两侧都留 EDGE；只有锚点落在贴边 EDGE 带里时才取消该侧顶开，避免整条被夹出视口。
  */
-const placeHorizontal = (
+export const placeHorizontal = (
   anchorLeft: number,
   anchorRight: number,
   size: number,
@@ -213,7 +198,7 @@ const desiredEditorBarMargin = (bar: HTMLElement, direction?: CountDirectionProp
     caret,
     caret,
     rect.width,
-    host.clipLeft,
+    host.hostLeft,
     host.hostRight,
     direction?.x === 'right',
   )
@@ -331,12 +316,13 @@ export const placeMenuPanel = (
   const anchorBottom = barRect?.bottom ?? anchor.bottom
   const parentLeft = parent.left + pendingShift
   const parentRight = parent.right + pendingShift
-  if (host.hostRight - host.clipLeft < 40) {
+  if (host.hostRight - host.hostLeft < 40) {
     return { visibility: 'visible', marginTop: 0 }
   }
 
-  // 横轴按 clipLeft：面板在 scrollable 内，伸进行号槽会被 overflow 裁掉
-  const maxWidth = Math.min(MENU_PANEL_MAX_WIDTH, Math.max(0, host.hostRight - host.clipLeft - MENU_PANEL_EDGE * 2))
+  // 横轴按整编辑器（hostLeft~hostRight）：含行号槽 / 滚动条 / minimap（配合 allowEditorOverflow）
+  const maxWidth = Math.min(MENU_PANEL_MAX_WIDTH, Math.max(0, host.hostRight - host.hostLeft - MENU_PANEL_EDGE * 2))
+
   const hostMaxHeight = Math.min(
     MENU_PANEL_MAX_HEIGHT,
     Math.max(0, host.hostBottom - host.hostTop - MENU_PANEL_EDGE * 2),
@@ -372,7 +358,7 @@ export const placeMenuPanel = (
     anchorLeft,
     anchorRight,
     panelWidth,
-    host.clipLeft,
+    host.hostLeft,
     host.hostRight,
     direction?.x === 'right',
   )
@@ -415,7 +401,7 @@ export const placeMenuPanel = (
     top: viewTop - padTop,
     bottom: 'auto',
     // 贴着按钮的那条边定位。列表异步变宽时，只会朝展开方向长，不会漂到按钮另一侧。
-    // 未量到宽或已被夹离锚点时用 left，避免 right+max-content 朝左长出 clipLeft 被裁
+    // 未量到宽或已被夹离锚点时用 left，避免 right+max-content 朝左长出 hostLeft 被裁
     ...(stuckToAnchor && growLeft && panelWidth > 0
       ? { right: parentRight - anchorRight, left: 'auto' }
       : { left: viewLeft - parentLeft, right: 'auto' }),
@@ -522,6 +508,28 @@ export const menuBarClippedByHost = (
   )
 }
 
+/**
+ * 有文案宽度能否经 placeHorizontal 横移后完整落入整编辑器宿主。
+ * 宽度超宿主，或试摆后仍被裁切，则返回 false（随后收成图标）。
+ */
+export const menuBarLabeledFitsInHost = (
+  labeledWidth: number,
+  caretX: number,
+  host: HostBox,
+  preferLeft: boolean,
+  barTop = 0,
+  barBottom = 0,
+) => {
+  const hostWidth = host.hostRight - host.hostLeft
+  if (labeledWidth <= 0 || hostWidth <= 0) return false
+  const limit = Math.max(0, hostWidth - MENU_PANEL_EDGE * 2)
+  if (labeledWidth > limit) return false
+  const { viewLeft } = placeHorizontal(caretX, caretX, labeledWidth, host.hostLeft, host.hostRight, preferLeft)
+  const top = barTop || host.hostTop
+  const bottom = barBottom > barTop ? barBottom : top + 1
+  return !menuBarClippedByHost({ left: viewLeft, right: viewLeft + labeledWidth, top, bottom }, host)
+}
+
 export const useMenuBarLayout = (
   barRef: RefObject<HTMLDivElement | null>,
   lang: string,
@@ -544,9 +552,8 @@ export const useMenuBarLayout = (
     const next = margin ? `${margin}px` : ''
     if (bar.style.marginLeft !== next) bar.style.marginLeft = next
 
-    const hostWidth = host.hostRight - host.clipLeft
+    const hostWidth = host.hostRight - host.hostLeft
     if (hostWidth <= 0) return
-    const limit = Math.max(0, hostWidth - MENU_PANEL_EDGE * 2)
     const signature = `${lang}\n${menuItemSignature(bar)}`
     if (signature !== signatureRef.current) {
       signatureRef.current = signature
@@ -554,30 +561,26 @@ export const useMenuBarLayout = (
       expandStableRef.current = 0
     }
     const rect = bar.getBoundingClientRect()
-    // 剪切判定用 clipLeft（scrollable），与下拉同一裁切边
-    const clipHost = { ...host, hostLeft: host.clipLeft }
+    const caretX = rect.left - currentBarMargin(bar)
+    const preferLeft = direction?.x === 'right'
+    // 文案显隐：有文案宽度经 placeHorizontal 横移后能否落入宿主；放不下再收成图标
+
     if (labeledWidthRef.current === 0 && !showLabel) {
       setShowLabel(true)
       return
     }
     if (showLabel) {
       labeledWidthRef.current = bar.offsetWidth
-      const clipped = menuBarClippedByHost(rect, clipHost)
-      // 宽过宿主或摆完仍被宿主剪切 → 只留图标（不做选区命中遮挡：选区菜单本来就叠在选区上）
-      if (bar.offsetWidth > limit || clipped) setShowLabel(false)
+      const fits = menuBarLabeledFitsInHost(bar.offsetWidth, caretX, host, preferLeft, rect.top, rect.bottom)
+      // 整编辑器内横移后仍放不下有文案宽度 → 只留图标
+      if (!fits) setShowLabel(false)
       expandStableRef.current = 0
       return
     }
-    // 图标模式：按「有文案时的占位」判断，避免条变窄后误判未剪切又扩回去闪烁
+    // 图标模式：以 caret 为锚、用有文案宽度试摆；连续两次 fits 再恢复文案
     const labeledW = labeledWidthRef.current
-    const probe = {
-      left: rect.left,
-      top: rect.top,
-      right: rect.left + labeledW,
-      bottom: rect.bottom,
-    }
-    const clipped = menuBarClippedByHost(probe, clipHost)
-    if (labeledW <= limit && !clipped) {
+    const fits = menuBarLabeledFitsInHost(labeledW, caretX, host, preferLeft, rect.top, rect.bottom)
+    if (fits) {
       expandStableRef.current += 1
       if (expandStableRef.current >= 2) setShowLabel(true)
     } else {

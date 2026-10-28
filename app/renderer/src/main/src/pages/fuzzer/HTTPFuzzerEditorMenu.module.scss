@@ -1,5 +1,7 @@
 .http-fuzzer-click-editor {
   position: relative;
+  /* 高于 Monaco 竖向滚动条 z-index:11（与 editerMenuFun content widget zIndex 对齐） */
+  z-index: 20;
   flex-shrink: 0;
   .http-fuzzer-click-editor-simple {
     flex-shrink: 0;
@@ -58,6 +60,8 @@
 }
 .http-fuzzer-click-editor-menu {
   position: absolute;
+  /* 高于 Monaco 竖向滚动条 z-index:11（panel 与 bar 同级） */
+  z-index: 20;
   box-sizing: border-box;
   margin-top: 0;
   border: 1px solid var(--Colors-Use-Neutral-Border);
@@ -242,6 +246,8 @@
 }
 .http-fuzzer-range-editor-body {
   position: relative;
+  /* bar 根 z-index：面板是 groups 兄弟，须压过 Monaco 竖向滚动条 z-index:11 */
+  z-index: 20;
   display: flex;
   align-items: center;
   width: max-content;
@@ -256,6 +262,8 @@
 }
 .http-fuzzer-range-editor {
   position: relative;
+  /* 高于 Monaco 竖向滚动条 z-index:11 */
+  z-index: 20;
   .http-fuzzer-range-editor-simple {
     flex-shrink: 0;
     background-color: var(--Colors-Use-Basic-Background);
@@ -312,7 +320,9 @@
     }
   }
 }
-.smart-decode-float-layer {
+/* 智能解码浮层：双选择器保证压过 .http-fuzzer-range-editor-menu 的 z-index:20 */
+.smart-decode-float-layer,
+.http-fuzzer-range-editor-menu.smart-decode-float-layer {
   position: fixed;
   z-index: 1050;
   margin-top: 0;
@@ -340,6 +350,8 @@
 }
 .http-fuzzer-range-editor-menu {
   position: absolute;
+  /* 高于 Monaco 竖向滚动条 z-index:11；兼用 smart-decode-float-layer 时由 1050 规则覆盖 */
+  z-index: 20;
   margin-top: 0;
   border: 1px solid var(--Colors-Use-Neutral-Border);
   border-radius: 4px;
@@ -393,6 +405,8 @@
 }
 .http-fuzzer-read-editor {
   position: relative;
+  /* 高于 Monaco 竖向滚动条 z-index:11（只读菜单 bar 根） */
+  z-index: 20;
   display: flex;
   align-items: center;
   width: max-content;
@@ -446,6 +460,8 @@
 }
 .http-fuzzer-range-read-only-editor-menu {
   position: absolute;
+  /* 高于 Monaco 竖向滚动条 z-index:11 */
+  z-index: 20;
   margin-top: 0;
   // width: 360px;
   // max-height: 250px;

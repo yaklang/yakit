@@ -207,6 +207,8 @@ export const editerMenuFun = (params: EditerMenuFunParams) => {
   // 编辑器点击显示的菜单
   const fizzSelectWidget = {
     isOpen: false,
+    // overflowingContentWidgets：浮层可超出 scrollable，叠在竖向滚动条上（scrollbar z≈11）
+    allowEditorOverflow: true,
     domNode: null as HTMLElement | null,
     anchorObserver: null as ResizeObserver | null,
     anchorFrame: null as number | null,
@@ -219,6 +221,8 @@ export const editerMenuFun = (params: EditerMenuFunParams) => {
     getDomNode: function () {
       // 将TSX转换为DOM节点
       const domNode = document.createElement('div')
+      // 高于 Monaco 竖向滚动条 z-index:11（与 SCSS bar/panel 对齐）
+      domNode.style.zIndex = '20'
       this.domNode = domNode
       watchMenuAnchorHeight(domNode, this, () => editor.layoutContentWidget(this))
       // 解决弹窗内鼠标滑轮无法滚动的问题
@@ -267,6 +271,8 @@ export const editerMenuFun = (params: EditerMenuFunParams) => {
   // 编辑器选中显示的菜单
   const fizzRangeWidget = {
     isOpen: false,
+    // overflowingContentWidgets：浮层可超出 scrollable，叠在竖向滚动条上（scrollbar z≈11）
+    allowEditorOverflow: true,
     domNode: null as HTMLElement | null,
     anchorObserver: null as ResizeObserver | null,
     anchorFrame: null as number | null,
@@ -279,6 +285,8 @@ export const editerMenuFun = (params: EditerMenuFunParams) => {
     getDomNode: function () {
       // 将TSX转换为DOM节点
       const domNode = document.createElement('div')
+      // 高于 Monaco 竖向滚动条 z-index:11（与 SCSS bar/panel 对齐）
+      domNode.style.zIndex = '20'
       this.domNode = domNode
       watchMenuAnchorHeight(domNode, this, () => editor.layoutContentWidget(this))
       // 解决弹窗内鼠标滑轮无法滚动的问题

@@ -14,6 +14,13 @@ vi.mock('react-monaco-editor', () => ({
   monaco: { editor: { EditorOption: { lineHeight: 19 } } },
 }))
 
+vi.mock('monaco-editor', () => ({
+  editor: {
+    EndOfLineSequence: { CRLF: 1 },
+    MouseTargetType: { CONTENT_WIDGET: 9, OVERLAY_WIDGET: 10 },
+  },
+}))
+
 vi.mock('@/pages/fuzzer/HTTPFuzzerEditorMenu', () => ({
   HTTPFuzzerClickEditorMenu: () => <div data-testid="default-click-menu" />,
   HTTPFuzzerRangeEditorMenu: () => <div data-testid="default-range-menu" />,
@@ -40,7 +47,12 @@ vi.mock('@/utils/eventBus/eventBus', () => ({
 window.require = (() => ({ ipcRenderer: { invoke: vi.fn() } })) as unknown as typeof window.require
 const { editerMenuFun } = await import('../fizzMenu/editerMenuFun')
 
-type FizzWidget = { getId: () => string; getDomNode: () => HTMLElement }
+type FizzWidget = {
+  getId: () => string
+  getDomNode: () => HTMLElement
+  allowEditorOverflow?: boolean
+  isOpen?: boolean
+}
 type ListenerDisposable = { dispose: ReturnType<typeof vi.fn> }
 
 const SELECT_ID_PREFIX = 'monaco.fizz.select.widget-'
@@ -249,5 +261,14 @@ describe('editerMenuFun 浮层生命周期', () => {
     listeners.forEach((listener) => expect(listener.dispose).toHaveBeenCalledTimes(1))
     // 清理函数幂等
     expect(() => dispose()).not.toThrow()
+  })
+
+  it('content widgets set allowEditorOverflow for overflowingContentWidgets mount', () => {
+    const { editor, removedWidgets } = createMockEditor()
+    disposers.push(editerMenuFun(createParams(editor)))
+    const selectWidget = findWidget(removedWidgets, SELECT_ID_PREFIX) as FizzWidget
+    const rangeWidget = findWidget(removedWidgets, RANGE_ID_PREFIX) as FizzWidget
+    expect(selectWidget.allowEditorOverflow).toBe(true)
+    expect(rangeWidget.allowEditorOverflow).toBe(true)
   })
 })
