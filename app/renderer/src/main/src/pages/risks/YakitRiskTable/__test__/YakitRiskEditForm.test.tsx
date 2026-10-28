@@ -443,7 +443,7 @@ describe('YakitRiskEditForm 验证人回填', () => {
       count: 2,
     })
     expect(onSave).not.toHaveBeenCalled()
-    expect(screen.queryByText(/每个范围最多 1000 条/)).not.toBeInTheDocument()
+    expect(screen.queryByText('BatchScopeSelector.summary')).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'YakitButton.cancel' })).toBeDisabled()
     fireEvent.click(screen.getByRole('button', { name: 'YakitButton.cancel' }))
     expect(onClose).not.toHaveBeenCalled()
@@ -466,10 +466,10 @@ describe('YakitRiskEditForm 验证人回填', () => {
     )
 
     fireEvent.click(screen.getByRole('button', { name: '测试提交' }))
-    expect(await screen.findByText('共 2501 条数据。每个范围最多 1000 条，完成后弹窗会继续保留。')).toBeInTheDocument()
+    expect(await screen.findByText('BatchScopeSelector.summary')).toBeInTheDocument()
     expect(execute).not.toHaveBeenCalled()
-    fireEvent.click(screen.getAllByRole('button', { name: '执行' })[0])
-    await waitFor(() => expect(screen.getByText('已完成')).toBeInTheDocument())
+    fireEvent.click(screen.getAllByRole('button', { name: 'BatchScopeSelector.execute' })[0])
+    await waitFor(() => expect(screen.getByText('BatchScopeSelector.success')).toBeInTheDocument())
     expect(execute).toHaveBeenCalledWith(expect.objectContaining({ RiskType: 'SQL注入' }), {
       index: 0,
       page: 1,
@@ -479,7 +479,7 @@ describe('YakitRiskEditForm 验证人回填', () => {
       count: 1000,
     })
     expect(onClose).not.toHaveBeenCalled()
-    fireEvent.click(screen.getByRole('button', { name: '完成/关闭' }))
+    fireEvent.click(screen.getByRole('button', { name: 'BatchScopeSelector.close' }))
     expect(onClose).toHaveBeenCalledOnce()
   })
 

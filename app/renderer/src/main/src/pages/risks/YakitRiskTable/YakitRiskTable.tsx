@@ -936,7 +936,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
           onRefRiskList()
           emiter.emit('onRefRiskFieldGroup')
         } catch (error) {
-          yakitNotify('error', `数据刷新失败，请手动刷新列表：${String(error)}`)
+          yakitNotify('error', t('BatchScopeSelector.refreshFailed', { error: String(error) }))
         }
         return result
       }
@@ -1043,7 +1043,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                       },
                     },
                   })
-                  if (!result) throw new Error('批量修改未返回执行结果')
+                  if (!result) throw new Error(t('BatchScopeSelector.missingResult'))
                   return result
                 },
               }}
@@ -2009,7 +2009,7 @@ export const YakitRiskEditForm: React.FC<YakitRiskEditFormProps> = React.memo((p
           const response = await batchScope.execute(nextInfo, scope)
           const updatedCount = Number(response?.UpdatedCount ?? 0)
           if (updatedCount !== scope.count) {
-            yakitNotify('error', `本次仅更新 ${updatedCount}/${scope.count} 条，请刷新列表后核对。`)
+            yakitNotify('error', t('BatchScopeSelector.incompleteUpdate', { updatedCount, expectedCount: scope.count }))
             onClose?.()
             return
           }

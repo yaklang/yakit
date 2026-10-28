@@ -1,4 +1,19 @@
 {
+  "BatchScopeSelector": {
+    "summary": "{{total}} records in total. Each range contains up to {{limit}} records. The dialog stays open after completion.",
+    "pending": "Not started",
+    "running": "Running",
+    "success": "Completed",
+    "failed": "Failed, retry available",
+    "partial": "Partially updated, please verify",
+    "execute": "Run",
+    "retry": "Retry",
+    "close": "Done / Close",
+    "partialUpdate": "Range {{start}}-{{end}} updated only {{updatedCount}}/{{expectedCount}} records. Retries are disabled for this range to avoid processing successful records again.",
+    "incompleteUpdate": "Only {{updatedCount}}/{{expectedCount}} records were updated. Refresh the list and verify the results.",
+    "refreshFailed": "Failed to refresh data. Please refresh the list manually: {{error}}",
+    "missingResult": "The batch update returned no result"
+  },
   "YakitButton": {
     "ok": "OK",
     "confirm": "Confirm",

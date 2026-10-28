@@ -101,11 +101,14 @@ export const FlowMarkEditForm: React.FC<FlowMarkEditFormProps> = memo((props) =>
           .then((response) => {
             const updatedCount = Number(response?.UpdatedCount ?? 0)
             if (updatedCount !== scope.count) {
-              yakitNotify('error', `本次仅更新 ${updatedCount}/${scope.count} 条，请刷新列表后核对。`)
+              yakitNotify(
+                'error',
+                t('BatchScopeSelector.incompleteUpdate', { updatedCount, expectedCount: scope.count }),
+              )
               try {
                 onRefresh?.()
               } catch (error) {
-                yakitNotify('error', `数据刷新失败，请手动刷新列表：${String(error)}`)
+                yakitNotify('error', t('BatchScopeSelector.refreshFailed', { error: String(error) }))
               }
               onClose?.()
               return
@@ -113,7 +116,7 @@ export const FlowMarkEditForm: React.FC<FlowMarkEditFormProps> = memo((props) =>
             try {
               onSuccess?.(buildPatch(ids, payload))
             } catch (error) {
-              yakitNotify('error', `数据刷新失败，请手动刷新列表：${String(error)}`)
+              yakitNotify('error', t('BatchScopeSelector.refreshFailed', { error: String(error) }))
             }
             onClose?.()
           })

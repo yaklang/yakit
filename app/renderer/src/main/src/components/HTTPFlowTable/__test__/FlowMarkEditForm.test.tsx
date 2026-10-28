@@ -2,6 +2,7 @@ import { act, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { HTTPFlow } from '../HTTPFlowTable.constants'
+import { buildBatchScopes } from '@/components/BatchScopeSelector/batchScope'
 
 const mocks = vi.hoisted(() => ({
   formProps: undefined as Record<string, any> | undefined,
@@ -61,6 +62,53 @@ vi.mock('@/utils/notification', () => ({ yakitNotify: vi.fn() }))
 vi.mock('../HTTPFlowMark.utils', () => ({ apiBatchSetHTTPFlowIssueFields: mocks.apiBatchSetHTTPFlowIssueFields }))
 
 import { FlowMarkEditForm } from '../FlowMarkEditForm'
+
+interface StatefulFlow {
+  Id: number
+  IssueType: string
+  Status: string
+}
+
+const createStatefulFlowMock = (flows: StatefulFlow[], updatedIds: number[]) => {
+  mocks.apiBatchSetHTTPFlowIssueFields.mockImplementation(async (request) => {
+    const filter = request.Filter || {}
+    const pagination = filter.Pagination || {}
+    const requestIds = new Set<number>(request.Ids || [])
+    const includeIds = new Set<number>(filter.IncludeId || [])
+    const candidates = flows
+      .filter((flow) => (requestIds.size ? requestIds.has(flow.Id) : !includeIds.size || includeIds.has(flow.Id)))
+      .filter((flow) => requestIds.size || !filter.IssueType || flow.IssueType === filter.IssueType)
+      .filter((flow) => requestIds.size || !filter.Status || flow.Status === filter.Status)
+      .sort((a, b) => (pagination.Order === 'asc' ? a.Id - b.Id : b.Id - a.Id))
+    const page = Number(pagination.Page || 1)
+    const limit = Number(pagination.Limit || candidates.length)
+    const selected = requestIds.size ? candidates : candidates.slice((page - 1) * limit, page * limit)
+    selected.forEach((flow) => {
+      updatedIds.push(flow.Id)
+      if (request.SetIssueType !== undefined) flow.IssueType = request.SetIssueType
+      if (request.SetStatus !== undefined) flow.Status = request.SetStatus
+    })
+    return { UpdatedCount: selected.length }
+  })
+}
+
+const renderStatefulBatch = async (selection: 'all' | 'explicit', values: { IssueType?: string; Status?: string }) => {
+  const ids = selection === 'explicit' ? Array.from({ length: 2501 }, (_, index) => index + 1) : []
+  render(
+    <FlowMarkEditForm
+      batch
+      batchCount={2501}
+      ids={ids}
+      filter={{ IssueType: 'XSS', Pagination: { Page: 1, Limit: 20, OrderBy: 'id', Order: 'asc' } }}
+    />,
+  )
+  await act(async () => {
+    mocks.formProps?.onFinish(values)
+  })
+  const execute = mocks.batchScopeProps?.execute
+  expect(execute).toBeTypeOf('function')
+  for (const scope of buildBatchScopes(2501)) await execute(scope)
+}
 
 describe('FlowMarkEditForm', () => {
   beforeEach(() => {
@@ -181,6 +229,44 @@ describe('FlowMarkEditForm', () => {
     await waitFor(() => expect(onRefresh).toHaveBeenCalledOnce())
     expect(onClose).toHaveBeenCalledOnce()
   })
+
+  for (const selection of ['all', 'explicit'] as const) {
+    it(`${selection} selection covers every original row once when edited fields do not affect the filter`, async () => {
+      const flows = Array.from({ length: 2501 }, (_, index) => ({
+        Id: index + 1,
+        IssueType: 'XSS',
+        Status: '待修复',
+      }))
+      const updatedIds: number[] = []
+      createStatefulFlowMock(flows, updatedIds)
+
+      await renderStatefulBatch(selection, { Status: '确认' })
+
+      expect(new Set(updatedIds).size).toBe(2501)
+      expect(updatedIds).toHaveLength(2501)
+      expect(flows.every((flow) => flow.Status === '确认')).toBe(true)
+    })
+
+    // 已知 P0：可变筛选集合按页执行会遗漏原目标；生产逻辑修复后移除 fails。
+    it.fails(
+      `${selection} selection keeps the original target set when an edited field shrinks the filter`,
+      async () => {
+        const flows = Array.from({ length: 2501 }, (_, index) => ({
+          Id: index + 1,
+          IssueType: 'XSS',
+          Status: '待修复',
+        }))
+        const updatedIds: number[] = []
+        createStatefulFlowMock(flows, updatedIds)
+
+        await renderStatefulBatch(selection, { IssueType: 'SQL注入' })
+
+        expect(new Set(updatedIds).size).toBe(2501)
+        expect(updatedIds).toHaveLength(2501)
+        expect(flows.every((flow) => flow.IssueType === 'SQL注入')).toBe(true)
+      },
+    )
+  }
 
   it('translates labels while preserving API values', async () => {
     render(<FlowMarkEditForm ids={[7]} />)

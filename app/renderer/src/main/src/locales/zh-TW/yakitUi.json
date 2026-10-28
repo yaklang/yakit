@@ -1,4 +1,19 @@
 {
+  "BatchScopeSelector": {
+    "summary": "共 {{total}} 筆資料。每個範圍最多 {{limit}} 筆，完成後彈窗會繼續保留。",
+    "pending": "未執行",
+    "running": "執行中",
+    "success": "已完成",
+    "failed": "失敗，可重試",
+    "partial": "部分更新，請核對",
+    "execute": "執行",
+    "retry": "重試",
+    "close": "完成/關閉",
+    "partialUpdate": "範圍 {{start}}-{{end}} 僅更新 {{updatedCount}}/{{expectedCount}} 筆。為避免重複處理已成功記錄，本範圍已停止自動重試。",
+    "incompleteUpdate": "本次僅更新 {{updatedCount}}/{{expectedCount}} 筆，請重新整理列表後核對。",
+    "refreshFailed": "資料重新整理失敗，請手動重新整理列表：{{error}}",
+    "missingResult": "批次修改未傳回執行結果"
+  },
   "YakitButton": {
     "ok": "確定",
     "confirm": "確認",

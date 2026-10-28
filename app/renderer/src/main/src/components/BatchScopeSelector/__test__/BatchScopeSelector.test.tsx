@@ -1,8 +1,16 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { createInstance } from 'i18next'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import zh from '@/locales/zh/yakitUi.json'
+import zhTW from '@/locales/zh-TW/yakitUi.json'
+import en from '@/locales/en/yakitUi.json'
 
 const mocks = vi.hoisted(() => ({ notify: vi.fn() }))
+const testI18n = createInstance()
+vi.mock('@/i18n/useI18nNamespaces', () => ({
+  useI18nNamespaces: () => ({ t: testI18n.t.bind(testI18n) }),
+}))
 vi.mock('@/components/yakitUI/YakitButton/YakitButton', () => ({
   YakitButton: ({
     children,
@@ -17,7 +25,16 @@ vi.mock('@/utils/notification', () => ({ yakitNotify: mocks.notify }))
 import { BatchScopeSelector } from '../BatchScopeSelector'
 
 describe('BatchScopeSelector', () => {
-  beforeEach(() => mocks.notify.mockReset())
+  beforeEach(async () => {
+    mocks.notify.mockReset()
+    await testI18n.init({
+      lng: 'zh',
+      fallbackLng: false,
+      defaultNS: 'yakitUi',
+      resources: { zh: { yakitUi: zh }, 'zh-TW': { yakitUi: zhTW }, en: { yakitUi: en } },
+      interpolation: { escapeValue: false },
+    })
+  })
 
   it('keeps the dialog open and executes ranges in the selected order', async () => {
     const user = userEvent.setup()
@@ -69,5 +86,41 @@ describe('BatchScopeSelector', () => {
     await waitFor(() => expect(screen.getByText('已完成')).toBeInTheDocument())
     expect(screen.queryByRole('button', { name: '重试' })).not.toBeInTheDocument()
     expect(mocks.notify).toHaveBeenCalledWith('error', expect.stringContaining('数据刷新失败'))
+  })
+
+  it.each([
+    {
+      language: 'en',
+      summary: '1001 records in total. Each range contains up to 1000 records. The dialog stays open after completion.',
+      executeLabel: 'Run',
+      pendingLabel: 'Not started',
+      partialLabel: 'Partially updated, please verify',
+      closeLabel: 'Done / Close',
+      error:
+        'Range 1-1000 updated only 1/1000 records. Retries are disabled for this range to avoid processing successful records again.',
+    },
+    {
+      language: 'zh-TW',
+      summary: '共 1001 筆資料。每個範圍最多 1000 筆，完成後彈窗會繼續保留。',
+      executeLabel: '執行',
+      pendingLabel: '未執行',
+      partialLabel: '部分更新，請核對',
+      closeLabel: '完成/關閉',
+      error: '範圍 1-1000 僅更新 1/1000 筆。為避免重複處理已成功記錄，本範圍已停止自動重試。',
+    },
+  ])('renders range controls and interpolated errors in $language', async (translation) => {
+    await testI18n.changeLanguage(translation.language)
+    const user = userEvent.setup()
+    const onClose = vi.fn()
+    render(<BatchScopeSelector total={1001} execute={async () => ({ UpdatedCount: 1 })} onClose={onClose} />)
+
+    expect(screen.getByText(translation.summary)).toBeInTheDocument()
+    expect(screen.getAllByText(translation.pendingLabel)).toHaveLength(2)
+    await user.click(screen.getAllByRole('button', { name: translation.executeLabel })[0])
+    expect(await screen.findByText(translation.partialLabel)).toBeInTheDocument()
+    expect(screen.getByText(translation.error)).toBeInTheDocument()
+    expect(mocks.notify).toHaveBeenCalledWith('error', translation.error)
+    await user.click(screen.getByRole('button', { name: translation.closeLabel }))
+    expect(onClose).toHaveBeenCalledOnce()
   })
 })

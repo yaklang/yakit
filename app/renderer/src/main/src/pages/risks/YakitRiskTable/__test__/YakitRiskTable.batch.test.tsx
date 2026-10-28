@@ -5,6 +5,7 @@ import type { QueryRisksRequest } from '../YakitRiskTableType'
 import type { Risk } from '../../schema'
 import { YakitRiskTable } from '../YakitRiskTable'
 import { DISPOSAL_STATUS_OPTIONS } from '../constants'
+import { buildBatchScopes } from '@/components/BatchScopeSelector/batchScope'
 
 const rows: Risk[] = [
   { Id: 11, Hash: 'risk-11', IP: '127.0.0.1', Title: 'risk 11', RiskType: 'SQL注入', CreatedAt: 1 },
@@ -25,6 +26,7 @@ const mocks = vi.hoisted(() => ({
   queryRiskTypes: vi.fn(),
   queryRiskTags: vi.fn(),
   columns: [] as any[],
+  rowSelection: undefined as any,
   refreshRisks: undefined as (() => void) | undefined,
 }))
 
@@ -89,6 +91,7 @@ vi.mock('@yakit-libs/yakit-ui-icons/colorful', async (importOriginal) => ({
 vi.mock('@/components/TableVirtualResize/TableVirtualResize', () => ({
   TableVirtualResize: ({ renderTitle, rowSelection, data, pagination, columns, onChange }) => {
     mocks.columns = columns
+    mocks.rowSelection = rowSelection
     return (
       <div>
         {renderTitle}
@@ -272,6 +275,82 @@ const renderTable = async () => {
 const openBatchEdit = () => {
   fireEvent.click(screen.getByRole('button', { name: 'batch-modify' }))
   return mocks.showModal.mock.calls[0][0].content.props
+}
+
+interface StatefulRisk {
+  Id: number
+  RiskType: string
+  Severity: string
+  Tags: string
+}
+
+const createStatefulRiskMock = (risks: StatefulRisk[], updatedIds: number[]) => {
+  mocks.batchSetRiskTags.mockImplementation(async (request) => {
+    const filter = request.Filter || {}
+    const pagination = filter.Pagination || {}
+    const requestIds = new Set<number>(request.Ids || [])
+    const filterIds = new Set<number>(filter.Ids || [])
+    const candidates = risks
+      .filter((risk) => (requestIds.size ? requestIds.has(risk.Id) : !filterIds.size || filterIds.has(risk.Id)))
+      .filter((risk) => requestIds.size || !filter.RiskType || risk.RiskType === filter.RiskType)
+      .filter((risk) => requestIds.size || !filter.Severity || risk.Severity === filter.Severity)
+      .filter((risk) => requestIds.size || !filter.Tags || risk.Tags === filter.Tags)
+      .sort((a, b) => (pagination.Order === 'asc' ? a.Id - b.Id : b.Id - a.Id))
+    const page = Number(pagination.Page || 1)
+    const limit = Number(pagination.Limit || candidates.length)
+    const selected = requestIds.size ? candidates : candidates.slice((page - 1) * limit, page * limit)
+    selected.forEach((risk) => {
+      updatedIds.push(risk.Id)
+      if (request.RiskTypeVerbose !== undefined) risk.RiskType = request.RiskTypeVerbose
+      if (request.SetSeverity !== undefined) risk.Severity = request.SetSeverity
+      if (request.SetTags !== undefined) risk.Tags = request.SetTags.join('|')
+    })
+    return { UpdatedCount: selected.length }
+  })
+}
+
+const openStatefulRiskBatch = async (selection: 'all' | 'explicit', targetIds: number[]) => {
+  const statefulQuery = {
+    ...query,
+    Search: '',
+    Network: '',
+    RiskTypeList: ['SQL注入'],
+    Pagination: { Page: 1, Limit: 20, OrderBy: 'id', Order: 'asc' },
+  }
+  mocks.queryRisks.mockResolvedValue({
+    Data: rows,
+    Total: targetIds.length,
+    Pagination: statefulQuery.Pagination,
+  })
+  render(
+    <YakitRiskTable
+      query={statefulQuery}
+      setQuery={vi.fn()}
+      setRiskLoading={vi.fn()}
+      allTotal={targetIds.length}
+      setAllTotal={vi.fn()}
+    />,
+  )
+  fireEvent.click(screen.getByRole('button', { name: 'load-table' }))
+  await waitFor(() => expect(screen.getByTestId('loaded-count')).toHaveTextContent('2'))
+  vi.clearAllMocks()
+  if (selection === 'all') {
+    fireEvent.click(screen.getByRole('button', { name: 'select-all' }))
+  } else {
+    act(() => {
+      targetIds.forEach((id) => {
+        mocks.rowSelection.onChangeCheckboxSingle(true, String(id), {
+          Id: id,
+          Hash: `risk-${id}`,
+          IP: '127.0.0.1',
+          Title: `risk ${id}`,
+          RiskType: 'SQL注入',
+          CreatedAt: id,
+        })
+      })
+    })
+  }
+  return openBatchEdit()
 }
 
 describe('YakitRiskTable 批量操作', () => {
@@ -716,6 +795,55 @@ describe('YakitRiskTable 批量操作', () => {
       mocks.queryRisks.mock.invocationCallOrder[0],
     )
   })
+
+  for (const selection of ['all', 'explicit'] as const) {
+    it(`${selection} selection covers every original risk once when edited fields do not affect the filter`, async () => {
+      const risks = Array.from({ length: 1001 }, (_, index) => ({
+        Id: index + 1,
+        RiskType: 'SQL注入',
+        Severity: 'high',
+        Tags: '待验证',
+      }))
+      const targetIds = risks.map((risk) => risk.Id)
+      const updatedIds: number[] = []
+      const formProps = await openStatefulRiskBatch(selection, targetIds)
+      createStatefulRiskMock(risks, updatedIds)
+
+      await act(async () => {
+        for (const scope of buildBatchScopes(risks.length)) {
+          await formProps.batchScope.execute({ RiskType: 'SQL注入', SeverityScore: 7, Tags: '确认' }, scope)
+        }
+      })
+
+      expect(new Set(updatedIds).size).toBe(risks.length)
+      expect(updatedIds).toHaveLength(risks.length)
+      expect(risks.every((risk) => risk.Tags === '确认')).toBe(true)
+    })
+
+    // 已知 P0：可变筛选集合按页执行会遗漏原目标；生产逻辑修复后移除 fails。
+    it.fails(`${selection} selection keeps the original risk set when an edited field shrinks the filter`, async () => {
+      const risks = Array.from({ length: 1001 }, (_, index) => ({
+        Id: index + 1,
+        RiskType: 'SQL注入',
+        Severity: 'high',
+        Tags: '待验证',
+      }))
+      const targetIds = risks.map((risk) => risk.Id)
+      const updatedIds: number[] = []
+      const formProps = await openStatefulRiskBatch(selection, targetIds)
+      createStatefulRiskMock(risks, updatedIds)
+
+      await act(async () => {
+        for (const scope of buildBatchScopes(risks.length)) {
+          await formProps.batchScope.execute({ RiskType: 'XSS', SeverityScore: 7, Tags: '确认' }, scope)
+        }
+      })
+
+      expect(new Set(updatedIds).size).toBe(risks.length)
+      expect(updatedIds).toHaveLength(risks.length)
+      expect(risks.every((risk) => risk.RiskType === 'XSS')).toBe(true)
+    })
+  }
 
   it('CSV 全选查询失败时向导出组件返回拒绝', async () => {
     await renderTable()

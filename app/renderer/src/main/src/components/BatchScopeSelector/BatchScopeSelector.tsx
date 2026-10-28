@@ -3,7 +3,8 @@ import { useMemo, useRef, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { yakitNotify } from '@/utils/notification'
-import { buildBatchScopes, type BatchScope } from './batchScope'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { BATCH_SCOPE_SIZE, buildBatchScopes, type BatchScope } from './batchScope'
 import styles from './BatchScopeSelector.module.scss'
 
 type ScopeState = 'pending' | 'running' | 'success' | 'failed' | 'partial'
@@ -22,6 +23,7 @@ export interface BatchScopeSelectorProps {
 
 export const BatchScopeSelector: React.FC<BatchScopeSelectorProps> = (props) => {
   const { total, execute, onScopeSuccess, onPartial, onClose } = props
+  const { t } = useI18nNamespaces(['yakitUi'])
   const [states, setStates] = useState<Record<number, ScopeState>>({})
   const [errors, setErrors] = useState<Record<number, string>>({})
   const runningRef = useRef(false)
@@ -40,7 +42,12 @@ export const BatchScopeSelector: React.FC<BatchScopeSelectorProps> = (props) => 
       const response = await execute(scope)
       const updatedCount = Number(response?.UpdatedCount ?? 0)
       if (updatedCount !== scope.count) {
-        const message = `范围 ${scope.start}-${scope.end} 仅更新 ${updatedCount}/${scope.count} 条。为避免重复处理已成功记录，本范围已停止自动重试。`
+        const message = t('BatchScopeSelector.partialUpdate', {
+          start: scope.start,
+          end: scope.end,
+          updatedCount,
+          expectedCount: scope.count,
+        })
         setStates((current) => ({ ...current, [index]: 'partial' }))
         setErrors((current) => ({ ...current, [index]: message }))
         yakitNotify('error', message)
@@ -59,7 +66,7 @@ export const BatchScopeSelector: React.FC<BatchScopeSelectorProps> = (props) => 
       if (completed) onScopeSuccess?.(scope)
       if (partialCount !== undefined) onPartial?.(scope, partialCount)
     } catch (error) {
-      yakitNotify('error', `数据刷新失败，请手动刷新列表：${String(error)}`)
+      yakitNotify('error', t('BatchScopeSelector.refreshFailed', { error: String(error) }))
     }
   })
 
@@ -72,7 +79,7 @@ export const BatchScopeSelector: React.FC<BatchScopeSelectorProps> = (props) => 
   return (
     <div className={styles['batch-scope-selector']}>
       <div className={styles['batch-scope-summary']}>
-        共 {total} 条数据。每个范围最多 1000 条，完成后弹窗会继续保留。
+        {t('BatchScopeSelector.summary', { total, limit: BATCH_SCOPE_SIZE })}
       </div>
       <div className={styles['batch-scope-list']}>
         {scopes.map((scope) => {
@@ -80,14 +87,14 @@ export const BatchScopeSelector: React.FC<BatchScopeSelectorProps> = (props) => 
           const disabled = hasRunning || state === 'success' || state === 'partial'
           const stateText =
             state === 'running'
-              ? '执行中'
+              ? t('BatchScopeSelector.running')
               : state === 'success'
-                ? '已完成'
+                ? t('BatchScopeSelector.success')
                 : state === 'failed'
-                  ? '失败，可重试'
+                  ? t('BatchScopeSelector.failed')
                   : state === 'partial'
-                    ? '部分更新，请核对'
-                    : '未执行'
+                    ? t('BatchScopeSelector.partial')
+                    : t('BatchScopeSelector.pending')
           return (
             <div className={styles['batch-scope-row']} key={scope.page}>
               <div>
@@ -103,7 +110,7 @@ export const BatchScopeSelector: React.FC<BatchScopeSelectorProps> = (props) => 
                 loading={state === 'running'}
                 onClick={() => runScope(scope.index)}
               >
-                {state === 'failed' ? '重试' : '执行'}
+                {state === 'failed' ? t('BatchScopeSelector.retry') : t('BatchScopeSelector.execute')}
               </YakitButton>
             </div>
           )
@@ -111,7 +118,7 @@ export const BatchScopeSelector: React.FC<BatchScopeSelectorProps> = (props) => 
       </div>
       <div className={styles['batch-scope-footer']}>
         <YakitButton type="outline2" disabled={hasRunning} onClick={closeSafely}>
-          完成/关闭
+          {t('BatchScopeSelector.close')}
         </YakitButton>
       </div>
     </div>

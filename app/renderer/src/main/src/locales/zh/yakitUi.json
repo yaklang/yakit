@@ -1,4 +1,19 @@
 {
+  "BatchScopeSelector": {
+    "summary": "共 {{total}} 条数据。每个范围最多 {{limit}} 条，完成后弹窗会继续保留。",
+    "pending": "未执行",
+    "running": "执行中",
+    "success": "已完成",
+    "failed": "失败，可重试",
+    "partial": "部分更新，请核对",
+    "execute": "执行",
+    "retry": "重试",
+    "close": "完成/关闭",
+    "partialUpdate": "范围 {{start}}-{{end}} 仅更新 {{updatedCount}}/{{expectedCount}} 条。为避免重复处理已成功记录，本范围已停止自动重试。",
+    "incompleteUpdate": "本次仅更新 {{updatedCount}}/{{expectedCount}} 条，请刷新列表后核对。",
+    "refreshFailed": "数据刷新失败，请手动刷新列表：{{error}}",
+    "missingResult": "批量修改未返回执行结果"
+  },
   "YakitButton": {
     "ok": "确定",
     "confirm": "确认",
