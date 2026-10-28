@@ -158,6 +158,12 @@
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
+
+  :global(.ant-radio-button-wrapper-checked) {
+    .guide-empty-platform-label :global(path) {
+      fill: currentColor;
+    }
+  }
 }
 
 .guide-empty-platform-label {
