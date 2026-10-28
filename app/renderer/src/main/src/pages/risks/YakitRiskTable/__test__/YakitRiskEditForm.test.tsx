@@ -417,6 +417,72 @@ describe('YakitRiskEditForm 验证人回填', () => {
     await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1))
   })
 
+  it('不超过 1000 条时直接分页保存，请求期间禁止取消且成功后关闭', async () => {
+    mocks.finishValues.mockReturnValue({ risk_type: 'SQL注入', cvss: 5, disposal_status: ['确认'] })
+    const onSave = vi.fn()
+    const pending = deferred<{ UpdatedCount: number }>()
+    const execute = vi.fn(() => pending.promise)
+    const onClose = vi.fn()
+    render(
+      <YakitRiskEditForm
+        info={{} as never}
+        batchCount={2}
+        onSave={onSave}
+        onClose={onClose}
+        batchScope={{ total: 2, execute }}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: '测试提交' }))
+    expect(execute).toHaveBeenCalledWith(expect.objectContaining({ RiskType: 'SQL注入' }), {
+      index: 0,
+      page: 1,
+      limit: 1000,
+      start: 1,
+      end: 2,
+      count: 2,
+    })
+    expect(onSave).not.toHaveBeenCalled()
+    expect(screen.queryByText(/每个范围最多 1000 条/)).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'YakitButton.cancel' })).toBeDisabled()
+    fireEvent.click(screen.getByRole('button', { name: 'YakitButton.cancel' }))
+    expect(onClose).not.toHaveBeenCalled()
+    pending.resolve({ UpdatedCount: 2 })
+    await waitFor(() => expect(onClose).toHaveBeenCalledOnce())
+  })
+
+  it('超过 1000 条时进入范围选择，执行成功后仍由用户手动关闭', async () => {
+    mocks.finishValues.mockReturnValue({ risk_type: 'SQL注入', cvss: 5, disposal_status: ['确认'] })
+    const execute = vi.fn(async (_info, scope) => ({ UpdatedCount: scope.count }))
+    const onClose = vi.fn()
+    render(
+      <YakitRiskEditForm
+        info={{} as never}
+        batchCount={2501}
+        onSave={vi.fn()}
+        onClose={onClose}
+        batchScope={{ total: 2501, execute }}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: '测试提交' }))
+    expect(await screen.findByText('共 2501 条数据。每个范围最多 1000 条，完成后弹窗会继续保留。')).toBeInTheDocument()
+    expect(execute).not.toHaveBeenCalled()
+    fireEvent.click(screen.getAllByRole('button', { name: '执行' })[0])
+    await waitFor(() => expect(screen.getByText('已完成')).toBeInTheDocument())
+    expect(execute).toHaveBeenCalledWith(expect.objectContaining({ RiskType: 'SQL注入' }), {
+      index: 0,
+      page: 1,
+      limit: 1000,
+      start: 1,
+      end: 1000,
+      count: 1000,
+    })
+    expect(onClose).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: '完成/关闭' }))
+    expect(onClose).toHaveBeenCalledOnce()
+  })
+
   it.each([
     [{ cvss: 5 }, 'YakitRiskEditForm.risk_type_required'],
     [{ risk_type: 'SQL注入' }, 'YakitRiskEditForm.cvss_required'],

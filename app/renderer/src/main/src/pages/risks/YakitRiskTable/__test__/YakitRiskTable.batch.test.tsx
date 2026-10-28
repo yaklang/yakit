@@ -402,7 +402,10 @@ describe('YakitRiskTable 批量操作', () => {
       formProps = openBatchEdit()
     }
     await act(async () => {
-      await formProps.onSave({ ...rows[0], SeverityScore: 7, Tags: '自定义状态' })
+      const info = { ...rows[0], SeverityScore: 7, Tags: '自定义状态' }
+      if (mode === 'batch') {
+        await formProps.batchScope.execute(info, { index: 0, page: 1, limit: 1000, start: 1, end: 1, count: 1 })
+      } else await formProps.onSave(info)
     })
     await waitFor(() => {
       expect(mocks.queryRiskTags).toHaveBeenCalled()
@@ -430,18 +433,34 @@ describe('YakitRiskTable 批量操作', () => {
     })
   })
 
-  it('显式选择只提交 IDs，成功后刷新列表与分组', async () => {
+  it('显式选择将完整 IDs 放入筛选并按服务端分页，成功后刷新列表与分组', async () => {
     await renderTable()
     fireEvent.click(screen.getByRole('button', { name: 'select-first' }))
     fireEvent.click(screen.getByRole('button', { name: 'select-second' }))
 
     const formProps = openBatchEdit()
-    await formProps.onSave({ RiskType: 'SQL注入', SeverityScore: 8.8, Tags: '确认' })
+    const modalConfig = mocks.showModal.mock.calls[0][0]
+    expect(modalConfig).toEqual(expect.objectContaining({ closable: false, keyboard: false, maskClosable: false }))
+    expect(formProps.batchScope.total).toBe(2)
+    await formProps.batchScope.execute(
+      { RiskType: 'SQL注入', SeverityScore: 8.8, Tags: '确认' },
+      { index: 0, page: 1, limit: 1000, start: 1, end: 2, count: 2 },
+    )
 
     expect(mocks.batchSetRiskTags).toHaveBeenCalledTimes(1)
     const request = mocks.batchSetRiskTags.mock.calls[0][0]
-    expect(request.Ids).toEqual([11, 22])
-    expect(request).not.toHaveProperty('Filter')
+    expect(request).not.toHaveProperty('Ids')
+    expect(request.Filter).toEqual(
+      expect.objectContaining({
+        Search: 'needle',
+        Network: '10.0.0.0/8',
+        RiskType: 'SQL注入',
+        Ids: [11, 22],
+        FromId: 0,
+        UntilId: 0,
+        Pagination: { Page: 1, Limit: 1000, OrderBy: 'id', Order: 'desc' },
+      }),
+    )
     expect(mocks.queryRisks).toHaveBeenCalled()
     expect(mocks.emit).toHaveBeenCalledWith('onRefRiskFieldGroup')
   })
@@ -465,7 +484,13 @@ describe('YakitRiskTable 批量操作', () => {
     fireEvent.click(cell.getByText('SQL注入'))
     const editProps = mocks.showModal.mock.calls[0][0].content.props
     await act(async () => {
-      await editProps.onSave({ ...rows[0], RiskType: 'SSRF', SeverityScore: 8.8, Tags: '确认', TagReason: '已核实' })
+      await editProps.onSave({
+        ...rows[0],
+        RiskType: 'SSRF',
+        SeverityScore: 8.8,
+        Tags: '确认',
+        TagReason: '已核实',
+      })
     })
     mocks.showModal.mockClear()
 
@@ -510,16 +535,23 @@ describe('YakitRiskTable 批量操作', () => {
     expect(formProps.info).toEqual({ Id: 0, Hash: '', IP: '', Title: '', RiskType: '', CreatedAt: 0 })
   })
 
-  it('全选按当前未读过滤提交，不退化为已加载行 IDs', async () => {
+  it('全选直接保留当前过滤与排序，不预取目标 IDs', async () => {
     await renderTable()
     fireEvent.click(screen.getByRole('button', { name: 'type-false' }))
     fireEvent.click(screen.getByRole('button', { name: 'select-all' }))
 
     const formProps = openBatchEdit()
     expect(formProps.batchCount).toBe(100)
-    await formProps.onSave({ RiskType: 'XSS', SeverityScore: 5, Tags: '待验证' })
+    mocks.queryRisks.mockClear()
+    await formProps.batchScope.execute(
+      { RiskType: 'XSS', SeverityScore: 5, Tags: '待验证' },
+      { index: 0, page: 1, limit: 1000, start: 1, end: 100, count: 100 },
+    )
 
     const request = mocks.batchSetRiskTags.mock.calls[0][0]
+    expect(mocks.batchSetRiskTags.mock.invocationCallOrder[0]).toBeLessThan(
+      mocks.queryRisks.mock.invocationCallOrder[0],
+    )
     expect(request).not.toHaveProperty('Ids')
     expect(request.Filter).toEqual(
       expect.objectContaining({
@@ -527,6 +559,10 @@ describe('YakitRiskTable 批量操作', () => {
         Network: '10.0.0.0/8',
         RiskType: 'SQL注入',
         IsRead: 'false',
+        Ids: [],
+        FromId: 0,
+        UntilId: 0,
+        Pagination: { Page: 1, Limit: 1000, OrderBy: 'id', Order: 'desc' },
       }),
     )
   })
@@ -537,9 +573,12 @@ describe('YakitRiskTable 批量操作', () => {
     fireEvent.click(screen.getByRole('button', { name: 'select-first' }))
 
     const formProps = openBatchEdit()
-    await expect(formProps.onSave({ RiskType: 'SQL注入', SeverityScore: 4, Tags: '确认' })).rejects.toThrow(
-      'save failed',
-    )
+    await expect(
+      formProps.batchScope.execute(
+        { RiskType: 'SQL注入', SeverityScore: 4, Tags: '确认' },
+        { index: 0, page: 1, limit: 1000, start: 1, end: 1, count: 1 },
+      ),
+    ).rejects.toThrow('save failed')
 
     expect(mocks.queryRisks).not.toHaveBeenCalled()
     expect(mocks.emit).not.toHaveBeenCalledWith('onRefRiskFieldGroup')
@@ -629,7 +668,7 @@ describe('YakitRiskTable 批量操作', () => {
     expect(mocks.showModal.mock.calls[0][0].content.props.batchCount).toBe(1)
   })
 
-  it('全选后后台总数更新仍保持 Filter 范围', async () => {
+  it('全选使用打开弹窗时的总数生成范围，并让第 3 页保持原筛选排序', async () => {
     const { rerender } = await renderTable()
     fireEvent.click(screen.getByRole('button', { name: 'select-all' }))
     mocks.queryIncrement.mockResolvedValueOnce({
@@ -644,16 +683,38 @@ describe('YakitRiskTable 批量操作', () => {
     mocks.intervalCallbacks[0]()
     await waitFor(() => expect(mocks.queryRisks).toHaveBeenCalled())
     rerender(
-      <YakitRiskTable query={query} setQuery={vi.fn()} setRiskLoading={vi.fn()} allTotal={101} setAllTotal={vi.fn()} />,
+      <YakitRiskTable
+        query={query}
+        setQuery={vi.fn()}
+        setRiskLoading={vi.fn()}
+        allTotal={2501}
+        setAllTotal={vi.fn()}
+      />,
     )
     fireEvent.click(screen.getByRole('button', { name: 'batch-modify' }))
     const formProps = mocks.showModal.mock.calls[0][0].content.props
-    expect(formProps.batchCount).toBe(101)
-    await formProps.onSave({ RiskType: 'SQL注入', SeverityScore: 7.5, Tags: '确认' })
+    expect(formProps.batchCount).toBe(2501)
+    expect(formProps.batchScope.total).toBe(2501)
+    mocks.queryRisks.mockClear()
+    await formProps.batchScope.execute(
+      { RiskType: 'SQL注入', SeverityScore: 7.5, Tags: '确认' },
+      { index: 2, page: 3, limit: 1000, start: 2001, end: 2501, count: 501 },
+    )
 
     const request = mocks.batchSetRiskTags.mock.calls[0][0]
-    expect(request).toHaveProperty('Filter')
     expect(request).not.toHaveProperty('Ids')
+    expect(request.Filter).toEqual(
+      expect.objectContaining({
+        Search: 'needle',
+        Network: '10.0.0.0/8',
+        RiskType: 'SQL注入',
+        Ids: [],
+        Pagination: { Page: 3, Limit: 1000, OrderBy: 'id', Order: 'desc' },
+      }),
+    )
+    expect(mocks.batchSetRiskTags.mock.invocationCallOrder[0]).toBeLessThan(
+      mocks.queryRisks.mock.invocationCallOrder[0],
+    )
   })
 
   it('CSV 全选查询失败时向导出组件返回拒绝', async () => {
