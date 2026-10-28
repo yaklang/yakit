@@ -15,6 +15,8 @@ describe('AI 界面 React Compiler 兼容性', () => {
     'pages/ai-agent/components/aiFileSystemList/FileTreeSystemItem/FileTreeSystemIem.tsx',
     'pages/ai-agent/components/aiFileSystemList/FileTreeSystemListWrapper/FileTreeSystemListWrapper.tsx',
     'pages/ai-agent/aiTree/AITree.tsx',
+    'pages/ai-agent/chatTemplate/historyTaskTree/useHasTaskTree.ts',
+    'pages/ai-agent/chatTemplate/historyTaskTree/useRunningAsyncTaskCount.ts',
     'pages/ai-re-act/aiReActChat/AIReActChat.tsx',
     'pages/ai-re-act/aiReActChat/aiToDoList/AIToDoList.tsx',
     'pages/ai-re-act/aiRightPanel/AIRightPanel.tsx',
@@ -30,6 +32,23 @@ describe('AI 界面 React Compiler 兼容性', () => {
     })
     expect(events.filter((event) => event.kind === 'CompileError')).toEqual([])
     expect(events.some((event) => event.kind === 'CompileSuccess')).toBe(true)
+  })
+
+  it('HistoryTaskTree 组件参与编译', () => {
+    const filename = path.resolve(sourceRoot, 'pages/ai-agent/chatTemplate/historyTaskTree/HistoryTaskTree.tsx')
+    const source = readFileSync(filename, 'utf8')
+    const declarationLine = source.split('\n').findIndex((line) => line.startsWith('export const HistoryTaskTree:')) + 1
+    const events: { kind: string; fnLoc?: { start: { line: number } } | null }[] = []
+    transformSync(source, {
+      filename,
+      babelrc: false,
+      configFile: false,
+      parserOpts: { plugins: ['typescript', 'jsx'] },
+      presets: [reactCompilerPreset({ logger: { logEvent: (_filename, event) => events.push(event) } }).preset],
+    })
+    const componentEvents = events.filter((event) => event.fnLoc?.start.line === declarationLine)
+    expect(componentEvents.filter((event) => event.kind === 'CompileError')).toEqual([])
+    expect(componentEvents.some((event) => event.kind === 'CompileSuccess')).toBe(true)
   })
 
   it('PluginExecuteLog 实际参与编译，保护日志与 loading 更新', () => {

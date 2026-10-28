@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { TaskListPane } from '@/pages/ai-agent/chatTemplate/historyTaskTree/TaskListPane'
+import useRunningAsyncTaskCount from '@/pages/ai-agent/chatTemplate/historyTaskTree/useRunningAsyncTaskCount'
 import { AIRightPanelPane } from './AIRightPanelPane'
 import { TimelineDumpButton } from './TimelineDumpButton'
 import { AISkillLoadingPane } from './AISkillLoadingPane/AISkillLoadingPane'
@@ -63,6 +64,7 @@ interface MenuItemDef {
   key: AIRightPanelMenuKey
   labelKey: string
   icon: React.ReactNode
+  total?: number
 }
 
 /** 主菜单：数据卡片下方常驻展示的功能入口（正常态与小屏态共用，小屏态仅渲染图标） */
@@ -458,30 +460,15 @@ const MenuList: React.FC<{
   menus: MenuItemDef[]
   small: boolean
   dataCards?: React.ReactNode
-  trafficTotal?: number
-  riskTotal?: number
   riskCounts?: AIRightPanelRiskCounts
   onMenuClick: (key: AIRightPanelMenuKey) => void
-}> = ({ menus, small, dataCards, trafficTotal, riskTotal = 0, riskCounts, onMenuClick }) => {
+}> = ({ menus, small, dataCards, riskCounts, onMenuClick }) => {
   const { t } = useI18nNamespaces(['aiAgent'])
-  const renderSmallBadge = (key: AIRightPanelMenuKey) => {
-    if (!small) return undefined
-
-    switch (key) {
-      case 'traffic':
-        return (trafficTotal ?? 0) > 0 ? trafficTotal : undefined
-      case 'risk':
-        return riskTotal > 0 ? riskTotal : undefined
-      default:
-        return undefined
-    }
-  }
-
-  const renderMenuSuffix = (key: AIRightPanelMenuKey) => {
-    if (key === 'traffic' && trafficTotal) {
+  const renderMenuSuffix = ({ key, total }: MenuItemDef) => {
+    if (key !== 'risk' && total) {
       return (
         <YakitTag fullRadius color="white" border={false}>
-          {trafficTotal}
+          {total}
         </YakitTag>
       )
     }
@@ -514,8 +501,8 @@ const MenuList: React.FC<{
             icon={item.icon}
             label={t(item.labelKey)}
             small={small}
-            suffix={renderMenuSuffix(item.key)}
-            smallBadge={renderSmallBadge(item.key)}
+            suffix={renderMenuSuffix(item)}
+            smallBadge={small && (item.total ?? 0) > 0 ? item.total : undefined}
             smallBadgeRisk={item.key === 'risk'}
             onClick={() => onMenuClick(item.key)}
           />
@@ -609,6 +596,11 @@ type WelcomeRightPanelProps = Pick<AIRightPanelProps, 'layoutRef'> & { panel: Pa
 const WelcomeRightPanel: React.FC<WelcomeRightPanelProps> = React.memo(({ panel, layoutRef }) => {
   const [inViewport = true] = useInViewport(layoutRef)
   const welcomeStats = useWelcomePanelStats(inViewport)
+  const totals: Partial<Record<AIRightPanelMenuKey, number | undefined>> = {
+    traffic: welcomeStats.trafficTotal,
+    risk: welcomeStats.riskTotal,
+  }
+  const menus = WELCOME_MENUS.map((item) => ({ ...item, total: totals[item.key] }))
   /**
    * 菜单点击：文件系统、浏览器、会话历史打开左侧对应页（已展开则收起）；
    * 流量、漏洞切换工作区 tab。
@@ -643,7 +635,12 @@ const WelcomeRightPanel: React.FC<WelcomeRightPanelProps> = React.memo(({ panel,
           [styles['right-panel-hidden']]: !!panel.activePane && !panel.isSmall,
         })}
       >
-        <MenuList menus={WELCOME_MENUS} small={panel.isSmall} {...welcomeStats} onMenuClick={handleMenuClick} />
+        <MenuList
+          menus={menus}
+          small={panel.isSmall}
+          riskCounts={welcomeStats.riskCounts}
+          onMenuClick={handleMenuClick}
+        />
       </div>
     </>
   )
@@ -658,6 +655,7 @@ const ChatRightPanel: React.FC<ChatRightPanelProps> = React.memo((props) => {
   const store = useCurrentStore()
   const questionID = useStore(store, (state) => state.currentChatStatus.questionID)
   const executionData = useCurrentTaskExecution(questionID)
+  const runningTaskCount = useRunningAsyncTaskCount()
   const levelCount = executionData?.risk_level_count
   // 快照映射见 riskLevelCount.mapSessionRiskLevelCount；首页全量别名归并见 useWelcomePanelStats。
   const riskCounts = useCreation<AIRightPanelRiskCounts | undefined>(() => {
@@ -688,6 +686,12 @@ const ChatRightPanel: React.FC<ChatRightPanelProps> = React.memo((props) => {
     }
     return MAIN_MENUS
   }, [currentChatStatusQuestionID])
+  const totals: Partial<Record<AIRightPanelMenuKey, number | undefined>> = {
+    traffic: executionData?.http_flow_count,
+    'task-list': runningTaskCount,
+    risk: riskTotal,
+  }
+  const menus = mainMenus.map((item) => ({ ...item, total: totals[item.key] }))
 
   /**
    * 菜单点击：任务列表、加载技能、时间线打开右侧内容面板；
@@ -782,11 +786,9 @@ const ChatRightPanel: React.FC<ChatRightPanelProps> = React.memo((props) => {
         })}
       >
         <MenuList
-          menus={mainMenus}
+          menus={menus}
           small={panel.isSmall}
           dataCards={!panel.isSmall ? <DataCards executionData={executionData} /> : undefined}
-          trafficTotal={executionData?.http_flow_count}
-          riskTotal={riskTotal}
           riskCounts={riskCounts}
           onMenuClick={handleMenuClick}
         />

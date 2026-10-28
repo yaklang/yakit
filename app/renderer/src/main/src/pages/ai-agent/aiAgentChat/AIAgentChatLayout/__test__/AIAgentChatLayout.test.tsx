@@ -10,7 +10,14 @@ import type { AIAgentChatMode } from '../../type'
 let removeFlow: (id: string, isSummary: boolean) => void
 
 const agentStore = createStore<{ activeChat?: { Id: string; SessionID: string } }>(() => ({}))
-const taskStore = createStore(() => ({ currentChatStatus: { questionID: 'task-1' }, taskDetailsUpdate: 0 }))
+const taskStore = createStore(() => ({
+  currentChatStatus: { questionID: 'task-1' },
+  currentPlan: { task_tree: [] },
+  chatElements: [],
+  tasks: {},
+  taskDetailsUpdate: 0,
+}))
+const taskContents = new Map()
 const taskDetailsMap = new Map([['task-1', { uuid: 'snapshot-1', execution: { http_flow_count: 7 } }]])
 let workspaceProps: {
   onSetSelectedHttpFlowIds: (ids: string[]) => void
@@ -38,7 +45,7 @@ vi.mock('@/pages/ai-agent/useContext/useStore', () => ({
 }))
 vi.mock('@/pages/ai-re-act/hooks/useCurrentDataBySession', () => ({
   useCurrentStore: () => taskStore,
-  useCurrentRawData: () => ({ taskDetailsMap }),
+  useCurrentRawData: () => ({ taskDetailsMap, contents: taskContents }),
 }))
 vi.mock('@/pages/ai-re-act/hooks/useCurrentSessionId', () => ({
   default: function useSessionId() {
@@ -61,7 +68,10 @@ vi.mock('@/utils/notification', () => ({ yakitNotify: vi.fn(), failed: vi.fn() }
 vi.mock('@/utils/eventBus/eventBus', () => ({ default: { emit: vi.fn() } }))
 vi.mock('@/pages/ai-agent/components/ExportAILogsModal/ExportAILogsModal', () => ({ ExportAILogsModal: () => null }))
 vi.mock('@/pages/ai-agent/chatTemplate/historyTaskTree/TaskListPane', () => ({ TaskListPane: () => null }))
-vi.mock('@/pages/ai-agent/chatTemplate/historyTaskTree/useHasTaskTree', () => ({ useHasTaskTree: () => false }))
+vi.mock('@/pages/ai-agent/chatTemplate/historyTaskTree/useHasTaskTree', () => ({
+  useHasTaskTree: () => false,
+  useCasualConcurrentTaskList: () => [],
+}))
 vi.mock('@/pages/ai-agent/chatTemplate/TimelineCard/TimelineCard', () => ({ default: () => null }))
 vi.mock('@/pages/ai-agent/aiTriageChatTemplate/AITriageChatTemplate', () => ({
   AIForgeForm: () => null,
@@ -361,7 +371,7 @@ describe('公共右侧面板', () => {
     expect(container.querySelector('[data-ai-right-panel] section')).toBeNull()
   })
 
-  it('按页面挂载数据源，回到欢迎页后取消任务订阅和轮询', async () => {
+  it('按页面挂载数据源，回到欢迎页后取消任务订阅和待刷新', async () => {
     const readTask = vi.spyOn(taskDetailsMap, 'get')
     const subscribe = taskStore.subscribe.bind(taskStore)
     let subscriptions = 0
