@@ -335,6 +335,12 @@ export default defineConfig(({ mode, command }) => {
           codeSplitting: {
             groups: [
               {
+                // aux 静态加载入口只需要动态导入辅助代码，避免它被并入 Monaco 等重型包。
+                name: 'vite-preload',
+                test: /\0vite\/preload-helper\.js$/,
+                priority: 70,
+              },
+              {
                 // react 本体会被 rolldown 合并进 monaco/streamdown 组，导致任何引 react 的 chunk
                 // 都必须整包 import 3.5MB 的 vendor-monaco。这里用更高优先级把 react 单独抽出。
                 // @babel/runtime helpers、rc-* 基础件被全图共享，同样会被卷进大 vendor 组，

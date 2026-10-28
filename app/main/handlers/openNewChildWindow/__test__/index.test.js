@@ -53,15 +53,16 @@ function setup(isDev = false, onLoad = () => {}) {
 }
 
 describe('child detail window', () => {
-  it.each([false, true])('loads the renderer-owned static page first (dev=%s)', (isDev) => {
+  it.each([false, true])('loads the aux static loading mode first (dev=%s)', (isDev) => {
     const { open } = setup(isDev)
     const child = open()
     if (isDev) {
-      expect(child.loadURL).toHaveBeenCalledExactlyOnceWith('http://127.0.0.1:3000/child-window/loading.html')
+      expect(child.loadURL).toHaveBeenCalledExactlyOnceWith('http://127.0.0.1:3000/yakit-aux.html?mode=child-loading')
       expect(child.loadFile).not.toHaveBeenCalled()
     } else {
       expect(child.loadFile).toHaveBeenCalledExactlyOnceWith(
-        appResourcePath('renderer', 'pages', 'main', 'child-window', 'loading.html'),
+        appResourcePath('renderer', 'pages', 'main', 'yakit-aux.html'),
+        { search: 'mode=child-loading' },
       )
       expect(child.loadURL).not.toHaveBeenCalled()
     }
@@ -69,7 +70,7 @@ describe('child detail window', () => {
 
   it('registers the handshake before loading even when the page responds immediately', () => {
     const { open } = setup(true, (child, ipcMain, url) => {
-      if (url.endsWith('/loading.html')) {
+      if (url.endsWith('/yakit-aux.html?mode=child-loading')) {
         ipcMain.emit('ready-to-load-child', { sender: child.webContents })
       }
     })
@@ -91,7 +92,7 @@ describe('child detail window', () => {
     const { ipcMain, open } = setup(true)
     const child = open()
     if (reason === 'close') child.close()
-    else child.webContents.emit('did-fail-load', {}, -6, 'NOT_FOUND', 'loading.html')
+    else child.webContents.emit('did-fail-load', {}, -6, 'NOT_FOUND', 'yakit-aux.html?mode=child-loading')
     expect(ipcMain.listenerCount('ready-to-load-child')).toBe(0)
     const reopened = open()
     ipcMain.emit('ready-to-load-child', { sender: child.webContents })
@@ -106,7 +107,7 @@ describe('child detail window', () => {
     const child = open()
     expect(parent.send).toHaveBeenCalledWith('child-window-hash', { hash: expect.any(String) })
     ipcMain.emit('ready-to-load-child', { sender: child.webContents })
-    expect(child.webContents.send).toHaveBeenCalledWith('start-child-loading')
+    expect(child.webContents.send).not.toHaveBeenCalledWith('start-child-loading')
     if (isDev) {
       expect(child.loadURL).toHaveBeenLastCalledWith('http://127.0.0.1:3000/?window=child')
     } else {
@@ -143,24 +144,5 @@ describe('child detail window', () => {
     const reopened = open(updated)
     ipcMain.emit('request-parent-data', { sender: reopened.webContents })
     expect(reopened.webContents.send).toHaveBeenLastCalledWith('get-parent-window-data', updated)
-  })
-
-  it('runs the static page handshake through the preload-provided Electron API', () => {
-    const loadingScript = readFileSync(
-      new URL('../../../../renderer/src/main/public/child-window/loading.js', import.meta.url),
-      'utf8',
-    )
-    const ipcRenderer = new EventEmitter()
-    const text = { innerText: '' }
-    ipcRenderer.send = vi.fn((channel) => {
-      expect(channel).toBe('ready-to-load-child')
-      ipcRenderer.emit('start-child-loading')
-    })
-    vm.runInNewContext(loadingScript, {
-      window: { require: () => ({ ipcRenderer }) },
-      document: { getElementById: () => text },
-    })
-    expect(ipcRenderer.send).toHaveBeenCalledOnce()
-    expect(text.innerText).toBe('正在准备加载资源，请稍候...')
   })
 })
