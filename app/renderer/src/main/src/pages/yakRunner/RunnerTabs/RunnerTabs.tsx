@@ -86,7 +86,7 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import type { OtherMenuListProps } from '@/components/yakitUI/YakitEditor/YakitEditorType'
 import { fetchCursorContent, fetchSelectionRange } from '@/components/yakitUI/YakitEditor/editorUtils'
 import { useYakRunnerAiAttachRef } from '../YakRunnerAiAttachContext'
-import { getRunnerEditorHighlightProps } from './runnerTabHighlightProps'
+import { getRunnerEditorHighlightProps, revealFirstHighlight } from './runnerTabHighlightProps'
 import { revealSearchHitOnEditor } from '@/components/FileTreeContentSearch'
 
 const { ipcRenderer } = window.require('electron')
@@ -1218,6 +1218,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     if (reqEditor && editorInfo?.code) {
       reqEditor.setValue(editorInfo.code)
       updatePosition()
+      revealFirstHighlight(reqEditor, editorInfo.highLightRange)
     }
   }, [editorInfo?.path])
 

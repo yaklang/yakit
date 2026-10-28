@@ -92,7 +92,10 @@ import { KeyToIcon } from '@/pages/yakRunner/FileTree/icon'
 import i18n from '@/i18n/i18n'
 import type { OtherMenuListProps } from '@/components/yakitUI/YakitEditor/YakitEditorType'
 import { fetchCursorContent, fetchSelectionRange } from '@/components/yakitUI/YakitEditor/editorUtils'
-import { getRunnerEditorHighlightProps } from '@/pages/yakRunner/RunnerTabs/runnerTabHighlightProps'
+import {
+  getRunnerEditorHighlightProps,
+  revealFirstHighlight,
+} from '@/pages/yakRunner/RunnerTabs/runnerTabHighlightProps'
 import { revealSearchHitOnEditor } from '@/components/FileTreeContentSearch'
 const tYak = i18n.getFixedT(null, 'yakRunner')
 const { ipcRenderer } = window.require('electron')
@@ -1204,6 +1207,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     if (reqEditor && editorInfo?.code) {
       reqEditor.setValue(editorInfo.code)
       updatePosition()
+      revealFirstHighlight(reqEditor, editorInfo.highLightRange)
     }
   }, [editorInfo?.path])
 

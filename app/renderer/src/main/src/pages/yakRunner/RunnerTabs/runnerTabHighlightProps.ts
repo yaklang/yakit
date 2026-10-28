@@ -9,3 +9,16 @@ export const getRunnerEditorHighlightProps = (highLightRange?: Selection | Selec
     isPositionHighLightCursor: highLightFind.length > 0,
   }
 }
+
+/** 换文件后按当前高亮首段再滚一次。坐标与上一文件相同时高亮指纹不变，编辑器不会自己滚。 */
+export const revealFirstHighlight = (
+  editor: { revealPositionInCenter: (position: { lineNumber: number; column: number }) => void } | undefined,
+  highLightRange?: Selection | Selection[],
+) => {
+  const hit = Array.isArray(highLightRange) ? highLightRange[0] : highLightRange
+  if (!editor || typeof hit?.startLineNumber !== 'number' || typeof hit.startColumn !== 'number') return
+  editor.revealPositionInCenter({
+    lineNumber: hit.startLineNumber,
+    column: hit.startColumn,
+  })
+}
