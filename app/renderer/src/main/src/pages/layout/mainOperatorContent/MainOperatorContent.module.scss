@@ -230,6 +230,7 @@
         overflow: hidden;
         padding-left: 8px;
         flex: 1;
+        max-width: 200px;
 
         .tab-menu-item-verbose {
           @extend .flex-align-center;
