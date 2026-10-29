@@ -23,9 +23,10 @@ describe('getRunnerEditorHighlightProps（RunnerTabPane 搜索定位）', () => 
     expect(props.isPositionHighLightCursor).toBe(true)
   })
 
-  it('无高亮时不定位', () => {
+  it('无高亮时不定位，类名仍与搜索命中一致', () => {
     const props = getRunnerEditorHighlightProps(undefined)
     expect(props.highLightFind).toEqual([])
+    expect(props.highLightFindClass).toBe('hight-light-file-search-hit')
     expect(props.isPositionHighLightCursor).toBe(false)
   })
 })

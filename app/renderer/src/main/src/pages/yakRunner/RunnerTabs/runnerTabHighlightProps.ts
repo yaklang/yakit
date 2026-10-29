@@ -3,9 +3,14 @@ import type { Selection } from './RunnerTabsType'
 /** RunnerTabPane → YakitEditor：搜索高亮装饰 + 滚到首个命中 */
 export const getRunnerEditorHighlightProps = (highLightRange?: Selection | Selection[]) => {
   const highLightFind = !highLightRange ? [] : Array.isArray(highLightRange) ? highLightRange : [highLightRange]
+  // 无高亮与搜索多命中用同一类。装饰 effect 只记住挂载时的类名，普通打开后再搜索不能改类。
+  const highLightFindClass =
+    highLightRange != null && !Array.isArray(highLightRange)
+      ? 'hight-light-yak-runner-color'
+      : 'hight-light-file-search-hit'
   return {
     highLightFind,
-    highLightFindClass: Array.isArray(highLightRange) ? 'hight-light-file-search-hit' : 'hight-light-yak-runner-color',
+    highLightFindClass,
     isPositionHighLightCursor: highLightFind.length > 0,
   }
 }
