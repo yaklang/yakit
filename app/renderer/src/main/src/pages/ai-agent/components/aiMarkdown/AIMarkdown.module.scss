@@ -35,16 +35,13 @@
   .ai-milkdown {
     font-size: 14px;
     background-color: transparent;
-    color: var(--Colors-Use-Neutral-Text-4-Help-text);
+    color: var(--Colors-Use-Neutral-Text-2-Primary);
     h1,
     h2,
     h3,
     h4,
     h5,
     h6 {
-      color: var(--Colors-Use-Neutral-Text-2-Primary);
-    }
-    [data-streamdown='strong'] {
       color: var(--Colors-Use-Neutral-Text-2-Primary);
     }
     p,
