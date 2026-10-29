@@ -30,6 +30,13 @@ export const RunnerFileTreeSearchView: FC<RunnerFileTreeSearchViewProps> = ({ ac
       },
     }
     emiter.emit('onOpenFileByPath', JSON.stringify(OpenFileByPathParams))
+    const hit = highLightRange[0]
+    if (hit) {
+      emiter.emit(
+        'onRevealSearchHit',
+        JSON.stringify({ path, lineNumber: hit.startLineNumber, column: hit.startColumn }),
+      )
+    }
   })
 
   const { onSearchSettled } = useClearFileSearchHighlights(active, () => {

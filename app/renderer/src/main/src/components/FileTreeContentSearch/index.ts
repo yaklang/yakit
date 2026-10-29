@@ -19,6 +19,8 @@ export {
   splitLineByMatches,
   clipLineAroundMatches,
 } from './utils'
+export { revealSearchHitOnEditor } from './revealSearchHit'
+export type { SearchHitRevealEditor, SearchHitRevealPayload } from './revealSearchHit'
 export type {
   FileSearchMatch,
   FileSearchLine,

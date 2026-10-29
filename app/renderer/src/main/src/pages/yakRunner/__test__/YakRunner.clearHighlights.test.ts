@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { clearFileSearchHighlights } from '../clearFileSearchHighlights'
+import { clearFileSearchHighlights, stripPersistedFileSearchHighlights } from '../clearFileSearchHighlights'
 import type { AreaInfoProps } from '../YakRunnerType'
 import type { FileDetailInfo } from '../RunnerTabs/RunnerTabsType'
 
@@ -116,5 +116,24 @@ describe('YakRunner clearFileSearchHighlights（onClearFileSearchHighlightsFun�
     expect(next.activeChanged).toBe(false)
     expect(next.areaInfo[0].elements[0].files[0].highLightRange).toEqual(highlight)
     expect(next.activeFile?.highLightRange).toEqual(highlight)
+  })
+})
+
+describe('stripPersistedFileSearchHighlights（重启工程不恢复搜索高亮）', () => {
+  it('历史里的搜索高亮数组被去掉，代码引用单区间保留', () => {
+    const areaInfo: AreaInfoProps[] = [
+      {
+        elements: [
+          {
+            id: 'tab-1',
+            files: [fileWithSearchHighlight('/a.txt'), fileWithCodeRefHighlight('/ref.txt')],
+          },
+        ],
+      },
+    ]
+    const persist = stripPersistedFileSearchHighlights(areaInfo, fileWithSearchHighlight('/a.txt'))
+    expect(persist.areaInfo[0].elements[0].files[0].highLightRange).toBeUndefined()
+    expect(persist.areaInfo[0].elements[0].files[1].highLightRange).toEqual(highlight)
+    expect(persist.activeFile?.highLightRange).toBeUndefined()
   })
 })

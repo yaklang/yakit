@@ -92,6 +92,11 @@ import { KeyToIcon } from '@/pages/yakRunner/FileTree/icon'
 import i18n from '@/i18n/i18n'
 import type { OtherMenuListProps } from '@/components/yakitUI/YakitEditor/YakitEditorType'
 import { fetchCursorContent, fetchSelectionRange } from '@/components/yakitUI/YakitEditor/editorUtils'
+import {
+  getRunnerEditorHighlightProps,
+  revealFirstHighlight,
+} from '@/pages/yakRunner/RunnerTabs/runnerTabHighlightProps'
+import { revealSearchHitOnEditor } from '@/components/FileTreeContentSearch'
 const tYak = i18n.getFixedT(null, 'yakRunner')
 const { ipcRenderer } = window.require('electron')
 
@@ -1202,6 +1207,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     if (reqEditor && editorInfo?.code) {
       reqEditor.setValue(editorInfo.code)
       updatePosition()
+      revealFirstHighlight(reqEditor, editorInfo.highLightRange)
     }
   }, [editorInfo?.path])
 
@@ -1219,10 +1225,16 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     } catch (error) {}
   })
 
+  const onRevealSearchHitFun = useMemoizedFn((data: string) => {
+    revealSearchHitOnEditor(reqEditor, editorInfo?.path, data)
+  })
+
   useEffect(() => {
     emiter.on('onAiCodeAuditJumpEditorDetail', onJumpEditorDetailFun)
+    emiter.on('onAiCodeAuditRevealSearchHit', onRevealSearchHitFun)
     return () => {
       emiter.off('onAiCodeAuditJumpEditorDetail', onJumpEditorDetailFun)
+      emiter.off('onAiCodeAuditRevealSearchHit', onRevealSearchHitFun)
     }
   }, [])
 
@@ -1405,14 +1417,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
                 type={editorInfo?.language}
                 value={editorInfo?.code || ''}
                 setValue={setYakitEditorValue}
-                highLightText={
-                  editorInfo?.highLightRange
-                    ? Array.isArray(editorInfo.highLightRange)
-                      ? editorInfo.highLightRange
-                      : [editorInfo.highLightRange]
-                    : undefined
-                }
-                highLightClass="hight-light-yak-runner-color"
+                {...getRunnerEditorHighlightProps(editorInfo?.highLightRange)}
                 contextMenu={rightContextMenu}
               />
               {selectionMenuVisible && (

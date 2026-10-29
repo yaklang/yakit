@@ -909,6 +909,9 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
   const deltaDecorationsRef = useRef<() => any>()
   const highLightTextFun = useMemoizedFn(() => highLightText)
   const highLightFindFun = useMemoizedFn(() => highLightFind)
+  // 装饰 effect 只随 editor 重建，类名必须在每次重画时读取
+  const highLightClassFun = useMemoizedFn(() => highLightClass)
+  const highLightFindClassFun = useMemoizedFn(() => highLightFindClass)
   const fixContentTypeFun = useMemoizedFn(() => fixContentType)
   const originalContentTypeFun = useMemoizedFn(() => originalContentType)
   const fixContentTypeHoverMessageFun = useMemoizedFn(() => fixContentTypeHoverMessage)
@@ -986,9 +989,9 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
           privacy: privacyFun(),
           disableUnicodeDecode: disableUnicodeDecodeRef.current,
           highLightText: highLightTextFun(),
-          highLightClass,
+          highLightClass: highLightClassFun(),
           highLightFind: highLightFindFun(),
-          highLightFindClass,
+          highLightFindClass: highLightFindClassFun(),
           fixContentType: fixContentTypeFun(),
           originalContentType: originalContentTypeFun(),
           fixContentTypeHoverMessage: fixContentTypeHoverMessageFun(),
@@ -1352,6 +1355,8 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
   }, [
     highLightTextKey,
     highLightFindKey,
+    highLightClass,
+    highLightFindClass,
     props.disableUnicodeDecode,
     props.fixContentType,
     props.originalContentType,

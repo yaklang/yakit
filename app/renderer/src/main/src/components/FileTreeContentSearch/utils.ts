@@ -112,14 +112,27 @@ export const toEditorHighlights = (lines: FileSearchLine[]): FileSearchEditorHig
   )
 }
 
+const isSameHighlight = (a: FileSearchEditorHighlight, b: FileSearchEditorHighlight) =>
+  a.startLineNumber === b.startLineNumber &&
+  a.startColumn === b.startColumn &&
+  a.endLineNumber === b.endLineNumber &&
+  a.endColumn === b.endColumn
+
 /**
- * 打开搜索结果时的高亮列表：点命中行用该行，点文件头用全部命中行。
- * AI 预览 / yakRunner 编辑器共用，避免两端各自拼区间。
+ * 打开搜索结果时的高亮列表：预览始终带上该文件全部命中。
+ * 点命中行时把该行区间放前面，便于编辑器滚到选中处。
  */
 export const resolveOpenHighlights = (
   line?: FileSearchLine,
   fileItem?: FileSearchFileItem,
-): FileSearchEditorHighlight[] => toEditorHighlights(line ? [line] : fileItem?.searchResult.results || [])
+): FileSearchEditorHighlight[] => {
+  const all = toEditorHighlights(fileItem?.searchResult.results || [])
+  if (!line) return all
+  const clicked = toEditorHighlights([line])
+  if (!all.length) return clicked
+  const rest = all.filter((item) => !clicked.some((hit) => isSameHighlight(item, hit)))
+  return [...clicked, ...rest]
+}
 
 /** 将命中行按 matches 切分为普通/高亮片段（列号 UTF-16 1-based、end 不含） */
 export const splitLineByMatches = (line: FileSearchLine): FileSearchSegment[] => {

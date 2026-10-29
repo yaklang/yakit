@@ -1,9 +1,10 @@
 import type { FileNodeProps } from '@/pages/yakRunner/FileTree/FileTreeType'
-import { useEffect, useMemo, useState, type FC } from 'react'
+import { useEffect, useRef, useState, type FC } from 'react'
 import styles from './FilePreview.module.scss'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { getCodeByPath, getCodeSizeByPath, MAX_FILE_SIZE_BYTES, monacaLanguageType } from '@/pages/yakRunner/utils'
+import { getRunnerEditorHighlightProps } from '@/pages/yakRunner/RunnerTabs/runnerTabHighlightProps'
 import { useMemoizedFn } from 'ahooks'
 import { Result } from 'antd'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
@@ -13,6 +14,9 @@ import type { FileInfo } from '../type'
 import { getLocalFileName } from '@/components/MilkdownEditor/CustomFile/utils'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import type { AIAgentFilePreviewHighlight } from '@/pages/ai-agent/aiChatContent/type'
+import emiter from '@/utils/eventBus/eventBus'
+import type { YakitIMonacoEditor } from '@/components/yakitUI/YakitEditor/YakitEditorType'
+import { revealSearchHitOnEditor } from '@/components/FileTreeContentSearch'
 
 const FilePreview: FC<{ data?: FileNodeProps; highlights?: AIAgentFilePreviewHighlight[] }> = ({
   data,
@@ -55,9 +59,20 @@ const FilePreview: FC<{ data?: FileNodeProps; highlights?: AIAgentFilePreviewHig
     }
   }, [path])
 
-  const highLightFind = useMemo(() => highlights || [], [highlights])
   // 仅按 path 挂载编辑器：高亮变化走 highLightFind 更新装饰，避免同文件点不同行整实例重挂卡顿
   const editorKey = fileInfo?.path || 'empty-editor'
+  const editorRef = useRef<YakitIMonacoEditor>()
+
+  const onRevealSearchHit = useMemoizedFn((data: string) => {
+    revealSearchHitOnEditor(editorRef.current, path, data)
+  })
+
+  useEffect(() => {
+    emiter.on('revealAIFilePreviewSearchHit', onRevealSearchHit)
+    return () => {
+      emiter.off('revealAIFilePreviewSearchHit', onRevealSearchHit)
+    }
+  }, [])
 
   return (
     <div className={styles['file-preview']}>
@@ -79,9 +94,10 @@ const FilePreview: FC<{ data?: FileNodeProps; highlights?: AIAgentFilePreviewHig
             readOnly
             editorOperationRecord="YAK_RUNNNER_EDITOR_RECORF"
             type={fileInfo?.language === 'yak' ? 'yak' : 'plaintext'}
-            highLightFind={highLightFind}
-            highLightFindClass="hight-light-file-search-hit"
-            isPositionHighLightCursor={highLightFind.length > 0}
+            editorDidMount={(editor) => {
+              editorRef.current = editor
+            }}
+            {...getRunnerEditorHighlightProps(highlights?.length ? highlights : undefined)}
           />
         )}
       </YakitSpin>

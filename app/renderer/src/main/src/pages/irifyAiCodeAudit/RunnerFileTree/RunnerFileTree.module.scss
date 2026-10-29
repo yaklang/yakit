@@ -39,16 +39,14 @@
       }
       .extra {
         display: flex;
+        align-items: center;
         gap: 8px;
+        line-height: 0;
       }
     }
-    &-tree {
-      flex: 1;
+    .tree-body {
+      height: 100%;
       overflow: hidden;
-      .tree-body {
-        height: 100%;
-        overflow: hidden;
-      }
     }
   }
 }

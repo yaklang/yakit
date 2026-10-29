@@ -20,6 +20,8 @@ import {
   removeYakRunnerAreaFileInfo,
   setAreaFileActive,
   updateAreaFileInfo,
+  clearFileSearchHighlights,
+  stripPersistedFileSearchHighlights,
 } from '../yakRunner/utils'
 import {
   getIrifyAiCodeAuditLastAreaFile,
@@ -383,6 +385,12 @@ export const YakRunnerIrifyAiCodeAudit: React.FC<YakRunnerProps> = () => {
 
   // 是否正在读取中
   const isReadingRef = useRef<boolean>(false)
+  /** 搜索结束后清空已打开文件上的搜索高亮 */
+  const onClearFileSearchHighlightsFun = useMemoizedFn(() => {
+    const next = clearFileSearchHighlights(areaInfo, activeFile)
+    if (next.areaChanged) setAreaInfo(next.areaInfo)
+    if (next.activeChanged) setActiveFile(next.activeFile)
+  })
   const onOpenFileByPathFun = useMemoizedFn(async (data) => {
     try {
       const { params, isHistory } = JSON.parse(data) as OpenFileByPathProps
@@ -540,6 +548,8 @@ export const YakRunnerIrifyAiCodeAudit: React.FC<YakRunnerProps> = () => {
     emiter.on('onAiCodeAuditRefreshTree', onRefreshTreeFun)
     // 通过路径打开文件
     emiter.on('onAiCodeAuditOpenFileByPath', onOpenFileByPathFun)
+    // 搜索结束后清空搜索高亮
+    emiter.on('onAiCodeAuditClearFileSearchHighlights', onClearFileSearchHighlightsFun)
     // 通过缓存文件路径读取文件内容
     emiter.on('onAiCodeAuditGetCodeByPathCache', onGetCodeByPathCacheFun)
     // 监听一级页面关闭事件
@@ -550,6 +560,7 @@ export const YakRunnerIrifyAiCodeAudit: React.FC<YakRunnerProps> = () => {
       emiter.off('onAiCodeAuditOpenFileTree', onOpenFileTreeEventFun)
       emiter.off('onAiCodeAuditRefreshTree', onRefreshTreeFun)
       emiter.off('onAiCodeAuditOpenFileByPath', onOpenFileByPathFun)
+      emiter.off('onAiCodeAuditClearFileSearchHighlights', onClearFileSearchHighlightsFun)
       emiter.off('onAiCodeAuditGetCodeByPathCache', onGetCodeByPathCacheFun)
       emiter.off('onAiCodeAuditCloseYakRunner', onCloseYakRunnerFun)
       emiter.off('onAiCodeAuditOpenTemporaryFile', onAiCodeAuditOpenTemporaryFileFun)
@@ -610,8 +621,9 @@ export const YakRunnerIrifyAiCodeAudit: React.FC<YakRunnerProps> = () => {
     try {
       const historyData = await getIrifyAiCodeAuditLastAreaFile()
       if (historyData?.activeFile && historyData.areaInfo) {
-        setActiveFile(historyData.activeFile)
-        setAreaInfo(historyData.areaInfo)
+        const persist = stripPersistedFileSearchHighlights(historyData.areaInfo, historyData.activeFile)
+        setActiveFile(persist.activeFile)
+        setAreaInfo(persist.areaInfo)
         setIsUnShow(false)
       }
     } catch (error) {}
@@ -678,7 +690,8 @@ export const YakRunnerIrifyAiCodeAudit: React.FC<YakRunnerProps> = () => {
           delete newActiveFile.code
         }
       }
-      setIrifyAiCodeAuditLastAreaFile(newAreaInfo, newActiveFile)
+      const persist = stripPersistedFileSearchHighlights(newAreaInfo, newActiveFile)
+      setIrifyAiCodeAuditLastAreaFile(persist.areaInfo, persist.activeFile)
     },
     [activeFile?.path, areaKey],
     { wait: 300 },

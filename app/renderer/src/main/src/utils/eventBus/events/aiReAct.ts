@@ -4,6 +4,8 @@ export type AIReActEventProps = {
   switchAIActTab?: string
   /** 文件内容搜索结束后清空已打开预览上的搜索高亮（无 payload） */
   clearAIFilePreviewSearchHighlights?: string
+  /** 搜索命中行：已打开的文件预览滚到该位置（同区间再点也能定位） */
+  revealAIFilePreviewSearchHit: string
   /**
    * string>{AIAgentTriggerEventInfo}
    */

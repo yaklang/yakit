@@ -189,7 +189,7 @@ export const FileTree: React.FC<FileTreeProps> = memo((props) => {
         fieldNames={{ title: 'name', key: 'path', children: 'children' }}
         treeData={data}
         blockNode={true}
-        switcherIcon={<></>}
+        switcherIcon={null}
         multiple={true}
         expandedKeys={expandedKeys}
         loadData={onLoadData}
