@@ -10,7 +10,7 @@ import type { AIAgentChatMode } from '../../type'
 let removeFlow: (id: string, isSummary: boolean) => void
 
 const agentStore = createStore<{ activeChat?: { Id: string; SessionID: string } }>(() => ({}))
-const taskStore = createStore(() => ({ currentChatStatus: { questionID: 'task-1' } }))
+const taskStore = createStore(() => ({ currentChatStatus: { questionID: 'task-1' }, taskDetailsUpdate: 0 }))
 const taskDetailsMap = new Map([['task-1', { uuid: 'snapshot-1', execution: { http_flow_count: 7 } }]])
 let workspaceProps: {
   onSetSelectedHttpFlowIds: (ids: string[]) => void
@@ -386,7 +386,11 @@ describe('公共右侧面板', () => {
       agentStore.setState({ activeChat: { Id: 'chat-1', SessionID: 'session-1' } })
     })
     expect(subscriptions).toBeGreaterThan(0)
+    expect(readTask).toHaveBeenCalled()
     const chatReads = readTask.mock.calls.length
+    act(() => vi.advanceTimersByTime(3000))
+    expect(readTask.mock.calls.length).toBe(chatReads)
+    act(() => taskStore.setState((state) => ({ ...state, taskDetailsUpdate: (state.taskDetailsUpdate ?? 0) + 1 })))
     act(() => vi.advanceTimersByTime(3000))
     expect(readTask.mock.calls.length).toBeGreaterThan(chatReads)
     expect(queryFlows).toHaveBeenCalledTimes(1)
@@ -395,6 +399,7 @@ describe('公共右侧面板', () => {
     await act(async () => agentStore.setState({ activeChat: undefined }))
     expect(subscriptions).toBe(0)
     const welcomeReads = readTask.mock.calls.length
+    act(() => taskStore.setState((state) => ({ ...state, taskDetailsUpdate: (state.taskDetailsUpdate ?? 0) + 1 })))
     act(() => vi.advanceTimersByTime(3000))
     expect(readTask.mock.calls.length).toBe(welcomeReads)
     expect(queryFlows).toHaveBeenCalledTimes(2)
