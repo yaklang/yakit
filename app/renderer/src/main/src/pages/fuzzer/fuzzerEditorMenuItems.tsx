@@ -639,12 +639,10 @@ export interface DecodeComponentProps {
   onReady?: () => void
 }
 
-export const AUTO_DECODE_MAX_CHARS = 256 * 1024
-
 export const DecodeComponent = (props: DecodeComponentProps) => {
   const { isReadOnly, rangeValue, replace, onReady } = props
   const { t } = useI18nNamespaces(['webFuzzer'])
-  const [status, setStatus] = useState<'none' | 'only' | 'many' | 'oversized'>()
+  const [status, setStatus] = useState<'none' | 'only' | 'many'>()
   const [result, setResult] = useState<AutoDecodeResult[]>([])
   const onReadyRef = useRef(onReady)
   onReadyRef.current = onReady
@@ -656,13 +654,6 @@ export const DecodeComponent = (props: DecodeComponentProps) => {
     try {
       if (!rangeValue) {
         setStatus('none')
-        setResult([])
-        ready()
-        return
-      }
-      // 超限明确拒绝：禁止用截断结果覆盖整段选区
-      if (rangeValue.length > AUTO_DECODE_MAX_CHARS) {
-        setStatus('oversized')
         setResult([])
         ready()
         return
@@ -732,7 +723,6 @@ export const DecodeComponent = (props: DecodeComponentProps) => {
           />
         </div>
       )}
-      {status === 'oversized' && <div className={styles['none-decode']}>{t('DecodeComponent.inputTooLarge')}</div>}
       {status === 'none' && <div className={styles['none-decode']}>{t('DecodeComponent.noDecodeInfo')}</div>}
     </div>
   )

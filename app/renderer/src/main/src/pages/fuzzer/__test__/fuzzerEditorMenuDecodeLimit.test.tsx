@@ -45,7 +45,7 @@ vi.mock('@/components/yakitUI/YakitButton/YakitButton', () => ({
 vi.mock('@/utils/notification', () => ({ failed: vi.fn() }))
 vi.mock('@/utils/clipboard', () => ({ setClipboardText: vi.fn() }))
 
-import { AUTO_DECODE_MAX_CHARS, DecodeComponent, getInsertTagDragPosition } from '../fuzzerEditorMenuItems'
+import { DecodeComponent, getInsertTagDragPosition } from '../fuzzerEditorMenuItems'
 
 const decodeResult = (resultText: string): AutoDecodeResult => ({
   Type: 'Base64',
@@ -79,7 +79,7 @@ describe('getInsertTagDragPosition', () => {
   })
 })
 
-describe('DecodeComponent oversize + replace chain', () => {
+describe('DecodeComponent full-range AutoDecode + replace', () => {
   beforeEach(() => {
     invoke.mockReset()
     invoke.mockResolvedValue({ Results: [] })
@@ -90,28 +90,21 @@ describe('DecodeComponent oversize + replace chain', () => {
     vi.clearAllMocks()
   })
 
-  it('超限选区拒绝解码且不调用 AutoDecode，展示 inputTooLarge', async () => {
-    const oversized = 'A'.repeat(AUTO_DECODE_MAX_CHARS + 1)
-    render(<DecodeComponent rangeValue={oversized} replace={vi.fn()} />)
-    await waitFor(() => {
-      expect(screen.getByText('DecodeComponent.inputTooLarge')).toBeTruthy()
-    })
-    expect(invoke).not.toHaveBeenCalled()
-    expect(screen.queryByTestId('decode-replace')).toBeNull()
-  })
-
-  it('边界恰好等于上限仍解码', async () => {
+  it('长选区仍用完整 rangeValue 调用 AutoDecode（不截断、不拒绝）', async () => {
+    const longInput = 'A'.repeat(256 * 1024 + 1)
     invoke.mockResolvedValue({
-      Results: [decodeResult('AAA')],
+      Results: [decodeResult('decoded-long')],
     })
-    const exact = 'Q'.repeat(AUTO_DECODE_MAX_CHARS)
-    render(<DecodeComponent rangeValue={exact} replace={vi.fn()} />)
+    render(<DecodeComponent rangeValue={longInput} replace={vi.fn()} />)
     await waitFor(() => expect(invoke).toHaveBeenCalled())
     expect(invoke.mock.calls[0][0]).toBe('AutoDecode')
-    expect((invoke.mock.calls[0][1] as { Data: string }).Data.length).toBe(AUTO_DECODE_MAX_CHARS)
+    expect((invoke.mock.calls[0][1] as { Data: string }).Data).toBe(longInput)
+    expect((invoke.mock.calls[0][1] as { Data: string }).Data.length).toBe(longInput.length)
+    await waitFor(() => expect(screen.getByTestId('decode-replace')).toBeTruthy())
+    expect(screen.queryByText('DecodeComponent.inputTooLarge')).toBeNull()
   })
 
-  it('未超限解码成功时可替换整段结果', async () => {
+  it('解码成功时可替换整段结果', async () => {
     const replace = vi.fn()
     invoke.mockResolvedValue({
       Results: [decodeResult('hello-decoded')],
@@ -125,15 +118,27 @@ describe('DecodeComponent oversize + replace chain', () => {
     expect(invoke).toHaveBeenCalledWith('AutoDecode', { Data: 'aGVsbG8=' })
   })
 
-  it('QUFB.repeat 超限案例：65537*4 > 256KB 时拒绝，避免截断替换丢尾', async () => {
+  it('QUFB.repeat 长输入：整串传给 AutoDecode，可替换', async () => {
     const input = 'QUFB'.repeat(65537)
-    expect(input.length).toBeGreaterThan(AUTO_DECODE_MAX_CHARS)
     const replace = vi.fn()
+    invoke.mockResolvedValue({
+      Results: [decodeResult('AAA-repeated')],
+    })
     render(<DecodeComponent rangeValue={input} replace={replace} />)
+    await waitFor(() => expect(invoke).toHaveBeenCalled())
+    expect((invoke.mock.calls[0][1] as { Data: string }).Data).toBe(input)
+    await waitFor(() => expect(screen.getByTestId('decode-replace')).toBeTruthy())
+    await act(async () => {
+      screen.getByTestId('decode-replace').click()
+    })
+    expect(replace).toHaveBeenCalledWith('AAA-repeated')
+  })
+
+  it('空选区不调用 AutoDecode，展示无解码信息', async () => {
+    render(<DecodeComponent rangeValue="" replace={vi.fn()} />)
     await waitFor(() => {
-      expect(screen.getByText('DecodeComponent.inputTooLarge')).toBeTruthy()
+      expect(screen.getByText('DecodeComponent.noDecodeInfo')).toBeTruthy()
     })
     expect(invoke).not.toHaveBeenCalled()
-    expect(replace).not.toHaveBeenCalled()
   })
 })
