@@ -17,6 +17,7 @@ export interface AIInputSettingPopoverProps {
   setVisible?: (v: boolean) => void
 }
 export interface AIInputSettingFormProps {
+  AllowUserPrompt: boolean
   SyncPerceptionTrigger: boolean
   EnablePlan: boolean
   SingleModelMode: boolean

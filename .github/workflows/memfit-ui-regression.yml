@@ -1,0 +1,43 @@
+name: Memfit UI regression
+on:
+  pull_request:
+    paths:
+      - 'app/renderer/src/main/src/pages/ai-re-act/**'
+      - 'app/renderer/src/main/src/pages/ai-agent/**'
+      - 'app/renderer/src/main/src/components/yakitUI/**'
+      - 'app/renderer/src/main/src/theme/**'
+      - 'app/renderer/src/main/src/styles/**'
+      - 'app/renderer/src/main/src/locales/**'
+      - 'app/renderer/src/main/src/i18n/**'
+      - 'app/renderer/src/main/src/hook/useTheme/**'
+      - 'app/renderer/src/main/src/utils/*Theme*'
+      - 'app/renderer/src/main/src/utils/yakitColorVars.ts'
+      - 'app/renderer/src/main/src/utils/envfile.tsx'
+      - 'app/renderer/src/main/package.json'
+      - 'package.json'
+      - 'vitest.config.ts'
+      - 'scripts/run-memfit-ui-e2e.mjs'
+      - 'e2e/fixtures/memfit-ui/**'
+      - 'e2e/specs/memfit-ui/**'
+      - 'e2e/config/wdio.memfit-ui.conf.mjs'
+      - 'e2e/fixtures/process/process-tree.mjs'
+      - '.github/workflows/memfit-ui-regression.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  memfit-ui:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/pr-ci-setup-node-yarn
+      - run: yarn test:memfit-ui
+      - run: xvfb-run -a yarn test:memfit-ui:electron
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: memfit-ui-regression
+          path: |
+            reports/e2e-electron/memfit-ui
+            reports/junit.xml

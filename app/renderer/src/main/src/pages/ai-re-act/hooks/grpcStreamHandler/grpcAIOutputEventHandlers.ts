@@ -1,4 +1,6 @@
 import type { AIMessageHandler } from '../type'
+import { aiInteractiveUIHandlers } from './aiInteractiveUI'
+import { handleComponentUI } from './aiComponentUI'
 import { aiPerfDataHandlers } from './aiPerf'
 import { aiOtherDataHandlers } from './aiOther'
 import { aiReviewDataHandlers } from './aiReview'
@@ -14,6 +16,8 @@ import { aiTaskDetailDataHandlers } from './aiTaskDetail'
  * 注意！别的地方单独使用时，请自行加入try-catch拦截错误
  */
 export const grpcAIMessageHandlers: Record<string, AIMessageHandler> = {
+  ...aiInteractiveUIHandlers,
+  ui_component: handleComponentUI,
   ...aiPerfDataHandlers,
   ...aiOtherDataHandlers,
   ...aiReviewDataHandlers,

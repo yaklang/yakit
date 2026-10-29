@@ -1,4 +1,6 @@
 import { AIChatQSDataTypeEnum } from '@/pages/ai-re-act/hooks/aiRender'
+import { QuestionSummary } from '@/pages/ai-re-act/interactive-ui/QuestionSummary'
+import { ComponentCard } from '@/pages/ai-re-act/interactive-ui/ComponentCard'
 import { type FC, memo } from 'react'
 import { AIModelErrorPrompt } from '../../aiChatListItem/aiModelErrorPrompt/AIModelErrorPrompt'
 import { AIHttpFlowFuzzStatusCard } from '../../aiHttpFlowFuzzStatusCard/AIHttpFlowFuzzStatusCard'
@@ -21,6 +23,10 @@ import type { AIChildWindowNodeItemWrapperProps } from './type'
 const AIChildWindowNodeItemWrapper: FC<AIChildWindowNodeItemWrapperProps> = memo(
   ({ itemData, groupIndex, renderNum }) => {
     switch (itemData.type) {
+      case AIChatQSDataTypeEnum.UI_COMPONENT:
+        return <ComponentCard key={itemData.id} item={itemData} />
+      case AIChatQSDataTypeEnum.UI_QUESTION:
+        return <QuestionSummary key={itemData.id} item={itemData} readOnly />
       case AIChatQSDataTypeEnum.TOOL_RESULT:
         return <AIChildWindowToolInvokerCard itemData={itemData} renderNum={renderNum} />
 
