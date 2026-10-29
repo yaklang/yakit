@@ -121,13 +121,6 @@ export interface fuzzerInfoProp {
   groupChildren?: MultipleNodeInfo[]
   id?: string
 }
-/**菜单展开收起默认值 */
-const getDefaultExpand = () => {
-  if (isMemfit()) {
-    return false
-  }
-  return true
-}
 const Main: React.FC<MainProp> = React.memo((props) => {
   const colors = useGetColorsByTheme()
   const [showRenderCrash, setShowRenderCrash] = useState(false)
@@ -385,10 +378,10 @@ const Main: React.FC<MainProp> = React.memo((props) => {
     return ''
   }
 
-  const [defaultExpand, setDefaultExpand] = useState<boolean>(getDefaultExpand())
+  const [defaultExpand, setDefaultExpand] = useState<boolean>(true)
 
   useEffect(() => {
-    /** Memfit版本没有展开收起*/
+    /** Memfit 固定展开，不读取历史折叠设置 */
     if (isMemfit()) return
     getRemoteValue(CodeGV.MenuExpand).then((result: string) => {
       if (!result) setDefaultExpand(true)

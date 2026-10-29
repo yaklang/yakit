@@ -188,7 +188,11 @@ export const MenuCodec: React.FC<MenuCodecProps> = React.memo((props) => {
           open={codeShow}
           onOpenChange={(visible) => setCodeShow(visible)}
         >
-          <YakitButton type={avtiveKey === 'decode' ? 'primary' : 'outline2'} onClick={(e) => e.preventDefault()}>
+          <YakitButton
+            size="small"
+            type={avtiveKey === 'decode' ? 'primary' : 'outline2'}
+            onClick={(e) => e.preventDefault()}
+          >
             <div className={styles['codec-menu-btn']}>
               {t('Layout.MenuCodec.decode')}
               {codeShow ? <ChevronUpIcon /> : <ChevronDownOutlined size={16} />}
@@ -202,7 +206,11 @@ export const MenuCodec: React.FC<MenuCodecProps> = React.memo((props) => {
           open={decodeShow}
           onOpenChange={(visible) => setDecodeShow(visible)}
         >
-          <YakitButton type={avtiveKey === 'code' ? 'primary' : 'outline2'} onClick={(e) => e.preventDefault()}>
+          <YakitButton
+            size="small"
+            type={avtiveKey === 'code' ? 'primary' : 'outline2'}
+            onClick={(e) => e.preventDefault()}
+          >
             <div className={styles['encode-menu-btn']}>
               {t('Layout.MenuCodec.encode')}
               {decodeShow ? <ChevronUpIcon /> : <ChevronDownOutlined size={16} />}
@@ -213,7 +221,6 @@ export const MenuCodec: React.FC<MenuCodecProps> = React.memo((props) => {
           size="small"
           type={avtiveKey === 'fuzztag' ? 'primary' : 'outline2'}
           onClick={() => onCodec('fuzztag')}
-          style={{ height: 24 }}
         >
           {t('Layout.MenuCodec.fuzztag')}
         </YakitButton>
