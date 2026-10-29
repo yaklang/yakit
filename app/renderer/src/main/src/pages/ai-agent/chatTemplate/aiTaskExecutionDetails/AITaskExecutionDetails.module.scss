@@ -386,9 +386,6 @@
       height: 515px;
       max-height: 515px;
       min-height: 515px;
-      .stats-overview {
-        gap: 12px;
-      }
     }
   }
 }
@@ -401,11 +398,6 @@
     .summary-section {
       grid-template-columns: 1fr;
       gap: 8px;
-    }
-    .task-statistics {
-      .stats-overview {
-        gap: 10px;
-      }
     }
   }
 }

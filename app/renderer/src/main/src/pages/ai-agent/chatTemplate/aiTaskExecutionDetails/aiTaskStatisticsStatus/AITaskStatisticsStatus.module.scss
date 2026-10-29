@@ -7,6 +7,18 @@
   padding: 0px 12px 4px 12px;
 }
 
+@container task-details (max-width: 800px) {
+  .stats-overview {
+    gap: 12px;
+  }
+}
+
+@container task-details (max-width: 500px) {
+  .stats-overview {
+    gap: 10px;
+  }
+}
+
 .stat-item {
   display: inline-flex;
   align-items: baseline;
