@@ -602,74 +602,74 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
             />
           )}
 
-          {!isMemfit() && (
-            <>
-              <>
-                {!isSecurityExpert && defaultMenu[activeMenu]?.label !== '插件' ? (
-                  <div className={styles['divider-style']}></div>
-                ) : (
-                  <div></div>
-                )}
-              </>
-              <div className={styles['tool-wrapper']}>
-                {defaultMenu[activeMenu]?.label === '插件' && (
-                  <MenuPlugin
-                    loading={loading}
-                    pluginList={pluginMenu}
-                    onMenuSelect={(route) => onClickMenu(route, 'plugin')}
-                    onRestore={() => {
-                      isInitRef.current = true
-                    }}
-                  />
-                )}
-                <div
-                  className={defaultMenu[activeMenu]?.label !== '插件' ? styles['tool-body'] : styles['hide-tool-body']}
-                >
-                  <div className={styles['tool-container']}>
-                    <div
-                      className={
-                        activeTool === 'codec' ? styles['tool-nohidden-container'] : styles['tool-hidden-container']
-                      }
-                    >
-                      <MenuCodec />
-                    </div>
-                    <div
-                      className={
-                        activeTool === 'dnslog' ? styles['tool-nohidden-container'] : styles['tool-hidden-container']
-                      }
-                    >
-                      <MenuDNSLog />
-                    </div>
+          <>
+            {!isSecurityExpert && (isMemfit() || defaultMenu[activeMenu]?.label !== '插件') ? (
+              <div className={styles['divider-style']}></div>
+            ) : (
+              <div></div>
+            )}
+            <div className={styles['tool-wrapper']}>
+              {!isMemfit() && defaultMenu[activeMenu]?.label === '插件' && (
+                <MenuPlugin
+                  loading={loading}
+                  pluginList={pluginMenu}
+                  onMenuSelect={(route) => onClickMenu(route, 'plugin')}
+                  onRestore={() => {
+                    isInitRef.current = true
+                  }}
+                />
+              )}
+              <div
+                className={
+                  isMemfit() || defaultMenu[activeMenu]?.label !== '插件'
+                    ? styles['tool-body']
+                    : styles['hide-tool-body']
+                }
+              >
+                <div className={styles['tool-container']}>
+                  <div
+                    className={
+                      activeTool === 'codec' ? styles['tool-nohidden-container'] : styles['tool-hidden-container']
+                    }
+                  >
+                    <MenuCodec />
                   </div>
-                  <div className={styles['switch-op-wrapper']}>
-                    <div className={styles['border-wrapper']}></div>
-                    <div
-                      className={classNames(styles['tab-bar'], {
-                        [styles['active-tab-bar']]: activeTool === 'codec',
-                      })}
-                      onClick={() => {
-                        if (activeTool === 'codec') return
-                        setActiveTool('codec')
-                      }}
-                    >
-                      {t('YakitRoute.Codec')}
-                    </div>
-                    <div
-                      className={classNames(styles['tab-bar'], {
-                        [styles['active-tab-bar']]: activeTool === 'dnslog',
-                      })}
-                      onClick={() => {
-                        if (activeTool === 'dnslog') return
-                        setActiveTool('dnslog')
-                      }}
-                    >
-                      {t('YakitRoute.DNSLog')}
-                    </div>
+                  <div
+                    className={
+                      activeTool === 'dnslog' ? styles['tool-nohidden-container'] : styles['tool-hidden-container']
+                    }
+                  >
+                    <MenuDNSLog />
+                  </div>
+                </div>
+                <div className={styles['switch-op-wrapper']}>
+                  <div className={styles['border-wrapper']}></div>
+                  <div
+                    className={classNames(styles['tab-bar'], {
+                      [styles['active-tab-bar']]: activeTool === 'codec',
+                    })}
+                    onClick={() => {
+                      if (activeTool === 'codec') return
+                      setActiveTool('codec')
+                    }}
+                  >
+                    {t('YakitRoute.Codec')}
+                  </div>
+                  <div
+                    className={classNames(styles['tab-bar'], {
+                      [styles['active-tab-bar']]: activeTool === 'dnslog',
+                    })}
+                    onClick={() => {
+                      if (activeTool === 'dnslog') return
+                      setActiveTool('dnslog')
+                    }}
+                  >
+                    {t('YakitRoute.DNSLog')}
                   </div>
                 </div>
               </div>
-            </>
-          )}
+            </div>
+          </>
         </div>
         {!isMemfit() && (
           <div className={styles['expand-wrapper']}>

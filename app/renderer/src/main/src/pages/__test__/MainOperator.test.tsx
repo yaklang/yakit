@@ -13,7 +13,7 @@ const { ipcRendererMock } = vi.hoisted(() => {
   return { ipcRendererMock }
 })
 
-import { act, render } from '@testing-library/react'
+import { act, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const { startIdleVisibleInterval } = vi.hoisted(() => ({
@@ -55,6 +55,8 @@ vi.mock('@/utils/kv', () => ({
   setLocalValue: vi.fn(),
 }))
 
+const edition = vi.hoisted(() => ({ memfit: false }))
+
 vi.mock('@/utils/envfile', () => ({
   isCommunityEdition: () => true,
   isCommunityIRify: () => false,
@@ -62,7 +64,7 @@ vi.mock('@/utils/envfile', () => ({
   isEnpriTraceAgent: () => false,
   isEnterpriseOrSimpleEdition: () => false,
   isIRify: () => false,
-  isMemfit: () => false,
+  isMemfit: () => edition.memfit,
   globalUserLogin: vi.fn(),
 }))
 
@@ -81,7 +83,11 @@ vi.mock('@/hook/useGetColorsByTheme', () => ({
 }))
 
 vi.mock('@/pages/layout/HeardMenu/HeardMenu', () => ({ default: () => null }))
-vi.mock('@/pages/layout/publicMenu/PublicMenu', () => ({ default: () => null }))
+vi.mock('@/pages/layout/publicMenu/PublicMenu', () => ({
+  default: ({ defaultExpand }: { defaultExpand: boolean }) => (
+    <div data-testid="public-menu" data-expanded={defaultExpand} />
+  ),
+}))
 vi.mock('@/pages/layout/mainOperatorContent/MainOperatorContent', () => ({
   MainOperatorContent: () => null,
 }))
@@ -122,6 +128,7 @@ describe('MainOperator 远程控制轮询', () => {
   let mockHidden = false
 
   beforeEach(() => {
+    edition.memfit = false
     vi.useFakeTimers()
     vi.stubGlobal('requestIdleCallback', undefined)
     vi.stubGlobal('cancelIdleCallback', undefined)
@@ -142,6 +149,16 @@ describe('MainOperator 远程控制轮询', () => {
     vi.unstubAllGlobals()
     vi.useRealTimers()
     vi.clearAllMocks()
+  })
+
+  it('Memfit 默认展开图标菜单，不读取历史折叠设置', async () => {
+    edition.memfit = true
+    const { getRemoteValue } = await import('@/utils/kv')
+    await act(async () => {
+      render(<Main />)
+    })
+    expect(screen.getByTestId('public-menu')).toHaveAttribute('data-expanded', 'true')
+    expect(getRemoteValue).not.toHaveBeenCalledWith('menu-expand')
   })
 
   it('挂载后启动远程控制状态轮询', () => {
