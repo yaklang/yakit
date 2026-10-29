@@ -364,7 +364,12 @@ export default function useVirtualTableHook<
             setTotal(rsp.Total)
             return
           }
-          setData((current) => [...current, ...newData])
+          setData((current) => {
+            // uint64 Id 经 longs:String 以字符串到达，Number 转换会丢精度导致不同 Id 撞车被误删
+            // uint64 Id 经 longs:String 以字符串到达，Number 转换会丢精度导致不同 Id 撞车被误删
+            const seen = new Set(current.map((row) => String(row[idKey])))
+            return [...current, ...newData.filter((row) => !seen.has(String(row[idKey])))]
+          })
           if (['desc', 'none'].includes(query.Pagination.Order)) {
             minIdRef.current = newData[newData.length - 1][responseKey.id]
           } else {
