@@ -421,6 +421,7 @@ const AIMCPList: React.FC<AIMCPListProps> = React.memo((props) => {
             <YakitButton
               type="text2"
               onClick={openYakMcpSettings}
+              aria-label={t('SettingsPage.item.yak-mcp')}
               iconPosition="end"
               icon={<CogOutlined color="currentColor" size={16} />}
             />
