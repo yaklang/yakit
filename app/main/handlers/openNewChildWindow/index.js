@@ -141,13 +141,14 @@ module.exports = {
       openedWindow.webContents.once('did-fail-load', (event, errorCode, errorDescription, validatedURL) => {
         // loading 页未能完成握手时也要清理，避免重开后遗留旧窗口的监听。
         ipcMain.removeListener('ready-to-load-child', onReadyToLoad)
-        win.send('child-window-hash', { hash: '' })
+        if (childWindow === openedWindow) {
+          win.send('child-window-hash', { hash: '' })
+        }
       })
 
       openedWindow.on('close', (e) => {
         e.preventDefault()
         openedWindow.destroy()
-        win.send('child-window-hash', { hash: '' })
       })
       openedWindow.on('closed', () => {
         ipcMain.removeListener('ready-to-load-child', onReadyToLoad)
