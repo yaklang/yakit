@@ -348,4 +348,92 @@ describe('SmartDecodeFloatPanel three-state layout', () => {
       expect(latestDragBounds!.top).toBeLessThanOrEqual(latestDragBounds!.bottom)
     })
   })
+
+  it('dragged 后 monaco 盒仍旧宽但 wrapper 已变窄时，按 wrapper 交集缩宽并夹位置', async () => {
+    const { rerender, hostRef, host } = mount()
+    await waitFor(() => expect(findPanel()).toBeTruthy())
+    const panel = findPanel()!
+    paintPanelBox(panel, 200, 221, 360, 200)
+    rerender(
+      <SmartDecodeFloatPanel
+        rangeValue="hello"
+        onClose={() => undefined}
+        hostRef={hostRef}
+        anchorRect={{ left: 200, top: 200, right: 280, bottom: 220, width: 80, height: 20 }}
+        editorInfo={editorInfo()}
+      />,
+    )
+    await waitFor(() => expect(panel.style.visibility).toBe('visible'))
+
+    act(() => {
+      dragHandlers.onStart?.(null, { x: 0, y: 0 })
+      dragHandlers.onDrag?.(null, { x: 40, y: 10 })
+      dragHandlers.onStop?.()
+    })
+
+    // 模拟 ReactResizeDetector debounce：overflow-guard 仍报旧宽 800，wrapper 已缩到 220
+    hostBox.hostLeft = 100
+    hostBox.hostTop = 50
+    hostBox.hostRight = 900
+    hostBox.hostBottom = 650
+    vi.spyOn(host, 'getBoundingClientRect').mockReturnValue({
+      x: 100,
+      y: 50,
+      left: 100,
+      top: 50,
+      right: 320,
+      bottom: 200,
+      width: 220,
+      height: 150,
+      toJSON: () => ({}),
+    } as DOMRect)
+
+    paintPanelBox(panel, 150, 80, 360, 200)
+    Object.defineProperty(panel, 'offsetWidth', {
+      configurable: true,
+      get: () => {
+        const w = parseFloat(panel.style.width || '')
+        const maxW = parseFloat(panel.style.maxWidth || '')
+        const base = Number.isFinite(w) ? w : 360
+        return Number.isFinite(maxW) ? Math.min(base, maxW) : base
+      },
+    })
+    Object.defineProperty(panel, 'offsetHeight', {
+      configurable: true,
+      get: () => {
+        const h = parseFloat(panel.style.maxHeight || '')
+        return Number.isFinite(h) ? h : 200
+      },
+    })
+
+    rerender(
+      <SmartDecodeFloatPanel
+        rangeValue="hello"
+        onClose={() => undefined}
+        hostRef={hostRef}
+        anchorRect={{ left: 200, top: 200, right: 280, bottom: 220, width: 80, height: 20 }}
+        editorInfo={{
+          ...editorInfo(),
+          left: 100,
+          top: 50,
+          right: 900,
+          bottom: 650,
+          direction: { x: 'left', y: 'bottom' },
+        }}
+      />,
+    )
+
+    await waitFor(() => {
+      expect(panel.style.visibility).toBe('visible')
+      const width = parseFloat(panel.style.width || '0')
+      const maxWidth = parseFloat(panel.style.maxWidth || '0')
+      expect(width).toBeLessThanOrEqual(220)
+      expect(width).toBeGreaterThan(0)
+      expect(maxWidth).toBeLessThanOrEqual(220)
+      const left = parseFloat(panel.style.left || '0')
+      const visualLeft = left + 40
+      expect(visualLeft).toBeGreaterThanOrEqual(100 - 0.5)
+      expect(visualLeft + width).toBeLessThanOrEqual(320 + 0.5)
+    })
+  })
 })

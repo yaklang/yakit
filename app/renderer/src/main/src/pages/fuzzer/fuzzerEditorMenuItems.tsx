@@ -768,19 +768,26 @@ export const SmartDecodeFloatPanel = (props: SmartDecodeFloatPanelProps) => {
   const readHostRect = useMemoizedFn(() => {
     const host = resolveHostEl()
     if (host) {
-      // 与下拉菜单同一套：排除 minimap / 滚动条占用
+      // 与下拉菜单同一套：按 monaco overflow-guard / scrollable 量可用区
       const box = readEditorHostBox(host)
-      const width = box.hostRight - box.hostLeft
-      const height = box.hostBottom - box.hostTop
+      let left = box.hostLeft
+      let top = box.hostTop
+      let right = box.hostRight
+      let bottom = box.hostBottom
+      // 浮层 portal 挂在 yakit-editor-wrapper；分割条缩窄时 wrapper 立刻变窄，
+      // 但 Monaco editor.layout 经 ReactResizeDetector debounce，overflow-guard 会短暂保留旧宽。
+      // 与 wrapper 取交集，避免粘性拖拽后仍按旧宽不缩、溢出到右栏。
+      const wrap = host.getBoundingClientRect()
+      if (wrap.width > 0 && wrap.height > 0) {
+        left = Math.max(left, wrap.left)
+        top = Math.max(top, wrap.top)
+        right = Math.min(right, wrap.right)
+        bottom = Math.min(bottom, wrap.bottom)
+      }
+      const width = right - left
+      const height = bottom - top
       if (width > 0 && height > 0) {
-        return {
-          left: box.hostLeft,
-          top: box.hostTop,
-          right: box.hostRight,
-          bottom: box.hostBottom,
-          width,
-          height,
-        }
+        return { left, top, right, bottom, width, height }
       }
     }
     // host 量不到时退回 editorInfo（不含 minimap 修正）
@@ -805,18 +812,22 @@ export const SmartDecodeFloatPanel = (props: SmartDecodeFloatPanelProps) => {
     const hostRect = readHostRect()
     if (!panel || !anchor || !hostRect) return
 
-    // 默认 360，编辑器更窄时再缩小，用光标所在一侧的空白而不是固定半高
+    // 默认 360，编辑器更窄时再缩小；border-box + maxWidth 防止 padding/内容把面板撑出宿主
     let width = Math.min(360, hostRect.width)
     let maxHeight = Math.min(menuHeight > 0 ? menuHeight : hostRect.height, hostRect.height)
     panel.style.position = 'fixed'
     panel.style.marginTop = '0px'
+    panel.style.boxSizing = 'border-box'
+    panel.style.minWidth = '0px'
     panel.style.width = `${width}px`
+    panel.style.maxWidth = `${hostRect.width}px`
     panel.style.maxHeight = `${maxHeight}px`
     let panelWidth = panel.offsetWidth
     let panelHeight = panel.offsetHeight
     if (panelWidth > hostRect.width) {
       width = Math.max(0, width - (panelWidth - hostRect.width))
       panel.style.width = `${width}px`
+      panel.style.maxWidth = `${hostRect.width}px`
       panelWidth = panel.offsetWidth
     }
     if (panelHeight > hostRect.height) {
@@ -868,7 +879,10 @@ export const SmartDecodeFloatPanel = (props: SmartDecodeFloatPanelProps) => {
       left: nextLeft,
       top: nextTop,
       width,
+      maxWidth: hostRect.width,
       maxHeight,
+      minWidth: 0,
+      boxSizing: 'border-box',
       marginTop: 0,
       visibility: 'visible',
     })
@@ -903,22 +917,38 @@ export const SmartDecodeFloatPanel = (props: SmartDecodeFloatPanelProps) => {
     }
     const { x, y } = dragPosRef.current
 
-    // 与 fitInHost 一致：先限制 width/maxHeight，再量真实尺寸，再夹位置
+    // 与 fitInHost 一致：先限制 width/maxHeight（border-box + maxWidth），再量真实尺寸，再夹位置
     let width = Math.min(360, hostRect.width)
     let maxHeight = Math.min(menuHeight > 0 ? menuHeight : hostRect.height, hostRect.height)
+    panel.style.boxSizing = 'border-box'
+    panel.style.minWidth = '0px'
     panel.style.width = `${width}px`
+    panel.style.maxWidth = `${hostRect.width}px`
     panel.style.maxHeight = `${maxHeight}px`
     let panelWidth = panel.offsetWidth
     let panelHeight = panel.offsetHeight
     if (panelWidth > hostRect.width) {
       width = Math.max(0, width - (panelWidth - hostRect.width))
       panel.style.width = `${width}px`
+      panel.style.maxWidth = `${hostRect.width}px`
       panelWidth = panel.offsetWidth
     }
     if (panelHeight > hostRect.height) {
       maxHeight = Math.max(0, maxHeight - (panelHeight - hostRect.height))
       panel.style.maxHeight = `${maxHeight}px`
       panelHeight = panel.offsetHeight
+    }
+    // 内容 min-content 仍撑破时，按宿主硬夹测量宽度，避免 left 夹死后右边仍溢出
+    if (panelWidth > hostRect.width) {
+      width = Math.max(0, hostRect.width)
+      panel.style.width = `${width}px`
+      panel.style.maxWidth = `${width}px`
+      panelWidth = Math.min(panel.offsetWidth, hostRect.width)
+    }
+    if (panelHeight > hostRect.height) {
+      maxHeight = Math.max(0, hostRect.height)
+      panel.style.maxHeight = `${maxHeight}px`
+      panelHeight = Math.min(panel.offsetHeight, hostRect.height)
     }
 
     const panelRect = panel.getBoundingClientRect()
@@ -932,7 +962,13 @@ export const SmartDecodeFloatPanel = (props: SmartDecodeFloatPanelProps) => {
     const nextLeft = visualLeft - x
     const nextTop = visualTop - y
     setPanelStyle((prev) => {
-      if (prev.left === nextLeft && prev.top === nextTop && prev.width === width && prev.maxHeight === maxHeight) {
+      if (
+        prev.left === nextLeft &&
+        prev.top === nextTop &&
+        prev.width === width &&
+        prev.maxWidth === hostRect.width &&
+        prev.maxHeight === maxHeight
+      ) {
         return prev
       }
       return {
@@ -940,7 +976,10 @@ export const SmartDecodeFloatPanel = (props: SmartDecodeFloatPanelProps) => {
         left: nextLeft,
         top: nextTop,
         width,
+        maxWidth: hostRect.width,
         maxHeight,
+        minWidth: 0,
+        boxSizing: 'border-box',
         visibility: 'visible' as const,
       }
     })
@@ -964,12 +1003,18 @@ export const SmartDecodeFloatPanel = (props: SmartDecodeFloatPanelProps) => {
     if (!contentReady) return
     const host = resolveHostEl()
     if (!host || typeof ResizeObserver === 'undefined') return
-    const ro = new ResizeObserver(() => {
+    const onResize = () => {
       if (sessionDraggingRef.current) updateDragBounds()
       else if (draggedRef.current) clampStickyPanelIntoHost()
       else fitInHost()
-    })
+    }
+    const ro = new ResizeObserver(onResize)
     ro.observe(host)
+    // Monaco layout 在 wrapper RO 之后 debounce 才改 overflow-guard；一并观察，layout 完成后补夹一次
+    const monacoBox =
+      (host.querySelector('.overflow-guard') as HTMLElement | null) ||
+      (host.querySelector('.monaco-scrollable-element') as HTMLElement | null)
+    if (monacoBox && monacoBox !== host) ro.observe(monacoBox)
     return () => ro.disconnect()
   }, [contentReady, hostRef])
 
