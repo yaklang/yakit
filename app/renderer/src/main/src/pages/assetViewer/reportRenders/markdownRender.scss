@@ -1,6 +1,10 @@
 .stream-markdown {
   /* Import Tailwind's base styles */
 
+  code[data-streamdown='inline-code'] {
+    background-color: var(--Colors-Use-Neutral-Bg-Hover);
+    padding-block: 1px;
+  }
   *,
   ::before,
   ::after {
@@ -127,7 +131,7 @@
     /* 2 */
     border-style: solid;
     /* 2 */
-    border-color: #e5e7eb;
+    border-color: var(--Colors-Use-Neutral-Border);
     /* 2 */
   }
 
@@ -1562,7 +1566,26 @@ Constrain images and videos to the parent width and preserve their intrinsic asp
     margin-bottom: 6px !important;
     border-radius: 6px !important;
     overflow: hidden !important;
+    border: 1px solid var(--Colors-Use-Neutral-Border);
 
+    table {
+      border-width: 0;
+      border-top-width: 1px;
+      th {
+        border-right-width: 1px;
+        &:last-child {
+          border-right-width: 0;
+        }
+      }
+    }
+    tbody {
+      td {
+        border-right-width: 1px;
+        &:last-child {
+          border-right-width: 0;
+        }
+      }
+    }
     table {
       th,
       td {
@@ -1578,16 +1601,28 @@ Constrain images and videos to the parent width and preserve their intrinsic asp
 
     > .flex.items-center.justify-end {
       background: var(--yakit-card-border-bg, rgba(0, 0, 0, 0.03)) !important;
-      border-bottom: 1px solid var(--yakit-border-color, rgba(0, 0, 0, 0.06)) !important;
       height: 22px !important;
       padding: 0 8px !important;
       border-radius: 6px 6px 0 0 !important;
       gap: 4px !important;
 
+      .bg-background {
+        background-color: var(--Colors-Use-Basic-Background);
+        padding: 4px;
+
+        > button:hover {
+          background-color: var(--Colors-Use-Neutral-Bg-Hover);
+          border-radius: 4px;
+        }
+      }
+
       button svg {
         width: 14px !important;
         height: 14px !important;
       }
+    }
+    &.space-y-2 > .overflow-x-auto:not([hidden]) {
+      margin-top: 0 !important;
     }
   }
 
