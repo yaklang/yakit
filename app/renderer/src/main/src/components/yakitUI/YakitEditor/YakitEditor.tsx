@@ -1467,7 +1467,8 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
   } | null>(null)
   const openSmartDecodeRef = useRef<(rangeValue: string, info?: EditorDetailInfoProps, rect?: DOMRect) => void>()
   openSmartDecodeRef.current = (rangeValue, info, rect) => {
-    if (!rect) return
+    // disabled 仅罩 shade + 失焦，Monaco 未必 readOnly；禁止再打开以免 Replace 仍可写回
+    if (disabled || !rect) return
     setSmartDecode({
       openId: Date.now(), // 强制 remount，避免旧拖拽位移残留
       rangeValue,
@@ -1479,6 +1480,11 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
   const onOpenSmartDecode = useMemoizedFn((rangeValue: string, anchorRect?: DOMRect) => {
     openSmartDecodeRef.current?.(rangeValue, editorInfo.current, anchorRect)
   })
+
+  // SmartDecode 浮层 z-index(1050) 高于 disabled shade(999)；disabled 时关闭/不渲染，避免仍可 Replace
+  useEffect(() => {
+    if (disabled) setSmartDecode(null)
+  }, [disabled])
   // 编辑器菜单
 
   useEffect(() => {
@@ -1572,7 +1578,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         refreshRate={30}
       />
       {disabled && <div className={styles['yakit-editor-shade']}></div>}
-      {smartDecode && (
+      {smartDecode && !disabled && (
         <SmartDecodeFloatPanel
           key={smartDecode.openId}
           rangeValue={smartDecode.rangeValue}
