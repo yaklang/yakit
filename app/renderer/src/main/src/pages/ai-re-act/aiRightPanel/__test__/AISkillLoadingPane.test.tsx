@@ -45,7 +45,8 @@ vi.mock('react-virtuoso', () => ({
           props.endReached?.(index)
         }}
       >
-        {props.data?.map((skill, index) => (
+        {/* 模拟虚拟列表的可见窗口，完整分页数据仍通过 virtuosoList 校验。 */}
+        {props.data?.slice(0, 10).map((skill, index) => (
           <div key={skill.name}>{props.itemContent?.(index, skill, undefined)}</div>
         ))}
       </div>
