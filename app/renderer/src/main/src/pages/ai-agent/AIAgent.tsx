@@ -91,6 +91,10 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
 
   const [show, setShow] = useState<boolean>(false)
   const [sideRatio, setSideRatio] = useState('360px')
+  const [pageWidth, setPageWidth] = useState(0)
+  const sideMinWidth = show ? 260 : 24
+  // 展开侧栏不会改变页面总宽度，按剩余空间放宽聊天区的最小宽度。
+  const chatMinWidth = pageWidth > 0 ? Math.max(0, Math.min(680, pageWidth - sideMinWidth - (show ? 1 : 0))) : 680
 
   const sideHiddenModeRef = useRef<string>('false')
 
@@ -106,6 +110,7 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
     const observer = new ResizeObserver((entries) => {
       const width = entries[0]?.contentRect?.width
       if (!width) return
+      setPageWidth(width)
       if (skipFirstClose) {
         skipFirstClose = false
         return
@@ -395,9 +400,9 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
             isRecalculateWH={show}
             firstRatio={show ? sideRatio : '24px'}
             lineSize={1}
-            firstMinSize={show ? 260 : 24}
+            firstMinSize={sideMinWidth}
             secondRatio={show ? '70%' : '100%'}
-            secondMinSize={680}
+            secondMinSize={chatMinWidth}
             firstNodeStyle={{ padding: 0 }}
             secondNodeStyle={{ padding: 0 }}
             lineDirection="right"
