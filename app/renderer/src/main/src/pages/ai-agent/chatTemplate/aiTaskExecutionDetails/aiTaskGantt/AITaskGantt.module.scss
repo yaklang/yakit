@@ -121,7 +121,7 @@
 .timeline-row {
   position: relative;
   z-index: 1;
-  height: 38px;
+  height: 31px;
   box-sizing: border-box;
   cursor: pointer;
   border-left: 2px solid transparent;
@@ -134,7 +134,7 @@
 
 .bar-label {
   position: absolute;
-  top: 4px;
+  top: 2px;
   right: 8px;
   z-index: 2;
   display: flex;
@@ -159,25 +159,25 @@
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 4px;
-  height: 10px;
+  bottom: 7px;
+  height: 5px;
 }
 
 .bar-segment {
   position: absolute;
   top: 0;
-  height: 10px;
+  height: 5px;
   min-width: 4px;
   border-radius: 0;
 
   &:first-child {
-    border-top-left-radius: 5px;
-    border-bottom-left-radius: 5px;
+    border-top-left-radius: 2.5px;
+    border-bottom-left-radius: 2.5px;
   }
 
   &:last-child {
-    border-top-right-radius: 5px;
-    border-bottom-right-radius: 5px;
+    border-top-right-radius: 2.5px;
+    border-bottom-right-radius: 2.5px;
   }
 
   &.bar-segment-wait {
