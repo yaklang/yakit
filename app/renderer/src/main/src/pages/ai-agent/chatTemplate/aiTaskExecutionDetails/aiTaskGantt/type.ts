@@ -18,6 +18,8 @@ export interface AITaskGanttProps {
   hiddenLegendKinds?: AITaskGanttSegmentKind[]
   /** 点击图例切换对应状态行的显示/隐藏 */
   onLegendToggle?: (kind: AITaskGanttSegmentKind) => void
+  /** 图例从左到右顺序，与顶部状态统计拖拽结果一致 */
+  legendKindOrder?: AITaskGanttSegmentKind[]
 }
 
 export interface AITaskGanttStatusMeta {

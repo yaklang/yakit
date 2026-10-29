@@ -5,6 +5,8 @@ import {
   GANTT_LEGEND_TO_FILTER_KEY,
   TODO_STATUS_FILTER_KEYS,
   TODO_STATUS_TO_FILTER_KEY,
+  reorderFilterKeys,
+  sortTodoItemsByStatusOrder,
   type AIBrowserProcessesProps,
   type AITaskDetailsAddListItem,
   type AITaskDetailsAddPopoverProps,
@@ -69,6 +71,7 @@ import { timeDiffWithMoment } from '@/utils/timeUtil'
 import { AITaskActionItem, AITaskExecutionList } from './aiTaskExecutionList/AITaskExecutionList'
 import { AITaskBoard } from './aiTaskBoard/AITaskBoard'
 import { AITaskGantt } from './aiTaskGantt/AITaskGantt'
+import { AITaskStatisticsStatus } from './aiTaskStatisticsStatus/AITaskStatisticsStatus'
 import { AIToDoListDetail } from '@/pages/ai-re-act/aiReActChat/aiToDoList/AIToDoListDetail'
 import useCurrentTaskData from '@/pages/ai-re-act/hooks/useCurrentTaskData/useCurrentTaskData'
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
@@ -87,8 +90,8 @@ const TODO_STAT_META: Array<{
   titleKey: string
 }> = [
   { key: 'created', color: 'neutral', titleKey: 'AITaskExecutionDetails.statusCreated' },
-  { key: 'pending', color: 'neutral', titleKey: 'AITaskExecutionDetails.statusPending' },
   { key: 'doing', color: 'main', titleKey: 'AITaskExecutionDetails.statusDoing' },
+  { key: 'pending', color: 'neutral', titleKey: 'AITaskExecutionDetails.statusPending' },
   { key: 'done', color: 'green', titleKey: 'AITaskExecutionDetails.statusDone' },
   { key: 'skipped', color: 'neutral', titleKey: 'AITaskExecutionDetails.statusSkipped' },
   { key: 'deleted', color: 'red', titleKey: 'AITaskExecutionDetails.statusDeleted' },
@@ -97,8 +100,9 @@ const TODO_STAT_META: Array<{
 export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = React.memo((props) => {
   const { taskId, taskGoal, taskName, onClose } = props
   const { t, i18nRefresh } = useI18nNamespaces(['aiAgent', 'yakitUi'])
-  const [todoViewMode, setTodoViewMode] = useState<TodoViewMode>('board')
+  const [todoViewMode, setTodoViewMode] = useState<TodoViewMode>('gantt')
   const [hiddenStatusKeys, setHiddenStatusKeys] = useState<TodoStatusFilterKey[]>([])
+  const [statusOrder, setStatusOrder] = useState<TodoStatusFilterKey[]>(() => [...TODO_STATUS_FILTER_KEYS])
   const [selectedTaskId, setSelectedTaskId] = useState(taskId)
 
   useEffect(() => {
@@ -155,16 +159,17 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
     const doing: TodoListCardData['items'] = []
     const done: TodoListCardData['items'] = []
     const skippedOrDeleted: TodoListCardData['items'] = []
-    const progressNumber: AITaskStatisticsStatusProps['list'] = TODO_STAT_META.map((meta) => ({
-      key: meta.key,
-      color: meta.color,
-      title: t(meta.titleKey),
-      footerLeft: meta.key === 'created' ? allItems.length : 0,
-    }))
-    const progressByKey = Object.fromEntries(progressNumber.map((item) => [item.key, item])) as Record<
-      string,
-      AITaskStatisticsStatusProps['list'][number]
-    >
+    const progressByKey = Object.fromEntries(
+      TODO_STAT_META.map((meta) => [
+        meta.key,
+        {
+          key: meta.key,
+          color: meta.color,
+          title: t(meta.titleKey),
+          footerLeft: meta.key === 'created' ? allItems.length : 0,
+        },
+      ]),
+    ) as Record<string, AITaskStatisticsStatusProps['list'][number]>
 
     // 一次遍历：统计全量、收集可见项（保序）、填充看板列
     for (const item of allItems) {
@@ -231,8 +236,22 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
         items: skippedOrDeleted,
       },
     ]
-    return { boardColumns, progressNumber, visibleItems }
-  }, [planItemDetailsData?.todoList?.items, hiddenStatusKeySet, i18nRefresh])
+    const progressNumber: AITaskStatisticsStatusProps['list'] = [
+      progressByKey.created,
+      ...statusOrder.map((key) => progressByKey[key]),
+    ]
+    return {
+      boardColumns,
+      progressNumber,
+      visibleItems: sortTodoItemsByStatusOrder(visibleItems, statusOrder),
+    }
+  }, [planItemDetailsData?.todoList?.items, hiddenStatusKeySet, i18nRefresh, statusOrder])
+
+  const legendKindOrder = useCreation(() => statusOrder.map((key) => FILTER_KEY_TO_GANTT_LEGEND[key]), [statusOrder])
+
+  const onStatReorder = useMemoizedFn((fromKey: string, toKey: string) => {
+    setStatusOrder((prev) => reorderFilterKeys(prev, fromKey, toKey))
+  })
 
   const skillFixedList = planItemDetailsData?.skills.fixed || []
   const skillDynamicList = planItemDetailsData?.skills.dynamic || []
@@ -395,20 +414,20 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
                   {
                     label: (
                       <span className={styles['todo-view-option']}>
-                        <ViewBoardsOutlined size={16} color="currentColor" />
-                        {t('AITaskExecutionDetails.board')}
-                      </span>
-                    ),
-                    value: 'board',
-                  },
-                  {
-                    label: (
-                      <span className={styles['todo-view-option']}>
                         <SquareGanttChartOutlined size={16} color="currentColor" />
                         {t('AITaskExecutionDetails.progress')}
                       </span>
                     ),
                     value: 'gantt',
+                  },
+                  {
+                    label: (
+                      <span className={styles['todo-view-option']}>
+                        <ViewBoardsOutlined size={16} color="currentColor" />
+                        {t('AITaskExecutionDetails.board')}
+                      </span>
+                    ),
+                    value: 'board',
                   },
                 ]}
               />
@@ -421,6 +440,7 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
                 list={todoData.progressNumber}
                 hiddenKeys={hiddenStatusKeys}
                 onToggle={toggleStatusFilter}
+                onReorder={onStatReorder}
               />
               {todoViewMode === 'board' ? (
                 <AITaskBoard columns={todoData.boardColumns} />
@@ -428,6 +448,7 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
                 <AITaskGantt
                   items={todoData.visibleItems}
                   hiddenLegendKinds={hiddenLegendKinds}
+                  legendKindOrder={legendKindOrder}
                   onLegendToggle={(kind) => {
                     const key = GANTT_LEGEND_TO_FILTER_KEY[kind]
                     if (key) toggleStatusFilter(key)
@@ -1002,49 +1023,6 @@ const AITaskExecutionDetailsCard: React.FC<AITaskExecutionDetailsCardProps> = Re
       <div className={styles['card-content']}>
         {content ? content : <span className={styles['empty-text']}>{t('AITaskExecutionDetails.noInfo')}</span>}
       </div>
-    </div>
-  )
-})
-
-const AITaskStatisticsStatus: React.FC<AITaskStatisticsStatusProps> = React.memo((props) => {
-  const { list, hiddenKeys = [], onToggle } = props
-  const hiddenSet = useCreation(() => new Set(hiddenKeys), [hiddenKeys])
-  const allHidden = useCreation(() => TODO_STATUS_FILTER_KEYS.every((key) => hiddenSet.has(key)), [hiddenSet])
-  return (
-    <div className={styles['stats-overview']}>
-      {list.map((item) => {
-        const filterable = !!onToggle
-        // 已创建：全隐藏时灰显；单项：自身在 hiddenKeys 中时灰显
-        const hidden = item.key === 'created' ? allHidden : hiddenSet.has(item.key)
-        return (
-          <div
-            key={item.key}
-            className={classNames(styles['stat-item'], {
-              [styles['stat-main']]: item.color === 'main',
-              [styles['stat-green']]: item.color === 'green',
-              [styles['stat-red']]: item.color === 'red',
-              [styles['stat-item-clickable']]: filterable,
-              [styles['stat-item-hidden']]: hidden,
-            })}
-            onClick={filterable ? () => onToggle?.(item.key) : undefined}
-            role={filterable ? 'button' : undefined}
-            tabIndex={filterable ? 0 : undefined}
-            onKeyDown={
-              filterable
-                ? (e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault()
-                      onToggle?.(item.key)
-                    }
-                  }
-                : undefined
-            }
-          >
-            <span className={styles['stat-count']}>{item.footerLeft}</span>
-            <span className={styles['stat-label']}>{item.title}</span>
-          </div>
-        )
-      })}
     </div>
   )
 })

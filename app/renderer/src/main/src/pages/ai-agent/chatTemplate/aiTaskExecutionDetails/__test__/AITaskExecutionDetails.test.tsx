@@ -11,6 +11,7 @@ import type { AIAgentGrpcApi } from '@/pages/ai-re-act/hooks/grpcApi'
 import { AIInputEventSyncTypeEnum } from '@/pages/ai-re-act/hooks/grpcApi'
 import { DefaultPlanItemDetailsData } from '@/pages/ai-re-act/hooks/defaultConstant'
 import { AITaskExecutionDetails } from '../AITaskExecutionDetails'
+import { reorderFilterKeys, sortTodoItemsByStatusOrder, TODO_STATUS_FILTER_KEYS } from '../type'
 
 const taskDetailsMap = new Map<string, PlanItemDetailsData>()
 const todoDetail = vi.fn(({ todoData }: { todoData: TodoListCardData }) => (
@@ -135,6 +136,9 @@ vi.mock('../aiTaskBoard/AITaskBoard.module.scss', () => ({
   default: new Proxy({}, { get: (_, key) => (key === '__esModule' ? false : key) }),
 }))
 vi.mock('../aiTaskSkillList/AITaskSkillList.module.scss', () => ({
+  default: new Proxy({}, { get: (_, key) => (key === '__esModule' ? false : key) }),
+}))
+vi.mock('../aiTaskStatisticsStatus/AITaskStatisticsStatus.module.scss', () => ({
   default: new Proxy({}, { get: (_, key) => (key === '__esModule' ? false : key) }),
 }))
 
@@ -463,9 +467,18 @@ describe('AITaskExecutionDetails 任务统计视图切换', () => {
     return (item.querySelector('.stat-count') as HTMLElement).textContent
   }
 
-  it('默认渲染看板视图：按状态分组各列并展示统计计数', () => {
+  const getStatItem = (title: string) =>
+    screen
+      .getAllByText(title)
+      .find((node) => node.closest('.stat-item'))!
+      .closest('.stat-item') as HTMLElement
+
+  it('看板视图：按状态分组各列并展示统计计数', () => {
     createTaskWithStatuses('task-board')
     render(<AITaskExecutionDetails taskId="task-board" />)
+
+    // 默认甘特图；切到看板后再断言列头
+    fireEvent.click(screen.getByText('AITaskExecutionDetails.board'))
 
     // 统计卡计数与状态分组一致
     expect(getStatCount('AITaskExecutionDetails.statusCreated')).toBe('5')
@@ -494,11 +507,11 @@ describe('AITaskExecutionDetails 任务统计视图切换', () => {
     expect(screen.getByText('排队任务')).toBeInTheDocument()
     expect(screen.getByText('执行任务')).toBeInTheDocument()
 
-    fireEvent.click(screen.getByText('AITaskExecutionDetails.statusPending'))
+    fireEvent.click(getStatItem('AITaskExecutionDetails.statusPending'))
     expect(screen.queryByText('排队任务')).not.toBeInTheDocument()
     expect(screen.getByText('执行任务')).toBeInTheDocument()
 
-    fireEvent.click(screen.getByText('AITaskExecutionDetails.statusPending'))
+    fireEvent.click(getStatItem('AITaskExecutionDetails.statusPending'))
     expect(screen.getByText('排队任务')).toBeInTheDocument()
   })
 
@@ -517,30 +530,93 @@ describe('AITaskExecutionDetails 任务统计视图切换', () => {
     expect(screen.getByText('执行任务')).toBeInTheDocument()
   })
 
-  it('切换到甘特图视图：渲染时间轴并保留状态分组统计', () => {
+  it('默认渲染甘特图视图：时间轴与状态分组统计，可切到看板再切回', () => {
     createTaskWithStatuses('task-gantt')
     render(<AITaskExecutionDetails taskId="task-gantt" />)
 
-    // 甘特图尚未出现
-    expect(document.querySelector('.ai-task-gantt')).toBeNull()
-
-    // Segmented 选项 label 点击触发底层 radio change（fake timers 下不走 userEvent）
-    fireEvent.click(screen.getByText('AITaskExecutionDetails.progress'))
-
-    // 甘特图渲染：条带上方叠状态与文字，无左侧 Todo list
+    // 默认即甘特图：条带上方叠状态与文字，无左侧 Todo list
+    expect(document.querySelector('.ai-task-gantt')).not.toBeNull()
     expect(screen.queryByText('Todo list')).not.toBeInTheDocument()
     expect(screen.getByText('排队任务')).toBeInTheDocument()
     expect(screen.getByText('删除任务')).toBeInTheDocument()
-    // 甘特图与统计计数不因视图切换丢失
-    expect(document.querySelector('.ai-task-gantt')).not.toBeNull()
     expect(getStatCount('AITaskExecutionDetails.statusCreated')).toBe('5')
     // 看板列头不再渲染（「待处理」在甘特图状态标签中仍存在，用看板独有的列头断言）
     expect(screen.queryByText('AITaskExecutionDetails.columnSkippedOrDeleted')).not.toBeInTheDocument()
 
-    // 切回看板
+    // 切到看板
     fireEvent.click(screen.getByText('AITaskExecutionDetails.board'))
     expect(document.querySelector('.ai-task-gantt')).toBeNull()
     expect(screen.getByText('AITaskExecutionDetails.columnSkippedOrDeleted')).toBeInTheDocument()
+
+    // 再切回甘特图
+    fireEvent.click(screen.getByText('AITaskExecutionDetails.progress'))
+    expect(document.querySelector('.ai-task-gantt')).not.toBeNull()
+    expect(screen.queryByText('AITaskExecutionDetails.columnSkippedOrDeleted')).not.toBeInTheDocument()
+  })
+
+  it('拖拽状态统计项后，甘特图按从左到右的状态顺序排列', () => {
+    createTaskWithStatuses('task-stat-drag')
+    render(<AITaskExecutionDetails taskId="task-stat-drag" />)
+    if (!document.querySelector('.ai-task-gantt')) {
+      fireEvent.click(screen.getByText('AITaskExecutionDetails.progress'))
+    }
+
+    const getGanttNames = () =>
+      Array.from(document.querySelectorAll('.ai-task-gantt .bar-label-name')).map((el) => el.textContent)
+    const getStatLabels = () =>
+      Array.from(document.querySelectorAll('.stats-overview .stat-label')).map((el) => el.textContent)
+
+    expect(getGanttNames()[0]).toBe('执行任务')
+    expect(getStatLabels()).toEqual([
+      'AITaskExecutionDetails.statusCreated',
+      'AITaskExecutionDetails.statusDoing',
+      'AITaskExecutionDetails.statusPending',
+      'AITaskExecutionDetails.statusDone',
+      'AITaskExecutionDetails.statusSkipped',
+      'AITaskExecutionDetails.statusDeleted',
+    ])
+
+    const store: Record<string, string> = {}
+    const dataTransfer = {
+      dropEffect: 'move',
+      effectAllowed: 'move',
+      files: [] as File[],
+      items: [] as unknown[],
+      types: [] as string[],
+      setData(type: string, val: string) {
+        store[type] = val
+        if (!this.types.includes(type)) this.types.push(type)
+      },
+      getData(type: string) {
+        return store[type] || ''
+      },
+      clearData() {
+        Object.keys(store).forEach((key) => delete store[key])
+      },
+      setDragImage() {},
+    }
+    const from = getStatItem('AITaskExecutionDetails.statusPending')
+    const to = getStatItem('AITaskExecutionDetails.statusDoing')
+
+    fireEvent.dragStart(from, { dataTransfer })
+    fireEvent.dragEnter(to, { dataTransfer })
+    fireEvent.drop(to, { dataTransfer })
+    fireEvent.dragEnd(from, { dataTransfer })
+
+    expect(getStatLabels()).toEqual([
+      'AITaskExecutionDetails.statusCreated',
+      'AITaskExecutionDetails.statusPending',
+      'AITaskExecutionDetails.statusDoing',
+      'AITaskExecutionDetails.statusDone',
+      'AITaskExecutionDetails.statusSkipped',
+      'AITaskExecutionDetails.statusDeleted',
+    ])
+    expect(getGanttNames().slice(0, 2)).toEqual(['排队任务', '执行任务'])
+    const legendLabels = Array.from(document.querySelectorAll('.gantt-legend .legend-item span:last-child')).map(
+      (el) => el.textContent,
+    )
+    expect(legendLabels[0]).toBe('AITaskExecutionDetails.statusPending')
+    expect(legendLabels[1]).toBe('AITaskExecutionDetails.statusDoing')
   })
 
   it('无待办时两种视图均不渲染', () => {
@@ -560,6 +636,7 @@ describe('AITaskExecutionDetails 任务统计视图切换', () => {
     createTaskWithStatuses('task-i18n-refresh')
     // taskName 仅用于冲破 React.memo，不参与 todo 缓存派生
     const { rerender } = render(<AITaskExecutionDetails taskId="task-i18n-refresh" taskName="lang-0" />)
+    fireEvent.click(screen.getByText('AITaskExecutionDetails.board'))
 
     expect(getStatCount('AITaskExecutionDetails.statusCreated')).toBe('5')
     expect(screen.getByText('AITaskExecutionDetails.columnDoing')).toBeInTheDocument()
@@ -690,5 +767,28 @@ describe('AITaskExecutionDetails 任务下拉切换', () => {
     rerender(<AITaskExecutionDetails taskId="task-b" taskName="本机 hostscan" />)
     expect(screen.getByLabelText('AITaskExecutionDetails.selectTask')).toHaveTextContent('123')
     expect(screen.getByText('任务 B 感知')).toBeInTheDocument()
+  })
+})
+
+describe('状态统计拖拽排序工具', () => {
+  it('reorderFilterKeys 把 from 插到 to 的位置', () => {
+    expect(reorderFilterKeys(TODO_STATUS_FILTER_KEYS, 'pending', 'doing')).toEqual([
+      'pending',
+      'doing',
+      'done',
+      'skipped',
+      'deleted',
+    ])
+    expect(reorderFilterKeys(TODO_STATUS_FILTER_KEYS, 'created', 'pending')).toEqual([...TODO_STATUS_FILTER_KEYS])
+    expect(reorderFilterKeys(TODO_STATUS_FILTER_KEYS, 'pending', 'pending')).toEqual([...TODO_STATUS_FILTER_KEYS])
+  })
+
+  it('sortTodoItemsByStatusOrder 按状态从左到右排，同状态保序', () => {
+    const items = [
+      { id: 'a', status: 'PENDING' },
+      { id: 'b', status: 'DOING' },
+      { id: 'c', status: 'PENDING' },
+    ]
+    expect(sortTodoItemsByStatusOrder(items, ['doing', 'pending']).map((item) => item.id)).toEqual(['b', 'a', 'c'])
   })
 })

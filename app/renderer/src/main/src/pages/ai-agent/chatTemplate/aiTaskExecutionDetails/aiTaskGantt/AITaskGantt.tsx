@@ -26,7 +26,7 @@ const formatGanttLabelName = (content?: string) => {
 
 /** 任务统计甘特图：时间轴条带上直接展示任务名与状态 */
 export const AITaskGantt: React.FC<AITaskGanttProps> = React.memo(
-  ({ items, className, hiddenLegendKinds = [], onLegendToggle }) => {
+  ({ items, className, hiddenLegendKinds = [], onLegendToggle, legendKindOrder }) => {
     const { t, i18nRefresh } = useI18nNamespaces(['aiAgent'])
     const [selectedId, setSelectedId] = useState<string>('')
     const [nowSec, setNowSec] = useState(() => Math.floor(Date.now() / 1000))
@@ -56,17 +56,23 @@ export const AITaskGantt: React.FC<AITaskGanttProps> = React.memo(
       [i18nRefresh],
     )
 
-    // 图例文案与顶部任务统计一致（status*）
-    const legendItems = useCreation<{ kind: AITaskGanttSegmentKind; label: string }[]>(
-      () => [
-        { kind: 'wait', label: t('AITaskExecutionDetails.statusPending') },
+    // 图例文案与顶部任务统计一致（status*）；顺序跟随统计项从左到右拖拽
+    const legendItems = useCreation<{ kind: AITaskGanttSegmentKind; label: string }[]>(() => {
+      const all: { kind: AITaskGanttSegmentKind; label: string }[] = [
         { kind: 'execute', label: t('AITaskExecutionDetails.statusDoing') },
+        { kind: 'wait', label: t('AITaskExecutionDetails.statusPending') },
         { kind: 'success', label: t('AITaskExecutionDetails.statusDone') },
         { kind: 'skipped', label: t('AITaskExecutionDetails.statusSkipped') },
         { kind: 'failed', label: t('AITaskExecutionDetails.statusDeleted') },
-      ],
-      [i18nRefresh],
-    )
+      ]
+      if (!legendKindOrder?.length) return all
+      const byKind = new Map(all.map((item) => [item.kind, item]))
+      const ordered = legendKindOrder
+        .map((kind) => byKind.get(kind))
+        .filter((item): item is (typeof all)[number] => !!item)
+      const rest = all.filter((item) => !legendKindOrder.includes(item.kind))
+      return ordered.concat(rest)
+    }, [i18nRefresh, legendKindOrder])
 
     const rowModels = useCreation(() => {
       return items.map((item, index) => {
