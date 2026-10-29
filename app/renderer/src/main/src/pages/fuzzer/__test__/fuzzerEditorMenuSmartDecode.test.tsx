@@ -8,6 +8,7 @@ const dragHandlers: {
   onDrag?: (e: unknown, data: { x: number; y: number }) => void
   onStop?: () => void
 } = {}
+let latestDragBounds: { left: number; top: number; right: number; bottom: number } | null = null
 
 vi.mock('@/utils/monacoSpec/yakEditor', () => ({}))
 vi.mock('lottie-web', () => ({ default: { loadAnimation: vi.fn(), destroy: vi.fn() } }))
@@ -35,15 +36,18 @@ vi.mock('react-draggable', () => ({
     onStart,
     onDrag,
     onStop,
+    bounds,
   }: {
     children: ReactElement
     onStart?: (e: unknown, data: { x: number; y: number }) => void
     onDrag?: (e: unknown, data: { x: number; y: number }) => void
     onStop?: () => void
+    bounds?: { left: number; top: number; right: number; bottom: number }
   }) => {
     dragHandlers.onStart = onStart
     dragHandlers.onDrag = onDrag
     dragHandlers.onStop = onStop
+    if (bounds) latestDragBounds = bounds
     return children
   },
 }))
@@ -108,6 +112,7 @@ describe('SmartDecodeFloatPanel three-state layout', () => {
     dragHandlers.onStart = undefined
     dragHandlers.onDrag = undefined
     dragHandlers.onStop = undefined
+    latestDragBounds = null
     vi.spyOn(layout, 'readEditorHostBox').mockImplementation(() => ({ ...hostBox }))
   })
 
@@ -256,6 +261,91 @@ describe('SmartDecodeFloatPanel three-state layout', () => {
       expect(panel.style.visibility).toBe('visible')
       // CSS left = visualLeft - dragX；visualLeft 夹到 hostRight-width=260，dragX=20 → left=240
       expect(panel.style.left).toBe('240px')
+    })
+  })
+
+  it('dragged 后宿主小于面板时 clampSticky 先缩尺寸再夹位置，dragBounds 不倒置', async () => {
+    const { rerender, hostRef } = mount()
+    await waitFor(() => expect(findPanel()).toBeTruthy())
+    const panel = findPanel()!
+    paintPanelBox(panel, 200, 221, 360, 200)
+    rerender(
+      <SmartDecodeFloatPanel
+        rangeValue="hello"
+        onClose={() => undefined}
+        hostRef={hostRef}
+        anchorRect={{ left: 200, top: 200, right: 280, bottom: 220, width: 80, height: 20 }}
+        editorInfo={editorInfo()}
+      />,
+    )
+    await waitFor(() => expect(panel.style.visibility).toBe('visible'))
+
+    act(() => {
+      dragHandlers.onStart?.(null, { x: 0, y: 0 })
+      dragHandlers.onDrag?.(null, { x: 10, y: 20 })
+      dragHandlers.onStop?.()
+    })
+
+    // 面板仍比宿主大：360x200 vs 宿主 300x150；offset 跟随 style，模拟浏览器缩尺寸后的 remeasure
+    paintPanelBox(panel, 100, 50, 360, 200)
+    Object.defineProperty(panel, 'offsetWidth', {
+      configurable: true,
+      get: () => {
+        const w = parseFloat(panel.style.width || '')
+        return Number.isFinite(w) ? w : 360
+      },
+    })
+    Object.defineProperty(panel, 'offsetHeight', {
+      configurable: true,
+      get: () => {
+        const h = parseFloat(panel.style.maxHeight || '')
+        return Number.isFinite(h) ? h : 200
+      },
+    })
+    hostBox.hostLeft = 100
+    hostBox.hostTop = 50
+    hostBox.hostRight = 400
+    hostBox.hostBottom = 200
+
+    rerender(
+      <SmartDecodeFloatPanel
+        rangeValue="hello"
+        onClose={() => undefined}
+        hostRef={hostRef}
+        anchorRect={{ left: 200, top: 200, right: 280, bottom: 220, width: 80, height: 20 }}
+        editorInfo={{
+          ...editorInfo(),
+          left: hostBox.hostLeft,
+          top: hostBox.hostTop,
+          right: hostBox.hostRight,
+          bottom: hostBox.hostBottom,
+          direction: { x: 'left', y: 'bottom' },
+        }}
+      />,
+    )
+
+    await waitFor(() => {
+      expect(panel.style.visibility).toBe('visible')
+      const width = parseFloat(panel.style.width || '0')
+      const maxHeight = parseFloat(panel.style.maxHeight || '0')
+      expect(width).toBeLessThanOrEqual(hostBox.hostRight - hostBox.hostLeft)
+      expect(width).toBeGreaterThan(0)
+      expect(maxHeight).toBeLessThanOrEqual(hostBox.hostBottom - hostBox.hostTop)
+      expect(maxHeight).toBeGreaterThan(0)
+      // CSS left = visualLeft - dragX；visualLeft 夹进宿主后不得越界
+      const left = parseFloat(panel.style.left || '0')
+      const top = parseFloat(panel.style.top || '0')
+      const visualLeft = left + 10
+      const visualTop = top + 20
+      expect(visualLeft).toBeGreaterThanOrEqual(hostBox.hostLeft - 0.5)
+      expect(visualLeft + width).toBeLessThanOrEqual(hostBox.hostRight + 0.5)
+      expect(visualTop).toBeGreaterThanOrEqual(hostBox.hostTop - 0.5)
+      expect(visualTop + maxHeight).toBeLessThanOrEqual(hostBox.hostBottom + 0.5)
+      expect(latestDragBounds).toBeTruthy()
+      expect(latestDragBounds!.right).toBeGreaterThanOrEqual(0)
+      expect(latestDragBounds!.bottom).toBeGreaterThanOrEqual(0)
+      expect(latestDragBounds!.left).toBeLessThanOrEqual(latestDragBounds!.right)
+      expect(latestDragBounds!.top).toBeLessThanOrEqual(latestDragBounds!.bottom)
     })
   })
 })

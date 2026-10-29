@@ -893,7 +893,7 @@ export const SmartDecodeFloatPanel = (props: SmartDecodeFloatPanelProps) => {
     })
   })
 
-  /** 粘性拖拽后宿主缩小：把 fixed left/top 夹回 live hostRect，避免浮层落在编辑器外 */
+  /** 粘性拖拽后宿主缩小：先把宽高钳到 live host，再夹 fixed left/top，避免溢出与 dragBounds 倒置 */
   const clampStickyPanelIntoHost = useMemoizedFn(() => {
     const hostRect = readHostRect()
     const panel = nodeRef.current
@@ -901,10 +901,27 @@ export const SmartDecodeFloatPanel = (props: SmartDecodeFloatPanelProps) => {
       updateDragBounds()
       return
     }
-    const panelRect = panel.getBoundingClientRect()
     const { x, y } = dragPosRef.current
-    const panelWidth = panelRect.width
-    const panelHeight = panelRect.height
+
+    // 与 fitInHost 一致：先限制 width/maxHeight，再量真实尺寸，再夹位置
+    let width = Math.min(360, hostRect.width)
+    let maxHeight = Math.min(menuHeight > 0 ? menuHeight : hostRect.height, hostRect.height)
+    panel.style.width = `${width}px`
+    panel.style.maxHeight = `${maxHeight}px`
+    let panelWidth = panel.offsetWidth
+    let panelHeight = panel.offsetHeight
+    if (panelWidth > hostRect.width) {
+      width = Math.max(0, width - (panelWidth - hostRect.width))
+      panel.style.width = `${width}px`
+      panelWidth = panel.offsetWidth
+    }
+    if (panelHeight > hostRect.height) {
+      maxHeight = Math.max(0, maxHeight - (panelHeight - hostRect.height))
+      panel.style.maxHeight = `${maxHeight}px`
+      panelHeight = panel.offsetHeight
+    }
+
+    const panelRect = panel.getBoundingClientRect()
     let visualLeft = panelRect.left
     let visualTop = panelRect.top
     if (visualLeft + panelWidth > hostRect.right) visualLeft = Math.max(hostRect.left, hostRect.right - panelWidth)
@@ -915,8 +932,17 @@ export const SmartDecodeFloatPanel = (props: SmartDecodeFloatPanelProps) => {
     const nextLeft = visualLeft - x
     const nextTop = visualTop - y
     setPanelStyle((prev) => {
-      if (prev.left === nextLeft && prev.top === nextTop) return prev
-      return { ...prev, left: nextLeft, top: nextTop, visibility: 'visible' as const }
+      if (prev.left === nextLeft && prev.top === nextTop && prev.width === width && prev.maxHeight === maxHeight) {
+        return prev
+      }
+      return {
+        ...prev,
+        left: nextLeft,
+        top: nextTop,
+        width,
+        maxHeight,
+        visibility: 'visible' as const,
+      }
     })
     setDragBounds({
       left: hostRect.left - visualLeft + x,

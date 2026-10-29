@@ -4,6 +4,7 @@ import {
   MENU_PANEL_EDGE,
   MENU_PANEL_GAP,
   pickVerticalHeightBudget,
+  placeMenuPanel,
   readEditorHostBox,
   menuBarClippedByHost,
   menuBarLabeledFitsInHost,
@@ -307,5 +308,154 @@ describe('menuBarLabeledFitsInHost / placeHorizontal', () => {
     )
     expect(naiveProbeClipped).toBe(true)
     expect(menuBarLabeledFitsInHost(labeledW, iconLeft, host, false)).toBe(true)
+  })
+})
+
+describe('placeMenuPanel', () => {
+  afterEach(() => {
+    document.body.innerHTML = ''
+  })
+
+  const stubRect = (el: HTMLElement, rect: Partial<DOMRect>) => {
+    el.getBoundingClientRect = () =>
+      ({
+        x: rect.left ?? 0,
+        y: rect.top ?? 0,
+        left: rect.left ?? 0,
+        top: rect.top ?? 0,
+        right: rect.right ?? 0,
+        bottom: rect.bottom ?? 0,
+        width: (rect.right ?? 0) - (rect.left ?? 0),
+        height: (rect.bottom ?? 0) - (rect.top ?? 0),
+        toJSON: () => ({}),
+      }) as DOMRect
+  }
+
+  const stubSize = (el: HTMLElement, width: number, height: number) => {
+    Object.defineProperty(el, 'offsetWidth', { configurable: true, value: width })
+    Object.defineProperty(el, 'offsetHeight', { configurable: true, value: height })
+  }
+
+  /** monaco overflow-guard + 工具条父节点 + 锚点按钮 + 面板 */
+  const mount = (opts?: {
+    host?: { left: number; top: number; right: number; bottom: number }
+    anchor?: { left: number; top: number; right: number; bottom: number }
+    panelSize?: { width: number; height: number }
+    parent?: { left: number; top: number; right: number; bottom: number }
+  }) => {
+    const host = opts?.host ?? { left: 0, top: 0, right: 800, bottom: 600 }
+    const anchor = opts?.anchor ?? { left: 100, top: 120, right: 160, bottom: 148 }
+    const panelSize = opts?.panelSize ?? { width: 280, height: 160 }
+    const parentBox = opts?.parent ?? { left: 100, top: 120, right: 160, bottom: 148 }
+
+    const wrapper = document.createElement('div')
+    const guard = document.createElement('div')
+    guard.className = 'overflow-guard'
+    const scrollable = document.createElement('div')
+    scrollable.className = 'monaco-scrollable-element'
+    const bar = document.createElement('div')
+    bar.setAttribute('data-menu-bar', '')
+    const parent = document.createElement('div')
+    const anchorEl = document.createElement('button')
+    const panel = document.createElement('div')
+    panel.setAttribute('data-menu-panel', '')
+
+    parent.appendChild(anchorEl)
+    parent.appendChild(panel)
+    bar.appendChild(parent)
+    scrollable.appendChild(bar)
+    guard.appendChild(scrollable)
+    wrapper.appendChild(guard)
+    document.body.appendChild(wrapper)
+
+    stubRect(guard, host)
+    stubRect(scrollable, host)
+    stubRect(bar, { left: anchor.left, top: anchor.top, right: anchor.right, bottom: anchor.bottom })
+    stubRect(parent, parentBox)
+    stubRect(anchorEl, anchor)
+    stubSize(panel, panelSize.width, panelSize.height)
+    Object.defineProperty(parent, 'clientTop', { configurable: true, value: 0 })
+
+    return { parent, anchorEl, panel, host, anchor }
+  }
+
+  it('maxWidth 取 min(360, 宿主宽 - EDGE*2)', () => {
+    const { parent, anchorEl } = mount({
+      host: { left: 0, top: 0, right: 800, bottom: 600 },
+      panelSize: { width: 280, height: 120 },
+    })
+    const style = placeMenuPanel(parent, anchorEl, { x: 'left', y: 'top' }, parent.querySelector('[data-menu-panel]'))
+    expect(style.maxWidth).toBe(Math.min(360, 800 - MENU_PANEL_EDGE * 2))
+    expect(style.width).toBe(280)
+    expect(style.visibility).toBe('visible')
+  })
+
+  it('宿主较窄时 maxWidth 跟着收窄', () => {
+    const { parent, anchorEl } = mount({
+      host: { left: 0, top: 0, right: 200, bottom: 400 },
+      panelSize: { width: 180, height: 100 },
+      anchor: { left: 20, top: 80, right: 80, bottom: 108 },
+      parent: { left: 20, top: 80, right: 80, bottom: 108 },
+    })
+    const style = placeMenuPanel(parent, anchorEl, { x: 'left', y: 'top' }, parent.querySelector('[data-menu-panel]'))
+    expect(style.maxWidth).toBe(Math.max(0, 200 - MENU_PANEL_EDGE * 2))
+    expect(style.maxWidth).toBeLessThan(360)
+  })
+
+  it('宿主宽不足 40 时提前返回，不做完整定位', () => {
+    const { parent, anchorEl } = mount({
+      host: { left: 0, top: 0, right: 30, bottom: 400 },
+    })
+    const style = placeMenuPanel(parent, anchorEl, { x: 'left', y: 'top' }, parent.querySelector('[data-menu-panel]'))
+    expect(style).toEqual({ visibility: 'visible', marginTop: 0 })
+  })
+
+  it('下方空间不足且上方更空时，maxHeight 受上方 heightBudget 限制', () => {
+    // 宿主 0~400；锚点贴底 → 下方几乎没有空间，应向上展开并用 spaceAbove 作预算
+    const { parent, anchorEl } = mount({
+      host: { left: 0, top: 0, right: 800, bottom: 400 },
+      anchor: { left: 100, top: 340, right: 180, bottom: 368 },
+      parent: { left: 100, top: 340, right: 180, bottom: 368 },
+      panelSize: { width: 240, height: 200 },
+    })
+    const style = placeMenuPanel(parent, anchorEl, { x: 'left', y: 'top' }, parent.querySelector('[data-menu-panel]'))
+    const { spaceAbove, spaceBelow } = verticalRoomsBesideAnchor(0, 400, 340, 368)
+    expect(spaceAbove).toBeGreaterThan(spaceBelow)
+    const { heightBudget } = pickVerticalHeightBudget(spaceAbove, spaceBelow, false, 200)
+    const hostMaxHeight = Math.min(320, Math.max(0, 400 - MENU_PANEL_EDGE * 2))
+    expect(style.maxHeight).toBe(Math.min(hostMaxHeight, heightBudget > 0 ? heightBudget : 0))
+    expect(style.maxHeight).toBeLessThanOrEqual(spaceAbove)
+  })
+
+  it('面板 left/top 保证整块落在宿主内（贴右边锚点时左移）', () => {
+    const host = { left: 0, top: 0, right: 500, bottom: 400 }
+    const parentLeft = 420
+    const parentRight = 480
+    const parentTop = 80
+    const { parent, anchorEl } = mount({
+      host,
+      anchor: { left: 420, top: 80, right: 480, bottom: 108 },
+      parent: { left: parentLeft, top: parentTop, right: parentRight, bottom: 108 },
+      panelSize: { width: 300, height: 120 },
+    })
+    const style = placeMenuPanel(parent, anchorEl, { x: 'right', y: 'top' }, parent.querySelector('[data-menu-panel]'))
+    const top = typeof style.top === 'number' ? style.top : Number(style.top)
+    expect(Number.isFinite(top)).toBe(true)
+    // stuckToAnchor+growLeft 时用 right 定位；否则用 left
+    let viewLeft: number
+    if (style.left === 'auto' || style.left === undefined) {
+      const right = typeof style.right === 'number' ? style.right : Number(style.right)
+      expect(Number.isFinite(right)).toBe(true)
+      viewLeft = parentRight - right - 300
+    } else {
+      const left = typeof style.left === 'number' ? style.left : Number(style.left)
+      expect(Number.isFinite(left)).toBe(true)
+      viewLeft = parentLeft + left
+    }
+    const viewTop = parentTop + top
+    expect(viewLeft).toBeGreaterThanOrEqual(host.left - 0.5)
+    expect(viewLeft + 300).toBeLessThanOrEqual(host.right + 0.5)
+    expect(viewTop).toBeGreaterThanOrEqual(host.top - 0.5)
+    expect(viewTop + 120).toBeLessThanOrEqual(host.bottom + 0.5)
   })
 })
