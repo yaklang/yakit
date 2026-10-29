@@ -50,6 +50,7 @@ export interface FuzzerEditorMenuGroup {
  * - InsertTag 等面板拖拽：`setPanelDragging(true)` 暂停自动关闭，并采样指针；
  *   松手后用 `elementsFromPoint` 判断是否仍在 `[data-menu-bar]` / `[data-menu-panel]` 上，
  *   仍在则当悬停，不在则重新开 5 秒。未采到真实坐标时不用 (0,0) 做命中，避免误关。
+ * - 卸载后 `aliveRef` 置 false；子组件（如 InsertTagPanel）清理里再调 `setPanelDragging(false)` / `startCloseTimeout` 不会重启定时器。
  *
  * @param close 真正关掉菜单的回调（由外层 closeFizz*Widget 提供）
  * @param timeoutIdRef 外层持有的定时器 id，便于别处也能清/重启；不传则不启用定时关闭
@@ -70,6 +71,8 @@ export const useFuzzerEditorMenuAutoClose = (
   const lastPointerRef = useRef({ x: 0, y: 0 })
   /** 是否在本轮拖拽中采到过真实 pointer 坐标（move/up/cancel）；未采样时松手不得用 (0,0) 误判 */
   const pointerSampledRef = useRef(false)
+  /** effect 清理后置 false，阻止卸载后子组件再调 setPanelDragging/startCloseTimeout 重启定时器 */
+  const aliveRef = useRef(true)
   const pointerMoveHandlerRef = useRef<((e: PointerEvent) => void) | null>(null)
   const pointerUpHandlerRef = useRef<((e: PointerEvent) => void) | null>(null)
   const pointerCancelHandlerRef = useRef<((e: PointerEvent) => void) | null>(null)
@@ -83,8 +86,9 @@ export const useFuzzerEditorMenuAutoClose = (
     }
   })
 
-  /** 重新开 5 秒关闭；拖拽中直接跳过 */
+  /** 重新开 5 秒关闭；拖拽中或已卸载直接跳过 */
   const startCloseTimeout = useMemoizedFn(() => {
+    if (!aliveRef.current) return
     if (!enabled || !timeoutIdRef) return
     if (draggingRef.current) return
     if (timeoutIdRef.current) clearTimeout(timeoutIdRef.current)
@@ -115,6 +119,7 @@ export const useFuzzerEditorMenuAutoClose = (
    * false：结束采样；若采到过坐标则 hit-test 菜单，决定保持悬停还是开 5 秒关闭。
    */
   const setPanelDragging = useMemoizedFn((dragging: boolean) => {
+    if (!aliveRef.current) return
     draggingRef.current = dragging
     if (dragging) {
       clearCloseTimeout()
@@ -177,11 +182,13 @@ export const useFuzzerEditorMenuAutoClose = (
 
   useEffect(() => {
     // 一挂载就计时；同时延迟显示，避免 content widget 定位前闪一下
+    aliveRef.current = true
     startCloseTimeout()
     const showId = setTimeout(() => {
       setBoxHidden(false)
     }, 300)
     return () => {
+      aliveRef.current = false
       clearTimeout(showId)
       clearCloseTimeout()
       stopPointerTracking()

@@ -150,6 +150,36 @@ describe('useFuzzerEditorMenuAutoClose', () => {
     expect(close).not.toHaveBeenCalled()
   })
 
+  it('拖拽中卸载后 setPanelDragging(false) 不重新计时', () => {
+    const outside = document.createElement('div')
+    document.body.appendChild(outside)
+    stubElementsFromPoint(() => [outside])
+
+    const { result, unmount } = mount()
+
+    act(() => {
+      result.current.setPanelDragging(true)
+    })
+    act(() => {
+      firePointer('pointermove', 10, 10)
+    })
+
+    unmount()
+    expect(timeoutIdRef.current).toBeUndefined()
+
+    // 模拟 InsertTagPanel 卸载清理在 hook cleanup 之后仍调用 setPanelDragging(false)
+    act(() => {
+      result.current.setPanelDragging(false)
+    })
+
+    expect(timeoutIdRef.current).toBeUndefined()
+
+    act(() => {
+      vi.advanceTimersByTime(5000)
+    })
+    expect(close).not.toHaveBeenCalled()
+  })
+
   it('卸载时移除 pointer 监听', () => {
     const addSpy = vi.spyOn(window, 'addEventListener')
     const removeSpy = vi.spyOn(window, 'removeEventListener')
