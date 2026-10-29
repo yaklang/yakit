@@ -1,5 +1,10 @@
 {
   "ConfigNetworkPage": {
+    "modelScript": "Yak model script",
+    "modelScriptRequired": "Enter a Yak model script",
+    "modelScriptHelp": "Set the endpoint, credentials, model ID, proxy and timeout in the script. Define chat(req, emit) to return content or emit it. Run trusted scripts only.",
+    "scriptConfigName": "Configuration name",
+    "scriptModelNameHelp": "Used only for display and selection; set the upstream model ID in the script.",
     "certificateName": "Certificate {{index}}",
     "onlySupportPkcs12": "Only application/x-pkcs12 is supported",
     "fetchCertificateContentFailed": "Failed to fetch certificate content, please check and try again: {{error}}",
@@ -159,6 +164,8 @@
     "highQualityModel": "Primary model: used for primary tasks",
     "lightweightModel": "Auxiliary model: used for auxiliary tasks",
     "visionModel": "Vision model: used for image recognition and knowledge base/task execution",
-    "userInfo": "User Info"
+    "userInfo": "User Info",
+    "nativeToolCalling": "Native tool calling",
+    "nativeToolCallingHelp": "Off by default: use text @action. When enabled, the script receives req.Tools / req.ToolChoice and returns an object with content, tool_calls and finish_reason. Requires upstream support."
   }
 }

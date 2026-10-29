@@ -25,7 +25,12 @@ import {
   AIConfigAPIKeyFormItem,
   buildAIConfigHealthCheckConfig,
 } from '@/pages/ai-agent/aiModelList/aiModelForm/AIModelForm'
-import { providerToListAiModelConfig } from '@/pages/ai-agent/aiModelList/aiModelForm/providerConfig'
+import {
+  providerToListAiModelConfig,
+  YAK_SCRIPT_PROVIDER,
+} from '@/pages/ai-agent/aiModelList/aiModelForm/providerConfig'
+import { YakScriptModelFields } from './YakScriptModelFields'
+import providerExample from './yakProviderExample.yak?raw'
 import {
   buildReasoningEffortOptions,
   effortProbeResultFromResponse,
@@ -212,6 +217,22 @@ const headersToDisplayAndCopy = (headers: KVPair[] | undefined) => {
 
 const buildDefaultAIFormItemsForType = (typeVal: string, t: TFunction) => {
   const items = cloneDeep(defaultAIFormItemsOfAI(t))
+  if (typeVal === YAK_SCRIPT_PROVIDER) {
+    return items
+      .filter((item) => item.Name !== 'api_type')
+      .map((item) =>
+        item.Name === 'model_type'
+          ? {
+              ...item,
+              Extra: JSON.stringify({
+                options: aiModelTypeOptions(t).filter(({ value }) => value !== AIModelTypeEnum.TierVision),
+              }),
+            }
+          : item.Name === 'model'
+            ? { ...item, Verbose: t('ConfigNetworkPage.scriptConfigName') }
+            : item,
+      )
+  }
   const { isRequired, data } = isShowRequiredApiKey(typeVal)
   if (isRequired) {
     const modelIndex = items.findIndex((item) => item.Name === 'model')
@@ -266,6 +287,7 @@ const optionalAIFormItemsOfAI: (t: TFunction) => ThirdPartyAppConfigItemTemplate
 ]
 
 const buildOptionalAIFormItemsForType = (typeVal: string, enableEndpoint: boolean, t: TFunction) => {
+  if (typeVal === YAK_SCRIPT_PROVIDER) return []
   const newData = cloneDeep(optionalAIFormItemsOfAI(t))
   const { isRequired, data } = isShowRequiredApiKey(typeVal)
   if (!isRequired) {
@@ -349,25 +371,38 @@ const AIThirdPartyConfigReadonlyPanel: React.FC<AIThirdPartyConfigReadonlyPanelP
         String(merged.Type ?? ''),
       )}
       {defaultItems.map((item) => renderFieldByTemplate(item))}
-      <YakitCollapse
-        defaultActiveKey={['1']}
-        bordered={false}
-        className={styles['ai-third-party-application-config-collapse']}
-      >
-        <YakitCollapse.YakitPanel
-          header={
-            <div className={styles['panel-heard']}>
-              <span className={styles['title']}>{t('ConfigNetworkPage.advancedConfigTitle')}</span>
-              <span className={styles['tip']}>{t('ConfigNetworkPage.advancedConfigTip')}</span>
-            </div>
-          }
-          key="1"
-          forceRender={true}
+      {typeVal === YAK_SCRIPT_PROVIDER && (
+        <>
+          <Form.Item label={t('ConfigNetworkPage.nativeToolCalling')}>
+            <YakitSwitch checked={!!merged.enable_native_tool_calling} disabled />
+          </Form.Item>
+          <div className={styles['model-script-readonly']}>
+            <span>{t('ConfigNetworkPage.modelScript')}</span>
+            <YakitInput.TextArea readOnly value={merged.script ?? ''} autoSize={{ minRows: 6, maxRows: 12 }} />
+          </div>
+        </>
+      )}
+      {typeVal !== YAK_SCRIPT_PROVIDER && (
+        <YakitCollapse
+          defaultActiveKey={['1']}
+          bordered={false}
+          className={styles['ai-third-party-application-config-collapse']}
         >
-          {optionalItems.map((item) => renderFieldByTemplate(item))}
-          {renderCopyRow('Headers', 'Header', headersPack.display, headersPack.copy)}
-        </YakitCollapse.YakitPanel>
-      </YakitCollapse>
+          <YakitCollapse.YakitPanel
+            header={
+              <div className={styles['panel-heard']}>
+                <span className={styles['title']}>{t('ConfigNetworkPage.advancedConfigTitle')}</span>
+                <span className={styles['tip']}>{t('ConfigNetworkPage.advancedConfigTip')}</span>
+              </div>
+            }
+            key="1"
+            forceRender={true}
+          >
+            {optionalItems.map((item) => renderFieldByTemplate(item))}
+            {renderCopyRow('Headers', 'Header', headersPack.display, headersPack.copy)}
+          </YakitCollapse.YakitPanel>
+        </YakitCollapse>
+      )}
     </div>
   )
 })
@@ -385,6 +420,8 @@ export interface AIThirdPartyApplicationConfig {
   proxy?: string
   Headers?: KVPair[]
   ExtraParams?: KVPair[]
+  script?: string
+  enable_native_tool_calling?: boolean
   /** 探测到的扩展思考强度（表单内部字段，由 NewAIThirdPartyApplicationConfigBase 自动写入） */
   _ProbedExtendedEfforts?: string[]
   /** 是否已对 xhigh/max 做过探测（表单内部字段） */
@@ -423,6 +460,7 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
     const { t, i18nRefresh } = useI18nNamespaces(['configNetwork'])
     const [form] = Form.useForm()
     const typeVal = Form.useWatch('Type', form)
+    const isScriptProvider = typeVal === YAK_SCRIPT_PROVIDER
     const [options, setOptions] = useState<SelectOptionsProps[]>([])
     const [modelOptionLoading, setModelOptionLoading] = useState<boolean>(false)
     const [modelNameAllOptions, setModelNameAllOptions] = useState<SelectOptionsProps[]>([])
@@ -460,7 +498,7 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
     /**懒探测：首次打开强度下拉框时探测模型是否支持 xhigh/max，model/Type 变化后再次打开会重新探测；失败不置已探测，下次打开可重试 */
     const ensureEffortProbed = useDebounceFn(
       () => {
-        if (readOnly || IsOnline) return
+        if (readOnly || IsOnline || isScriptProvider) return
         if (probedExtendedEfforts !== undefined && !effortProbeDirty) return
         if (effortProbing) return
         const values = form.getFieldsValue()
@@ -523,20 +561,24 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
     }, [])
 
     useUpdateEffect(() => {
-      if (readOnly || IsOnline) return
+      if (readOnly || IsOnline || isScriptProvider) return
       if (apiKeyWatch) {
         execModelNameOption.current = true
         getModelNameOption()
       } else {
         handleDefaultModalNameOption()
       }
-    }, [apiKeyWatch, IsOnline, readOnly])
+    }, [apiKeyWatch, IsOnline, readOnly, isScriptProvider])
 
     const { run: getModelNameOption, cancel: cancelModelNameOption } = useDebounceFn(
       useMemoizedFn(() => {
         if (!execModelNameOption.current) return
         setModelOptionLoading(true)
         const v = form.getFieldsValue()
+        if (v.Type === YAK_SCRIPT_PROVIDER) {
+          setModelOptionLoading(false)
+          return
+        }
         ipcRenderer
           .invoke('ListAiModel', { Config: providerToListAiModelConfig(buildAIConfigHealthCheckConfig(v)) })
           .then((res) => {
@@ -607,7 +649,7 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
       if (readOnly) return
       execModelNameOption.current = false
       cancelModelNameOption()
-      if (typeVal === 'custom') {
+      if (typeVal === 'custom' || isScriptProvider) {
         setActiveKey('1')
       } else {
         setActiveKey(undefined)
@@ -653,6 +695,13 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
           )
         case 'list': {
           if (item.Name === 'model') {
+            if (isScriptProvider) {
+              return (
+                <Form.Item {...formProps} extra={t('ConfigNetworkPage.scriptModelNameHelp')}>
+                  <YakitInput placeholder="script-model" disabled={IsOnline} />
+                </Form.Item>
+              )
+            }
             // 模型名称
             return (
               <Form.Item
@@ -725,7 +774,11 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
     }
 
     const initialValues = useMemo(() => {
-      const copyFormValues = { ...formValues }
+      const copyFormValues = {
+        enable_native_tool_calling: false,
+        ...formValues,
+        script: formValues.script ?? providerExample,
+      }
       const aiFormValues = copyFormValues as typeof copyFormValues & { api_type?: string }
       aiFormValues.api_type = normalizeAIAPIType(aiFormValues.api_type)
 
@@ -772,7 +825,7 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
     if (readOnly) {
       return (
         <div className={styles['config-form-wrapper']}>
-          <AIThirdPartyConfigReadonlyPanel merged={formValues} />
+          <AIThirdPartyConfigReadonlyPanel merged={initialValues} />
           {footer ? <div className={styles['config-footer']}>{footer}</div> : null}
         </div>
       )
@@ -789,12 +842,23 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
           onValuesChange={(changedValues, allValues) => {
             // 当类型改变时，表单项的值采用默认值
             if (changedValues.Type !== undefined) {
-              allAIFormItemsOfAI.forEach((item) => {
+              const nextItems = [
+                ...buildDefaultAIFormItemsForType(changedValues.Type, t),
+                ...buildOptionalAIFormItemsForType(changedValues.Type, false, t),
+              ]
+              nextItems.forEach((item) => {
                 form.setFieldsValue({
                   [item.Name]: ['string', 'list'].includes(item.Type)
                     ? item.DefaultValue
                     : item.DefaultValue === 'true',
                 })
+              })
+              resetModelConfigSettings()
+              form.setFieldsValue({
+                api_key_id: undefined,
+                ExtraParams: [],
+                script: providerExample,
+                enable_native_tool_calling: false,
               })
             }
           }}
@@ -845,109 +909,115 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
             )}
           </Form.Item>
           {renderAllFormItems()}
-          <YakitCollapse
-            activeKey={activeKey}
-            onChange={onChangeCollapse}
-            bordered={false}
-            className={styles['ai-third-party-application-config-collapse']}
-          >
-            <YakitCollapse.YakitPanel
-              header={
-                <div className={styles['panel-heard']}>
-                  <span className={styles['title']}>{t('ConfigNetworkPage.advancedConfigTitle')}</span>
-                  <span className={styles['tip']}>{t('ConfigNetworkPage.advancedConfigTip')}</span>
-                </div>
-              }
-              key="1"
-              forceRender={true}
+          <Form.Item name="ExtraParams" noStyle>
+            <HiddenFormField />
+          </Form.Item>
+          {isScriptProvider && <YakScriptModelFields disabled={IsOnline} />}
+          {!isScriptProvider && (
+            <YakitCollapse
+              activeKey={activeKey}
+              onChange={onChangeCollapse}
+              bordered={false}
+              className={styles['ai-third-party-application-config-collapse']}
             >
-              {/* 可选的表单项 */}
-              {renderOptionalFormItems()}
-              <Form.Item label={'Header'} name="Headers">
-                {(headers || []).map((i, index) => {
-                  return (
-                    <YakitTag
-                      key={index}
-                      onClick={() => {
-                        if (IsOnline) return
-                        headerItemRef.current = {
-                          Header: i.Key,
-                          Value: i.Value,
-                        }
-                        headerItemIndexRef.current = index
-                        setVisibleHTTPHeader(true)
-                      }}
-                      closable={!IsOnline}
-                      onClose={() => {
-                        onRemoveHeaders(index)
-                      }}
-                    >
-                      {i.Key}
-                    </YakitTag>
-                  )
-                })}
-                <YakitButton
-                  type={'outline1'}
-                  disabled={IsOnline}
-                  onClick={() => {
-                    headerItemRef.current = undefined
-                    headerItemIndexRef.current = undefined
-                    setVisibleHTTPHeader(true)
-                  }}
-                >
-                  {t('ConfigNetworkPage.addHeaderBtn')}
-                </YakitButton>
-              </Form.Item>
-            </YakitCollapse.YakitPanel>
-            <YakitCollapse.YakitPanel
-              header={
-                <div className={styles['panel-heard']}>
-                  <span className={styles['title']}>{t('ConfigNetworkPage.modelConfigTitle')}</span>
-                  <span className={styles['tip']}>{t('ConfigNetworkPage.modelConfigTip')}</span>
-                </div>
-              }
-              key="2"
-              forceRender={true}
-            >
-              {/* #region 思考 */}
-              <Form.Item
-                label="Reasoning Effort"
-                name="ReasoningEffort"
-                help={t('ConfigNetworkPage.reasoningEffortHelp')}
+              <YakitCollapse.YakitPanel
+                header={
+                  <div className={styles['panel-heard']}>
+                    <span className={styles['title']}>{t('ConfigNetworkPage.advancedConfigTitle')}</span>
+                    <span className={styles['tip']}>{t('ConfigNetworkPage.advancedConfigTip')}</span>
+                  </div>
+                }
+                key="1"
+                forceRender={true}
               >
-                <ReasoningEffortSelect
-                  options={reasoningEffortOptions}
-                  loading={effortProbing}
-                  onDropdownVisibleChange={(open) => {
-                    if (open) ensureEffortProbed()
-                  }}
-                />
-              </Form.Item>
-              {/* 隐藏字段：注册探测缓存，使 validateFields 能取到这两个值 */}
-              <Form.Item name="_ProbedExtendedEfforts" noStyle>
-                <HiddenFormField />
-              </Form.Item>
-              <Form.Item name="_EffortProbed" noStyle>
-                <HiddenFormField />
-              </Form.Item>
-              {/* #endregion */}
-              <Form.Item label="Max Tokens" name="MaxTokens">
-                <YakitInputNumber min={1} max={163840} />
-              </Form.Item>
-              <Form.Item label="Temperature" name="Temperature">
-                <YakitInputNumber min={0} max={2} step={0.1} />
-              </Form.Item>
-              <Form.Item label="Top-P" name="TopP">
-                <YakitInputNumber min={0} max={1} step={0.1} />
-              </Form.Item>
-              <Form.Item label="Top-K" name="TopK">
-                <YakitInputNumber min={0} max={100} />
-              </Form.Item>
-              <Form.Item label="Frequency Penalty" name="FrequencyPenalty">
-                <YakitInputNumber min={0} max={2} step={0.1} />
-              </Form.Item>
-            </YakitCollapse.YakitPanel>
-          </YakitCollapse>
+                {/* 可选的表单项 */}
+                {renderOptionalFormItems()}
+                <Form.Item label={'Header'} name="Headers">
+                  {(headers || []).map((i, index) => {
+                    return (
+                      <YakitTag
+                        key={index}
+                        onClick={() => {
+                          if (IsOnline) return
+                          headerItemRef.current = {
+                            Header: i.Key,
+                            Value: i.Value,
+                          }
+                          headerItemIndexRef.current = index
+                          setVisibleHTTPHeader(true)
+                        }}
+                        closable={!IsOnline}
+                        onClose={() => {
+                          onRemoveHeaders(index)
+                        }}
+                      >
+                        {i.Key}
+                      </YakitTag>
+                    )
+                  })}
+                  <YakitButton
+                    type={'outline1'}
+                    disabled={IsOnline}
+                    onClick={() => {
+                      headerItemRef.current = undefined
+                      headerItemIndexRef.current = undefined
+                      setVisibleHTTPHeader(true)
+                    }}
+                  >
+                    {t('ConfigNetworkPage.addHeaderBtn')}
+                  </YakitButton>
+                </Form.Item>
+              </YakitCollapse.YakitPanel>
+              <YakitCollapse.YakitPanel
+                header={
+                  <div className={styles['panel-heard']}>
+                    <span className={styles['title']}>{t('ConfigNetworkPage.modelConfigTitle')}</span>
+                    <span className={styles['tip']}>{t('ConfigNetworkPage.modelConfigTip')}</span>
+                  </div>
+                }
+                key="2"
+                forceRender={true}
+              >
+                {/* #region 思考 */}
+                <Form.Item
+                  label="Reasoning Effort"
+                  name="ReasoningEffort"
+                  help={t('ConfigNetworkPage.reasoningEffortHelp')}
+                >
+                  <ReasoningEffortSelect
+                    options={reasoningEffortOptions}
+                    loading={effortProbing}
+                    onDropdownVisibleChange={(open) => {
+                      if (open) ensureEffortProbed()
+                    }}
+                  />
+                </Form.Item>
+                {/* 隐藏字段：注册探测缓存，使 validateFields 能取到这两个值 */}
+                <Form.Item name="_ProbedExtendedEfforts" noStyle>
+                  <HiddenFormField />
+                </Form.Item>
+                <Form.Item name="_EffortProbed" noStyle>
+                  <HiddenFormField />
+                </Form.Item>
+                {/* #endregion */}
+                <Form.Item label="Max Tokens" name="MaxTokens">
+                  <YakitInputNumber min={1} max={163840} />
+                </Form.Item>
+                <Form.Item label="Temperature" name="Temperature">
+                  <YakitInputNumber min={0} max={2} step={0.1} />
+                </Form.Item>
+                <Form.Item label="Top-P" name="TopP">
+                  <YakitInputNumber min={0} max={1} step={0.1} />
+                </Form.Item>
+                <Form.Item label="Top-K" name="TopK">
+                  <YakitInputNumber min={0} max={100} />
+                </Form.Item>
+                <Form.Item label="Frequency Penalty" name="FrequencyPenalty">
+                  <YakitInputNumber min={0} max={2} step={0.1} />
+                </Form.Item>
+              </YakitCollapse.YakitPanel>
+            </YakitCollapse>
+          )}
         </Form>
         <div className={styles['config-footer']}>{footer}</div>
         <InputHTTPHeaderForm

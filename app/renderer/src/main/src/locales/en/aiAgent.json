@@ -964,7 +964,13 @@
     "aiCallTokenLimit": "Pressure token threshold",
     "aiCallTokenLimitDesc": "Warn when AI dialogue tokens exceed this limit",
     "userInteractLimit": "User interaction limit",
-    "userInteractLimitDesc": "Maximum user interactions; beyond this, AI may no longer ask the user"
+    "userInteractLimitDesc": "Maximum user interactions; beyond this, AI may no longer ask the user",
+    "modelRPM": "Model requests per minute",
+    "modelRPMDesc": "All models and retries on this engine share a rolling 60-second start limit. Responses do not refund permits. 0 disables proactive limiting. Queueing excludes attempt timeouts; 429 still respects Retry-After.",
+    "retryForever": "Unlimited retry",
+    "retryForeverDesc": "Wait and retry model failures or invalid action output until recovery or cancellation. Buffers each response before delivery so partial output cannot reach the Agent.",
+    "networkDebug": "Network request Debug",
+    "networkDebugDesc": "Writes model HTTP requests, responses and timing to aispace files only, never the traffic database. Session exports include captures. Contains credentials and business data; disable after diagnosis."
   },
   "AIChatWorkspace": {
     "close": "Close",

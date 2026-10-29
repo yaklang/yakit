@@ -1,5 +1,10 @@
 {
   "ConfigNetworkPage": {
+    "modelScript": "Yak 模型脚本",
+    "modelScriptRequired": "请填写 Yak 模型脚本",
+    "modelScriptHelp": "在脚本中设置地址、凭据、模型 ID、代理和超时；定义 chat(req, emit) 返回正文或用 emit 输出。仅运行可信脚本。",
+    "scriptConfigName": "配置名称",
+    "scriptModelNameHelp": "仅用于列表显示和选择；上游模型 ID 在脚本中设置。",
     "certificateName": "证书{{index}}",
     "onlySupportPkcs12": "仅支持格式为：application/x-pkcs12",
     "fetchCertificateContentFailed": "无法获取该文件内容，请检查后后重试！{{error}}",
@@ -159,6 +164,8 @@
     "highQualityModel": "主模型:用于主线任务",
     "lightweightModel": "辅助模型:用于辅助任务",
     "visionModel": "视觉模式:用于识别图片等,生成知识库和任务执行都会用到",
-    "userInfo": "用户信息"
+    "userInfo": "用户信息",
+    "nativeToolCalling": "原生工具调用",
+    "nativeToolCallingHelp": "默认关闭，使用文本 @action。开启后，脚本通过 req.Tools / req.ToolChoice 接收工具定义，并返回包含 content、tool_calls、finish_reason 的对象；需上游接口支持。"
   }
 }

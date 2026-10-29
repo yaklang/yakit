@@ -159,6 +159,49 @@ const expectModelRequest = (Type: string) =>
   })
 
 describe('AIModelSelect', () => {
+  it.each(['memfit', 'yakitEE'])('%s 的脚本模型使用已配置名称，不触发模型发现', async (edition) => {
+    vi.stubEnv('YAKIT_EDITION', edition)
+    config = {
+      ...config,
+      IntelligentModels: [createModel('script-model', 'yak-script')],
+    }
+    useAIGlobalConfigStore.getState().setAIGlobalConfig(config)
+    const dropdown = await openModels()
+    expect(within(dropdown).getByText('script-model')).toBeVisible()
+    if (edition === 'yakitEE') {
+      fireEvent.mouseEnter(within(dropdown).getByRole('button', { name: 'YakitButton.edit' }))
+      await waitFor(() => expect(screen.getAllByText('script-model')).toHaveLength(3))
+    }
+    expect(screen.getByRole('button', { name: 'YakitButton.refresh' })).toBeDisabled()
+    expect(mocks.names).not.toHaveBeenCalled()
+  })
+
+  it('脚本 Provider 更新后关闭旧编辑浮层，再次打开仍使用配置名称', async () => {
+    vi.stubEnv('YAKIT_EDITION', 'yakitEE')
+    config = { ...config, IntelligentModels: [createModel('script-model', 'yak-script')] }
+    useAIGlobalConfigStore.getState().setAIGlobalConfig(config)
+    const dropdown = await openModels()
+    const editButton = within(dropdown).getByRole('button', { name: 'YakitButton.edit' })
+    fireEvent.mouseEnter(editButton)
+    expect(await screen.findByRole('button', { name: 'YakitButton.refresh' })).toBeDisabled()
+
+    const model = config.IntelligentModels[0]
+    act(() =>
+      useAIGlobalConfigStore.getState().setAIGlobalConfig({
+        ...config,
+        IntelligentModels: [
+          { ...model, Provider: { ...model.Provider, ExtraParams: [{ Key: 'script', Value: 'updated-script' }] } },
+        ],
+      }),
+    )
+    expect(screen.queryByRole('button', { name: 'YakitButton.refresh' })).not.toBeInTheDocument()
+    fireEvent.mouseEnter(editButton)
+    expect(await screen.findByRole('button', { name: 'YakitButton.refresh' })).toBeDisabled()
+    expect(screen.getAllByText('script-model')).toHaveLength(3)
+    expect(mocks.names).not.toHaveBeenCalled()
+    expect(mocks.save).not.toHaveBeenCalled()
+  })
+
   it.each(['yakitEE', 'yakitSE', 'irifyEE'])('%s 使用企业旧版模型列表并保存首选顺序', async (edition) => {
     vi.stubEnv('YAKIT_EDITION', edition)
     const dropdown = await openModels()

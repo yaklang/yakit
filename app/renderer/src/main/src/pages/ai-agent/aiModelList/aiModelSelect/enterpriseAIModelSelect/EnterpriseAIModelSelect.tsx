@@ -23,7 +23,7 @@ import {
   sortMemfitNameFirst,
 } from '../../utils'
 import { normalizeReasoningEffort } from '../../aiModelForm/reasoningEffort'
-import { providerToListAiModelConfig } from '../../aiModelForm/providerConfig'
+import { providerToListAiModelConfig, YAK_SCRIPT_PROVIDER } from '../../aiModelForm/providerConfig'
 import styles from './EnterpriseAIModelSelect.module.scss'
 import classNames from 'classnames'
 import { AIModelTypeEnum, AIModelTypeInterFileNameEnum, AIOnlineModelIconMap } from '../../../defaultConstant'
@@ -581,6 +581,7 @@ const AIModelSelectList: React.FC<AIModelSelectListProps> = React.memo((props) =
       item.ProviderId !== currentItem.ProviderId ||
       item.ModelName !== currentItem.ModelName ||
       !!item.IsOnline !== !!currentItem.IsOnline ||
+      (item.Provider.Type === YAK_SCRIPT_PROVIDER && !isEqual(item.Provider, currentItem.Provider)) ||
       providerToListAiModelConfig(item.Provider) !== providerToListAiModelConfig(currentItem.Provider)
     ) {
       resetEditContent()
@@ -713,7 +714,7 @@ const AIModelSelectList: React.FC<AIModelSelectListProps> = React.memo((props) =
               modelNameData={
                 modelNameListMap.get(providerToListAiModelConfig(currentItem.Provider) || '') || {
                   loading: false,
-                  list: [],
+                  list: currentItem.Provider.Type === YAK_SCRIPT_PROVIDER ? [currentItem.ModelName] : [],
                 }
               }
               item={currentItem}
@@ -778,6 +779,7 @@ const AIModelEditContent: React.FC<AIModelEditContentProps> = React.memo((props)
                 type="text2"
                 size="small"
                 aria-label={t('YakitButton.refresh')}
+                disabled={item.Provider.Type === YAK_SCRIPT_PROVIDER}
                 icon={<RefreshOutlined color="currentColor" />}
                 onClick={onRefresh}
               />

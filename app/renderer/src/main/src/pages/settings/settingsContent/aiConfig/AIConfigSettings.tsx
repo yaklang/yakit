@@ -18,6 +18,7 @@ import {
   serializeAIAgentChatSetting,
 } from '@/pages/ai-agent/utils/aiAgentChatSettingCache'
 import emiter from '@/utils/eventBus/eventBus'
+import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import classNames from 'classnames'
 import { SettingsSections } from '../../constants'
@@ -83,6 +84,30 @@ const digitsOnly = (raw: string) => {
 export const AIConfigSettings: React.FC = () => {
   const { t } = useI18nNamespaces(['setting', 'aiAgent', 'yakitUi'])
   const welcomeAnimationDisabled = useWelcomeAnimationDisabled()
+  const [globalState, globalEvents] = useAIGlobalConfig()
+  const globalConfig = globalState.aiGlobalConfig
+  // store 初始值也是完整对象，必须等当前 hook 成功读到配置后才能写入。
+  const globalWriteDisabled =
+    !globalState.aiGlobalConfigRef.current || globalState.queryLoading || globalState.updateLoading
+  const [modelRPM, setModelRPM] = useState<number | null>(0)
+  useEffect(
+    () => setModelRPM(Number(globalConfig?.ModelRequestsPerMinute || 0)),
+    [globalConfig?.ModelRequestsPerMinute],
+  )
+  const saveGlobal = (patch: Parameters<typeof globalEvents.setAIGlobalConfig>[0]) => {
+    if (!readyRef.current || globalWriteDisabled) return
+    void globalEvents.setAIGlobalConfig(patch).catch(() => undefined)
+  }
+  const resetGlobal = () => saveGlobal({ ModelRequestsPerMinute: 0, RetryForever: false, NetworkDebug: false })
+  const saveRPM = () => {
+    if (modelRPM === null) {
+      setModelRPM(Number(globalConfig?.ModelRequestsPerMinute || 0))
+      return
+    }
+    const next = Math.max(0, Math.min(60000, Math.trunc(modelRPM)))
+    setModelRPM(next)
+    if (next !== Number(globalConfig?.ModelRequestsPerMinute || 0)) saveGlobal({ ModelRequestsPerMinute: next })
+  }
   const [setting, setSetting] = useState<AIAgentSetting>(() => cloneDeep(AIAgentSettingDefault))
   const [ready, setReady] = useState(false)
   const lastPayloadRef = useRef(serializeAIAgentChatSetting(AIAgentSettingDefault))
@@ -152,7 +177,12 @@ export const AIConfigSettings: React.FC = () => {
           type="outline1"
           colors="danger"
           icon={<RotateCcwOutlined color="currentColor" />}
-          onClick={() => applyAll(cloneDeep(AIAgentSettingDefault))}
+          disabled={!ready || globalWriteDisabled}
+          onClick={() => {
+            if (!readyRef.current || globalWriteDisabled) return
+            applyAll(cloneDeep(AIAgentSettingDefault))
+            resetGlobal()
+          }}
         >
           {t('YakitButton.reset')}
         </YakitButton>
@@ -290,7 +320,12 @@ export const AIConfigSettings: React.FC = () => {
           <YakitButton
             type="text2"
             icon={<RefreshOutlined color="currentColor" />}
-            onClick={() => apply(automationReset)}
+            disabled={!ready || globalWriteDisabled}
+            onClick={() => {
+              if (!readyRef.current || globalWriteDisabled) return
+              apply(automationReset)
+              resetGlobal()
+            }}
           />
         </div>
         <div className={styles['list-panel']}>
@@ -320,6 +355,35 @@ export const AIConfigSettings: React.FC = () => {
               size="middle"
               checked={!!setting.DisableMemoryTriage}
               onChange={(v) => apply({ DisableMemoryTriage: v })}
+            />
+          </SettingRow>
+          <SettingRow title={t('AIChatSetting.modelRPM')} desc={t('AIChatSetting.modelRPMDesc')}>
+            <YakitInputNumber
+              aria-label={t('AIChatSetting.modelRPM')}
+              min={0}
+              max={60000}
+              precision={0}
+              value={modelRPM}
+              disabled={!ready || globalWriteDisabled}
+              onChange={(v) => setModelRPM(v === null ? null : Number(v))}
+              onBlur={saveRPM}
+              onPressEnter={saveRPM}
+            />
+          </SettingRow>
+          <SettingRow title={t('AIChatSetting.retryForever')} desc={t('AIChatSetting.retryForeverDesc')}>
+            <YakitSwitch
+              aria-label={t('AIChatSetting.retryForever')}
+              checked={!!globalConfig?.RetryForever}
+              disabled={!ready || globalWriteDisabled}
+              onChange={(v) => saveGlobal({ RetryForever: v })}
+            />
+          </SettingRow>
+          <SettingRow title={t('AIChatSetting.networkDebug')} desc={t('AIChatSetting.networkDebugDesc')}>
+            <YakitSwitch
+              aria-label={t('AIChatSetting.networkDebug')}
+              checked={!!globalConfig?.NetworkDebug}
+              disabled={!ready || globalWriteDisabled}
+              onChange={(v) => saveGlobal({ NetworkDebug: v })}
             />
           </SettingRow>
           <SettingRow title={t('AIChatSetting.aiCallAutoRetry')} desc={t('AIChatSetting.aiCallAutoRetryDesc')}>

@@ -71,4 +71,13 @@ describe('providerToListAiModelConfig', () => {
   it('does not create a request configuration when the provider is missing', () => {
     expect(providerToListAiModelConfig()).toBeUndefined()
   })
+
+  it('does not create a discovery request for script providers', () => {
+    expect(
+      providerToListAiModelConfig({
+        Type: 'yak-script',
+        Script: 'chat = func(req, emit) { return "ok" }',
+      }),
+    ).toBeUndefined()
+  })
 })

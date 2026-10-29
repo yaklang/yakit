@@ -286,6 +286,8 @@ const AIOnlineModelListItem: React.FC<AIOnlineModelListItemProps> = React.memo((
     setTestLoading(true)
     const value = {
       Type: item.Provider.Type,
+      script: item.Provider.Script,
+      enable_native_tool_calling: item.Provider.EnableNativeToolCalling,
       api_key: item.Provider.APIKey,
       domain: item.Provider.Domain,
       proxy: item.Provider.Proxy,

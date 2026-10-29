@@ -115,6 +115,9 @@ export interface ThirdPartyApplicationConfig {
     | 'tencent'
     | 'quake'
     | string
+  /** Complete implementation for yak-script providers. */
+  Script?: string
+  EnableNativeToolCalling?: boolean
   APIKey?: string
   UserIdentifier?: string
   UserSecret?: string
