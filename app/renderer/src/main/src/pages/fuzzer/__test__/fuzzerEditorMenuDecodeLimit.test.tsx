@@ -1,7 +1,11 @@
 import { act, cleanup, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import type { DraggingStyle } from '@hello-pangea/dnd'
+import type { AutoDecodeResult } from '@/utils/encodec'
 
-const invoke = vi.fn(() => Promise.resolve({ Results: [] }))
+type AutoDecodeIpcResponse = { Results: AutoDecodeResult[] }
+
+const invoke = vi.fn<(...args: unknown[]) => Promise<AutoDecodeIpcResponse>>(() => Promise.resolve({ Results: [] }))
 
 vi.mock('@/utils/monacoSpec/yakEditor', () => ({}))
 vi.mock('lottie-web', () => ({ default: { loadAnimation: vi.fn(), destroy: vi.fn() } }))
@@ -43,6 +47,14 @@ vi.mock('@/utils/clipboard', () => ({ setClipboardText: vi.fn() }))
 
 import { AUTO_DECODE_MAX_CHARS, DecodeComponent, getInsertTagDragPosition } from '../fuzzerEditorMenuItems'
 
+const decodeResult = (resultText: string): AutoDecodeResult => ({
+  Type: 'Base64',
+  TypeVerbose: 'Base64',
+  Origin: new Uint8Array(),
+  Result: new TextEncoder().encode(resultText),
+  Modify: true,
+})
+
 describe('getInsertTagDragPosition', () => {
   it('非拖拽时 top/left 为 none', () => {
     expect(getInsertTagDragPosition(false, { top: 100, left: 200 })).toEqual({
@@ -59,7 +71,10 @@ describe('getInsertTagDragPosition', () => {
   })
 
   it('缺少 top/left 时回落 none', () => {
-    expect(getInsertTagDragPosition(true, {})).toEqual({ top: 'none', left: 'none' })
+    expect(getInsertTagDragPosition(true, {} as Pick<DraggingStyle, 'top' | 'left'>)).toEqual({
+      top: 'none',
+      left: 'none',
+    })
     expect(getInsertTagDragPosition(true, null)).toEqual({ top: 'none', left: 'none' })
   })
 })
@@ -87,7 +102,7 @@ describe('DecodeComponent oversize + replace chain', () => {
 
   it('边界恰好等于上限仍解码', async () => {
     invoke.mockResolvedValue({
-      Results: [{ Type: 'Base64', TypeVerbose: 'Base64', Result: new TextEncoder().encode('AAA') }],
+      Results: [decodeResult('AAA')],
     })
     const exact = 'Q'.repeat(AUTO_DECODE_MAX_CHARS)
     render(<DecodeComponent rangeValue={exact} replace={vi.fn()} />)
@@ -99,14 +114,7 @@ describe('DecodeComponent oversize + replace chain', () => {
   it('未超限解码成功时可替换整段结果', async () => {
     const replace = vi.fn()
     invoke.mockResolvedValue({
-      Results: [
-        {
-          Type: 'Base64',
-          TypeVerbose: 'Base64',
-          // Buffer.from(item.Result).toString('utf8') in DecodeCopyReplace
-          Result: new TextEncoder().encode('hello-decoded'),
-        },
-      ],
+      Results: [decodeResult('hello-decoded')],
     })
     render(<DecodeComponent rangeValue="aGVsbG8=" replace={replace} />)
     await waitFor(() => expect(screen.getByTestId('decode-replace')).toBeTruthy())
