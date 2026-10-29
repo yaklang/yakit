@@ -280,7 +280,7 @@ describe('useMenuBarLayout fold (light)', () => {
     })
   })
 
-  it('收起后宿主变宽且连续两次 fits 时恢复文案', async () => {
+  it('收起后宿主一次变宽经 rAF 复检即可恢复文案（无需手动二次 RO）', async () => {
     const narrow = { left: 0, top: 0, right: 100, bottom: 400 }
     const wide = { left: 0, top: 0, right: 800, bottom: 400 }
     const barBox = { left: 10, top: 40, right: 190, bottom: 70 }
@@ -298,13 +298,16 @@ describe('useMenuBarLayout fold (light)', () => {
     expect(resizeInstances.length).toBeGreaterThanOrEqual(1)
     const ro = resizeInstances[0]
 
+    // 仅一次 RO；首次 fits 会排 rAF 复检，无需再手动触发 RO
     act(() => {
       ro.callback([] as unknown as ResizeObserverEntry[], ro as unknown as ResizeObserver)
     })
     expect(result.current).toBe(false)
 
-    act(() => {
-      ro.callback([] as unknown as ResizeObserverEntry[], ro as unknown as ResizeObserver)
+    await act(async () => {
+      await new Promise<void>((resolve) => {
+        requestAnimationFrame(() => resolve())
+      })
     })
     await waitFor(() => expect(result.current).toBe(true))
   })

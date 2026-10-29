@@ -535,10 +535,22 @@ export const useMenuBarLayout = (
   const signatureRef = useRef('')
   /** 连续两次判定可展开才恢复文案，压住 ResizeObserver 抖动 */
   const expandStableRef = useRef(0)
+  /** 首次 fits 后排一次 rAF 复检；无后续 RO 时也能恢复文案 */
+  const expandRecheckRafRef = useRef(0)
+
+  const clearExpandRecheck = useMemoizedFn(() => {
+    if (expandRecheckRafRef.current) {
+      cancelAnimationFrame(expandRecheckRafRef.current)
+      expandRecheckRafRef.current = 0
+    }
+  })
 
   const fitBarInEditor = useMemoizedFn(() => {
     const bar = barRef.current
-    if (!bar || !active) return
+    if (!bar || !active) {
+      clearExpandRecheck()
+      return
+    }
     const host = readEditorHostBox(bar)
     // 先按当前宽度贴边，再判断是否被剪切（否则用旧 margin 会误判）
     const margin = Math.round(desiredEditorBarMargin(bar, direction))
@@ -552,6 +564,7 @@ export const useMenuBarLayout = (
       signatureRef.current = signature
       labeledWidthRef.current = 0
       expandStableRef.current = 0
+      clearExpandRecheck()
     }
     const rect = bar.getBoundingClientRect()
     const caretX = rect.left - currentBarMargin(bar)
@@ -559,6 +572,7 @@ export const useMenuBarLayout = (
     // 文案显隐：有文案宽度经 placeHorizontal 横移后能否落入宿主；放不下再收成图标
 
     if (labeledWidthRef.current === 0 && !showLabel) {
+      clearExpandRecheck()
       setShowLabel(true)
       return
     }
@@ -568,17 +582,29 @@ export const useMenuBarLayout = (
       // 整编辑器内横移后仍放不下有文案宽度 → 只留图标
       if (!fits) setShowLabel(false)
       expandStableRef.current = 0
+      clearExpandRecheck()
       return
     }
     // 图标模式：以 caret 为锚、用有文案宽度试摆；连续两次 fits 再恢复文案
+    // 首次 fits 排 rAF 复检，避免仅一次 RO、无后续回调时文案一直隐藏
     // 签名仅跟踪 ids/lang；图标模式下标签文案漂移不触发重测，属可接受残差
     const labeledW = labeledWidthRef.current
     const fits = menuBarLabeledFitsInHost(labeledW, caretX, host, preferLeft, rect.top, rect.bottom)
     if (fits) {
       expandStableRef.current += 1
-      if (expandStableRef.current >= 2) setShowLabel(true)
+      if (expandStableRef.current >= 2) {
+        clearExpandRecheck()
+        setShowLabel(true)
+      } else {
+        clearExpandRecheck()
+        expandRecheckRafRef.current = requestAnimationFrame(() => {
+          expandRecheckRafRef.current = 0
+          fitBarInEditor()
+        })
+      }
     } else {
       expandStableRef.current = 0
+      clearExpandRecheck()
     }
   })
 
@@ -593,6 +619,7 @@ export const useMenuBarLayout = (
     if (scrollable) resize.observe(scrollable)
     const stopWatch = watchStyleUntilOverflowGuard(bar.parentElement, fitBarInEditor)
     return () => {
+      clearExpandRecheck()
       resize.disconnect()
       stopWatch()
     }

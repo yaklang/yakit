@@ -216,6 +216,9 @@
   }
   .menu-content {
     position: relative;
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
     background-color: var(--Colors-Use-Basic-Background);
     .ai-plugin-box {
       .ai-plugin-item {
