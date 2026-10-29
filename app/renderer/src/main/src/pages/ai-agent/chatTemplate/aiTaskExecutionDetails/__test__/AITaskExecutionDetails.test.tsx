@@ -603,6 +603,11 @@ describe('AITaskExecutionDetails 任务统计视图切换', () => {
     fireEvent.drop(to, { dataTransfer })
     fireEvent.dragEnd(from, { dataTransfer })
 
+    // dragEnd 后浏览器可能再发 click；skipClickRef 在 setTimeout(0) 前应挡住误触筛选
+    fireEvent.click(getStatItem('AITaskExecutionDetails.statusPending'))
+    expect(screen.getByText('排队任务')).toBeInTheDocument()
+    expect(getStatItem('AITaskExecutionDetails.statusPending')).not.toHaveClass('stat-item-hidden')
+
     expect(getStatLabels()).toEqual([
       'AITaskExecutionDetails.statusCreated',
       'AITaskExecutionDetails.statusPending',
