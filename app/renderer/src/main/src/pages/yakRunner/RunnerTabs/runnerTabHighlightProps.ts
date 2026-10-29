@@ -3,7 +3,7 @@ import type { Selection } from './RunnerTabsType'
 /** RunnerTabPane → YakitEditor：搜索高亮装饰 + 滚到首个命中 */
 export const getRunnerEditorHighlightProps = (highLightRange?: Selection | Selection[]) => {
   const highLightFind = !highLightRange ? [] : Array.isArray(highLightRange) ? highLightRange : [highLightRange]
-  // 无高亮与搜索多命中用同一类。装饰 effect 只记住挂载时的类名，普通打开后再搜索不能改类。
+  // 无高亮与搜索多命中用搜索类；单个范围是代码引用样式。编辑器重画时会改用当前类名。
   const highLightFindClass =
     highLightRange != null && !Array.isArray(highLightRange)
       ? 'hight-light-yak-runner-color'
