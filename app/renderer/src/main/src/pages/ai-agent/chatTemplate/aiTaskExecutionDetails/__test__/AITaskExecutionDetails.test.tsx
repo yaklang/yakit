@@ -11,6 +11,7 @@ import type { AIAgentGrpcApi } from '@/pages/ai-re-act/hooks/grpcApi'
 import { AIInputEventSyncTypeEnum } from '@/pages/ai-re-act/hooks/grpcApi'
 import { DefaultPlanItemDetailsData } from '@/pages/ai-re-act/hooks/defaultConstant'
 import { AITaskExecutionDetails } from '../AITaskExecutionDetails'
+import { reorderFilterKeys, sortTodoItemsByStatusOrder, TODO_STATUS_FILTER_KEYS } from '../type'
 
 const taskDetailsMap = new Map<string, PlanItemDetailsData>()
 const todoDetail = vi.fn(({ todoData }: { todoData: TodoListCardData }) => (
@@ -135,6 +136,9 @@ vi.mock('../aiTaskBoard/AITaskBoard.module.scss', () => ({
   default: new Proxy({}, { get: (_, key) => (key === '__esModule' ? false : key) }),
 }))
 vi.mock('../aiTaskSkillList/AITaskSkillList.module.scss', () => ({
+  default: new Proxy({}, { get: (_, key) => (key === '__esModule' ? false : key) }),
+}))
+vi.mock('../aiTaskStatisticsStatus/AITaskStatisticsStatus.module.scss', () => ({
   default: new Proxy({}, { get: (_, key) => (key === '__esModule' ? false : key) }),
 }))
 
@@ -543,6 +547,73 @@ describe('AITaskExecutionDetails 任务统计视图切换', () => {
     expect(screen.getByText('AITaskExecutionDetails.columnSkippedOrDeleted')).toBeInTheDocument()
   })
 
+  it('拖拽状态统计项后，甘特图按从左到右的状态顺序排列', () => {
+    createTaskWithStatuses('task-stat-drag')
+    render(<AITaskExecutionDetails taskId="task-stat-drag" />)
+    if (!document.querySelector('.ai-task-gantt')) {
+      fireEvent.click(screen.getByText('AITaskExecutionDetails.progress'))
+    }
+
+    const getGanttNames = () =>
+      Array.from(document.querySelectorAll('.ai-task-gantt .bar-label-name')).map((el) => el.textContent)
+    const getStatLabels = () =>
+      Array.from(document.querySelectorAll('.stats-overview .stat-label')).map((el) => el.textContent)
+
+    expect(getGanttNames()[0]).toBe('执行任务')
+    expect(getStatLabels()).toEqual([
+      'AITaskExecutionDetails.statusCreated',
+      'AITaskExecutionDetails.statusDoing',
+      'AITaskExecutionDetails.statusPending',
+      'AITaskExecutionDetails.statusDone',
+      'AITaskExecutionDetails.statusSkipped',
+      'AITaskExecutionDetails.statusDeleted',
+    ])
+
+    const store: Record<string, string> = {}
+    const dataTransfer = {
+      dropEffect: 'move',
+      effectAllowed: 'move',
+      files: [] as File[],
+      items: [] as unknown[],
+      types: [] as string[],
+      setData(type: string, val: string) {
+        store[type] = val
+        if (!this.types.includes(type)) this.types.push(type)
+      },
+      getData(type: string) {
+        return store[type] || ''
+      },
+      clearData() {
+        Object.keys(store).forEach((key) => delete store[key])
+      },
+      setDragImage() {},
+    }
+    const getStatItem = (title: string) =>
+      screen.getAllByText(title).find((node) => node.closest('.stat-item'))!.closest('.stat-item') as HTMLElement
+    const from = getStatItem('AITaskExecutionDetails.statusPending')
+    const to = getStatItem('AITaskExecutionDetails.statusDoing')
+
+    fireEvent.dragStart(from, { dataTransfer })
+    fireEvent.dragEnter(to, { dataTransfer })
+    fireEvent.drop(to, { dataTransfer })
+    fireEvent.dragEnd(from, { dataTransfer })
+
+    expect(getStatLabels()).toEqual([
+      'AITaskExecutionDetails.statusCreated',
+      'AITaskExecutionDetails.statusPending',
+      'AITaskExecutionDetails.statusDoing',
+      'AITaskExecutionDetails.statusDone',
+      'AITaskExecutionDetails.statusSkipped',
+      'AITaskExecutionDetails.statusDeleted',
+    ])
+    expect(getGanttNames().slice(0, 2)).toEqual(['排队任务', '执行任务'])
+    const legendLabels = Array.from(document.querySelectorAll('.gantt-legend .legend-item span:last-child')).map(
+      (el) => el.textContent,
+    )
+    expect(legendLabels[0]).toBe('AITaskExecutionDetails.statusPending')
+    expect(legendLabels[1]).toBe('AITaskExecutionDetails.statusDoing')
+  })
+
   it('无待办时两种视图均不渲染', () => {
     const data = cloneDeep(DefaultPlanItemDetailsData)
     data.taskId = 'task-empty'
@@ -690,5 +761,28 @@ describe('AITaskExecutionDetails 任务下拉切换', () => {
     rerender(<AITaskExecutionDetails taskId="task-b" taskName="本机 hostscan" />)
     expect(screen.getByLabelText('AITaskExecutionDetails.selectTask')).toHaveTextContent('123')
     expect(screen.getByText('任务 B 感知')).toBeInTheDocument()
+  })
+})
+
+describe('状态统计拖拽排序工具', () => {
+  it('reorderFilterKeys 把 from 插到 to 的位置', () => {
+    expect(reorderFilterKeys(TODO_STATUS_FILTER_KEYS, 'pending', 'doing')).toEqual([
+      'pending',
+      'doing',
+      'done',
+      'skipped',
+      'deleted',
+    ])
+    expect(reorderFilterKeys(TODO_STATUS_FILTER_KEYS, 'created', 'pending')).toEqual([...TODO_STATUS_FILTER_KEYS])
+    expect(reorderFilterKeys(TODO_STATUS_FILTER_KEYS, 'pending', 'pending')).toEqual([...TODO_STATUS_FILTER_KEYS])
+  })
+
+  it('sortTodoItemsByStatusOrder 按状态从左到右排，同状态保序', () => {
+    const items = [
+      { id: 'a', status: 'PENDING' },
+      { id: 'b', status: 'DOING' },
+      { id: 'c', status: 'PENDING' },
+    ]
+    expect(sortTodoItemsByStatusOrder(items, ['doing', 'pending']).map((item) => item.id)).toEqual(['b', 'a', 'c'])
   })
 })

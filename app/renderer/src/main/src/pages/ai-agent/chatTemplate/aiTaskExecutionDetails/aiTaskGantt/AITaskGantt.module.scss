@@ -121,7 +121,7 @@
 .timeline-row {
   position: relative;
   z-index: 1;
-  height: 48px;
+  height: 38px;
   box-sizing: border-box;
   cursor: pointer;
   border-left: 2px solid transparent;
@@ -134,8 +134,7 @@
 
 .bar-label {
   position: absolute;
-  top: 8px;
-  // left 由条带起点决定；right 卡死右边界，保证过长文字能省略
+  top: 4px;
   right: 8px;
   z-index: 2;
   display: flex;
@@ -160,7 +159,7 @@
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 12px;
+  bottom: 4px;
   height: 10px;
 }
 

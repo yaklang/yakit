@@ -77,6 +77,25 @@ describe('AITaskGantt 渲染', () => {
     expect(gantt.querySelector('.bar-segment-failed')).not.toBeNull()
   })
 
+  it('legendKindOrder 决定图例从左到右顺序', () => {
+    render(
+      <AITaskGantt
+        items={[createItem({ id: 't-a', content: '任务 A' })]}
+        legendKindOrder={['execute', 'wait', 'success', 'skipped', 'failed']}
+      />,
+    )
+    const labels = Array.from(document.querySelectorAll('.gantt-legend .legend-item')).map((el) =>
+      (el.querySelector('span:last-child') as HTMLElement).textContent,
+    )
+    expect(labels).toEqual([
+      'AITaskExecutionDetails.statusDoing',
+      'AITaskExecutionDetails.statusPending',
+      'AITaskExecutionDetails.statusDone',
+      'AITaskExecutionDetails.statusSkipped',
+      'AITaskExecutionDetails.statusDeleted',
+    ])
+  })
+
   it('无有效时间戳的条目仍渲染行，但不生成分段条', () => {
     render(
       <AITaskGantt
