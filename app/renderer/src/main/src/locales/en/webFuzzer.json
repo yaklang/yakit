@@ -609,7 +609,8 @@
   },
   "DecodeComponent": {
     "smartDecode": "Smart Decode",
-    "noDecodeInfo": "No decode information"
+    "noDecodeInfo": "No decode information",
+    "inputTooLarge": "Selection too large (over 256KB); decode rejected to avoid truncated replace"
   },
   "HTTPFuzzerRangeReadOnlyEditorMenu": {
     "decode": "Decode"

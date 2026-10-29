@@ -609,7 +609,8 @@
   },
   "DecodeComponent": {
     "smartDecode": "智能解码",
-    "noDecodeInfo": "无解码信息"
+    "noDecodeInfo": "无解码信息",
+    "inputTooLarge": "选区过长（超过 256KB），已拒绝解码以避免截断替换"
   },
   "HTTPFuzzerRangeReadOnlyEditorMenu": {
     "decode": "解码"

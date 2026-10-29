@@ -57,6 +57,18 @@ const getItemStyle = (isDragging: boolean, draggableStyle) => {
   }
 }
 
+/** overflowingContentWidgets 用视口坐标；dnd 的 top/left 已是视口值，勿再减 editorInfo/60 */
+export const getInsertTagDragPosition = (
+  isDragging: boolean,
+  style?: Pick<DraggingStyle, 'top' | 'left'> | null,
+): { top: number | 'none'; left: number | 'none' } => {
+  if (!isDragging || !style) return { top: 'none', left: 'none' }
+  return {
+    top: typeof style.top === 'number' ? style.top : 'none',
+    left: typeof style.left === 'number' ? style.left : 'none',
+  }
+}
+
 interface InsertTagPanelProps {
   editorInfo?: EditorDetailInfoProps
   insert: (v: QueryFuzzerLabelResponseProps) => void
@@ -70,8 +82,7 @@ interface InsertTagPanelProps {
 
 /** 插入标签面板。列表来自标签数据，增删改和排序都走原来的接口。 */
 export const InsertTagPanel = (props: InsertTagPanelProps) => {
-  const { editorInfo, insert, addLabel, maxWidth, onReady, onDraggingChange } = props
-  const { top = 0, left = 0, scrollTop = 0 } = editorInfo || {}
+  const { insert, addLabel, maxWidth, onReady, onDraggingChange } = props
   const { t } = useI18nNamespaces(['webFuzzer', 'yakitUi'])
   const showPanelCount = maxWidth >= 220
   const showPanelSubTitle = maxWidth > 250
@@ -218,14 +229,7 @@ export const InsertTagPanel = (props: InsertTagPanelProps) => {
                           style={{
                             ...draggablePropsStyle,
                             ...getItemStyle(snapshot.isDragging, dragProvided.draggableProps.style),
-                            top:
-                              isDragging.current && draggablePropsStyle?.top
-                                ? draggablePropsStyle.top - top + scrollTop
-                                : 'none',
-                            left:
-                              isDragging.current && draggablePropsStyle?.left
-                                ? draggablePropsStyle.left - left - 60
-                                : 'none',
+                            ...getInsertTagDragPosition(isDragging.current, draggablePropsStyle),
                           }}
                         >
                           <div
@@ -635,12 +639,12 @@ export interface DecodeComponentProps {
   onReady?: () => void
 }
 
-const AUTO_DECODE_MAX_CHARS = 256 * 1024
+export const AUTO_DECODE_MAX_CHARS = 256 * 1024
 
 export const DecodeComponent = (props: DecodeComponentProps) => {
   const { isReadOnly, rangeValue, replace, onReady } = props
   const { t } = useI18nNamespaces(['webFuzzer'])
-  const [status, setStatus] = useState<'none' | 'only' | 'many'>()
+  const [status, setStatus] = useState<'none' | 'only' | 'many' | 'oversized'>()
   const [result, setResult] = useState<AutoDecodeResult[]>([])
   const onReadyRef = useRef(onReady)
   onReadyRef.current = onReady
@@ -652,16 +656,21 @@ export const DecodeComponent = (props: DecodeComponentProps) => {
     try {
       if (!rangeValue) {
         setStatus('none')
+        setResult([])
         ready()
         return
       }
-      const decodeInput =
-        rangeValue.length > AUTO_DECODE_MAX_CHARS ? rangeValue.slice(0, AUTO_DECODE_MAX_CHARS) : rangeValue
+      // 超限明确拒绝：禁止用截断结果覆盖整段选区
+      if (rangeValue.length > AUTO_DECODE_MAX_CHARS) {
+        setStatus('oversized')
+        setResult([])
+        ready()
+        return
+      }
       ipcRenderer
-        .invoke('AutoDecode', { Data: decodeInput })
+        .invoke('AutoDecode', { Data: rangeValue })
         .then((e: { Results: AutoDecodeResult[] }) => {
           if (cancelled) return
-          // console.log("Results", e.Results)
           const { Results } = e
           const successArr: AutoDecodeResult[] = []
           const failArr: AutoDecodeResult[] = []
@@ -723,6 +732,7 @@ export const DecodeComponent = (props: DecodeComponentProps) => {
           />
         </div>
       )}
+      {status === 'oversized' && <div className={styles['none-decode']}>{t('DecodeComponent.inputTooLarge')}</div>}
       {status === 'none' && <div className={styles['none-decode']}>{t('DecodeComponent.noDecodeInfo')}</div>}
     </div>
   )
