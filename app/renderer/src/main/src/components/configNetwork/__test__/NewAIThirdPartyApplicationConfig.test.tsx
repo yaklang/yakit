@@ -11,6 +11,8 @@ import {
 } from '@/pages/ai-agent/aiModelList/aiModelForm/AIModelForm'
 import type { AIGlobalConfig, AIModelConfig } from '@/pages/ai-agent/aiModelList/utils'
 import { AIModelTypeEnum } from '@/pages/ai-agent/defaultConstant'
+import { AIOnlineModel } from '@/pages/ai-agent/aiModelList/AIModelList'
+import providerExample from '../yakProviderExample.yak?raw'
 
 const mocks = vi.hoisted(() => {
   const invoke = vi.fn()
@@ -48,9 +50,15 @@ vi.mock('@/pages/plugins/operator/horizontalScrollCard/HorizontalScrollCard', ()
   HorizontalScrollCard: () => null,
 }))
 vi.mock('@/pages/mitm/MITMRule/MITMRuleFromModal', () => ({ InputHTTPHeaderForm: () => null }))
+vi.mock('@/pages/ai-agent/aiModelList/installLlamaServerModelPrompt/InstallLlamaServerModelPrompt', () => ({}))
+vi.mock('@/pages/ai-agent/aiModelList/aiStartModelForm/AIStartModelForm', () => ({}))
+vi.mock('@/pages/ai-agent/aiModelList/addAIModel/AddAIModel', () => ({}))
+vi.mock('@/pages/notepadManage/notepadManage/utils', () => ({ onOpenLocalFileByPath: vi.fn() }))
 vi.mock('@/pages/ai-agent/aiModelList/utils', async () => {
   const { normalizeAIAPIType } = await import('@/pages/ai-agent/aiModelList/aiApiTypeOptions')
+  const { getModelName } = await import('@/pages/ai-agent/aiModelList/modelName')
   return {
+    getModelName,
     normalizeAIAPIType,
     grpcGetAIThirdPartyAppConfigTemplate: async () => ({
       Templates: [
@@ -93,6 +101,23 @@ beforeEach(() => {
 describe('Yak script model configuration', () => {
   const script = 'chat = func(req, emit) { return "hello" }'
   const provider = { Type: 'yak-script', Script: script, EnableNativeToolCalling: false }
+
+  it.each([false, true])('tests a saved script from the model list (native tools=%s)', async (enableNative) => {
+    const savedProvider = { ...provider, EnableNativeToolCalling: enableNative }
+    const onSelect = vi.fn()
+    render(
+      <AIOnlineModel
+        list={[{ ProviderId: '', Provider: savedProvider, ModelName: 'my-script', ExtraParams: [] }]}
+        modelType={AIModelTypeEnum.TierIntelligent}
+        onEdit={vi.fn()}
+        onRemove={vi.fn()}
+        onSelect={onSelect}
+      />,
+    )
+    fireEvent.click(screen.getAllByRole('button')[0])
+    await waitFor(() => expect(mocks.healthCheck).toHaveBeenCalledWith({ Config: savedProvider, Content: '测试成功' }))
+    expect(onSelect).not.toHaveBeenCalled()
+  })
 
   it('adds a script model with the default editor template through the real save flow', async () => {
     render(<AIModelForm onClose={vi.fn()} />)
@@ -248,13 +273,13 @@ describe('Yak script model configuration', () => {
     expect(screen.queryByText('ConfigNetworkPage.scriptTimeout')).not.toBeInTheDocument()
   })
 
-  it('clears script fields when switching back to an ordinary provider', async () => {
+  it('resets the script draft and native tools when switching providers', async () => {
     const ref = createRef<{ form: FormInstance }>()
     render(
       <NewAIThirdPartyApplicationConfigBase
         ref={ref}
         formValues={{
-          ...buildAIConfigHealthCheckFormValues(provider),
+          ...buildAIConfigHealthCheckFormValues({ ...provider, EnableNativeToolCalling: true }),
           model: 'my-script',
           model_type: AIModelTypeEnum.TierIntelligent,
         }}
@@ -267,6 +292,16 @@ describe('Yak script model configuration', () => {
     await screen.findByText('Reasoning Effort')
     expect(screen.queryByLabelText('yak-model-script')).not.toBeInTheDocument()
     expect(formValueToAIConfigProvider(ref.current!.form.getFieldsValue()).ExtraParams).toEqual([])
+    fireEvent.change(screen.getByRole('combobox', { name: 'ConfigNetworkPage.typeLabel' }), {
+      target: { value: 'yak-script' },
+    })
+    expect(await screen.findByLabelText('yak-model-script')).toHaveValue(providerExample)
+    expect(screen.getByRole('switch', { name: 'ConfigNetworkPage.nativeToolCalling' })).not.toBeChecked()
+    expect(formValueToAIConfigProvider(ref.current!.form.getFieldsValue())).toEqual({
+      Type: 'yak-script',
+      Script: providerExample,
+      EnableNativeToolCalling: false,
+    })
   })
 })
 

@@ -854,7 +854,12 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
                 })
               })
               resetModelConfigSettings()
-              form.setFieldsValue({ api_key_id: undefined, ExtraParams: [] })
+              form.setFieldsValue({
+                api_key_id: undefined,
+                ExtraParams: [],
+                script: providerExample,
+                enable_native_tool_calling: false,
+              })
             }
           }}
           onSubmitCapture={(e) => {

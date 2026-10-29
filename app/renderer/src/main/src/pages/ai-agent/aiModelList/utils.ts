@@ -403,7 +403,10 @@ export const grpcGetAIGlobalConfig: APINoRequestFunc<AIGlobalConfig> = (hiddenEr
   return new Promise((resolve, reject) => {
     ipcRenderer
       .invoke('GetAIGlobalConfig')
-      .then(resolve)
+      .then((config) => {
+        // proto-loader 使用 longs: String，在 IPC 边界还原前端声明的 number 类型。
+        resolve({ ...config, ModelRequestsPerMinute: Number(config.ModelRequestsPerMinute ?? 0) })
+      })
       .catch((err) => {
         if (!hiddenError) yakitNotify('error', 'grpcGetAIGlobalConfig 失败:' + err)
         reject(err)

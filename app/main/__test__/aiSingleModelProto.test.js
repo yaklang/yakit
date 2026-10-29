@@ -32,3 +32,39 @@ describe('single-model gRPC contract', () => {
     expect(payload.SingleModelMode).toBe(true)
   })
 })
+
+describe('script providers and global controls gRPC contract', () => {
+  const script = 'chat = func(req, emit) { return "hello" }'
+
+  it.each([false, true])('preserves script health checks (native tools=%s)', (enableNative) => {
+    const method = ypb.Yak.service.AIConfigHealthCheck
+    const config = { Type: 'yak-script', Script: script, EnableNativeToolCalling: enableNative }
+    const payload = method.requestDeserialize(method.requestSerialize({ Config: config, Content: '测试成功' }))
+
+    expect(payload.Config).toMatchObject(config)
+    expect(payload.Content).toBe('测试成功')
+  })
+
+  it.each([0, 12, 60000])('round-trips saved providers and global controls (RPM=%s)', (rpm) => {
+    const config = {
+      RetryForever: true,
+      NetworkDebug: true,
+      ModelRequestsPerMinute: rpm,
+      IntelligentModels: [
+        {
+          ProviderId: '0',
+          ModelName: 'my-script',
+          Provider: { Type: 'yak-script', Script: script, EnableNativeToolCalling: true },
+        },
+      ],
+    }
+    const setMethod = ypb.Yak.service.SetAIGlobalConfig
+    const saved = setMethod.requestDeserialize(setMethod.requestSerialize(config))
+    const getMethod = ypb.Yak.service.GetAIGlobalConfig
+    const loaded = getMethod.responseDeserialize(getMethod.responseSerialize(saved))
+
+    // 与主进程相同的 longs: String 配置：IPC 接收到的 int64 是字符串。
+    expect(saved).toMatchObject({ ...config, ModelRequestsPerMinute: String(rpm) })
+    expect(loaded).toEqual(saved)
+  })
+})
