@@ -77,7 +77,7 @@ vi.mock('lottie-web', () => ({ default: { loadAnimation: () => undefined, destro
 vi.mock('@xterm/xterm', () => ({ Terminal: class Terminal {} }))
 
 vi.mock('react-monaco-editor', () => {
-  const React = require('react') as typeof import('react')
+  const React = require('react')
   const lazyFn = () => {
     const fn = () => makeProxy()
     return fn
@@ -141,7 +141,7 @@ vi.mock('@/components/yakitUI/YakitEditor/fizzMenu/editerMenuFun', () => ({
 }))
 
 vi.mock('@/pages/fuzzer/HTTPFuzzerEditorMenu', () => {
-  const React = require('react') as typeof import('react')
+  const React = require('react')
   return {
     SmartDecodeFloatPanel: ({ rangeValue }: { rangeValue: string }) =>
       React.createElement('div', { 'data-testid': 'smart-decode-float-panel' }, rangeValue),
