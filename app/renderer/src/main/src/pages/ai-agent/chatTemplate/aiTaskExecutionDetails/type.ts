@@ -56,7 +56,8 @@ export const reorderFilterKeys = (
   const to = next.indexOf(toKey as TodoStatusFilterKey)
   if (from < 0 || to < 0 || from === to) return next
   const [item] = next.splice(from, 1)
-  next.splice(to, 0, item)
+  const insertAt = from < to ? to - 1 : to
+  next.splice(insertAt, 0, item)
   return next
 }
 

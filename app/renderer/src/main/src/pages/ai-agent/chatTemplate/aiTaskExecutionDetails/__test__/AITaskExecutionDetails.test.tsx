@@ -784,6 +784,20 @@ describe('状态统计拖拽排序工具', () => {
       'skipped',
       'deleted',
     ])
+    expect(reorderFilterKeys(TODO_STATUS_FILTER_KEYS, 'doing', 'skipped')).toEqual([
+      'pending',
+      'done',
+      'doing',
+      'skipped',
+      'deleted',
+    ])
+    expect(reorderFilterKeys(TODO_STATUS_FILTER_KEYS, 'skipped', 'pending')).toEqual([
+      'doing',
+      'skipped',
+      'pending',
+      'done',
+      'deleted',
+    ])
     expect(reorderFilterKeys(TODO_STATUS_FILTER_KEYS, 'created', 'pending')).toEqual([...TODO_STATUS_FILTER_KEYS])
     expect(reorderFilterKeys(TODO_STATUS_FILTER_KEYS, 'pending', 'pending')).toEqual([...TODO_STATUS_FILTER_KEYS])
   })
