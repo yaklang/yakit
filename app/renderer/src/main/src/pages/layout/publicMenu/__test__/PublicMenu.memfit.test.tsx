@@ -4,6 +4,18 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import PublicMenu from '../PublicMenu'
 import styles from '../PublicMenu.module.scss'
 
+// 根 Vitest 会将样式文件解析为空 stub，显式提供断言所需的类名以兼容两套配置。
+vi.mock('../PublicMenu.module.scss', () => ({
+  default: {
+    'public-menu-wrapper': 'public-menu-wrapper',
+    'second-menu-wrapper': 'second-menu-wrapper',
+    'tool-body': 'tool-body',
+    'hide-tool-body': 'hide-tool-body',
+    'tool-nohidden-container': 'tool-nohidden-container',
+    'tool-hidden-container': 'tool-hidden-container',
+  },
+}))
+
 const edition = vi.hoisted(() => ({ memfit: true }))
 vi.mock('@/utils/envfile', () => ({
   isMemfit: () => edition.memfit,

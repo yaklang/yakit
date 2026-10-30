@@ -11,6 +11,14 @@ import styles from '../MenuMode.module.scss'
 
 const edition = vi.hoisted(() => ({ current: 'memfit' }))
 
+vi.mock('../MenuMode.module.scss', () => ({
+  default: {
+    'vertical-menu-wrapper': 'vertical-menu-wrapper',
+    'divider-style': 'divider-style',
+    'multiple-vertical-menu-wrapper': 'multiple-vertical-menu-wrapper',
+  },
+}))
+
 vi.mock('@/utils/envfile', () => ({
   isMemfit: () => edition.current === 'memfit',
   isIRify: () => edition.current === 'irify',
@@ -165,8 +173,13 @@ describe('Memfit 公共菜单', () => {
 
   it('Yakit 保留原有主菜单，不展示 Memfit 的 AI 展开菜单', () => {
     edition.current = 'yakit'
-    expect(getPublicRouteMenu(YakitModeEnum.Classic)[0].label).toBe('渗透测试')
-    render(<MenuMode mode="AI" pluginToId={pluginToId} onMenuSelect={vi.fn()} />)
+    const menus = getPublicRouteMenu(YakitModeEnum.Classic)
+    expect(menus[0].label).toBe('渗透测试')
+    expect(menus.some((menu) => menu.label === 'AI')).toBe(false)
+    const onMenuSelect = vi.fn()
+    render(<MenuMode mode={menus[0].label} pluginToId={pluginToId} onMenuSelect={onMenuSelect} />)
+    fireEvent.click(screen.getByText('MITM'))
+    expect(onMenuSelect).toHaveBeenCalledExactlyOnceWith({ route: YakitRoute.MITMHacker })
     expect(screen.queryByText('YakitRoute.AIAgent')).not.toBeInTheDocument()
     expect(screen.queryByText('YakitRoute.ai-repository')).not.toBeInTheDocument()
     expect(screen.queryByText('YakitRoute.ai-memory')).not.toBeInTheDocument()
