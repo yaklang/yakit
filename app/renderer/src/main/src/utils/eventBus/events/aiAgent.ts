@@ -44,4 +44,6 @@ export type AIAgentEventProps = {
    * @name payload {sessionId?: string, isRunning?: boolean}
    */
   onServerPushAISession: string
+  /** 手动打开 Memfit 更新说明弹窗 */
+  openMemfitWhatsNew?: string
 }

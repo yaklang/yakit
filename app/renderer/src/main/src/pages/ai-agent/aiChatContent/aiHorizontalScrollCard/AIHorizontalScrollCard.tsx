@@ -5,7 +5,7 @@ import { useStore } from 'zustand'
 import classNames from 'classnames'
 import styles from './AIHorizontalScrollCard.module.scss'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { MessageCirclePlusOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { MessageCirclePlusOutlined, QuestionMarkCircleOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { ChatAlt2Solid } from '@yakit-libs/yakit-ui-icons/solid'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { ExpandAndRetract } from '@/pages/plugins/operator/expandAndRetract/ExpandAndRetract'
@@ -14,6 +14,9 @@ import { useMemoizedFn } from 'ahooks'
 import ContextDetailPopover from '../AIContextToken/ContextDetailPopover'
 import { onNewChat } from '../../historyChat/HistoryChat'
 import { Tooltip } from 'antd'
+import { isMemfit } from '@/utils/envfile'
+import emiter from '@/utils/eventBus/eventBus'
+import { MEMFIT_WHATS_NEW } from '@/components/layout/whatsNew/memfitWhatsNewConfig'
 
 export const AIHorizontalScrollCard = memo(() => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
@@ -50,6 +53,15 @@ export const AIHorizontalScrollCard = memo(() => {
             <div className={styles['chat-title']}>{activeChat?.Title || t('AIChatContent.newChatTitle')}</div>
           </div>
           <div className={styles['extra']}>
+            {isMemfit() && MEMFIT_WHATS_NEW.enabled && MEMFIT_WHATS_NEW.items.length > 0 && (
+              <Tooltip title={t('AIChatContent.whatsNew')}>
+                <YakitButton
+                  type="text2"
+                  icon={<QuestionMarkCircleOutlined color="currentColor" />}
+                  onClick={() => emiter.emit('openMemfitWhatsNew')}
+                />
+              </Tooltip>
+            )}
             <ContextDetailPopover />
             <Tooltip title={t('AIChatContent.newChat')}>
               <YakitButton

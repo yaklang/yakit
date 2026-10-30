@@ -66,6 +66,7 @@ import { Trans } from 'react-i18next'
 import aiChatPersistStore from './ai-re-act/hooks/persist/aiChatPersistStore'
 import useGetColorsByTheme from '@/hook/useGetColorsByTheme'
 import { autoEnableGlobalHotPatch } from '@/store/globalHotPatch'
+import { MemfitWhatsNewModal } from '@/components/layout/whatsNew/MemfitWhatsNewModal'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -660,6 +661,8 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                 onOk={onUpdateCancenl}
                 onIgnore={onUpdateIgnore}
             /> */}
+
+      {isMemfit() && <MemfitWhatsNewModal />}
 
       <YakitHintModal
         visible={showProxyModal}
