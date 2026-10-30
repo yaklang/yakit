@@ -210,6 +210,50 @@
   }
 }
 
+.api-doc-history-panel {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background-color: var(--Colors-Use-Basic-Background);
+
+  .header {
+    flex-shrink: 0;
+    padding: 8px 12px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .title {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .search-icon {
+    svg {
+      width: 16px;
+      height: 16px;
+      color: var(--Colors-Use-Neutral-Disable);
+    }
+  }
+
+  .content {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+}
+
 .api-doc-history-panel-loading {
   padding: 16px;
   text-align: center;

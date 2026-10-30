@@ -8,16 +8,15 @@ import {
   DotsHorizontalOutlined,
   GlobeOutlined,
   PaperAirplaneOutlined,
-  QuestionMarkCircleOutlined,
   RefreshOutlined,
   PositionOutlined,
   XOutlined,
+  InformationCircleOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 import { BrowserClientIcon } from './BrowserClientIcon'
 import classNames from 'classnames'
 import { useMemoizedFn } from 'ahooks'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { SideSettingButton } from '../aiChatWelcome/AIChatWelcomeSideSetting'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
 import { YakitModalConfirm } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
@@ -50,7 +49,9 @@ import {
   BrowserInstancesGuideEmpty,
   BrowserInstancesGuideManual,
 } from './BrowserInstancesGuideEmpty/BrowserInstancesGuideEmpty'
+import AIAgentSideBox from '../components/aiAgentSideBox/AIAgentSideBox'
 import styles from './BrowserInstancesPanel.module.scss'
+import { Tooltip } from 'antd'
 
 export const browserProductLabel = (instance: { client?: string; clientVersion?: string }) => {
   const client = (instance.client || '').trim()
@@ -564,48 +565,34 @@ export const BrowserInstancesPanel: React.FC = () => {
   const [onlineExpanded, setOnlineExpanded] = useState(true)
   const [pendingExpanded, setPendingExpanded] = useState(true)
   const [historyExpanded, setHistoryExpanded] = useState(false)
-  const [pairingLoading, setPairingLoading] = useState(false)
   const [manualVisible, setManualVisible] = useState(false)
   const online = useMemo(() => instances.filter((instance) => instance.online), [instances])
   const hasContent = Boolean(online.length || pending.length || history.length || historyError)
-  const handleOpenPairingWindow = useMemoizedFn(async () => {
-    if (pairingLoading) return
-    setPairingLoading(true)
-    try {
-      await openPairingWindow(t)
-    } finally {
-      setPairingLoading(false)
-    }
-  })
   return (
-    <div className={styles['browser-instances-panel']}>
-      <div className={styles['panel-header']}>
-        <div>
-          <div className={styles['panel-title']}>{t('BrowserInstances.title')}</div>
-          <div className={styles['panel-subtitle']}>{t('BrowserInstances.subtitle')}</div>
-        </div>
-        <div className={styles['header-actions']}>
-          <SideSettingButton type="text2" size="small" />
+    <AIAgentSideBox
+      className={styles['browser-instances-panel']}
+      title={t('BrowserInstances.title')}
+      titleExtra={
+        <Tooltip title={t('BrowserInstances.connectionHelp')}>
           <YakitButton
             type="text2"
-            icon={<QuestionMarkCircleOutlined color="currentColor" />}
-            size="small"
+            icon={<InformationCircleOutlined color="currentColor" size={16} />}
+            aria-label={t('BrowserInstances.connectionHelp')}
             onClick={() => setManualVisible(true)}
-          >
-            {t('BrowserInstances.connectionHelp')}
-          </YakitButton>
-          <YakitButton
-            type="text2"
-            icon={<RefreshOutlined color="currentColor" />}
-            size="small"
-            loading={loading}
-            aria-label={t('BrowserInstances.refresh')}
-            onClick={() => void refreshBrowserInstances()}
           />
-        </div>
-      </div>
-
-      <YakitSpin spinning={loading && !hasContent}>
+        </Tooltip>
+      }
+      extra={
+        <YakitButton
+          type="text2"
+          icon={<RefreshOutlined color="currentColor" size={16} />}
+          loading={loading}
+          aria-label={t('BrowserInstances.refresh')}
+          onClick={() => void refreshBrowserInstances()}
+        />
+      }
+    >
+      <YakitSpin spinning={loading && !hasContent} wrapperClassName={styles['panel-spin']}>
         <div className={styles['panel-body']}>
           {!!error && (
             <div className={styles['service-unavailable']} role="alert">
@@ -725,6 +712,6 @@ export const BrowserInstancesPanel: React.FC = () => {
         </div>
       </YakitSpin>
       <BrowserInstancesGuideManual open={manualVisible} onClose={() => setManualVisible(false)} />
-    </div>
+    </AIAgentSideBox>
   )
 }

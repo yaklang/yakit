@@ -1,12 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useDebounceFn, useInViewport, useMemoizedFn } from 'ahooks'
 import { Tooltip } from 'antd'
-import {
-  PlusOutlined,
-  InformationCircleOutlined,
-  RefreshOutlined,
-  SearchOutlined,
-} from '@yakit-libs/yakit-ui-icons/outline'
+import { PlusOutlined, RefreshOutlined, SearchOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitRoundCornerTag } from '@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag'
@@ -18,12 +13,12 @@ import { grpcGetAIReActSchedule, grpcQueryAIReActSchedules, grpcRunAIReActSchedu
 import type { AIScheduledTasksProps } from './type'
 import ScheduledTasksForm from './scheduledTasksForm/ScheduledTasksForm'
 import AIScheduledTasksList from './aiScheduledTasksList/AIScheduledTasksList'
-import { SideSettingButton } from '../aiChatWelcome/AIChatWelcomeSideSetting'
 import { yakitNotify } from '@/utils/notification'
 import emiter from '@/utils/eventBus/eventBus'
 import { grpcQueryAISession } from '../grpc'
 import { openAIAgentChatTab } from '../historyChat/HistoryChat'
 import { waitForAISessionPush } from './waitForAISessionPush'
+import AIAgentSideBox from '../components/aiAgentSideBox/AIAgentSideBox'
 import styles from './AIScheduledTasks.module.scss'
 
 const AIScheduledTasks: React.FC<AIScheduledTasksProps> = React.memo((props) => {
@@ -139,25 +134,27 @@ const AIScheduledTasks: React.FC<AIScheduledTasksProps> = React.memo((props) => 
   })
 
   return (
-    <div className={styles['ai-schedule-list-wrapper']} ref={listRef}>
-      <div className={styles['ai-schedule-list-header']}>
-        <div className={styles['ai-schedule-list-header-left']}>
-          <span className={styles['ai-schedule-list-header-title']}>{t('AIScheduledTasks.title')}</span>
-          <Tooltip title={t('AIScheduledTasks.maxConcurrentRuns')}>
-            <InformationCircleOutlined className={styles['info-icon']} color="currentColor" />
-          </Tooltip>
-          <YakitRoundCornerTag>{schedules.length}</YakitRoundCornerTag>
-        </div>
-        <div className={styles['ai-schedule-list-header-right']}>
-          <SideSettingButton type="text2" />
-          <Tooltip title={t('YakitButton.add')}>
-            <YakitButton type="text2" icon={<PlusOutlined />} onClick={onAdd} />
-          </Tooltip>
+    <AIAgentSideBox
+      ref={listRef}
+      className={styles['ai-schedule-list-wrapper']}
+      title={t('AIScheduledTasks.title')}
+      titleHint={t('AIScheduledTasks.maxConcurrentRuns')}
+      titleExtra={<YakitRoundCornerTag>{schedules.length}</YakitRoundCornerTag>}
+      extra={
+        <>
           <Tooltip title={t('YakitButton.refresh')}>
-            <YakitButton type="text2" icon={<RefreshOutlined />} onClick={() => getList()} />
+            <YakitButton
+              type="text2"
+              icon={<RefreshOutlined color="currentColor" size={16} />}
+              onClick={() => getList()}
+            />
           </Tooltip>
-        </div>
-      </div>
+          <Tooltip title={t('YakitButton.add')}>
+            <YakitButton type="text2" icon={<PlusOutlined color="currentColor" size={16} />} onClick={onAdd} />
+          </Tooltip>
+        </>
+      }
+    >
       <div className={styles['ai-schedule-list-search']}>
         <YakitInput
           prefix={<SearchOutlined className={styles['search-icon']} />}
@@ -178,7 +175,7 @@ const AIScheduledTasks: React.FC<AIScheduledTasksProps> = React.memo((props) => 
         onEdit={openForm}
         onRunNow={runScheduleNow}
       />
-    </div>
+    </AIAgentSideBox>
   )
 })
 export default AIScheduledTasks

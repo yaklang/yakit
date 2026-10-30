@@ -258,7 +258,7 @@ describe('BrowserInstancesPanel interactions', () => {
     })
     render(<BrowserInstancesPanel />)
 
-    fireEvent.click(screen.getByText('BrowserInstances.connectionHelp'))
+    fireEvent.click(screen.getByLabelText('BrowserInstances.connectionHelp'))
     expect(screen.getByRole('dialog')).toHaveTextContent('新手引导手册')
     expect(mocks.requestBrowserExtensionSnapshot).not.toHaveBeenCalled()
   })

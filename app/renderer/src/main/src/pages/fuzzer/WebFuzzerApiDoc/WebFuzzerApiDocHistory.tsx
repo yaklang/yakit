@@ -17,7 +17,6 @@ import {
   WEEK_MS,
   normalizeTimestamp,
 } from '@/pages/ai-agent/historyChat/HistoryChatList/HistoryChatList'
-import historyChatStyles from '@/pages/ai-agent/historyChat/HistoryChat.module.scss'
 import listStyles from '@/pages/ai-agent/historyChat/HistoryChatList/HistoryChatList.module.scss'
 import type { YakURLResource } from '@/pages/yakURLTree/data'
 import { type ApiDocHistoryItem, getExtra, openApiRequest, toNumber } from './apiDoc'
@@ -116,25 +115,21 @@ export const WebFuzzerApiDocHistory: React.FC<{
   })
 
   return (
-    <div className={historyChatStyles['history-chat']}>
-      <div className={historyChatStyles['header-wrapper']}>
-        <div className={historyChatStyles['haeder-first']}>
-          <div className={historyChatStyles['first-title']}>
-            {t('ApiDoc.historyDocuments')}
-            <YakitRoundCornerTag>{items.length}</YakitRoundCornerTag>
-          </div>
+    <div className={styles['api-doc-history-panel']}>
+      <div className={styles['header']}>
+        <div className={styles['title']}>
+          {t('ApiDoc.historyDocuments')}
+          <YakitRoundCornerTag>{items.length}</YakitRoundCornerTag>
         </div>
-        <div className={historyChatStyles['header-second']}>
-          <YakitInput
-            prefix={<SearchOutlined className={historyChatStyles['search-icon']} color="currentColor" />}
-            placeholder={t('YakitInput.searchKeyWordPlaceholder')}
-            allowClear
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
+        <YakitInput
+          prefix={<SearchOutlined className={styles['search-icon']} color="currentColor" />}
+          placeholder={t('YakitInput.searchKeyWordPlaceholder')}
+          allowClear
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
       </div>
-      <div className={historyChatStyles['content']}>
+      <div className={styles['content']}>
         {loading ? (
           <div className={styles['api-doc-history-panel-loading']}>{t('YakitSpin.loading')}</div>
         ) : (

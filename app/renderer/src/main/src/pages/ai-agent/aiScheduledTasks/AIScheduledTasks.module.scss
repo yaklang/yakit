@@ -1,50 +1,5 @@
-%display-flex-center {
-  display: flex;
-  align-items: center;
-}
 .ai-schedule-list-wrapper {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  overflow: hidden;
-  background: var(--Colors-Use-Basic-Background);
-  .ai-schedule-list-header {
-    @extend %display-flex-center;
-    justify-content: space-between;
-    gap: 4px;
-    padding: 8px 12px;
-    .ai-schedule-list-header-left {
-      @extend %display-flex-center;
-      gap: 6px;
-      .ai-schedule-list-header-title {
-        color: var(--Colors-Use-Neutral-Text-1-Title);
-        font-size: 12px;
-        font-weight: 600;
-        line-height: 16px;
-      }
-      .info-icon {
-        svg {
-          width: 16px;
-          height: 16px;
-          color: var(--Colors-Use-Neutral-Text-3-Secondary);
-        }
-      }
-    }
-    .ai-schedule-list-header-right {
-      @extend %display-flex-center;
-      line-height: 0;
-      svg {
-        width: 16px;
-        height: 16px;
-      }
-      > :global(span) {
-        display: inline-flex;
-        align-items: center;
-        line-height: 0;
-      }
-    }
-  }
   .ai-schedule-list-search {
     display: flex;
     align-items: center;

@@ -259,39 +259,8 @@ describe('HistoryChat 头部操作', () => {
     expect(screen.getByText('历史会话内容')).toBeInTheDocument()
   })
 
-  it('隐藏固定按钮时保留新建行为，额外操作位于同一行最右侧', () => {
-    const onClose = vi.fn()
-    const onChatEvent = vi.fn()
-    emiter.on('onReActChatEvent', onChatEvent)
-    try {
-      render(
-        <HistoryChat
-          aiSource={['ai']}
-          hidePinButton
-          headerActionsExtra={<button onClick={onClose}>关闭会话列表</button>}
-        />,
-      )
-
-      // 头部按钮依次为清空、新建和传入的关闭操作。
-      const buttons = screen.getAllByRole('button')
-      expect(buttons).toHaveLength(3)
-      const newChatButton = buttons[1]
-      const closeButton = screen.getByRole('button', { name: '关闭会话列表' })
-      expect(screen.queryByRole('button', { name: '固定' })).not.toBeInTheDocument()
-      expect(closeButton.parentElement).toBe(newChatButton.parentElement)
-      expect(closeButton.parentElement?.lastElementChild).toBe(closeButton)
-
-      fireEvent.click(newChatButton)
-      expect(onChatEvent).toHaveBeenCalledWith(JSON.stringify({ type: ReActChatEventEnum.NEW_CHAT }))
-      fireEvent.click(closeButton)
-      expect(onClose).toHaveBeenCalledTimes(1)
-    } finally {
-      emiter.off('onReActChatEvent', onChatEvent)
-    }
-  })
-
   it('embedded 仍隐藏新建和固定按钮，并在挂载时刷新会话', () => {
-    render(<HistoryChat aiSource={['ai']} embedded hidePinButton={false} />)
+    render(<HistoryChat aiSource={['ai']} embedded />)
 
     expect(screen.getAllByRole('button')).toHaveLength(1)
     expect(screen.queryByRole('button', { name: '固定' })).not.toBeInTheDocument()

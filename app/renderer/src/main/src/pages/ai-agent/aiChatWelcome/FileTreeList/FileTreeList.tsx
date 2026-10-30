@@ -1,14 +1,13 @@
 import { useState } from 'react'
 import type { FileNodeProps } from '@/pages/yakRunner/FileTree/FileTreeType'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { SideSettingButton } from '../AIChatWelcomeSideSetting'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { SlidePanels } from '@/components/SlidePanels/SlidePanels'
 import { SearchOutlined, XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import AIAgentSideBox from '../../components/aiAgentSideBox/AIAgentSideBox'
 import FileTreeSplitPanels from './FileTreeSplitPanels/FileTreeSplitPanels'
 import FileTreeSearchView from './FileTreeSearchView/FileTreeSearchView'
 import { FileTreeSearchScope, type FileTreeSearchScopeValue } from './FileTreeSearchView/constants'
-import styles from './FileTreeList.module.scss'
 
 interface FileTreeListProps {
   selected?: FileNodeProps
@@ -29,31 +28,29 @@ const FileTreeList: React.FC<FileTreeListProps> = ({ selected, setSelected }) =>
   }
 
   return (
-    <div className={styles['file-tree-list']}>
-      <div className={styles['header']}>
-        <span className={styles['header-title']}>{isSearchView ? t('YakitInput.search') : t('AITabs.fileSystem')}</span>
-        <div className={styles['header-actions']}>
-          {isSearchView ? (
-            <YakitButton
-              type="text2"
-              title={t('YakitButton.close')}
-              aria-label={t('YakitButton.close')}
-              icon={<XOutlined color="currentColor" />}
-              onClick={() => setIsSearchView(false)}
-            />
-          ) : (
-            <YakitButton
-              type="text2"
-              title={t('YakitInput.search')}
-              aria-label={t('YakitInput.search')}
-              data-testid="file-tree-header-search"
-              icon={<SearchOutlined color="currentColor" />}
-              onClick={() => openSearch(FileTreeSearchScope.All)}
-            />
-          )}
-          <SideSettingButton type="text2" />
-        </div>
-      </div>
+    <AIAgentSideBox
+      title={isSearchView ? t('YakitInput.search') : t('AITabs.fileSystem')}
+      extra={
+        isSearchView ? (
+          <YakitButton
+            type="text2"
+            title={t('YakitButton.close')}
+            aria-label={t('YakitButton.close')}
+            icon={<XOutlined color="currentColor" size={16} />}
+            onClick={() => setIsSearchView(false)}
+          />
+        ) : (
+          <YakitButton
+            type="text2"
+            title={t('YakitInput.search')}
+            aria-label={t('YakitInput.search')}
+            data-testid="file-tree-header-search"
+            icon={<SearchOutlined color="currentColor" size={16} />}
+            onClick={() => openSearch(FileTreeSearchScope.All)}
+          />
+        )
+      }
+    >
       <SlidePanels
         showSecond={isSearchView}
         data-testid="file-tree-view-track"
@@ -67,7 +64,7 @@ const FileTreeList: React.FC<FileTreeListProps> = ({ selected, setSelected }) =>
           />
         }
       />
-    </div>
+    </AIAgentSideBox>
   )
 }
 export default FileTreeList

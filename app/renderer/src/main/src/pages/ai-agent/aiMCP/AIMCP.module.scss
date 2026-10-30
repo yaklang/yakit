@@ -7,82 +7,15 @@
   flex-direction: column;
 }
 .ai-mcp-list-wrapper {
-  @extend %display-column;
-  height: 100%;
-  overflow: hidden;
-  background: var(--Colors-Use-Basic-Background);
-  .ai-mcp-list-header {
-    @extend %display-flex-center;
-    justify-content: space-between;
-    flex-wrap: nowrap;
+  .ai-mcp-tool-list-name {
     min-width: 0;
-    padding: 8px 12px;
-    gap: 4px;
     overflow: hidden;
-
-    .ai-mcp-list-header-left {
-      @extend %display-flex-center;
-      flex: 1;
-      gap: 4px;
-      min-width: 0;
-      overflow: hidden;
-      color: var(--Colors-Use-Neutral-Text-1-Title);
-      font-size: 14px;
-      font-weight: 600;
-      line-height: 16px;
-    }
-    .ai-mcp-list-header-title {
-      min-width: 0;
-      overflow: hidden;
-      color: var(--Colors-Use-Neutral-Text-1-Title);
-      font-size: 14px;
-      font-weight: 600;
-      line-height: 16px;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-    }
-    .ai-mcp-tool-list-name {
-      min-width: 0;
-      overflow: hidden;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-    }
-    .ai-mcp-tool-list-label {
-      flex-shrink: 0;
-      white-space: nowrap;
-    }
-    .info-icon {
-      flex-shrink: 0;
-      svg {
-        width: 16px;
-        height: 16px;
-        color: var(--Colors-Use-Neutral-Text-3-Secondary);
-      }
-    }
-    .ai-mcp-list-header-right {
-      @extend %display-flex-center;
-      flex-shrink: 0;
-      gap: 4px;
-      line-height: 0;
-      > :global(span) {
-        display: inline-flex;
-        align-items: center;
-        line-height: 0;
-      }
-    }
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
-  .yak-mcp-entry {
+  .ai-mcp-tool-list-label {
     flex-shrink: 0;
-    svg {
-      width: 16px;
-      height: 16px;
-    }
-  }
-  .header-divider {
-    width: 1px;
-    height: 16px;
-    margin-right: 8px;
-    background: var(--Colors-Use-Neutral-Border);
+    white-space: nowrap;
   }
   .ai-mcp-list-search {
     padding: 0 12px 8px;
