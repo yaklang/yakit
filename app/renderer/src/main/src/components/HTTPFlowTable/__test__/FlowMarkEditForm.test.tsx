@@ -1,6 +1,7 @@
 import { act, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import type * as Antd from 'antd'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { HTTPFlow } from '../HTTPFlowTable.constants'
 import { buildBatchScopes } from '@/components/BatchScopeSelector/batchScope'
 
@@ -15,44 +16,42 @@ vi.mock('@/components/BatchScopeSelector/BatchScopeSelector', () => ({
     return <div>batch-scope-selector</div>
   },
 }))
-vi.mock('antd', () => ({
-  Form: Object.assign(
-    (props: Record<string, any>) => {
-      mocks.formProps = props
-      return (
-        <form
-          onKeyDown={props.onKeyDown}
-          onSubmit={(event) => {
-            event.preventDefault()
-            props.onFinish(props.initialValues)
-          }}
-        >
-          {props.children}
-        </form>
-      )
-    },
-    { useForm: () => [{}], Item: ({ children }: { children: React.ReactNode }) => <>{children}</> },
-  ),
-}))
+vi.mock('antd', async (importOriginal) => {
+  const actual = await importOriginal<typeof Antd>()
+  return {
+    Form: Object.assign(
+      (props: React.ComponentProps<typeof actual.Form>) => {
+        mocks.formProps = props
+        return <actual.Form {...props} />
+      },
+      { useForm: actual.Form.useForm, Item: actual.Form.Item },
+    ),
+  }
+})
 vi.mock('@/components/yakitUI/YakitButton/YakitButton', () => ({
-  YakitButton: ({ children, htmlType = 'button', onClick, disabled }: any) => (
-    <button type={htmlType} onClick={onClick} disabled={disabled}>
+  YakitButton: ({ children, htmlType = 'button', onClick, disabled, loading }: any) => (
+    <button type={htmlType} onClick={onClick} disabled={disabled} aria-busy={loading}>
       {children}
     </button>
   ),
 }))
 vi.mock('@/components/yakitUI/YakitSelect/YakitSelect', () => ({
   YakitSelect: Object.assign(
-    ({ children }: { children: React.ReactNode }) => (
+    ({ children, value, onChange, id }: any) => (
       <div>
         <input aria-label="选项输入" />
-        <select>{children}</select>
+        <select id={id} value={value ?? ''} onChange={(event) => onChange?.(event.target.value)}>
+          <option value="" />
+          {children}
+        </select>
       </div>
     ),
     { Option: ({ children, value }: any) => <option value={value}>{children}</option> },
   ),
 }))
-vi.mock('@/components/yakitUI/YakitInput/YakitInput', () => ({ YakitInput: { TextArea: () => <textarea /> } }))
+vi.mock('@/components/yakitUI/YakitInput/YakitInput', () => ({
+  YakitInput: { TextArea: (props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) => <textarea {...props} /> },
+}))
 vi.mock('@/i18n/useI18nNamespaces', () => ({
   useI18nNamespaces: () => ({
     t: (key: string) => (key === 'HTTPFlowTable.markOptions.SQL注入' ? 'SQL injection' : key),
@@ -112,11 +111,19 @@ const renderStatefulBatch = async (selection: 'all' | 'explicit', values: { Issu
 
 describe('FlowMarkEditForm', () => {
   beforeEach(() => {
+    vi.stubGlobal('matchMedia', (media: string) => ({
+      matches: false,
+      media,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+    }))
     mocks.formProps = undefined
     mocks.batchScopeProps = undefined
     mocks.apiBatchSetHTTPFlowIssueFields.mockReset()
     mocks.apiBatchSetHTTPFlowIssueFields.mockResolvedValue({ UpdatedCount: 1 })
   })
+
+  afterEach(() => vi.unstubAllGlobals())
 
   it('keeps single-record behavior unchanged', async () => {
     const user = userEvent.setup()
@@ -213,6 +220,88 @@ describe('FlowMarkEditForm', () => {
     await waitFor(() => expect(onClose).toHaveBeenCalledOnce())
     expect(onSuccess).toHaveBeenCalledExactlyOnceWith({ Ids: [7, 8], Severity: '高危' })
     expect(mocks.apiBatchSetHTTPFlowIssueFields).toHaveBeenCalledOnce()
+  })
+
+  it('preserves small-batch inputs after rejection and retries successfully without duplicate submissions', async () => {
+    const user = userEvent.setup()
+    let rejectRequest!: (error: Error) => void
+    let resolveRetry!: (result: { UpdatedCount: number }) => void
+    const failedRequest = new Promise<{ UpdatedCount: number }>((_, reject) => {
+      rejectRequest = reject
+    })
+    const retryRequest = new Promise<{ UpdatedCount: number }>((resolve) => {
+      resolveRetry = resolve
+    })
+    mocks.apiBatchSetHTTPFlowIssueFields.mockReturnValueOnce(failedRequest).mockReturnValueOnce(retryRequest)
+    const onClose = vi.fn()
+    const onSuccess = vi.fn()
+    const onRefresh = vi.fn()
+    render(
+      <FlowMarkEditForm
+        batch
+        batchCount={2}
+        ids={[7, 8]}
+        onClose={onClose}
+        onSuccess={onSuccess}
+        onRefresh={onRefresh}
+      />,
+    )
+
+    const values = { IssueType: 'SQL注入', Severity: '高危', Status: '待修复', StatusReason: ' investigate ' }
+    await user.selectOptions(screen.getByLabelText('HTTPFlowTable.problemType'), values.IssueType)
+    await user.selectOptions(screen.getByLabelText('HTTPFlowTable.severity'), values.Severity)
+    await user.selectOptions(screen.getByLabelText('HTTPFlowTable.disposalStatus'), values.Status)
+    await user.type(screen.getByRole('textbox', { name: 'HTTPFlowTable.disposalNote' }), values.StatusReason)
+
+    const submit = screen.getByRole('button', { name: 'YakitButton.ok' })
+    const cancel = screen.getByRole('button', { name: 'YakitButton.cancel' })
+    await user.dblClick(submit)
+    expect(mocks.apiBatchSetHTTPFlowIssueFields).toHaveBeenCalledOnce()
+    expect(cancel).toBeDisabled()
+    expect(submit).toHaveAttribute('aria-busy', 'true')
+    const expectedRequest = {
+      Token: undefined,
+      SetIssueType: values.IssueType,
+      SetSeverity: values.Severity,
+      SetStatus: values.Status,
+      StatusReason: 'investigate',
+      Filter: {
+        IncludeId: [7, 8],
+        AfterId: undefined,
+        BeforeId: undefined,
+        Pagination: { Page: 1, Limit: 1000, OrderBy: 'id', Order: 'desc' },
+      },
+    }
+    expect(mocks.apiBatchSetHTTPFlowIssueFields).toHaveBeenNthCalledWith(1, expectedRequest)
+
+    await act(async () => rejectRequest(new Error('offline')))
+    expect(onClose).not.toHaveBeenCalled()
+    expect(onSuccess).not.toHaveBeenCalled()
+    expect(onRefresh).not.toHaveBeenCalled()
+    expect(cancel).toBeEnabled()
+    expect(submit).toBeEnabled()
+    expect(submit).toHaveAttribute('aria-busy', 'false')
+    expect(screen.getByLabelText('HTTPFlowTable.problemType')).toHaveValue(values.IssueType)
+    expect(screen.getByLabelText('HTTPFlowTable.severity')).toHaveValue(values.Severity)
+    expect(screen.getByLabelText('HTTPFlowTable.disposalStatus')).toHaveValue(values.Status)
+    expect(screen.getByRole('textbox', { name: 'HTTPFlowTable.disposalNote' })).toHaveValue(values.StatusReason)
+
+    await user.dblClick(submit)
+    expect(mocks.apiBatchSetHTTPFlowIssueFields).toHaveBeenCalledTimes(2)
+    expect(mocks.apiBatchSetHTTPFlowIssueFields).toHaveBeenNthCalledWith(2, expectedRequest)
+    expect(cancel).toBeDisabled()
+    expect(submit).toHaveAttribute('aria-busy', 'true')
+    await user.click(cancel)
+    expect(onClose).not.toHaveBeenCalled()
+    expect(onSuccess).not.toHaveBeenCalled()
+
+    await act(async () => resolveRetry({ UpdatedCount: 2 }))
+    expect(onSuccess).toHaveBeenCalledExactlyOnceWith({ Ids: [7, 8], ...values, StatusReason: 'investigate' })
+    expect(onClose).toHaveBeenCalledOnce()
+    expect(onRefresh).not.toHaveBeenCalled()
+    expect(mocks.apiBatchSetHTTPFlowIssueFields).toHaveBeenCalledTimes(2)
+    expect(cancel).toBeEnabled()
+    expect(submit).toHaveAttribute('aria-busy', 'false')
   })
 
   it('shows ranges only above 1000 and page 3 keeps limit 1000 without prefetch', async () => {
