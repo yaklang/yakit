@@ -129,7 +129,7 @@ describe('Yak script model configuration', () => {
     })
     expect(screen.getByRole('switch', { name: 'ConfigNetworkPage.nativeToolCalling' })).not.toBeChecked()
     const editor = await screen.findByLabelText('yak-model-script')
-    expect((editor as HTMLTextAreaElement).value).toContain('provider.ReadSSE')
+    expect(editor).toHaveValue(providerExample)
     expect(screen.queryByText('ConfigNetworkPage.scriptTemplate')).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'ConfigNetworkPage.loadProviderExample' })).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'AIModelList.confirmAddBtn' }))
@@ -138,7 +138,7 @@ describe('Yak script model configuration', () => {
     expect(saved.ModelName).toBe('script-model')
     expect(saved.Provider).toEqual({
       Type: 'yak-script',
-      Script: expect.stringContaining('provider.ReadSSE'),
+      Script: providerExample,
       EnableNativeToolCalling: false,
     })
     expect(mocks.invoke).not.toHaveBeenCalled()
@@ -196,7 +196,7 @@ describe('Yak script model configuration', () => {
       />,
     )
     const editor = await screen.findByLabelText('yak-model-script')
-    expect((editor as HTMLTextAreaElement).value).toContain('provider.ReadSSE')
+    expect(editor).toHaveValue(providerExample)
     const form = ref.current!.form
     expect(screen.queryByLabelText('ConfigNetworkPage.scriptParams')).not.toBeInTheDocument()
     await act(async () => {
