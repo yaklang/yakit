@@ -50,16 +50,6 @@
       justify-content: right;
       align-items: center;
       gap: 8px;
-
-      .no-expand-wrapper {
-        height: 100%;
-        cursor: pointer;
-        svg {
-          width: 24px;
-          height: 24px;
-          color: var(--Colors-Use-Neutral-Text-3-Secondary);
-        }
-      }
     }
   }
   .second-menu-wrapper {
@@ -152,48 +142,7 @@
         }
       }
     }
-    .expand-wrapper {
-      width: 30px;
-      height: 72px;
-      display: flex;
-      align-items: flex-end;
-      .expand-body {
-        width: 30px;
-        height: 30px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        cursor: pointer;
-        svg {
-          width: 24px;
-          height: 24px;
-          color: var(--Colors-Use-Neutral-Text-3-Secondary);
-        }
-      }
-    }
   }
-  .second-menu-hidden-wrapper {
-    margin-top: 0;
-    width: 0;
-    height: 0;
-    overflow: hidden;
-    visibility: hidden;
-  }
-}
-.public-menu-no-expand-wrapper {
-  padding: 6px 16px;
-}
-
-.child-menu-popover {
-  :global {
-    .ant-popover-inner {
-      padding: 0;
-    }
-  }
-}
-
-.child-menu-submenu.child-menu-submenu:global(.ant-menu-submenu-popup) {
-  padding: 0 6px;
 }
 
 .modal-content {

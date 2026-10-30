@@ -219,6 +219,9 @@
     "tabPage": "tab pages"
   },
   "UILayout": {
+    "hideMenu": "Hide menu",
+    "showMenu": "Show menu",
+    "toggleMenu": "Show or hide menu",
     "entering": "Entering...",
     "projectSyncFailed": "{{name}} project data synchronization failed, please upload manually",
     "exiting": "Exiting...",

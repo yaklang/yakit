@@ -34,8 +34,6 @@ vi.mock('@/pages/pluginHub/utils/grpc', () => ({ grpcFetchLocalPluginDetail: vi.
 vi.mock('@/pages/hacker/httpHacker', () => ({ toMITMHacker: vi.fn() }))
 vi.mock('@/components/managementTab', () => ({ ManagementTab: () => null }))
 vi.mock('@/components/yakitUI/YakitButton/YakitButton', () => ({ YakitButton: () => null }))
-vi.mock('@/components/yakitUI/YakitPopover/YakitPopover', () => ({ YakitPopover: () => null }))
-vi.mock('@/components/yakitUI/YakitMenu/YakitMenu', () => ({ YakitMenu: () => null }))
 vi.mock('@/components/yakitUI/YakitModal/YakitModalConfirm', () => ({ YakitModalConfirm: vi.fn() }))
 vi.mock('../ExtraMenu', () => ({ ExtraMenu: () => null, OrdinaryMenu: () => null }))
 vi.mock('../MenuMode', () => ({ MenuMode: () => null }))
@@ -45,7 +43,7 @@ vi.mock('../MenuPlugin', () => ({ MenuPlugin: () => <div data-testid="plugin-con
 
 const renderMenu = async () => {
   await act(async () => {
-    render(<PublicMenu defaultExpand onMenuSelect={vi.fn()} setRouteToLabel={vi.fn()} />)
+    render(<PublicMenu onMenuSelect={vi.fn()} setRouteToLabel={vi.fn()} />)
   })
 }
 
@@ -69,6 +67,21 @@ describe('PublicMenu 工具区域', () => {
     vi.clearAllTimers()
     vi.useRealTimers()
     vi.clearAllMocks()
+  })
+
+  it.each([true, false])('公共菜单固定展开且没有展开收起控件（Memfit: %s）', async (memfit) => {
+    edition.memfit = memfit
+    await renderMenu()
+    const root = screen.getByText('AI').closest('.' + styles['public-menu-wrapper'])!
+    expect(root).toHaveAttribute('class', styles['public-menu-wrapper'])
+    for (const label of ['AI', '插件', '数据库']) {
+      expect(screen.getByText(label)).toBeInTheDocument()
+    }
+    const secondMenu = root.querySelector('.' + styles['second-menu-wrapper'])!
+    expect(secondMenu).toHaveAttribute('class', styles['second-menu-wrapper'])
+    expect(secondMenu.children).toHaveLength(1)
+    fireEvent.click(screen.getByText('数据库'))
+    expectTool('codec')
   })
 
   it('Memfit 展开菜单默认显示 Codec，支持切换 DNSLog 和切回', async () => {
