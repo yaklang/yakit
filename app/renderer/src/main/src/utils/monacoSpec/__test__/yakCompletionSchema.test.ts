@@ -19,7 +19,7 @@ describe('Yak 补全请求上下文', () => {
     getModelContext.mockReset()
   })
 
-  it.each(['ai-model', 'yak'])('保留 %s 分析上下文并发送当前代码和光标范围', async (scriptType) => {
+  it.each(['yak', 'mitm'])('保留 %s 分析上下文并发送当前代码和光标范围', async (scriptType) => {
     const code = 'chat = func(req, emit) { return req.Prompt }'
     const model = {
       id: 'script-model',

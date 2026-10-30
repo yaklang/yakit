@@ -14,7 +14,6 @@ import type { TypeSelectOpt } from './funcTemplateType'
 import type { PluginFilterParams, PluginSearchParams } from './baseTemplateType'
 
 export function GetPluginLanguage(type: string): string {
-  if (type === 'ai-model') return 'yak'
   return pluginTypeToName[type]?.language || type
 }
 

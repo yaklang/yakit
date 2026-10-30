@@ -115,11 +115,11 @@ beforeEach(() => {
 })
 
 describe('YakitEditor AI 模型脚本', () => {
-  it('使用 Yak 高亮并保留独立的 ai-model 分析上下文', () => {
-    const view = render(<YakitEditor type="ai-model" value="chat = func(req, emit) { return req.Prompt }" />)
+  it('使用普通 Yak 高亮和补全上下文', () => {
+    const view = render(<YakitEditor type="yak" value="chat = func(req, emit) { return req.Prompt }" />)
 
     expect(view.getByTestId('monaco-editor')).toHaveAttribute('data-language', 'yak')
-    expect(setEditorContext).toHaveBeenCalledWith(editor, 'plugin', 'ai-model')
+    expect(setEditorContext).toHaveBeenCalledWith(editor, 'plugin', 'yak')
   })
 })
 

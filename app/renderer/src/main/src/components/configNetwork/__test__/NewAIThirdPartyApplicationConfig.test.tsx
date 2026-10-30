@@ -222,7 +222,7 @@ describe('Yak script model configuration', () => {
       <AIModelForm item={item} aiModelType={AIModelTypeEnum.TierIntelligent} onClose={onClose} />,
     )
     const editor = await screen.findByLabelText('yak-model-script')
-    expect(editor).toHaveAttribute('data-script-type', 'ai-model')
+    expect(editor).toHaveAttribute('data-script-type', 'yak')
     expect(editor).toHaveValue(script)
     fireEvent.change(editor, { target: { value: edited } })
     if (enableNative) fireEvent.click(screen.getByRole('switch', { name: 'ConfigNetworkPage.nativeToolCalling' }))
