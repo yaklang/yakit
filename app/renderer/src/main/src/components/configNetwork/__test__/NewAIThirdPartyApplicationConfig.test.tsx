@@ -36,9 +36,10 @@ vi.mock('@/pages/ai-re-act/hooks/useAIGlobalConfig', () => ({
   ],
 }))
 vi.mock('@/components/yakitUI/YakitEditor/YakitEditor', () => ({
-  YakitEditor: ({ value, setValue, readOnly }) => (
+  YakitEditor: ({ value, setValue, readOnly, type }) => (
     <textarea
       aria-label="yak-model-script"
+      data-script-type={type}
       value={value}
       onChange={(e) => setValue?.(e.target.value)}
       readOnly={readOnly}
@@ -129,7 +130,7 @@ describe('Yak script model configuration', () => {
     })
     expect(screen.getByRole('switch', { name: 'ConfigNetworkPage.nativeToolCalling' })).not.toBeChecked()
     const editor = await screen.findByLabelText('yak-model-script')
-    expect((editor as HTMLTextAreaElement).value).toContain('provider.ReadSSE')
+    expect((editor as HTMLTextAreaElement).value).toContain('ai.ReadSSE')
     expect(screen.queryByText('ConfigNetworkPage.scriptTemplate')).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'ConfigNetworkPage.loadProviderExample' })).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'AIModelList.confirmAddBtn' }))
@@ -138,7 +139,7 @@ describe('Yak script model configuration', () => {
     expect(saved.ModelName).toBe('script-model')
     expect(saved.Provider).toEqual({
       Type: 'yak-script',
-      Script: expect.stringContaining('provider.ReadSSE'),
+      Script: expect.stringContaining('ai.ReadSSE'),
       EnableNativeToolCalling: false,
     })
     expect(mocks.invoke).not.toHaveBeenCalled()
@@ -196,7 +197,7 @@ describe('Yak script model configuration', () => {
       />,
     )
     const editor = await screen.findByLabelText('yak-model-script')
-    expect((editor as HTMLTextAreaElement).value).toContain('provider.ReadSSE')
+    expect((editor as HTMLTextAreaElement).value).toContain('ai.ReadSSE')
     const form = ref.current!.form
     expect(screen.queryByLabelText('ConfigNetworkPage.scriptParams')).not.toBeInTheDocument()
     await act(async () => {
@@ -221,6 +222,7 @@ describe('Yak script model configuration', () => {
       <AIModelForm item={item} aiModelType={AIModelTypeEnum.TierIntelligent} onClose={onClose} />,
     )
     const editor = await screen.findByLabelText('yak-model-script')
+    expect(editor).toHaveAttribute('data-script-type', 'ai-model')
     expect(editor).toHaveValue(script)
     fireEvent.change(editor, { target: { value: edited } })
     if (enableNative) fireEvent.click(screen.getByRole('switch', { name: 'ConfigNetworkPage.nativeToolCalling' }))

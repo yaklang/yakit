@@ -18,7 +18,7 @@ const ScriptEditor: React.FC<{
 }> = ({ value, onChange, disabled, id }) => (
   <div id={id} className={styles['model-script-editor']}>
     <Suspense fallback={null}>
-      <YakitEditor type="yak" value={value ?? ''} setValue={onChange} readOnly={disabled} noMiniMap />
+      <YakitEditor type="ai-model" value={value ?? ''} setValue={onChange} readOnly={disabled} noMiniMap />
     </Suspense>
   </div>
 )
