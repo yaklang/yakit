@@ -8,7 +8,7 @@ const store = createStore(() => ({
   currentPlan: { task_tree: [] as object[] },
   currentChatStatus: { coordinatorId: 'current' },
   planHistoryList: { records: [] as { coordinator_id: string }[] },
-  chatElements: [] as { token: string; chatType: string }[],
+  chatElements: [] as { token: string; chatType: string; kind: 'task'; isHistory: boolean }[],
   tasks: {} as Record<string, { renderNum: number }>,
 }))
 const initialState = store.getState()
@@ -50,7 +50,10 @@ describe('TaskListPane', () => {
 
   it('仅有子 Agent 时保留列表，移除后显示空状态', () => {
     contents.set('child', { type: AIChatQSDataTypeEnum.TASK_NODE_GROUP, data: { taskId: 'child' } })
-    store.setState({ chatElements: [{ token: 'child', chatType: 'reAct' }], tasks: { child: { renderNum: 1 } } })
+    store.setState({
+      chatElements: [{ token: 'child', chatType: 'reAct', kind: 'task', isHistory: false }],
+      tasks: { child: { renderNum: 1 } },
+    })
     render(<TaskListPane />)
     expect(screen.getByText('子 Agent')).toBeInTheDocument()
     expect(screen.queryByText('暂无数据')).not.toBeInTheDocument()

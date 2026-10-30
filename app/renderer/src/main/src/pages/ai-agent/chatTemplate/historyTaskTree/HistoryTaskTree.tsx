@@ -7,12 +7,8 @@ import type {
   SendRecoverParams,
 } from './HistoryTaskTreeType'
 import { useCreation, useMemoizedFn, useUpdateEffect } from 'ahooks'
-import {
-  type AIAgentGrpcApi,
-  type AIInputEvent,
-  AIInputEventSyncTypeEnum,
-  AITaskStatus,
-} from '@/pages/ai-re-act/hooks/grpcApi'
+import { AIInputEventSyncTypeEnum, AITaskStatus } from '@/pages/ai-re-act/hooks/grpcApi'
+import type { AIAgentGrpcApi, AIInputEvent } from '@/pages/ai-re-act/hooks/grpcApi'
 import { AITree } from '../../aiTree/AITree'
 import YakitCollapse from '@/components/yakitUI/YakitCollapse/YakitCollapse'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'

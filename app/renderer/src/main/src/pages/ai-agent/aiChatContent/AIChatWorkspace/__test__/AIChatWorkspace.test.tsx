@@ -121,6 +121,9 @@ vi.mock('@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu', () => ({
 
 const store = createStore(() => ({
   currentChatStatus: { questionID: 'task-1' },
+  currentPlan: { task_tree: [] },
+  chatElements: [],
+  tasks: {},
   execFileRecord: new Map(),
   httpTabShow: false,
   httpTabUpdate: 0,
@@ -128,7 +131,7 @@ const store = createStore(() => ({
   riskTabUpdate: 0,
 }))
 const initialState = store.getState()
-const rawData = { httpRunTimeIDs: [] as string[], riskRunTimeIDs: [] as string[] }
+const rawData = { httpRunTimeIDs: [] as string[], riskRunTimeIDs: [] as string[], contents: new Map() }
 const agentStore = createStore<{
   activeChat?: { SessionID: string; Title: string; RelatedRuntimeIDs: string[] }
   pageId?: string

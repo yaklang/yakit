@@ -37,11 +37,19 @@ vi.mock('../AIAgentSideList', () => ({
 vi.mock('@/components/yakitUI/YakitResizeBox/YakitResizeBox', () => ({
   YakitResizeBox: ({
     firstRatio,
+    firstMinSize,
+    secondMinSize,
+    lineSize,
+    freeze,
     firstNode,
     secondNode,
     onMouseUp,
   }: {
     firstRatio?: string
+    firstMinSize?: string | number
+    secondMinSize?: string | number
+    lineSize?: number
+    freeze?: boolean
     firstNode: ReactNode
     secondNode: ReactNode
     onMouseUp?: (e: {
@@ -53,6 +61,9 @@ vi.mock('@/components/yakitUI/YakitResizeBox/YakitResizeBox', () => ({
   }) => (
     <div>
       <output aria-label="first-ratio">{firstRatio}</output>
+      <output aria-label="first-min-size">{firstMinSize}</output>
+      <output aria-label="second-min-size">{secondMinSize}</output>
+      <output aria-label="separator-size">{freeze ? lineSize : 0}</output>
       <button
         type="button"
         onClick={() =>
@@ -223,5 +234,42 @@ describe('AIAgent 侧栏拖拽宽度', () => {
     notifyWidth(1400)
     expect(screen.getByLabelText('side-show')).toHaveTextContent('false')
     expect(screen.getByLabelText('first-ratio')).toHaveTextContent('24px')
+  })
+
+  it.each([900, 940, 941, 1200])('固定 %spx 宽度下展开侧栏，传入的两侧最小宽度不会撑出容器', (width) => {
+    render(<AIAgent pageId="test" />)
+    notifyWidth(width)
+
+    // 展开后不再发送尺寸通知，确保 show 变化本身就能更新布局约束。
+    fireEvent.click(screen.getByRole('button', { name: '展开侧栏' }))
+    expect(screen.getByLabelText('side-show')).toHaveTextContent('true')
+    const firstMin = Number(screen.getByLabelText('first-min-size').textContent)
+    const secondMin = Number(screen.getByLabelText('second-min-size').textContent)
+    const separator = Number(screen.getByLabelText('separator-size').textContent)
+    expect(firstMin).toBe(260)
+    expect(secondMin).toBe(Math.min(680, width - firstMin - separator))
+    expect(firstMin + secondMin + separator).toBeLessThanOrEqual(width)
+  })
+
+  it('收起侧栏或窗口变宽时恢复聊天区最小宽度，保留拖拽宽度偏好', () => {
+    render(<AIAgent pageId="test" />)
+    notifyWidth(900)
+    fireEvent.click(screen.getByRole('button', { name: '展开侧栏' }))
+    fireEvent.click(screen.getByRole('button', { name: '模拟拖拽结束' }))
+    expect(screen.getByLabelText('second-min-size')).toHaveTextContent('639')
+
+    fireEvent.click(screen.getByRole('button', { name: '收起侧栏' }))
+    expect(screen.getByLabelText('first-min-size')).toHaveTextContent('24')
+    expect(screen.getByLabelText('second-min-size')).toHaveTextContent('680')
+    expect(screen.getByLabelText('separator-size')).toHaveTextContent('0')
+
+    fireEvent.click(screen.getByRole('button', { name: '展开侧栏' }))
+    expect(screen.getByLabelText('first-ratio')).toHaveTextContent('480px')
+    expect(screen.getByLabelText('second-min-size')).toHaveTextContent('639')
+
+    notifyWidth(1400)
+    expect(screen.getByLabelText('side-show')).toHaveTextContent('true')
+    expect(screen.getByLabelText('second-min-size')).toHaveTextContent('680')
+    expect(screen.getByLabelText('first-ratio')).toHaveTextContent('480px')
   })
 })

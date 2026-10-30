@@ -688,7 +688,7 @@
     "traffic": "流量",
     "risk": "漏洞",
     "sessionHistory": "會話歷史",
-    "taskList": "任務列表",
+    "taskList": "非同步任務",
     "timeline": "時間線",
     "exportLog": "匯出日誌",
     "viewLog": "查看日誌",

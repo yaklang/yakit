@@ -11,6 +11,12 @@ import type { ExportAILogsModal as ExportAILogsModalComponent } from '@/pages/ai
 import { apiRiskFieldGroup } from '@/pages/risks/YakitRiskTable/utils'
 import emiter from '@/utils/eventBus/eventBus'
 import type * as AIRightPanelModule from '../AIRightPanel'
+import { useStore } from 'zustand'
+
+vi.mock('@/pages/ai-agent/chatTemplate/historyTaskTree/useRunningAsyncTaskCount', () => {
+  const useMockRunningAsyncTaskCount = () => useStore(mockRunningTaskStore, (state) => state.count)
+  return { default: useMockRunningAsyncTaskCount }
+})
 
 // 当前安装的图标包缺少这两个装饰图标；保留其余真实导出以验证面板交互。
 vi.mock('@yakit-libs/yakit-ui-icons/outline', async (importOriginal) => ({
@@ -54,6 +60,7 @@ interface MockTaskDetails {
   execution?: Record<string, unknown>
 }
 const mockTaskDetailsMap = new Map<string, MockTaskDetails>()
+const mockRunningTaskStore = createStore<{ count: number | undefined }>(() => ({ count: undefined }))
 const mockAgentStore = createStore<{ activeChat?: { Id: number; SessionID: string } }>(() => ({}))
 const mockTaskStore: StoreApi<MockTaskStoreState> = createStore<MockTaskStoreState>(() => ({
   currentChatStatus: { questionID: '' },
@@ -217,7 +224,7 @@ vi.mock('i18next-resources-to-backend', () => {
           traffic: '流量',
           risk: '漏洞',
           sessionHistory: '会话历史',
-          taskList: '任务列表',
+          taskList: '异步任务',
           timeline: '时间线',
           aiSettings: 'AI 设置',
           exportLog: '导出日志',
@@ -298,6 +305,7 @@ const expectEmptyDataCards = () => {
 
 describe('AIRightPanel', () => {
   beforeEach(() => {
+    mockRunningTaskStore.setState({ count: undefined })
     viewportState.visible = true
     mockAgentStore.setState({ activeChat: undefined })
     mockTaskStore.setState({ execute: false })
@@ -308,6 +316,48 @@ describe('AIRightPanel', () => {
     mockIsCommunityEdition.mockReturnValue(true)
     mockNetWorkApi.mockReset()
     mockNetWorkApi.mockResolvedValue(undefined)
+  })
+
+  it.each([false, true])('异步任务数量变化时更新标签，零和未知数量隐藏（小屏：%s）', (small) => {
+    const result = render(<AIRightPanel small={small} />)
+    try {
+      for (const count of [undefined, 0, 1, 99, 100, 0, undefined]) {
+        act(() => mockRunningTaskStore.setState({ count }))
+        const menu = screen.getByLabelText('异步任务')
+        const displayedCount = count ? (small ? Math.min(count, 99) : count) : ''
+        expect(menu.textContent).toBe(`${small ? '' : '异步任务'}${displayedCount}`)
+        if (small && count) {
+          const badge = screen.getByLabelText(`异步任务 ${count}`)
+          expect(badge).toHaveClass('count-badge')
+          expect(badge).not.toHaveClass('count-badge-risk')
+          expect(badge.classList.contains('count-badge-overflow')).toBe(count > 99)
+        } else {
+          expect(screen.queryByLabelText(/^异步任务 /)).not.toBeInTheDocument()
+        }
+      }
+    } finally {
+      result.unmount()
+    }
+  })
+
+  it('异步任务切换宽窄屏保留数量，浮层使用相同标题', () => {
+    mockRunningTaskStore.setState({ count: 100 })
+    const result = render(<AIRightPanel />)
+    try {
+      expect(screen.getByLabelText('异步任务')).toHaveTextContent('异步任务100')
+      result.rerender(<AIRightPanel small />)
+      expect(screen.getByLabelText('异步任务 100')).toHaveTextContent('99')
+      result.rerender(<AIRightPanel small={false} />)
+      expect(screen.queryByLabelText('异步任务 100')).not.toBeInTheDocument()
+      expect(screen.getByLabelText('异步任务')).toHaveTextContent('异步任务100')
+      fireEvent.click(screen.getByLabelText('异步任务'))
+      expect(screen.getByTestId('task-list-pane')).toBeInTheDocument()
+      const closeButton = screen.getByRole('button', { name: /关闭|Close|YakitButton\.close/ })
+      expect(closeButton.parentElement?.parentElement?.firstElementChild).toHaveTextContent('异步任务')
+      expect(screen.queryByText('任务列表')).not.toBeInTheDocument()
+    } finally {
+      result.unmount()
+    }
   })
 
   describe('主模型 Tokens 登录入口', () => {
@@ -851,7 +901,7 @@ describe('AIRightPanel', () => {
         for (const label of ['文件系统', '浏览器实例', '流量', '漏洞', '会话历史']) {
           expect(screen.getByLabelText(label)).toBeInTheDocument()
         }
-        for (const label of ['任务详情看板', '加载技能', '任务列表', '更多', '时间线', '导出日志', '查看日志']) {
+        for (const label of ['任务详情看板', '加载技能', '异步任务', '更多', '时间线', '导出日志', '查看日志']) {
           expect(screen.queryByLabelText(label)).not.toBeInTheDocument()
         }
         expect(screen.queryByText('运行时间')).not.toBeInTheDocument()
@@ -1001,7 +1051,7 @@ describe('AIRightPanel', () => {
   })
 
   it.each([
-    ['任务列表', 'task-list-pane'],
+    ['异步任务', 'task-list-pane'],
     ['时间线', 'timeline-pane'],
     ['加载技能', 'load-skills-pane'],
   ])('切换详情会话后关闭旧会话的%s', (label, testId) => {
@@ -1036,10 +1086,10 @@ describe('AIRightPanel', () => {
     expect(screen.getByLabelText('文件系统')).toBeInTheDocument()
   })
 
-  it('小屏点击在任务列表和时间线间切换，移出不销毁', async () => {
+  it('小屏点击在异步任务和时间线间切换，移出不销毁', async () => {
     render(<AIRightPanel small />)
     fireEvent.click(screen.getByLabelText('更多'))
-    const taskItem = screen.getByLabelText('任务列表')
+    const taskItem = screen.getByLabelText('异步任务')
     const timelineItem = screen.getByLabelText('时间线')
     fireEvent.click(taskItem)
     expect(screen.getByTestId('task-list-pane')).toBeInTheDocument()
@@ -1052,7 +1102,7 @@ describe('AIRightPanel', () => {
     expect(screen.queryByTestId('timeline-pane')).not.toBeInTheDocument()
   })
   it.each([
-    ['任务列表', 'task-list-pane'],
+    ['异步任务', 'task-list-pane'],
     ['加载技能', 'load-skills-pane'],
   ])('正常态点击%s替换菜单，关闭后恢复菜单', async (label, testId) => {
     await renderPanel(<AIRightPanel />)
@@ -1071,7 +1121,7 @@ describe('AIRightPanel', () => {
   })
 
   it.each([
-    ['任务列表', 'task-list-pane'],
+    ['异步任务', 'task-list-pane'],
     ['加载技能', 'load-skills-pane'],
   ])('小屏点击%s打开浮层，移出不销毁', async (label, testId) => {
     render(<AIRightPanel small />)
@@ -1089,7 +1139,7 @@ describe('AIRightPanel', () => {
 
   it('切换屏幕模式时清理打开的任务浮层', () => {
     const result = render(<AIRightPanel small />)
-    fireEvent.click(screen.getByLabelText('任务列表'))
+    fireEvent.click(screen.getByLabelText('异步任务'))
     result.rerender(<AIRightPanel small={false} />)
     expect(screen.queryByTestId('task-list-pane')).not.toBeInTheDocument()
   })
@@ -1101,12 +1151,12 @@ describe('AIRightPanel', () => {
     expect(loadSkills.nextElementSibling).toBe(screen.getByLabelText('浏览器实例'))
   })
 
-  it('小屏加载技能与任务列表互相切换', () => {
+  it('小屏加载技能与异步任务互相切换', () => {
     render(<AIRightPanel small />)
     const loadSkills = screen.getByLabelText('加载技能')
     fireEvent.click(loadSkills)
     expect(screen.getByTestId('load-skills-pane')).toBeVisible()
-    fireEvent.click(screen.getByLabelText('任务列表'))
+    fireEvent.click(screen.getByLabelText('异步任务'))
     expect(screen.queryByTestId('load-skills-pane')).not.toBeInTheDocument()
     expect(screen.getByTestId('task-list-pane')).toBeVisible()
     fireEvent.click(loadSkills)
@@ -1339,6 +1389,7 @@ describe('AIRightPanel', () => {
   it.each([false, true])('数量更新后无需悬停即可刷新流量和漏洞（小屏：%s）', (small) => {
     vi.useFakeTimers()
     setMockQuestionID('task-live-count')
+    mockRunningTaskStore.setState({ count: 7 })
     const detail = {
       uuid: 'snapshot-0',
       execution: { http_flow_count: 0, risk_level_count: { high: 0, total: 0 } },
@@ -1359,6 +1410,7 @@ describe('AIRightPanel', () => {
         const displayedCount = small && count > 99 ? 99 : count || ''
         expect(trafficMenu.textContent).toBe(`${small ? '' : '流量'}${displayedCount}`)
         expect(riskMenu.textContent).toBe(`${small ? '' : '漏洞'}${displayedCount}`)
+        expect(screen.getByLabelText('异步任务').textContent).toBe(`${small ? '' : '异步任务'}7`)
         if (small && count > 0) {
           for (const label of ['流量', '漏洞']) {
             const badge = screen.getByLabelText(`${label} ${count}`)

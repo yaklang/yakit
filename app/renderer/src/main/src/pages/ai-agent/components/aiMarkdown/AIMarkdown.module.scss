@@ -35,6 +35,22 @@
   .ai-milkdown {
     font-size: 14px;
     background-color: transparent;
+    color: var(--Colors-Use-Neutral-Text-2-Primary);
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+      color: var(--Colors-Use-Neutral-Text-2-Primary);
+    }
+    p,
+    :global(.space-y-4) > p:not([hidden]) {
+      margin: 2px 0 4px !important;
+    }
+    > :global(.space-y-4):only-child > :only-child {
+      margin: 0 !important;
+    }
   }
   .ai-milkdown-mini {
     max-height: 200px;

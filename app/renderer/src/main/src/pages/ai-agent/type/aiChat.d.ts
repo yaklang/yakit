@@ -2,7 +2,7 @@ import type { SessionLifecycle } from '@/pages/ai-re-act/hooks/sessionLifecycle'
 import type { AIAgentGrpcApi, AIInputEvent, AIStartParams, AISource } from '@/pages/ai-re-act/hooks/grpcApi'
 import type { PlanItemDetailsData, AIChatQSData } from '@/pages/ai-re-act/hooks/aiRender'
 import type { AISkillListItem } from '@/pages/ai-re-act/aiRightPanel/AISkillLoadingPane/aiSkillList/type'
-import { type PaginationSchema } from '@/pages/invoker/schema'
+import type { PaginationSchema } from '@/pages/invoker/schema'
 
 /** 上下文字节统计 */
 export interface AIContextStatsDetail {
