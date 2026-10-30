@@ -1,4 +1,3 @@
-import { SortAscendingOutlined, SortDescendingOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import {
   type DatabaseFirstMenuProps,
@@ -19,27 +18,22 @@ import { MenuCodec } from './MenuCodec'
 import { MenuDNSLog } from './MenuDNSLog'
 import { MenuMode } from './MenuMode'
 import { useMemoizedFn } from 'ahooks'
-import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
-import { YakitMenu } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import { MenuPlugin } from './MenuPlugin'
 import { yakitNotify } from '@/utils/notification'
 import { useStore } from '@/store'
 import {
   type EnhancedPublicRouteMenuProps,
-  keyToRouteInfo,
   publicConvertDatabase,
   publicExchangeProps,
-  routeToMenu,
   publicUnionMenus,
   menusConvertKey,
   type DownloadOnlinePluginByScriptNamesResponse,
   routeConvertKey,
-  routeInfoToKey,
 } from './utils'
 import { CodeGV, RemoteGV } from '@/yakitGV'
 import type { YakScript } from '@/pages/invoker/schema'
 import { YakitModalConfirm } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
-import { getRemoteValue, setRemoteValue } from '@/utils/kv'
+import { getRemoteValue } from '@/utils/kv'
 import { grpcFetchLocalPluginDetail } from '@/pages/pluginHub/utils/grpc'
 
 import classNames from 'classnames'
@@ -67,14 +61,13 @@ export interface RouteToPageProps {
   pluginName?: string
 }
 interface PublicMenuProps {
-  defaultExpand: boolean
   onMenuSelect: (route: RouteToPageProps) => void
   setRouteToLabel: (data: Map<string, string>) => void
 }
 
 const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
-  const { onMenuSelect, setRouteToLabel, defaultExpand } = props
-  const { t, i18nRefresh } = useI18nNamespaces(['layout', 'yakitRoute', 'yakitUi'])
+  const { onMenuSelect, setRouteToLabel } = props
+  const { t } = useI18nNamespaces(['layout', 'yakitRoute', 'yakitUi'])
   // 登录用户状态信息
   const { userInfo } = useStore()
   // 菜单模式
@@ -105,11 +98,6 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
   }, [softMode])
 
   const [activeTool, setActiveTool] = useState<'codec' | 'dnslog'>('codec')
-  const [isExpand, setIsExpand] = useState<boolean>(defaultExpand)
-  useEffect(() => {
-    setIsExpand(defaultExpand)
-  }, [defaultExpand])
-
   const routeToName = useRef<Map<string, string>>(new Map<string, string>())
   useEffect(() => {
     getRouteToName()
@@ -121,12 +109,6 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
     const pluginNames = menusConvertKey(pluginMenu)
     pluginNames.forEach((value, key) => routeToName.current.set(key, value))
     setRouteToLabel(routeToName.current)
-  })
-
-  const onSetIsExpand = useMemoizedFn((checked: boolean) => {
-    const value = JSON.stringify(checked)
-    setIsExpand(checked)
-    setRemoteValue(CodeGV.MenuExpand, value)
   })
 
   // 获取 基础工具菜单下的4个插件 是否存在于本地库内
@@ -403,21 +385,7 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
     })
   })
 
-  // 收起菜单的点击回调
-  const onNoExpandClickMenu = useMemoizedFn((key: string, keyPath: string[]) => {
-    setNoExpandMenu(-1)
-    const data = keyToRouteInfo(key)
-
-    if (data) {
-      if (data.route === YakitRoute.Plugin_OP) {
-        if (pluginToId[data?.pluginName || '']) data.pluginId = pluginToId[data?.pluginName || '']
-        onCheckPlugin(data, 'plugin')
-      } else {
-        onMenuSelect({ route: data.route })
-      }
-    }
-  })
-  // 展开菜单的点击回调
+  // 菜单的点击回调
   const onClickMenu = useMemoizedFn((route: RouteToPageProps, source: string) => {
     if (route.route !== YakitRoute.Plugin_OP) onMenuSelect(route)
     else {
@@ -425,77 +393,6 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
       onCheckPlugin(route, source)
     }
   })
-
-  const [noExpandMenu, setNoExpandMenu] = useState<number>(-1)
-  // 收起状态下的菜单组件
-  const noExpand = useMemo(() => {
-    const plugins: EnhancedPublicRouteMenuProps[] = []
-    for (const item of pluginMenu) {
-      if (item.children && item.children.length > 0) {
-        plugins.push({ ...item })
-      }
-    }
-
-    return (
-      <>
-        {defaultMenu.map((item, index) => {
-          const data =
-            item.label === '插件'
-              ? routeToMenu(
-                  (item.children || []).concat(
-                    plugins.length === 0
-                      ? []
-                      : [
-                          {
-                            page: undefined,
-                            label: t('Layout.MenuPlugin.commonPlugins'),
-                            menuName: '常用插件',
-                            children: plugins,
-                          },
-                        ],
-                  ),
-                  t,
-                )
-              : routeToMenu(item.children || [], t)
-          const isOnlyFirst = !item.children && item.page
-          return (
-            <YakitPopover
-              key={`${item.label}-${index}`}
-              trigger={'click'}
-              classNames={{ root: styles['child-menu-popover'] }}
-              placement={index === 0 ? 'bottomLeft' : 'bottom'}
-              open={noExpandMenu === index}
-              content={
-                <YakitMenu
-                  // triggerSubMenuAction="click"
-                  selectable={false}
-                  selectedKeys={[]}
-                  data={data}
-                  popupClassName={styles['child-menu-submenu']}
-                  onClick={({ key, keyPath }) => onNoExpandClickMenu(key, keyPath)}
-                />
-              }
-              onOpenChange={(visible) => !isOnlyFirst && setNoExpandMenu(visible ? index : -1)}
-            >
-              <div
-                key={`${item.label}-${index}`}
-                className={classNames(styles['menu-opt'], {
-                  [styles['active-menu-opt']]: noExpandMenu === index,
-                })}
-                onClick={() => {
-                  if (!item.children && item.page) {
-                    onNoExpandClickMenu(routeInfoToKey(item), [item.page])
-                  }
-                }}
-              >
-                {item.labelUi ? t(item.labelUi) : item.label}
-              </div>
-            </YakitPopover>
-          )
-        })}
-      </>
-    )
-  }, [defaultMenu, pluginMenu, noExpandMenu, i18nRefresh])
 
   // 右侧额外菜单点击
   const onClickExtraMenu = useMemoizedFn((route: RouteToPageProps) => {
@@ -524,11 +421,7 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
   }, [softMode])
 
   return (
-    <div
-      className={classNames(styles['public-menu-wrapper'], {
-        [styles['public-menu-no-expand-wrapper']]: !isExpand,
-      })}
-    >
+    <div className={styles['public-menu-wrapper']}>
       <div className={styles['first-menu-wrapper']}>
         {isSecurityExpert ? (
           <div className={styles['menu-wrapper-left']}>
@@ -548,44 +441,30 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
             </MenuPlugin>
           </div>
         ) : (
-          <>
-            {isExpand && (
-              <div className={styles['first-menu-body']}>
-                {defaultMenu.map((item, index) => {
-                  return (
-                    <div
-                      key={`${item.menuName}-${index}`}
-                      className={classNames(styles['menu-opt'], {
-                        [styles['active-menu-opt']]: activeMenu === index,
-                      })}
-                      onClick={() => {
-                        if (activeMenu !== index) setActiveMenu(index)
-                      }}
-                    >
-                      {item.labelUi ? t(item.labelUi) : item.label}
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-            {!isExpand && <div className={styles['first-menu-body']}>{noExpand}</div>}
-          </>
+          <div className={styles['first-menu-body']}>
+            {defaultMenu.map((item, index) => {
+              return (
+                <div
+                  key={`${item.menuName}-${index}`}
+                  className={classNames(styles['menu-opt'], {
+                    [styles['active-menu-opt']]: activeMenu === index,
+                  })}
+                  onClick={() => {
+                    if (activeMenu !== index) setActiveMenu(index)
+                  }}
+                >
+                  {item.labelUi ? t(item.labelUi) : item.label}
+                </div>
+              )
+            })}
+          </div>
         )}
         <div className={styles['first-menu-extra-wrapper']}>
           <ExtraMenu onMenuSelect={onClickExtraMenu} isSecurityExpert={isSecurityExpert} />
-          {!isMemfit() && !isExpand && (
-            <div className={styles['no-expand-wrapper']} onClick={(e) => onSetIsExpand(true)}>
-              <SortDescendingOutlined />
-            </div>
-          )}
         </div>
       </div>
 
-      <div
-        className={classNames(styles['second-menu-wrapper'], {
-          [styles['second-menu-hidden-wrapper']]: !isExpand,
-        })}
-      >
+      <div className={styles['second-menu-wrapper']}>
         <div
           className={styles['second-menu-body']}
           style={{
@@ -602,82 +481,75 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
             />
           )}
 
-          {!isMemfit() && (
-            <>
-              <>
-                {!isSecurityExpert && defaultMenu[activeMenu]?.label !== '插件' ? (
-                  <div className={styles['divider-style']}></div>
-                ) : (
-                  <div></div>
-                )}
-              </>
-              <div className={styles['tool-wrapper']}>
-                {defaultMenu[activeMenu]?.label === '插件' && (
-                  <MenuPlugin
-                    loading={loading}
-                    pluginList={pluginMenu}
-                    onMenuSelect={(route) => onClickMenu(route, 'plugin')}
-                    onRestore={() => {
-                      isInitRef.current = true
-                    }}
-                  />
-                )}
-                <div
-                  className={defaultMenu[activeMenu]?.label !== '插件' ? styles['tool-body'] : styles['hide-tool-body']}
-                >
-                  <div className={styles['tool-container']}>
-                    <div
-                      className={
-                        activeTool === 'codec' ? styles['tool-nohidden-container'] : styles['tool-hidden-container']
-                      }
-                    >
-                      <MenuCodec />
-                    </div>
-                    <div
-                      className={
-                        activeTool === 'dnslog' ? styles['tool-nohidden-container'] : styles['tool-hidden-container']
-                      }
-                    >
-                      <MenuDNSLog />
-                    </div>
+          <>
+            {!isSecurityExpert && (isMemfit() || defaultMenu[activeMenu]?.label !== '插件') ? (
+              <div className={styles['divider-style']}></div>
+            ) : (
+              <div></div>
+            )}
+            <div className={styles['tool-wrapper']}>
+              {!isMemfit() && defaultMenu[activeMenu]?.label === '插件' && (
+                <MenuPlugin
+                  loading={loading}
+                  pluginList={pluginMenu}
+                  onMenuSelect={(route) => onClickMenu(route, 'plugin')}
+                  onRestore={() => {
+                    isInitRef.current = true
+                  }}
+                />
+              )}
+              <div
+                className={
+                  isMemfit() || defaultMenu[activeMenu]?.label !== '插件'
+                    ? styles['tool-body']
+                    : styles['hide-tool-body']
+                }
+              >
+                <div className={styles['tool-container']}>
+                  <div
+                    className={
+                      activeTool === 'codec' ? styles['tool-nohidden-container'] : styles['tool-hidden-container']
+                    }
+                  >
+                    <MenuCodec />
                   </div>
-                  <div className={styles['switch-op-wrapper']}>
-                    <div className={styles['border-wrapper']}></div>
-                    <div
-                      className={classNames(styles['tab-bar'], {
-                        [styles['active-tab-bar']]: activeTool === 'codec',
-                      })}
-                      onClick={() => {
-                        if (activeTool === 'codec') return
-                        setActiveTool('codec')
-                      }}
-                    >
-                      {t('YakitRoute.Codec')}
-                    </div>
-                    <div
-                      className={classNames(styles['tab-bar'], {
-                        [styles['active-tab-bar']]: activeTool === 'dnslog',
-                      })}
-                      onClick={() => {
-                        if (activeTool === 'dnslog') return
-                        setActiveTool('dnslog')
-                      }}
-                    >
-                      {t('YakitRoute.DNSLog')}
-                    </div>
+                  <div
+                    className={
+                      activeTool === 'dnslog' ? styles['tool-nohidden-container'] : styles['tool-hidden-container']
+                    }
+                  >
+                    <MenuDNSLog />
+                  </div>
+                </div>
+                <div className={styles['switch-op-wrapper']}>
+                  <div className={styles['border-wrapper']}></div>
+                  <div
+                    className={classNames(styles['tab-bar'], {
+                      [styles['active-tab-bar']]: activeTool === 'codec',
+                    })}
+                    onClick={() => {
+                      if (activeTool === 'codec') return
+                      setActiveTool('codec')
+                    }}
+                  >
+                    {t('YakitRoute.Codec')}
+                  </div>
+                  <div
+                    className={classNames(styles['tab-bar'], {
+                      [styles['active-tab-bar']]: activeTool === 'dnslog',
+                    })}
+                    onClick={() => {
+                      if (activeTool === 'dnslog') return
+                      setActiveTool('dnslog')
+                    }}
+                  >
+                    {t('YakitRoute.DNSLog')}
                   </div>
                 </div>
               </div>
-            </>
-          )}
-        </div>
-        {!isMemfit() && (
-          <div className={styles['expand-wrapper']}>
-            <div className={styles['expand-body']} onClick={(e) => onSetIsExpand(false)}>
-              <SortAscendingOutlined />
             </div>
-          </div>
-        )}
+          </>
+        </div>
       </div>
     </div>
   )

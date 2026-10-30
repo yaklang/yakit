@@ -25,10 +25,12 @@ vi.hoisted(() => {
   })
 })
 
-import { act, render } from '@testing-library/react'
+import type { ReactNode } from 'react'
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-const { startIdleVisibleInterval, grpcFetchYakInstallResult } = vi.hoisted(() => ({
+const { startIdleVisibleInterval, grpcFetchYakInstallResult, headerState } = vi.hoisted(() => ({
+  headerState: { system: 'Darwin', portable: true, ready: true, community: true },
   startIdleVisibleInterval: vi.fn(() => vi.fn()),
   grpcFetchYakInstallResult: vi.fn().mockResolvedValue(true),
 }))
@@ -48,7 +50,7 @@ vi.mock('@/components/layout/YaklangEngineWatchDog', () => ({
   YaklangEngineWatchDog: ({ onReady }: { onReady?: () => void }) => {
     const { useEffect } = require('react')
     useEffect(() => {
-      onReady?.()
+      if (headerState.ready) onReady?.()
     }, [])
     return null
   },
@@ -62,11 +64,11 @@ vi.mock('@/utils/envfile', async (importOriginal) => {
   const actual = (await importOriginal()) as Record<string, unknown>
   return {
     ...actual,
-    isEnpriTraceAgent: () => true,
+    isEnpriTraceAgent: () => headerState.portable,
     isEnpriTrace: () => false,
     isEnterpriseEdition: () => false,
     isCommunityYakit: () => false,
-    isCommunityEdition: () => false,
+    isCommunityEdition: () => headerState.community,
     isMemfit: () => false,
     isIRify: () => false,
     getReleaseEditionName: () => 'Yakit',
@@ -140,10 +142,20 @@ vi.mock('@/services/electronBridge', async (importOriginal) => {
   const unsubscribe = () => undefined
   return {
     ...actual,
+    yakitSystem: {
+      ...(actual.yakitSystem as Record<string, unknown>),
+      fetchSystemName: vi.fn(async () => headerState.system),
+    },
     yakitUILayout: new Proxy(
       {},
       {
         get: (_target, prop) => {
+          if (prop === 'onFromEngineLinkWindow') {
+            return vi.fn((callback) => {
+              callback({ credential: { Mode: 'remote' } })
+              return unsubscribe
+            })
+          }
           if (String(prop).startsWith('on')) return vi.fn(() => unsubscribe)
           return vi.fn().mockResolvedValue(undefined)
         },
@@ -210,7 +222,16 @@ vi.mock('@/pages/pluginHub/utils/grpc', () => ({
 vi.mock('../MacUIOp', () => ({ MacUIOp: () => null }))
 vi.mock('../WinUIOp', () => ({ WinUIOp: () => null, TemporaryProjectPop: () => null }))
 vi.mock('../PerformanceDisplay', () => ({ PerformanceDisplay: () => null }))
-vi.mock('../FuncDomain', () => ({ FuncDomain: () => null, UIOpNotice: () => null }))
+vi.mock('../FuncDomain', () => ({
+  FuncDomain: ({ homeIcon }: { homeIcon?: ReactNode }) => <>{homeIcon}</>,
+  UIOpNotice: () => null,
+}))
+vi.mock('../YakitGlobalHost', () => ({ YakitGlobalHost: () => null }))
+vi.mock('@yakit-libs/yakit-ui-icons/solid', async (importOriginal) => ({
+  ...((await importOriginal()) as Record<string, unknown>),
+  HomeSolid: () => <svg aria-label="home" />,
+  ParkAboveSolid: () => <svg aria-label="park-above" />,
+}))
 vi.mock('../GlobalState', () => ({ GlobalState: () => null }))
 vi.mock('../AllKillEngineConfirm', () => ({ AllKillEngineConfirm: () => null }))
 vi.mock('../basics/YakitLoading', () => ({ EngineModeVerbose: () => 'local' }))
@@ -225,6 +246,7 @@ vi.mock('@/components/yakitUI/YakitPopover/YakitPopover', () => ({
   YakitPopover: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
 }))
 vi.mock('@/pages/softwareSettings/ProjectManage', () => ({
+  default: () => null,
   NewProjectAndFolder: () => null,
   TransferProject: () => null,
 }))
@@ -250,7 +272,27 @@ vi.mock('@/pages/pluginHub/hooks/useGetSetState', () => {
   return { default: useGetSetState }
 })
 
+// 根级 Vitest 将样式映射为空对象，固定本测试依赖的类名以保留 DOM 断言。
+vi.mock('../uiLayout.module.scss', () => ({
+  default: {
+    'mac-header-body': 'mac-header-body',
+    'header-body': 'header-body',
+    'header-navigation-wrapper': 'header-navigation-wrapper',
+    'yakit-mode-icon': 'yakit-mode-icon',
+    'yakit-mode-icon-reverse': 'yakit-mode-icon-reverse',
+    'park-above-icon-active': 'park-above-icon-active',
+  },
+}))
+
+import { useMenuHeight } from '@/store/menuHeight'
 import UILayout from '../UILayout'
+import styles from '../uiLayout.module.scss'
+
+beforeEach(() => useMenuHeight.setState({ isMenuVisible: true }))
+afterEach(() => {
+  cleanup()
+  useMenuHeight.setState({ isMenuVisible: true })
+})
 
 describe('UILayout 引擎连接后的安装探测轮询', () => {
   beforeEach(() => {
@@ -269,5 +311,98 @@ describe('UILayout 引擎连接后的安装探测轮询', () => {
       await Promise.resolve()
     })
     expect(startIdleVisibleInterval).toHaveBeenCalled()
+  })
+})
+
+describe('UILayout 标题栏导航图标', () => {
+  beforeEach(() => {
+    headerState.portable = false
+    headerState.ready = true
+    headerState.community = true
+  })
+
+  afterEach(() => {
+    cleanup()
+    headerState.portable = true
+    headerState.ready = true
+    headerState.system = 'Darwin'
+    headerState.community = true
+    vi.clearAllMocks()
+  })
+
+  it.each(['Darwin', 'Windows_NT', 'Linux'])('%s 中 Home 后展示 Park，点击切换菜单状态和选中背景', async (system) => {
+    headerState.system = system
+    const { container } = render(<UILayout />)
+    await waitFor(() => expect(screen.getByLabelText('park-above')).toBeInTheDocument())
+    await waitFor(() =>
+      expect(container.querySelector('.' + styles['mac-header-body']) !== null).toBe(system === 'Darwin'),
+    )
+    const navigation = container.querySelector('.' + styles['header-navigation-wrapper'])
+    expect(navigation).not.toBeNull()
+    const home = screen.getByLabelText('home').closest('.' + styles['yakit-mode-icon'])!
+    if (system === 'Darwin') {
+      expect(home).not.toHaveClass(styles['yakit-mode-icon-reverse'])
+    } else {
+      expect(home).toHaveClass(styles['yakit-mode-icon-reverse'])
+    }
+    expect(Array.from(navigation!.querySelectorAll('svg')).map((icon) => icon.getAttribute('aria-label'))).toEqual([
+      'home',
+      'park-above',
+    ])
+    const header = container.querySelector('.' + styles['header-body']) as HTMLElement
+    expect(header.style.borderBottomWidth).toBe('')
+    const button = screen.getByLabelText('UILayout.toggleMenu')
+    fireEvent.mouseEnter(button)
+    await waitFor(() => expect(screen.getByRole('tooltip')).toHaveTextContent('UILayout.hideMenu'))
+    fireEvent.mouseLeave(button)
+    expect(button.tagName).toBe('DIV')
+    expect(button).not.toHaveAttribute('role')
+    expect(button).toHaveAttribute('aria-pressed', 'true')
+    expect(button).toHaveClass(styles['park-above-icon-active'])
+    fireEvent.click(button)
+    expect(useMenuHeight.getState().isMenuVisible).toBe(false)
+    expect(button).toHaveAttribute('aria-pressed', 'false')
+    expect(button).not.toHaveClass(styles['park-above-icon-active'])
+    expect(header).toHaveStyle({ borderBottomWidth: '0px' })
+    fireEvent.mouseEnter(button)
+    await waitFor(() => expect(screen.getByRole('tooltip')).toHaveTextContent('UILayout.showMenu'))
+    fireEvent.mouseLeave(button)
+    fireEvent.click(button)
+    expect(useMenuHeight.getState().isMenuVisible).toBe(true)
+    expect(header.style.borderBottomWidth).toBe('')
+    expect(button).toHaveAttribute('aria-pressed', 'true')
+    expect(button).toHaveClass(styles['park-above-icon-active'])
+  })
+
+  it.each(['Darwin', 'Windows_NT', 'Linux'])('%s 非社区版保留 Home，隐藏 Park', async (system) => {
+    headerState.system = system
+    headerState.community = false
+    const { container } = render(<UILayout />)
+    await waitFor(() => expect(screen.getByLabelText('home')).toBeInTheDocument())
+    await waitFor(() =>
+      expect(container.querySelector('.' + styles['mac-header-body']) !== null).toBe(system === 'Darwin'),
+    )
+    expect(screen.queryByLabelText('park-above')).not.toBeInTheDocument()
+  })
+
+  it.each(['Darwin', 'Windows_NT', 'Linux'])('%s 便携企业版隐藏 Home 和 Park', async (system) => {
+    headerState.system = system
+    headerState.portable = true
+    render(<UILayout />)
+    await act(async () => {
+      await Promise.resolve()
+    })
+    expect(screen.queryByLabelText('home')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('park-above')).not.toBeInTheDocument()
+  })
+
+  it('引擎未连接时隐藏 Home 和 Park', async () => {
+    headerState.ready = false
+    render(<UILayout />)
+    await act(async () => {
+      await Promise.resolve()
+    })
+    expect(screen.queryByLabelText('home')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('park-above')).not.toBeInTheDocument()
   })
 })

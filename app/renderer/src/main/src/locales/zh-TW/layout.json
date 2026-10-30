@@ -219,6 +219,9 @@
     "tabPage": "個標籤頁"
   },
   "UILayout": {
+    "hideMenu": "隱藏選單",
+    "showMenu": "顯示選單",
+    "toggleMenu": "顯示或隱藏選單",
     "entering": "即將進入...",
     "projectSyncFailed": "{{name}} 專案資料同步失敗, 請手動上傳",
     "exiting": "即將退出...",

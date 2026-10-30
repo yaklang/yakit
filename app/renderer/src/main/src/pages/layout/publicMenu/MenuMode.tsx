@@ -15,10 +15,8 @@ import { PublicDomainIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicDomai
 import { PublicFingerprintManageIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicFingerprintManageIcon'
 import { PublicHTTPHistoryIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicHTTPHistoryIcon'
 import { PublicICMPSizeLogIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicICMPSizeLogIcon'
-import { PublicKnowledgeBaseIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicKnowledgeBaseIcon'
 import { PublicMitmIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicMitmIcon'
 import { PublicPayloadGeneraterIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicPayloadGeneraterIcon'
-import { PublicPluginStoreIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicPluginStoreIcon'
 import { PublicPocIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicPocIcon'
 import { PublicPortsIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicPortsIcon'
 import { PublicProjectManagerIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicProjectManagerIcon'
@@ -38,12 +36,20 @@ import type { RouteToPageProps } from './PublicMenu'
 import { Tooltip } from 'antd'
 import { YakitRouteToPageInfo, ResidentPluginName } from '@/routes/newRoute'
 import { YakitRoute } from '@/enums/yakitRoute'
-import { isIRify } from '@/utils/envfile'
+import { isIRify, isMemfit } from '@/utils/envfile'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 import classNames from 'classnames'
 import styles from './MenuMode.module.scss'
 import { useHttpFlowStore } from '@/store/httpFlow'
+import {
+  MemfitAIAgentIcon,
+  MemfitKnowledgeBaseIcon,
+  MemfitMemoryIcon,
+  MemfitToolIcon,
+  MemfitSkillIcon,
+  MemfitPluginStoreIcon,
+} from './memfitMenuIcon'
 
 interface MenuModeProps {
   mode: string
@@ -246,24 +252,37 @@ export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
       )}
       {mode === '插件' && (
         <>
-          <div className={styles['vertical-menu-wrapper']} onClick={() => onMenu(YakitRoute.Plugin_Hub)}>
-            <div className={styles['menu-icon-wrapper']}>
-              <div className={styles['icon-wrapper']}>
-                <PublicPluginStoreIcon />
+          {isMemfit() ? (
+            <div className={styles['vertical-menu-wrapper']} onClick={() => onMenu(YakitRoute.Plugin_Hub)}>
+              <div className={styles['menu-icon-wrapper']}>
+                <div className={styles['icon-wrapper']}>
+                  <MemfitPluginStoreIcon />
+                </div>
               </div>
+              <div className={styles['title-style']}>{t('YakitRoute.pluginHub')}</div>
             </div>
-            <div className={styles['title-style']}>{t('YakitRoute.pluginHub')}</div>
-          </div>
+          ) : (
+            <>
+              <div className={styles['vertical-menu-wrapper']} onClick={() => onMenu(YakitRoute.Plugin_Hub)}>
+                <div className={styles['menu-icon-wrapper']}>
+                  <div className={styles['icon-wrapper']}>
+                    <MemfitPluginStoreIcon />
+                  </div>
+                </div>
+                <div className={styles['title-style']}>{t('YakitRoute.pluginHub')}</div>
+              </div>
 
-          <div className={styles['divider-style']}></div>
-          <div className={styles['vertical-menu-wrapper']} onClick={() => onMenu(YakitRoute.BatchExecutorPage)}>
-            <div className={styles['menu-icon-wrapper']}>
-              <div className={styles['icon-wrapper']}>
-                <PublicBatchPluginIcon />
+              <div className={styles['divider-style']}></div>
+              <div className={styles['vertical-menu-wrapper']} onClick={() => onMenu(YakitRoute.BatchExecutorPage)}>
+                <div className={styles['menu-icon-wrapper']}>
+                  <div className={styles['icon-wrapper']}>
+                    <PublicBatchPluginIcon />
+                  </div>
+                </div>
+                <div className={styles['title-style']}>{t('YakitRoute.batchExecute')}</div>
               </div>
-            </div>
-            <div className={styles['title-style']}>{t('YakitRoute.batchExecute')}</div>
-          </div>
+            </>
+          )}
         </>
       )}
       {mode === '反连' && (
@@ -495,19 +514,45 @@ export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
           <div className={styles['vertical-menu-wrapper']} onClick={() => onMenu(YakitRoute.AI_Agent)}>
             <div className={styles['menu-icon-wrapper']}>
               <div className={styles['icon-wrapper']}>
-                <PublicAIAgentIcon />
+                <MemfitAIAgentIcon />
               </div>
             </div>
             <div className={styles['title-style']}>{t('YakitRoute.AIAgent')}</div>
           </div>
           <div className={styles['divider-style']}></div>
-          <div className={styles['vertical-menu-wrapper']} onClick={() => onMenu(YakitRoute.AI_REPOSITORY)}>
-            <div className={styles['menu-icon-wrapper']}>
-              <div className={styles['icon-wrapper']}>
-                <PublicKnowledgeBaseIcon />
+          <div className={styles['multiple-vertical-menu-wrapper']}>
+            <div className={styles['vertical-menu-wrapper']} onClick={() => onMenu(YakitRoute.AI_REPOSITORY)}>
+              <div className={styles['menu-icon-wrapper']}>
+                <div className={styles['icon-wrapper']}>
+                  <MemfitKnowledgeBaseIcon />
+                </div>
               </div>
+              <div className={styles['title-style']}>{t('YakitRoute.ai-repository')}</div>
             </div>
-            <div className={styles['title-style']}>{t('YakitRoute.ai-repository')}</div>
+            <div className={styles['vertical-menu-wrapper']} onClick={() => onMenu(YakitRoute.AI_Memory)}>
+              <div className={styles['menu-icon-wrapper']}>
+                <div className={styles['icon-wrapper']}>
+                  <MemfitMemoryIcon />
+                </div>
+              </div>
+              <div className={styles['title-style']}>{t('YakitRoute.ai-memory')}</div>
+            </div>
+            <div className={styles['vertical-menu-wrapper']} onClick={() => onMenu(YakitRoute.AI_Tool)}>
+              <div className={styles['menu-icon-wrapper']}>
+                <div className={styles['icon-wrapper']}>
+                  <MemfitToolIcon />
+                </div>
+              </div>
+              <div className={styles['title-style']}>{t('YakitRoute.ai-tool')}</div>
+            </div>
+            <div className={styles['vertical-menu-wrapper']} onClick={() => onMenu(YakitRoute.AI_Forge)}>
+              <div className={styles['menu-icon-wrapper']}>
+                <div className={styles['icon-wrapper']}>
+                  <MemfitSkillIcon />
+                </div>
+              </div>
+              <div className={styles['title-style']}>{t('YakitRoute.ai-forge')}</div>
+            </div>
           </div>
         </>
       )}

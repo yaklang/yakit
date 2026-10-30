@@ -1,7 +1,8 @@
 .menu-mode-wrapper {
   height: 72px;
   display: inline-flex;
-  gap: 4px;
+  flex-shrink: 0;
+  gap: 8px;
 
   .divider-style {
     width: 1px;
@@ -10,7 +11,8 @@
   }
 
   .menu-icon-wrapper {
-    flex: 1 0 0;
+    flex: 0 0 44px;
+    min-width: 40px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -24,8 +26,9 @@
     background: var(--Colors-Use-Neutral-Bg-Hover);
   }
   .title-style {
-    height: 12px;
-    line-height: 12px;
+    height: 14px;
+    line-height: 14px;
+    letter-spacing: 0.5px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -46,10 +49,10 @@
   }
 
   .vertical-menu-wrapper {
-    padding: 4px;
+    padding: 0 4px;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
     border-radius: 4px;
     cursor: pointer;
@@ -79,7 +82,7 @@
     .childs-menu-wrapper {
       flex: 1 0 0;
       display: flex;
-      justify-content: center;
+      justify-content: space-between;
       align-items: center;
       padding: 4px 0;
       gap: 4px;
@@ -88,9 +91,6 @@
 
   .multiple-vertical-menu-wrapper {
     display: flex;
-    gap: 8px;
-    .vertical-menu-wrapper {
-      padding-top: 4px;
-    }
+    gap: 0;
   }
 }
