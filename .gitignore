@@ -71,8 +71,8 @@ pr-ci-changed-files-list.txt
 .omx/
 
 # Generated theme css
-app/renderer/src/main/public/theme.css
 app/main/handlers/openNewChildWindow/theme.css
+app/renderer/src/main/public/theme.css
 app/renderer/engine-link-startup/public/theme.css
 
 # Electron build outputs

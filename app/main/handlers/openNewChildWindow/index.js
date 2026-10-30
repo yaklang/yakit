@@ -1,10 +1,11 @@
-const { appResourcePath, preloadPath, resourcePath } = require('../../runtimePaths')
+const { appResourcePath, preloadPath } = require('../../runtimePaths')
 const { ipcMain, BrowserWindow } = require('electron')
 const isDev = require('electron-is-dev')
 const crypto = require('crypto')
 
 module.exports = {
   register: (win, getClient) => {
+    // 保存当前详情窗口及最新业务数据，供主窗口的控制、推送和子窗口的数据请求使用。
     let childWindow = null
     let childWindowData = null
 
@@ -115,40 +116,58 @@ module.exports = {
       // 移除子窗口的菜单
       childWindow.setMenu(null)
 
-      // 先加载loading页面
-      childWindow.loadFile(resourcePath('child-window', 'index.html'))
-
-      ipcMain.once('ready-to-load-child', () => {
-        // 通知 loading.html 显示“正在加载主页面...”
-        childWindow.webContents.send('start-child-loading')
+      // 固定本次创建的窗口引用：childWindow 后续可能指向新窗口或被清空，
+      // 异步加载、关闭回调仍须操作它们所属的窗口；这里不会复制或新建窗口。
+      const openedWindow = childWindow
+      // loading 页完成握手后，切换到现有 React 详情入口；只接受本窗口的消息。
+      const onReadyToLoad = (event) => {
+        if (openedWindow.isDestroyed() || event.sender !== openedWindow.webContents) return
+        // 校验通过后再移除，避免其他窗口的消息消耗 once 监听，同时保证只跳转一次。
+        ipcMain.removeListener('ready-to-load-child', onReadyToLoad)
         if (isDev) {
-          childWindow.loadURL('http://127.0.0.1:3000/?window=child')
+          openedWindow.loadURL('http://127.0.0.1:3000/?window=child')
         } else {
-          childWindow.loadFile(appResourcePath('renderer', 'pages', 'main', 'index.html'), {
+          openedWindow.loadFile(appResourcePath('renderer', 'pages', 'main', 'index.html'), {
             search: 'window=child',
           })
         }
+      }
+      ipcMain.on('ready-to-load-child', onReadyToLoad)
+
+      openedWindow.webContents.once('did-finish-load', () => {
+        openedWindow.show()
       })
 
-      childWindow.webContents.once('did-finish-load', () => {
-        childWindow.show()
-        // childWindow.webContents.openDevTools()
+      openedWindow.webContents.once('did-fail-load', (event, errorCode, errorDescription, validatedURL) => {
+        // loading 页未能完成握手时也要清理，避免重开后遗留旧窗口的监听。
+        ipcMain.removeListener('ready-to-load-child', onReadyToLoad)
+        if (childWindow === openedWindow) {
+          win.send('child-window-hash', { hash: '' })
+        }
       })
 
-      childWindow.webContents.once('did-fail-load', (event, errorCode, errorDescription, validatedURL) => {
-        win.send('child-window-hash', { hash: '' })
-      })
-
-      childWindow.on('close', (e) => {
+      openedWindow.on('close', (e) => {
         e.preventDefault()
-        childWindow.destroy()
-        win.send('child-window-hash', { hash: '' })
+        openedWindow.destroy()
       })
-      childWindow.on('closed', () => {
-        childWindow = null
-        childWindowData = null
-        win.send('child-window-hash', { hash: '' })
+      openedWindow.on('closed', () => {
+        ipcMain.removeListener('ready-to-load-child', onReadyToLoad)
+        // 仅清理当前实例的共享状态，避免旧窗口的 closed 回调清空新窗口及其数据。
+        if (childWindow === openedWindow) {
+          childWindow = null
+          childWindowData = null
+          win.send('child-window-hash', { hash: '' })
+        }
       })
+
+      // 复用 aux HTML 的静态加载模式；收到握手后仍进入原详情页，不启动 aux 应用。
+      if (isDev) {
+        openedWindow.loadURL('http://127.0.0.1:3000/yakit-aux.html?mode=child-loading')
+      } else {
+        openedWindow.loadFile(appResourcePath('renderer', 'pages', 'main', 'yakit-aux.html'), {
+          search: 'mode=child-loading',
+        })
+      }
     })
   },
 }

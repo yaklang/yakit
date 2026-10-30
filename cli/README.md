@@ -188,7 +188,7 @@ yarn cli pack -s mwl -v yakitEE
 
 主进程及三个 preload 的输出位于 `dist/electron`，两种模式布局一致。启动前检查两端渲染内容，最多等待 120 秒。构建失败不启动旧产物。仅保存代码不会编译、重启 Electron 或重载窗口；请主动关闭 Electron 后再运行 `yarn cli electron`。需要保留渲染服务时，分别运行 `cli start` 与 `cli electron`；`cli dev` 仍在 Electron 退出时清理它启动的渲染服务。
 
-主进程独立生成子窗口主题 CSS，仅需根目录依赖，无需安装或构建渲染端。开发和发布均先检查上次 `dist/electron` 中的主题：主题色、颜色库版本和内容哈希一致时复用，否则重新生成。日志中的 `theme: cached/generated` 表示复用或生成；清理 `dist/electron` 后下次自动生成。仅 `--main/--link` 的 CI 仍不要求安装主进程构建工具；打安装包仍需准备两个渲染端产物。
+主进程构建仅需根目录依赖，无需安装或构建渲染端。子窗口加载页在运行时复用主渲染端的 `yakit-aux.html?mode=child-loading` 和 `theme.css`，主题 CSS 由渲染端开发／构建流程生成，主进程不再独立生成或缓存。开发时需先等待渲染服务就绪；发布时需准备 `app/renderer/pages/main` 中的主渲染端产物（含 aux HTML 和主题 CSS）。仅 `--main/--link` 的 CI 仍不要求安装主进程构建工具；打安装包仍需准备两个渲染端产物。
 
 新增 JS／TS 业务模块时更新 `app/main/ipcModules.js` 的字面量、延迟加载清单；不要同时保留同名 JS 和 TS。保持相对模块引用。新增运行资源时更新 `scripts/build-electron.mjs` 的资源清单和 `app/main/runtimePaths.js`，不要依赖源码位置的 `__dirname`。E2E 初始化必须早于用户目录、缓存和业务模块加载。
 

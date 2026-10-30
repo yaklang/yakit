@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url'
 const rootDir = path.dirname(fileURLToPath(import.meta.url))
 const outDir = path.resolve(rootDir, '../../../pages/main')
 
-const requiredFiles = ['index.html', 'yakit-aux.html']
+const requiredFiles = ['index.html', 'yakit-aux.html', 'theme.css']
 const requiredGlobs = [
   { label: 'main entry js', pattern: /^main-.+\.js$/ },
   { label: 'aux entry js', pattern: /^aux-.+\.js$/ },
