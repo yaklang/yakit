@@ -359,6 +359,8 @@ describe('YakitRiskEditForm 验证人回填', () => {
   })
 
   it('保存非已修复风险时清除旧验证人与修复字段', async () => {
+    const pending = deferred<{ data: { uid: string; name: string }[] }>()
+    mocks.userSearch.mockReturnValueOnce(pending.promise)
     mocks.finishValues.mockReturnValue({
       risk_type: '命令执行',
       cvss: 4.2,
@@ -377,6 +379,10 @@ describe('YakitRiskEditForm 验证人回填', () => {
     )
 
     await waitFor(() => expect(mocks.userSearch).toHaveBeenCalledWith({ uid: 'old-uid' }))
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: '测试提交' })))
+    expect(onSave).not.toHaveBeenCalled()
+
+    await act(async () => pending.resolve({ data: [] }))
     await act(async () => fireEvent.click(screen.getByRole('button', { name: '测试提交' })))
 
     expect(onSave).toHaveBeenCalledWith(
