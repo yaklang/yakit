@@ -57,12 +57,23 @@ vi.mock('../memfitWhatsNewConfig', async (importOriginal) => {
     MEMFIT_WHATS_NEW: {
       enabled: true,
       targetVersion: '1.4.9-1023',
-      items: [{ title: '更新说明', description: '测试内容' }],
+      items: [
+        { title: '模型限免', description: '第一页' },
+        { title: '任务详情页面增加进度看板', description: '第二页' },
+        { title: 'Goal模式增加持续时间设置', description: '第三页' },
+      ],
     },
   }
 })
 
 import { MemfitWhatsNewModal } from '../MemfitWhatsNewModal'
+
+const clickByName = (name: string) => screen.getByRole('button', { name }).click()
+
+const latestOpenHandler = () => {
+  const calls = emiterOn.mock.calls.filter((call) => call[0] === 'openMemfitWhatsNew')
+  return calls[calls.length - 1]?.[1]
+}
 
 describe('MemfitWhatsNewModal', () => {
   beforeEach(() => {
@@ -87,18 +98,57 @@ describe('MemfitWhatsNewModal', () => {
     await waitFor(() => {
       expect(screen.getByTestId('whats-new-modal')).toBeTruthy()
     })
-    expect(screen.getByText('更新说明')).toBeTruthy()
+    expect(screen.getByText('模型限免')).toBeTruthy()
+    expect(screen.queryByText('任务详情页面增加进度看板')).toBeNull()
   })
 
-  it('点知道了后写入当前版本', async () => {
+  it('三页可翻页，末页知道了关闭并写入，重开回到第一页', async () => {
     render(<MemfitWhatsNewModal />)
     await waitFor(() => {
       expect(screen.getByTestId('whats-new-modal')).toBeTruthy()
     })
+    expect(screen.getByText('模型限免')).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'YakitButton.next' })).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'YakitButton.iKnow' })).toBeNull()
+
     await act(async () => {
-      screen.getByRole('button').click()
+      clickByName('YakitButton.next')
     })
+    expect(screen.getByText('任务详情页面增加进度看板')).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'YakitButton.prev' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'YakitButton.next' })).toBeTruthy()
+
+    await act(async () => {
+      clickByName('YakitButton.prev')
+    })
+    expect(screen.getByText('模型限免')).toBeTruthy()
+
+    await act(async () => {
+      clickByName('YakitButton.next')
+    })
+    await act(async () => {
+      clickByName('YakitButton.next')
+    })
+    expect(screen.getByText('Goal模式增加持续时间设置')).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'YakitButton.iKnow' })).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'YakitButton.next' })).toBeNull()
+
+    await act(async () => {
+      clickByName('YakitButton.iKnow')
+    })
+    expect(screen.queryByTestId('whats-new-modal')).toBeNull()
     expect(setLocalValue).toHaveBeenCalledWith(LocalGVS.WhatsNewAckVersion, '1.4.9-1023')
+
+    const handler = latestOpenHandler()
+    expect(handler).toEqual(expect.any(Function))
+    await act(async () => {
+      handler()
+    })
+    await waitFor(() => {
+      expect(screen.getByTestId('whats-new-modal')).toBeTruthy()
+    })
+    expect(screen.getByText('模型限免')).toBeTruthy()
+    expect(screen.queryByText('Goal模式增加持续时间设置')).toBeNull()
   })
 
   it('已确认当前版本不弹', async () => {
@@ -119,8 +169,7 @@ describe('MemfitWhatsNewModal', () => {
       await Promise.resolve()
     })
     expect(screen.queryByTestId('whats-new-modal')).toBeNull()
-    const calls = emiterOn.mock.calls.filter((call) => call[0] === 'openMemfitWhatsNew')
-    const handler = calls[calls.length - 1]?.[1]
+    const handler = latestOpenHandler()
     expect(handler).toEqual(expect.any(Function))
     await act(async () => {
       handler()
