@@ -219,6 +219,9 @@
     "tabPage": "个标签页"
   },
   "UILayout": {
+    "hideMenu": "隐藏菜单",
+    "showMenu": "显示菜单",
+    "toggleMenu": "显示或隐藏菜单",
     "entering": "即将进入...",
     "projectSyncFailed": "{{name}} 项目数据同步失败, 请手动上传",
     "exiting": "即将退出...",

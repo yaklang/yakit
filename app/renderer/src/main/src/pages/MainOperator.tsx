@@ -19,28 +19,18 @@ import {
   isEnpriTraceAgent,
   isEnterpriseOrSimpleEdition,
   isIRify,
-  isMemfit,
 } from '@/utils/envfile'
 import { CodeGV } from '@/yakitGV'
 import CustomizeMenu from './customizeMenu/CustomizeMenu'
-const ControlOperation = lazy(() =>
-  import('@/pages/dynamicControl/DynamicControl').then((m) => ({ default: m.ControlOperation })),
-)
 import HeardMenu from './layout/HeardMenu/HeardMenu'
-const Login = lazy(() => import('./Login'))
-const SetPassword = lazy(() => import('./SetPassword'))
 import { YakitHintModal } from '@/components/yakitUI/YakitHint/YakitHintModal'
 import { useScreenRecorder } from '@/store/screenRecorder'
 import PublicMenu, { type RouteToPageProps } from './layout/publicMenu/PublicMenu'
 import { type YakitRoute } from '@/enums/yakitRoute'
-const YakChatCS = lazy(() => import('@/components/yakChat/chatCS').then((m) => ({ default: m.YakChatCS })))
 import { MainOperatorContent } from './layout/mainOperatorContent/MainOperatorContent'
 import type { MultipleNodeInfo } from './layout/mainOperatorContent/MainOperatorContentType'
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
-const MessageCenterModal = lazy(() =>
-  import('@/components/MessageCenter/MessageCenter').then((m) => ({ default: m.MessageCenterModal })),
-)
 import { LocalGVS } from '@/enums/localGlobal'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import { grpcOpenRenderLogFolder } from '@/utils/logCollection'
@@ -50,22 +40,32 @@ import { onGetRemoteValuesBase } from '@/components/yakitUI/utils'
 import { grpcSetGlobalProxyRulesConfig } from '@/apiUtils/grpc'
 import { MITMConsts } from './mitm/MITMConsts'
 import { checkProxyVersion } from '@/utils/proxyConfigUtil'
+const ControlOperation = lazy(() =>
+  import('@/pages/dynamicControl/DynamicControl').then((m) => ({ default: m.ControlOperation })),
+)
+const Login = lazy(() => import('./Login'))
+const SetPassword = lazy(() => import('./SetPassword'))
+const YakChatCS = lazy(() => import('@/components/yakChat/chatCS').then((m) => ({ default: m.YakChatCS })))
+const MessageCenterModal = lazy(() =>
+  import('@/components/MessageCenter/MessageCenter').then((m) => ({ default: m.MessageCenterModal })),
+)
 
 import './main.scss'
 import { genDefaultPagination } from './invoker/schema'
 import { apiQuerySSAPrograms } from './yakRunnerScanHistory/utils'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-const IRifyUpdateProjectManagerModal = lazy(() =>
-  import('./YakRunnerProjectManager/YakRunnerProjectManager').then((m) => ({
-    default: m.IRifyUpdateProjectManagerModal,
-  })),
-)
 import { parseUrl } from '@/hook/useProxy'
 import { JSONParseLog } from '@/utils/tool'
 import { Trans } from 'react-i18next'
 import aiChatPersistStore from './ai-re-act/hooks/persist/aiChatPersistStore'
 import useGetColorsByTheme from '@/hook/useGetColorsByTheme'
 import { autoEnableGlobalHotPatch } from '@/store/globalHotPatch'
+import { useMenuHeight } from '@/store/menuHeight'
+const IRifyUpdateProjectManagerModal = lazy(() =>
+  import('./YakRunnerProjectManager/YakRunnerProjectManager').then((m) => ({
+    default: m.IRifyUpdateProjectManagerModal,
+  })),
+)
 
 const { ipcRenderer } = window.require('electron')
 
@@ -123,6 +123,7 @@ export interface fuzzerInfoProp {
 }
 const Main: React.FC<MainProp> = React.memo((props) => {
   const colors = useGetColorsByTheme()
+  const isMenuVisible = useMenuHeight((state) => state.isMenuVisible)
   const [showRenderCrash, setShowRenderCrash] = useState(false)
   const [showProxyModal, setShowProxyModal] = useState(false)
   const [ProxyModalLoading, setProxyModalLoading] = useState(false)
@@ -381,8 +382,8 @@ const Main: React.FC<MainProp> = React.memo((props) => {
   const [defaultExpand, setDefaultExpand] = useState<boolean>(true)
 
   useEffect(() => {
-    /** Memfit 固定展开，不读取历史折叠设置 */
-    if (isMemfit()) return
+    /** 公共菜单固定展开，仅自定义菜单读取历史折叠设置 */
+    if (isCommunityEdition()) return
     getRemoteValue(CodeGV.MenuExpand).then((result: string) => {
       if (!result) setDefaultExpand(true)
       try {
@@ -513,29 +514,30 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                 height: '100%',
               }}
             >
-              {isCommunityEdition() ? (
-                <>
-                  <PublicMenu
+              <div hidden={!isMenuVisible}>
+                {isCommunityEdition() ? (
+                  <>
+                    <PublicMenu
+                      onMenuSelect={openMenu}
+                      setRouteToLabel={(val) => {
+                        val.forEach((value, key) => {
+                          routeKeyToLabel.current.set(key, value)
+                        })
+                      }}
+                    />
+                  </>
+                ) : (
+                  <HeardMenu
                     defaultExpand={defaultExpand}
-                    onMenuSelect={openMenu}
+                    onRouteMenuSelect={openMenu}
                     setRouteToLabel={(val) => {
                       val.forEach((value, key) => {
                         routeKeyToLabel.current.set(key, value)
                       })
                     }}
                   />
-                </>
-              ) : (
-                <HeardMenu
-                  defaultExpand={defaultExpand}
-                  onRouteMenuSelect={openMenu}
-                  setRouteToLabel={(val) => {
-                    val.forEach((value, key) => {
-                      routeKeyToLabel.current.set(key, value)
-                    })
-                  }}
-                />
-              )}
+                )}
+              </div>
               <MainOperatorContent routeKeyToLabel={routeKeyToLabel.current} />
             </div>
           </AutoSpin>

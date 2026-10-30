@@ -13,8 +13,10 @@ const { ipcRendererMock } = vi.hoisted(() => {
   return { ipcRendererMock }
 })
 
-import { act, render, screen } from '@testing-library/react'
+import { act, cleanup, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { getRemoteValue } from '@/utils/kv'
+import { useMenuHeight } from '@/store/menuHeight'
 
 const { startIdleVisibleInterval } = vi.hoisted(() => ({
   startIdleVisibleInterval: vi.fn((cb: () => void) => {
@@ -55,16 +57,16 @@ vi.mock('@/utils/kv', () => ({
   setLocalValue: vi.fn(),
 }))
 
-const edition = vi.hoisted(() => ({ memfit: false }))
+const edition = vi.hoisted(() => ({ current: 'yakit' }))
 
 vi.mock('@/utils/envfile', () => ({
-  isCommunityEdition: () => true,
+  isCommunityEdition: () => edition.current !== 'enterprise',
   isCommunityIRify: () => false,
   isEnpriTrace: () => false,
   isEnpriTraceAgent: () => false,
   isEnterpriseOrSimpleEdition: () => false,
   isIRify: () => false,
-  isMemfit: () => edition.memfit,
+  isMemfit: () => edition.current === 'memfit',
   globalUserLogin: vi.fn(),
 }))
 
@@ -82,14 +84,18 @@ vi.mock('@/hook/useGetColorsByTheme', () => ({
   default: () => ({ colorPrimary: '#000' }),
 }))
 
-vi.mock('@/pages/layout/HeardMenu/HeardMenu', () => ({ default: () => null }))
-vi.mock('@/pages/layout/publicMenu/PublicMenu', () => ({
+vi.mock('@/pages/layout/HeardMenu/HeardMenu', () => ({
   default: ({ defaultExpand }: { defaultExpand: boolean }) => (
-    <div data-testid="public-menu" data-expanded={defaultExpand} />
+    <div data-testid="heard-menu" data-expanded={defaultExpand} />
+  ),
+}))
+vi.mock('@/pages/layout/publicMenu/PublicMenu', () => ({
+  default: (props: { defaultExpand?: boolean }) => (
+    <div data-testid="public-menu" data-has-expand={'defaultExpand' in props} />
   ),
 }))
 vi.mock('@/pages/layout/mainOperatorContent/MainOperatorContent', () => ({
-  MainOperatorContent: () => null,
+  MainOperatorContent: () => <main data-testid="main-content">page content</main>,
 }))
 vi.mock('@/pages/Login', () => ({ default: () => null }))
 vi.mock('@/pages/SetPassword', () => ({ default: () => null }))
@@ -128,7 +134,9 @@ describe('MainOperator 远程控制轮询', () => {
   let mockHidden = false
 
   beforeEach(() => {
-    edition.memfit = false
+    useMenuHeight.setState({ isMenuVisible: true })
+    edition.current = 'yakit'
+    vi.mocked(getRemoteValue).mockResolvedValue('')
     vi.useFakeTimers()
     vi.stubGlobal('requestIdleCallback', undefined)
     vi.stubGlobal('cancelIdleCallback', undefined)
@@ -145,20 +153,53 @@ describe('MainOperator 远程控制轮询', () => {
   })
 
   afterEach(() => {
+    cleanup()
+    useMenuHeight.setState({ isMenuVisible: true })
     delete (document as any).hidden
     vi.unstubAllGlobals()
     vi.useRealTimers()
     vi.clearAllMocks()
   })
 
-  it('Memfit 默认展开图标菜单，不读取历史折叠设置', async () => {
-    edition.memfit = true
-    const { getRemoteValue } = await import('@/utils/kv')
+  it.each(['yakit', 'memfit'])('%s 公共菜单不接收展开配置，也不读取历史折叠设置', async (current) => {
+    edition.current = current
     await act(async () => {
       render(<Main />)
     })
-    expect(screen.getByTestId('public-menu')).toHaveAttribute('data-expanded', 'true')
+    expect(screen.getByTestId('public-menu')).toHaveAttribute('data-has-expand', 'false')
+    expect(screen.queryByTestId('heard-menu')).not.toBeInTheDocument()
     expect(getRemoteValue).not.toHaveBeenCalledWith('menu-expand')
+  })
+
+  it.each([true, false])('非社区菜单读取并应用历史展开状态 %s', async (expanded) => {
+    edition.current = 'enterprise'
+    vi.mocked(getRemoteValue).mockImplementation(async (key) => (key === 'menu-expand' ? JSON.stringify(expanded) : ''))
+    await act(async () => {
+      render(<Main />)
+    })
+    expect(getRemoteValue).toHaveBeenCalledWith('menu-expand')
+    expect(screen.getByTestId('heard-menu')).toHaveAttribute('data-expanded', String(expanded))
+    expect(screen.queryByTestId('public-menu')).not.toBeInTheDocument()
+  })
+
+  it.each(['yakit', 'memfit', 'enterprise'])('%s 切换菜单可见性时保留菜单实例和页面内容', async (current) => {
+    edition.current = current
+    await act(async () => {
+      render(<Main />)
+    })
+    const menu = screen.getByTestId(current === 'enterprise' ? 'heard-menu' : 'public-menu')
+    const content = screen.getByTestId('main-content')
+    expect(menu).toBeVisible()
+    expect(content).toBeVisible()
+    act(() => useMenuHeight.setState({ isMenuVisible: false }))
+    expect(menu).not.toBeVisible()
+    expect(menu.isConnected).toBe(true)
+    expect(content).toBeVisible()
+    act(() => useMenuHeight.getState().toggleMenuVisibility())
+    expect(menu).toBeVisible()
+    expect(screen.getByTestId(current === 'enterprise' ? 'heard-menu' : 'public-menu')).toBe(menu)
+    expect(screen.getByTestId('main-content')).toBe(content)
+    expect(content).toBeVisible()
   })
 
   it('挂载后启动远程控制状态轮询', () => {

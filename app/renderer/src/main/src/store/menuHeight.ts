@@ -4,6 +4,8 @@ interface MenuBodyHeightProps {
   firstTabMenuBodyHeight: number
 }
 interface MenuBodyHeightStoreProps {
+  isMenuVisible: boolean
+  toggleMenuVisibility: () => void
   menuBodyHeight: MenuBodyHeightProps
   /**更新 menuBodyHeight*/
   updateMenuBodyHeight: (v: MenuBodyHeightProps) => void
@@ -11,6 +13,8 @@ interface MenuBodyHeightStoreProps {
 
 export const useMenuHeight = createWithEqualityFn<MenuBodyHeightStoreProps>(
   (set, get) => ({
+    isMenuVisible: true,
+    toggleMenuVisibility: () => set((state) => ({ isMenuVisible: !state.isMenuVisible })),
     menuBodyHeight: {
       firstTabMenuBodyHeight: 0,
     },
