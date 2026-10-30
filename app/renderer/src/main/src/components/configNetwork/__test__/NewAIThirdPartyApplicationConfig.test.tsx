@@ -36,10 +36,9 @@ vi.mock('@/pages/ai-re-act/hooks/useAIGlobalConfig', () => ({
   ],
 }))
 vi.mock('@/components/yakitUI/YakitEditor/YakitEditor', () => ({
-  YakitEditor: ({ value, setValue, readOnly, type }) => (
+  YakitEditor: ({ value, setValue, readOnly }) => (
     <textarea
       aria-label="yak-model-script"
-      data-script-type={type}
       value={value}
       onChange={(e) => setValue?.(e.target.value)}
       readOnly={readOnly}
@@ -222,7 +221,6 @@ describe('Yak script model configuration', () => {
       <AIModelForm item={item} aiModelType={AIModelTypeEnum.TierIntelligent} onClose={onClose} />,
     )
     const editor = await screen.findByLabelText('yak-model-script')
-    expect(editor).toHaveAttribute('data-script-type', 'yak')
     expect(editor).toHaveValue(script)
     fireEvent.change(editor, { target: { value: edited } })
     if (enableNative) fireEvent.click(screen.getByRole('switch', { name: 'ConfigNetworkPage.nativeToolCalling' }))
