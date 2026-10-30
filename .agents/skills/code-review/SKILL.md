@@ -9,7 +9,7 @@ description: 对 Yakit 仓库的代码改动做规范化 code review：按代码
 
 ## 触发
 
-1. 语义：如「review」「审查这个 PR / 当前分支」「对比 master」「合并前检查」。
+1. 语义：如「review」「审查这个 PR / 当前分支」「对比 origin/master」「合并前检查」。
 2. `/code-review`，可带参数（如 `/code-review review PR 4198`）。
 3. 被其他 skill 调用（如 create-pr）：**已指定范围则直接执行，不弹框**。三块报告全文返回调用方；落盘仍须用户同意。
 
@@ -28,12 +28,12 @@ description: 对 Yakit 仓库的代码改动做规范化 code review：按代码
 | 3 | 外部 skill 已指定 diff 范围 | 直接采用，不弹框 |
 | 4 | 以上都没有 | 按交互约定询问 |
 
-**CHECKPOINT：审查范围未明确时，先取得用户选择再审查。** 选项：当前分支 vs master；工作区未提交改动。问题中注明也可输入 PR 编号或其他基线分支名。
+**CHECKPOINT：审查范围未明确时，先取得用户选择再审查。** 选项：当前分支 vs origin/master；工作区未提交改动。问题中注明也可输入 PR 编号或其他基线分支名。
 
 | 模式 | 获取改动 | 报告文件名（仓库根） |
 | --- | --- | --- |
 | PR | `gh pr view <编号> --repo yaklang/yakit --json title,headRefName,headRefOid,baseRefName,baseRefOid,files` + `gh pr diff <编号>`。必须记录 `baseRefOid` / `headRefOid` 供步骤 4 | `PR-<编号>-review.md` |
-| 分支 | `git diff <基线>...HEAD` + `git log --oneline <基线>..HEAD`，基线默认 `master` | `<分支名>-review.md`（`/` → `-`） |
+| 分支 | `git diff <基线>...HEAD` + `git log --oneline <基线>..HEAD`，基线默认 `origin/master`，不得自动替换为本地 `master` | `<分支名>-review.md`（`/` → `-`） |
 | 工作区 | `git diff HEAD` + `git status --short` 未跟踪新文件（读内容纳入审查） | `working-tree-review.md` |
 
 gh 未安装或未登录：PR 模式报错并停止；若本地分支恰好对应该 PR，按交互约定取得用户确认后降级为分支模式。
