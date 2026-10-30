@@ -21,4 +21,7 @@ export enum LocalGVS {
 
   /** @name 软件是否白屏崩溃过,在渲染端只会设置为false,在主进程触发崩溃时设置为true */
   RenderCrashScreen = 'render-crash-screen',
+
+  /** @name Memfit 更新说明已点「知道了」的版本号 */
+  WhatsNewAckVersion = 'whats-new-ack-version',
 }

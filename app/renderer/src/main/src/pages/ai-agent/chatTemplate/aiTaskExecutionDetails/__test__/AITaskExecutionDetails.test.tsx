@@ -776,18 +776,11 @@ describe('AITaskExecutionDetails 任务下拉切换', () => {
 })
 
 describe('状态统计拖拽排序工具', () => {
-  it('reorderFilterKeys 把 from 插到 to 的位置', () => {
+  it('reorderFilterKeys 向左插入到目标位置（含跨多项）', () => {
     expect(reorderFilterKeys(TODO_STATUS_FILTER_KEYS, 'pending', 'doing')).toEqual([
       'pending',
       'doing',
       'done',
-      'skipped',
-      'deleted',
-    ])
-    expect(reorderFilterKeys(TODO_STATUS_FILTER_KEYS, 'doing', 'skipped')).toEqual([
-      'pending',
-      'done',
-      'doing',
       'skipped',
       'deleted',
     ])
@@ -798,6 +791,27 @@ describe('状态统计拖拽排序工具', () => {
       'done',
       'deleted',
     ])
+  })
+
+  it('reorderFilterKeys 向右插到目标前面（含跨多项）', () => {
+    expect(reorderFilterKeys(TODO_STATUS_FILTER_KEYS, 'doing', 'pending')).toEqual([...TODO_STATUS_FILTER_KEYS])
+    expect(reorderFilterKeys(TODO_STATUS_FILTER_KEYS, 'doing', 'skipped')).toEqual([
+      'pending',
+      'done',
+      'doing',
+      'skipped',
+      'deleted',
+    ])
+    expect(reorderFilterKeys(TODO_STATUS_FILTER_KEYS, 'doing', 'deleted')).toEqual([
+      'pending',
+      'done',
+      'skipped',
+      'doing',
+      'deleted',
+    ])
+  })
+
+  it('reorderFilterKeys 非法或同位置不改顺序', () => {
     expect(reorderFilterKeys(TODO_STATUS_FILTER_KEYS, 'created', 'pending')).toEqual([...TODO_STATUS_FILTER_KEYS])
     expect(reorderFilterKeys(TODO_STATUS_FILTER_KEYS, 'pending', 'pending')).toEqual([...TODO_STATUS_FILTER_KEYS])
   })

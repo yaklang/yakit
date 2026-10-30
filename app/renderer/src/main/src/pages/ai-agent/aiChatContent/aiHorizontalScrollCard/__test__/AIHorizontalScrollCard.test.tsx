@@ -4,7 +4,16 @@ import { createStore } from 'zustand/vanilla'
 import { AIHorizontalScrollCard } from '../AIHorizontalScrollCard'
 
 const store = createStore(() => ({ card: [] as { title: string }[] }))
-const { newChat } = vi.hoisted(() => ({ newChat: vi.fn() }))
+const { newChat, isMemfitMock, emit } = vi.hoisted(() => ({
+  newChat: vi.fn(),
+  isMemfitMock: vi.fn(() => false),
+  emit: vi.fn(),
+}))
+vi.mock('@/utils/envfile', () => ({ isMemfit: () => isMemfitMock() }))
+vi.mock('@/utils/eventBus/eventBus', () => ({ default: { emit, on: vi.fn(), off: vi.fn() } }))
+vi.mock('@/components/layout/whatsNew/memfitWhatsNewConfig', () => ({
+  MEMFIT_WHATS_NEW: { enabled: true, targetVersion: '1.4.9-1023', items: [{ title: 't', description: 'd' }] },
+}))
 vi.mock('@/pages/ai-re-act/hooks/useCurrentDataBySession', () => ({ useCurrentStore: () => store }))
 vi.mock('../../../useContext/useStore', () => ({ default: () => ({ activeChat: { Title: '当前会话' } }) }))
 vi.mock('../../../historyChat/HistoryChat', () => ({ onNewChat: newChat }))
@@ -16,6 +25,7 @@ vi.mock('@/i18n/useI18nNamespaces', () => ({ useI18nNamespaces: () => ({ t: (key
 
 beforeEach(() => {
   vi.clearAllMocks()
+  isMemfitMock.mockReturnValue(false)
   store.setState({ card: [] })
 })
 
@@ -29,6 +39,15 @@ describe('AIHorizontalScrollCard', () => {
     fireEvent.click(buttons[1])
     expect(newChat).toHaveBeenCalledTimes(1)
     expect(screen.queryByText('执行结果')).not.toBeInTheDocument()
+  })
+
+  it('memfit 下点击更新说明按钮打开弹窗', () => {
+    isMemfitMock.mockReturnValue(true)
+    render(<AIHorizontalScrollCard />)
+    const buttons = screen.getAllByRole('button')
+    expect(buttons).toHaveLength(3)
+    fireEvent.click(buttons[0])
+    expect(emit).toHaveBeenCalledWith('openMemfitWhatsNew')
   })
 
   it('移除操作按钮后，执行结果仍支持展开和收起', () => {
