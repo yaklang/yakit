@@ -17,7 +17,6 @@ import { PublicHTTPHistoryIcon } from '@yakit-libs/yakit-ui-icons/oldicon/Public
 import { PublicICMPSizeLogIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicICMPSizeLogIcon'
 import { PublicMitmIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicMitmIcon'
 import { PublicPayloadGeneraterIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicPayloadGeneraterIcon'
-import { PublicPluginStoreIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicPluginStoreIcon'
 import { PublicPocIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicPocIcon'
 import { PublicPortsIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicPortsIcon'
 import { PublicProjectManagerIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicProjectManagerIcon'
@@ -49,6 +48,7 @@ import {
   MemfitMemoryIcon,
   MemfitToolIcon,
   MemfitSkillIcon,
+  MemfitPluginStoreIcon,
 } from './memfitMenuIcon'
 
 interface MenuModeProps {
@@ -256,7 +256,7 @@ export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
             <div className={styles['vertical-menu-wrapper']} onClick={() => onMenu(YakitRoute.Plugin_Hub)}>
               <div className={styles['menu-icon-wrapper']}>
                 <div className={styles['icon-wrapper']}>
-                  <PublicPluginStoreIcon />
+                  <MemfitPluginStoreIcon />
                 </div>
               </div>
               <div className={styles['title-style']}>{t('YakitRoute.pluginHub')}</div>
@@ -266,7 +266,7 @@ export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
               <div className={styles['vertical-menu-wrapper']} onClick={() => onMenu(YakitRoute.Plugin_Hub)}>
                 <div className={styles['menu-icon-wrapper']}>
                   <div className={styles['icon-wrapper']}>
-                    <PublicPluginStoreIcon />
+                    <MemfitPluginStoreIcon />
                   </div>
                 </div>
                 <div className={styles['title-style']}>{t('YakitRoute.pluginHub')}</div>

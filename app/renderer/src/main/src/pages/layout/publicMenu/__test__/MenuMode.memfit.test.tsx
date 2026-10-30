@@ -113,6 +113,21 @@ describe('Memfit 公共菜单', () => {
     }
   })
 
+  it.each(['memfit', 'yakit'])('%s 插件仓库使用设计稿的 44px 商店图标', (current) => {
+    edition.current = current
+    const onMenuSelect = vi.fn()
+    const { container } = render(<MenuMode mode="插件" pluginToId={pluginToId} onMenuSelect={onMenuSelect} />)
+    const icon = container.querySelector('svg')!
+    expect(icon).toHaveAttribute('width', '44')
+    expect(icon).toHaveAttribute('height', '44')
+    expect(icon.querySelectorAll('path')).toHaveLength(11)
+    expect(icon.querySelector('[fill="var(--Colors-Use-Main-Primary)"]')).not.toBeNull()
+    expect(icon.querySelector('[fill="var(--Colors-Use-Main-Border)"]')).not.toBeNull()
+    expect(icon.querySelector('image, use')).toBeNull()
+    fireEvent.click(screen.getByText('YakitRoute.pluginHub'))
+    expect(onMenuSelect).toHaveBeenCalledExactlyOnceWith({ route: YakitRoute.Plugin_Hub })
+  })
+
   it('展开插件仓库只有插件入口，不显示批量执行', () => {
     const menu = getPublicRouteMenu(undefined)[1]
     const onMenuSelect = vi.fn()
