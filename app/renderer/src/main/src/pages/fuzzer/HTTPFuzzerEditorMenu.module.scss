@@ -1,6 +1,10 @@
 .http-fuzzer-click-editor {
   position: relative;
+  /* 高于 Monaco 竖向滚动条 z-index:11（与 editerMenuFun content widget zIndex 对齐） */
+  z-index: 20;
+  flex-shrink: 0;
   .http-fuzzer-click-editor-simple {
+    flex-shrink: 0;
     box-sizing: content-box;
     background-color: var(--Colors-Use-Basic-Background);
     border-radius: 6px;
@@ -18,6 +22,8 @@
       }
       .insert-box,
       .aiplugin-box {
+        flex-shrink: 0;
+        white-space: nowrap;
         padding: 4px 8px;
         display: flex;
         flex-direction: row;
@@ -35,6 +41,7 @@
           font-size: 12px;
           font-weight: 500;
           line-height: 16px;
+          white-space: nowrap;
         }
         .down,
         .up {
@@ -53,7 +60,10 @@
 }
 .http-fuzzer-click-editor-menu {
   position: absolute;
-  margin-top: 2px;
+  /* 高于 Monaco 竖向滚动条 z-index:11（panel 与 bar 同级） */
+  z-index: 20;
+  box-sizing: border-box;
+  margin-top: 0;
   border: 1px solid var(--Colors-Use-Neutral-Border);
   border-radius: 4px;
   box-shadow: 0px 2px 4px var(--Colors-Use-Basic-Shadow);
@@ -65,8 +75,11 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    min-width: 0;
     padding: 8px 4px;
     &-left {
+      flex: 1;
+      min-width: 0;
       padding: 0px 12px;
       font-weight: 500;
       font-size: 12px;
@@ -84,7 +97,7 @@
       }
     }
     &-opt {
-      // padding-right: 4px;
+      flex-shrink: 0;
       display: flex;
       flex-direction: row;
       gap: 4px;
@@ -120,6 +133,8 @@
       &-info {
         display: flex;
         align-items: center;
+        flex: 1;
+        min-width: 0;
         .input {
           margin-left: 12px;
         }
@@ -136,6 +151,7 @@
           font-weight: 500;
           line-height: 16px;
           color: var(--Colors-Use-Neutral-Text-1-Title);
+          min-width: 0;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -158,7 +174,7 @@
         align-items: center;
         gap: 8px;
         .form-outlined {
-          color: var(--Colors-Use-Neutral-Text-1-Title);
+          color: var(--Colors-Use-Neutral-Text-3-Secondary);
           display: none;
           padding: 4px;
           &:hover {
@@ -200,6 +216,9 @@
   }
   .menu-content {
     position: relative;
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
     background-color: var(--Colors-Use-Basic-Background);
     .ai-plugin-box {
       .ai-plugin-item {
@@ -215,6 +234,7 @@
           font-weight: 500;
           line-height: 16px;
           flex: 1;
+          min-width: 0;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -228,8 +248,12 @@
   }
 }
 .http-fuzzer-range-editor-body {
+  position: relative;
+  /* bar 根 z-index：面板是 groups 兄弟，须压过 Monaco 竖向滚动条 z-index:11 */
+  z-index: 20;
   display: flex;
   align-items: center;
+  width: max-content;
   box-shadow: 0px 2px 4px 0px var(--Colors-Use-Basic-Shadow);
   border: 0.5px solid var(--Colors-Use-Neutral-Border);
   border-radius: 6px;
@@ -241,6 +265,8 @@
 }
 .http-fuzzer-range-editor {
   position: relative;
+  /* 高于 Monaco 竖向滚动条 z-index:11 */
+  z-index: 20;
   .http-fuzzer-range-editor-simple {
     flex-shrink: 0;
     background-color: var(--Colors-Use-Basic-Background);
@@ -262,6 +288,8 @@
       .encode-box,
       .decodeLabel-box,
       .decode-box {
+        flex-shrink: 0;
+        white-space: nowrap;
         padding: 4px 8px;
         display: flex;
         flex-direction: row;
@@ -278,6 +306,7 @@
           font-size: 12px;
           font-weight: 500;
           line-height: 16px;
+          white-space: nowrap;
         }
         .down,
         .up {
@@ -294,9 +323,39 @@
     }
   }
 }
+/* 智能解码浮层：双选择器保证压过 .http-fuzzer-range-editor-menu 的 z-index:20 */
+.smart-decode-float-layer,
+.http-fuzzer-range-editor-menu.smart-decode-float-layer {
+  position: fixed;
+  z-index: 1050;
+  margin-top: 0;
+  padding: 2px 4px 4px;
+  .menu-drag {
+    height: 16px;
+    align-items: center;
+    button {
+      height: 16px;
+      width: 16px;
+      min-width: 16px;
+    }
+  }
+  .decode-box {
+    .only-one {
+      padding: 0 4px;
+    }
+    .decode-copy-replace {
+      .content,
+      .content-solid {
+        padding: 6px 8px;
+      }
+    }
+  }
+}
 .http-fuzzer-range-editor-menu {
   position: absolute;
-  margin-top: 2px;
+  /* 高于 Monaco 竖向滚动条 z-index:11；兼用 smart-decode-float-layer 时由 1050 规则覆盖 */
+  z-index: 20;
+  margin-top: 0;
   border: 1px solid var(--Colors-Use-Neutral-Border);
   border-radius: 4px;
   padding: 8px 4px 6px 4px;
@@ -329,6 +388,7 @@
           font-weight: 500;
           line-height: 16px;
           flex: 1;
+          min-width: 0;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -348,6 +408,11 @@
 }
 .http-fuzzer-read-editor {
   position: relative;
+  /* 高于 Monaco 竖向滚动条 z-index:11（只读菜单 bar 根） */
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  width: max-content;
   .http-fuzzer-read-editor-simple {
     flex-shrink: 0;
     background-color: var(--Colors-Use-Basic-Background);
@@ -361,11 +426,12 @@
       align-items: center;
       justify-content: space-between;
       .decode-box {
+        flex-shrink: 0;
+        white-space: nowrap;
         padding: 4px 8px;
         display: flex;
         flex-direction: row;
         align-items: center;
-        justify-content: space-between;
         gap: 6px;
         .tag {
           svg {
@@ -378,6 +444,7 @@
           font-size: 12px;
           font-weight: 500;
           line-height: 16px;
+          white-space: nowrap;
         }
         .down,
         .up {
@@ -396,7 +463,9 @@
 }
 .http-fuzzer-range-read-only-editor-menu {
   position: absolute;
-  margin-top: 2px;
+  /* 高于 Monaco 竖向滚动条 z-index:11 */
+  z-index: 20;
+  margin-top: 0;
   // width: 360px;
   // max-height: 250px;
   border: 1px solid var(--Colors-Use-Neutral-Border);
