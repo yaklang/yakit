@@ -174,8 +174,8 @@ const templateStr = `<!DOCTYPE html>
           </svg>
         </div>
         <h1>验证成功</h1>
-        <p>账号验证成功，点击返回开启Yakit安全之旅。</p>
-        <a id="goBackSuccee">返回 Yakit</a>
+        <p>账号验证成功，点击返回开启PenetraX安全之旅。</p>
+        <a id="goBackSuccee">返回 PenetraX</a>
       </div>
 
       <div id="fail" class="container fail-box">
@@ -225,8 +225,8 @@ const templateStr = `<!DOCTYPE html>
           </svg>
         </div>
         <h1>验证失败</h1>
-        <p>请求异常，请返回Yakit重新登录。</p>
-        <a id="goBackFail">返回 Yakit</a>
+        <p>请求异常，请返回PenetraX重新登录。</p>
+        <a id="goBackFail">返回 PenetraX</a>
       </div>
 
       <div id="load" class="middle-loading-body">
