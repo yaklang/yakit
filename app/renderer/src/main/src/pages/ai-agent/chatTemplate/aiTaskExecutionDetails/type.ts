@@ -1,9 +1,10 @@
 import type { ForgesAndSkillsDynamicItem, PlanItemDetailsData } from '@/pages/ai-re-act/hooks/aiRender'
 import type { AIAgentGrpcApi } from '@/pages/ai-re-act/hooks/grpcApi'
 import type { PaginationSchema } from '@/pages/invoker/schema'
-import type { ThemeColorName } from '@yakit-libs/color'
 import type { ReactNode } from 'react'
 import type { AITaskGanttSegmentKind } from './aiTaskGantt/type'
+
+export type { AITaskStatisticsStatusItem, AITaskStatisticsStatusProps } from './aiTaskStatisticsStatus/type'
 
 export interface AITaskExecutionDetailsProps {
   taskId: string
@@ -14,8 +15,8 @@ export interface AITaskExecutionDetailsProps {
 
 export type TodoViewMode = 'board' | 'gantt'
 
-/** 统计项 / 图例 → 待办 status，用于点击筛选行 */
-export const TODO_STATUS_FILTER_KEYS = ['pending', 'doing', 'done', 'skipped', 'deleted'] as const
+/** 统计项 / 图例默认从左到右：进行中、待处理、已完成、已跳过、已删除 */
+export const TODO_STATUS_FILTER_KEYS = ['doing', 'pending', 'done', 'skipped', 'deleted'] as const
 export type TodoStatusFilterKey = (typeof TODO_STATUS_FILTER_KEYS)[number]
 
 export const TODO_STATUS_TO_FILTER_KEY: Record<string, TodoStatusFilterKey> = {
@@ -43,6 +44,39 @@ export const GANTT_LEGEND_TO_FILTER_KEY = (Object.keys(FILTER_KEY_TO_GANTT_LEGEN
   },
   {} as Record<AITaskGanttSegmentKind, TodoStatusFilterKey>,
 )
+
+/** 拖拽状态统计项后，按目标位置重排（已创建不参与） */
+export const reorderFilterKeys = (
+  order: readonly TodoStatusFilterKey[],
+  fromKey: string,
+  toKey: string,
+): TodoStatusFilterKey[] => {
+  const next = order.slice()
+  const from = next.indexOf(fromKey as TodoStatusFilterKey)
+  const to = next.indexOf(toKey as TodoStatusFilterKey)
+  if (from < 0 || to < 0 || from === to) return next
+  const [item] = next.splice(from, 1)
+  const insertAt = from < to ? to - 1 : to
+  next.splice(insertAt, 0, item)
+  return next
+}
+
+/** 待办按状态统计从左到右的顺序排序，同状态保持原相对顺序 */
+export const sortTodoItemsByStatusOrder = <T extends { status: string }>(
+  items: T[],
+  order: readonly TodoStatusFilterKey[],
+): T[] => {
+  if (!items.length || !order.length) return items
+  const rank = new Map(order.map((key, i) => [key, i]))
+  return items
+    .map((item, i) => ({ item, i }))
+    .sort((a, b) => {
+      const ar = rank.get(TODO_STATUS_TO_FILTER_KEY[a.item.status] || '') ?? order.length
+      const br = rank.get(TODO_STATUS_TO_FILTER_KEY[b.item.status] || '') ?? order.length
+      return ar - br || a.i - b.i
+    })
+    .map((entry) => entry.item)
+}
 
 export type PlanItemDetailsCategoryTypes = (
   | AIAgentGrpcApi.PlanItemDetailsFixedItem
@@ -84,20 +118,6 @@ export interface AITaskExecutionDetailsCardProps {
   title: ReactNode
   content: ReactNode
   className?: string
-}
-
-export interface AITaskStatisticsStatusItem {
-  key: string
-  color: Uncapitalize<ThemeColorName>
-  title: ReactNode
-  footerLeft: number
-}
-export interface AITaskStatisticsStatusProps {
-  list: AITaskStatisticsStatusItem[]
-  /** 已隐藏（筛选掉）的状态 key：pending/doing/done/skipped/deleted */
-  hiddenKeys?: string[]
-  /** 点击状态项切换显示/隐藏；created 为全选/全不选 */
-  onToggle?: (key: string) => void
 }
 
 export interface AIBrowserProcessesProps {

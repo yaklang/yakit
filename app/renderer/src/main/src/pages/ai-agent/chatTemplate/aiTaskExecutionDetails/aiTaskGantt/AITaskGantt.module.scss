@@ -121,7 +121,7 @@
 .timeline-row {
   position: relative;
   z-index: 1;
-  height: 48px;
+  height: 31px;
   box-sizing: border-box;
   cursor: pointer;
   border-left: 2px solid transparent;
@@ -134,8 +134,7 @@
 
 .bar-label {
   position: absolute;
-  top: 8px;
-  // left 由条带起点决定；right 卡死右边界，保证过长文字能省略
+  top: 2px;
   right: 8px;
   z-index: 2;
   display: flex;
@@ -160,25 +159,25 @@
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 12px;
-  height: 10px;
+  bottom: 7px;
+  height: 4px;
 }
 
 .bar-segment {
   position: absolute;
   top: 0;
-  height: 10px;
+  height: 4px;
   min-width: 4px;
   border-radius: 0;
 
   &:first-child {
-    border-top-left-radius: 5px;
-    border-bottom-left-radius: 5px;
+    border-top-left-radius: 2px;
+    border-bottom-left-radius: 2px;
   }
 
   &:last-child {
-    border-top-right-radius: 5px;
-    border-bottom-right-radius: 5px;
+    border-top-right-radius: 2px;
+    border-bottom-right-radius: 2px;
   }
 
   &.bar-segment-wait {
