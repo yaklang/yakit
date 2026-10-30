@@ -5,6 +5,7 @@ import { type ReactNode } from 'react'
 import { type TableVirtualResizeProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import { type CodeRangeProps } from '@/pages/yakRunnerAuditCode/RightAuditDetail/RightAuditDetail'
 import type { SSARisk } from '@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType'
+import type { BatchScope } from '@/components/BatchScopeSelector/batchScope'
 // import {SSARisk} from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType"
 export interface YakitRiskTableProps {
   setRiskLoading: (b: boolean) => void
@@ -96,7 +97,11 @@ export interface YakitRiskEditFormProps {
   info: Risk
   batchCount?: number
   onClose?: () => void
-  onSave: (info: Risk) => void | Promise<void>
+  onSave: (info: Risk) => void | Promise<unknown>
+  batchScope?: {
+    total: number
+    execute: (info: Risk, scope: BatchScope) => Promise<{ UpdatedCount?: number }>
+  }
 }
 
 export interface YakitCodeScanRiskDetailsProps {

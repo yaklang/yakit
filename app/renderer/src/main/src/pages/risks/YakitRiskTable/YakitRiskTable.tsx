@@ -128,6 +128,8 @@ import { RemoteRiskGV } from '@/enums/risk'
 import { useStore } from '@/store'
 import { isEnterpriseEdition } from '@/utils/envfile'
 import { RiskDisposalLog } from './RiskDisposalLog'
+import { BatchScopeSelector } from '@/components/BatchScopeSelector/BatchScopeSelector'
+import { buildBatchScopes } from '@/components/BatchScopeSelector/batchScope'
 import { apiGetRiskVerifierUid } from '../riskVerifier'
 import { minWinSendToChildWin, openRiskNewWindow } from '@/utils/openWebsite'
 import type { CodeRangeProps } from '@/pages/yakRunnerAuditCode/RightAuditDetail/RightAuditDetail'
@@ -928,11 +930,15 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
       FixSuggestion: isRepaired ? info.FixSuggestion : undefined,
       TagReason: isRepaired ? undefined : info.TagReason,
     }
-    return apiBatchSetRiskTags(params).then(() => {
+    return apiBatchSetRiskTags(params).then((result) => {
       if (scope) {
-        onRefRiskList()
-        emiter.emit('onRefRiskFieldGroup')
-        return
+        try {
+          onRefRiskList()
+          emiter.emit('onRefRiskFieldGroup')
+        } catch (error) {
+          yakitNotify('error', t('BatchScopeSelector.refreshFailed', { error: String(error) }))
+        }
+        return result
       }
       const current = getResponse()
       const index = current.Data.findIndex((item) => item.Id === info.Id)
@@ -963,6 +969,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
       }
       getRiskType()
       getRiskTags()
+      return result
     })
   })
   const onRemoveSingle = useMemoizedFn((id) => {
@@ -995,12 +1002,21 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
     switch (key) {
       case 'modify-mark': {
         if (!isEnterpriseEdition()) return
+        const currentFilter = cloneDeep(getQuery())
+        const batchFilter: QueryRisksRequest = {
+          ...currentFilter,
+          Ids: allCheck ? currentFilter.Ids || [] : selectList.map((item) => item.Id),
+          FromId: 0,
+          UntilId: 0,
+        }
         const batchEditInfo =
           !allCheck && selectList.length === 1
             ? cloneDeep(selectList[0])
             : { Id: 0, Hash: '', IP: '', Title: '', RiskType: '', CreatedAt: 0 }
         const m = showYakitModal({
           title: (modalT) => modalT('YakitRiskTable.batch_modify_mark'),
+          closable: false,
+          keyboard: false,
           maskClosable: false,
           footer: null,
           onCancel: () => m.destroy(),
@@ -1009,7 +1025,28 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
               info={batchEditInfo}
               batchCount={selectNum}
               onClose={() => m.destroy()}
-              onSave={(info) => onSaveRiskEdit(info, scope)}
+              onSave={async (info) => {
+                await onSaveRiskEdit(info, scope)
+              }}
+              batchScope={{
+                total: selectNum,
+                execute: async (info, range) => {
+                  const result = await onSaveRiskEdit(info, {
+                    Filter: {
+                      ...batchFilter,
+                      Pagination: {
+                        ...batchFilter.Pagination,
+                        Page: range.page,
+                        Limit: range.limit,
+                        OrderBy: batchFilter.Pagination?.OrderBy || 'id',
+                        Order: batchFilter.Pagination?.Order || 'desc',
+                      },
+                    },
+                  })
+                  if (!result) throw new Error(t('BatchScopeSelector.missingResult'))
+                  return result
+                },
+              }}
             />
           ),
         })
@@ -1799,11 +1836,12 @@ const YakitRiskSelectTag: React.FC<YakitRiskSelectTagProps> = React.memo((props)
   )
 })
 export const YakitRiskEditForm: React.FC<YakitRiskEditFormProps> = React.memo((props) => {
-  const { info, onClose, onSave, batchCount } = props
+  const { info, onClose, onSave, batchCount, batchScope } = props
   const { t, i18nRefresh } = useI18nNamespaces(['risk', 'yakitUi'])
   const { userInfo } = useStore()
   const [form] = Form.useForm()
   const [submitting, setSubmitting] = useState(false)
+  const [batchInfo, setBatchInfo] = useState<Risk>()
   const submittingRef = useRef(false)
   const initRiskType = info.RiskTypeVerbose || info.RiskType || undefined
   const initCvss = typeof info.SeverityScore === 'number' ? info.SeverityScore : undefined
@@ -1944,22 +1982,50 @@ export const YakitRiskEditForm: React.FC<YakitRiskEditFormProps> = React.memo((p
       const verifierName = verifierUid
         ? verifierOptions.find((item) => item.value === verifierUid)?.label || info.Verifier || verifierUid
         : undefined
+      const nextInfo: Risk = {
+        ...info,
+        RiskType: riskType,
+        RiskTypeVerbose: riskType,
+        SeverityScore: cvss,
+        Severity: severity,
+        Tags: disposal,
+        Verifier: verifierName,
+        VerifierUid: verifierUid,
+        FixTime: isRepaired ? value.repair_time : undefined,
+        FixSuggestion: isRepaired ? value.repair_suggestion : undefined,
+        TagReason: isRepaired ? undefined : value.disposal_note,
+      }
+      if (batchScope) {
+        if (batchScope.total <= 0) return
+        if (batchScope.total > 1000) {
+          setBatchInfo(nextInfo)
+          return
+        }
+        const scope = buildBatchScopes(batchScope.total)[0]
+        if (!scope) return
+        submittingRef.current = true
+        setSubmitting(true)
+        try {
+          const response = await batchScope.execute(nextInfo, scope)
+          const updatedCount = Number(response?.UpdatedCount ?? 0)
+          if (updatedCount !== scope.count) {
+            yakitNotify('error', t('BatchScopeSelector.incompleteUpdate', { updatedCount, expectedCount: scope.count }))
+            onClose?.()
+            return
+          }
+          onClose?.()
+        } catch {
+          // 接口层提示错误；保留输入，允许重试。
+        } finally {
+          submittingRef.current = false
+          setSubmitting(false)
+        }
+        return
+      }
       submittingRef.current = true
       setSubmitting(true)
       try {
-        await onSave({
-          ...info,
-          RiskType: riskType,
-          RiskTypeVerbose: riskType,
-          SeverityScore: cvss,
-          Severity: severity,
-          Tags: disposal,
-          Verifier: verifierName,
-          VerifierUid: verifierUid,
-          FixTime: isRepaired ? value.repair_time : undefined,
-          FixSuggestion: isRepaired ? value.repair_suggestion : undefined,
-          TagReason: isRepaired ? undefined : value.disposal_note,
-        })
+        await onSave(nextInfo)
         onClose?.()
       } catch {
         // 接口层提示错误；保留输入，允许重试。
@@ -1973,6 +2039,16 @@ export const YakitRiskEditForm: React.FC<YakitRiskEditFormProps> = React.memo((p
   const layout = {
     labelCol: { span: 5 },
     wrapperCol: { span: 19 },
+  }
+
+  if (batchScope && batchInfo) {
+    return (
+      <BatchScopeSelector
+        total={batchScope.total}
+        execute={(scope) => batchScope.execute(batchInfo, scope)}
+        onClose={onClose}
+      />
+    )
   }
 
   return (
@@ -2109,7 +2185,7 @@ export const YakitRiskEditForm: React.FC<YakitRiskEditFormProps> = React.memo((p
               type="outline2"
               disabled={submitting}
               onClick={() => {
-                if (onClose) onClose()
+                if (!submittingRef.current) onClose?.()
               }}
             >
               {t('YakitButton.cancel')}

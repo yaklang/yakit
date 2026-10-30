@@ -1,4 +1,5 @@
 import type { YakQueryHTTPFlowRequest } from '@/utils/yakQueryHTTPFlow'
+import cloneDeep from 'lodash/cloneDeep'
 import type { HTTPFlow } from './HTTPFlowTable.constants'
 
 export interface HTTPFlowMarkScope {
@@ -6,12 +7,12 @@ export interface HTTPFlowMarkScope {
   filter?: YakQueryHTTPFlowRequest
 }
 
-/** 全选按当前筛选条件更新；局部选择只按显式 ID 更新。 */
+/** 保留当前筛选与排序；局部选择额外使用完整 ID 集合作为筛选限定。 */
 export const resolveHTTPFlowMarkScope = (
   isAllSelect: boolean,
   ids: number[],
   filter: YakQueryHTTPFlowRequest,
-): HTTPFlowMarkScope => (isAllSelect ? { ids: [], filter } : { ids })
+): HTTPFlowMarkScope => ({ ids: isAllSelect ? [] : [...ids], filter: cloneDeep(filter) })
 
 const HTTP_FLOW_MARK_FIELDS = ['IssueType', 'Severity', 'Status', 'StatusReason'] as const
 

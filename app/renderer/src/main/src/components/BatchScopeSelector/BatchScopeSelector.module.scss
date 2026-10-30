@@ -1,0 +1,44 @@
+.batch-scope-selector {
+  padding: 24px;
+}
+
+.batch-scope-summary {
+  margin-bottom: 12px;
+  color: var(--Colors-Use-Neutral-Text-2-Primary);
+  font-size: 12px;
+}
+
+.batch-scope-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+.batch-scope-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  border: 1px solid var(--Colors-Use-Neutral-Border);
+  border-radius: 4px;
+}
+
+.batch-scope-state {
+  flex: 1;
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  font-size: 12px;
+}
+
+.batch-scope-error {
+  margin-top: 4px;
+  color: var(--Colors-Use-Error-Primary);
+}
+
+.batch-scope-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+}

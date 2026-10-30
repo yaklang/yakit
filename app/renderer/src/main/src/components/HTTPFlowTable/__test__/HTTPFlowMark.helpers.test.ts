@@ -6,13 +6,28 @@ describe('resolveHTTPFlowMarkScope', () => {
   it('uses explicit ids only for a partial selection', () => {
     const filter = { Keyword: 'example.com' }
 
-    expect(resolveHTTPFlowMarkScope(false, [1, 2], filter)).toEqual({ ids: [1, 2] })
+    expect(resolveHTTPFlowMarkScope(false, [1, 2], filter)).toEqual({ ids: [1, 2], filter })
   })
 
   it('uses the current filter only for select-all', () => {
     const filter = { Keyword: 'example.com' }
 
     expect(resolveHTTPFlowMarkScope(true, [1, 2], filter)).toEqual({ ids: [], filter })
+  })
+
+  it('freezes explicit ids and filter values when opening the form', () => {
+    const ids = [1, 2]
+    const filter = { Keyword: 'example.com', Pagination: { Page: 1, Limit: 20 } }
+    const scope = resolveHTTPFlowMarkScope(false, ids, filter)
+
+    ids.push(3)
+    filter.Keyword = 'changed.example.com'
+    filter.Pagination.Page = 2
+
+    expect(scope).toEqual({
+      ids: [1, 2],
+      filter: { Keyword: 'example.com', Pagination: { Page: 1, Limit: 20 } },
+    })
   })
 })
 

@@ -10,6 +10,8 @@ const mocks = vi.hoisted(() => ({
   verifierUid: vi.fn(),
   userSearch: vi.fn(),
   notify: vi.fn(),
+  t: vi.fn((key: string) => key),
+  resetFields: vi.fn(),
   setFieldsValue: vi.fn(),
   getFieldValue: vi.fn(() => undefined),
   finishValues: vi.fn(),
@@ -72,6 +74,7 @@ vi.mock('antd', async (importOriginal) => {
   Form.useForm = () => [
     {
       setFieldsValue: mocks.setFieldsValue,
+      resetFields: mocks.resetFields,
       getFieldValue: mocks.getFieldValue,
     },
   ]
@@ -84,7 +87,7 @@ vi.mock('@/utils/envfile', async (importOriginal) => ({
   isEnterpriseEdition: () => true,
 }))
 vi.mock('@/i18n/useI18nNamespaces', () => ({
-  useI18nNamespaces: () => ({ t: (key: string) => key, i18n: { language: 'zh' }, i18nRefresh: 0 }),
+  useI18nNamespaces: () => ({ t: mocks.t, i18n: { language: 'zh' }, i18nRefresh: 0 }),
 }))
 vi.mock('@/pages/risks/riskVerifier', () => ({ apiGetRiskVerifierUid: mocks.verifierUid }))
 vi.mock('@/pages/notepadManage/NotepadShareModal/utils', () => ({ apiGetUserSearch: mocks.userSearch }))
@@ -151,10 +154,12 @@ vi.mock('../RiskDisposalLog', () => ({
 
 const deferred = <T,>() => {
   let resolve!: (value: T) => void
-  const promise = new Promise<T>((done) => {
+  let reject!: (reason: unknown) => void
+  const promise = new Promise<T>((done, fail) => {
     resolve = done
+    reject = fail
   })
-  return { promise, resolve }
+  return { promise, resolve, reject }
 }
 
 describe('YakitRiskEditForm 验证人回填', () => {
@@ -354,6 +359,8 @@ describe('YakitRiskEditForm 验证人回填', () => {
   })
 
   it('保存非已修复风险时清除旧验证人与修复字段', async () => {
+    const pending = deferred<{ data: { uid: string; name: string }[] }>()
+    mocks.userSearch.mockReturnValueOnce(pending.promise)
     mocks.finishValues.mockReturnValue({
       risk_type: '命令执行',
       cvss: 4.2,
@@ -372,6 +379,10 @@ describe('YakitRiskEditForm 验证人回填', () => {
     )
 
     await waitFor(() => expect(mocks.userSearch).toHaveBeenCalledWith({ uid: 'old-uid' }))
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: '测试提交' })))
+    expect(onSave).not.toHaveBeenCalled()
+
+    await act(async () => pending.resolve({ data: [] }))
     await act(async () => fireEvent.click(screen.getByRole('button', { name: '测试提交' })))
 
     expect(onSave).toHaveBeenCalledWith(
@@ -415,6 +426,145 @@ describe('YakitRiskEditForm 验证人回填', () => {
     fireEvent.click(screen.getByRole('button', { name: '测试提交' }))
     await waitFor(() => expect(onSave).toHaveBeenCalledTimes(2))
     await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1))
+  })
+
+  it('不超过 1000 条时直接分页保存，请求期间禁止取消且成功后关闭', async () => {
+    mocks.finishValues.mockReturnValue({ risk_type: 'SQL注入', cvss: 5, disposal_status: ['确认'] })
+    const onSave = vi.fn()
+    const pending = deferred<{ UpdatedCount: number }>()
+    const execute = vi.fn(() => pending.promise)
+    const onClose = vi.fn()
+    render(
+      <YakitRiskEditForm
+        info={{} as never}
+        batchCount={2}
+        onSave={onSave}
+        onClose={onClose}
+        batchScope={{ total: 2, execute }}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: '测试提交' }))
+    expect(execute).toHaveBeenCalledWith(expect.objectContaining({ RiskType: 'SQL注入' }), {
+      index: 0,
+      page: 1,
+      limit: 1000,
+      start: 1,
+      end: 2,
+      count: 2,
+    })
+    expect(onSave).not.toHaveBeenCalled()
+    expect(screen.queryByText('BatchScopeSelector.summary')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'YakitButton.cancel' })).toBeDisabled()
+    fireEvent.click(screen.getByRole('button', { name: 'YakitButton.cancel' }))
+    expect(onClose).not.toHaveBeenCalled()
+    pending.resolve({ UpdatedCount: 2 })
+    await waitFor(() => expect(onClose).toHaveBeenCalledOnce())
+  })
+
+  it.each([0, 1])('小批量仅更新 %i/2 条时提示实际数量并关闭', async (updatedCount) => {
+    mocks.finishValues.mockReturnValue({ risk_type: 'SQL注入', cvss: 5, disposal_status: ['确认'] })
+    const execute = vi.fn().mockResolvedValue({ UpdatedCount: updatedCount })
+    const onSave = vi.fn()
+    const onClose = vi.fn()
+    render(
+      <YakitRiskEditForm
+        info={{} as never}
+        batchCount={2}
+        onSave={onSave}
+        onClose={onClose}
+        batchScope={{ total: 2, execute }}
+      />,
+    )
+
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: '测试提交' })))
+
+    expect(execute).toHaveBeenCalledOnce()
+    expect(onSave).not.toHaveBeenCalled()
+    expect(mocks.t).toHaveBeenCalledWith('BatchScopeSelector.incompleteUpdate', { updatedCount, expectedCount: 2 })
+    expect(mocks.notify).toHaveBeenCalledExactlyOnceWith('error', 'BatchScopeSelector.incompleteUpdate')
+    expect(onClose).toHaveBeenCalledOnce()
+    expect(mocks.notify.mock.invocationCallOrder[0]).toBeLessThan(onClose.mock.invocationCallOrder[0])
+  })
+
+  it('小批量请求失败后保留输入并解锁，允许用原数据重试成功后关闭', async () => {
+    const pending = deferred<{ UpdatedCount: number }>()
+    const retry = deferred<{ UpdatedCount: number }>()
+    const execute = vi.fn().mockReturnValueOnce(pending.promise).mockReturnValueOnce(retry.promise)
+    const onSave = vi.fn()
+    const onClose = vi.fn()
+    render(
+      <YakitRiskEditForm
+        info={{} as never}
+        batchCount={2}
+        onSave={onSave}
+        onClose={onClose}
+        batchScope={{ total: 2, execute }}
+      />,
+    )
+    const cvssInput = screen.getByTestId('cvss-input') as HTMLInputElement
+    fireEvent.change(cvssInput, { target: { value: '5' } })
+    mocks.finishValues.mockImplementation(() => ({
+      risk_type: 'SQL注入',
+      cvss: Number(cvssInput.value),
+      disposal_status: ['确认'],
+    }))
+    const submit = screen.getByRole('button', { name: '测试提交' })
+    const cancel = screen.getByRole('button', { name: 'YakitButton.cancel' })
+    fireEvent.click(submit)
+    expect(execute).toHaveBeenCalledOnce()
+    expect(cancel).toBeDisabled()
+    await act(async () => pending.reject(new Error('保存失败')))
+
+    expect(onClose).not.toHaveBeenCalled()
+    expect(cancel).toBeEnabled()
+    expect(screen.getByTestId('cvss-input')).toBe(cvssInput)
+    expect(cvssInput).toHaveValue('5')
+    expect(mocks.resetFields).not.toHaveBeenCalled()
+    expect(mocks.setFieldsValue).not.toHaveBeenCalled()
+
+    fireEvent.click(submit)
+    fireEvent.click(submit)
+    expect(execute).toHaveBeenCalledTimes(2)
+    expect(execute.mock.calls[1]).toEqual(execute.mock.calls[0])
+    expect(cancel).toBeDisabled()
+    expect(onClose).not.toHaveBeenCalled()
+    await act(async () => retry.resolve({ UpdatedCount: 2 }))
+    expect(onClose).toHaveBeenCalledOnce()
+    expect(onSave).not.toHaveBeenCalled()
+    expect(mocks.notify).not.toHaveBeenCalled()
+  })
+
+  it('超过 1000 条时进入范围选择，执行成功后仍由用户手动关闭', async () => {
+    mocks.finishValues.mockReturnValue({ risk_type: 'SQL注入', cvss: 5, disposal_status: ['确认'] })
+    const execute = vi.fn(async (_info, scope) => ({ UpdatedCount: scope.count }))
+    const onClose = vi.fn()
+    render(
+      <YakitRiskEditForm
+        info={{} as never}
+        batchCount={2501}
+        onSave={vi.fn()}
+        onClose={onClose}
+        batchScope={{ total: 2501, execute }}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: '测试提交' }))
+    expect(await screen.findByText('BatchScopeSelector.summary')).toBeInTheDocument()
+    expect(execute).not.toHaveBeenCalled()
+    fireEvent.click(screen.getAllByRole('button', { name: 'BatchScopeSelector.execute' })[0])
+    await waitFor(() => expect(screen.getByText('BatchScopeSelector.success')).toBeInTheDocument())
+    expect(execute).toHaveBeenCalledWith(expect.objectContaining({ RiskType: 'SQL注入' }), {
+      index: 0,
+      page: 1,
+      limit: 1000,
+      start: 1,
+      end: 1000,
+      count: 1000,
+    })
+    expect(onClose).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: 'BatchScopeSelector.close' }))
+    expect(onClose).toHaveBeenCalledOnce()
   })
 
   it.each([

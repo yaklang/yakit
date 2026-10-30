@@ -1885,15 +1885,21 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     if (!isAllSelect && scope.ids.length === 0) return
     const m = showYakitModal({
       title: t('HTTPFlowTable.batchModifyMark'),
+      closable: false,
+      keyboard: false,
       maskClosable: false,
       content: (
         <FlowMarkEditForm
           batch
+          batchCount={isAllSelect ? total : scope.ids.length}
           ids={scope.ids}
           filter={scope.filter}
+          orderBy={pagination.OrderBy}
+          order={pagination.Order}
           token={userInfo.token}
           onClose={() => m.destroy()}
           onSuccess={isAllSelect ? () => updateData() : patchFlowMark}
+          onRefresh={() => updateData()}
         />
       ),
       footer: null,
