@@ -52,11 +52,14 @@ const { deltaDecorations, editor } = vi.hoisted(() => {
 
 vi.mock('react-monaco-editor', () => {
   const React = require('react')
-  const MonacoEditorStub = (props: { editorDidMount?: (editor: unknown, monaco: unknown) => void }) => {
+  const MonacoEditorStub = (props: {
+    language?: string
+    editorDidMount?: (editor: unknown, monaco: unknown) => void
+  }) => {
     React.useEffect(() => {
       props.editorDidMount?.(editor, {})
     }, [])
-    return React.createElement('div', { 'data-testid': 'monaco-editor' })
+    return React.createElement('div', { 'data-testid': 'monaco-editor', 'data-language': props.language })
   }
   return {
     default: MonacoEditorStub,
@@ -86,6 +89,7 @@ vi.mock('@/utils/monacoSpec/html', () => ({}))
 vi.mock('@/utils/monacoSpec/syntaxflowEditor', () => ({ SyntaxFlowMonacoSpec: 'syntaxflow' }))
 
 import { YakitEditor } from '../YakitEditor'
+import { setEditorContext } from '@/utils/monacoSpec/yakEditor'
 
 const hit = { startLineNumber: 2, startColumn: 1, endLineNumber: 2, endColumn: 7 }
 
@@ -106,7 +110,17 @@ const classNameOf = (prefix: string) => {
 
 beforeEach(() => {
   deltaDecorations.mockClear()
+  vi.mocked(setEditorContext).mockClear()
   window.require = (() => ({ ipcRenderer: { invoke: vi.fn(), on: vi.fn(), removeListener: vi.fn() } })) as never
+})
+
+describe('YakitEditor AI 模型脚本', () => {
+  it('使用 Yak 高亮并保留独立的 ai-model 分析上下文', () => {
+    const view = render(<YakitEditor type="ai-model" value="chat = func(req, emit) { return req.Prompt }" />)
+
+    expect(view.getByTestId('monaco-editor')).toHaveAttribute('data-language', 'yak')
+    expect(setEditorContext).toHaveBeenCalledWith(editor, 'plugin', 'ai-model')
+  })
 })
 
 describe('YakitEditor 高亮类名切换', () => {
