@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { act, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { createInstance } from 'i18next'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -56,6 +56,52 @@ describe('BatchScopeSelector', () => {
       [2, 1000, 1000],
     ])
     expect(onClose).not.toHaveBeenCalled()
+  })
+
+  it('blocks duplicate runs, other ranges and closing until the current request completes', async () => {
+    const user = userEvent.setup()
+    let resolveRequest!: (result: { UpdatedCount: number }) => void
+    const pending = new Promise<{ UpdatedCount: number }>((resolve) => {
+      resolveRequest = resolve
+    })
+    const execute = vi.fn().mockReturnValueOnce(pending).mockResolvedValue({ UpdatedCount: 1 })
+    const onClose = vi.fn()
+    const onScopeSuccess = vi.fn()
+    render(<BatchScopeSelector total={1001} execute={execute} onClose={onClose} onScopeSuccess={onScopeSuccess} />)
+
+    const [firstRange, secondRange] = screen.getAllByRole('button', { name: '执行' })
+    const close = screen.getByRole('button', { name: '完成/关闭' })
+    act(() => {
+      firstRange.click()
+      firstRange.click()
+      secondRange.click()
+      close.click()
+    })
+
+    expect(execute).toHaveBeenCalledOnce()
+    expect(execute).toHaveBeenCalledWith(expect.objectContaining({ page: 1, count: 1000 }))
+    expect(firstRange).toBeDisabled()
+    expect(secondRange).toBeDisabled()
+    expect(close).toBeDisabled()
+    await user.click(secondRange)
+    await user.click(close)
+    expect(execute).toHaveBeenCalledOnce()
+    expect(onClose).not.toHaveBeenCalled()
+    expect(onScopeSuccess).not.toHaveBeenCalled()
+
+    await act(async () => resolveRequest({ UpdatedCount: 1000 }))
+    expect(onScopeSuccess).toHaveBeenCalledOnce()
+    expect(firstRange).toBeDisabled()
+    expect(secondRange).toBeEnabled()
+    expect(close).toBeEnabled()
+    await user.click(firstRange)
+    expect(execute).toHaveBeenCalledOnce()
+    await user.click(secondRange)
+    expect(execute).toHaveBeenCalledTimes(2)
+    expect(execute).toHaveBeenLastCalledWith(expect.objectContaining({ page: 2, count: 1 }))
+    expect(onClose).not.toHaveBeenCalled()
+    await user.click(close)
+    expect(onClose).toHaveBeenCalledOnce()
   })
 
   it('allows request failures to retry but locks partial updates', async () => {

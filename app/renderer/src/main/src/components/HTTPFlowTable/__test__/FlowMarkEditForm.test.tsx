@@ -184,6 +184,37 @@ describe('FlowMarkEditForm', () => {
     expect(onSuccess).toHaveBeenCalledWith({ Ids: [7, 8], Severity: '高危', StatusReason: 'investigate' })
   })
 
+  it('blocks duplicate submission and cancellation while a small batch is pending', async () => {
+    const user = userEvent.setup()
+    let resolveRequest!: (result: { UpdatedCount: number }) => void
+    const pending = new Promise<{ UpdatedCount: number }>((resolve) => {
+      resolveRequest = resolve
+    })
+    mocks.apiBatchSetHTTPFlowIssueFields.mockReturnValueOnce(pending)
+    const onClose = vi.fn()
+    const onSuccess = vi.fn()
+    render(<FlowMarkEditForm batch batchCount={2} ids={[7, 8]} onClose={onClose} onSuccess={onSuccess} />)
+
+    const cancel = screen.getByRole('button', { name: 'YakitButton.cancel' })
+    act(() => {
+      mocks.formProps?.onFinish({ Severity: '高危' })
+      mocks.formProps?.onFinish({ Severity: '高危' })
+      cancel.click()
+    })
+
+    expect(cancel).toBeDisabled()
+    await user.click(screen.getByRole('button', { name: 'YakitButton.ok' }))
+    await user.click(cancel)
+    expect(mocks.apiBatchSetHTTPFlowIssueFields).toHaveBeenCalledOnce()
+    expect(onSuccess).not.toHaveBeenCalled()
+    expect(onClose).not.toHaveBeenCalled()
+
+    await act(async () => resolveRequest({ UpdatedCount: 2 }))
+    await waitFor(() => expect(onClose).toHaveBeenCalledOnce())
+    expect(onSuccess).toHaveBeenCalledExactlyOnceWith({ Ids: [7, 8], Severity: '高危' })
+    expect(mocks.apiBatchSetHTTPFlowIssueFields).toHaveBeenCalledOnce()
+  })
+
   it('shows ranges only above 1000 and page 3 keeps limit 1000 without prefetch', async () => {
     const onRefresh = vi.fn()
     render(
