@@ -272,6 +272,18 @@ vi.mock('@/pages/pluginHub/hooks/useGetSetState', () => {
   return { default: useGetSetState }
 })
 
+// 根级 Vitest 将样式映射为空对象，固定本测试依赖的类名以保留 DOM 断言。
+vi.mock('../uiLayout.module.scss', () => ({
+  default: {
+    'mac-header-body': 'mac-header-body',
+    'header-body': 'header-body',
+    'header-navigation-wrapper': 'header-navigation-wrapper',
+    'yakit-mode-icon': 'yakit-mode-icon',
+    'yakit-mode-icon-reverse': 'yakit-mode-icon-reverse',
+    'park-above-icon-active': 'park-above-icon-active',
+  },
+}))
+
 import { useMenuHeight } from '@/store/menuHeight'
 import UILayout from '../UILayout'
 import styles from '../uiLayout.module.scss'
