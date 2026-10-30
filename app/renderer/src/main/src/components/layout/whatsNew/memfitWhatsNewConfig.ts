@@ -25,7 +25,7 @@ export const MEMFIT_WHATS_NEW: {
     {
       title: '模型限免',
       description:
-        '官方内置的standard模型将于11.2-11.6日将开启限免活动，活动期间每日Token使用无限制，欢迎师傅们多多使用。',
+        '官方内置的standard模型将于11月2日–6日开启限免活动，活动期间每日Token使用无限制，欢迎师傅们多多使用。',
       images: whatsNew1,
     },
     {
