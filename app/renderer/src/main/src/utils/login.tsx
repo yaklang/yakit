@@ -63,11 +63,11 @@ export const loginOutLocal = (userInfo: UserInfoProps) => {
           OnlineBaseUrl,
         })
         .finally(() => {
-          yakitApp.userSignOut()
+          yakitApp.userSignOut({ isEnpriTrace: isEnpriTrace() })
           emiter.emit('onRefreshLocalPluginList')
         })
     } else {
-      yakitApp.userSignOut()
+      yakitApp.userSignOut({ isEnpriTrace: isEnpriTrace() })
     }
   })
 }

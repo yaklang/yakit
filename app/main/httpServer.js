@@ -76,6 +76,7 @@ service.interceptors.request.use(
     config.headers = config.headers || {}
     if (USER_INFO.isLogin && USER_INFO.token) config.headers['Authorization'] = USER_INFO.token
     // console.log('request-config',config);
+    printLogOutputFile(`[BaseURL Log] => ${baseUrl}`)
     return config
   },
   (error) => {
