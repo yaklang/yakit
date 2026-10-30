@@ -809,7 +809,7 @@ declare global {
       syncEditBaseUrl: (baseUrl: string) => unknown
       syncUpdateUser: (user: UserInfoProps) => unknown
       killRunNode: (pid: number) => Promise<unknown>
-      userSignOut: () => void
+      userSignOut: (params: { isEnpriTrace?: boolean }) => void
       triggerDevtool: () => Promise<unknown>
       setZoomFactor: (factor: number) => Promise<unknown>
       reload: () => Promise<unknown>
@@ -985,6 +985,7 @@ declare global {
       editBaseUrl: (baseUrl: string) => Promise<any>
       requestPasswordReset: () => Promise<unknown>
       onSignInData: (callback: (payload: SignInDataPayload) => void) => BridgeCleanup
+      onSignCCBInData: (callback: (payload: any) => void) => BridgeCleanup
       onBaseUrlStatus: (callback: () => void) => BridgeCleanup
     }
     release: {

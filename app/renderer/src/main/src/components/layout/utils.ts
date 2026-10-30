@@ -132,6 +132,11 @@ interface StartUploadProps {
   isUploadSyncData?: boolean
   // 是否更新全局配置
   isUpdateGlobalConfig?: boolean
+  // 登录信息
+  loginInfo?: {
+    isLogin: boolean
+    token: string
+  }
 }
 
 export const useUploadInfoByEnpriTrace = () => {
