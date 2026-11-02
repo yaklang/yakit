@@ -4,6 +4,7 @@ import { EventEmitter } from 'node:events'
 import ts from 'typescript'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { appendIndexedFuzzerRow } from '../../fuzzerRowLimit'
+import { fuzzerRawStore, fuzzerSequenceScope, parkFuzzerRaw } from '../../fuzzerRawStore'
 
 // Exercise the actual parameter builder and start guard without loading Monaco/Electron.
 const source = ts.createSourceFile(
@@ -85,6 +86,8 @@ describe('browser gateway group execution boundary', () => {
         resetResponse: vi.fn(),
         updateConcurrentLoad: vi.fn(),
         resetDroppedCount: vi.fn(),
+        rawScopesRef: { current: new Set<string>() },
+        fuzzerRawStore,
         droppedSequenceIndexMapRef: { current: new Map() },
         setShowAllRes: vi.fn(),
         setCurrentSelectResponse: vi.fn(),
@@ -181,6 +184,10 @@ describe('FuzzerSequence response release queue', () => {
       filterColorTag: () => undefined,
       successBufferRef,
       appendIndexedFuzzerRow,
+      parkFuzzerRaw,
+      fuzzerSequenceScope,
+      fuzzerRawStore,
+      rawScopesRef: { current: new Set<string>() },
       fuzzerTableMaxDataRef: {
         current: new Map<string, number>([
           ['alpha', 100],

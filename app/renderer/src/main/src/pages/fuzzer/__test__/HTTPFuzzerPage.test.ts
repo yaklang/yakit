@@ -5,6 +5,7 @@ import _ from 'lodash'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createHTTPFuzzerRun } from '../httpFuzzerRun'
 import { appendFuzzerRow } from '../fuzzerRowLimit'
+import { fuzzerPageScope, fuzzerRawStore, parkFuzzerRaw } from '../fuzzerRawStore'
 import { createMcpWebFuzzerExecutionSlot } from '../mcpWebFuzzerExecutionSlot'
 
 // Execute the real page control paths without loading Monaco and the Electron UI.
@@ -59,6 +60,10 @@ const setup = () => {
     _,
     createHTTPFuzzerRun,
     appendFuzzerRow,
+    parkFuzzerRaw,
+    fuzzerPageScope,
+    fuzzerRawStore,
+    props: { id: 'page' },
     useMemoizedFn: (fn: unknown) => fn,
     useEffect: (fn: () => () => void) => {
       streamEffectFn = fn
@@ -419,6 +424,19 @@ describe('HTTPFuzzerPage real IPC control paths', () => {
     dispose()
   })
 
+  it('stores each row raw packet outside the list', async () => {
+    const { api, bindings: b, send, dispose } = setup()
+    api.submitToHTTPFuzzer()
+    send('body-1')
+    const row = b.successFuzzerRef.current[0]
+    expect(row.RequestRaw).toHaveLength(0)
+    expect(row.ResponseRaw).toHaveLength(0)
+    const body = await fuzzerRawStore.get('body-1')
+    expect(Array.from(body?.request || [])).toEqual([1])
+    expect(Array.from(body?.response || [])).toEqual([2])
+    dispose()
+  })
+
   it('caps failed rows with the same limit as success and keeps the full failure count', async () => {
     const { api, bindings: b, send, dispose } = setup()
     api.submitToHTTPFuzzer()
@@ -461,6 +479,7 @@ describe('HTTPFuzzerPage real IPC control paths', () => {
       const caseBindings = {
         useMemo: (factory: () => unknown) => factory(),
         configKeepAlive,
+        sampleStoredRaw: { response: new Uint8Array() },
         multipleReturnsHttpResponse: { ResponseRaw: new Uint8Array([1, 2, 3]) },
         Uint8ArrayToString: decode,
       }
@@ -742,6 +761,8 @@ const setupRestoreFlow = (
     t: (value: string) => value,
     YakitRoute: { HTTPFuzzer: 'fuzzer' },
     props: { id: 'page' },
+    fuzzerRawStore,
+    fuzzerPageScope,
     inViewport: true,
     streamRunRef: { current: null },
     tokenRef,

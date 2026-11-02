@@ -16,6 +16,7 @@ import { type IMonacoEditor, NewHTTPCard, NewHTTPPacketEditor, type RenderTypeOp
 import { failed, yakitNotify } from '../utils/notification'
 import { FuzzableParamList } from './FuzzableParamList'
 import type { FuzzerResponse, RandomChunkedResponse } from '../pages/fuzzer/HTTPFuzzerPage'
+import { hydrateFuzzerRaw } from '../pages/fuzzer/fuzzerRawStore'
 import type { HTTPHistorySourcePageType, HTTPPacketFuzzable } from './HTTPHistory'
 import { Buffer } from 'buffer'
 import { Uint8ArrayToString } from '@/utils/str'
@@ -131,9 +132,16 @@ export const FuzzerResponseToHTTPFlowDetail = (rsp: FuzzerResponseToHTTPFlowDeta
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    setResponse(rsp.response)
-    setIndex(rsp.index)
-  }, [rsp.response])
+    let cancel = false
+    void hydrateFuzzerRaw(rsp.response).then((full) => {
+      if (cancel) return
+      setResponse(full)
+      setIndex(rsp.index)
+    })
+    return () => {
+      cancel = true
+    }
+  }, [rsp.response, rsp.index])
 
   useEffect(() => {
     if (!response) {
@@ -155,15 +163,13 @@ export const FuzzerResponseToHTTPFlowDetail = (rsp: FuzzerResponseToHTTPFlowDeta
 
   const fetchInfo = (kind: number) => {
     if (index === undefined || !rsp.data || rsp.data.length === 0) return
-
-    if (kind === 1) {
-      setResponse(rsp.data[index - 1])
-      setIndex(index - 1)
-    }
-    if (kind === 2) {
-      setResponse(rsp.data[index + 1])
-      setIndex(index + 1)
-    }
+    const nextIndex = kind === 1 ? index - 1 : kind === 2 ? index + 1 : index
+    const next = rsp.data[nextIndex]
+    if (!next || nextIndex === index) return
+    void hydrateFuzzerRaw(next).then((full) => {
+      setResponse(full)
+      setIndex(nextIndex)
+    })
   }
 
   return (

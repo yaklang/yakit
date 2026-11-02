@@ -70,6 +70,7 @@ import {
   advancedConfigValueToFuzzerRequests,
 } from '../HTTPFuzzerPage'
 import { appendIndexedFuzzerRow } from '../fuzzerRowLimit'
+import { fuzzerRawStore, fuzzerSequenceScope, parkFuzzerRaw, useFuzzerRaw } from '../fuzzerRawStore'
 import { randomString } from '@/utils/randomUtil'
 import { getRemoteValue } from '@/utils/kv'
 import type { AdvancedConfigValueProps } from '../HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType'
@@ -383,6 +384,9 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         r.cellClassName = colors
       }
 
+      const rawScope = fuzzerSequenceScope(FuzzerIndex)
+      rawScopesRef.current.add(rawScope)
+      parkFuzzerRaw(rawScope, r)
       // 成功、失败都只留该节点配置的最新条数
       const fuzzerTableMaxData = fuzzerTableMaxDataRef.current.get(FuzzerIndex) || DefFuzzerTableMaxData
       if (Response.Ok) {
@@ -514,6 +518,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
   const successCountRef = useRef<Map<string, number>>(new Map())
   const failedCountRef = useRef<Map<string, number>>(new Map())
   const successBufferRef = useRef<Map<string, FuzzerResponse[]>>(new Map())
+  const rawScopesRef = useRef<Set<string>>(new Set())
   const failedBufferRef = useRef<Map<string, FuzzerResponse[]>>(new Map())
   const countRef = useRef<Map<string, number>>(new Map())
   const runtimeIdBufferRef = useRef<Map<string, string[]>>(new Map())
@@ -676,6 +681,9 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         r.cellClassName = colors
       }
 
+      const rawScope = fuzzerSequenceScope(FuzzerIndex)
+      rawScopesRef.current.add(rawScope)
+      parkFuzzerRaw(rawScope, r)
       const fuzzerTableMaxData = fuzzerTableMaxDataRef.current.get(FuzzerIndex) || DefFuzzerTableMaxData
       if (Response.Ok) {
         appendIndexedFuzzerRow(successBufferRef.current, FuzzerIndex, r, fuzzerTableMaxData, scheduleRelease)
@@ -732,6 +740,9 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
       ipcRenderer.removeAllListeners(errToken)
       ipcRenderer.removeAllListeners(dataToken)
       ipcRenderer.removeAllListeners(endToken)
+      rawScopesRef.current.forEach((scope) => {
+        void fuzzerRawStore.deleteScope(scope)
+      })
     }
   }, [])
 
@@ -1116,6 +1127,10 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     }
     const httpParams = getHttpParams()
     if (!httpParams.length) return
+    rawScopesRef.current.forEach((scope) => {
+      void fuzzerRawStore.deleteScope(scope)
+    })
+    rawScopesRef.current.clear()
     !isConcurrency && setLoading(true)
     onClearRef()
     resetResponse()
@@ -1648,20 +1663,17 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
       updatePagesDataCacheById(YakitRoute.HTTPFuzzer, { ...newCurrentItem })
     }
   })
-  /**多条数据返回的第一条数据的ResponseRaw,一条数据就返回这一条的 ResponseRaw */
-  const defaultHttpResponse: string = useMemo(() => {
-    if (currentSelectResponse) {
-      const { onlyOneResponse, successFuzzer } = currentSelectResponse
-      if (successFuzzer.length > 1) {
-        const firstSuccessResponse = successFuzzer[0]
-        return Uint8ArrayToString(firstSuccessResponse.ResponseRaw || '')
-      } else {
-        return Uint8ArrayToString(onlyOneResponse.ResponseRaw || '')
-      }
-    } else {
-      return Uint8ArrayToString(emptyFuzzer.ResponseRaw || '')
-    }
-  }, [currentSelectResponse, currentSelectRequest])
+  const sampleRow = currentSelectResponse
+    ? currentSelectResponse.successFuzzer.length > 1
+      ? currentSelectResponse.successFuzzer[0]
+      : currentSelectResponse.onlyOneResponse
+    : undefined
+  const sampleRaw = useFuzzerRaw(sampleRow?.UUID, sampleRow?.RawVersion, true)
+  /** 多条结果时用第一条的响应原文，只有一条时用那一条。原文在 IndexedDB 里。 */
+  const defaultHttpResponse = useMemo(() => {
+    const raw = sampleRaw.response.byteLength ? sampleRaw.response : sampleRow?.ResponseRaw
+    return Uint8ArrayToString(raw || new Uint8Array())
+  }, [sampleRaw.response, sampleRow?.ResponseRaw])
   /**提取器和匹配器的值 */
   const matcherAndExtractionValue: MatcherAndExtractionValueProps = useCreation(() => {
     const matchData: MatcherValueProps = {
@@ -2686,6 +2698,14 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
     const onlyOneResponse: boolean = useCreation(() => {
       return cachedTotal === 1
     }, [cachedTotal])
+    const sequenceStoredRaw = useFuzzerRaw(
+      onlyOneResponse ? httpResponse?.UUID : undefined,
+      httpResponse?.RawVersion,
+      true,
+    )
+    const sequenceResponsePacket = httpResponse?.ResponseRaw?.byteLength
+      ? httpResponse.ResponseRaw
+      : sequenceStoredRaw.response
 
     const { queryPagesDataById, updatePagesDataCacheById } = usePageInfo(
       (s) => ({
@@ -2994,8 +3014,8 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                 oneResponseValue={
                   onlyOneResponse
                     ? {
-                        originValue: Uint8ArrayToString(httpResponse.ResponseRaw),
-                        originalPackage: httpResponse.ResponseRaw,
+                        originValue: Uint8ArrayToString(sequenceResponsePacket),
+                        originalPackage: sequenceResponsePacket,
                       }
                     : undefined
                 }
@@ -3013,7 +3033,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                   defaultResponseSearch={defaultResponseSearch}
                   request={requestHttpRef.current}
                   isHttps={advancedConfigValue.isHttps}
-                  webFuzzerValue={Uint8ArrayToString(httpResponse.ResponseRaw)}
+                  webFuzzerValue={Uint8ArrayToString(sequenceResponsePacket)}
                   showMatcherAndExtraction={showMatcherAndExtraction}
                   setShowMatcherAndExtraction={setShowMatcherAndExtraction}
                   matcherValue={matcherValue}
