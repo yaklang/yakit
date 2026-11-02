@@ -29,8 +29,19 @@ import type { ReactNode } from 'react'
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-const { startIdleVisibleInterval, grpcFetchYakInstallResult, headerState } = vi.hoisted(() => ({
-  headerState: { system: 'Darwin', portable: true, ready: true, community: true, projectManage: false },
+const { startIdleVisibleInterval, grpcFetchYakInstallResult, headerState, watchdogCallbacks } = vi.hoisted(() => ({
+  headerState: {
+    system: 'Darwin',
+    portable: true,
+    ready: true,
+    community: true,
+    projectManage: false,
+    engineMode: 'remote',
+  },
+  watchdogCallbacks: {
+    onReady: undefined as (() => void) | undefined,
+    onFailed: undefined as ((count: number) => void) | undefined,
+  },
   startIdleVisibleInterval: vi.fn(() => vi.fn()),
   grpcFetchYakInstallResult: vi.fn().mockResolvedValue(true),
 }))
@@ -47,7 +58,9 @@ vi.mock('@/apiUtils/grpc', async (importOriginal) => {
 })
 
 vi.mock('@/components/layout/YaklangEngineWatchDog', () => ({
-  YaklangEngineWatchDog: ({ onReady }: { onReady?: () => void }) => {
+  YaklangEngineWatchDog: ({ onReady, onFailed }: { onReady?: () => void; onFailed?: (count: number) => void }) => {
+    watchdogCallbacks.onReady = onReady
+    watchdogCallbacks.onFailed = onFailed
     const { useEffect } = require('react')
     useEffect(() => {
       if (headerState.ready) onReady?.()
@@ -161,7 +174,7 @@ vi.mock('@/services/electronBridge', async (importOriginal) => {
         get: (_target, prop) => {
           if (prop === 'onFromEngineLinkWindow') {
             return vi.fn((callback) => {
-              callback({ credential: { Mode: 'remote' } })
+              callback({ credential: { Mode: headerState.engineMode } })
               return unsubscribe
             })
           }
@@ -309,7 +322,10 @@ import styles from '../uiLayout.module.scss'
 beforeEach(() => {
   useMenuHeight.getState().toggleMenuVisibility.cancel()
   headerState.projectManage = false
-  useMenuHeight.setState({ isMenuVisible: true })
+  headerState.engineMode = 'remote'
+  watchdogCallbacks.onReady = undefined
+  watchdogCallbacks.onFailed = undefined
+  useMenuHeight.setState({ isMenuVisible: true, isMenuVisibilityLoading: true })
   vi.mocked(getRemoteValue).mockReset().mockResolvedValue('')
   vi.mocked(setRemoteValue).mockReset().mockResolvedValue(undefined)
 })
@@ -381,6 +397,7 @@ describe('UILayout 标题栏导航图标', () => {
     await waitFor(() => expect(screen.getByRole('tooltip')).toHaveTextContent('UILayout.hideMenu'))
     fireEvent.mouseLeave(button)
     expect(button.tagName).toBe('DIV')
+    expect(button.firstElementChild).toBe(screen.getByLabelText('park-above'))
     expect(button).not.toHaveAttribute('role')
     expect(button).toHaveAttribute('aria-pressed', 'true')
     expect(button).toHaveClass(styles['park-above-icon-active'])
@@ -445,6 +462,70 @@ describe('UILayout 标题栏导航图标', () => {
     render(<UILayout />)
 
     await waitFor(() => expect(screen.getByLabelText('UILayout.toggleMenu')).toHaveAttribute('aria-pressed', 'true'))
+  })
+
+  it('本地引擎恢复时复用未完成的初始化，成功后才能切换菜单', async () => {
+    headerState.engineMode = 'local'
+    let resolveCache!: (value: string) => void
+    const cache = new Promise<string>((resolve) => {
+      resolveCache = resolve
+    })
+    const readMenuCache = vi.fn().mockReturnValue(cache)
+    vi.mocked(getRemoteValue).mockImplementation((key) =>
+      key === CodeGV.MenuVisible ? readMenuCache() : Promise.resolve(''),
+    )
+
+    render(<UILayout />)
+    await waitFor(() => expect(readMenuCache).toHaveBeenCalledTimes(1))
+    expect(screen.queryByLabelText('UILayout.toggleMenu')).not.toBeInTheDocument()
+
+    act(() => watchdogCallbacks.onFailed?.(1))
+    act(() => watchdogCallbacks.onReady?.())
+    expect(readMenuCache).toHaveBeenCalledTimes(1)
+    expect(screen.queryByLabelText('UILayout.toggleMenu')).not.toBeInTheDocument()
+    expect(useMenuHeight.getState().isMenuVisibilityLoading).toBe(true)
+
+    await act(async () => resolveCache('false'))
+    await waitFor(() => expect(screen.getByLabelText('UILayout.toggleMenu')).toHaveAttribute('aria-pressed', 'false'))
+    expect(screen.getByLabelText('UILayout.toggleMenu')).toHaveAttribute('aria-disabled', 'false')
+    expect(screen.getByLabelText('UILayout.toggleMenu')).toHaveAttribute('aria-busy', 'false')
+
+    fireEvent.click(screen.getByLabelText('UILayout.toggleMenu'))
+    expect(screen.getByLabelText('UILayout.toggleMenu')).toHaveAttribute('aria-pressed', 'true')
+    expect(setRemoteValue).toHaveBeenCalledExactlyOnceWith(CodeGV.MenuVisible, 'true')
+
+    expect(useMenuHeight.getState().isMenuVisible).toBe(true)
+  })
+
+  it('菜单初始化期间按钮 loading 且不能切换，成功后恢复点击', async () => {
+    render(<UILayout />)
+    const button = await screen.findByLabelText('UILayout.toggleMenu')
+    let resolveCache!: (value: string) => void
+    vi.mocked(getRemoteValue).mockReturnValueOnce(
+      new Promise<string>((resolve) => {
+        resolveCache = resolve
+      }),
+    )
+    let initialization!: Promise<void>
+    act(() => {
+      initialization = useMenuHeight.getState().initMenuVisibility()
+    })
+
+    expect(button).toHaveAttribute('aria-disabled', 'true')
+    expect(button).toHaveAttribute('aria-busy', 'true')
+    fireEvent.click(button)
+    expect(setRemoteValue).not.toHaveBeenCalled()
+
+    await act(async () => {
+      resolveCache('false')
+      await initialization
+    })
+
+    expect(button).toHaveAttribute('aria-disabled', 'false')
+    expect(button).toHaveAttribute('aria-busy', 'false')
+    fireEvent.click(button)
+    expect(button).toHaveAttribute('aria-pressed', 'true')
+    expect(setRemoteValue).toHaveBeenCalledExactlyOnceWith(CodeGV.MenuVisible, 'true')
   })
 
   it.each(['Darwin', 'Windows_NT', 'Linux'])('%s 非社区版保留 Home，隐藏 Park', async (system) => {

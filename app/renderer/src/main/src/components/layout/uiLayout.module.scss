@@ -121,6 +121,11 @@
           }
         }
 
+        .park-above-spin {
+          width: 28px;
+          height: 28px;
+        }
+
         .park-above-icon {
           width: 28px;
           height: 28px;
@@ -133,7 +138,10 @@
           background: transparent;
           color: var(--Colors-Use-Neutral-Text-3-Secondary);
           cursor: pointer;
-          &:hover {
+          &[aria-disabled='true'] {
+            cursor: not-allowed;
+          }
+          &:not([aria-disabled='true']):hover {
             background: var(--Colors-Use-Neutral-Bg-Hover);
           }
         }

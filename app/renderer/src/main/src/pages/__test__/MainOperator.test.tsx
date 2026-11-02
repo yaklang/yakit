@@ -135,7 +135,7 @@ describe('MainOperator 远程控制轮询', () => {
 
   beforeEach(() => {
     useMenuHeight.getState().toggleMenuVisibility.cancel()
-    useMenuHeight.setState({ isMenuVisible: true })
+    useMenuHeight.setState({ isMenuVisible: true, isMenuVisibilityLoading: false })
     edition.current = 'yakit'
     vi.mocked(getRemoteValue).mockResolvedValue('')
     vi.useFakeTimers()

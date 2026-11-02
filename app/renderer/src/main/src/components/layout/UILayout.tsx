@@ -162,6 +162,7 @@ export interface UILayoutProp {
 const UILayout: React.FC<UILayoutProp> = (props) => {
   const { t, i18n, i18nRefresh } = useI18nNamespaces(['layout', 'yakitUi', 'projectManage'])
   const isMenuVisible = useMenuHeight((state) => state.isMenuVisible)
+  const isMenuVisibilityLoading = useMenuHeight((state) => state.isMenuVisibilityLoading)
   const initMenuVisibility = useMenuHeight((state) => state.initMenuVisibility)
   const toggleMenuVisibility = useMenuHeight((state) => state.toggleMenuVisibility)
   // #region 软件级功能设置
@@ -1733,18 +1734,25 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
       </div>
       {isCommunityEdition() && !showProjectManage && (
         <div className={styles['park-above-wrapper']}>
-          <Tooltip title={t(isMenuVisible ? 'UILayout.hideMenu' : 'UILayout.showMenu')} placement="bottom">
-            <div
-              className={classNames(styles['park-above-icon'], {
-                [styles['park-above-icon-active']]: isMenuVisible,
-              })}
-              aria-label={t('UILayout.toggleMenu')}
-              aria-pressed={isMenuVisible}
-              onClick={toggleMenuVisibility}
-            >
-              <ParkAboveSolid size={20} />
-            </div>
-          </Tooltip>
+          <YakitSpin spinning={isMenuVisibilityLoading} size="small" wrapperClassName={styles['park-above-spin']}>
+            <Tooltip title={t(isMenuVisible ? 'UILayout.hideMenu' : 'UILayout.showMenu')} placement="bottom">
+              <div
+                className={classNames(styles['park-above-icon'], {
+                  [styles['park-above-icon-active']]: isMenuVisible,
+                })}
+                aria-label={t('UILayout.toggleMenu')}
+                aria-pressed={isMenuVisible}
+                aria-busy={isMenuVisibilityLoading}
+                aria-disabled={isMenuVisibilityLoading}
+                onClick={() => {
+                  if (isMenuVisibilityLoading) return
+                  toggleMenuVisibility()
+                }}
+              >
+                <ParkAboveSolid size={20} />
+              </div>
+            </Tooltip>
+          </YakitSpin>
         </div>
       )}
     </div>

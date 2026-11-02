@@ -10,6 +10,7 @@ interface MenuBodyHeightProps {
 }
 interface MenuBodyHeightStoreProps {
   isMenuVisible: boolean
+  isMenuVisibilityLoading: boolean
   initMenuVisibility: () => Promise<void>
   toggleMenuVisibility: DebouncedFunc<() => void>
   menuBodyHeight: MenuBodyHeightProps
@@ -17,19 +18,30 @@ interface MenuBodyHeightStoreProps {
   updateMenuBodyHeight: (v: MenuBodyHeightProps) => void
 }
 
+let menuVisibilityInitialization: Promise<void> | undefined
+
 export const useMenuHeight = createWithEqualityFn<MenuBodyHeightStoreProps>(
   (set, get) => ({
     isMenuVisible: true,
-    initMenuVisibility: async () => {
-      try {
-        const value = await getRemoteValue(CodeGV.MenuVisible)
-        set({ isMenuVisible: value !== 'false' })
-      } catch (error) {
-        yakitFailed(String(error))
-      }
+    isMenuVisibilityLoading: true,
+    initMenuVisibility: () => {
+      if (menuVisibilityInitialization) return menuVisibilityInitialization
+      set({ isMenuVisibilityLoading: true })
+      menuVisibilityInitialization = getRemoteValue(CodeGV.MenuVisible)
+        .then((value) => {
+          set({ isMenuVisible: value !== 'false', isMenuVisibilityLoading: false })
+        })
+        .catch((error) => {
+          yakitFailed(String(error))
+        })
+        .finally(() => {
+          menuVisibilityInitialization = undefined
+        })
+      return menuVisibilityInitialization
     },
     toggleMenuVisibility: debounce(
       () => {
+        if (get().isMenuVisibilityLoading) return
         const isMenuVisible = !get().isMenuVisible
         set({ isMenuVisible })
         setRemoteValue(CodeGV.MenuVisible, String(isMenuVisible)).catch((error) => {
