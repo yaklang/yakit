@@ -30,7 +30,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-libra
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const { startIdleVisibleInterval, grpcFetchYakInstallResult, headerState } = vi.hoisted(() => ({
-  headerState: { system: 'Darwin', portable: true, ready: true, community: true },
+  headerState: { system: 'Darwin', portable: true, ready: true, community: true, projectManage: false },
   startIdleVisibleInterval: vi.fn(() => vi.fn()),
   grpcFetchYakInstallResult: vi.fn().mockResolvedValue(true),
 }))
@@ -132,7 +132,11 @@ vi.mock('@/store/yakMcpStream', () => ({
 }))
 
 vi.mock('@/constants/hardware', () => ({
-  SystemInfo: { isDev: false },
+  SystemInfo: {
+    get isDev() {
+      return !headerState.projectManage
+    },
+  },
   handleFetchArchitecture: vi.fn(),
   handleFetchIsDev: vi.fn(),
 }))
@@ -145,6 +149,11 @@ vi.mock('@/services/electronBridge', async (importOriginal) => {
     yakitSystem: {
       ...(actual.yakitSystem as Record<string, unknown>),
       fetchSystemName: vi.fn(async () => headerState.system),
+    },
+    yakitProject: {
+      ...(actual.yakitProject as Record<string, unknown>),
+      getDefaultProjectEx: vi.fn().mockResolvedValue({ Id: 1, ProjectName: '[default]' }),
+      getCurrentProjectEx: vi.fn().mockResolvedValue({ Id: 1, ProjectName: '[default]' }),
     },
     yakitUILayout: new Proxy(
       {},
@@ -250,6 +259,13 @@ vi.mock('@/pages/softwareSettings/ProjectManage', () => ({
   NewProjectAndFolder: () => null,
   TransferProject: () => null,
 }))
+vi.mock('@/pages/softwareSettings/SoftwareSettings', () => ({
+  SoftwareSettings: ({ onFinish }: { onFinish: () => void }) => (
+    <div data-testid="project-manager">
+      <button onClick={onFinish}>进入项目</button>
+    </div>
+  ),
+}))
 vi.mock('@/pages/mitm/MITMServerHijacking/MITMPluginOnline', () => ({
   YakitGetOnlinePlugin: () => null,
 }))
@@ -285,12 +301,21 @@ vi.mock('../uiLayout.module.scss', () => ({
 }))
 
 import { useMenuHeight } from '@/store/menuHeight'
+import { CodeGV } from '@/yakitGV'
+import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import UILayout from '../UILayout'
 import styles from '../uiLayout.module.scss'
 
-beforeEach(() => useMenuHeight.setState({ isMenuVisible: true }))
+beforeEach(() => {
+  useMenuHeight.getState().toggleMenuVisibility.cancel()
+  headerState.projectManage = false
+  useMenuHeight.setState({ isMenuVisible: true })
+  vi.mocked(getRemoteValue).mockReset().mockResolvedValue('')
+  vi.mocked(setRemoteValue).mockReset().mockResolvedValue(undefined)
+})
 afterEach(() => {
   cleanup()
+  useMenuHeight.getState().toggleMenuVisibility.cancel()
   useMenuHeight.setState({ isMenuVisible: true })
 })
 
@@ -361,17 +386,65 @@ describe('UILayout 标题栏导航图标', () => {
     expect(button).toHaveClass(styles['park-above-icon-active'])
     fireEvent.click(button)
     expect(useMenuHeight.getState().isMenuVisible).toBe(false)
+    expect(setRemoteValue).toHaveBeenCalledWith(CodeGV.MenuVisible, 'false')
     expect(button).toHaveAttribute('aria-pressed', 'false')
     expect(button).not.toHaveClass(styles['park-above-icon-active'])
     expect(header).toHaveStyle({ borderBottomWidth: '0px' })
     fireEvent.mouseEnter(button)
     await waitFor(() => expect(screen.getByRole('tooltip')).toHaveTextContent('UILayout.showMenu'))
     fireEvent.mouseLeave(button)
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 500))
+    })
     fireEvent.click(button)
     expect(useMenuHeight.getState().isMenuVisible).toBe(true)
+    expect(setRemoteValue).toHaveBeenCalledWith(CodeGV.MenuVisible, 'true')
     expect(header.style.borderBottomWidth).toBe('')
     expect(button).toHaveAttribute('aria-pressed', 'true')
     expect(button).toHaveClass(styles['park-above-icon-active'])
+  })
+
+  it.each(['true', 'false'])('引擎连接后从缓存 %s 恢复菜单显隐', async (cached) => {
+    vi.mocked(getRemoteValue).mockImplementation((key) => Promise.resolve(key === CodeGV.MenuVisible ? cached : ''))
+
+    render(<UILayout />)
+
+    await waitFor(() => expect(screen.getByLabelText('UILayout.toggleMenu')).toHaveAttribute('aria-pressed', cached))
+    expect(getRemoteValue).toHaveBeenCalledWith(CodeGV.MenuVisible)
+    expect(setRemoteValue).not.toHaveBeenCalledWith(CodeGV.MenuVisible, expect.anything())
+  })
+
+  it('缓存恢复完成前不显示菜单开关', async () => {
+    let resolveCache!: (value: string) => void
+    const cache = new Promise<string>((resolve) => {
+      resolveCache = resolve
+    })
+    vi.mocked(getRemoteValue).mockImplementation((key) => (key === CodeGV.MenuVisible ? cache : Promise.resolve('')))
+
+    render(<UILayout />)
+
+    await waitFor(() => expect(getRemoteValue).toHaveBeenCalledWith(CodeGV.MenuVisible))
+    expect(screen.queryByLabelText('UILayout.toggleMenu')).not.toBeInTheDocument()
+    await act(async () => resolveCache('false'))
+    await waitFor(() => expect(screen.getByLabelText('UILayout.toggleMenu')).toHaveAttribute('aria-pressed', 'false'))
+  })
+
+  it('切换后重新挂载布局会恢复已保存的显隐状态', async () => {
+    let cached = 'false'
+    vi.mocked(getRemoteValue).mockImplementation((key) => Promise.resolve(key === CodeGV.MenuVisible ? cached : ''))
+    vi.mocked(setRemoteValue).mockImplementation(async (key, value) => {
+      if (key === CodeGV.MenuVisible) cached = value
+    })
+    const first = render(<UILayout />)
+    await waitFor(() => expect(screen.getByLabelText('UILayout.toggleMenu')).toHaveAttribute('aria-pressed', 'false'))
+
+    fireEvent.click(screen.getByLabelText('UILayout.toggleMenu'))
+    expect(cached).toBe('true')
+    first.unmount()
+    useMenuHeight.setState({ isMenuVisible: false })
+    render(<UILayout />)
+
+    await waitFor(() => expect(screen.getByLabelText('UILayout.toggleMenu')).toHaveAttribute('aria-pressed', 'true'))
   })
 
   it.each(['Darwin', 'Windows_NT', 'Linux'])('%s 非社区版保留 Home，隐藏 Park', async (system) => {
@@ -383,6 +456,28 @@ describe('UILayout 标题栏导航图标', () => {
       expect(container.querySelector('.' + styles['mac-header-body']) !== null).toBe(system === 'Darwin'),
     )
     expect(screen.queryByLabelText('park-above')).not.toBeInTheDocument()
+    expect(getRemoteValue).not.toHaveBeenCalledWith(CodeGV.MenuVisible)
+  })
+
+  it.each(['Darwin', 'Windows_NT', 'Linux'])('%s 项目管理界面隐藏 Park，进入项目后恢复', async (system) => {
+    headerState.system = system
+    headerState.projectManage = true
+    render(
+      <UILayout>
+        <div data-testid="workbench" />
+      </UILayout>,
+    )
+
+    await screen.findByTestId('project-manager')
+    expect(screen.getByLabelText('home')).toBeInTheDocument()
+    expect(screen.queryByLabelText('park-above')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('UILayout.toggleMenu')).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: '进入项目' }))
+
+    await screen.findByTestId('workbench')
+    expect(screen.getByLabelText('park-above')).toBeInTheDocument()
+    expect(screen.getByLabelText('UILayout.toggleMenu')).toBeInTheDocument()
   })
 
   it.each(['Darwin', 'Windows_NT', 'Linux'])('%s 便携企业版隐藏 Home 和 Park', async (system) => {
@@ -404,5 +499,6 @@ describe('UILayout 标题栏导航图标', () => {
     })
     expect(screen.queryByLabelText('home')).not.toBeInTheDocument()
     expect(screen.queryByLabelText('park-above')).not.toBeInTheDocument()
+    expect(getRemoteValue).not.toHaveBeenCalledWith(CodeGV.MenuVisible)
   })
 })

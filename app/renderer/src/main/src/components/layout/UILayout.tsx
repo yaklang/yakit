@@ -162,6 +162,7 @@ export interface UILayoutProp {
 const UILayout: React.FC<UILayoutProp> = (props) => {
   const { t, i18n, i18nRefresh } = useI18nNamespaces(['layout', 'yakitUi', 'projectManage'])
   const isMenuVisible = useMenuHeight((state) => state.isMenuVisible)
+  const initMenuVisibility = useMenuHeight((state) => state.initMenuVisibility)
   const toggleMenuVisibility = useMenuHeight((state) => state.toggleMenuVisibility)
   // #region 软件级功能设置
   // 顶部是否可以拖拽并移动软件位置
@@ -1608,6 +1609,9 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
   const onLinkedEngine = useMemoizedFn(async () => {
     // EE & CE
     try {
+      if (isCommunityEdition()) {
+        await initMenuVisibility()
+      }
       const flag = await getRemoteValue(RemoteGV.TemporaryProjectNoPrompt)
       if (flag) {
         setTemporaryProjectNoPromptFlag(flag === 'true')
@@ -1727,7 +1731,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
       >
         <HomeSolid className={styles['mode-icon-selected']} color="currentColor" />
       </div>
-      {isCommunityEdition() && (
+      {isCommunityEdition() && !showProjectManage && (
         <div className={styles['park-above-wrapper']}>
           <Tooltip title={t(isMenuVisible ? 'UILayout.hideMenu' : 'UILayout.showMenu')} placement="bottom">
             <div

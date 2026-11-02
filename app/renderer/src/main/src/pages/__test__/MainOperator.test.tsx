@@ -52,7 +52,7 @@ vi.mock('@/store/screenRecorder', () => ({
 
 vi.mock('@/utils/kv', () => ({
   getRemoteValue: vi.fn().mockResolvedValue(''),
-  setRemoteValue: vi.fn(),
+  setRemoteValue: vi.fn().mockResolvedValue(undefined),
   getLocalValue: vi.fn().mockResolvedValue(''),
   setLocalValue: vi.fn(),
 }))
@@ -134,6 +134,7 @@ describe('MainOperator 远程控制轮询', () => {
   let mockHidden = false
 
   beforeEach(() => {
+    useMenuHeight.getState().toggleMenuVisibility.cancel()
     useMenuHeight.setState({ isMenuVisible: true })
     edition.current = 'yakit'
     vi.mocked(getRemoteValue).mockResolvedValue('')
@@ -154,6 +155,7 @@ describe('MainOperator 远程控制轮询', () => {
 
   afterEach(() => {
     cleanup()
+    useMenuHeight.getState().toggleMenuVisibility.cancel()
     useMenuHeight.setState({ isMenuVisible: true })
     delete (document as any).hidden
     vi.unstubAllGlobals()

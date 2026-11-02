@@ -140,6 +140,8 @@ export enum CodeGV {
   PublicMenuModeValue = 'public',
   /** @name 菜单状态缓存 */
   MenuExpand = 'menu-expand',
+  /** @name 菜单显隐状态缓存 */
+  MenuVisible = 'menu-visible',
 }
 
 /**YakitAutoComplate + YakitSelect缓存下拉和默认值变量 */
