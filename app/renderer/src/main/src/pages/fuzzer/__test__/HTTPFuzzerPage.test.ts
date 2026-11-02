@@ -4,6 +4,7 @@ import ts from 'typescript'
 import _ from 'lodash'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createHTTPFuzzerRun } from '../httpFuzzerRun'
+import { appendFuzzerRow } from '../fuzzerRowLimit'
 import { createMcpWebFuzzerExecutionSlot } from '../mcpWebFuzzerExecutionSlot'
 
 // Execute the real page control paths without loading Monaco and the Electron UI.
@@ -57,6 +58,7 @@ const setup = () => {
   const bindings: Record<string, any> = {
     _,
     createHTTPFuzzerRun,
+    appendFuzzerRow,
     useMemoizedFn: (fn: unknown) => fn,
     useEffect: (fn: () => () => void) => {
       streamEffectFn = fn
@@ -414,6 +416,34 @@ describe('HTTPFuzzerPage real IPC control paths', () => {
 
     // 留在表格内的 100 行不受释放影响
     expect(rows.slice(260).every((row) => row.RequestRaw !== null && row.ResponseRaw !== null)).toBe(true)
+    dispose()
+  })
+
+  it('caps failed rows with the same limit as success and keeps the full failure count', async () => {
+    const { api, bindings: b, send, dispose } = setup()
+    api.submitToHTTPFuzzer()
+    const rows: any[] = []
+    const failedRef = b.failedFuzzerRef as { current: any[] }
+    const push = failedRef.current.push.bind(failedRef.current)
+    failedRef.current.push = (...items: any[]) => {
+      rows.push(...items)
+      return push(...items)
+    }
+    for (let i = 0; i < 150; i++) send(`fail-${i}`, false)
+    expect(failedRef.current).toHaveLength(100)
+    expect(failedRef.current[0].UUID).toBe('fail-50')
+    expect(failedRef.current[99].UUID).toBe('fail-149')
+    expect(b.successFuzzerRef.current).toHaveLength(0)
+    vi.advanceTimersByTime(500)
+    expect(b.setFailedCount).toHaveBeenLastCalledWith(150)
+    expect(rows.slice(0, 50).every((row) => row.RequestRaw !== null)).toBe(true)
+    vi.advanceTimersByTime(2000)
+    let guard = 0
+    while (rows.slice(0, 50).some((row) => row.RequestRaw !== null) && guard++ < 20) {
+      vi.advanceTimersByTime(500)
+    }
+    expect(rows.slice(0, 50).every((row) => row.RequestRaw === null && row.ResponseRaw === null)).toBe(true)
+    expect(rows.slice(50).every((row) => row.RequestRaw !== null)).toBe(true)
     dispose()
   })
 

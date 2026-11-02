@@ -69,6 +69,7 @@ import {
   SecondNodeTitle,
   advancedConfigValueToFuzzerRequests,
 } from '../HTTPFuzzerPage'
+import { appendIndexedFuzzerRow } from '../fuzzerRowLimit'
 import { randomString } from '@/utils/randomUtil'
 import { getRemoteValue } from '@/utils/kv'
 import type { AdvancedConfigValueProps } from '../HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType'
@@ -382,27 +383,12 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         r.cellClassName = colors
       }
 
-      // 分类存储成功/失败响应
+      // 成功、失败都只留该节点配置的最新条数
+      const fuzzerTableMaxData = fuzzerTableMaxDataRef.current.get(FuzzerIndex) || DefFuzzerTableMaxData
       if (Response.Ok) {
-        const successList = successBufferRef.current.get(FuzzerIndex)
-        const fuzzerTableMaxData = fuzzerTableMaxDataRef.current.get(FuzzerIndex) || DefFuzzerTableMaxData
-        if (successList) {
-          successList.push(r)
-          if (successList.length > fuzzerTableMaxData) {
-            successList.shift()
-          }
-          successBufferRef.current.set(FuzzerIndex, successList)
-        } else {
-          successBufferRef.current.set(FuzzerIndex, [r])
-        }
+        appendIndexedFuzzerRow(successBufferRef.current, FuzzerIndex, r, fuzzerTableMaxData)
       } else {
-        const failedList = failedBufferRef.current.get(FuzzerIndex)
-        if (failedList) {
-          failedList.push(r)
-          failedBufferRef.current.set(FuzzerIndex, failedList)
-        } else {
-          failedBufferRef.current.set(FuzzerIndex, [r])
-        }
+        appendIndexedFuzzerRow(failedBufferRef.current, FuzzerIndex, r, fuzzerTableMaxData)
       }
 
       if (!fuzzerIndexArr.current.includes(FuzzerIndex)) {
@@ -690,28 +676,11 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         r.cellClassName = colors
       }
 
+      const fuzzerTableMaxData = fuzzerTableMaxDataRef.current.get(FuzzerIndex) || DefFuzzerTableMaxData
       if (Response.Ok) {
-        const successList = successBufferRef.current.get(FuzzerIndex)
-        const fuzzerTableMaxData = fuzzerTableMaxDataRef.current.get(FuzzerIndex) || DefFuzzerTableMaxData
-        if (successList) {
-          successList.push(r)
-          // 超过最大显示 展示最新数据
-          if (successList.length > fuzzerTableMaxData) {
-            const oldest = successList.shift()
-            if (oldest) scheduleRelease(oldest)
-          }
-          successBufferRef.current.set(FuzzerIndex, successList)
-        } else {
-          successBufferRef.current.set(FuzzerIndex, [r])
-        }
+        appendIndexedFuzzerRow(successBufferRef.current, FuzzerIndex, r, fuzzerTableMaxData, scheduleRelease)
       } else {
-        const failedList = failedBufferRef.current.get(FuzzerIndex)
-        if (failedList) {
-          failedList.push(r)
-          failedBufferRef.current.set(FuzzerIndex, failedList)
-        } else {
-          failedBufferRef.current.set(FuzzerIndex, [r])
-        }
+        appendIndexedFuzzerRow(failedBufferRef.current, FuzzerIndex, r, fuzzerTableMaxData, scheduleRelease)
       }
 
       if (!fuzzerIndexArr.current.includes(FuzzerIndex)) {

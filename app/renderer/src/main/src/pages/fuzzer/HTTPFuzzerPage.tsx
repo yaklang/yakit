@@ -80,6 +80,7 @@ import type { HTTPHeader } from '../mitm/MITMContentReplacerHeaderOperator'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import _ from 'lodash'
 import { createHTTPFuzzerRun } from './httpFuzzerRun'
+import { appendFuzzerRow } from './fuzzerRowLimit'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { FUZZER_LABEL_LIST_NUMBER } from './HTTPFuzzerEditorMenu'
 import { BlastingAnimationAemonstration } from './AnimationAemonstration'
@@ -1865,6 +1866,10 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
       }
 
       let isNewRow = true
+      // 成功、失败共用「前端渲染数量」：只留最新的若干条，更早的行交给延迟释放。
+      const keepLatest = (list: FuzzerResponse[]) => {
+        appendFuzzerRow(list, r, fuzzerTableMaxDataRef.current, scheduleRelease)
+      }
       if (data.Ok) {
         const upserted = tryUpsertByUUID(successFuzzerRef.current, r) || tryUpsertByUUID(failedFuzzerRef.current, r)
         if (upserted) {
@@ -1872,12 +1877,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
         } else {
           run.state.successCount++
           successCountRef.current = run.state.successCount
-          successFuzzerRef.current.push(r)
-          // 超过最大显示 展示最新数据
-          if (successFuzzerRef.current.length > fuzzerTableMaxDataRef.current) {
-            const oldest = successFuzzerRef.current.shift()
-            if (oldest) scheduleRelease(oldest)
-          }
+          keepLatest(successFuzzerRef.current)
         }
       } else {
         const upserted = tryUpsertByUUID(failedFuzzerRef.current, r) || tryUpsertByUUID(successFuzzerRef.current, r)
@@ -1886,7 +1886,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
         } else {
           run.state.failedCount++
           failedCountRef.current = run.state.failedCount
-          failedFuzzerRef.current.push(r)
+          keepLatest(failedFuzzerRef.current)
         }
       }
 

@@ -3,6 +3,7 @@ import { Buffer } from 'node:buffer'
 import { EventEmitter } from 'node:events'
 import ts from 'typescript'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { appendIndexedFuzzerRow } from '../../fuzzerRowLimit'
 
 // Exercise the actual parameter builder and start guard without loading Monaco/Electron.
 const source = ts.createSourceFile(
@@ -179,6 +180,7 @@ describe('FuzzerSequence response release queue', () => {
       runtimeIdBufferRef: { current: new Map() },
       filterColorTag: () => undefined,
       successBufferRef,
+      appendIndexedFuzzerRow,
       fuzzerTableMaxDataRef: {
         current: new Map<string, number>([
           ['alpha', 100],
@@ -194,7 +196,7 @@ describe('FuzzerSequence response release queue', () => {
       t: (key: string) => key,
     }
     new Function(...Object.keys(bindings), sequenceStreamEffect)(...Object.values(bindings))
-    const send = (fuzzerIndex: string, id: string) =>
+    const send = (fuzzerIndex: string, id: string, ok = true) =>
       ipc.emit(
         'seq-token-data',
         {},
@@ -202,7 +204,7 @@ describe('FuzzerSequence response release queue', () => {
           Request: { FuzzerIndex: fuzzerIndex },
           Response: {
             UUID: id,
-            Ok: true,
+            Ok: ok,
             RuntimeID: `runtime-${fuzzerIndex}`,
             RequestRaw: new Uint8Array([1]),
             ResponseRaw: new Uint8Array([2]),
@@ -271,6 +273,17 @@ describe('FuzzerSequence response release queue', () => {
     expect(bindings.fuzzerIndexArr.current).toEqual(['alpha', 'beta'])
     vi.advanceTimersByTime(500)
     expect(clearIntervalSpy).toHaveBeenCalled()
+    dispose()
+  })
+
+  it('caps failed rows per fuzzer index the same way as success rows', () => {
+    const { bindings, send, dispose } = setup()
+    for (let i = 0; i < 130; i++) send('alpha', `fail-${i}`, false)
+    const failed = bindings.failedBufferRef.current.get('alpha')
+    expect(failed).toHaveLength(100)
+    expect(failed[0].UUID).toBe('fail-30')
+    expect(failed[99].UUID).toBe('fail-129')
+    expect(bindings.successBufferRef.current.get('alpha')).toHaveLength(0)
     dispose()
   })
 })
