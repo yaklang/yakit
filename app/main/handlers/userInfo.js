@@ -35,6 +35,15 @@ const clearBrowserSession = (targetWindow) => {
   } catch (error) {}
 }
 
+// 登录态要同步到已打开的子窗口；登录成功提示、重新进入企业登录页仍只发给主窗口。
+const sendToAllWindows = (channel, payload) => {
+  BrowserWindow.getAllWindows().forEach((bw) => {
+    if (bw.isDestroyed()) return
+    if (payload === undefined) bw.webContents.send(channel)
+    else bw.webContents.send(channel, payload)
+  })
+}
+
 module.exports = {
   register: (win, getClient) => {
     const commonSignIn = (res) => {
@@ -68,7 +77,7 @@ module.exports = {
       USER_INFO.user_id = user.user_id
       USER_INFO.companyName = user.companyName
       USER_INFO.companyHeadImg = user.companyHeadImg
-      win.webContents.send('fetch-signin-token', user)
+      sendToAllWindows('fetch-signin-token', user)
       win.webContents.send('fetch-signin-data', { ok: true, info: '登录成功' })
     }
     // login modal
@@ -305,7 +314,7 @@ module.exports = {
       USER_INFO.user_id = user.user_id
       USER_INFO.companyName = user.companyName
       USER_INFO.companyHeadImg = user.companyHeadImg
-      win.webContents.send('fetch-signin-token', user)
+      sendToAllWindows('fetch-signin-token', user)
       win.webContents.send('fetch-signin-data', { ok: true, info: '登录成功' })
 
       return new Promise((resolve, reject) => {
@@ -315,7 +324,7 @@ module.exports = {
 
     ipcMain.on('company-refresh-in', (event) => {
       assertTrustedAppSender(event, 'company-refresh-in')
-      win.webContents.send('fetch-signin-token', USER_INFO)
+      sendToAllWindows('fetch-signin-token', USER_INFO)
       win.webContents.send('fetch-signin-data', { ok: true, info: '登录成功' })
     })
 
@@ -341,7 +350,7 @@ module.exports = {
       USER_INFO.user_id = ''
       USER_INFO.companyName = null
       USER_INFO.companyHeadImg = null
-      win.webContents.send('login-out')
+      sendToAllWindows('login-out')
       // 企业版为强制登录 - 退出登录则需重新回到登录页
       if (arg?.isEnpriTrace) {
         win.webContents.send('again-judge-license-login')
@@ -374,7 +383,11 @@ module.exports = {
           HttpSetting.wsBaseURL = getSocketUrl(baseUrl)
           HttpSetting.httpBaseURL = baseUrl
           USER_INFO.token = ''
-          win.webContents.send('edit-baseUrl-status', { ok: true, info: '更改成功' })
+          // 企业登录要等这条回执才继续请求登录接口，必须回给发起窗口。
+          // 子窗口点登录时若只发给主窗口，发起方的 loginUser 不会执行。
+          if (!event.sender.isDestroyed()) {
+            event.sender.send('edit-baseUrl-status', { ok: true, info: '更改成功' })
+          }
           win.webContents.send('refresh-new-home', { ok: true, info: '刷新成功' })
           resolve()
         } catch (error) {
