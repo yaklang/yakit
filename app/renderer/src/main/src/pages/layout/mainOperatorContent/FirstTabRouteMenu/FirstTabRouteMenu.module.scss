@@ -1,0 +1,46 @@
+.tab-route-menu {
+  width: 240px;
+  padding: 6px 4px;
+}
+
+.tab-route-search {
+  padding: 2px 4px 4px;
+}
+
+.tab-route-search-icon {
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+}
+
+.tab-route-list {
+  max-height: min(320px, calc(100vh - 140px));
+  padding: 0 4px;
+  overflow-y: auto;
+}
+
+.tab-route-option {
+  display: block;
+  width: 100%;
+  padding: 6px 8px;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  font-family: inherit;
+  cursor: pointer;
+  border-radius: 4px;
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  font-size: 12px;
+  line-height: 16px;
+  overflow-wrap: anywhere;
+
+  &:hover {
+    background: var(--Colors-Use-Main-Primary);
+    color: var(--Colors-Use-Main-On-Primary);
+  }
+}
+
+.tab-route-empty {
+  padding: 12px 8px;
+  color: var(--Colors-Use-Neutral-Disable);
+  text-align: center;
+  font-size: 12px;
+}

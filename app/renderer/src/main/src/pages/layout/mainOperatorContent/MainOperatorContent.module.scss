@@ -47,6 +47,12 @@
   overflow-y: auto;
 }
 
+.tab-route-popover {
+  :global(.ant-popover-inner) {
+    padding: 0;
+  }
+}
+
 .sub-tab-count-submenu.sub-tab-count-submenu:global(.ant-menu-submenu-popup) {
   padding: 0 6px;
   max-height: 400px;
@@ -141,21 +147,13 @@
   height: 100%;
   color: var(--Colors-Use-Neutral-Text-1-Title);
 
-  .tab-menu-first {
+  .tab-menu-first-bar {
     display: flex;
-    flex-wrap: nowrap;
     align-items: center;
     position: relative;
     background-color: var(--Colors-Use-Neutral-Bg);
-
-    overflow-x: auto;
-    overflow-y: hidden;
+    min-width: 0;
     flex-shrink: 0;
-
-    // 下面是滚动条的样式
-    &::-webkit-scrollbar {
-      display: none;
-    }
 
     &::before {
       @extend .grey-link;
@@ -166,9 +164,41 @@
       @extend .grey-link;
       bottom: 0;
     }
+  }
+
+  .tab-menu-first-add {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 36px;
+    height: 24px;
+    padding: 0 8px;
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  }
+
+  .tab-menu-first-add-button {
+    width: 20px;
+    height: 20px;
+    padding: 3px;
+  }
+
+  .tab-menu-first {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    position: relative;
+    flex: 0 1 auto;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+
+    &::-webkit-scrollbar {
+      height: 4px;
+    }
 
     .tab-menu-first-item {
       display: flex;
+      flex-shrink: 0;
       height: 24px;
       // padding: 4px 8px;
       padding: 4px 4px;

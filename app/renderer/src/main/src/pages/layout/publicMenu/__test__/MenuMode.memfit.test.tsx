@@ -10,6 +10,7 @@ import { MemfitMemoryIcon } from '../memfitMenuIcon'
 import styles from '../MenuMode.module.scss'
 
 const edition = vi.hoisted(() => ({ current: 'memfit' }))
+const comparison = vi.hoisted(() => ({ reset: vi.fn() }))
 
 vi.mock('../MenuMode.module.scss', () => ({
   default: {
@@ -39,7 +40,7 @@ vi.mock('@/i18n/useI18nNamespaces', () => ({
 }))
 
 vi.mock('@/store/httpFlow', () => ({
-  useHttpFlowStore: () => ({ resetCompareData: vi.fn() }),
+  useHttpFlowStore: { getState: () => ({ resetCompareData: comparison.reset }) },
 }))
 
 const aiRoutes = [
@@ -59,6 +60,7 @@ const pluginToId = {
 describe('Memfit 公共菜单', () => {
   beforeEach(() => {
     edition.current = 'memfit'
+    comparison.reset.mockClear()
   })
   afterEach(cleanup)
 
@@ -183,6 +185,16 @@ describe('Memfit 公共菜单', () => {
     expect(screen.queryByText('YakitRoute.AIAgent')).not.toBeInTheDocument()
     expect(screen.queryByText('YakitRoute.ai-repository')).not.toBeInTheDocument()
     expect(screen.queryByText('YakitRoute.ai-memory')).not.toBeInTheDocument()
+  })
+
+  it('Yakit 数据对比图标通过共用入口先清空对比状态再导航', () => {
+    edition.current = 'yakit'
+    const onMenuSelect = vi.fn()
+    render(<MenuMode mode="渗透测试" pluginToId={pluginToId} onMenuSelect={onMenuSelect} />)
+    fireEvent.click(screen.getByText(YakitRouteToPageInfo[YakitRoute.DataCompare].labelUi!))
+    expect(comparison.reset).toHaveBeenCalledExactlyOnceWith()
+    expect(onMenuSelect).toHaveBeenCalledExactlyOnceWith({ route: YakitRoute.DataCompare })
+    expect(comparison.reset.mock.invocationCallOrder[0]).toBeLessThan(onMenuSelect.mock.invocationCallOrder[0])
   })
 
   it('IRify 仍使用代码审计及报告菜单', () => {

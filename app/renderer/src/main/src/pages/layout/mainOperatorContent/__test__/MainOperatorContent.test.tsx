@@ -3,7 +3,32 @@ import classNames from 'classnames'
 import ts from 'typescript'
 import debounce from 'lodash/debounce'
 import isEqual from 'lodash/isEqual'
+import React from 'react'
+import type { ReactNode } from 'react'
+import { renderToStaticMarkup } from 'react-dom/server'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import { YakitRoute } from '@/enums/yakitRoute'
+import FirstTabRouteMenu from '../FirstTabRouteMenu/FirstTabRouteMenu'
+import type { PublicRouteMenuProps } from '@/routes/newRoute'
+import emiter from '@/utils/eventBus/eventBus'
+import { useHttpFlowStore } from '@/store/httpFlow'
+
+const routeMenuI18n = vi.hoisted(() => ({ t: (key: string) => key }))
+const routeMenuSource = vi.hoisted(() => ({ getPublicRouteMenu: vi.fn<(mode?: unknown) => PublicRouteMenuProps[]>() }))
+const routeMenuServices = vi.hoisted(() => ({ fetchPlugin: vi.fn(), notify: vi.fn() }))
+
+vi.mock('@/i18n/useI18nNamespaces', () => ({
+  useI18nNamespaces: () => ({ t: (key: string) => routeMenuI18n.t(key) }),
+}))
+vi.mock('@/routes/newRoute', () => ({ getPublicRouteMenu: routeMenuSource.getPublicRouteMenu }))
+vi.mock('@/store/softMode', () => ({
+  YakitModeEnum: { Classic: 'classic', SecurityExpert: 'securityExpert' },
+}))
+vi.mock('@/pages/pluginHub/utils/grpc', () => ({ grpcFetchLocalPluginDetail: routeMenuServices.fetchPlugin }))
+vi.mock('@/utils/notification', () => ({ yakitNotify: routeMenuServices.notify }))
 
 // 执行实际初始化 Effect、AI 恢复方法和新开入口；不加载 Electron、Monaco，也不模拟浏览器的 inert 行为。
 const source = ts.createSourceFile(
@@ -123,6 +148,543 @@ const setupTabActions = () => {
     callback,
   }
 }
+
+describe('MainOperatorContent first-level tab layout', () => {
+  it.each([0, 3, 40])('keeps the plus outside the scrolling list with %i tabs', (count) => {
+    const initializer = declaration('TabList')!.initializer as ts.CallExpression
+    const component = initializer.arguments[0] as ts.ArrowFunction
+    const markup = (component.body as ts.Block).statements.find(ts.isReturnStatement)!.expression!
+    const pageCache = Array.from({ length: count }, (_, index) => ({ routeKey: `tab-${index}` }))
+    const droppable = vi.fn(({ children }) =>
+      children({
+        droppableProps: { 'data-droppable-id': 'droppable1' },
+        innerRef: undefined,
+        placeholder: <span data-placeholder="true" />,
+      }),
+    )
+    const element = execute(`return ${markup.getText(source)}`, {
+      React,
+      styles: new Proxy({}, { get: (_, key) => key }),
+      classNames,
+      pageCache,
+      softMode: 'classic',
+      currentTabKey: 'tab-0',
+      onDragEnd: vi.fn(),
+      onRemove: vi.fn(),
+      setCurrentTabKey: vi.fn(),
+      onRightClickOperation: vi.fn(),
+      t: (key: string) => key,
+      isCommunityEdition: () => true,
+      isMenuVisible: false,
+      routeMenuOpen: false,
+      setRouteMenuOpen: vi.fn(),
+      YakitPopover: ({ children }: { children: ReactNode }) => children,
+      FirstTabRouteMenu: () => null,
+      DragDropContext: ({ children }: { children: ReactNode }) => children,
+      Droppable: droppable,
+      TabItem: ({ item }: { item: { routeKey: string } }) => <span data-tab={item.routeKey} />,
+      PlusSmOutlined: ({ size }: { size: number }) => <svg width={size} height={size} />,
+      YakitButton: ({
+        children,
+        className,
+        'aria-label': label,
+      }: {
+        children: ReactNode
+        className: string
+        'aria-label': string
+      }) => (
+        <button type="button" className={className} aria-label={label}>
+          {children}
+        </button>
+      ),
+    })
+    const container = document.createElement('div')
+    container.innerHTML = renderToStaticMarkup(element)
+    const list = container.querySelector('.tab-menu-first')!
+    const plus = container.querySelector('.tab-menu-first-add')!
+
+    expect(list.nextElementSibling).toBe(plus)
+    expect(plus.parentElement).toHaveClass('tab-menu-first-bar')
+    expect(list.contains(plus)).toBe(false)
+    expect(plus.querySelector('button')).toHaveAttribute('aria-label', 'YakitButton.add')
+    expect(plus.querySelector('svg')).toHaveAttribute('width', '12')
+    expect(plus.querySelector('svg')).toHaveAttribute('height', '12')
+    expect(Array.from(list.querySelectorAll('[data-tab]'), (tab) => tab.getAttribute('data-tab'))).toEqual(
+      pageCache.map((tab) => tab.routeKey),
+    )
+    expect(list.lastElementChild).toHaveAttribute('data-placeholder', 'true')
+    expect(droppable.mock.calls[0][0]).toMatchObject({ droppableId: 'droppable1', direction: 'horizontal' })
+  })
+})
+
+describe('MainOperatorContent route picker', () => {
+  afterEach(() => {
+    cleanup()
+    vi.restoreAllMocks()
+  })
+
+  const setupPicker = (community = true, menuVisible = false, softMode = 'classic') => {
+    routeMenuServices.fetchPlugin.mockReset()
+    routeMenuServices.notify.mockReset()
+    let language = 'zh'
+    let currentMenuVisible = menuVisible
+    const translations: Record<string, Record<string, string>> = {
+      zh: { 'YakitRoute.agent': '智能助手', 'YakitRoute.tools': '工具', 'YakitRoute.plugins': '插件' },
+      en: { 'YakitRoute.agent': 'AI Agent', 'YakitRoute.tools': 'Tools', 'YakitRoute.plugins': 'Plugins' },
+    }
+    routeMenuI18n.t = (key: string) => translations[language][key] || key
+    const agent = { page: YakitRoute.AI_Agent, label: '智能助手', labelUi: 'YakitRoute.agent' }
+    const tools = { page: YakitRoute.AI_Tool, label: '工具', labelUi: 'YakitRoute.tools' }
+    const getPublicRouteMenu = routeMenuSource.getPublicRouteMenu
+    getPublicRouteMenu.mockReset().mockReturnValue([{ page: undefined, label: 'AI', children: [agent, tools] }])
+    const Component = execute(`return ${declaration('TabList')!.initializer!.getText(source)}`, {
+      React,
+      useState: React.useState,
+      useI18nNamespaces: () => ({ t: routeMenuI18n.t }),
+      useMenuHeight: (select: (state: { isMenuVisible: boolean }) => unknown) =>
+        select({ isMenuVisible: currentMenuVisible }),
+      useFuzzerSequence: () => ({ clearFuzzerSequence: vi.fn() }),
+      shallow: () => true,
+      useMemoizedFn: (fn: unknown) => fn,
+      isCommunityEdition: () => community,
+      styles: new Proxy({}, { get: (_, key) => key }),
+      classNames,
+      DragDropContext: ({ children }: { children: ReactNode }) => children,
+      Droppable: ({ children }: { children: (provided: unknown) => ReactNode }) =>
+        children({ droppableProps: {}, innerRef: undefined, placeholder: null }),
+      TabItem: () => null,
+      YakitPopover,
+      FirstTabRouteMenu,
+      YakitButton,
+      PlusSmOutlined: () => <svg />,
+    })
+    const props = {
+      softMode,
+      pageCache: [],
+      setPageCache: vi.fn(),
+      currentTabKey: '',
+      setCurrentTabKey: vi.fn(),
+      onDragEnd: vi.fn(),
+      onRemove: vi.fn(),
+    }
+    const view = render(<Component {...props} />)
+    const open = async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'YakitButton.add' }))
+      await screen.findByRole('textbox', { name: 'YakitInput.search' })
+    }
+    return {
+      view,
+      open,
+      getPublicRouteMenu,
+      changeLanguage: (next: string) => {
+        language = next
+        view.rerender(<Component {...props} pageCache={[]} />)
+      },
+      setMenuVisible: (visible: boolean) => {
+        currentMenuVisible = visible
+        view.rerender(<Component {...props} pageCache={[]} />)
+      },
+      changeMode: (next: string) => {
+        props.softMode = next
+        view.rerender(<Component {...props} pageCache={[]} />)
+      },
+    }
+  }
+
+  const attachMenuNavigation = (openedRoutes: YakitRoute[] = []) => {
+    const openMenuPage = vi.fn()
+    const openMultipleMenuPage = vi.fn()
+    const setCurrentTabKey = vi.fn()
+    const addBugTest = vi.fn()
+    const addYakRunnerAuditCodePage = vi.fn()
+    const extraOpenMenuPage = execute(`return ${declaration('extraOpenMenuPage')!.initializer!.getText(source)}`, {
+      useMemoizedFn: (fn: unknown) => fn,
+      YakitRoute,
+      isIndependentTabRoute: (route: YakitRoute) => route === YakitRoute.Plugin_OP,
+      SingletonPageRoute: [YakitRoute.YakRunner_Audit_Code],
+      pageCache: openedRoutes.map((route) => ({ route })),
+      openMenuPage,
+      openMultipleMenuPage,
+      setCurrentTabKey,
+      openAIAgentPage: vi.fn(),
+    })
+    const menuOpenPage = execute(`return ${declaration('menuOpenPage')!.initializer!.getText(source)}`, {
+      useMemoizedFn: (fn: unknown) => fn,
+      JSONParseLog: JSON.parse,
+      yakitNotify: routeMenuServices.notify,
+      extraOpenMenuPage,
+    })
+    const onOpenPage = execute(`return ${declaration('onOpenPage')!.initializer!.getText(source)}`, {
+      useMemoizedFn: (fn: unknown) => fn,
+      JSONParseLog: JSON.parse,
+      YakitRoute,
+      YakitRouteToPageInfo: { [YakitRoute.DataCompare]: { label: '数据对比' } },
+      extraOpenMenuPage,
+      addBugTest,
+      addPoC: vi.fn(),
+      addYakRunnerAuditCodePage,
+    })
+    emiter.on('menuOpenPage', menuOpenPage)
+    emiter.on('openPage', onOpenPage)
+    return {
+      openMenuPage,
+      openMultipleMenuPage,
+      setCurrentTabKey,
+      addBugTest,
+      addYakRunnerAuditCodePage,
+      dispose: () => {
+        emiter.off('menuOpenPage', menuOpenPage)
+        emiter.off('openPage', onOpenPage)
+      },
+    }
+  }
+
+  it('navigates to PoC through the normal menu initialization instead of its URL command', async () => {
+    const app = setupPicker()
+    app.getPublicRouteMenu.mockReturnValue([
+      { page: undefined, label: '工具', children: [{ page: YakitRoute.PoC, label: '专项漏洞检测' }] },
+    ])
+    const navigation = attachMenuNavigation()
+    try {
+      await app.open()
+      fireEvent.click(screen.getByRole('listitem'))
+      expect(navigation.openMultipleMenuPage).toHaveBeenCalledExactlyOnceWith({ route: YakitRoute.PoC })
+      expect(navigation.addBugTest).not.toHaveBeenCalled()
+    } finally {
+      navigation.dispose()
+    }
+  })
+
+  it('focuses an existing audit page without sending new audit parameters or resetting it', async () => {
+    const app = setupPicker()
+    app.getPublicRouteMenu.mockReturnValue([
+      { page: undefined, label: '审计', children: [{ page: YakitRoute.YakRunner_Audit_Code, label: '代码审计' }] },
+    ])
+    const navigation = attachMenuNavigation([YakitRoute.YakRunner_Audit_Code])
+    try {
+      await app.open()
+      fireEvent.click(screen.getByRole('listitem'))
+      expect(navigation.setCurrentTabKey).toHaveBeenCalledExactlyOnceWith(YakitRoute.YakRunner_Audit_Code)
+      expect(navigation.addYakRunnerAuditCodePage).not.toHaveBeenCalled()
+      expect(navigation.openMenuPage).not.toHaveBeenCalled()
+    } finally {
+      navigation.dispose()
+    }
+  })
+
+  it('clears comparison data before navigating to a fresh data comparison page', async () => {
+    const app = setupPicker()
+    app.getPublicRouteMenu.mockReturnValue([
+      { page: undefined, label: '工具', children: [{ page: YakitRoute.DataCompare, label: '数据对比' }] },
+    ])
+    const previous = useHttpFlowStore.getState()
+    useHttpFlowStore.setState({
+      token: 'old-comparison',
+      flag: 'left',
+      dataMap: new Map([['old-comparison', { type: 1, left: { content: 'old', language: 'http' } }]]),
+    })
+    const navigation = attachMenuNavigation()
+    let comparisonAtOpen: { token: string; dataMapSize: number } | undefined
+    navigation.openMultipleMenuPage.mockImplementation(() => {
+      const { token, dataMap } = useHttpFlowStore.getState()
+      comparisonAtOpen = { token, dataMapSize: dataMap.size }
+    })
+    try {
+      await app.open()
+      fireEvent.click(screen.getByRole('listitem'))
+      expect(navigation.openMultipleMenuPage).toHaveBeenCalledExactlyOnceWith({ route: YakitRoute.DataCompare })
+      expect(comparisonAtOpen).toEqual({ token: '', dataMapSize: 0 })
+      expect(useHttpFlowStore.getState().flag).toBe('')
+    } finally {
+      navigation.dispose()
+      useHttpFlowStore.setState(previous)
+    }
+  })
+
+  it('opens the clicked route through the menu navigation event', async () => {
+    const app = setupPicker()
+    const emit = vi.spyOn(emiter, 'emit')
+    await app.open()
+    const item = screen.getAllByRole('listitem')[0]
+    expect(item.tagName).toBe('DIV')
+    fireEvent.click(item)
+    expect(emit).toHaveBeenCalledExactlyOnceWith('menuOpenPage', JSON.stringify({ route: YakitRoute.AI_Agent }))
+    expect(routeMenuServices.fetchPlugin).not.toHaveBeenCalled()
+    await waitFor(() => expect(screen.queryByRole('textbox')).toBeNull())
+  })
+
+  it('opens the route associated with a translated search result', async () => {
+    const app = setupPicker()
+    const emit = vi.spyOn(emiter, 'emit')
+    await app.open()
+    app.changeLanguage('en')
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'tool' } })
+    await waitFor(() => expect(screen.getByRole('listitem')).toHaveTextContent('Tools'))
+    fireEvent.click(screen.getByRole('listitem'))
+    expect(emit).toHaveBeenCalledExactlyOnceWith('menuOpenPage', JSON.stringify({ route: YakitRoute.AI_Tool }))
+  })
+
+  it('resolves the clicked plugin by name and sends its current local ID', async () => {
+    const app = setupPicker()
+    const emit = vi.spyOn(emiter, 'emit')
+    app.getPublicRouteMenu.mockReturnValue([
+      {
+        page: undefined,
+        label: '插件',
+        children: [
+          { page: YakitRoute.Plugin_OP, label: '子域名收集', yakScripName: 'subdomain' },
+          { page: YakitRoute.Plugin_OP, label: '基础爬虫', yakScripName: 'crawler', yakScriptId: 1 },
+        ],
+      },
+    ])
+    routeMenuServices.fetchPlugin.mockResolvedValue({ Id: 42, ScriptName: 'crawler' })
+    await app.open()
+    fireEvent.click(screen.getAllByRole('listitem')[1])
+    await waitFor(() =>
+      expect(emit).toHaveBeenCalledExactlyOnceWith(
+        'menuOpenPage',
+        JSON.stringify({ route: YakitRoute.Plugin_OP, pluginId: 42, pluginName: 'crawler' }),
+      ),
+    )
+    expect(routeMenuServices.fetchPlugin).toHaveBeenCalledExactlyOnceWith({ Name: 'crawler' }, true)
+  })
+
+  it('closes immediately when selecting a plugin while its lookup is still pending', async () => {
+    const app = setupPicker()
+    const emit = vi.spyOn(emiter, 'emit')
+    app.getPublicRouteMenu.mockReturnValue([
+      {
+        page: undefined,
+        label: '插件',
+        children: [{ page: YakitRoute.Plugin_OP, label: '基础爬虫', yakScripName: 'crawler' }],
+      },
+    ])
+    let resolvePlugin!: (plugin: { Id: number; ScriptName: string }) => void
+    const pluginResult = new Promise<{ Id: number; ScriptName: string }>((resolve) => {
+      resolvePlugin = resolve
+    })
+    routeMenuServices.fetchPlugin.mockReturnValue(pluginResult)
+    await app.open()
+    fireEvent.click(screen.getByRole('listitem'))
+    await waitFor(() => expect(screen.queryByRole('textbox')).toBeNull())
+    expect(emit).not.toHaveBeenCalled()
+
+    await act(async () => {
+      resolvePlugin({ Id: 42, ScriptName: 'crawler' })
+      await pluginResult
+    })
+    expect(emit).toHaveBeenCalledExactlyOnceWith(
+      'menuOpenPage',
+      JSON.stringify({ route: YakitRoute.Plugin_OP, pluginId: 42, pluginName: 'crawler' }),
+    )
+  })
+
+  it.each(['missing', 'failed'])('does not open a blank plugin page when plugin lookup is %s', async (status) => {
+    const app = setupPicker()
+    const emit = vi.spyOn(emiter, 'emit')
+    app.getPublicRouteMenu.mockReturnValue([
+      {
+        page: undefined,
+        label: '插件',
+        children: [{ page: YakitRoute.Plugin_OP, label: '基础爬虫', yakScripName: 'crawler' }],
+      },
+    ])
+    if (status === 'missing') routeMenuServices.fetchPlugin.mockResolvedValue({ Id: 0 })
+    else routeMenuServices.fetchPlugin.mockRejectedValue(new Error('lookup failed'))
+    await app.open()
+    fireEvent.click(screen.getByRole('listitem'))
+    await waitFor(() =>
+      expect(routeMenuServices.notify).toHaveBeenCalledExactlyOnceWith('error', 'Layout.HeardMenu.pluginLoadFailed'),
+    )
+    expect(emit).not.toHaveBeenCalled()
+  })
+
+  it('opens only on click and filters the displayed labels in the current language', async () => {
+    const app = setupPicker()
+    expect(screen.queryByRole('textbox')).toBeNull()
+    fireEvent.mouseEnter(app.view.container.querySelector('.tab-menu-first-add')!)
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 150))
+    })
+    expect(screen.queryByRole('textbox')).toBeNull()
+    await app.open()
+    expect(screen.getAllByRole('listitem').map((item) => item.textContent)).toEqual(['智能助手', '工具'])
+    const input = screen.getByRole('textbox', { name: 'YakitInput.search' })
+    fireEvent.change(input, { target: { value: '助手' } })
+    await waitFor(() => expect(screen.getAllByRole('listitem').map((item) => item.textContent)).toEqual(['智能助手']))
+    app.changeLanguage('en')
+    expect(screen.queryAllByRole('listitem')).toHaveLength(0)
+    expect(screen.getByText('YakitEmpty.noData')).toBeInTheDocument()
+    fireEvent.change(input, { target: { value: 'aGe' } })
+    await waitFor(() => expect(screen.getAllByRole('listitem').map((item) => item.textContent)).toEqual(['AI Agent']))
+    fireEvent.change(input, { target: { value: '' } })
+    await waitFor(() =>
+      expect(screen.getAllByRole('listitem').map((item) => item.textContent)).toEqual(['AI Agent', 'Tools']),
+    )
+  })
+
+  it('reuses flattened routes while searching and translating, and rebuilds only when the route mode changes', async () => {
+    const app = setupPicker()
+    const readChildren = vi.fn(() => [
+      { page: YakitRoute.AI_Agent, label: '智能助手', labelUi: 'YakitRoute.agent' },
+      { page: YakitRoute.AI_Tool, label: '工具', labelUi: 'YakitRoute.tools' },
+    ])
+    app.getPublicRouteMenu.mockReturnValue([
+      {
+        page: undefined,
+        label: 'AI',
+        get children() {
+          return readChildren()
+        },
+      },
+    ])
+    await app.open()
+    expect(app.getPublicRouteMenu).toHaveBeenCalledTimes(1)
+    expect(readChildren).toHaveBeenCalledTimes(1)
+
+    const input = screen.getByRole('textbox')
+    fireEvent.change(input, { target: { value: '助手' } })
+    await waitFor(() => expect(screen.getByRole('listitem')).toHaveTextContent('智能助手'))
+    app.changeLanguage('en')
+    expect(screen.queryAllByRole('listitem')).toHaveLength(0)
+    fireEvent.change(input, { target: { value: 'aGe' } })
+    await waitFor(() => expect(screen.getByRole('listitem')).toHaveTextContent('AI Agent'))
+    app.changeMode('securityExpert')
+    expect(app.getPublicRouteMenu).toHaveBeenCalledTimes(1)
+    expect(readChildren).toHaveBeenCalledTimes(1)
+
+    app.changeMode('scan')
+    expect(app.getPublicRouteMenu).toHaveBeenCalledTimes(2)
+    expect(app.getPublicRouteMenu).toHaveBeenLastCalledWith('scan')
+    expect(readChildren).toHaveBeenCalledTimes(2)
+    expect(screen.getByRole('listitem')).toHaveTextContent('AI Agent')
+  })
+
+  it('updates input immediately and waits 300ms after the latest change before filtering', () => {
+    setupPicker()
+    vi.useFakeTimers()
+    try {
+      const view = render(<FirstTabRouteMenu softMode={undefined} />)
+      const input = screen.getByRole('textbox', { name: 'YakitInput.search' })
+      fireEvent.change(input, { target: { value: '助手' } })
+      expect(input).toHaveValue('助手')
+      act(() => vi.advanceTimersByTime(299))
+      expect(screen.getAllByRole('listitem')).toHaveLength(2)
+
+      fireEvent.change(input, { target: { value: '工具' } })
+      expect(input).toHaveValue('工具')
+      act(() => vi.advanceTimersByTime(299))
+      expect(screen.getAllByRole('listitem')).toHaveLength(2)
+      act(() => vi.advanceTimersByTime(1))
+      expect(screen.getByRole('listitem')).toHaveTextContent('工具')
+
+      fireEvent.change(input, { target: { value: '' } })
+      act(() => vi.advanceTimersByTime(300))
+      expect(screen.getAllByRole('listitem')).toHaveLength(2)
+      view.unmount()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('keeps the popup open after mouse leave and resets search when toggled closed and reopened', async () => {
+    const app = setupPicker()
+    await app.open()
+    const popup = document.querySelector('.tab-route-popover')!
+    const trigger = app.view.container.querySelector('.tab-menu-first-add')!
+    fireEvent.mouseLeave(trigger)
+    fireEvent.mouseLeave(popup)
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 350))
+    })
+    expect(screen.getByRole('textbox')).toBeInTheDocument()
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: '助手' } })
+    await waitFor(() => expect(screen.getByRole('listitem')).toHaveTextContent('智能助手'))
+    fireEvent.click(screen.getByRole('button', { name: 'YakitButton.add' }))
+    await waitFor(() => expect(screen.queryByRole('textbox')).toBeNull())
+    await app.open()
+    expect(screen.getByRole('textbox')).toHaveValue('')
+    expect(screen.getAllByRole('listitem')).toHaveLength(2)
+  })
+
+  it.each([
+    [true, false, true],
+    [true, true, true],
+    [false, false, false],
+    [false, true, false],
+  ])('shows the plus only for community=%s with menuVisible=%s', (community, menuVisible, expected) => {
+    setupPicker(community, menuVisible)
+    expect(screen.queryByRole('button', { name: 'YakitButton.add' }) !== null).toBe(expected)
+  })
+
+  it('keeps the plus and search state when menu visibility changes', async () => {
+    const app = setupPicker(true, true)
+    expect(screen.getByRole('button', { name: 'YakitButton.add' })).toBeInTheDocument()
+    await app.open()
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: '助手' } })
+    await waitFor(() => expect(screen.getAllByRole('listitem')).toHaveLength(1))
+    app.setMenuVisible(false)
+    expect(screen.getByRole('button', { name: 'YakitButton.add' })).toBeInTheDocument()
+    expect(screen.getByRole('textbox')).toHaveValue('助手')
+    expect(screen.getAllByRole('listitem')).toHaveLength(1)
+    app.setMenuVisible(true)
+    expect(screen.getByRole('button', { name: 'YakitButton.add' })).toBeInTheDocument()
+    expect(screen.getByRole('textbox')).toHaveValue('助手')
+    expect(screen.getAllByRole('listitem')).toHaveLength(1)
+  })
+
+  it('uses the edition route catalog in security expert mode, which has no grouped menu of its own', async () => {
+    const app = setupPicker(true, false, 'securityExpert')
+    await app.open()
+    expect(app.getPublicRouteMenu).toHaveBeenCalledWith('classic')
+  })
+})
+
+describe('MainOperatorContent openPage dispatch', () => {
+  const setupDispatch = () => {
+    const extraOpenMenuPage = vi.fn()
+    const openAIAgentPage = vi.fn()
+    const catalogRoutes = [
+      YakitRoute.AI_REPOSITORY,
+      YakitRoute.AI_Memory,
+      YakitRoute.AI_Tool,
+      YakitRoute.AI_Forge,
+      YakitRoute.HTTPFuzzer,
+      YakitRoute.Codec,
+      YakitRoute.DB_HTTPHistory,
+    ]
+    const open = execute(`return ${declaration('onOpenPage')!.initializer!.getText(source)}`, {
+      useMemoizedFn: (fn: unknown) => fn,
+      JSONParseLog: JSON.parse,
+      YakitRoute,
+      YakitRouteToPageInfo: Object.fromEntries(catalogRoutes.map((route) => [route, { label: route }])),
+      extraOpenMenuPage,
+      openAIAgentPage,
+    })
+    return { open, extraOpenMenuPage, openAIAgentPage, catalogRoutes }
+  }
+
+  it('does not treat parameterized commands without dedicated handlers as menu navigation', () => {
+    const app = setupDispatch()
+    app.catalogRoutes.forEach((route) => app.open(JSON.stringify({ route, params: {} })))
+    expect(app.extraOpenMenuPage).not.toHaveBeenCalled()
+  })
+
+  it('keeps dedicated route initialization and its parameters', () => {
+    const app = setupDispatch()
+    const params = { id: 'new-session' }
+    app.open(JSON.stringify({ route: YakitRoute.AI_Agent, params }))
+    expect(app.openAIAgentPage).toHaveBeenCalledExactlyOnceWith(params)
+    expect(app.extraOpenMenuPage).not.toHaveBeenCalled()
+  })
+
+  it('ignores missing or unknown routes', () => {
+    const app = setupDispatch()
+    app.open('{}')
+    app.open(JSON.stringify({ route: 'unknown-route', params: {} }))
+    expect(app.extraOpenMenuPage).not.toHaveBeenCalled()
+  })
+})
 
 describe('MainOperatorContent first-level tab actions', () => {
   it('persists AI ordering from the actual drag result while preserving page metadata', () => {
