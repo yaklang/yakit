@@ -1869,7 +1869,10 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
       let isNewRow = true
       // 成功、失败共用「前端渲染数量」：只留最新的若干条，更早的行交给延迟释放。
       const keepLatest = (list: FuzzerResponse[]) => {
-        appendFuzzerRow(list, r, fuzzerTableMaxDataRef.current, scheduleRelease)
+        appendFuzzerRow(list, r, fuzzerTableMaxDataRef.current, (oldest) => {
+          scheduleRelease(oldest)
+          if (oldest.UUID) void fuzzerRawStore.deleteUuid(oldest.UUID)
+        })
       }
       if (data.Ok) {
         const upserted = tryUpsertByUUID(successFuzzerRef.current, r) || tryUpsertByUUID(failedFuzzerRef.current, r)

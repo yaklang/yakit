@@ -88,6 +88,8 @@ describe('browser gateway group execution boundary', () => {
         resetDroppedCount: vi.fn(),
         rawScopesRef: { current: new Set<string>() },
         fuzzerRawStore,
+        fuzzerSequenceScope,
+        selectGroupId: 'group',
         droppedSequenceIndexMapRef: { current: new Map() },
         setShowAllRes: vi.fn(),
         setCurrentSelectResponse: vi.fn(),
@@ -187,6 +189,7 @@ describe('FuzzerSequence response release queue', () => {
       parkFuzzerRaw,
       fuzzerSequenceScope,
       fuzzerRawStore,
+      selectGroupId: 'group',
       rawScopesRef: { current: new Set<string>() },
       fuzzerTableMaxDataRef: {
         current: new Map<string, number>([

@@ -214,12 +214,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
     const bodyLengthRef = useRef<any>()
     const durationMsRef = useRef<any>()
     const tableRef = useRef<any>(null)
-    // 同一条结果复用解码文本，避免关键词过滤反复把原文转成字符串
-    const responseSearchTextCacheRef = useRef(new Map<string, string>())
     const storedRaw = useFuzzerRaw(currentSelectItem?.UUID, currentSelectItem?.RawVersion, inViewport)
-    useEffect(() => {
-      if (!inViewport) responseSearchTextCacheRef.current.clear()
-    }, [inViewport])
     const requestBytes = currentSelectItem?.RequestRaw?.byteLength ? currentSelectItem.RequestRaw : storedRaw.request
     const responseBytes = currentSelectItem?.ResponseRaw?.byteLength
       ? currentSelectItem.ResponseRaw
@@ -811,15 +806,10 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
               }
               // 关键字搜索
               if (query?.keyWord) {
-                const cacheKey = `${record.UUID}:${record.RawVersion || 0}`
-                let responseString = responseSearchTextCacheRef.current.get(cacheKey)
-                if (responseString === undefined) {
-                  const responseRaw = record.ResponseRaw?.byteLength
-                    ? record.ResponseRaw
-                    : rawByUUID?.get(record.UUID)?.response || new Uint8Array()
-                  responseString = Uint8ArrayToString(responseRaw)
-                  responseSearchTextCacheRef.current.set(cacheKey, responseString)
-                }
+                const responseRaw = record.ResponseRaw?.byteLength
+                  ? record.ResponseRaw
+                  : rawByUUID?.get(record.UUID)?.response || new Uint8Array()
+                const responseString = Uint8ArrayToString(responseRaw)
                 const payloadsString = (record.Payloads || []).join('')
                 let extractedResultsString = ''
                 if (extractedMap.size > 0) {

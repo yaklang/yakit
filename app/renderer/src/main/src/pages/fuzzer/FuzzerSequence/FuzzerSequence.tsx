@@ -374,7 +374,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
       const r = {
         ...Response,
         Headers: Response.Headers || [],
-        UUID: Response.UUID,
+        UUID: Response.UUID || randomString(16),
         Count: countRef.current.get(FuzzerIndex),
         cellClassName: '',
       } as FuzzerResponse
@@ -384,15 +384,19 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         r.cellClassName = colors
       }
 
-      const rawScope = fuzzerSequenceScope(FuzzerIndex)
+      const rawScope = fuzzerSequenceScope(selectGroupId, 'concurrency', FuzzerIndex)
       rawScopesRef.current.add(rawScope)
       parkFuzzerRaw(rawScope, r)
       // 成功、失败都只留该节点配置的最新条数
       const fuzzerTableMaxData = fuzzerTableMaxDataRef.current.get(FuzzerIndex) || DefFuzzerTableMaxData
       if (Response.Ok) {
-        appendIndexedFuzzerRow(successBufferRef.current, FuzzerIndex, r, fuzzerTableMaxData)
+        appendIndexedFuzzerRow(successBufferRef.current, FuzzerIndex, r, fuzzerTableMaxData, (oldest) => {
+          if (oldest.UUID) void fuzzerRawStore.deleteUuid(oldest.UUID)
+        })
       } else {
-        appendIndexedFuzzerRow(failedBufferRef.current, FuzzerIndex, r, fuzzerTableMaxData)
+        appendIndexedFuzzerRow(failedBufferRef.current, FuzzerIndex, r, fuzzerTableMaxData, (oldest) => {
+          if (oldest.UUID) void fuzzerRawStore.deleteUuid(oldest.UUID)
+        })
       }
 
       if (!fuzzerIndexArr.current.includes(FuzzerIndex)) {
@@ -671,7 +675,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
       let r = {
         ...Response,
         Headers: Response.Headers || [],
-        UUID: Response.UUID,
+        UUID: Response.UUID || randomString(16),
         Count: countRef.current.get(FuzzerIndex),
         cellClassName: '',
       } as FuzzerResponse
@@ -681,14 +685,20 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         r.cellClassName = colors
       }
 
-      const rawScope = fuzzerSequenceScope(FuzzerIndex)
+      const rawScope = fuzzerSequenceScope(selectGroupId, 'sequence', FuzzerIndex)
       rawScopesRef.current.add(rawScope)
       parkFuzzerRaw(rawScope, r)
       const fuzzerTableMaxData = fuzzerTableMaxDataRef.current.get(FuzzerIndex) || DefFuzzerTableMaxData
       if (Response.Ok) {
-        appendIndexedFuzzerRow(successBufferRef.current, FuzzerIndex, r, fuzzerTableMaxData, scheduleRelease)
+        appendIndexedFuzzerRow(successBufferRef.current, FuzzerIndex, r, fuzzerTableMaxData, (oldest) => {
+          scheduleRelease(oldest)
+          if (oldest.UUID) void fuzzerRawStore.deleteUuid(oldest.UUID)
+        })
       } else {
-        appendIndexedFuzzerRow(failedBufferRef.current, FuzzerIndex, r, fuzzerTableMaxData, scheduleRelease)
+        appendIndexedFuzzerRow(failedBufferRef.current, FuzzerIndex, r, fuzzerTableMaxData, (oldest) => {
+          scheduleRelease(oldest)
+          if (oldest.UUID) void fuzzerRawStore.deleteUuid(oldest.UUID)
+        })
       }
 
       if (!fuzzerIndexArr.current.includes(FuzzerIndex)) {
@@ -1127,10 +1137,12 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     }
     const httpParams = getHttpParams()
     if (!httpParams.length) return
-    rawScopesRef.current.forEach((scope) => {
+    // 只清当前模式这次要重跑的节点，另一个模式的原文还留着。
+    currentList.forEach((item) => {
+      const scope = fuzzerSequenceScope(selectGroupId, isConcurrency ? 'concurrency' : 'sequence', item.id)
       void fuzzerRawStore.deleteScope(scope)
+      rawScopesRef.current.delete(scope)
     })
-    rawScopesRef.current.clear()
     !isConcurrency && setLoading(true)
     onClearRef()
     resetResponse()

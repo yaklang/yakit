@@ -43,7 +43,8 @@ let dbPromise: Promise<IDBDatabase> | null = null
 let startupClear: Promise<void> | null = null
 
 export const fuzzerPageScope = (pageId: string) => `page:${pageId}`
-export const fuzzerSequenceScope = (fuzzerIndex: string) => `seq:${fuzzerIndex}`
+export const fuzzerSequenceScope = (groupId: string, mode: string, fuzzerIndex: string) =>
+  `seq:${groupId || 'group'}:${mode}:${fuzzerIndex}`
 
 const copyBuffer = (bytes?: Uint8Array) => {
   if (!bytes?.byteLength) return new ArrayBuffer(0)
@@ -92,13 +93,18 @@ const openDatabase = () => {
   return dbPromise
 }
 
-const clearDatabase = (db: IDBDatabase) =>
+const waitTransaction = (tx: IDBTransaction) =>
   new Promise<void>((resolve, reject) => {
-    const tx = db.transaction(STORE, 'readwrite')
     tx.oncomplete = () => resolve()
     tx.onerror = () => reject(tx.error)
-    tx.objectStore(STORE).clear()
+    tx.onabort = () => reject(tx.error || new Error('indexedDB transaction aborted'))
   })
+
+const clearDatabase = (db: IDBDatabase) => {
+  const tx = db.transaction(STORE, 'readwrite')
+  tx.objectStore(STORE).clear()
+  return waitTransaction(tx)
+}
 
 const ensureBackend = async () => {
   if (backend) return
@@ -167,12 +173,9 @@ const writeRecord = async (record: FuzzerRawRecord) => {
     return
   }
   const db = await openDatabase()
-  await new Promise<void>((resolve, reject) => {
-    const tx = db.transaction(STORE, 'readwrite')
-    tx.oncomplete = () => resolve()
-    tx.onerror = () => reject(tx.error)
-    tx.objectStore(STORE).put(record)
-  })
+  const tx = db.transaction(STORE, 'readwrite')
+  tx.objectStore(STORE).put(record)
+  await waitTransaction(tx)
 }
 
 const removeScopeRecords = async (scope: string) => {
@@ -184,19 +187,28 @@ const removeScopeRecords = async (scope: string) => {
     return
   }
   const db = await openDatabase()
-  await new Promise<void>((resolve, reject) => {
-    const tx = db.transaction(STORE, 'readwrite')
-    const index = tx.objectStore(STORE).index('byScope')
-    const req = index.openCursor(IDBKeyRange.only(scope))
-    req.onsuccess = () => {
-      const cursor = req.result
-      if (!cursor) return
-      cursor.delete()
-      cursor.continue()
-    }
-    tx.oncomplete = () => resolve()
-    tx.onerror = () => reject(tx.error)
-  })
+  const tx = db.transaction(STORE, 'readwrite')
+  const index = tx.objectStore(STORE).index('byScope')
+  const req = index.openCursor(IDBKeyRange.only(scope))
+  req.onsuccess = () => {
+    const cursor = req.result
+    if (!cursor) return
+    cursor.delete()
+    cursor.continue()
+  }
+  await waitTransaction(tx)
+}
+
+const removeUuidRecord = async (uuid: string) => {
+  await ensureBackend()
+  if (backend === 'memory') {
+    memory.delete(uuid)
+    return
+  }
+  const db = await openDatabase()
+  const tx = db.transaction(STORE, 'readwrite')
+  tx.objectStore(STORE).delete(uuid)
+  await waitTransaction(tx)
 }
 
 const dropPending = (scope: string) => {
@@ -250,15 +262,30 @@ export const fuzzerRawStore = {
         if (pending.get(uuid)?.token === token) pending.delete(uuid)
         return
       }
-      const current = await readRecord(uuid)
-      await writeRecord({
-        uuid,
-        scope,
-        request: requestCopy || current?.request || new ArrayBuffer(0),
-        response: responseCopy || current?.response || new ArrayBuffer(0),
-      })
-      if (pending.get(uuid)?.token === token) pending.delete(uuid)
+      try {
+        const current = await readRecord(uuid)
+        await writeRecord({
+          uuid,
+          scope,
+          request: requestCopy || current?.request || new ArrayBuffer(0),
+          response: responseCopy || current?.response || new ArrayBuffer(0),
+        })
+        if (pending.get(uuid)?.token === token) pending.delete(uuid)
+      } catch {
+        // 写入失败时留在 pending，详情还能读到这包原文。
+      }
     })
+  },
+
+  deleteUuid(uuid: string) {
+    if (!uuid) return Promise.resolve()
+    const staged = pending.get(uuid)
+    pending.delete(uuid)
+    return (async () => {
+      const scope = staged?.scope || (await readRecord(uuid))?.scope
+      if (!scope) return
+      await afterScope(scope, () => removeUuidRecord(uuid))
+    })()
   },
 
   deleteScope(scope: string) {
@@ -275,18 +302,17 @@ export const fuzzerRawStore = {
 
 /** 把这一行的原文交出去，行上只留空数组。后续空包不会盖掉已经存下的原文。 */
 export function parkFuzzerRaw(scope: string, item: FuzzerResponse) {
+  // 没有 UUID 就留在行上，避免原文被清掉后又无处可读。
+  if (!scope || !item?.UUID) return
   const request = item.RequestRaw
   const response = item.ResponseRaw
   item.RawVersion = (item.RawVersion || 0) + 1
   item.RequestRaw = EMPTY_RAW
   item.ResponseRaw = EMPTY_RAW
-  if (!item.UUID || (!request?.byteLength && !response?.byteLength)) return
-  void fuzzerRawStore.merge(
-    scope,
-    item.UUID,
-    request?.byteLength ? request : undefined,
-    response?.byteLength ? response : undefined,
-  )
+  if (!request?.byteLength && !response?.byteLength) return
+  void fuzzerRawStore
+    .merge(scope, item.UUID, request?.byteLength ? request : undefined, response?.byteLength ? response : undefined)
+    .catch(() => undefined)
 }
 
 export async function hydrateFuzzerRaw<T extends FuzzerResponse>(row: T): Promise<T> {
