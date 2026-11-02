@@ -300,3 +300,10 @@ yarn cli pack -s mac -v yakit
 | `yarn cli pack -s <os> -v <edition>` | electron-builder 打安装包（`win\|mac\|linux\|mwl`） |
 
 `-v` 取值：`yakit` / `yakitEE` / `yakitSE` / `irify` / `irifyEE` / `memfit`（另有 `breachtrace`）。
+
+## Cursor Cloud specific instructions
+
+- 默认镜像已有 Node.js 22 与 Yarn 1，登录 shell 的 `PATH` 可直接找到。依赖用 `yarn cli install`（根目录 → Link 渲染端 → 主渲染端），可重复执行。
+- 主渲染端 Vite 会 crawl 全部 `src` 做依赖预构建。默认 Node 堆大约 2GB，启动后几十秒会以 `ERR_WORKER_OUT_OF_MEMORY` 退出。启动渲染端前设置 `NODE_OPTIONS=--max-old-space-size=8192`。
+- 端口进入监听不等于页面可访问。先确认 `http://127.0.0.1:3000` 与 `http://127.0.0.1:5173` 都返回包含 `<script` 或 `<div id="root"` 的 HTML，并且主渲染日志里依赖优化和 `[TypeScript] Found 0 errors` 已经出现、进程仍在，再执行 `yarn cli electron`。
+- Electron 27 使用当前桌面的 `DISPLAY`。日志里的 GPU、Vulkan、DBus 地址错误不影响窗口。仓库不含 `bins/yak.zip`，引擎链接页会提示下载引擎；验证 GUI 时切换本地连接模式即可，不必下载引擎。
