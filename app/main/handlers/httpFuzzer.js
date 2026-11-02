@@ -153,32 +153,16 @@ module.exports = (win, getClient) => {
   const streamHTTPFuzzerMap = new Map()
   ipcMain.handle('cancel-HTTPFuzzer', handlerHelper.cancelHandler(streamHTTPFuzzerMap))
   ipcMain.handle('HTTPFuzzer', (e, params, token) => {
-    let stream = getClient().HTTPFuzzer(params)
-    stream.on('data', (data) => {
-      if (win && data) win.webContents.send(`fuzzer-data-${token}`, data)
-    })
-    stream.on('error', (err) => {
-      if (win && err) win.webContents.send(`fuzzer-error-${token}`, err.details)
-    })
-    stream.on('end', (data) => {
-      if (win && data) win.webContents.send(`fuzzer-end-${token}`)
-    })
+    const stream = getClient().HTTPFuzzer(params)
+    // registerHandler 已经把 data/error/end 发到 `${token}-data`。
+    // 这里再监听一次会把同一条结果投递两遍。
     handlerHelper.registerHandler(win, stream, streamHTTPFuzzerMap, token)
   })
 
   const streamHTTPFuzzerSequenceMap = new Map()
   ipcMain.handle('cancel-HTTPFuzzerSequence', handlerHelper.cancelHandler(streamHTTPFuzzerSequenceMap))
   ipcMain.handle('HTTPFuzzerSequence', (e, params, token) => {
-    let stream = getClient().HTTPFuzzerSequence(params)
-    stream.on('data', (data) => {
-      if (win && data) win.webContents.send(`fuzzer-sequence-data-${token}`, data)
-    })
-    stream.on('error', (err) => {
-      if (win && err) win.webContents.send(`fuzzer-sequence-error-${token}`, err.details)
-    })
-    stream.on('end', (data) => {
-      if (win && data) win.webContents.send(`fuzzer-sequence-end-${token}`)
-    })
+    const stream = getClient().HTTPFuzzerSequence(params)
     handlerHelper.registerHandler(win, stream, streamHTTPFuzzerSequenceMap, token)
   })
 
