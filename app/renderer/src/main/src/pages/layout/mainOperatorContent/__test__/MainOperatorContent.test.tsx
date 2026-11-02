@@ -18,7 +18,7 @@ import { useHttpFlowStore } from '@/store/httpFlow'
 
 const routeMenuI18n = vi.hoisted(() => ({ t: (key: string) => key }))
 const routeMenuSource = vi.hoisted(() => ({ getPublicRouteMenu: vi.fn<(mode?: unknown) => PublicRouteMenuProps[]>() }))
-const routeMenuServices = vi.hoisted(() => ({ fetchPlugin: vi.fn(), notify: vi.fn() }))
+const routeMenuServices = vi.hoisted(() => ({ notify: vi.fn() }))
 
 vi.mock('@/i18n/useI18nNamespaces', () => ({
   useI18nNamespaces: () => ({ t: (key: string) => routeMenuI18n.t(key) }),
@@ -27,7 +27,6 @@ vi.mock('@/routes/newRoute', () => ({ getPublicRouteMenu: routeMenuSource.getPub
 vi.mock('@/store/softMode', () => ({
   YakitModeEnum: { Classic: 'classic', SecurityExpert: 'securityExpert' },
 }))
-vi.mock('@/pages/pluginHub/utils/grpc', () => ({ grpcFetchLocalPluginDetail: routeMenuServices.fetchPlugin }))
 vi.mock('@/utils/notification', () => ({ yakitNotify: routeMenuServices.notify }))
 
 // 执行实际初始化 Effect、AI 恢复方法和新开入口；不加载 Electron、Monaco，也不模拟浏览器的 inert 行为。
@@ -224,7 +223,6 @@ describe('MainOperatorContent route picker', () => {
   })
 
   const setupPicker = (community = true, menuVisible = false, softMode = 'classic') => {
-    routeMenuServices.fetchPlugin.mockReset()
     routeMenuServices.notify.mockReset()
     let language = 'zh'
     let currentMenuVisible = menuVisible
@@ -409,7 +407,6 @@ describe('MainOperatorContent route picker', () => {
     expect(item.tagName).toBe('DIV')
     fireEvent.click(item)
     expect(emit).toHaveBeenCalledExactlyOnceWith('menuOpenPage', JSON.stringify({ route: YakitRoute.AI_Agent }))
-    expect(routeMenuServices.fetchPlugin).not.toHaveBeenCalled()
     await waitFor(() => expect(screen.queryByRole('textbox')).toBeNull())
   })
 
@@ -424,7 +421,7 @@ describe('MainOperatorContent route picker', () => {
     expect(emit).toHaveBeenCalledExactlyOnceWith('menuOpenPage', JSON.stringify({ route: YakitRoute.AI_Tool }))
   })
 
-  it('resolves the clicked plugin by name and sends its current local ID', async () => {
+  it('excludes individual plugin entries while keeping ordinary routes available', async () => {
     const app = setupPicker()
     const emit = vi.spyOn(emiter, 'emit')
     app.getPublicRouteMenu.mockReturnValue([
@@ -434,52 +431,21 @@ describe('MainOperatorContent route picker', () => {
         children: [
           { page: YakitRoute.Plugin_OP, label: '子域名收集', yakScripName: 'subdomain' },
           { page: YakitRoute.Plugin_OP, label: '基础爬虫', yakScripName: 'crawler', yakScriptId: 1 },
+          { page: YakitRoute.Codec, label: 'Codec' },
         ],
       },
     ])
-    routeMenuServices.fetchPlugin.mockResolvedValue({ Id: 42, ScriptName: 'crawler' })
     await app.open()
-    fireEvent.click(screen.getAllByRole('listitem')[1])
-    await waitFor(() =>
-      expect(emit).toHaveBeenCalledExactlyOnceWith(
-        'menuOpenPage',
-        JSON.stringify({ route: YakitRoute.Plugin_OP, pluginId: 42, pluginName: 'crawler' }),
-      ),
-    )
-    expect(routeMenuServices.fetchPlugin).toHaveBeenCalledExactlyOnceWith({ Name: 'crawler' }, true)
-  })
-
-  it('closes immediately when selecting a plugin while its lookup is still pending', async () => {
-    const app = setupPicker()
-    const emit = vi.spyOn(emiter, 'emit')
-    app.getPublicRouteMenu.mockReturnValue([
-      {
-        page: undefined,
-        label: '插件',
-        children: [{ page: YakitRoute.Plugin_OP, label: '基础爬虫', yakScripName: 'crawler' }],
-      },
-    ])
-    let resolvePlugin!: (plugin: { Id: number; ScriptName: string }) => void
-    const pluginResult = new Promise<{ Id: number; ScriptName: string }>((resolve) => {
-      resolvePlugin = resolve
-    })
-    routeMenuServices.fetchPlugin.mockReturnValue(pluginResult)
-    await app.open()
+    expect(screen.getAllByRole('listitem')).toHaveLength(1)
+    expect(screen.getByRole('listitem')).toHaveTextContent('Codec')
+    expect(screen.queryByText('子域名收集')).toBeNull()
+    expect(screen.queryByText('基础爬虫')).toBeNull()
     fireEvent.click(screen.getByRole('listitem'))
+    expect(emit).toHaveBeenCalledExactlyOnceWith('menuOpenPage', JSON.stringify({ route: YakitRoute.Codec }))
     await waitFor(() => expect(screen.queryByRole('textbox')).toBeNull())
-    expect(emit).not.toHaveBeenCalled()
-
-    await act(async () => {
-      resolvePlugin({ Id: 42, ScriptName: 'crawler' })
-      await pluginResult
-    })
-    expect(emit).toHaveBeenCalledExactlyOnceWith(
-      'menuOpenPage',
-      JSON.stringify({ route: YakitRoute.Plugin_OP, pluginId: 42, pluginName: 'crawler' }),
-    )
   })
 
-  it.each(['missing', 'failed'])('does not open a blank plugin page when plugin lookup is %s', async (status) => {
+  it('shows the empty state when all entries are individual plugins', async () => {
     const app = setupPicker()
     const emit = vi.spyOn(emiter, 'emit')
     app.getPublicRouteMenu.mockReturnValue([
@@ -489,13 +455,9 @@ describe('MainOperatorContent route picker', () => {
         children: [{ page: YakitRoute.Plugin_OP, label: '基础爬虫', yakScripName: 'crawler' }],
       },
     ])
-    if (status === 'missing') routeMenuServices.fetchPlugin.mockResolvedValue({ Id: 0 })
-    else routeMenuServices.fetchPlugin.mockRejectedValue(new Error('lookup failed'))
     await app.open()
-    fireEvent.click(screen.getByRole('listitem'))
-    await waitFor(() =>
-      expect(routeMenuServices.notify).toHaveBeenCalledExactlyOnceWith('error', 'Layout.HeardMenu.pluginLoadFailed'),
-    )
+    expect(screen.queryByRole('listitem')).toBeNull()
+    expect(screen.getByText('YakitEmpty.noData')).toBeInTheDocument()
     expect(emit).not.toHaveBeenCalled()
   })
 

@@ -6,10 +6,7 @@ import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { getPublicRouteMenu } from '@/routes/newRoute'
 import type { PublicRouteMenuProps } from '@/routes/newRoute'
-import { YakitRoute } from '@/enums/yakitRoute'
 import { YakitModeEnum } from '@/store/softMode'
-import { grpcFetchLocalPluginDetail } from '@/pages/pluginHub/utils/grpc'
-import { yakitNotify } from '@/utils/notification'
 import { openMenuRoute } from '../../publicMenu/openMenuRoute'
 import { buildFirstTabRouteOptions, flattenFirstTabRouteMenus } from './utils'
 import type { FirstTabRouteMenuProps } from './type'
@@ -23,25 +20,10 @@ const FirstTabRouteMenu: FC<FirstTabRouteMenuProps> = ({ softMode, onSelect }) =
   const routeMenus = useCreation(() => flattenFirstTabRouteMenus(getPublicRouteMenu(routeMode)), [routeMode])
   const routeMenuOptions = buildFirstTabRouteOptions(routeMenus, (key) => t(key), searchKeyword)
 
-  const onOpenRoute = async (option: PublicRouteMenuProps) => {
+  const onOpenRoute = (option: PublicRouteMenuProps) => {
     if (!option.page) return
-    let pluginInfo: { pluginId?: number; pluginName?: string } = {}
-    if (option.page === YakitRoute.Plugin_OP) {
-      try {
-        const pluginName = option.yakScripName || option.label
-        const plugin = await grpcFetchLocalPluginDetail({ Name: pluginName }, true)
-        if (!plugin.Id) {
-          yakitNotify('error', t('Layout.HeardMenu.pluginLoadFailed'))
-          return
-        }
-        pluginInfo = { pluginId: +plugin.Id, pluginName: plugin.ScriptName || pluginName }
-      } catch {
-        yakitNotify('error', t('Layout.HeardMenu.pluginLoadFailed'))
-        return
-      }
-    }
-    openMenuRoute({ route: option.page, ...pluginInfo })
     onSelect?.()
+    openMenuRoute({ route: option.page })
   }
 
   return (
@@ -61,7 +43,7 @@ const FirstTabRouteMenu: FC<FirstTabRouteMenuProps> = ({ softMode, onSelect }) =
         {routeMenuOptions.length > 0 ? (
           routeMenuOptions.map((option) => (
             <div
-              key={`${option.page}-${option.yakScripName || ''}`}
+              key={option.page}
               className={styles['tab-route-option']}
               role="listitem"
               onClick={() => onOpenRoute(option)}

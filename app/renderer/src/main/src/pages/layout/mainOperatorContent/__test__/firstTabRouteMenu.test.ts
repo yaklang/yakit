@@ -59,18 +59,19 @@ describe('buildFirstTabRouteOptions', () => {
     expect(options.map((option) => option.displayLabel)).toEqual(['知识库', 'HTTP 模糊测试', '流量历史'])
   })
 
-  it('同一路由下的不同插件分别保留，并保留各自插件数据', () => {
+  it('平铺时排除单个插件入口，保留其他路由', () => {
     const plugins: PublicRouteMenuProps[] = [
       { page: YakitRoute.Plugin_OP, label: '子域名收集', yakScripName: 'subdomain', yakScriptId: 11 },
       { page: YakitRoute.Plugin_OP, label: '基础爬虫', yakScripName: 'crawler', yakScriptId: 12 },
     ]
 
-    const options = buildFirstTabRouteOptions(flattenFirstTabRouteMenus([group('插件', plugins)]), translate('zh'), '')
-
-    expect(options).toEqual([
-      { ...plugins[0], displayLabel: '子域名收集' },
-      { ...plugins[1], displayLabel: '基础爬虫' },
+    const flattened = flattenFirstTabRouteMenus([
+      group('工具', [knowledge, ...plugins, group('嵌套分组', [plugins[0], history])]),
     ])
+    const options = buildFirstTabRouteOptions(flattened, translate('zh'), '')
+
+    expect(flattened).toEqual([knowledge, history])
+    expect(options.map((option) => option.page)).toEqual([YakitRoute.AI_REPOSITORY, YakitRoute.DB_HTTPHistory])
   })
 
   it('中文下展示 labelUi 对应文案，并按中文片段搜索', () => {
@@ -106,10 +107,10 @@ describe('buildFirstTabRouteOptions', () => {
   })
 
   it('没有 labelUi 的条目使用 label 展示和搜索', () => {
-    const custom: PublicRouteMenuProps = { page: YakitRoute.Plugin_OP, label: 'Custom Plugin', yakScripName: 'custom' }
+    const custom: PublicRouteMenuProps = { page: YakitRoute.Codec, label: 'Custom Codec' }
 
-    expect(buildFirstTabRouteOptions([custom], translate('en'), 'plugin')).toEqual([
-      { ...custom, displayLabel: 'Custom Plugin' },
+    expect(buildFirstTabRouteOptions([custom], translate('en'), 'codec')).toEqual([
+      { ...custom, displayLabel: 'Custom Codec' },
     ])
   })
 
