@@ -3153,7 +3153,11 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     : keepConfigType
   const leftPanelSuspenseFallback = <>{t('YakitSpin.loading')}...</>
 
-  const oneStoredRaw = useFuzzerRaw(onlyOneResponse ? httpResponse.UUID : undefined, httpResponse.RawVersion, true)
+  const oneStoredRaw = useFuzzerRaw(
+    onlyOneResponse ? httpResponse.UUID : undefined,
+    httpResponse.RawVersion,
+    inViewport,
+  )
   const oneResponsePacket = httpResponse.ResponseRaw?.byteLength ? httpResponse.ResponseRaw : oneStoredRaw.response
   const oneResponseValue = useMemo(() => {
     if (!onlyOneResponse) return undefined
@@ -3186,7 +3190,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
   const sampleStoredRaw = useFuzzerRaw(
     multipleReturnsHttpResponse.UUID,
     multipleReturnsHttpResponse.RawVersion,
-    configKeepAlive,
+    configKeepAlive && inViewport,
   )
   const defaultHttpResponse = useMemo(() => {
     if (!configKeepAlive) return ''
@@ -3636,6 +3640,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                             <div style={{ height: '100%', overflow: 'hidden' }}>
                               <ResponseViewer
                                 pageId={props.id}
+                                inViewport={inViewport}
                                 keepSearchName="fuzzer-response"
                                 isHttps={advancedConfigValue.isHttps}
                                 ref={responseViewerRef}
@@ -4982,6 +4987,8 @@ interface ResponseViewerProps {
 
   keepSearchName?: string
   pageId?: string
+  /** 隐藏页签时不把原文留在详情状态里 */
+  inViewport?: boolean
   foldBinaryFuzztag?: boolean
   onFoldBinaryFuzztagChange?: (enabled: boolean) => void
 }
@@ -5006,6 +5013,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
       secondNodeExtra,
       webFuzzerValue,
       request,
+      inViewport = true,
       keepSearchName,
       onSetOnlyOneResEditor,
       loading,
@@ -5014,7 +5022,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
       onFoldBinaryFuzztagChange,
     } = props
     const { t, i18nRefresh } = useI18nNamespaces(['webFuzzer'])
-    const storedRaw = useFuzzerRaw(fuzzerResponse?.UUID, fuzzerResponse?.RawVersion, true)
+    const storedRaw = useFuzzerRaw(fuzzerResponse?.UUID, fuzzerResponse?.RawVersion, inViewport !== false)
     const responsePacket = fuzzerResponse?.ResponseRaw?.byteLength ? fuzzerResponse.ResponseRaw : storedRaw.response
 
     const [showMatcherAndExtraction, setShowMatcherAndExtraction] = useControllableValue<boolean>(props, {

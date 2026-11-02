@@ -1668,7 +1668,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
       ? currentSelectResponse.successFuzzer[0]
       : currentSelectResponse.onlyOneResponse
     : undefined
-  const sampleRaw = useFuzzerRaw(sampleRow?.UUID, sampleRow?.RawVersion, true)
+  const sampleRaw = useFuzzerRaw(sampleRow?.UUID, sampleRow?.RawVersion, inViewport === true)
   /** 多条结果时用第一条的响应原文，只有一条时用那一条。原文在 IndexedDB 里。 */
   const defaultHttpResponse = useMemo(() => {
     const raw = sampleRaw.response.byteLength ? sampleRaw.response : sampleRow?.ResponseRaw
@@ -2701,7 +2701,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
     const sequenceStoredRaw = useFuzzerRaw(
       onlyOneResponse ? httpResponse?.UUID : undefined,
       httpResponse?.RawVersion,
-      true,
+      inViewport,
     )
     const sequenceResponsePacket = httpResponse?.ResponseRaw?.byteLength
       ? httpResponse.ResponseRaw
@@ -3029,6 +3029,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
               {onlyOneResponse ? (
                 <ResponseViewer
                   ref={responseViewerRef}
+                  inViewport={inViewport}
                   fuzzerResponse={httpResponse}
                   defaultResponseSearch={defaultResponseSearch}
                   request={requestHttpRef.current}

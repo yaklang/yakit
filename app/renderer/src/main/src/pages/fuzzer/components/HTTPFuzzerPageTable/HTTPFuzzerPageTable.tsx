@@ -216,7 +216,10 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
     const tableRef = useRef<any>(null)
     // 同一条结果复用解码文本，避免关键词过滤反复把原文转成字符串
     const responseSearchTextCacheRef = useRef(new Map<string, string>())
-    const storedRaw = useFuzzerRaw(currentSelectItem?.UUID, currentSelectItem?.RawVersion, true)
+    const storedRaw = useFuzzerRaw(currentSelectItem?.UUID, currentSelectItem?.RawVersion, inViewport)
+    useEffect(() => {
+      if (!inViewport) responseSearchTextCacheRef.current.clear()
+    }, [inViewport])
     const requestBytes = currentSelectItem?.RequestRaw?.byteLength ? currentSelectItem.RequestRaw : storedRaw.request
     const responseBytes = currentSelectItem?.ResponseRaw?.byteLength
       ? currentSelectItem.ResponseRaw
