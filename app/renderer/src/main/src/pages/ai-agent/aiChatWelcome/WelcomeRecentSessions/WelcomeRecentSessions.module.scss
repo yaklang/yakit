@@ -7,14 +7,10 @@
 }
 
 .welcome-recent-header {
-  display: flex;
-  align-items: center;
   gap: 8px;
   color: var(--Colors-Use-Neutral-Text-1-Title);
   height: 20px;
   padding: 0 8px;
-  cursor: pointer;
-  user-select: none;
 }
 
 .welcome-recent-header-icon {
@@ -81,23 +77,16 @@
   line-height: 14px;
   padding: 3px 0 3px 32px;
   color: var(--Colors-Use-Main-Primary);
-  display: flex;
-  align-items: center;
-  cursor: pointer;
   .welcome-recent-header-arrow {
     transform: rotate(-90deg);
     color: var(--Colors-Use-Main-Primary);
   }
 }
 .welcome-recent-item {
-  display: flex;
-  align-items: center;
   justify-content: space-between;
   gap: 12px;
   height: 28px;
   padding: 0 8px;
-  cursor: pointer;
-  user-select: none;
   border-radius: 8px;
   &:hover {
     background: var(--Colors-Use-Neutral-Bg-Hover);

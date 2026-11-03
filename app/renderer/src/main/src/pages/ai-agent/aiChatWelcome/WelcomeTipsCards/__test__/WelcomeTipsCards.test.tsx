@@ -1,4 +1,5 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import emiter from '@/utils/eventBus/eventBus'
 import { AIAgentTabListEnum, AITabsEnum, SwitchAIAgentTabEventEnum } from '../../../defaultConstant'
@@ -81,12 +82,26 @@ describe('WelcomeTipsCards', () => {
     )
   })
 
+  it('卡片入口是可聚焦的原生按钮，Enter 可激活', async () => {
+    const emitSpy = vi.spyOn(emiter, 'emit')
+    render(<WelcomeTipsCards />)
+    const footers = screen.getAllByRole('button')
+    expect(footers).toHaveLength(3)
+    expect(footers.every((node) => node.tagName === 'BUTTON' && node.getAttribute('tabIndex') !== '-1')).toBe(true)
+    footers[0].focus()
+    await userEvent.keyboard('{Enter}')
+    expect(emitSpy).toHaveBeenCalledWith('switchAIActTab', JSON.stringify({ key: AITabsEnum.Risk }))
+  })
+
   it('compact 模式下整卡可点且使用 compact 样式', () => {
     const emitSpy = vi.spyOn(emiter, 'emit')
     const { container } = render(<WelcomeTipsCards compact />)
     expect(container.querySelector('.welcome-tips-list-compact')).toBeTruthy()
     expect(container.querySelectorAll('.welcome-tip-card-compact')).toHaveLength(3)
-    fireEvent.click(container.querySelectorAll('.welcome-tip-card-compact')[0])
+    const compactCards = screen.getAllByRole('button')
+    expect(compactCards).toHaveLength(3)
+    expect(compactCards[0].tagName).toBe('BUTTON')
+    fireEvent.click(compactCards[0])
     expect(emitSpy).toHaveBeenCalledWith('switchAIActTab', JSON.stringify({ key: AITabsEnum.Risk }))
   })
 })

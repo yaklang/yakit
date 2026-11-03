@@ -1,4 +1,5 @@
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import moment from 'moment'
 import { createStore } from 'zustand/vanilla'
@@ -352,6 +353,93 @@ describe('WelcomeRecentSessions', () => {
     })
     expect(screen.getByText('新会话')).toBeInTheDocument()
     expect(screen.queryByText('旧会话')).not.toBeInTheDocument()
+  })
+
+  it('refresh 在途时 updateSession 不会被旧查询整表覆盖', async () => {
+    let resolveRefresh!: (value: ReturnType<typeof queryResponse>) => void
+    const refresh = new Promise<ReturnType<typeof queryResponse>>((resolve) => {
+      resolveRefresh = resolve
+    })
+    const stale = makeSession({
+      Title: '过期标题',
+      StartParams: {
+        SyncPerceptionTrigger: true,
+        EnablePlan: true,
+        SingleModelMode: false,
+        DisableMemoryTriage: false,
+        Strategy: {
+          EnableMultiAgent: true,
+          EnableGoalMode: false,
+          GoalMinIterations: 1,
+          MaxSubAgents: 2,
+        },
+      },
+    })
+    vi.mocked(grpcQueryAISession)
+      .mockResolvedValueOnce(queryResponse([makeSession()]))
+      .mockImplementationOnce(() => refresh)
+
+    render(<WelcomeRecentSessions />)
+    await waitFor(() => expect(screen.getByText('会话一')).toBeInTheDocument())
+
+    await act(async () => {
+      emiter.emit('sessionData', JSON.stringify({ type: 'refresh' }))
+    })
+    await act(async () => {
+      emiter.emit(
+        'sessionData',
+        JSON.stringify({
+          type: 'updateSession',
+          sessionId: 's-1',
+          updates: {
+            Title: '最新标题',
+            StartParams: { EnablePlan: false, Strategy: { MaxSubAgents: 9 } },
+          },
+        }),
+      )
+    })
+    await waitFor(() => expect(screen.getByText('最新标题')).toBeInTheDocument())
+
+    await act(async () => {
+      resolveRefresh(queryResponse([stale]))
+    })
+    await waitFor(() => expect(screen.getByText('最新标题')).toBeInTheDocument())
+    expect(screen.queryByText('过期标题')).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByText('最新标题'))
+    const updater = mocks.setSetting.mock.calls[0][0] as (old: Record<string, unknown>) => Record<string, unknown>
+    expect(updater({})).toMatchObject({
+      SyncPerceptionTrigger: true,
+      EnablePlan: false,
+      SingleModelMode: false,
+      DisableMemoryTriage: false,
+      Strategy: {
+        EnableMultiAgent: true,
+        EnableGoalMode: false,
+        GoalMinIterations: 1,
+        MaxSubAgents: 9,
+      },
+    })
+  })
+
+  it('会话行、展开和查看更多是可聚焦的原生按钮，Enter 可选中会话', async () => {
+    vi.mocked(grpcQueryAISession).mockResolvedValue(queryResponse([makeSession()], 8))
+    render(<WelcomeRecentSessions />)
+    await waitFor(() => expect(screen.getByText('会话一')).toBeInTheDocument())
+
+    const sessionButton = screen.getByRole('button', { name: /会话一/ })
+    const expandButton = screen.getByRole('button', { name: /AIChatWelcome.recentSessions/ })
+    const moreButton = screen.getByRole('button', { name: /AIChatWelcome.viewMoreSessions/ })
+    expect(sessionButton.tagName).toBe('BUTTON')
+    expect(expandButton.tagName).toBe('BUTTON')
+    expect(moreButton.tagName).toBe('BUTTON')
+    expect(sessionButton).not.toHaveAttribute('tabIndex', '-1')
+    expect(expandButton).not.toHaveAttribute('tabIndex', '-1')
+    expect(moreButton).not.toHaveAttribute('tabIndex', '-1')
+
+    sessionButton.focus()
+    await userEvent.keyboard('{Enter}')
+    expect(mocks.setActiveChat).toHaveBeenCalledWith(expect.objectContaining({ SessionID: 's-1' }))
   })
 
   it('点击会话恢复配置并 setActiveChat', async () => {
