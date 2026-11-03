@@ -125,19 +125,22 @@ describe('菜单布局状态', () => {
     expect(useMenuHeight.getState().isMenuVisibilityLoading).toBe(false)
   })
 
-  it('读取缓存失败时保持禁用并提示错误，重试成功后解除 loading', async () => {
+  it.each([true, false])('读取缓存失败时保留显隐状态 %s、解除 loading 并允许切换和重试', async (visible) => {
     const error = new Error('read failed')
     vi.mocked(getRemoteValue).mockRejectedValueOnce(error)
+    useMenuHeight.setState({ isMenuVisible: visible })
 
     await useMenuHeight.getState().initMenuVisibility()
 
-    expect(useMenuHeight.getState().isMenuVisible).toBe(true)
-    expect(useMenuHeight.getState().isMenuVisibilityLoading).toBe(true)
+    expect(useMenuHeight.getState().isMenuVisible).toBe(visible)
+    expect(useMenuHeight.getState().isMenuVisibilityLoading).toBe(false)
     expect(yakitFailed).toHaveBeenCalledExactlyOnceWith(String(error))
     useMenuHeight.getState().toggleMenuVisibility()
-    expect(setRemoteValue).not.toHaveBeenCalled()
+    expect(useMenuHeight.getState().isMenuVisible).toBe(!visible)
+    expect(setRemoteValue).toHaveBeenCalledExactlyOnceWith(CodeGV.MenuVisible, String(!visible))
     await useMenuHeight.getState().initMenuVisibility()
     expect(getRemoteValue).toHaveBeenCalledTimes(2)
+    expect(useMenuHeight.getState().isMenuVisible).toBe(true)
     expect(useMenuHeight.getState().isMenuVisibilityLoading).toBe(false)
   })
 

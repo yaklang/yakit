@@ -29,13 +29,14 @@ export const useMenuHeight = createWithEqualityFn<MenuBodyHeightStoreProps>(
       set({ isMenuVisibilityLoading: true })
       menuVisibilityInitialization = getRemoteValue(CodeGV.MenuVisible)
         .then((value) => {
-          set({ isMenuVisible: value !== 'false', isMenuVisibilityLoading: false })
+          set({ isMenuVisible: value !== 'false' })
         })
         .catch((error) => {
           yakitFailed(String(error))
         })
         .finally(() => {
           menuVisibilityInitialization = undefined
+          set({ isMenuVisibilityLoading: false })
         })
       return menuVisibilityInitialization
     },
