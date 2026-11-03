@@ -7,6 +7,7 @@ import HistoryChatList from '../HistoryChatList'
 import type { AISession } from '../../../type/aiChat'
 import { AISessionDeleteCancelledError } from '../../utils'
 import { YakitRoute } from '@/enums/yakitRoute'
+import emiter from '@/utils/eventBus/eventBus'
 import type { EditChatNameModalProps } from '../../../aiAgentType'
 import type * as UtilModals from '../../../UtilModals'
 
@@ -117,6 +118,7 @@ beforeAll(() => {
 })
 beforeEach(() => {
   vi.clearAllMocks()
+  vi.spyOn(emiter, 'emit')
   mocks.realEditModal = false
   mocks.pages.set(YakitRoute.AI_Agent, {
     pageList: sessions.slice(0, 2).map((session, index) => ({
@@ -297,7 +299,26 @@ describe('HistoryChatList viewport rendering', () => {
         pageParamsInfo: { aiAgentPageInfo: { ...inputParams, session: { ...data[0], Title: 'Renamed' } } },
       }),
     )
+    expect(emiter.emit).toHaveBeenCalledWith(
+      'sessionData',
+      JSON.stringify({ type: 'updateSession', sessionId: data[0].SessionID, updates: { Title: 'Renamed' } }),
+    )
     expect(mocks.setActiveChat).not.toHaveBeenCalled()
+  })
+
+  it('未打开 Tab 的会话重命名成功后仍广播标题给最近会话列表', async () => {
+    mocks.pages.clear()
+    render(view('', sessions.slice(0, 1)))
+    fireEvent.click(within(rowFor('Session 0')).getAllByRole('button')[0])
+    fireEvent.click(await screen.findByRole('button', { name: 'Save title' }))
+    await waitFor(() =>
+      expect(mocks.updateTitle).toHaveBeenCalledWith({ SessionID: sessions[0].SessionID, Title: 'Renamed' }),
+    )
+    expect(mocks.updatePagesDataCacheById).not.toHaveBeenCalled()
+    expect(emiter.emit).toHaveBeenCalledWith(
+      'sessionData',
+      JSON.stringify({ type: 'updateSession', sessionId: sessions[0].SessionID, updates: { Title: 'Renamed' } }),
+    )
   })
 
   it('keeps the page title unchanged when manual rename fails', async () => {
@@ -308,6 +329,7 @@ describe('HistoryChatList viewport rendering', () => {
     await waitFor(() => expect(mocks.notify).toHaveBeenCalled())
     expect(mocks.updatePagesDataCacheById).not.toHaveBeenCalled()
     expect(mocks.setSessions).not.toHaveBeenCalled()
+    expect(emiter.emit).not.toHaveBeenCalledWith('sessionData', expect.stringContaining('"type":"updateSession"'))
   })
 
   it('keeps delete actions visible when moving from the row into its confirmation popup', async () => {

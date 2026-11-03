@@ -9,18 +9,33 @@ import { AIAgentTabListEnum, SwitchAIAgentTabEventEnum } from '../../../defaultC
 import { grpcQueryAISession } from '../../../grpc'
 import WelcomeRecentSessions, { formatRecentSessionTime, getRecentSessionTimestamp } from '../WelcomeRecentSessions'
 
-const mocks = vi.hoisted(() => ({
-  setActiveChat: vi.fn(),
-  setSetting: vi.fn(),
-  openChatInNewTab: false,
-  openAIAgentChatTab: vi.fn(),
-  viewport: { visible: true },
-}))
+const mocks = vi.hoisted(() => {
+  const viewportListeners = new Set<() => void>()
+  return {
+    setActiveChat: vi.fn(),
+    setSetting: vi.fn(),
+    openChatInNewTab: false,
+    openAIAgentChatTab: vi.fn(),
+    viewport: { visible: true },
+    subscribeViewport: (listener: () => void) => {
+      viewportListeners.add(listener)
+      return () => viewportListeners.delete(listener)
+    },
+    setViewport: (visible: boolean) => {
+      mocks.viewport.visible = visible
+      viewportListeners.forEach((listener) => listener())
+    },
+  }
+})
 
-vi.mock('ahooks', async () => ({
-  ...(await vi.importActual('ahooks')),
-  useInViewport: () => [mocks.viewport.visible],
-}))
+vi.mock('ahooks', async () => {
+  const actual = await vi.importActual('ahooks')
+  const { useSyncExternalStore } = await import('react')
+  return {
+    ...actual,
+    useInViewport: () => [useSyncExternalStore(mocks.subscribeViewport, () => mocks.viewport.visible)],
+  }
+})
 vi.mock('@/i18n/useI18nNamespaces', () => ({
   useI18nNamespaces: () => ({
     t: (key: string, options?: Record<string, unknown>) => {
@@ -56,6 +71,7 @@ vi.mock('../WelcomeRecentSessions.module.scss', () => ({
     'welcome-recent-list': 'welcome-recent-list',
     'welcome-recent-item': 'welcome-recent-item',
     'welcome-recent-more': 'welcome-recent-more',
+    'welcome-recent-list-wrapper': 'welcome-recent-list-wrapper',
     'welcome-recent-list-wrapper-expanded': 'welcome-recent-list-wrapper-expanded',
   },
 }))
@@ -187,6 +203,7 @@ describe('WelcomeRecentSessions', () => {
       'aria-expanded',
       'false',
     )
+    expect(container.querySelector('.welcome-recent-list-wrapper')).toHaveAttribute('inert')
 
     rerender(<WelcomeRecentSessions density="full" />)
     expect(container.querySelector('.welcome-recent-list-wrapper-expanded')).toBeTruthy()
@@ -194,6 +211,7 @@ describe('WelcomeRecentSessions', () => {
       'aria-expanded',
       'true',
     )
+    expect(container.querySelector('.welcome-recent-list-wrapper')).not.toHaveAttribute('inert')
   })
 
   it('density=three 时只展示 3 条，Total 超过 3 显示查看更多', async () => {
@@ -492,6 +510,114 @@ describe('WelcomeRecentSessions', () => {
         type: SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE,
         params: { active: AIAgentTabListEnum.Session, show: true },
       }),
+    )
+  })
+
+  it('不可见时不发起查询', () => {
+    mocks.viewport.visible = false
+    render(<WelcomeRecentSessions />)
+    expect(grpcQueryAISession).not.toHaveBeenCalled()
+    expect(screen.queryByText('AIChatWelcome.recentSessions')).not.toBeInTheDocument()
+  })
+
+  it('隐藏后作废在途查询，恢复可见时重新加载', async () => {
+    let resolveHidden!: (value: ReturnType<typeof queryResponse>) => void
+    vi.mocked(grpcQueryAISession)
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            resolveHidden = resolve
+          }),
+      )
+      .mockResolvedValueOnce(queryResponse([makeSession({ Title: '恢复后的会话', Id: '2' })]))
+
+    render(<WelcomeRecentSessions />)
+    expect(grpcQueryAISession).toHaveBeenCalledTimes(1)
+
+    await act(async () => {
+      mocks.setViewport(false)
+    })
+    await act(async () => {
+      resolveHidden(queryResponse([makeSession({ Title: '迟到的会话' })]))
+    })
+    expect(screen.queryByText('迟到的会话')).not.toBeInTheDocument()
+
+    await act(async () => {
+      mocks.setViewport(true)
+    })
+    await waitFor(() => expect(screen.getByText('恢复后的会话')).toBeInTheDocument())
+    expect(screen.queryByText('迟到的会话')).not.toBeInTheDocument()
+    expect(grpcQueryAISession).toHaveBeenCalledTimes(2)
+  })
+
+  it('卸载时作废在途查询', async () => {
+    let resolvePending!: (value: ReturnType<typeof queryResponse>) => void
+    vi.mocked(grpcQueryAISession).mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolvePending = resolve
+        }),
+    )
+    const { unmount } = render(<WelcomeRecentSessions />)
+    expect(grpcQueryAISession).toHaveBeenCalledTimes(1)
+    unmount()
+    await act(async () => {
+      resolvePending(queryResponse([makeSession({ Title: '卸载后到达' })]))
+    })
+    expect(screen.queryByText('卸载后到达')).not.toBeInTheDocument()
+  })
+
+  it('手动折叠后列表 inert，再次展开后可键盘打开会话', async () => {
+    const { container } = render(<WelcomeRecentSessions />)
+    await waitFor(() => expect(screen.getByText('会话一')).toBeInTheDocument())
+    const header = screen.getByRole('button', { name: /AIChatWelcome.recentSessions/ })
+    const list = container.querySelector('.welcome-recent-list-wrapper') as HTMLElement
+
+    fireEvent.click(header)
+    expect(header).toHaveAttribute('aria-expanded', 'false')
+    expect(list).toHaveAttribute('inert')
+
+    fireEvent.click(header)
+    expect(header).toHaveAttribute('aria-expanded', 'true')
+    expect(list).not.toHaveAttribute('inert')
+    screen.getByRole('button', { name: /会话一/ }).focus()
+    await userEvent.keyboard('{Enter}')
+    expect(mocks.setActiveChat).toHaveBeenCalledWith(expect.objectContaining({ SessionID: 's-1' }))
+  })
+
+  it('重新挂载后按当前时间重算相对时间', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    const now = new Date('2026-11-02T12:00:00')
+    vi.setSystemTime(now)
+    const session = makeSession({ LastUsedAt: now.getTime(), UpdatedAt: now.getTime(), CreatedAt: now.getTime() })
+    vi.mocked(grpcQueryAISession).mockResolvedValue(queryResponse([session]))
+
+    const { unmount } = render(<WelcomeRecentSessions />)
+    await waitFor(() => expect(screen.getByText('AIChatWelcome.justNow')).toBeInTheDocument())
+    unmount()
+
+    vi.setSystemTime(new Date(now.getTime() + 5 * 60 * 1000))
+    render(<WelcomeRecentSessions />)
+    await waitFor(() => expect(screen.getByText('AIChatWelcome.minutesAgo:5')).toBeInTheDocument())
+    expect(screen.queryByText('AIChatWelcome.justNow')).not.toBeInTheDocument()
+  })
+
+  it('页面标题重命名后最近会话展示新标题并可点开', async () => {
+    render(<WelcomeRecentSessions />)
+    await waitFor(() => expect(screen.getByText('会话一')).toBeInTheDocument())
+
+    await act(async () => {
+      emiter.emit(
+        'sessionData',
+        JSON.stringify({ type: 'updateSession', sessionId: 's-1', updates: { Title: '重命名后的会话' } }),
+      )
+    })
+    await waitFor(() => expect(screen.getByText('重命名后的会话')).toBeInTheDocument())
+    expect(screen.queryByText('会话一')).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByText('重命名后的会话'))
+    expect(mocks.setActiveChat).toHaveBeenCalledWith(
+      expect.objectContaining({ SessionID: 's-1', Title: '重命名后的会话' }),
     )
   })
 })
