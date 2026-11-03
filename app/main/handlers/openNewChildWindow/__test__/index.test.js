@@ -16,9 +16,15 @@ function setup(isDev = false, onLoad = () => {}) {
   class BrowserWindow extends EventEmitter {
     constructor() {
       super()
-      this.webContents = Object.assign(new EventEmitter(), { send: vi.fn() })
+      const contents = Object.assign(new EventEmitter(), { send: vi.fn() })
       this.destroyed = false
       this.isDestroyed = () => this.destroyed
+      Object.defineProperty(this, 'webContents', {
+        get() {
+          if (this.destroyed) throw new Error('Object has been destroyed')
+          return contents
+        },
+      })
       this.loadFile = vi.fn((...args) => onLoad(this, ipcMain, ...args))
       this.loadURL = vi.fn((...args) => onLoad(this, ipcMain, ...args))
       this.setMenu = vi.fn()
@@ -91,16 +97,34 @@ describe('child detail window', () => {
   it.each(['close', 'load-failure'])('cleans up the pending handshake on %s before reopening', (reason) => {
     const { ipcMain, parent, open } = setup(true)
     const child = open()
+    const contents = child.webContents
     if (reason === 'close') child.close()
-    else child.webContents.emit('did-fail-load', {}, -6, 'NOT_FOUND', 'yakit-aux.html?mode=child-loading')
+    else contents.emit('did-fail-load', {}, -6, 'NOT_FOUND', 'yakit-aux.html?mode=child-loading')
     expect(ipcMain.listenerCount('ready-to-load-child')).toBe(0)
     expect(parent.send).toHaveBeenLastCalledWith('child-window-hash', { hash: '' })
     const reopened = open()
-    ipcMain.emit('ready-to-load-child', { sender: child.webContents })
+    ipcMain.emit('ready-to-load-child', { sender: contents })
     expect(reopened.loadURL).toHaveBeenCalledTimes(1)
     ipcMain.emit('ready-to-load-child', { sender: reopened.webContents })
     expect(reopened.loadURL).toHaveBeenCalledTimes(2)
     expect(child.loadURL).toHaveBeenCalledTimes(1)
+  })
+
+  it('keeps the window hash when the loading navigation is aborted', () => {
+    const { ipcMain, parent, open } = setup(true)
+    const child = open()
+    const hash = parent.send.mock.calls.find((call) => call[0] === 'child-window-hash')[1].hash
+    ipcMain.emit('ready-to-load-child', { sender: child.webContents })
+    parent.send.mockClear()
+
+    child.webContents.emit('did-fail-load', {}, -3, 'ERR_ABORTED', 'yakit-aux.html?mode=child-loading', true)
+    child.webContents.emit('did-fail-load', {}, -6, 'ERR_ABORTED', 'https://example.test/frame', false)
+    expect(parent.send).not.toHaveBeenCalled()
+    expect(child.webContents.listenerCount('did-fail-load')).toBe(1)
+
+    child.webContents.emit('did-fail-load', {}, -6, 'NOT_FOUND', 'http://127.0.0.1:3000/?window=child', true)
+    expect(parent.send).toHaveBeenCalledExactlyOnceWith('child-window-hash', { hash: '' })
+    expect(hash).not.toBe('')
   })
 
   it.each([0, 1])('routes overlapping window handshakes independently (first=%s)', (first) => {
@@ -122,26 +146,27 @@ describe('child detail window', () => {
   it.each(['close', 'destroy', 'load-failure'])('preserves the current window after an older window %s', (reason) => {
     const { ipcMain, parent, open } = setup(true)
     const older = open()
+    const olderContents = older.webContents
     const latest = { type: 'openRiskNewWindow', data: { id: 2 } }
     const current = open(latest)
     parent.send.mockClear()
 
     if (reason === 'close') older.close()
     else if (reason === 'destroy') older.destroy()
-    else older.webContents.emit('did-fail-load', {}, -6, 'NOT_FOUND', 'yakit-aux.html?mode=child-loading')
+    else olderContents.emit('did-fail-load', {}, -6, 'NOT_FOUND', 'yakit-aux.html?mode=child-loading')
 
     expect(parent.send).not.toHaveBeenCalled()
     expect(current.isDestroyed()).toBe(false)
     expect(ipcMain.listenerCount('ready-to-load-child')).toBe(1)
-    ipcMain.emit('ready-to-load-child', { sender: older.webContents })
+    ipcMain.emit('ready-to-load-child', { sender: olderContents })
     expect(older.loadURL).toHaveBeenCalledTimes(1)
     expect(current.loadURL).toHaveBeenCalledTimes(1)
     ipcMain.emit('ready-to-load-child', { sender: current.webContents })
     expect(current.loadURL).toHaveBeenLastCalledWith('http://127.0.0.1:3000/?window=child')
     expect(ipcMain.listenerCount('ready-to-load-child')).toBe(0)
 
-    ipcMain.emit('request-parent-data', { sender: older.webContents })
-    expect(older.webContents.send).not.toHaveBeenCalled()
+    ipcMain.emit('request-parent-data', { sender: olderContents })
+    expect(olderContents.send).not.toHaveBeenCalled()
     ipcMain.emit('request-parent-data', { sender: current.webContents })
     expect(current.webContents.send).toHaveBeenCalledExactlyOnceWith('get-parent-window-data', latest)
     ipcMain.emit('close-childWin')
@@ -182,6 +207,27 @@ describe('child detail window', () => {
       expect(child.webContents.send).toHaveBeenCalledWith('get-parent-window-data', updated)
     },
   )
+
+  it('opens another child window after the previous one is closed', () => {
+    const { ipcMain, parent, open } = setup(true)
+    const first = open()
+    const firstContents = first.webContents
+    ipcMain.emit('ready-to-load-child', { sender: firstContents })
+    firstContents.emit('did-fail-load', {}, -3, 'ERR_ABORTED', 'yakit-aux.html?mode=child-loading', true)
+    firstContents.emit('did-finish-load')
+    expect(first.show).toHaveBeenCalledOnce()
+
+    first.close()
+    expect(parent.send).toHaveBeenLastCalledWith('child-window-hash', { hash: '' })
+
+    const second = open()
+    const secondContents = second.webContents
+    ipcMain.emit('ready-to-load-child', { sender: secondContents })
+    secondContents.emit('did-fail-load', {}, -3, 'ERR_ABORTED', 'yakit-aux.html?mode=child-loading', true)
+    secondContents.emit('did-finish-load')
+    expect(second.show).toHaveBeenCalledOnce()
+    expect(parent.send).toHaveBeenLastCalledWith('child-window-hash', { hash: expect.not.stringMatching(/^$/) })
+  })
 
   it('clears the window hash on close and initializes a reopened window with new data', () => {
     const { ipcMain, parent, open } = setup()
