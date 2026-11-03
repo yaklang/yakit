@@ -2,6 +2,20 @@ name: Finalize Release
 run-name: Finalize candidate ${{ inputs.prepare_run_id }} · engine ${{ inputs.engine_version }} · publish=${{ inputs.publish }}
 
 on:
+  workflow_call:
+    inputs:
+      prepare_run_id:
+        type: string
+        required: true
+      engine_version:
+        type: string
+        required: true
+      publish:
+        type: boolean
+        default: false
+      verify_test_oss:
+        type: boolean
+        default: false
   workflow_dispatch:
     inputs:
       prepare_run_id:
@@ -31,6 +45,7 @@ env:
   GH_TOKEN: ${{ github.token }}
   ENGINE_VERSION: ${{ inputs.engine_version }}
   RELEASE_PUBLISH: ${{ inputs.publish }}
+  RELEASE_TEST_OSS: ${{ inputs.verify_test_oss }}
 
 jobs:
   plan:

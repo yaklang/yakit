@@ -17,6 +17,14 @@ import { uploadOss } from './oss.mjs'
 const ghJson = async (args) => JSON.parse(await run('gh', args, { capture: true }))
 const isPublic = (edition) => ['yakit', 'irify', 'memfit'].includes(edition)
 
+export function testOssObject(plan, target, name, env = process.env) {
+  if (plan.tag || env.RELEASE_PUBLISH === 'true' || !/^\d+$/.test(env.GITHUB_RUN_ID || '')) {
+    throw new Error('Isolated OSS verification requires an unpublished branch candidate')
+  }
+  if (!/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(name)) throw new Error('Invalid test artifact name')
+  return `${products[target.edition].oss}/ci-release-tests/${env.GITHUB_RUN_ID}/${name}`
+}
+
 export function assertReleaseBinding(plan, binding, engineVersion) {
   if (
     binding.candidate !== plan.candidate ||
@@ -41,6 +49,10 @@ export async function loadCandidate(env = process.env) {
   const source = await ghJson(['api', `repos/${env.GITHUB_REPOSITORY}/actions/runs/${env.PREPARE_RUN_ID}`])
   assertSourceRun(plan, source, env.GITHUB_REPOSITORY)
   if (plan.candidate !== candidate) throw new Error('Candidate belongs to a different prepare run')
+  if (env.RELEASE_TEST_OSS === 'true') {
+    testOssObject(plan, plan.targets[0], 'preflight', env)
+    if (!env.OSS_KEY_ID || !env.OSS_KEY_SECRET) throw new Error('Missing OSS test credentials')
+  }
   if (env.RELEASE_PUBLISH === 'true') {
     if (!plan.tag)
       throw new Error('Only a candidate prepared from a release tag may be published; branch builds are dry runs')
@@ -112,7 +124,6 @@ export async function uploadResult(plan, target, env = process.env) {
   )
   receipt.finalizeRunId = env.GITHUB_RUN_ID
   const result = `.release/result-${env.GITHUB_RUN_ID}-${target.id}.json`
-  await writeJson(result, receipt)
   if (env.RELEASE_PUBLISH === 'true') {
     const uploads = files.map((name) =>
       uploadOss(path.join('.release/output', name), `${products[target.edition].oss}/${plan.version}/${name}`),
@@ -137,7 +148,16 @@ export async function uploadResult(plan, target, env = process.env) {
       ...files.map((name) => path.join('.release/output', name)),
       '--clobber',
     ])
+    if (env.RELEASE_TEST_OSS === 'true') {
+      receipt.testObjects = await Promise.all(
+        files.map(async (name) => {
+          const object = testOssObject(plan, target, name, env)
+          return { object, etag: await uploadOss(path.join('.release/output', name), object) }
+        }),
+      )
+    }
   }
+  await writeJson(result, receipt)
   await run('gh', ['release', 'upload', plan.candidate, result, '--clobber'])
 }
 
@@ -161,6 +181,13 @@ export function assertResults(plan, results, env = process.env) {
       result.files.some((file) => !/^[a-f0-9]{64}$/.test(file.sha256))
     )
       throw new Error(`Final verification failed: ${target.id}`)
+    if (
+      env.RELEASE_TEST_OSS === 'true' &&
+      (JSON.stringify(result.testObjects?.map((item) => item.object)) !==
+        JSON.stringify(names.map((name) => testOssObject(plan, target, name, env))) ||
+        result.testObjects.some((item) => !/^[a-f0-9]{32}$/.test(item.etag)))
+    )
+      throw new Error(`OSS verification receipt missing: ${target.id}`)
   }
 }
 
@@ -180,6 +207,9 @@ async function complete(plan, env = process.env) {
   )
   assertResults(plan, results, env)
   await writeJson('.release/release-manifest.json', { ...plan, engineVersion: env.ENGINE_VERSION, results })
+  if (env.RELEASE_PUBLISH !== 'true') {
+    await run('gh', ['release', 'upload', plan.candidate, '.release/release-manifest.json', '--clobber'])
+  }
   if (env.RELEASE_PUBLISH === 'true') {
     await run('gh', ['release', 'upload', plan.tag, '.release/release-manifest.json', '--clobber'])
     // No channel is changed until every native package, signature, engine check and upload succeeded.

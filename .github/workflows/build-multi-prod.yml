@@ -1,6 +1,16 @@
 name: Prepare Yakit Release
 
 on:
+  workflow_dispatch:
+    inputs:
+      editions:
+        description: Editions to preassemble
+        type: choice
+        default: yakit,yakitEE
+        options: [yakit, yakitEE, 'yakit,yakitEE']
+      release_version:
+        description: Optional software version for a branch rehearsal
+        type: string
   push:
     tags:
       - 'v*-*'
@@ -16,4 +26,5 @@ jobs:
   prepare:
     uses: ./.github/workflows/release-prepare.yml
     with:
-      editions: yakit,yakitEE
+      editions: ${{ inputs.editions || 'yakit,yakitEE' }}
+      release_version: ${{ inputs.release_version || '' }}

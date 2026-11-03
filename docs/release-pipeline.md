@@ -39,6 +39,17 @@ macOS 在注入引擎后签名应用，普通版按现有策略公证，兼容�
 
 `release-pipeline-test.yml` 在相关 PR 上执行发布契约测试、Electron 类型检查和既有构建测试，并针对上述五个平台的普通版/兼容版生成实际安装包。使用固定的已发布引擎 `1.4.9-beta5`，不创建候选草稿、不上传 OSS、不更新升级入口。同仓库 PR 使用现有 secrets 验证 Apple 签名/公证和 Windows 签名；fork PR 只验证未签名封装。
 
-Windows Azure 和 Apple 签名/公证、OSS 真实写入需要仓库 secrets。OSS 写入只在人工运行 Finalize Release 且勾选 publish 时执行。现有 secrets 名称保持不变。预演不会验证真实 OSS 写入；正式上传使用 OSS PutObject 的 Content-MD5 校验和现有 OSS 凭据。
+Windows Azure 和 Apple 签名/公证、OSS 真实写入需要仓库 secrets。正式版本和升级入口只在人工运行 Finalize Release 且勾选 publish 时写入。现有 secrets 名称保持不变。普通预演只保存候选草稿；下述分支测试入口还会验证隔离目录中的真实 OSS 写入。所有 OSS 上传均使用 PutObject 的 Content-MD5，并通过 HEAD 核对远端 ETag。
+
+### 在未合并分支上验证完整交接
+
+GitHub 的手动入口需要默认分支上已有对应工作流文件。PR 合并前，可借助现有入口在同一测试分支执行两次独立任务：
+
+1. 手动运行 **Prepare Yakit Release**（文件 `build-multi-prod.yml`），选择测试分支，发行版选择 `yakit,yakitEE`，软件版本可填写 `1.4.9-ci.4461`。此阶段只预装配，不下载引擎；全部完成后，从 Summary 复制 Prepare run ID。
+2. 手动运行 **Verify Yakit Sign and Notarize Build**，选择同一分支，填写该 Prepare run ID 和明确的已发布引擎版本。留空 run ID 时仍执行原有 macOS 签名检查。
+3. 新任务调用同一 Finalize Release，强制 `publish=false`，在新 runner 上下载候选、校验归档并还原，然后注入引擎、签名、封装。
+4. 签名安装包保存在候选 Draft Release，并实际上传至 `yak/ci-release-tests/<收尾 run ID>/`、`vip/ci-release-tests/<收尾 run ID>/`。每次上传后通过 HEAD 校验远端 ETag 与本地 Content-MD5 一致；只有全部目标上传和校验成功，完整 `release-manifest.json` 才记录预演成功。
+
+这个专用分支测试入口不会创建正式软件 Release，不会写入正式版本目录或 `latest`，不会切换升级入口。普通 Finalize 预演仍只上传候选草稿；额外的 OSS 测试开关仅在可复用工作流调用时提供，并拒绝正式 tag 候选或 `publish=true`。
 
 参考：[GitHub 标准 runner](https://docs.github.com/en/actions/reference/runners/github-hosted-runners)、[Actions 并发限制](https://docs.github.com/en/actions/reference/limits)、[Release 存储](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases)、[electron-builder 生命周期](https://www.electron.build/docs/configuration/)、[OSS 请求签名](https://help.aliyun.com/en/oss/developer-reference/include-signatures-in-the-authorization-header)。

@@ -22,8 +22,8 @@ import {
   validateStapledTicket,
 } from '../../../scripts/release/engine.mjs'
 import { makeConfig } from '../../../scripts/release/package.mjs'
-import { assertReleaseBinding, assertResults } from '../../../scripts/release/finalize.mjs'
-import { ossAuthorization } from '../../../scripts/release/oss.mjs'
+import { assertReleaseBinding, assertResults, testOssObject } from '../../../scripts/release/finalize.mjs'
+import { ossAuthorization, verifyOssEtag } from '../../../scripts/release/oss.mjs'
 
 const require = createRequire(import.meta.url)
 const temporary = []
@@ -271,6 +271,21 @@ describe('publish gate', () => {
       expect(() => assertResults(candidate, [{ ...valid[0], ...change }, ...valid.slice(1)], environment)).toThrow()
     }
   })
+  it('requires matching isolated OSS receipts when exercising real test uploads', () => {
+    const candidate = { ...plan(), tag: null }
+    const env = { ...environment, RELEASE_TEST_OSS: 'true' }
+    const valid = receipts(candidate)
+    expect(() => assertResults(candidate, valid, env)).toThrow('OSS verification receipt missing')
+    for (const [index, result] of valid.entries()) {
+      result.testObjects = result.files.map((file) => ({
+        object: testOssObject(candidate, candidate.targets[index], file.name, env),
+        etag: 'a'.repeat(32),
+      }))
+    }
+    expect(() => assertResults(candidate, valid, env)).not.toThrow()
+    valid[0].testObjects[0].object = 'yak/latest/yakit-version.txt'
+    expect(() => assertResults(candidate, valid, env)).toThrow('OSS verification receipt missing')
+  })
   it('constructs OSS authorization with the content checksum and exact versioned object path', () => {
     const value = ossAuthorization({
       keyId: 'test-key',
@@ -281,6 +296,53 @@ describe('publish gate', () => {
     })
     expect(value).toBe('OSS test-key:nJ1kelCMeB2QwMaFyGRkfSsjgro=')
   })
+})
+
+describe('isolated branch upload boundaries', () => {
+  it('places CE and EE files under run-specific test directories', () => {
+    const candidate = { ...plan(), tag: null }
+    const env = { GITHUB_RUN_ID: '456', RELEASE_PUBLISH: 'false' }
+    const ce = candidate.targets[0]
+    const ee = candidate.targets.find((target) => target.edition === 'yakitEE')
+    expect(testOssObject(candidate, ce, artifactName(candidate, ce), env)).toBe(
+      'yak/ci-release-tests/456/Yakit-1.4.9-1030-windows-amd64.exe',
+    )
+    expect(testOssObject(candidate, ee, artifactName(candidate, ee), env)).toBe(
+      'vip/ci-release-tests/456/EnpriTrace-1.4.9-1030-windows-amd64.exe',
+    )
+  })
+  it('rejects test writes from production tags or with production publishing enabled', () => {
+    const candidate = plan()
+    const env = { GITHUB_RUN_ID: '456' }
+    expect(() => testOssObject(candidate, candidate.targets[0], 'Yakit.exe', env)).toThrow()
+    candidate.tag = null
+    expect(() =>
+      testOssObject(candidate, candidate.targets[0], 'Yakit.exe', { ...env, RELEASE_PUBLISH: 'true' }),
+    ).toThrow()
+    expect(() => testOssObject(candidate, candidate.targets[0], 'Yakit.exe', { GITHUB_RUN_ID: '../latest' })).toThrow()
+  })
+  it.each(['../latest/yakit-version.txt', 'a/b.exe', 'a\\b.exe', '.hidden'])(
+    'rejects an unsafe test filename: %s',
+    (name) => {
+      const candidate = { ...plan(), tag: null }
+      expect(() => testOssObject(candidate, candidate.targets[0], name, { GITHUB_RUN_ID: '456' })).toThrow()
+    },
+  )
+})
+
+describe('OSS remote object checksums', () => {
+  const md5 = '1B2M2Y8AsgTpgAmY7PhCfg=='
+  it('validates a quoted ETag from a CRLF HTTP HEAD response', () => {
+    expect(verifyOssEtag('HTTP/1.1 200 OK\r\nETag: "D41D8CD98F00B204E9800998ECF8427E"\r\n\r\n', md5)).toBe(
+      'd41d8cd98f00b204e9800998ecf8427e',
+    )
+  })
+  it.each(['', 'ETag: "invalid"', `ETag: "${'0'.repeat(32)}"`])(
+    'refuses absent or corrupt remote checksums: %s',
+    (headers) => {
+      expect(() => verifyOssEtag(headers, md5)).toThrow('checksum differs')
+    },
+  )
 })
 
 describe('Apple ticket validation', () => {
