@@ -6,7 +6,7 @@ import emiter from '@/utils/eventBus/eventBus'
 import type { AISession } from '../../../type/aiChat'
 import { AIAgentTabListEnum, SwitchAIAgentTabEventEnum } from '../../../defaultConstant'
 import { grpcQueryAISession } from '../../../grpc'
-import WelcomeRecentSessions, { formatRecentSessionTime } from '../WelcomeRecentSessions'
+import WelcomeRecentSessions, { formatRecentSessionTime, getRecentSessionTimestamp } from '../WelcomeRecentSessions'
 
 const mocks = vi.hoisted(() => ({
   setActiveChat: vi.fn(),
@@ -110,6 +110,30 @@ afterEach(() => {
   vi.useRealTimers()
 })
 
+describe('getRecentSessionTimestamp', () => {
+  it('LastUsedAt 为零值字符串时回退 UpdatedAt/CreatedAt', () => {
+    const updatedAtSec = 1_700_000_100
+    expect(
+      getRecentSessionTimestamp(
+        makeSession({
+          LastUsedAt: '0' as unknown as number,
+          UpdatedAt: updatedAtSec,
+          CreatedAt: 1_700_000_000,
+        }),
+      ),
+    ).toBe(updatedAtSec * 1000)
+    expect(
+      getRecentSessionTimestamp(
+        makeSession({
+          LastUsedAt: '0' as unknown as number,
+          UpdatedAt: '0' as unknown as number,
+          CreatedAt: 1_700_000_000,
+        }),
+      ),
+    ).toBe(1_700_000_000 * 1000)
+  })
+})
+
 describe('formatRecentSessionTime', () => {
   it('空时间戳返回空字符串', () => {
     expect(formatRecentSessionTime(0, t)).toBe('')
@@ -202,6 +226,84 @@ describe('WelcomeRecentSessions', () => {
     })
     await waitFor(() => expect(screen.queryByText('会话一')).not.toBeInTheDocument())
     expect(screen.queryByText('AIChatWelcome.recentSessions')).not.toBeInTheDocument()
+  })
+
+  it('sessionData updateSession 合并标题与 StartParams，保留未改字段', async () => {
+    const session = makeSession({
+      StartParams: {
+        SyncPerceptionTrigger: true,
+        EnablePlan: true,
+        SingleModelMode: false,
+        DisableMemoryTriage: false,
+        Strategy: {
+          EnableMultiAgent: true,
+          EnableGoalMode: false,
+          GoalMinIterations: 1,
+          MaxSubAgents: 2,
+        },
+      },
+    })
+    vi.mocked(grpcQueryAISession).mockResolvedValue(queryResponse([session]))
+    render(<WelcomeRecentSessions />)
+    await waitFor(() => expect(screen.getByText('会话一')).toBeInTheDocument())
+
+    await act(async () => {
+      emiter.emit(
+        'sessionData',
+        JSON.stringify({
+          type: 'updateSession',
+          sessionId: 's-1',
+          updates: {
+            Title: '更新后的标题',
+            StartParams: {
+              EnablePlan: false,
+              Strategy: { MaxSubAgents: 9 },
+            },
+          },
+        }),
+      )
+    })
+    await waitFor(() => expect(screen.getByText('更新后的标题')).toBeInTheDocument())
+    expect(screen.queryByText('会话一')).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByText('更新后的标题'))
+    const updater = mocks.setSetting.mock.calls[0][0] as (old: Record<string, unknown>) => Record<string, unknown>
+    expect(updater({})).toMatchObject({
+      SyncPerceptionTrigger: true,
+      EnablePlan: false,
+      SingleModelMode: false,
+      DisableMemoryTriage: false,
+      Strategy: {
+        EnableMultiAgent: true,
+        EnableGoalMode: false,
+        GoalMinIterations: 1,
+        MaxSubAgents: 9,
+      },
+    })
+    expect(mocks.setActiveChat).toHaveBeenCalledWith(
+      expect.objectContaining({
+        SessionID: 's-1',
+        Title: '更新后的标题',
+      }),
+    )
+  })
+
+  it('sessionData updateSession 对不在列表中的会话不改动', async () => {
+    render(<WelcomeRecentSessions />)
+    await waitFor(() => expect(screen.getByText('会话一')).toBeInTheDocument())
+
+    await act(async () => {
+      emiter.emit(
+        'sessionData',
+        JSON.stringify({
+          type: 'updateSession',
+          sessionId: 's-missing',
+          updates: { Title: '无关标题' },
+        }),
+      )
+    })
+    expect(screen.getByText('会话一')).toBeInTheDocument()
+    expect(screen.queryByText('无关标题')).not.toBeInTheDocument()
   })
 
   it('并发 refresh 时旧响应不会覆盖新响应', async () => {

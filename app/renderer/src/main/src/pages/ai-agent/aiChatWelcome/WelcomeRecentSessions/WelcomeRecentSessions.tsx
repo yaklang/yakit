@@ -13,6 +13,7 @@ import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionCon
 import { JSONParseLog } from '@/utils/tool'
 import { grpcQueryAISession } from '../../grpc'
 import { openAIAgentChatTab } from '../../historyChat/HistoryChat'
+import { mergeAISessionUpdate } from '../../historyChat/mergeAISessionUpdate'
 import { getSessionDisplayTitle } from '../../historyChat/source'
 import { normalizeTimestamp } from '../../historyChat/HistoryChatList/HistoryChatList'
 import { idleSessionStore } from '../../historyChat/idleSessionStore'
@@ -25,8 +26,9 @@ import styles from './WelcomeRecentSessions.module.scss'
 
 const RECENT_SESSION_LIMIT = 5
 
-const getRecentSessionTimestamp = (item: AISession) => {
-  return normalizeTimestamp(item.LastUsedAt || item.UpdatedAt || item.CreatedAt)
+export const getRecentSessionTimestamp = (item: AISession) => {
+  // LastUsedAt 等 int64 经主进程 longs:String 后，零值可能是 '0'（真值），需先归一化再回退
+  return normalizeTimestamp(item.LastUsedAt) || normalizeTimestamp(item.UpdatedAt) || normalizeTimestamp(item.CreatedAt)
 }
 
 export const formatRecentSessionTime = (
@@ -138,11 +140,27 @@ const WelcomeRecentSessions: FC<WelcomeRecentSessionsProps> = memo(({ compact = 
     }
   }, [inViewport])
 
-  // 侧栏新建/删除/清空会话后同步首页最近会话
+  const updateSession = useMemoizedFn((sessionId: string, updates: Partial<AISession>) => {
+    setSessions((prev) => prev.map((session) => mergeAISessionUpdate(session, sessionId, updates)))
+  })
+
+  // 侧栏新建/删除/清空/增量更新后同步首页最近会话
   useEffect(() => {
     const handleSessionData = (data: string) => {
-      const payload = JSONParseLog(data, { throwOnError: false }) as { type?: string } | undefined
+      const payload = JSONParseLog(data, { throwOnError: false }) as
+        | {
+            type?: string
+            sessionId?: string
+            updates?: Partial<AISession>
+          }
+        | undefined
       if (!payload?.type) return
+      if (payload.type === 'updateSession') {
+        if (payload.sessionId && payload.updates) {
+          updateSession(payload.sessionId, payload.updates)
+        }
+        return
+      }
       if (payload.type === 'refresh' || payload.type === 'clear' || payload.type === 'prependSession') {
         if (payload.type === 'clear') {
           loadGenRef.current += 1
@@ -157,7 +175,7 @@ const WelcomeRecentSessions: FC<WelcomeRecentSessionsProps> = memo(({ compact = 
     return () => {
       emiter.off('sessionData', handleSessionData)
     }
-  }, [loadRecentSessions])
+  }, [loadRecentSessions, updateSession])
 
   const handleSelect = useMemoizedFn((info: AISession) => {
     if (openChatInNewTab) {

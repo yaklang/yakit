@@ -19,7 +19,7 @@ interface WelcomeTipsCardsProps {
 }
 
 const WelcomeTipsCards: FC<WelcomeTipsCardsProps> = memo(({ compact = false }) => {
-  const { t } = useI18nNamespaces(['aiAgent'])
+  const { t, i18nRefresh } = useI18nNamespaces(['aiAgent'])
   const containerRef = useRef<HTMLDivElement>(null)
   const [inViewport = true] = useInViewport(containerRef)
   const { riskTotal, trafficTotal } = useWelcomePanelStats(inViewport)
@@ -52,7 +52,7 @@ const WelcomeTipsCards: FC<WelcomeTipsCardsProps> = memo(({ compact = false }) =
         add: 0,
       },
     ],
-    [riskTotal, trafficTotal, customFolder, t],
+    [riskTotal, trafficTotal, customFolder, i18nRefresh],
   )
 
   const handleTipClick = useMemoizedFn((key: WelcomeTipKey) => {
