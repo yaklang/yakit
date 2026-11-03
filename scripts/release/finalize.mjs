@@ -17,6 +17,17 @@ import { uploadOss } from './oss.mjs'
 const ghJson = async (args) => JSON.parse(await run('gh', args, { capture: true }))
 const isPublic = (edition) => ['yakit', 'irify', 'memfit'].includes(edition)
 
+export function assertReleaseBinding(plan, binding, engineVersion) {
+  if (
+    binding.candidate !== plan.candidate ||
+    binding.sha !== plan.sha ||
+    binding.version !== plan.version ||
+    binding.engineVersion !== engineVersion
+  ) {
+    throw new Error('This release version is already bound to a different candidate or engine')
+  }
+}
+
 export async function loadCandidate(env = process.env) {
   if (!/^\d+$/.test(env.PREPARE_RUN_ID || '')) throw new Error('Supply a prepare workflow run ID')
   assertVersion(env.ENGINE_VERSION, 'engine version')
@@ -55,6 +66,31 @@ export async function loadCandidate(env = process.env) {
         '--notes',
         `Engine ${env.ENGINE_VERSION}; frontend ${plan.sha}`,
       ])
+    const binding = {
+      candidate: plan.candidate,
+      sha: plan.sha,
+      version: plan.version,
+      engineVersion: env.ENGINE_VERSION,
+    }
+    await writeJson('.release/release-binding.json', binding)
+    try {
+      // Asset creation is atomic. The first candidate reserves this software version;
+      // another finalization cannot race its platform uploads, even before the publish job.
+      await run('gh', ['release', 'upload', plan.tag, '.release/release-binding.json'])
+    } catch (error) {
+      if (error.code !== 1) throw error
+      await run('gh', [
+        'release',
+        'download',
+        plan.tag,
+        '--pattern',
+        'release-binding.json',
+        '--dir',
+        '.release/binding',
+        '--clobber',
+      ])
+      assertReleaseBinding(plan, await readJson('.release/binding/release-binding.json'), env.ENGINE_VERSION)
+    }
   }
   await writeJson('.release/plan.json', plan)
   await appendFile(

@@ -17,7 +17,7 @@ export function run(command, args, { capture = false, ...options } = {}) {
     child.stdout?.on('data', (chunk) => (stdout += chunk))
     child.stderr?.on('data', (chunk) => (stderr += chunk))
     child.once('error', reject)
-    child.once('exit', (code, signal) => {
+    child.once('close', (code, signal) => {
       if (code === 0) resolve(stdout.trim())
       else reject(Object.assign(new Error(`${command} failed (${signal || code}): ${stderr}`), { code, stdout }))
     })
@@ -55,6 +55,10 @@ export async function download(url, destination, { optional = false } = {}) {
       [
         '--fail',
         '--location',
+        '--proto',
+        '=https',
+        '--proto-redir',
+        '=https',
         '--silent',
         '--show-error',
         '--retry',
