@@ -29,13 +29,12 @@ jobs:
       - name: Verify release contracts and the Electron build
         run: |
           yarn typecheck:electron
-          yarn test:vitest e2e/fixtures/__test__/release-pipeline.test.mjs --run
-          yarn test:electron-build
+          yarn test:vitest --config scripts/release/vitest.config.mjs --run
 
   native-installers:
     uses: ./.github/workflows/release-prepare.yml
     with:
-      editions: yakit
+      editions: yakit,yakitEE
       test_only: true
       sign_test: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
     secrets: inherit

@@ -104,7 +104,7 @@ export async function preparePackage(plan, target) {
     'app/renderer/pages/main/index.html',
     'app/renderer/engine-link-startup/dist/index.html',
   ]) {
-    if (!extractFile(path.join(paths.resources, 'app.asar'), file).length)
+    if (!extractFile(path.join(paths.resources, 'app.asar'), path.normalize(file)).length)
       throw new Error(`Missing packaged runtime entry: ${file}`)
   }
   await writeJson('.release/app/prepared.json', {
