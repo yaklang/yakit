@@ -256,6 +256,7 @@ const WelcomeRecentSessions: FC<WelcomeRecentSessionsProps> = memo(({ density = 
         className={classNames(styles['welcome-recent-list-wrapper'], {
           [styles['welcome-recent-list-wrapper-expanded']]: expanded,
         })}
+        inert={!expanded || undefined}
       >
         <div className={styles['welcome-recent-list-inner']}>
           <div className={styles['welcome-recent-list']}>

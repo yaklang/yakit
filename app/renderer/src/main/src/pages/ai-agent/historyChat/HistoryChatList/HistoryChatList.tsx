@@ -211,6 +211,10 @@ const HistoryChatList: FC<{
         await grpcUpdateAISessionTitle({ SessionID: info.SessionID, Title: info.Title })
         syncAIAgentPageInfo({ sessionId: info.SessionID, title: info.Title, emitSessionData: false })
         setSessions?.((old) => updateChatTitle(old, info))
+        emiter.emit(
+          'sessionData',
+          JSON.stringify({ type: 'updateSession', sessionId: info.SessionID, updates: { Title: info.Title } }),
+        )
       } catch (error) {
         yakitNotify('error', t('HistoryChatList.updateTitleFailed', { error: String(error) }))
       }
