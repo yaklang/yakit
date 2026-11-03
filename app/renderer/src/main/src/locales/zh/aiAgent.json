@@ -204,7 +204,9 @@
     "allowUserPrompt": "允许 AI 主动提问",
     "allowUserPromptTip": "允许 AI 追问和展示交互表单，异步追问不暂停任务。修改对后续任务生效。",
     "singleModelModeGlobalTip": "全局配置已启用，当前会话无法关闭",
-    "singleModelModeSessionTip": "单模型模式只能在新会话启动前修改"
+    "singleModelModeSessionTip": "单模型模式只能在新会话启动前修改",
+    "advancedConfiguration": "高级配置",
+    "singleModelModeDescription": "开启后本会话只使用全局配置中的主模型"
   },
   "AIModelGlobalConfig": {
     "aiModelConfig": "AI模型配置",
@@ -928,7 +930,14 @@
   },
   "AIRunModeSelect": {
     "mode": "模式",
-    "multiMode": "多模式"
+    "multiMode": "多模式",
+    "configuration": "执行模式配置",
+    "configurationTip": "按任务需要组合使用 Plan、Multi-Agent 和 Goal 模式",
+    "goalHint": "请选择一种目标模式并设定参数",
+    "switchGoalModeContent": "切换后，当前选中项的值将恢复为默认值，是否继续？",
+    "durationHint": "设置“继续深入”时间来增加轮次",
+    "editAcceptance": "编辑验收条件",
+    "noAcceptance": "暂无"
   },
   "AITaskQuery": {
     "taskQueue": "任务队列",

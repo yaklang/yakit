@@ -16,7 +16,7 @@ import {
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import classNames from 'classnames'
 import type { AIEnabledCapability, AIReActRecommendedSkill } from '@/pages/ai-re-act/hooks/grpcApi'
-import { ColorsPreViewMDIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
+import { ColorsPreViewMDIcon } from '@yakit-libs/yakit-ui-icons/oldicon/ColorsPreViewMDIcon'
 import {
   grpcGetAIReActRecommendedSkills,
   grpcUpdateAIReActRecommendedSkill,
@@ -140,7 +140,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
             </Flex>
             <div className={styles['input-body-wrapper']}>
               <div className={styles['input-panel']} data-ai-ripple-disabled>
-                <AIChatWelcomeSettingCard ref={settingCardRef} />
+                {/* <AIChatWelcomeSettingCard ref={settingCardRef} /> */}
                 <AIChatTextarea
                   ref={aiChatTextareaRef}
                   onSubmit={handleTriageSubmit}

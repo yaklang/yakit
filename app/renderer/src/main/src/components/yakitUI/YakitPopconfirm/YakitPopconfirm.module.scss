@@ -1,4 +1,45 @@
 .yakit-popconfirm-wrapper {
+  // 箭头向内容框内覆盖 1px，遮住与箭头相接处的边框。
+  &:global(.ant-popover-placement-top),
+  &:global(.ant-popover-placement-topLeft),
+  &:global(.ant-popover-placement-topRight) {
+    > :global(.ant-popover-arrow) {
+      margin-bottom: 1px;
+    }
+  }
+
+  &:global(.ant-popover-placement-bottom),
+  &:global(.ant-popover-placement-bottomLeft),
+  &:global(.ant-popover-placement-bottomRight) {
+    > :global(.ant-popover-arrow) {
+      margin-top: 1px;
+    }
+  }
+
+  &:global(.ant-popover-placement-left),
+  &:global(.ant-popover-placement-leftTop),
+  &:global(.ant-popover-placement-leftBottom) {
+    > :global(.ant-popover-arrow) {
+      margin-right: 1px;
+    }
+  }
+
+  &:global(.ant-popover-placement-right),
+  &:global(.ant-popover-placement-rightTop),
+  &:global(.ant-popover-placement-rightBottom) {
+    > :global(.ant-popover-arrow) {
+      margin-left: 1px;
+    }
+  }
+
+  &:global(.ant-popover) > :global(.ant-popover-arrow) {
+    filter: drop-shadow(0 -1px 0 var(--Colors-Use-Neutral-Border));
+
+    &::after {
+      box-shadow: none;
+    }
+  }
+
   :global {
     --antd-arrow-background-color: var(--Colors-Use-Basic-Background);
 

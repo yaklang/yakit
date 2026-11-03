@@ -6,9 +6,9 @@ import type { AICodeBlockCommandParams } from '../components/aiMilkdownInput/aiC
 import type { EditorMilkdownProps } from '@/components/MilkdownEditor/MilkdownEditorType'
 import type { AIChatMentionProps } from '../components/aiChatMention/type'
 import type { AIReviewRuleSelectProps } from '@/pages/ai-re-act/aiReviewRuleSelect/type'
-import type { AIModelSelectProps } from '../aiModelList/aiModelSelect/AIModelSelectType'
 import type { AIFocusModeProps } from '@/pages/ai-re-act/aiFocusMode/type'
 import type { AIEnabledCapability } from '@/pages/ai-re-act/hooks/grpcApi'
+import type { AIModelSelectProps } from '../aiModelList/aiModelSelect/AIModelSelectType'
 
 export interface QSInputTextareaProps extends Omit<TextAreaProps, 'bordered' | 'autoSize'> {}
 
@@ -39,10 +39,10 @@ export interface AIChatTextareaRefProps {
 }
 export enum AIInputInnerFeatureEnum {
   AIReviewRuleSelect = 'AIReviewRuleSelect',
-  AIModelSelect = 'AIModelSelect',
 }
 export enum AIInputFooterRightEnum {
   AIFocusMode = 'AIFocusMode',
+  AIModelSelect = 'AIModelSelect',
 }
 export type AIInputInnerFeature = `${AIInputInnerFeatureEnum}`
 export type AIInputFooterRight = `${AIInputFooterRightEnum}`
@@ -52,10 +52,10 @@ interface FooterLeftTypesBase<T extends string, U> {
   component?: ReactNode
 }
 type AIReviewRuleSelectType = FooterLeftTypesBase<AIInputInnerFeatureEnum.AIReviewRuleSelect, AIReviewRuleSelectProps>
-type AIModelSelectType = FooterLeftTypesBase<AIInputInnerFeatureEnum.AIModelSelect, AIModelSelectProps>
-type AIFocusModeType = FooterLeftTypesBase<'AIFocusMode', AIFocusModeProps>
-export type FooterLeftTypesComponentProps = AIReviewRuleSelectType | AIModelSelectType
-export type FooterRightTypesComponentProps = AIFocusModeType
+type AIModelSelectType = FooterLeftTypesBase<AIInputFooterRightEnum.AIModelSelect, AIModelSelectProps>
+type AIFocusModeType = FooterLeftTypesBase<AIInputFooterRightEnum.AIFocusMode, AIFocusModeProps>
+export type FooterLeftTypesComponentProps = AIReviewRuleSelectType
+export type FooterRightTypesComponentProps = AIFocusModeType | AIModelSelectType
 export interface AIChatTextareaProps {
   ref?: React.ForwardedRef<AIChatTextareaRefProps>
   /** 提交按钮的 loading 状态 */

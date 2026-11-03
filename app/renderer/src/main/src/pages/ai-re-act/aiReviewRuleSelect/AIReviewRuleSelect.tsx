@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { Slider, type SliderSingleProps } from 'antd'
+import { Slider } from 'antd'
+import type { SliderSingleProps } from 'antd'
 import type { AIChatSelectProps, ReviewRuleSelectProps } from './type'
 import styles from './AIReviewRuleSelect.module.scss'
 import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
@@ -7,19 +8,17 @@ import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
 import classNames from 'classnames'
 import { useClickAway, useControllableValue, useCreation, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
-import {
-  AIAgentSettingDefault,
-  AIReviewRuleIconMap,
-  AIReviewRuleOptions,
-  type AIReviewRuleOptionsType,
-} from '@/pages/ai-agent/defaultConstant'
-import { SirenOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { AIAgentSettingDefault, AIReviewRuleIconMap, AIReviewRuleOptions } from '@/pages/ai-agent/defaultConstant'
+import type { AIReviewRuleOptionsType } from '@/pages/ai-agent/defaultConstant'
+import { HandOutlined, SirenOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { OutlineAIIcon } from '@/pages/ai-agent/template/icon'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { type AIInputEvent, AIInputEventHotPatchTypeEnum, type AIStartParams } from '../hooks/grpcApi'
+import { AIInputEventHotPatchTypeEnum } from '../hooks/grpcApi'
+import type { AIInputEvent, AIStartParams } from '../hooks/grpcApi'
 import isEqual from 'lodash/isEqual'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { isNil } from 'lodash'
+import isNil from 'lodash/isNil'
 import useCurrentSessionId from '../hooks/useCurrentSessionId'
 import { useCurrentStore } from '../hooks/useCurrentDataBySession'
 import { useStore } from 'zustand'
@@ -129,17 +128,19 @@ const AIReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) =
     return AIReviewRuleIconMap[value]?.icon
   })
   const getActiveIcon = useMemoizedFn((value: AIReviewRuleOptionsType) => {
-    return AIReviewRuleIconMap[value]?.activeIcon
+    if (value === 'ai') return <OutlineAIIcon />
+    if (value === 'manual') return <HandOutlined color="currentColor" />
+    return getIcon(value)
   })
-  const onSetOpen = useMemoizedFn((v: boolean) => {
+  const onSetOpen = useMemoizedFn((v: boolean, reviewPolicy = selectReviewPolicy) => {
     setOpen(v)
-    if (!v && execute && !isEqual(selectReviewPolicy, modelValue)) {
-      handHotpatchReviewPolicy(selectReviewPolicy)
+    if (!v && execute && !isEqual(reviewPolicy, modelValue)) {
+      handHotpatchReviewPolicy(reviewPolicy)
     }
     if (v) {
       setSelectReviewPolicy(modelValue)
     } else {
-      onSelectModel(selectReviewPolicy)
+      onSelectModel(reviewPolicy)
     }
   })
   const renderContent = useMemoizedFn(() => {
@@ -149,18 +150,15 @@ const AIReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) =
         <YakitSelect.Option
           value="select"
           label={
-            <div className={styles['select-option']}>
+            <div
+              className={classNames(styles['select-option'], {
+                [styles['select-option-ai']]: currentSelect?.value === 'ai',
+                [styles['select-option-yolo']]: currentSelect?.value === 'yolo',
+              })}
+            >
               {currentSelect ? (
                 <>
-                  <div
-                    className={classNames(styles['select-icon-wrapper'], {
-                      [styles['select-ai-icon-wrapper']]: currentSelect?.value === 'ai',
-                      [styles['select-yolo-icon-wrapper']]: currentSelect?.value === 'yolo',
-                      [styles['select-manual-icon-wrapper']]: currentSelect?.value === 'manual',
-                    })}
-                  >
-                    {getActiveIcon(currentSelect?.value)}
-                  </div>
+                  <div className={styles['select-icon-wrapper']}>{getActiveIcon(currentSelect?.value)}</div>
                   <span className={styles['select-option-text']}>{t(currentSelect?.label)}</span>
                 </>
               ) : (
@@ -192,7 +190,7 @@ const AIReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) =
                     className={classNames(styles['option-wrapper'], styles['select-option-wrapper'], {
                       [styles['select-option-active-wrapper']]: item.value === displayReviewPolicy,
                     })}
-                    onClick={() => setSelectReviewPolicy(item.value)}
+                    onClick={() => onSetOpen(false, item.value)}
                   >
                     <div className={styles['icon-wrapper']}>{getIcon(item.value)}</div>
                     <div className={styles['text-wrapper']}>
@@ -206,6 +204,8 @@ const AIReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) =
           )
         }}
         value="select"
+        variant="borderless"
+        suffixIcon={null}
         optionLabelProp="label"
         open={open}
         setOpen={onSetOpen}

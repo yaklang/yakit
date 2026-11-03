@@ -204,7 +204,9 @@
     "allowUserPrompt": "Allow AI questions",
     "allowUserPromptTip": "Allow AI questions and interactive forms. Async questions do not pause the task. Changes apply to subsequent tasks.",
     "singleModelModeGlobalTip": "Enabled by the global configuration and cannot be disabled for this session",
-    "singleModelModeSessionTip": "Single-model mode can only be changed before starting a new session"
+    "singleModelModeSessionTip": "Single-model mode can only be changed before starting a new session",
+    "advancedConfiguration": "Advanced configuration",
+    "singleModelModeDescription": "Use only the globally configured primary model for this session when enabled"
   },
   "AIModelGlobalConfig": {
     "aiModelConfig": "AI model configuration",
@@ -928,7 +930,14 @@
   },
   "AIRunModeSelect": {
     "mode": "Mode",
-    "multiMode": "Multi-mode"
+    "multiMode": "Multi-mode",
+    "configuration": "Execution modes",
+    "configurationTip": "Combine Plan, Multi-Agent and Goal modes for your task",
+    "goalHint": "Choose a goal mode and set its parameters",
+    "switchGoalModeContent": "Switching will reset the value of the currently selected option to its default. Continue?",
+    "durationHint": "Set a time window to continue exploring",
+    "editAcceptance": "Edit acceptance criteria",
+    "noAcceptance": "None"
   },
   "AITaskQuery": {
     "taskQueue": "Task Queue",

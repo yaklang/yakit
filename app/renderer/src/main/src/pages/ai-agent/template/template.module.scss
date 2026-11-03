@@ -27,7 +27,6 @@ textarea.qs-input-textarea {
     flex-shrink: 0;
   }
 
-  background: var(--Colors-Use-Neutral-Bg);
   border-radius: 12px;
   position: relative;
   .btn-base {
@@ -98,7 +97,7 @@ textarea.qs-input-textarea {
   .divider-style {
     width: 1px;
     height: 12px;
-    background-color: var(--Colors-Use-Basic-Shadow);
+    background-color: var(--Colors-Use-Neutral-Border);
   }
 }
 
@@ -173,17 +172,6 @@ textarea.qs-input-textarea {
     }
   }
 }
-.http-flow-references {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  min-width: 0;
-}
-.http-flow-reference-popover:global(.ant-popover) {
-  :global(.ant-popover-inner) {
-    padding-right: 4px;
-  }
-}
 .http-flow-reference {
   display: inline-flex;
   gap: 4px;
@@ -202,9 +190,6 @@ textarea.qs-input-textarea {
   .http-flow-reference-icon {
     flex-shrink: 0;
     color: var(--Colors-Use-Neutral-Text-2-Primary);
-  }
-  .http-flow-reference-close {
-    color: var(--Colors-Use-Neutral-Text-3-Secondary);
   }
 }
 
@@ -256,54 +241,6 @@ textarea.qs-input-textarea {
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: 100px;
-}
-.http-flow-reference-ids {
-  box-sizing: border-box;
-  width: max-content;
-  max-height: 194px;
-  margin: 0;
-  padding: 0 8px 0 0;
-  overflow-y: auto;
-  font-size: 12px;
-  line-height: 16px;
-  color: var(--Colors-Use-Neutral-Text-1-Title);
-
-  .http-flow-reference-items {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 4px;
-    max-width: 220px;
-  }
-
-  .http-flow-reference-id:global(.ant-tag) {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    min-width: 0;
-    height: 22px;
-    margin: 0;
-    padding: 0 4px;
-    border-radius: 4px;
-
-    &:hover {
-      background-color: var(--Colors-Use-Neutral-Bg-Hover);
-    }
-
-    > span {
-      min-width: 0;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    :global(.ant-tag-close-icon) {
-      flex-shrink: 0;
-      color: var(--Colors-Use-Neutral-Text-3-Secondary);
-      svg {
-        color: inherit;
-      }
-    }
-  }
 }
 // #endregion
 

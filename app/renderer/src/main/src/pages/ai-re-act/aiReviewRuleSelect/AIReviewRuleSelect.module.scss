@@ -145,16 +145,17 @@
 .select-option {
   display: flex;
   align-items: center;
-  gap: 4px;
   color: var(--Colors-Use-Neutral-Text-1-Title);
 
   font-size: 12px;
   font-style: normal;
   font-weight: 400;
   line-height: 16px;
+  letter-spacing: 0.5px;
   overflow: hidden;
 
   .select-option-text {
+    padding: 0 4px;
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
@@ -178,23 +179,33 @@
   .select-icon-wrapper {
     width: 16px;
     height: 16px;
-    border-radius: 50%;
+    flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: center;
     svg {
-      width: 12px;
-      height: 12px;
+      width: 16px;
+      height: 16px;
     }
   }
-  .select-ai-icon-wrapper {
-    background: var(--Colors-Use-Success-Bg-Hover);
+
+  &.select-option-ai {
+    .select-option-text {
+      background-image: linear-gradient(
+        95.367877deg,
+        var(--yakit-colors-Lake-blue-80) 0%,
+        var(--yakit-colors-Blue-70) 25%,
+        var(--yakit-colors-Magenta-60) 85%,
+        var(--yakit-colors-Yellow-60) 100%
+      );
+      background-origin: content-box;
+      background-clip: text;
+      color: transparent;
+    }
   }
-  .select-yolo-icon-wrapper {
-    background: var(--Colors-Use-Error-Bg-Hover);
-  }
-  .select-manual-icon-wrapper {
-    background: var(--Colors-Use-Purple-Bg-Hover);
+
+  &.select-option-yolo {
+    color: var(--Colors-Use-Error-Primary);
   }
 }
 
@@ -251,6 +262,21 @@
   align-items: center;
   gap: 4px;
   flex-shrink: 0;
+  .ai-chat-select-wrapper.ai-chat-select-borderless {
+    :global {
+      .ant-select {
+        border-radius: 9999px;
+      }
+      .ant-select.ant-select-single.ant-select-borderless:not(.ant-select-customize-input) .ant-select-selector {
+        height: 24px;
+        padding: 4px 2px 4px 6px;
+        border-radius: 9999px;
+      }
+      .ant-select-single .ant-select-selector .ant-select-selection-item {
+        padding-right: 0;
+      }
+    }
+  }
   .siren-icon {
     svg {
       color: var(--Colors-Use-Neutral-Text-2-Primary);

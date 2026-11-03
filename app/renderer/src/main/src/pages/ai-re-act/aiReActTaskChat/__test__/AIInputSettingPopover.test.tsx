@@ -9,6 +9,9 @@ const mocks = vi.hoisted(() => ({
   setting: { SingleModelMode: false, SyncPerceptionTrigger: false, EnablePlan: false } as Record<string, unknown>,
   activeChat: undefined as { SessionID?: string; StartParams?: Record<string, unknown> } | undefined,
   globalSingleModelMode: false,
+  globalPresetPrompt: '',
+  globalPlanPrompt: '',
+  setAIGlobalConfig: vi.fn(),
   sessionId: 'session-id',
   setSetting: vi.fn(),
   setActiveChat: vi.fn(),
@@ -51,11 +54,11 @@ vi.mock('../../hooks/useAIGlobalConfig', () => ({
     {
       aiGlobalConfig: {
         SingleModelMode: mocks.globalSingleModelMode,
-        AIPresetPrompt: '',
-        AIPlanPrompt: '',
+        AIPresetPrompt: mocks.globalPresetPrompt,
+        AIPlanPrompt: mocks.globalPlanPrompt,
       },
     },
-    { setAIGlobalConfig: vi.fn() },
+    { setAIGlobalConfig: mocks.setAIGlobalConfig },
   ],
 }))
 
@@ -64,12 +67,14 @@ vi.mock('@/components/yakitUI/YakitPopover/YakitPopover', () => ({
     children,
     content,
     onOpenChange,
+    arrow,
   }: {
     children?: React.ReactNode
     content?: React.ReactNode
     onOpenChange?: (open: boolean) => void
+    arrow?: boolean
   }) => (
-    <div>
+    <div data-testid="settings-popover" data-arrow={String(arrow)}>
       {children}
       {content}
       <button type="button" onClick={() => onOpenChange?.(true)}>
@@ -87,16 +92,19 @@ vi.mock('@/components/yakitUI/YakitSwitch/YakitSwitch', () => ({
     checked,
     disabled,
     onChange,
+    id,
     'aria-label': ariaLabel,
   }: {
     checked?: boolean
     disabled?: boolean
     onChange?: (v: boolean) => void
+    id?: string
     'aria-label'?: string
   }) => (
     <input
       type="checkbox"
       role="switch"
+      id={id}
       aria-label={ariaLabel}
       checked={!!checked}
       disabled={disabled}
@@ -139,8 +147,11 @@ describe('AIInputSettingPopover', () => {
   beforeEach(() => {
     mocks.setting = { SingleModelMode: false, SyncPerceptionTrigger: false, EnablePlan: false }
     mocks.activeChat = undefined
-    mocks.sessionId = 'session-id'
     mocks.globalSingleModelMode = false
+    mocks.globalPresetPrompt = ''
+    mocks.globalPlanPrompt = ''
+    mocks.setAIGlobalConfig.mockReset()
+    mocks.sessionId = 'session-id'
     mocks.setSetting.mockReset()
     mocks.setActiveChat.mockReset()
     mocks.setActiveChat.mockImplementation((update) => {
@@ -149,6 +160,122 @@ describe('AIInputSettingPopover', () => {
     mocks.onSend.mockReset().mockReturnValue(true)
     mocks.emit.mockClear()
     sessionStore = createStore(() => ({ execute: false }))
+  })
+
+  it('高级配置面板显示标题和内联说明，弹窗不显示箭头', () => {
+    render(<AIInputSettingPopover visible />)
+
+    expect(screen.getByText('AIReActTaskChatContent.advancedConfiguration')).toBeInTheDocument()
+    expect(screen.getByTestId('settings-popover')).toHaveAttribute('data-arrow', 'false')
+    expect(screen.getByRole('button', { name: 'YakitButton.reset' })).toBeInTheDocument()
+    for (const description of [
+      'AIReActTaskChatContent.singleModelModeDescription',
+      'AIReActTaskChatContent.syncPerceptionTriggerTip',
+      'AIChatSetting.runtimeContextSizeDesc',
+    ]) {
+      expect(screen.getByText(description)).toBeVisible()
+    }
+  })
+
+  it('新会话重置关闭两个开关并恢复 300 KB，保留其他设置', () => {
+    mocks.setting = {
+      SingleModelMode: true,
+      SyncPerceptionTrigger: true,
+      RuntimeContextSizeLimit: 600,
+      EnablePlan: true,
+    }
+    mocks.setSetting.mockImplementation((update) => {
+      mocks.setting = update(mocks.setting)
+    })
+    render(<AIInputSettingPopover visible />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'YakitButton.reset' }))
+
+    expect(screen.getAllByRole('switch')[0]).not.toBeChecked()
+    expect(screen.getByRole('switch', { name: 'AIReActTaskChatContent.syncPerceptionTrigger' })).not.toBeChecked()
+    expect(screen.getByLabelText('AIChatSetting.runtimeContextSize')).toHaveValue('300')
+    expect(mocks.setting).toEqual({
+      SingleModelMode: false,
+      SyncPerceptionTrigger: false,
+      RuntimeContextSizeLimit: 300,
+      EnablePlan: true,
+    })
+    expect(mocks.setSetting).toHaveBeenCalledTimes(3)
+    expect(mocks.onSend).not.toHaveBeenCalled()
+  })
+
+  it.each(['global', 'session'] as const)('%s 锁定单模型时重置不会修改单模型设置', (lock) => {
+    mocks.globalSingleModelMode = lock === 'global'
+    mocks.setting.SingleModelMode = lock === 'session'
+    if (lock === 'session') mocks.activeChat = { SessionID: 'session-id' }
+    mocks.setSetting.mockImplementation((update) => {
+      mocks.setting = update(mocks.setting)
+    })
+    render(<AIInputSettingPopover visible />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'YakitButton.reset' }))
+
+    expect(screen.getAllByRole('switch')[0]).toBeChecked()
+    expect(screen.getAllByRole('switch')[0]).toBeDisabled()
+    expect(mocks.setting.SingleModelMode).toBe(lock === 'session')
+    expect(mocks.setSetting).toHaveBeenCalledTimes(2)
+  })
+
+  it('运行中重置使用字节热更新上下文并关闭同步意图识别', () => {
+    mocks.setting.SingleModelMode = true
+    mocks.activeChat = {
+      SessionID: 'session-id',
+      StartParams: { RuntimeContextSizeLimit: 600 * 1024, SyncPerceptionTrigger: true, EnablePlan: true },
+    }
+    sessionStore.setState({ execute: true })
+    render(<AIInputSettingPopover visible />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'YakitButton.reset' }))
+
+    expect(mocks.onSend).toHaveBeenCalledTimes(2)
+    for (const [HotpatchType, Params] of [
+      ['RuntimeContextSizeLimit', { RuntimeContextSizeLimit: 300 * 1024 }],
+      ['SyncPerceptionTrigger', { SyncPerceptionTrigger: false }],
+    ]) {
+      expect(mocks.onSend).toHaveBeenCalledWith({
+        token: 'session-id',
+        type: 'casual',
+        params: { IsConfigHotpatch: true, HotpatchType, Params },
+      })
+    }
+    expect(mocks.activeChat?.StartParams).toEqual({
+      RuntimeContextSizeLimit: 300 * 1024,
+      SyncPerceptionTrigger: false,
+      EnablePlan: true,
+    })
+    expect(screen.getAllByRole('switch')[0]).toBeChecked()
+    expect(mocks.setSetting).toHaveBeenCalledTimes(2)
+  })
+
+  it('重置清空全局提示词，直到关闭弹窗才保存', () => {
+    mocks.globalPresetPrompt = '已有全局指令'
+    mocks.globalPlanPrompt = '已有 Plan 提示词'
+    render(<AIInputSettingPopover visible />)
+    fireEvent.click(screen.getByText('打开设置'))
+
+    fireEvent.click(screen.getByRole('button', { name: 'YakitButton.reset' }))
+
+    expect(screen.getByLabelText('AIReActTaskChatContent.globalDirective')).toHaveValue('')
+    expect(screen.getByLabelText('AIReActTaskChatContent.planPrompt')).toHaveValue('')
+    expect(mocks.setAIGlobalConfig).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByText('关闭设置'))
+    expect(mocks.setAIGlobalConfig).toHaveBeenCalledExactlyOnceWith({ AIPresetPrompt: '', AIPlanPrompt: '' })
+  })
+
+  it('提示词未编辑时关闭弹窗不保存全局配置', () => {
+    mocks.globalPresetPrompt = '已有全局指令'
+    mocks.globalPlanPrompt = '已有 Plan 提示词'
+    render(<AIInputSettingPopover visible />)
+
+    fireEvent.click(screen.getByText('打开设置'))
+    fireEvent.click(screen.getByText('关闭设置'))
+
+    expect(mocks.setAIGlobalConfig).not.toHaveBeenCalled()
   })
 
   it('已有会话打开设置读取自己的字节上限，修改后当前会话和下次默认值同时更新', () => {
@@ -417,7 +544,7 @@ describe('AIInputSettingPopover', () => {
     sessionStore = createStore(() => ({ execute: true }))
     render(<AIInputSettingPopover visible />)
 
-    fireEvent.click(screen.getAllByRole('switch')[2])
+    fireEvent.click(screen.getByRole('switch', { name: 'AIReActTaskChatContent.syncPerceptionTrigger' }))
 
     expect(mocks.onSend).toHaveBeenCalledExactlyOnceWith({
       token: 'session-id',
@@ -468,7 +595,7 @@ describe('AIInputSettingPopover', () => {
           },
         },
         perception: {
-          change: () => fireEvent.click(screen.getAllByRole('switch')[2]),
+          change: () => fireEvent.click(screen.getByRole('switch', { name: 'AIReActTaskChatContent.syncPerceptionTrigger' })),
           params: {
             IsConfigHotpatch: true,
             HotpatchType: 'SyncPerceptionTrigger',
@@ -496,7 +623,7 @@ describe('AIInputSettingPopover', () => {
       expect(mocks.setSetting).toHaveBeenCalledTimes(2)
       expect(mocks.setting).toMatchObject({ RuntimeContextSizeLimit: 600, SyncPerceptionTrigger: true })
       expect(screen.getByLabelText('AIChatSetting.runtimeContextSize')).toHaveValue('600')
-      expect(screen.getAllByRole('switch')[2]).toBeChecked()
+      expect(screen.getByRole('switch', { name: 'AIReActTaskChatContent.syncPerceptionTrigger' })).toBeChecked()
       expect(mocks.onSend).toHaveBeenCalledTimes(2)
       expect(vi.mocked(emiter.emit).mock.calls).toEqual(
         sequence.map((update) => [
@@ -541,7 +668,7 @@ describe('AIInputSettingPopover', () => {
         <button type="button">设置</button>
       </AIInputSettingPopover>,
     )
-    fireEvent.click(screen.getAllByRole('switch')[2])
+    fireEvent.click(screen.getByRole('switch', { name: 'AIReActTaskChatContent.syncPerceptionTrigger' }))
     rerender(
       <AIInputSettingPopover visible>
         <button type="button">设置</button>
@@ -574,7 +701,7 @@ describe('AIInputSettingPopover', () => {
     ])
     expect(mocks.setting).toMatchObject({ RuntimeContextSizeLimit: 900, SyncPerceptionTrigger: true })
     expect(screen.getByLabelText('AIChatSetting.runtimeContextSize')).toHaveValue('900')
-    expect(screen.getAllByRole('switch')[2]).toBeChecked()
+    expect(screen.getByRole('switch', { name: 'AIReActTaskChatContent.syncPerceptionTrigger' })).toBeChecked()
   })
 
   it.each(['stopped', 'rejected', 'missing-session-id'])(
@@ -634,7 +761,7 @@ describe('AIInputSettingPopover', () => {
     mocks.onSend.mockReturnValue(false)
     render(<AIInputSettingPopover visible />)
 
-    fireEvent.click(screen.getAllByRole('switch')[2])
+    fireEvent.click(screen.getByRole('switch', { name: 'AIReActTaskChatContent.syncPerceptionTrigger' }))
 
     expect(mocks.onSend).toHaveBeenCalledTimes(1)
     expect(mocks.setActiveChat).not.toHaveBeenCalled()
