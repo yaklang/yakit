@@ -54,7 +54,7 @@ beforeEach(() => {
     '--yakit-colors-Neutral-20': `${theme}-neutral-20`,
     '--yakit-colors-Neutral-30': `${theme}-neutral-30`,
     '--yakit-colors-Neutral-40': `${theme}-neutral-40`,
-    '--yakit-colors-Main-40': `${theme}-main-40`,
+    '--yakit-colors-Main-20': `${theme}-main-20`,
   }))
 })
 
@@ -156,7 +156,7 @@ describe('AIWelcomeAsciiRipple', () => {
     expect(mocks.colors).toHaveBeenLastCalledWith('light')
     expect(latestProps()).toMatchObject({
       textColor: 'light-neutral-30',
-      troughColor: 'light-main-40',
+      troughColor: 'light-main-20',
       rippleColor: 'light-neutral-40',
       textOpacity: 0.15,
     })
@@ -165,7 +165,7 @@ describe('AIWelcomeAsciiRipple', () => {
     expect(mocks.colors).toHaveBeenLastCalledWith('dark')
     expect(latestProps()).toMatchObject({
       textColor: 'dark-neutral-20',
-      troughColor: 'dark-main-40',
+      troughColor: 'dark-main-20',
       rippleColor: 'dark-neutral-40',
       textOpacity: 0.15,
     })
