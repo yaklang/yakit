@@ -270,12 +270,15 @@ describe('HistoryChat 头部操作', () => {
 })
 
 describe('HistoryChat 删除与多开刷新', () => {
+  const sessionDataRefresh = JSON.stringify({ type: 'refresh' })
+
   it('按天清理删到当前会话：回欢迎页，不再切到剩余会话', async () => {
     const oldChat = { SessionID: 'old', UpdatedAt: 0 }
     const recentChat = { SessionID: 'recent', UpdatedAt: Date.now() }
     mocks.ctx.sessions = [oldChat, recentChat]
     mocks.ctx.activeChat = oldChat
     const onChatEvent = vi.fn()
+    const emitSpy = vi.spyOn(emiter, 'emit')
     emiter.on('onReActChatEvent', onChatEvent)
     try {
       render(<HistoryChat aiSource={['ai']} />)
@@ -285,8 +288,25 @@ describe('HistoryChat 删除与多开刷新', () => {
       await waitFor(() => expect(mocks.dispatcher.setSessions).toHaveBeenCalledWith([recentChat]))
       expect(onChatEvent).toHaveBeenCalledWith(JSON.stringify({ type: ReActChatEventEnum.NEW_CHAT }))
       expect(mocks.setActiveChat).toHaveBeenCalledExactlyOnceWith(undefined)
+      expect(emitSpy).toHaveBeenCalledWith('sessionData', sessionDataRefresh)
     } finally {
       emiter.off('onReActChatEvent', onChatEvent)
+      emitSpy.mockRestore()
+    }
+  })
+
+  it('清空全部成功后广播 sessionData refresh', async () => {
+    mocks.ctx.sessions = [{ SessionID: 'a', UpdatedAt: Date.now() }]
+    const emitSpy = vi.spyOn(emiter, 'emit')
+    try {
+      render(<HistoryChat aiSource={['ai']} />)
+      fireEvent.click(screen.getAllByRole('button')[0]) // 清空
+      fireEvent.click(await screen.findByText('HistoryChat.clearAll'))
+      fireEvent.click(await screen.findByRole('button', { name: 'YakitButton.ok' }))
+      await waitFor(() => expect(mocks.dispatcher.setSessions).toHaveBeenCalledWith([]))
+      expect(emitSpy).toHaveBeenCalledWith('sessionData', sessionDataRefresh)
+    } finally {
+      emitSpy.mockRestore()
     }
   })
 
