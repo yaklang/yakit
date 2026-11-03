@@ -15,10 +15,13 @@ function register(manager, mainWindow) {
     }
   }
 
-  // did-finish-load 早于终端 onPush。这段时间内的输出先排队，ready 后再按到达顺序补推。
+  // did-finish-load 通常早于终端 ready。这段时间内的输出先排队，ready 后再按到达顺序补推。
+  // ready 若先到，窗口已经能接收输出，随后的 onOpened 不能再把缓冲打开。
   /** @type {unknown[]} */
   let pendingData = []
   let bufferUntilReady = false
+  /** @type {string | null} */
+  let readyWindowId = null
 
   const resetPending = () => {
     pendingData = []
@@ -53,18 +56,21 @@ function register(manager, mainWindow) {
     singletonKey: SINGLETON_KEY,
     onOpened(payload) {
       if (payload.singletonKey !== SINGLETON_KEY) return
+      safeSendMain('engineConsole-window-hash', { hash: payload.windowId })
+      if (readyWindowId === payload.windowId) return
       pendingData = []
       bufferUntilReady = true
-      safeSendMain('engineConsole-window-hash', { hash: payload.windowId })
     },
     onClosed(payload) {
       if (payload.singletonKey !== SINGLETON_KEY) return
+      readyWindowId = null
       resetPending()
       safeSendMain('engineConsole-window-hash', { hash: '' })
     },
     onAuxReady(windowId) {
       const entry = manager.getEntry(windowId)
       if (entry?.meta?.route !== ROUTE) return
+      readyWindowId = windowId
       const queued = pendingData
       resetPending()
       queued.forEach((data) => {
