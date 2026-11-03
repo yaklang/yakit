@@ -138,22 +138,16 @@ module.exports = {
         openedWindow.show()
       })
 
-      // 不能用 once：握手后的跳转会先以 -3 中止加载页，这次不能清掉窗口标记，
-      // 详情页之后的真实失败仍要处理。子框架失败同样不是这次详情加载失败。
-      const onFailLoad = (_event, errorCode, _errorDescription, _validatedURL, isMainFrame) => {
-        if (isMainFrame === false || errorCode === -3) return
-        openedWindow.webContents.removeListener('did-fail-load', onFailLoad)
+      openedWindow.webContents.once('did-fail-load', (event, errorCode, errorDescription, validatedURL) => {
+        // loading 页未能完成握手时也要清理，避免重开后遗留旧窗口的监听。
         ipcMain.removeListener('ready-to-load-child', onReadyToLoad)
         if (childWindow === openedWindow) {
           win.send('child-window-hash', { hash: '' })
         }
-      }
-      openedWindow.webContents.on('did-fail-load', onFailLoad)
+      })
 
       openedWindow.on('close', (e) => {
         e.preventDefault()
-        // closed 之后窗口已销毁，再访问 webContents 会抛错并跳过清空 hash。
-        openedWindow.webContents.removeListener('did-fail-load', onFailLoad)
         openedWindow.destroy()
       })
       openedWindow.on('closed', () => {
