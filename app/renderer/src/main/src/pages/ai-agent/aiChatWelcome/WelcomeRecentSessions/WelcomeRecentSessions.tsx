@@ -84,17 +84,26 @@ const WelcomeRecentSessionItem: FC<WelcomeRecentSessionItemProps> = memo(({ item
   )
 })
 
-const WelcomeRecentSessions: FC = memo(() => {
+interface WelcomeRecentSessionsProps {
+  /** 小屏时默认收起列表，用户仍可手动展开 */
+  compact?: boolean
+}
+
+const WelcomeRecentSessions: FC<WelcomeRecentSessionsProps> = memo(({ compact = false }) => {
   const { t } = useI18nNamespaces(['aiAgent'])
   const containerRef = useRef<HTMLDivElement>(null)
   const [inViewport = true] = useInViewport(containerRef)
-  const [expanded, setExpanded] = useState(true)
+  const [expanded, setExpanded] = useState(!compact)
   const [sessions, setSessions] = useState<AISession[]>([])
   const [hasMore, setHasMore] = useState(false)
   const { setActiveChat, setSetting } = useAIAgentDispatcher()
   const { openChatInNewTab } = useAIAgentStore()
   // 递增作废在途查询，避免可见性抖动 / 并发 refresh 时旧响应覆盖新结果
   const loadGenRef = useRef(0)
+
+  useEffect(() => {
+    setExpanded(!compact)
+  }, [compact])
 
   const loadRecentSessions = useMemoizedFn(() => {
     const gen = ++loadGenRef.current
@@ -184,7 +193,7 @@ const WelcomeRecentSessions: FC = memo(() => {
   if (sessions.length === 0) return null
 
   return (
-    <div className={styles['welcome-recent-sessions']} ref={containerRef}>
+    <div className={styles['welcome-recent-sessions']} ref={containerRef} data-ai-ripple-disabled>
       <div
         className={styles['welcome-recent-header']}
         onClick={() => setExpanded((prev) => !prev)}

@@ -3,6 +3,7 @@
   flex-direction: column;
   gap: 4px;
   width: 100%;
+  background-color: var(--Colors-Use-Basic-Background);
 }
 
 .welcome-recent-header {
@@ -97,9 +98,9 @@
   padding: 0 8px;
   cursor: pointer;
   user-select: none;
-
+  border-radius: 8px;
   &:hover {
-    background: var(--Colors-Use-Neutral-Bg);
+    background: var(--Colors-Use-Neutral-Bg-Hover);
   }
 }
 

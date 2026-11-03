@@ -31,7 +31,6 @@
     width: 100%;
     height: 100%;
     @extend %display-column-center;
-    overflow-y: auto;
   }
 
   .input-wrapper {
@@ -49,36 +48,18 @@
     box-sizing: border-box;
     min-height: 100%;
     padding: 56px 0 16px 0;
+    height: 100%;
 
     .milkdown-input {
       min-height: 124px;
       max-height: 124px;
     }
 
-    &-compact {
-      .milkdown-input {
-        min-height: 64px;
-        max-height: 100px;
-      }
-      padding: 28px 16px 8px;
-      gap: 10px;
-
-      .input-heard {
-        .title {
-          font-size: 28px;
-          line-height: 36px;
-        }
-        .subtitle {
-          font-size: 13px;
-          line-height: 18px;
-        }
-      }
-    }
-
     .input-heard {
       width: 100%;
       max-width: 784px;
       flex: 1;
+      min-height: 0;
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -100,6 +81,35 @@
         width: 100%;
       }
     }
+
+    &-short {
+      padding: 26px 0 8px 0;
+
+      .input-heard {
+        overflow-y: hidden;
+        &:hover {
+          overflow-y: overlay;
+        }
+      }
+    }
+
+    &-compact {
+      .milkdown-input {
+        min-height: 64px;
+        max-height: 100px;
+      }
+      padding: 28px 16px 8px;
+      gap: 10px;
+
+      .input-heard {
+        overflow-y: hidden;
+        justify-content: flex-start;
+        &:hover {
+          overflow-y: overlay;
+        }
+      }
+    }
+
     .input-body-wrapper {
       width: 100%;
     }
