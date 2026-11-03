@@ -100,6 +100,12 @@ describe('ChildNewApp login state', () => {
     )
     const { ChildNewApp, useStore } = await loadChild()
     render(<ChildNewApp />)
+    const fresh = { ...loggedIn, token: 'fresh-token' }
+
+    await act(async () => {
+      ipc.emit('fetch-signin-token', {}, fresh)
+    })
+    expect(useStore.getState().userInfo).toEqual(fresh)
 
     await act(async () => {
       ipc.emit('login-out')
