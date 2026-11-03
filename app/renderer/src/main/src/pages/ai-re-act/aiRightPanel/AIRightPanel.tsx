@@ -5,11 +5,10 @@ import { AIRightPanelPane } from './AIRightPanelPane'
 import { TimelineDumpButton } from './TimelineDumpButton'
 import { AISkillLoadingPane } from './AISkillLoadingPane/AISkillLoadingPane'
 import TimelineCard from '@/pages/ai-agent/chatTemplate/TimelineCard/TimelineCard'
-import { useCreation, useInViewport, useMemoizedFn } from 'ahooks'
+import { useCreation, useMemoizedFn } from 'ahooks'
 import { useStore } from 'zustand'
 import { useCurrentStore } from '../hooks/useCurrentDataBySession'
 import useCurrentTaskExecution from '../hooks/useCurrentTaskData/useCurrentTaskExecution'
-import { useWelcomePanelStats } from '@/pages/ai-agent/aiChatWelcome/hooks/useWelcomePanelStats'
 import classNames from 'classnames'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { timeDiffWithMoment } from '@/utils/timeUtil'
@@ -78,10 +77,6 @@ const MAIN_MENUS: MenuItemDef[] = [
   { key: 'session-history', labelKey: 'AIRightPanel.sessionHistory', icon: <ChatAlt2Outlined /> },
   { key: 'task-list', labelKey: 'AIRightPanel.taskList', icon: <FlagOutlined /> },
 ]
-
-const WELCOME_MENUS = MAIN_MENUS.filter(
-  (item) => item.key !== 'task-board' && item.key !== 'task-list' && item.key !== 'load-skills',
-)
 
 /** 「更多」分组展开后追加显示的功能入口（收起态仅在底部显示「更多」按钮） */
 const MORE_MENUS: MenuItemDef[] = [
@@ -588,64 +583,7 @@ const PaneSlot: React.FC<{
 })
 // #endregion
 
-// #region 首页模式：仅文件系统、浏览器实例、流量、漏洞、会话历史五个入口，不订阅会话与任务相关数据
 type PanelState = ReturnType<typeof usePanelShared>
-
-type WelcomeRightPanelProps = Pick<AIRightPanelProps, 'layoutRef'> & { panel: PanelState }
-
-const WelcomeRightPanel: React.FC<WelcomeRightPanelProps> = React.memo(({ panel, layoutRef }) => {
-  const [inViewport = true] = useInViewport(layoutRef)
-  const welcomeStats = useWelcomePanelStats(inViewport)
-  const totals: Partial<Record<AIRightPanelMenuKey, number | undefined>> = {
-    traffic: welcomeStats.trafficTotal,
-    risk: welcomeStats.riskTotal,
-  }
-  const menus = WELCOME_MENUS.map((item) => ({ ...item, total: totals[item.key] }))
-  /**
-   * 菜单点击：文件系统、浏览器、会话历史打开左侧对应页（已展开则收起）；
-   * 流量、漏洞切换工作区 tab。
-   */
-  const handleMenuClick = useMemoizedFn((key: AIRightPanelMenuKey) => {
-    switch (key) {
-      case 'file-system':
-        emitToggleAIAgentTab(AIAgentTabListEnum.File)
-        break
-      case 'browser':
-        emitToggleAIAgentTab(AIAgentTabListEnum.Browser)
-        break
-      case 'session-history':
-        emitToggleAIAgentTab(AIAgentTabListEnum.Session)
-        break
-      case 'traffic':
-        emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.HTTP }))
-        break
-      case 'risk':
-        emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.Risk }))
-        break
-      default:
-        break
-    }
-  })
-
-  return (
-    <>
-      <div
-        className={classNames(styles['right-panel'], {
-          [styles['right-panel-small']]: panel.isSmall,
-          [styles['right-panel-hidden']]: !!panel.activePane && !panel.isSmall,
-        })}
-      >
-        <MenuList
-          menus={menus}
-          small={panel.isSmall}
-          riskCounts={welcomeStats.riskCounts}
-          onMenuClick={handleMenuClick}
-        />
-      </div>
-    </>
-  )
-})
-// #endregion
 
 // #region 会话模式：数据卡片 + 主菜单 + 底部「更多」分组 + 任务、导出日志等会话相关交互
 type ChatRightPanelProps = { panel: PanelState }
@@ -820,7 +758,7 @@ const ChatRightPanel: React.FC<ChatRightPanelProps> = React.memo((props) => {
 
 /**
  * Memfit AI 右侧功能面板：
- * - 首页模式（welcome）：仅文件系统、浏览器实例、流量、漏洞、会话历史入口，不订阅会话与任务数据
+ * - 首页模式（welcome）：不渲染右侧菜单（入口已迁移到欢迎页 WelcomeTipsCards），仅关闭遗留浮层
  * - 正常态（宽 301px）：数据卡片 + 主菜单 + 底部「更多」分组，更多分组可在 展开/收起 间切换
  * - 小屏态（正常态面板会使列表可用宽度小于最大宽度时）：仅图标的窄栏（宽 41px）
  */
@@ -834,7 +772,7 @@ export const AIRightPanel: React.FC<AIRightPanelProps> = React.memo((props) => {
   }, [welcome])
   return (
     <div className={styles['right-panel-wrapper']} data-ai-right-panel data-ai-right-panel-small={panel.isSmall}>
-      {welcome ? <WelcomeRightPanel panel={panel} layoutRef={props.layoutRef} /> : <ChatRightPanel panel={panel} />}
+      {!welcome && <ChatRightPanel panel={panel} />}
       {panel.activePane && <PaneSlot pane={panel.activePane} small={panel.isSmall} onClose={panel.closePane} />}
     </div>
   )

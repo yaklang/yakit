@@ -1,0 +1,151 @@
+.welcome-tips-list {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  width: 100%;
+}
+
+.welcome-tips-list-compact {
+  flex-direction: column;
+  gap: 8px;
+}
+
+.welcome-tip-card {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 12px;
+  border: 1px solid var(--Colors-Use-Neutral-Border);
+  background: var(--Colors-Use-Basic-Background);
+}
+
+.welcome-tip-card-compact {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 64px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid var(--Colors-Use-Neutral-Border);
+  background: var(--Colors-Use-Basic-Background);
+  cursor: pointer;
+  user-select: none;
+}
+
+.welcome-tip-compact-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  .welcome-tip-compact-title {
+    color: var(--Colors-Use-Neutral-Text-2-Primary);
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 20px;
+  }
+  .welcome-tip-compact-add {
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 16px;
+    span {
+      color: var(--Colors-Use-Neutral-Disable);
+      font-weight: 500;
+    }
+  }
+}
+
+.welcome-tip-compact-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  svg {
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+  }
+}
+
+.welcome-tip-main {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 12px 8px;
+  height: 86px;
+}
+
+.welcome-tip-add {
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 16px;
+  text-align: right;
+  span {
+    color: var(--Colors-Use-Neutral-Disable);
+    font-weight: 500;
+  }
+}
+
+.welcome-tip-card-compact .welcome-tip-add {
+  padding-left: 26px;
+  text-align: left;
+}
+
+.welcome-tip-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  height: 40px;
+}
+
+.welcome-tip-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  white-space: nowrap;
+  color: var(--Colors-Use-Neutral-Text-2-Primary);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+}
+
+.welcome-tip-number {
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  font-size: 24px;
+  font-weight: 500;
+  line-height: 32px;
+}
+
+.welcome-tip-card-compact .welcome-tip-number {
+  font-size: 20px;
+  line-height: 28px;
+}
+
+.welcome-tip-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+  padding: 8px 12px;
+  height: 32px;
+  background: var(--Colors-Use-Neutral-Bg);
+  cursor: pointer;
+}
+
+.welcome-tip-footer-icon {
+  flex-shrink: 0;
+  color: currentColor;
+  svg {
+    width: 12px;
+    height: 12px;
+  }
+}

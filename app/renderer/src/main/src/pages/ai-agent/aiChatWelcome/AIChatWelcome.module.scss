@@ -16,7 +16,6 @@
   container: ai-chat-welcome / inline-size;
   height: 100%;
   position: relative;
-  background: linear-gradient(180deg, var(--Colors-Use-Main-Bg) 0.11%, var(--Colors-Use-Basic-Background) 50%);
 
   .welcome-ascii-ripple {
     position: absolute;
@@ -40,18 +39,16 @@
     z-index: 1;
     @extend %display-column-center;
     align-items: center;
-    justify-content: center;
-    gap: 64px;
+    justify-content: space-between;
+    gap: 12px;
     flex-shrink: 0;
     // 扣除面板预留宽度，内容最多宽 784px。
     width: calc(100% - var(--ai-right-panel-slot-width, 325px));
     max-width: 784px;
-    // 左移半个预留宽度，在剩余区域居中。
-    transform: translateX(calc(var(--ai-right-panel-slot-width, 325px) / -2));
     min-width: 0;
     box-sizing: border-box;
     min-height: 100%;
-    padding: 88px 24px 20px;
+    padding: 56px 0 16px 0;
 
     .milkdown-input {
       min-height: 124px;
@@ -63,152 +60,48 @@
         min-height: 64px;
         max-height: 100px;
       }
-      padding-top: 30px;
+      padding: 28px 16px 8px;
       gap: 10px;
+
+      .input-heard {
+        .title {
+          font-size: 28px;
+          line-height: 36px;
+        }
+        .subtitle {
+          font-size: 13px;
+          line-height: 18px;
+        }
+      }
     }
 
     .input-heard {
-      @extend %display-column-center;
-      padding-left: 16px;
-      align-items: flex-start;
-      gap: 8px;
-      flex: 1;
       width: 100%;
+      max-width: 784px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
       justify-content: center;
-
       .title {
         color: var(--Colors-Use-Neutral-Text-1-Title);
         text-align: center;
-        white-space: nowrap;
         font-size: 40px;
         font-weight: 400;
         line-height: 56px;
-        letter-spacing: 0;
-        user-select: none;
       }
       .subtitle {
         color: var(--Colors-Use-Neutral-Text-4-Help-text);
         text-align: center;
-        font-size: 18px;
+        font-size: 14px;
         font-weight: 400;
-        line-height: 26px;
-        letter-spacing: 0;
-        user-select: none;
+        line-height: 20px;
       }
-      .memfit-icon {
-        svg {
-          width: 64px;
-          height: 64px;
-        }
-      }
-
-      @container ai-chat-welcome (width > 1192px) {
-        .memfit-icon {
-          svg {
-            width: 88px;
-            height: 88px;
-          }
-        }
-
-        .title {
-          font-size: 56px;
-          line-height: 72px;
-        }
-
-        .subtitle {
-          font-size: 24px;
-          line-height: 32px;
-        }
+      .welcome-tips-block {
+        width: 100%;
       }
     }
     .input-body-wrapper {
       width: 100%;
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-end;
-    }
-
-    .intro-tips {
-      @extend %display-column-center;
-      align-items: flex-start;
-      width: 100%;
-
-      .intro-tip-item {
-        @extend %display-flex-center;
-        gap: 4px;
-
-        color: var(--Colors-Use-Neutral-Text-4-Help-text);
-        font-size: 12px;
-        font-weight: 400;
-        line-height: 16px; /* 142.857% */
-        letter-spacing: 0.1px;
-
-        padding: 4px 16px 12px;
-        align-items: center;
-        gap: 8px;
-        user-select: none;
-
-        cursor: pointer;
-        &:last-child {
-          padding-bottom: 16px;
-        }
-
-        .intro-tip-content {
-          @extend %display-flex-center;
-          gap: 8px;
-          transition: transform 0.2s ease;
-          transform-origin: left center;
-        }
-
-        &:hover {
-          .intro-tip-content {
-            transform: scale(1.2);
-          }
-
-          .intro-tip-text {
-            background: linear-gradient(
-              108deg,
-              var(--Colors-Use-Main-Primary) 0%,
-              var(--Colors-Use-Success-Pressed) 100%
-            );
-            background-clip: text;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-          }
-
-          .intro-tip-icon {
-            color: var(--Colors-Use-Main-Primary);
-          }
-        }
-
-        .intro-tip-icon {
-          svg {
-            width: 16px;
-            height: 16px;
-          }
-          color: var(--Colors-Use-Neutral-Text-3-Secondary);
-        }
-        .intro-tip-color-icon {
-          display: none;
-          svg {
-            width: 16px;
-            height: 16px;
-          }
-        }
-      }
-
-      .intro-tip-active {
-        color: var(--Colors-Use-Main-Primary);
-
-        .intro-tip-icon {
-          color: var(--Colors-Use-Main-Primary);
-        }
-      }
-
-      .intro-tip-text {
-        letter-spacing: 0.2px;
-      }
     }
 
     .input-panel {

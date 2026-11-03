@@ -239,6 +239,7 @@ const HistoryChat = memo(({ aiSource, embedded, title, className }: HistoryChatP
       dispatcher.setSessions?.([])
       dispatcher.resetPagination?.()
       setSearch('')
+      emiter.emit('sessionData', JSON.stringify({ type: 'refresh' }))
       yakitNotify('success', t('HistoryChat.allChatsCleared'))
     } catch (e) {
       if (!(e instanceof AISessionDeleteCancelledError)) {
@@ -295,6 +296,7 @@ const HistoryChat = memo(({ aiSource, embedded, title, className }: HistoryChatP
 
       dispatcher.setSessions?.(nextChats)
       dispatcher.resetPagination?.()
+      emiter.emit('sessionData', JSON.stringify({ type: 'refresh' }))
       yakitNotify('success', t('HistoryChat.clearedBeforeDays', { days }))
     } catch (e) {
       if (!(e instanceof AISessionDeleteCancelledError)) {
