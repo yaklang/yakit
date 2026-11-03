@@ -34,6 +34,7 @@ env:
 
 jobs:
   plan:
+    timeout-minutes: 5
     runs-on: ubuntu-24.04
     outputs:
       matrix: ${{ steps.plan.outputs.matrix }}
@@ -59,6 +60,7 @@ jobs:
           retention-days: 1
 
   package:
+    timeout-minutes: 40
     needs: plan
     runs-on: ${{ matrix.runner }}
     strategy:
@@ -121,6 +123,7 @@ jobs:
         run: node scripts/release/finalize.mjs upload
 
   publish:
+    timeout-minutes: 10
     needs: [plan, package]
     runs-on: ubuntu-24.04
     concurrency:

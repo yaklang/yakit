@@ -1,6 +1,7 @@
 import { chmod, mkdir, readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { createRequire } from 'node:module'
+import { setTimeout as delay } from 'node:timers/promises'
 import { assertVersion } from './model.mjs'
 import { download, hashFile, run } from './io.mjs'
 
@@ -62,9 +63,44 @@ export async function injectEngine(engine, appRoot, target) {
 }
 
 export async function verifyEngineVersion(engine) {
-  const output = await run(engine.binary, ['version'], { capture: true })
+  const output = await run(engine.binary, ['version'], { capture: true, timeout: 30000 })
   const escaped = engine.version.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
   if (!new RegExp(`(?:^|[^0-9A-Za-z.-])v?${escaped}(?:$|[^0-9A-Za-z.-])`).test(output)) {
     throw new Error(`Downloaded engine does not report requested version ${engine.version}: ${output}`)
   }
+}
+
+const appleNetworkError = (error) => /NSURLErrorDomain|network connection/i.test(error.message + error.stdout)
+
+// Retry only the Apple ticket operation that lost its connection. Neither an invalid
+// ticket nor a rejected submission may pass, and accepted apps are never resubmitted.
+async function runStapler(action, app, { execute = run, wait = delay } = {}) {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      await execute('xcrun', ['stapler', action, app], { capture: true })
+      return
+    } catch (error) {
+      if (error.code !== 68 || !appleNetworkError(error) || attempt === 2) throw error
+      await wait(2000 * (attempt + 1))
+    }
+  }
+}
+
+export const validateStapledTicket = (app, options) => runStapler('validate', app, options)
+
+export async function notarizeApp(
+  app,
+  authorization,
+  { submit = require('@electron/notarize').notarize, ...options } = {},
+) {
+  try {
+    await submit({ ...authorization, appPath: app })
+  } catch (error) {
+    // The SDK has already obtained acceptance when it reaches its staple step.
+    // Recover that specific network failure without repeating signing or submission.
+    if (!/Failed to staple your application with code: 68\b/.test(error.message) || !appleNetworkError(error))
+      throw error
+    await runStapler('staple', app, options)
+  }
+  await validateStapledTicket(app, options)
 }

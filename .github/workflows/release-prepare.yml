@@ -40,6 +40,7 @@ concurrency:
 
 jobs:
   plan:
+    timeout-minutes: 5
     runs-on: ubuntu-24.04
     outputs:
       matrix: ${{ steps.plan.outputs.matrix }}
@@ -71,6 +72,7 @@ jobs:
           retention-days: 1
 
   render:
+    timeout-minutes: 20
     needs: plan
     runs-on: ubuntu-24.04
     strategy:
@@ -119,6 +121,7 @@ jobs:
           retention-days: 1
 
   preassemble:
+    timeout-minutes: 40
     needs: [plan, render]
     runs-on: ${{ matrix.runner }}
     strategy:
@@ -190,6 +193,7 @@ jobs:
           retention-days: 1
 
   ready:
+    timeout-minutes: 5
     needs: [plan, preassemble]
     if: ${{ !inputs.test_only && github.event_name != 'pull_request' }}
     runs-on: ubuntu-24.04

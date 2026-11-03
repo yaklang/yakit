@@ -14,7 +14,13 @@ import {
   sha256,
 } from '../../../scripts/release/model.mjs'
 import { archive, extract } from '../../../scripts/release/io.mjs'
-import { downloadEngine, engineFile, injectEngine } from '../../../scripts/release/engine.mjs'
+import {
+  downloadEngine,
+  engineFile,
+  injectEngine,
+  notarizeApp,
+  validateStapledTicket,
+} from '../../../scripts/release/engine.mjs'
 import { makeConfig } from '../../../scripts/release/package.mjs'
 import { assertReleaseBinding, assertResults } from '../../../scripts/release/finalize.mjs'
 import { ossAuthorization } from '../../../scripts/release/oss.mjs'
@@ -275,4 +281,55 @@ describe('publish gate', () => {
     })
     expect(value).toBe('OSS test-key:nJ1kelCMeB2QwMaFyGRkfSsjgro=')
   })
+})
+
+describe('Apple ticket validation', () => {
+  it('retries a transient network disconnect without resubmitting notarization', async () => {
+    const network = Object.assign(new Error('NSURLErrorDomain: network connection was lost'), { code: 68 })
+    const execute = vi.fn().mockRejectedValueOnce(network).mockRejectedValueOnce(network).mockResolvedValue('valid')
+    const wait = vi.fn().mockResolvedValue()
+    await validateStapledTicket('/Yakit.app', { execute, wait })
+    expect(execute).toHaveBeenCalledTimes(3)
+    expect(execute).toHaveBeenLastCalledWith('xcrun', ['stapler', 'validate', '/Yakit.app'], { capture: true })
+    expect(wait.mock.calls).toEqual([[2000], [4000]])
+  })
+  it('does not retry or ignore an invalid ticket', async () => {
+    const invalid = Object.assign(new Error('Invalid ticket'), { code: 65 })
+    const execute = vi.fn().mockRejectedValue(invalid)
+    const wait = vi.fn()
+    await expect(validateStapledTicket('/Yakit.app', { execute, wait })).rejects.toBe(invalid)
+    expect(execute).toHaveBeenCalledTimes(1)
+    expect(wait).not.toHaveBeenCalled()
+  })
+  it('fails closed after three failed Apple network lookups', async () => {
+    const network = Object.assign(new Error('NSURLErrorDomain: network connection was lost'), { code: 68 })
+    const execute = vi.fn().mockRejectedValue(network)
+    await expect(validateStapledTicket('/Yakit.app', { execute, wait: vi.fn().mockResolvedValue() })).rejects.toBe(
+      network,
+    )
+    expect(execute).toHaveBeenCalledTimes(3)
+  })
+})
+
+it('recovers a staple disconnect after acceptance without resubmitting to Apple', async () => {
+  const submit = vi
+    .fn()
+    .mockRejectedValue(
+      new Error('Failed to staple your application with code: 68\nNSURLErrorDomain: network connection lost'),
+    )
+  const execute = vi.fn().mockResolvedValue('success')
+  await notarizeApp('/Yakit.app', { appleId: 'example' }, { submit, execute, wait: vi.fn() })
+  expect(submit).toHaveBeenCalledOnce()
+  expect(execute.mock.calls.map((call) => call[1])).toEqual([
+    ['stapler', 'staple', '/Yakit.app'],
+    ['stapler', 'validate', '/Yakit.app'],
+  ])
+})
+
+it('fails a rejected notarization without attempting to staple an unaccepted app', async () => {
+  const rejected = new Error('Notarization status Invalid')
+  const submit = vi.fn().mockRejectedValue(rejected)
+  const execute = vi.fn()
+  await expect(notarizeApp('/Yakit.app', {}, { submit, execute })).rejects.toBe(rejected)
+  expect(execute).not.toHaveBeenCalled()
 })

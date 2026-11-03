@@ -4,7 +4,7 @@ import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import { artifactName, assertPlan, products, readJson, targetFromEnv, writeJson } from './model.mjs'
 import { archive, extract, hashFile, run } from './io.mjs'
-import { downloadEngine, injectEngine, signMacEngine, verifyEngineVersion } from './engine.mjs'
+import { downloadEngine, injectEngine, signMacEngine, notarizeApp, verifyEngineVersion } from './engine.mjs'
 import { setVersion } from './prepare.mjs'
 
 const require = createRequire(import.meta.url)
@@ -158,7 +158,9 @@ export async function finalizePackage(plan, target, { signed = true } = {}) {
   await verifyEngineVersion(engine)
   const receipt = await injectEngine(engine, paths.contents, target)
   // Exercise the selected engine on the target's native runner before shipping it.
-  await run(process.execPath, ['scripts/engine-startup/verify-real-engine.cjs', path.resolve(engine.binary)])
+  await run(process.execPath, ['scripts/engine-startup/verify-real-engine.cjs', path.resolve(engine.binary)], {
+    timeout: 180000,
+  })
   const config = makeConfig(plan, target)
   if (signed && target.platform === 'darwin') {
     const { signAsync } = require('@electron/osx-sign')
@@ -175,14 +177,12 @@ export async function finalizePackage(plan, target, { signed = true } = {}) {
       }),
     })
     if (!target.legacy) {
-      await require('@electron/notarize').notarize({
-        appPath: path.resolve(paths.app),
+      await notarizeApp(path.resolve(paths.app), {
         appBundleId: config.appId,
         appleId: process.env.APPLE_ID,
         appleIdPassword: process.env.APPLE_APP_SPECIFIC_PASSWORD,
         teamId: process.env.APPLE_TEAM_ID,
       })
-      await run('xcrun', ['stapler', 'validate', path.resolve(paths.app)])
     }
     await run('codesign', ['--verify', '--deep', '--strict', path.resolve(paths.app)])
   }
