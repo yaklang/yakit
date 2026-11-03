@@ -19,6 +19,7 @@ import {
   engineFile,
   injectEngine,
   notarizeApp,
+  signWithTimestampRetry,
   validateStapledTicket,
 } from '../../../scripts/release/engine.mjs'
 import { makeConfig } from '../../../scripts/release/package.mjs'
@@ -343,6 +344,34 @@ describe('OSS remote object checksums', () => {
       expect(() => verifyOssEtag(headers, md5)).toThrow('checksum differs')
     },
   )
+})
+
+describe('Apple signing timestamps', () => {
+  const unavailable = Object.assign(new Error('codesign: The timestamp service is not available.'), { code: 1 })
+  it('retries temporary timestamp failures while preserving the signing result', async () => {
+    const sign = vi
+      .fn()
+      .mockRejectedValueOnce(unavailable)
+      .mockRejectedValueOnce(unavailable)
+      .mockResolvedValue('signed')
+    const wait = vi.fn().mockResolvedValue()
+    expect(await signWithTimestampRetry(sign, { wait })).toBe('signed')
+    expect(sign).toHaveBeenCalledTimes(3)
+    expect(wait.mock.calls).toEqual([[2000], [4000]])
+  })
+  it('fails certificate or signature errors immediately', async () => {
+    const invalid = Object.assign(new Error('The specified item could not be found in the keychain.'), { code: 1 })
+    const sign = vi.fn().mockRejectedValue(invalid)
+    const wait = vi.fn()
+    await expect(signWithTimestampRetry(sign, { wait })).rejects.toBe(invalid)
+    expect(sign).toHaveBeenCalledOnce()
+    expect(wait).not.toHaveBeenCalled()
+  })
+  it('fails closed when the timestamp service stays unavailable', async () => {
+    const sign = vi.fn().mockRejectedValue(unavailable)
+    await expect(signWithTimestampRetry(sign, { wait: vi.fn().mockResolvedValue() })).rejects.toBe(unavailable)
+    expect(sign).toHaveBeenCalledTimes(3)
+  })
 })
 
 describe('Apple ticket validation', () => {

@@ -4,7 +4,14 @@ import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import { artifactName, assertPlan, products, readJson, targetFromEnv, writeJson } from './model.mjs'
 import { archive, extract, hashFile, run } from './io.mjs'
-import { downloadEngine, injectEngine, signMacEngine, notarizeApp, verifyEngineVersion } from './engine.mjs'
+import {
+  downloadEngine,
+  injectEngine,
+  signMacEngine,
+  signWithTimestampRetry,
+  notarizeApp,
+  verifyEngineVersion,
+} from './engine.mjs'
 import { setVersion } from './prepare.mjs'
 
 const require = createRequire(import.meta.url)
@@ -164,18 +171,20 @@ export async function finalizePackage(plan, target, { signed = true } = {}) {
   const config = makeConfig(plan, target)
   if (signed && target.platform === 'darwin') {
     const { signAsync } = require('@electron/osx-sign')
-    await signAsync({
-      app: path.resolve(paths.app),
-      identity,
-      platform: 'darwin',
-      arch: target.arch,
-      version: target.electronVersion,
-      gatekeeperAssess: false,
-      optionsForFile: () => ({
-        hardenedRuntime: true,
-        entitlements: path.resolve('packageScript/plist/entitlements.mac.plist'),
+    await signWithTimestampRetry(() =>
+      signAsync({
+        app: path.resolve(paths.app),
+        identity,
+        platform: 'darwin',
+        arch: target.arch,
+        version: target.electronVersion,
+        gatekeeperAssess: false,
+        optionsForFile: () => ({
+          hardenedRuntime: true,
+          entitlements: path.resolve('packageScript/plist/entitlements.mac.plist'),
+        }),
       }),
-    })
+    )
     if (!target.legacy) {
       await notarizeApp(path.resolve(paths.app), {
         appBundleId: config.appId,

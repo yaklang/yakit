@@ -42,8 +42,25 @@ export async function downloadEngine(
   return { binary, type, version, source, sourceSha256: expected }
 }
 
+export async function signWithTimestampRetry(sign, { wait = delay } = {}) {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      return await sign()
+    } catch (error) {
+      if (error.code !== 1 || !/The timestamp service is not available\./i.test(error.message) || attempt === 2)
+        throw error
+      console.warn('Apple timestamp service unavailable; retrying signing')
+      await wait(2000 * (attempt + 1))
+    }
+  }
+}
+
 export async function signMacEngine(engine, identity) {
-  await run('codesign', ['--force', '--timestamp', '--options', 'runtime', '--sign', identity, engine.binary])
+  await signWithTimestampRetry(() =>
+    run('codesign', ['--force', '--timestamp', '--options', 'runtime', '--sign', identity, engine.binary], {
+      capture: true,
+    }),
+  )
   await run('codesign', ['--verify', '--strict', engine.binary])
 }
 
