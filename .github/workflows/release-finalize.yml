@@ -1,0 +1,141 @@
+name: Finalize Release
+run-name: Finalize candidate ${{ inputs.prepare_run_id }} · engine ${{ inputs.engine_version }} · publish=${{ inputs.publish }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      prepare_run_id:
+        description: Successful Prepare Release run ID (from its summary)
+        type: string
+        required: true
+      engine_version:
+        description: Exact released engine version (never latest)
+        type: string
+        required: true
+      publish:
+        description: Publish to GitHub and OSS update channels (unchecked = signed dry run)
+        type: boolean
+        default: false
+        required: true
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: release-candidate-${{ inputs.prepare_run_id }}
+  cancel-in-progress: false
+
+env:
+  HUSKY: '0'
+  GH_TOKEN: ${{ github.token }}
+  ENGINE_VERSION: ${{ inputs.engine_version }}
+  RELEASE_PUBLISH: ${{ inputs.publish }}
+
+jobs:
+  plan:
+    runs-on: ubuntu-24.04
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+      sha: ${{ steps.plan.outputs.sha }}
+      version: ${{ steps.plan.outputs.version }}
+      candidate: ${{ steps.plan.outputs.candidate }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.22.1'
+      - id: plan
+        env:
+          PREPARE_RUN_ID: ${{ inputs.prepare_run_id }}
+          OSS_KEY_ID: ${{ secrets.OSS_KEY_ID }}
+          OSS_KEY_SECRET: ${{ secrets.OSS_KEY_SECRET }}
+        run: node scripts/release/finalize.mjs plan
+      - uses: actions/upload-artifact@v4
+        with:
+          name: finalize-plan
+          path: .release/plan.json
+          include-hidden-files: true
+          retention-days: 1
+
+  package:
+    needs: plan
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    env:
+      NODE_OPTIONS: --max_old_space_size=4096
+      RELEASE_TARGET: ${{ matrix.id }}
+      APPLE_ID: ${{ secrets.APPLE_ACCOUNT_EMAIL }}
+      APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      CERT_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
+      CERT_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.plan.outputs.sha }}
+      - uses: ./.github/actions/release-toolchain
+      - uses: actions/download-artifact@v4
+        with:
+          name: finalize-plan
+          path: .release
+      - name: Download the selected preassembled application
+        shell: bash
+        env:
+          CANDIDATE: ${{ needs.plan.outputs.candidate }}
+        run: gh release download "$CANDIDATE" --pattern "${RELEASE_TARGET}.tgz" --dir .release
+      - name: Verify and restore the prepared archive
+        run: node scripts/release/package.mjs restore
+      - name: Install the existing EE Linux legacy wrapper tool
+        if: matrix.edition == 'yakitEE' && matrix.platform == 'linux' && matrix.legacy
+        run: sudo apt-get update && sudo apt-get install -y makeself
+      - name: Inject the pinned engine, verify it, sign and create the installer
+        run: node scripts/release/package.mjs finalize
+      - name: Sign Windows installers on the packaging runner
+        if: matrix.platform == 'win32'
+        uses: ./.github/actions/sign-windows
+        with:
+          path: .release/output
+          key-vault-url: ${{ secrets.AZURE_YAK_CODE_SIGN_KEY_VAULT_URI }}
+          key-vault-client-id: ${{ secrets.AZURE_YAK_CODE_SIGN_KEY_VAULT_APPLICATION_ID }}
+          key-vault-tenant-id: ${{ secrets.AZURE_YAK_CODE_SIGN_KEY_VAULT_DIRECTORY_ID }}
+          key-vault-client-secret: ${{ secrets.AZURE_YAK_CODE_SIGN_KEY_VAULT_CLIENT_SECRET }}
+          key-vault-certificate: ${{ secrets.AZURE_YAK_CODE_SIGN_KEY_VAULT_CERT_NAME }}
+          timestamp-url: ${{ secrets.AZURE_YAK_CODE_SIGN_KEY_VAULT_TIMESTAMP_URL }}
+      - name: Require a valid Windows signature before upload
+        if: matrix.platform == 'win32'
+        shell: pwsh
+        run: |
+          Get-ChildItem .release/output/*windows*.exe | ForEach-Object {
+            if ((Get-AuthenticodeSignature $_.FullName).Status -ne 'Valid') {
+              throw "Invalid installer signature: $($_.Name)"
+            }
+          }
+      - name: Upload this platform directly and record its final checksums
+        env:
+          OSS_KEY_ID: ${{ secrets.OSS_KEY_ID }}
+          OSS_KEY_SECRET: ${{ secrets.OSS_KEY_SECRET }}
+        run: node scripts/release/finalize.mjs upload
+
+  publish:
+    needs: [plan, package]
+    runs-on: ubuntu-24.04
+    concurrency:
+      group: release-publish-${{ needs.plan.outputs.version }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.plan.outputs.sha }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: finalize-plan
+          path: .release
+      - name: Verify all target receipts and complete the manually requested release
+        env:
+          OSS_KEY_ID: ${{ secrets.OSS_KEY_ID }}
+          OSS_KEY_SECRET: ${{ secrets.OSS_KEY_SECRET }}
+        run: node scripts/release/finalize.mjs complete

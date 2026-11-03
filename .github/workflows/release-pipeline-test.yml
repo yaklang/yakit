@@ -1,0 +1,41 @@
+name: Release Pipeline Test
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/release-*.yml'
+      - '.github/workflows/build-multi*-prod.yml'
+      - '.github/actions/release-toolchain/**'
+      - 'scripts/release/**'
+      - 'e2e/fixtures/__test__/release-pipeline.test.mjs'
+      - 'packageScript/**'
+      - 'scripts/build-electron.mjs'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-test-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  contracts:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: ./.github/actions/release-toolchain
+      - name: Verify release contracts and the Electron build
+        run: |
+          yarn typecheck:electron
+          yarn test:vitest e2e/fixtures/__test__/release-pipeline.test.mjs --run
+          yarn test:electron-build
+
+  native-installers:
+    uses: ./.github/workflows/release-prepare.yml
+    with:
+      editions: yakit
+      test_only: true
+      sign_test: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+    secrets: inherit

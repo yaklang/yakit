@@ -1,0 +1,207 @@
+name: Prepare Release
+run-name: Prepare ${{ inputs.editions || 'yakit,yakitEE' }} · ${{ github.ref_name }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      editions:
+        description: Editions to prepare
+        type: choice
+        default: yakit,yakitEE
+        options: [yakit, yakitEE, 'yakit,yakitEE', irify, 'irify,irifyEE', memfit]
+      release_version:
+        description: Software version (empty uses the tag or package.json)
+        type: string
+  workflow_call:
+    inputs:
+      editions:
+        type: string
+        default: yakit,yakitEE
+      release_version:
+        type: string
+        default: ''
+      test_only:
+        type: boolean
+        default: false
+      sign_test:
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+env:
+  HUSKY: '0'
+  SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+
+concurrency:
+  group: release-candidate-${{ github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    runs-on: ubuntu-24.04
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+      editions: ${{ steps.plan.outputs.editions }}
+      version: ${{ steps.plan.outputs.version }}
+      candidate: ${{ steps.plan.outputs.candidate }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.SOURCE_SHA }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.22.1'
+      - id: plan
+        env:
+          RELEASE_EDITIONS: ${{ inputs.editions }}
+          RELEASE_VERSION: ${{ inputs.release_version }}
+        run: node scripts/release/prepare.mjs plan
+      - name: Create internal draft candidate
+        if: ${{ !inputs.test_only && github.event_name != 'pull_request' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/release/prepare.mjs init
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-plan
+          path: .release/plan.json
+          include-hidden-files: true
+          retention-days: 1
+
+  render:
+    needs: plan
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        edition: ${{ fromJSON(needs.plan.outputs.editions) }}
+    env:
+      NODE_OPTIONS: --max_old_space_size=8192
+      RELEASE_VERSION: ${{ needs.plan.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.SOURCE_SHA }}
+      - uses: ./.github/actions/release-toolchain
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.22.1'
+          cache: yarn
+          cache-dependency-path: |
+            app/renderer/src/main/yarn.lock
+            app/renderer/engine-link-startup/yarn.lock
+      - name: Install locked renderer dependencies
+        run: |
+          yarn --cwd app/renderer/src/main install --frozen-lockfile --ignore-scripts --non-interactive
+          yarn --cwd app/renderer/engine-link-startup install --frozen-lockfile --ignore-scripts --non-interactive
+      - name: Build both renderers and the production Electron entries
+        env:
+          EDITION: ${{ matrix.edition }}
+        run: |
+          node scripts/release/prepare.mjs version
+          yarn cli build -v "$EDITION"
+          yarn build:electron
+      - name: Freeze the Chrome extension with the frontend
+        shell: bash
+        run: |
+          version=$(curl -fsSL --retry 3 https://yaklang.oss-accelerate.aliyuncs.com/chrome-extension/latest-version.txt | tr -d '\r\n')
+          [[ "$version" =~ ^[0-9A-Za-z.-]+$ ]]
+          curl -fsSL --retry 3 "https://yaklang.oss-accelerate.aliyuncs.com/chrome-extension/yakit-chrome-extension-v${version}.zip" -o bins/scripts/google-chrome-plugin.zip
+          tar -czf .release-render.tgz app/renderer/pages app/renderer/engine-link-startup/dist dist/electron bins/scripts/google-chrome-plugin.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-render-${{ matrix.edition }}
+          path: .release-render.tgz
+          compression-level: 0
+          include-hidden-files: true
+          retention-days: 1
+
+  preassemble:
+    needs: [plan, render]
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    env:
+      NODE_OPTIONS: --max_old_space_size=4096
+      RELEASE_TARGET: ${{ matrix.id }}
+      GH_TOKEN: ${{ github.token }}
+      APPLE_ID: ${{ secrets.APPLE_ACCOUNT_EMAIL }}
+      APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      CERT_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
+      CERT_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.SOURCE_SHA }}
+      - uses: ./.github/actions/release-toolchain
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-plan
+          path: .release
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-render-${{ matrix.edition }}
+      - name: Restore the frozen frontend
+        shell: bash
+        run: |
+          tar -xzf .release-render.tgz
+          rm .release-render.tgz
+      - name: Prepare the complete application without an engine
+        run: node scripts/release/package.mjs prepare
+      - name: Store preassembled application in the internal draft
+        if: ${{ !inputs.test_only && github.event_name != 'pull_request' }}
+        shell: bash
+        env:
+          CANDIDATE: ${{ needs.plan.outputs.candidate }}
+        run: gh release upload "$CANDIDATE" ".release/${RELEASE_TARGET}.tgz" ".release/prepared-${RELEASE_TARGET}.json" --clobber
+      - name: Install Linux legacy wrapper tool for the integration test
+        if: inputs.test_only && matrix.edition == 'yakitEE' && matrix.platform == 'linux' && matrix.legacy
+        run: sudo apt-get update && sudo apt-get install -y makeself
+      - name: Test finalization with a pinned released engine (never publish)
+        if: inputs.test_only
+        env:
+          ENGINE_VERSION: 1.4.9-beta5
+          RELEASE_UNSIGNED: ${{ !inputs.sign_test }}
+        run: node scripts/release/package.mjs finalize
+      - name: Verify Windows signing without publishing
+        if: inputs.test_only && inputs.sign_test && matrix.platform == 'win32'
+        uses: ./.github/actions/sign-windows
+        with:
+          path: .release/output
+          key-vault-url: ${{ secrets.AZURE_YAK_CODE_SIGN_KEY_VAULT_URI }}
+          key-vault-client-id: ${{ secrets.AZURE_YAK_CODE_SIGN_KEY_VAULT_APPLICATION_ID }}
+          key-vault-tenant-id: ${{ secrets.AZURE_YAK_CODE_SIGN_KEY_VAULT_DIRECTORY_ID }}
+          key-vault-client-secret: ${{ secrets.AZURE_YAK_CODE_SIGN_KEY_VAULT_CLIENT_SECRET }}
+          key-vault-certificate: ${{ secrets.AZURE_YAK_CODE_SIGN_KEY_VAULT_CERT_NAME }}
+          timestamp-url: ${{ secrets.AZURE_YAK_CODE_SIGN_KEY_VAULT_TIMESTAMP_URL }}
+      - name: Upload integration receipts
+        if: inputs.test_only
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-test-${{ matrix.id }}
+          path: .release/result-*.json
+          if-no-files-found: error
+          include-hidden-files: true
+          retention-days: 1
+
+  ready:
+    needs: [plan, preassemble]
+    if: ${{ !inputs.test_only && github.event_name != 'pull_request' }}
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.SOURCE_SHA }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-plan
+          path: .release
+      - name: Validate every target and mark the candidate ready
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/release/prepare.mjs seal

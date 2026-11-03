@@ -1,0 +1,26 @@
+name: Release toolchain
+description: Reuse locked packaging tools on standard GitHub-hosted runners
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '22.22.1'
+    - uses: actions/cache@v4
+      id: tools
+      with:
+        path: |
+          node_modules
+          ~/.cache/electron
+          ~/.cache/electron-builder
+          ~/Library/Caches/electron
+          ~/Library/Caches/electron-builder
+          ~/AppData/Local/electron/Cache
+          ~/AppData/Local/electron-builder/Cache
+        key: release-tools-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('yarn.lock') }}
+    - name: Install locked packaging tools on a cold cache
+      if: steps.tools.outputs.cache-hit != 'true'
+      shell: bash
+      env:
+        HUSKY: '0'
+      run: yarn install --frozen-lockfile --ignore-scripts --non-interactive --network-timeout 120000
