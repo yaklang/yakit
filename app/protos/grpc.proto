@@ -2238,8 +2238,12 @@ message AIStartParams {
   int64 ReActMaxIteration = 27;
 
   // 限制 Timeline 的最大条目和最大内容大小（bytes）
-  int64 TimelineItemLimit = 28; // 已经废弃，功能不可用了，只需要关注 TimelineContentSizeLimit 就好
+  int64 TimelineItemLimit = 28; // 已经废弃，运行时上下文请看 RuntimeContextSizeLimit
+  // Deprecated: 旧阈值不能表示包含 Skill 正文、Evidence 等内容的完整运行时上下文。
+  // 客户端不再下发此字段，使用 RuntimeContextSizeLimit。
   int64 TimelineContentSizeLimit = 29;
+  // 运行时上下文压缩阈值，单位字节；>0 覆盖服务端默认，<=0 或不传使用服务端默认。
+  int64 RuntimeContextSizeLimit = 51;
 
   // 用户交互的最大次数限制,超过这个次数，AI 将不再被允许问用户问题
   int64 UserInteractLimit = 30;
@@ -2308,6 +2312,12 @@ message AIExecutionStrategy {
   // Multi 模式下子 Agent 最大并发数（同时运行数量）。
   // <=0 时由服务端使用默认值；服务端负责执行绝对上限钳制。
   int64 MaxSubAgents = 4;
+
+  // Goal 时间窗口（秒）。>0 时窗口内拒绝 finish；-1 永不自动放行；0 不启用时间窗口。
+  int64 GoalDurationSeconds = 5;
+
+  // 非空时 finish 需通过验收条件 review；留空不启用验收条件。
+  string GoalAcceptanceCriteria = 6;
 }
 
 message AITaskFilter {

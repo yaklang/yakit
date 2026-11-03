@@ -6,7 +6,12 @@ vi.mock('@/pages/ai-agent/grpc', () => ({ grpcQueryAIForge: vi.fn() }))
 vi.mock('@/pages/ai-agent/template/template', () => ({
   AIChatTextarea: React.forwardRef(({ defaultMentions, submitDisabled, onSubmit }: any, ref) => (
     <div>
-      <textarea aria-label="对话内容" />
+      <textarea
+        aria-label="对话内容"
+        onKeyDown={(event) => {
+          if (event.ctrlKey && event.key === 'Enter') onSubmit({ qs: '分析告警', mentionList: defaultMentions })
+        }}
+      />
       <span data-testid="default-forge">{defaultMentions?.[0]?.mentionName || 'none'}</span>
       <button disabled={submitDisabled} onClick={() => onSubmit({ qs: '分析告警', mentionList: defaultMentions })}>
         发送消息
@@ -79,5 +84,40 @@ describe('DigitalEmployeeChatWelcome', () => {
     expect(screen.getByRole('textbox', { name: '对话内容' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '发送消息' })).toBeDisabled()
     expect(onSubmit).not.toHaveBeenCalled()
+  })
+
+  it('guards shortcut submissions without an agent and enables them after the engine recovers', async () => {
+    vi.mocked(grpcQueryAIForge).mockRejectedValue(new Error('offline'))
+    const onSubmit = vi.fn()
+    render(
+      <DigitalEmployeeProvider enabled>
+        <DigitalEmployeeChatWelcome onSubmit={onSubmit} />
+      </DigitalEmployeeProvider>,
+    )
+    await screen.findByRole('button', { name: '重新加载' })
+    // Deliberately dispatch through the editor callback even while its send button is disabled.
+    fireEvent.keyDown(screen.getByRole('textbox', { name: '对话内容' }), { key: 'Enter', ctrlKey: true })
+    expect(onSubmit).not.toHaveBeenCalled()
+
+    vi.mocked(grpcQueryAIForge).mockResolvedValue({
+      Data: [
+        {
+          Id: 1,
+          ForgeName: 'threat-primary',
+          ForgeVerboseName: '恢复后的智能体',
+          Tag: [createDigitalEmployeeRoleTag('threat-analyst')],
+        },
+      ],
+      Total: 1,
+    } as never)
+    fireEvent.click(screen.getByRole('button', { name: '重新加载' }))
+    await waitFor(() => expect(screen.getByRole('button', { name: '发送消息' })).toBeEnabled())
+    fireEvent.keyDown(screen.getByRole('textbox', { name: '对话内容' }), { key: 'Enter', ctrlKey: true })
+    expect(onSubmit).toHaveBeenCalledTimes(1)
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        mentionList: [expect.objectContaining({ mentionName: '恢复后的智能体', mentionType: 'forge', lock: true })],
+      }),
+    )
   })
 })

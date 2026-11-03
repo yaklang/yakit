@@ -44,7 +44,7 @@ export function useChatIPC(route: YakitRouteType, pageId: string) {
   })
 
   const onSend = useMemoizedFn((payload: AIChatSendParams) => {
-    globalSessionEngine.handleSendMessage(payload)
+    return globalSessionEngine.handleSendMessage(payload)
   })
 
   const onClose = useMemoizedFn((sessionIds: string[], onEnd?: () => void) => {

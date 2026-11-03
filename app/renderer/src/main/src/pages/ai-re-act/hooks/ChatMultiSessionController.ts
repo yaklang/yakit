@@ -8,6 +8,7 @@ import {
   type AIInputEvent,
   type AIOutputEvent,
   type AIStartParams,
+  withServerRuntimeContextLimit,
 } from './grpcApi'
 import { createChatStore } from './chatStore'
 import { sessionStatusStore, SessionDeleteStatus } from './sessionStatus/sessionStatusStore'
@@ -765,7 +766,8 @@ export class ChatMultiSessionController {
       onLinkSuccess?: (sessionId: string) => void
     },
   ): boolean {
-    const { token: sessionId, params, route, pageId, localSource } = requestParams
+    const { token: sessionId, params: inputParams, route, pageId, localSource } = requestParams
+    const params = { ...inputParams, Params: withServerRuntimeContextLimit(inputParams.Params || {}) }
     if (this.readyChannels.has(sessionId)) {
       yakitNotify('warning', '会话已经存在，请勿重复建立！')
       return false
@@ -868,14 +870,14 @@ export class ChatMultiSessionController {
   }
 
   /** 主动向grpc发送请求 */
-  public handleSendMessage(payload: AIChatSendParams) {
+  public handleSendMessage(payload: AIChatSendParams): boolean {
     // console.log('handleSendMessage', payload)
     try {
       const { token, type, params, optionValue } = payload
       if (!this.readyChannels.has(token)) {
-        if (!this.isActiveShowSession(token)) return
+        if (!this.isActiveShowSession(token)) return false
         yakitNotify('warning', '会话不存在，无法发送消息')
-        return
+        return false
       }
 
       const { store, rawData, meta } = this.ensureSession(token)
@@ -883,8 +885,11 @@ export class ChatMultiSessionController {
       // 向上加载历史（recovery_history）进行中时禁止发送消息，避免与 gRPC 查询并发导致后端表死锁
       if (store.getState().grpcLoadMoreLoading) {
         yakitNotify('warning', '历史消息加载中，请稍后再发送')
-        return
+        return false
       }
+
+      // 恢复尚未完成时不提交热补丁，也不让 UI 把未发送的值记成会话配置。
+      if (params.IsConfigHotpatch && store.getState().initLoading) return false
 
       if (params.IsFreeInput) {
         const { currentChatStatus } = store.getState()
@@ -974,7 +979,7 @@ export class ChatMultiSessionController {
             const review = rawData.contents.get(params.InteractiveId)
             if (!isExist || !review) {
               yakitNotify('error', '未获取到 review 信息, 操作无效')
-              return
+              return false
             }
 
             switch (review.type) {
@@ -1003,7 +1008,7 @@ export class ChatMultiSessionController {
             const review = rawData.contents.get(params.InteractiveId)
             if (!isExist || !review) {
               yakitNotify('error', '未获取到 review 信息, 操作无效')
-              return
+              return false
             }
 
             store.getState().updateState({ currentReviewDetail: { token: '', renderNum: 0 } })
@@ -1052,8 +1057,10 @@ export class ChatMultiSessionController {
       }
 
       this.requestMessage(token, params)
+      return true
     } catch (error) {
       console.error('handleSendMessage error', error)
+      return false
     }
   }
   /** 向连接中的会话发送请求 */

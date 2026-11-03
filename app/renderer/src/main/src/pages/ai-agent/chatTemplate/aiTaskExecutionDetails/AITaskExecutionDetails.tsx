@@ -60,7 +60,10 @@ import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitR
 import { timeDiffWithMoment } from '@/utils/timeUtil'
 import { AITaskActionItem, AITaskExecutionList } from './aiTaskExecutionList/AITaskExecutionList'
 import { AIToDoListDetail } from '@/pages/ai-re-act/aiReActChat/aiToDoList/AIToDoListDetail'
-import { useCurrentRawData } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import { useCurrentRawData, useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import { useStore } from 'zustand'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { AITaskBoardView } from './aiTaskBoard/AITaskBoardView'
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
 import useAIAgentDispatcher from '../../useContext/useDispatcher'
 import { randomString } from '@/utils/randomUtil'
@@ -68,13 +71,22 @@ import { randomString } from '@/utils/randomUtil'
 export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = React.memo((props) => {
   const { taskId, taskGoal, taskName, onClose } = props
   const rawData = useCurrentRawData()
+  const { t } = useI18nNamespaces(['aiAgent'])
+  const sessionId = useCurrentSessionId()
+  const store = useCurrentStore()
+  const todoListUpdate = useStore(store, (state) => state.chatTodoListUpdate)
+  const [todoView, setTodoView] = useState<'list' | 'board'>('list')
 
   const [planItemDetailsData, setPlanItemDetailsData] = useState<PlanItemDetailsData>()
   const perPlanItemDetailsDataUUIdRef = useRef<string>('')
   useEffect(() => {
     onReset()
+    setTodoView('list')
     getData()
-  }, [taskId])
+  }, [taskId, sessionId, rawData])
+  useEffect(() => {
+    getData()
+  }, [todoListUpdate])
   useInterval(() => {
     getData()
   }, 5 * 1000)
@@ -85,7 +97,10 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
   const getData = useMemoizedFn(() => {
     if (!taskId) return
     const itemData = rawData.taskDetailsMap.get(taskId)
-    if (!itemData) return
+    if (!itemData) {
+      if (perPlanItemDetailsDataUUIdRef.current) onReset()
+      return
+    }
     if (perPlanItemDetailsDataUUIdRef.current === itemData.uuid) return
     perPlanItemDetailsDataUUIdRef.current = itemData.uuid
     setPlanItemDetailsData(cloneDeep(itemData))
@@ -284,42 +299,57 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
           <div className={styles['task-statistics']}>
             <div className={styles['stats-header']}>
               <span className={styles['title']}>待办任务</span>
+              {!!total && (
+                <YakitRadioButtons
+                  size="small"
+                  value={todoView}
+                  options={[
+                    { value: 'list', label: t('AITaskBoard.list') },
+                    { value: 'board', label: t('AITaskBoard.board') },
+                  ]}
+                  onChange={(event) => setTodoView(event.target.value)}
+                />
+              )}
               {!!total && todoListCardData && <AIToDoListDetail todoData={todoListCardData} />}
             </div>
             {total ? (
               <>
                 {/* 状态统计区块 */}
                 <AITaskStatisticsStatus list={todoData.progressNumber} />
-                <div className={styles['stats-content']}>
-                  {/* 待办列表区块 */}
-                  <div className={styles['todo-list-wrapper']}>
-                    <div className={styles['todo-list-header']}>
-                      <span className={styles['todo-title']}>待办</span>
-                      <YakitTag border={false} fullRadius size="small">
-                        {todoData.unFinish.length}
-                      </YakitTag>
+                {todoView === 'board' ? (
+                  <AITaskBoardView items={todoListCardData?.items || []} />
+                ) : (
+                  <div className={styles['stats-content']}>
+                    {/* 待办列表区块 */}
+                    <div className={styles['todo-list-wrapper']}>
+                      <div className={styles['todo-list-header']}>
+                        <span className={styles['todo-title']}>待办</span>
+                        <YakitTag border={false} fullRadius size="small">
+                          {todoData.unFinish.length}
+                        </YakitTag>
+                      </div>
+                      <div className={styles['todo-list']}>
+                        {todoData.unFinish.map((item, index) => (
+                          <AIToDoListItem key={index} item={item} />
+                        ))}
+                      </div>
                     </div>
-                    <div className={styles['todo-list']}>
-                      {todoData.unFinish.map((item, index) => (
-                        <AIToDoListItem key={index} item={item} />
-                      ))}
+                    {/* 已结束 */}
+                    <div className={styles['todo-list-wrapper']}>
+                      <div className={styles['todo-list-header']}>
+                        <span className={styles['todo-title']}>已结束</span>
+                        <YakitTag border={false} fullRadius size="small">
+                          {todoData.finished.length}
+                        </YakitTag>
+                      </div>
+                      <div className={styles['todo-list']}>
+                        {todoData.finished.map((item, index) => (
+                          <AIToDoListItem key={index} item={item} />
+                        ))}
+                      </div>
                     </div>
                   </div>
-                  {/* 已结束 */}
-                  <div className={styles['todo-list-wrapper']}>
-                    <div className={styles['todo-list-header']}>
-                      <span className={styles['todo-title']}>已结束</span>
-                      <YakitTag border={false} fullRadius size="small">
-                        {todoData.finished.length}
-                      </YakitTag>
-                    </div>
-                    <div className={styles['todo-list']}>
-                      {todoData.finished.map((item, index) => (
-                        <AIToDoListItem key={index} item={item} />
-                      ))}
-                    </div>
-                  </div>
-                </div>
+                )}
               </>
             ) : (
               <div className={styles['empty-body']}>

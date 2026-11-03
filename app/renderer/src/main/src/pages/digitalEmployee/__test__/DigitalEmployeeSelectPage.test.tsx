@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@/pages/ai-agent/grpc', () => ({ grpcQueryAIForge: vi.fn() }))
@@ -16,6 +16,7 @@ import { createDigitalEmployeeRoleTag } from '../roleAssignment'
 
 describe('DigitalEmployeeSelectPage', () => {
   afterEach(() => {
+    cleanup()
     consumeDigitalEmployeeQuickNavigation()
     vi.restoreAllMocks()
     vi.mocked(grpcQueryAIForge).mockReset()

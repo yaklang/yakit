@@ -1,7 +1,9 @@
 import type { AIAgentSetting } from '../aiAgentType'
+import { normalizeExecutionStrategy } from '../aiRunModeSelect/goalStrategy'
 import isNil from 'lodash/isNil'
 import { AIAgentSettingDefault, AttachedResourceKeyEnum, AttachedResourceTypeEnum } from '../defaultConstant'
 import type { AIAgentGrpcApi, AIInputEvent, AIStartParams, AttachedResourceInfo } from '../../ai-re-act/hooks/grpcApi'
+import { withServerRuntimeContextLimit } from '../../ai-re-act/hooks/grpcApi'
 import type { AITaskInfoProps } from '../../ai-re-act/hooks/aiRender'
 import type { HandleStartParams } from '../aiAgentChat/type'
 import type { AIMentionCommandParams } from '../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
@@ -75,10 +77,10 @@ export const formatNumberUnits = (num: number) => {
 /** @name 将全局配置信息转换为可以请求的数据结构 */
 export const formatAIAgentSetting = (setting: AIAgentSetting): AIAgentSetting => {
   /**
-   * AIService/AIModelName/TimelineItemLimit 已经废弃
+   * AIService/AIModelName/TimelineItemLimit/TimelineContentSizeLimit 已经废弃
    */
   let data: AIAgentSetting = { ...setting }
-  data = omit(data, ['AIService', 'AIModelName', 'TimelineItemLimit'])
+  data = omit(data, ['AIService', 'AIModelName', 'TimelineItemLimit', 'TimelineContentSizeLimit'])
   try {
     data.EnableSystemFileSystemOperator =
       setting.EnableSystemFileSystemOperator ?? AIAgentSettingDefault.EnableSystemFileSystemOperator
@@ -109,12 +111,15 @@ export const formatAIAgentSetting = (setting: AIAgentSetting): AIAgentSetting =>
     data.SyncPerceptionTrigger = setting.SyncPerceptionTrigger ?? AIAgentSettingDefault.SyncPerceptionTrigger
     data.EnablePlan = setting.EnablePlan ?? AIAgentSettingDefault.EnablePlan
     data.PlanExecTaskConcurrency = setting.PlanExecTaskConcurrency ?? AIAgentSettingDefault.PlanExecTaskConcurrency
-    data.Strategy = {
+    data.Strategy = normalizeExecutionStrategy({
       EnableMultiAgent: setting.Strategy?.EnableMultiAgent ?? AIAgentSettingDefault.Strategy?.EnableMultiAgent,
       EnableGoalMode: setting.Strategy?.EnableGoalMode ?? AIAgentSettingDefault.Strategy?.EnableGoalMode,
       GoalMinIterations: setting.Strategy?.GoalMinIterations ?? AIAgentSettingDefault.Strategy?.GoalMinIterations,
       MaxSubAgents: setting.Strategy?.MaxSubAgents ?? AIAgentSettingDefault.Strategy?.MaxSubAgents,
-    }
+      GoalDurationSeconds: setting.Strategy?.GoalDurationSeconds ?? AIAgentSettingDefault.Strategy?.GoalDurationSeconds,
+      GoalAcceptanceCriteria:
+        setting.Strategy?.GoalAcceptanceCriteria ?? AIAgentSettingDefault.Strategy?.GoalAcceptanceCriteria,
+    })
 
     if (setting?.AllowPlanUserInteract) {
       if (!isNil(setting?.PlanUserInteractMaxCount)) {
@@ -126,9 +131,8 @@ export const formatAIAgentSetting = (setting: AIAgentSetting): AIAgentSetting =>
     if (!isNil(setting?.ReActMaxIteration)) {
       data.ReActMaxIteration = setting.ReActMaxIteration || AIAgentSettingDefault.ReActMaxIteration
     }
-    // TimelineContentSizeLimit 单位是KB，但传到后端需要转换为字节
-    data.TimelineContentSizeLimit =
-      ((setting.TimelineContentSizeLimit ?? AIAgentSettingDefault.TimelineContentSizeLimit) as number) * 1024
+    // 设置页为 KB，只在这里换算一次；缺省或无效值由服务端决定。
+    data.RuntimeContextSizeLimit = (setting.RuntimeContextSizeLimit ?? 0) * 1024
 
     // AICallTokenLimit 单位是KB，但传到后端需要转换为字节
     data.AICallTokenLimit = ((setting.AICallTokenLimit ?? AIAgentSettingDefault.AICallTokenLimit) as number) * 1024
@@ -141,7 +145,7 @@ export const formatAIAgentSetting = (setting: AIAgentSetting): AIAgentSetting =>
     data.DisableToolIntervalReview =
       setting.DisableToolIntervalReview ?? AIAgentSettingDefault.DisableToolIntervalReview
   } catch (error) {}
-  return { ...data }
+  return withServerRuntimeContextLimit(data)
 }
 
 const getResourceInfoByMention = (mention: AIMentionCommandParams): AttachedResourceInfo | null => {
@@ -303,12 +307,15 @@ export const onReStart = (props: ReStartParams) => {
   if (!activeChat?.SessionID) return
   const execute = globalSessionEngine.getSessionExecute(activeChat.SessionID)
   if (!execute) {
-    const request: AIStartParams = setting ?? {
-      ...AIAgentSettingDefault,
-      ...activeChat.StartParams,
-      PreferSessionCachedConfig: true,
-      UserQuery: '',
-    }
+    // UI 默认值里的运行时阈值是 KB，不能填进历史请求的字节字段。
+    const request: AIStartParams = withServerRuntimeContextLimit(
+      setting ?? {
+        ...omit(AIAgentSettingDefault, ['RuntimeContextSizeLimit']),
+        ...activeChat.StartParams,
+        PreferSessionCachedConfig: true,
+        UserQuery: '',
+      },
+    )
     // 发送初始化参数
     const aiInputEvent: AIInputEvent = {
       IsStart: true,

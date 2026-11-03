@@ -532,7 +532,10 @@
     "permissionsAndSecurity": "基礎權限與安全",
     "planningAndExecution": "任務規劃與執行",
     "automation": "自動化配置",
-    "resourcesLimits": "資源與上下文閾值"
+    "resourcesLimits": "資源與上下文閾值",
+    "runtimeContextSize": "執行時上下文大小",
+    "runtimeContextSizeHelp": "歷史、技能正文等執行時上下文的壓縮閾值，單位 KB。0 或留空時使用引擎預設值；此處設定作為新會話預設值。執行中的會話可在輸入框設定中單獨調整。",
+    "runtimeContextSizeHotpatchHelp": "單位 KB，最小 60 KB。執行中修改時會向目前會話傳送熱更新，並儲存為新會話預設值。未連線、已停止或正在恢復歷史時，僅儲存新會話預設值；重新開啟會顯示目前會話原有閾值。"
   },
   "AIScheduledTasks": {
     "title": "定時任務",
@@ -640,5 +643,49 @@
       "weekly": "每週",
       "custom": "自訂"
     }
+  },
+  "AIRunModeSelect": {
+    "mode": "模式",
+    "multiMode": "多模式",
+    "settingsHint": "可多選模式；執行中的修改提交給目前會話。",
+    "maxSubAgents": "子 Agent 數量",
+    "maxSubAgentsHelp": "0 使用服務端預設值，最大 20。",
+    "goalCondition": "Goal 完成條件",
+    "iterations": "迭代次數",
+    "duration": "持續時間",
+    "acceptance": "驗收條件",
+    "minimumIterations": "最小迭代次數",
+    "minimumDuration": "至少持續",
+    "seconds": "秒",
+    "continuous": "持續執行（手動停止）",
+    "durationHelp": "時間表示允許結束前的最短期間，不是逾時上限；持續執行需手動停止。",
+    "acceptanceCriteria": "驗收條件",
+    "acceptancePlaceholder": "例如：完成資產盤點並輸出包含證據的報告",
+    "exclusiveHelp": "點擊套用後提交；三種條件互斥，套用時會清除另外兩種條件。",
+    "updateRejected": "目前會話暫不可更新，請等待連線或歷史恢復完成後重試。",
+    "applyCondition": "套用 Goal 條件"
+  },
+  "AITaskBoard": {
+    "PENDING": "待處理",
+    "DOING": "執行中",
+    "DONE": "已完成",
+    "SKIPPED_DELETED": "已跳過 / 已刪除",
+    "OTHER": "其他狀態",
+    "list": "清單",
+    "board": "看板",
+    "title": "任務看板",
+    "openBoard": "檢視任務看板",
+    "emptyColumn": "暫無任務"
+  },
+  "AITaskExecutionDetails": {
+    "createdTime": "建立於 {{time}}",
+    "duration": "耗時 {{time}}",
+    "startOngoing": "開始 {{time}} · 執行中",
+    "survival": "存活 {{time}}",
+    "labelStart": "開始",
+    "labelEnd": "結束",
+    "labelCreated": "建立",
+    "labelSkipped": "跳過",
+    "labelDeleted": "刪除"
   }
 }

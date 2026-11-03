@@ -18,6 +18,7 @@ export interface AIInputSettingPopoverProps {
   setVisible?: (v: boolean) => void
 }
 export interface AIInputSettingFormProps {
+  RuntimeContextSizeLimit: number | null
   SyncPerceptionTrigger: boolean
   EnablePlan: boolean
   /** 全局指令 */

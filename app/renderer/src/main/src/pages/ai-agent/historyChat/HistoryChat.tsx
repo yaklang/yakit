@@ -42,6 +42,7 @@ import { usePageInfo } from '@/store/pageInfo'
 import { shallow } from 'zustand/shallow'
 import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
+import { mergeAISessionUpdates } from './sessionUpdates'
 
 const HISTORY_SOURCE_FILTER_OPTIONS: {
   key: HistorySourceFilter
@@ -346,7 +347,9 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
         case 'updateSession':
           if (payload.sessionId && payload.updates) {
             dispatcher.setSessions((prev) =>
-              prev.map((item) => (item.SessionID === payload.sessionId ? { ...item, ...payload.updates } : item)),
+              prev.map((item) =>
+                item.SessionID === payload.sessionId ? mergeAISessionUpdates(item, payload.updates!) : item,
+              ),
             )
           }
           break

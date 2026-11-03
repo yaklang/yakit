@@ -5,6 +5,7 @@ import type { AITool } from '@/pages/ai-agent/type/aiTool'
 import type { AIForge } from '@/pages/ai-agent/type/forge'
 import type { ExecResult, PaginationSchema } from '@/pages/invoker/schema'
 import type { AITaskInfoProps } from './aiRender'
+import omit from 'lodash/omit'
 
 import type {
   AIToDoListStatusEnumType,
@@ -122,7 +123,10 @@ export interface AIStartParams {
   AIModelName?: string
   ReActMaxIteration?: number
   /** 时间线上下文大小（20*1024） */
+  /** @deprecated 请求不再携带此字段，使用 RuntimeContextSizeLimit。 */
   TimelineContentSizeLimit?: number
+  /** 运行时上下文压缩阈值；固定参考前端按 UI 刻度 × 1024 下发，<=0 使用服务端默认。 */
+  RuntimeContextSizeLimit?: number
   /** 用户交互的最大次数限制,超过这个次数，AI 将不再被允许问用户问题 */
   UserInteractLimit?: number
   /** timeline sessionID  用于多轮对话保持上下文 */
@@ -184,6 +188,10 @@ export interface AIExecutionStrategy {
   GoalMinIterations?: number
   /** Multi 模式下单次 dispatch 子 Agent 数量，<=0 由服务端默认；服务端硬上限 20 */
   MaxSubAgents?: number
+  /** Goal 时间窗口（秒）：>0 窗口内拒绝 finish；-1 永不自动放行；0 不启用。 */
+  GoalDurationSeconds?: number
+  /** Goal 验收条件；非空时 finish 需通过 review。 */
+  GoalAcceptanceCriteria?: string
 }
 
 export interface AIEnabledCapability {
@@ -191,18 +199,28 @@ export interface AIEnabledCapability {
   Type: string
 }
 
+/** 官方启动参数边界：入参已经是传输值，不重复换算；无有效新阈值时使用服务端默认。 */
+export const withServerRuntimeContextLimit = <
+  T extends Omit<AIStartParams, 'RuntimeContextSizeLimit'> & { RuntimeContextSizeLimit?: number | string },
+>(
+  params: T,
+): Omit<T, 'TimelineContentSizeLimit' | 'RuntimeContextSizeLimit'> & { RuntimeContextSizeLimit: number } => {
+  const value = Number(params.RuntimeContextSizeLimit)
+  return {
+    ...omit(params, ['TimelineContentSizeLimit', 'RuntimeContextSizeLimit']),
+    RuntimeContextSizeLimit: Number.isSafeInteger(value) && value > 0 ? value : 0,
+  }
+}
+
 /** AIInputEvent-HotpatchType 的可选值 */
 export enum AIInputEventHotPatchTypeEnum {
   HotPatchType_AllowRequireForUserInteract = 'AllowRequireForUserInteract',
   HotPatchType_AgreePolicy = 'AgreePolicy',
   HotPatchType_SyncPerceptionTrigger = 'SyncPerceptionTrigger',
+  HotPatchType_RuntimeContextSizeLimit = 'RuntimeContextSizeLimit',
   HotPatchType_EnablePlan = 'EnablePlan',
-  /**
-   * 预留：Strategy 执行策略热更新。
-   * 目前策略侧暂不支持热更新，前端 onSetStrategy 仅写回本地 setting 与会话 StartParams；
-   * 后端支持热加载后，在 onSetStrategy 中启用该 hotpatch 调用即可。
-   */
-  HotPatchType_Strategy = 'Strategy',
+  /** 官方执行策略热更新。 */
+  HotPatchType_Strategy = 'ExecutionStrategy',
 
   HotPatchType_EnabledCapabilities = 'EnabledCapabilities',
   HotPatchType_DisabledCapabilities = 'DisabledCapabilities',
@@ -477,6 +495,13 @@ export declare namespace AIAgentGrpcApi {
     updated_at: number
     scope_task_id?: string
     scope_task_index?: string
+    /** 真实时间字段，created_at / updated_at 可能只是序号。 */
+    created_ts?: number
+    closed_ts?: number
+    focus_started_ts?: number
+    age_seconds?: number
+    survival_seconds?: number
+    focus_seconds?: number
   }
 
   export interface TodoListUpdateStats {

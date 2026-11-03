@@ -1,4 +1,5 @@
 import { memo, useMemo, useRef, useState, type FC } from 'react'
+import { normalizeExecutionStrategy } from '../../aiRunModeSelect/goalStrategy'
 import styles from './HistoryChatList.module.scss'
 import { OutlinePencilaltIcon, OutlineTrashIcon } from '@/assets/icon/outline'
 import { SolidChatalt2Icon, SolidUserIcon, SolidUsersIcon } from '@/assets/icon/solid'
@@ -249,12 +250,7 @@ const HistoryChatList: FC<{
       ...old,
       SyncPerceptionTrigger: info?.StartParams?.SyncPerceptionTrigger ?? false,
       EnablePlan: info?.StartParams?.EnablePlan ?? false,
-      Strategy: {
-        EnableMultiAgent: info?.StartParams?.Strategy?.EnableMultiAgent ?? false,
-        EnableGoalMode: info?.StartParams?.Strategy?.EnableGoalMode ?? false,
-        GoalMinIterations: info?.StartParams?.Strategy?.GoalMinIterations ?? 0,
-        MaxSubAgents: info?.StartParams?.Strategy?.MaxSubAgents ?? 0,
-      },
+      Strategy: normalizeExecutionStrategy(info.StartParams?.Strategy),
     }))
     setActiveChat && setActiveChat(info)
   })

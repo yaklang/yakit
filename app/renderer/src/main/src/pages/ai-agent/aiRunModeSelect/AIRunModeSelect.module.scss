@@ -22,7 +22,8 @@
 
 // 运行模式下拉
 .mode-menu {
-  width: 215px;
+  width: 304px;
+  max-width: calc(100vw - 24px);
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -42,6 +43,10 @@
     gap: 2px;
   }
   .mode-option {
+    width: 100%;
+    border: 0;
+    background: transparent;
+    text-align: left;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -126,4 +131,29 @@
 }
 .mode-dropdown {
   z-index: 1050;
+}
+
+.goal-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 8px 8px;
+  .goal-editor-label {
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+    font-size: 12px;
+  }
+  .goal-field {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--Colors-Use-Neutral-Text-2-Primary);
+  }
+  .goal-help {
+    margin: 0;
+    font-size: 12px;
+    line-height: 18px;
+    color: var(--Colors-Use-Neutral-Text-4-Help-text);
+  }
 }

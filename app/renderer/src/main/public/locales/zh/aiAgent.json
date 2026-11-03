@@ -532,7 +532,10 @@
     "permissionsAndSecurity": "基础权限与安全",
     "planningAndExecution": "任务规划与执行",
     "automation": "自动化配置",
-    "resourcesLimits": "资源与上下文阈值"
+    "resourcesLimits": "资源与上下文阈值",
+    "runtimeContextSize": "运行时上下文大小",
+    "runtimeContextSizeHelp": "历史、技能正文等运行时上下文的压缩阈值，单位 KB。0 或留空时使用引擎默认值；此处设置作为新会话默认值。当前运行中的会话可在输入框配置中单独调整。",
+    "runtimeContextSizeHotpatchHelp": "单位 KB，最小 60 KB。运行中修改时会向当前会话发送热更新，并保存为新会话默认值。未连接、已停止或正在恢复历史时，仅保存新会话默认值；重新打开会显示当前会话原有阈值。"
   },
   "AIScheduledTasks": {
     "title": "定时任务",
@@ -640,5 +643,49 @@
       "weekly": "每周",
       "custom": "自定义"
     }
+  },
+  "AIRunModeSelect": {
+    "mode": "模式",
+    "multiMode": "多模式",
+    "settingsHint": "可多选模式；运行中的修改提交给当前会话。",
+    "maxSubAgents": "子 Agent 数量",
+    "maxSubAgentsHelp": "0 使用服务端默认值，最大 20。",
+    "goalCondition": "Goal 完成条件",
+    "iterations": "迭代次数",
+    "duration": "持续时长",
+    "acceptance": "验收条件",
+    "minimumIterations": "最小迭代次数",
+    "minimumDuration": "至少持续",
+    "seconds": "秒",
+    "continuous": "持续执行（手动停止）",
+    "durationHelp": "时长表示允许结束前的最短窗口，不是超时上限；持续执行需手动停止。",
+    "acceptanceCriteria": "验收条件",
+    "acceptancePlaceholder": "例如：完成资产梳理并输出包含证据的报告",
+    "exclusiveHelp": "点击应用后提交；三种条件互斥，应用时会清除另外两种条件。",
+    "updateRejected": "当前会话暂不可更新，请等待连接或历史恢复完成后重试。",
+    "applyCondition": "应用 Goal 条件"
+  },
+  "AITaskBoard": {
+    "PENDING": "待处理",
+    "DOING": "运行中",
+    "DONE": "已完成",
+    "SKIPPED_DELETED": "已跳过 / 已删除",
+    "OTHER": "其他状态",
+    "list": "列表",
+    "board": "看板",
+    "title": "任务看板",
+    "openBoard": "查看任务看板",
+    "emptyColumn": "暂无任务"
+  },
+  "AITaskExecutionDetails": {
+    "createdTime": "创建于 {{time}}",
+    "duration": "耗时 {{time}}",
+    "startOngoing": "开始 {{time}} · 执行中",
+    "survival": "存活 {{time}}",
+    "labelStart": "开始",
+    "labelEnd": "结束",
+    "labelCreated": "创建",
+    "labelSkipped": "跳过",
+    "labelDeleted": "删除"
   }
 }

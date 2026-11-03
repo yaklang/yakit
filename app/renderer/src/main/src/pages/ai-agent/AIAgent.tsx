@@ -25,7 +25,7 @@ import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { DigitalEmployeeProfile, DigitalEmployeeSidebar } from '@/pages/digitalEmployee/DigitalEmployeeWorkspace'
 
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { omit } from 'lodash'
+import { mergeAIAgentChatSettingCache, stripAIAgentChatSettingForPersist } from './utils/aiAgentChatSettingCache'
 import { grpcDeleteAISession } from './grpc'
 import { useChatIPC } from '../ai-re-act/hooks/useChatIPC'
 import { AISourceEnum } from '../ai-re-act/hooks/grpcApi'
@@ -92,12 +92,16 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
 
   // 缓存全局配置数据
   useUpdateEffect(() => {
-    const cache = omit(getSetting(), ['AIService', 'AIModelName'])
+    const currentSetting = getSetting()
+    const cache = stripAIAgentChatSettingForPersist(currentSetting)
     if (activeChat?.SessionID) {
-      globalSessionEngine.updateSessionConfig(activeChat.SessionID, getSetting())
+      globalSessionEngine.updateSessionConfig(activeChat.SessionID, {
+        ...currentSetting,
+        RuntimeContextSizeLimit: activeChat.StartParams?.RuntimeContextSizeLimit ?? 0,
+      })
     }
     setRemoteValue(RemoteAIAgentGV.AIAgentChatSetting, JSON.stringify(cache))
-  }, [setting])
+  }, [setting, activeChat?.SessionID, activeChat?.StartParams?.RuntimeContextSizeLimit])
 
   const { onStart, onSend, onClose, onUpdatePageId } = useChatIPC(YakitRoute.AI_Agent, YakitRoute.AI_Agent)
 
@@ -136,10 +140,8 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
             try {
               const cache = JSON.parse(res) as AIAgentSetting
               if (typeof cache !== 'object') return
-              const newCache = omit(cache, ['AIService', 'AIModelName'])
               setSetting({
-                ...AIAgentSettingDefault,
-                ...newCache,
+                ...mergeAIAgentChatSettingCache(cache),
                 SyncPerceptionTrigger: AIAgentSettingDefault.SyncPerceptionTrigger,
                 EnablePlan: AIAgentSettingDefault.EnablePlan,
                 Strategy: {
@@ -147,6 +149,8 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
                   EnableGoalMode: false,
                   GoalMinIterations: AIAgentSettingDefault.Strategy?.GoalMinIterations,
                   MaxSubAgents: AIAgentSettingDefault.Strategy?.MaxSubAgents,
+                  GoalDurationSeconds: AIAgentSettingDefault.Strategy?.GoalDurationSeconds,
+                  GoalAcceptanceCriteria: AIAgentSettingDefault.Strategy?.GoalAcceptanceCriteria,
                 },
                 Source: AISourceEnum.aiAgent,
               })

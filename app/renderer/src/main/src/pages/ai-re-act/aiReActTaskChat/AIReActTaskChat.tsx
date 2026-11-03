@@ -25,6 +25,9 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import useAIGlobalConfig from '../hooks/useAIGlobalConfig'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
+import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInputNumber'
+import useRuntimeContextSizeLimit from '@/pages/ai-agent/useContext/useRuntimeContextSizeLimit'
+import { mergeAISessionUpdates } from '@/pages/ai-agent/historyChat/sessionUpdates'
 import { v4 as uuidv4 } from 'uuid'
 import moment from 'moment'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
@@ -152,12 +155,13 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
   const { children } = props
   const { t } = useI18nNamespaces(['aiAgent'])
 
-  const { onSend, setSetting } = useAIAgentDispatcher()
+  const { onSend, setSetting, setActiveChat } = useAIAgentDispatcher()
 
   const sessionId = useCurrentSessionId()
   const store = useCurrentStore()
 
   const { setting, activeChat } = useAIAgentStore()
+  const runtimeContextSizeLimit = useRuntimeContextSizeLimit()
   const [aiGlobalConfigData, aiGlobalConfigEvent] = useAIGlobalConfig()
   const aiGlobalConfig = aiGlobalConfigData.aiGlobalConfig
 
@@ -168,42 +172,50 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
   })
   const [form] = Form.useForm<AIInputSettingFormProps>()
 
+  useEffect(() => {
+    if (visible) form.setFieldsValue({ RuntimeContextSizeLimit: runtimeContextSizeLimit })
+  }, [visible, sessionId, runtimeContextSizeLimit, form])
+
   // 缓存弹窗打开时的文本域初始值，用于关闭时比较是否修改
   const promptSnapshotRef = useRef<{ AIPresetPrompt: string; AIPlanPrompt: string }>({
     AIPresetPrompt: '',
     AIPlanPrompt: '',
   })
 
-  const onHotSyncPerceptionTrigger = useMemoizedFn((value: boolean) => {
-    if (store.getState().execute) {
+  const onHotConfigChange = useMemoizedFn(
+    (hotpatchType: AIInputEventHotPatchTypeEnum, params: AIInputEvent['Params']) => {
+      if (!store.getState().execute || !sessionId) return
+      if (activeChat?.SessionID && activeChat.SessionID !== sessionId) return
       const info: AIInputEvent = {
         IsConfigHotpatch: true,
-        HotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_SyncPerceptionTrigger,
-        Params: {
-          SyncPerceptionTrigger: value,
-        },
+        HotpatchType: hotpatchType,
+        Params: params,
       }
-      onSend({ token: sessionId, type: 'casual', params: info })
-    }
-    if (activeChat?.SessionID) {
-      emiter.emit(
-        'sessionData',
-        JSON.stringify({
-          type: 'updateSession',
-          sessionId: activeChat.SessionID,
-          updates: {
-            StartParams: {
-              ...(activeChat.StartParams || {}),
-              SyncPerceptionTrigger: value,
-            },
-          },
-        }),
-      )
-    }
-  })
+      // 返回值表示客户端接受发送，不代表引擎已回执或已完成上下文压缩。
+      if (!onSend({ token: sessionId, type: 'casual', params: info })) return
+      if (activeChat?.SessionID) {
+        setActiveChat((current) =>
+          current?.SessionID === sessionId ? mergeAISessionUpdates(current, { StartParams: params }) : current,
+        )
+        emiter.emit(
+          'sessionData',
+          JSON.stringify({ type: 'updateSession', sessionId, updates: { StartParams: params } }),
+        )
+      }
+    },
+  )
   const onValuesChange = useMemoizedFn((changedValues: AIInputSettingFormProps) => {
+    const limit = changedValues.RuntimeContextSizeLimit
+    if (limit && limit >= 60 && Number.isSafeInteger(limit) && Number.isSafeInteger(limit * 1024)) {
+      onHotConfigChange(AIInputEventHotPatchTypeEnum.HotPatchType_RuntimeContextSizeLimit, {
+        RuntimeContextSizeLimit: limit * 1024,
+      })
+      setSetting?.((v) => ({ ...v, RuntimeContextSizeLimit: limit }))
+    }
     if (has(changedValues, 'SyncPerceptionTrigger')) {
-      onHotSyncPerceptionTrigger(!!changedValues.SyncPerceptionTrigger)
+      onHotConfigChange(AIInputEventHotPatchTypeEnum.HotPatchType_SyncPerceptionTrigger, {
+        SyncPerceptionTrigger: !!changedValues.SyncPerceptionTrigger,
+      })
       setSetting?.((v) => ({
         ...v,
         SyncPerceptionTrigger: !!changedValues.SyncPerceptionTrigger,
@@ -219,6 +231,7 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
         AIPlanPrompt: aiGlobalConfig.AIPlanPrompt || '',
       }
       form.setFieldsValue({
+        RuntimeContextSizeLimit: runtimeContextSizeLimit,
         AIPresetPrompt: aiGlobalConfig.AIPresetPrompt || '',
         AIPlanPrompt: aiGlobalConfig.AIPlanPrompt || '',
       })
@@ -243,10 +256,11 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
       content={
         <Form
           form={form}
-          labelCol={{ span: 8 }}
-          wrapperCol={{ span: 16 }}
+          labelCol={{ span: 10 }}
+          wrapperCol={{ span: 14 }}
           onValuesChange={onValuesChange}
           initialValues={{
+            RuntimeContextSizeLimit: runtimeContextSizeLimit,
             SyncPerceptionTrigger: setting.SyncPerceptionTrigger,
             EnablePlan: setting.EnablePlan,
             AIPresetPrompt: aiGlobalConfig.AIPresetPrompt || '',
@@ -270,6 +284,25 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
             valuePropName="checked"
           >
             <YakitSwitch />
+          </Form.Item>
+          <Form.Item
+            label={
+              <>
+                {t('AIChatSetting.runtimeContextSize')}
+                <Tooltip title={t('AIChatSetting.runtimeContextSizeHotpatchHelp')}>
+                  <OutlineInformationcircleIcon className={styles['info-icon']} />
+                </Tooltip>
+              </>
+            }
+            name="RuntimeContextSizeLimit"
+          >
+            <YakitInputNumber
+              key={activeChat?.SessionID || 'new-session'}
+              min={60}
+              max={Math.floor(Number.MAX_SAFE_INTEGER / 1024)}
+              precision={0}
+              addonAfter="KB"
+            />
           </Form.Item>
           <Form.Item label={t('AIReActTaskChatContent.globalDirective')} name="AIPresetPrompt">
             <YakitInput.TextArea

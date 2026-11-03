@@ -130,6 +130,19 @@ module.exports = {
     addWebpackExternals({ './cptable': 'var cptable' }),
     removeModuleScopePlugin(),
     (config) => {
+      // 本地验收可先单独执行 tsc，再编译页面，避免同时常驻两份大型 TypeScript 进程。
+      // 仅显式开启时跳过开发服务器内的重复检查；生产构建不受影响。
+      if (config.mode === 'development' && process.env.YAKIT_DEV_EXTERNAL_TYPECHECK === 'true') {
+        config.plugins = config.plugins.filter((plugin) => plugin.constructor?.name !== 'ForkTsCheckerWebpackPlugin')
+      }
+      // 大型工程的开发增量检查可能超过子进程默认 2 GB；仅本地显式配置时调整。
+      const devTscMemoryLimit = Number(process.env.YAKIT_DEV_TSC_MEMORY_LIMIT_MB)
+      if (config.mode === 'development' && Number.isInteger(devTscMemoryLimit) && devTscMemoryLimit >= 2048) {
+        const checker = config.plugins.find((plugin) => plugin.constructor?.name === 'ForkTsCheckerWebpackPlugin')
+        if (checker) {
+          checker.options.typescript = { ...checker.options.typescript, memoryLimit: devTscMemoryLimit }
+        }
+      }
       if (config.mode !== 'development') {
         config.output.path = OUTPUT_PATH
         config.output.publicPath = './'

@@ -532,7 +532,10 @@
     "permissionsAndSecurity": "Permissions & Security",
     "planningAndExecution": "Planning & Execution",
     "automation": "Automation",
-    "resourcesLimits": "Resources & Limits"
+    "resourcesLimits": "Resources & Limits",
+    "runtimeContextSize": "Runtime context size",
+    "runtimeContextSizeHelp": "Compression threshold for runtime context, including history and skill content, in KB. Set to 0 or leave blank to use the engine default. This sets the default for new sessions. Use the input settings to adjust a running session separately.",
+    "runtimeContextSizeHotpatchHelp": "In KB, minimum 60 KB. Changes send a hotpatch to the current running session and set the default for new sessions. If disconnected, stopped, or restoring history, only the new-session default is saved; reopening shows the session's original threshold."
   },
   "AIScheduledTasks": {
     "title": "Scheduled Tasks",
@@ -640,5 +643,49 @@
       "weekly": "Weekly",
       "custom": "Custom"
     }
+  },
+  "AIRunModeSelect": {
+    "mode": "Mode",
+    "multiMode": "Multiple modes",
+    "settingsHint": "Select modes. Live changes are sent to the current session.",
+    "maxSubAgents": "Sub-agent count",
+    "maxSubAgentsHelp": "0 uses the server default; maximum 20.",
+    "goalCondition": "Goal completion condition",
+    "iterations": "Iterations",
+    "duration": "Duration",
+    "acceptance": "Acceptance",
+    "minimumIterations": "Minimum iterations",
+    "minimumDuration": "Minimum duration",
+    "seconds": "seconds",
+    "continuous": "Keep running until stopped",
+    "durationHelp": "This is the minimum window before finishing is allowed, not a timeout. Continuous execution requires a manual stop.",
+    "acceptanceCriteria": "Acceptance criteria",
+    "acceptancePlaceholder": "For example: complete the asset inventory and provide a report with evidence",
+    "exclusiveHelp": "Apply to submit. The three conditions are exclusive; applying one clears the other two.",
+    "updateRejected": "The session cannot be updated yet. Wait for the connection or history recovery, then retry.",
+    "applyCondition": "Apply Goal condition"
+  },
+  "AITaskBoard": {
+    "PENDING": "Pending",
+    "DOING": "Running",
+    "DONE": "Completed",
+    "SKIPPED_DELETED": "Skipped / Deleted",
+    "OTHER": "Other",
+    "list": "List",
+    "board": "Board",
+    "title": "Task board",
+    "openBoard": "Open task board",
+    "emptyColumn": "No tasks"
+  },
+  "AITaskExecutionDetails": {
+    "createdTime": "Created {{time}}",
+    "duration": "Duration {{time}}",
+    "startOngoing": "Started {{time}} · Running",
+    "survival": "Lifetime {{time}}",
+    "labelStart": "Start",
+    "labelEnd": "End",
+    "labelCreated": "Created",
+    "labelSkipped": "Skipped",
+    "labelDeleted": "Deleted"
   }
 }

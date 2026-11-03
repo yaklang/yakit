@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { normalizeExecutionStrategy } from '../../aiRunModeSelect/goalStrategy'
 import { useCreation, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import moment from 'moment'
 import type { AISession } from '../../type/aiChat'
@@ -200,12 +201,7 @@ const AIScheduledTasksDetail: React.FC<AIScheduledTasksDetailProps> = React.memo
       SyncPerceptionTrigger: relatedSession.StartParams?.SyncPerceptionTrigger ?? false,
       EnablePlan: relatedSession.StartParams?.EnablePlan ?? false,
       DisableMemoryTriage: relatedSession.StartParams?.DisableMemoryTriage ?? false,
-      Strategy: {
-        EnableMultiAgent: relatedSession.StartParams?.Strategy?.EnableMultiAgent ?? false,
-        EnableGoalMode: relatedSession.StartParams?.Strategy?.EnableGoalMode ?? false,
-        GoalMinIterations: relatedSession.StartParams?.Strategy?.GoalMinIterations ?? 0,
-        MaxSubAgents: relatedSession.StartParams?.Strategy?.MaxSubAgents ?? 0,
-      },
+      Strategy: normalizeExecutionStrategy(relatedSession.StartParams?.Strategy),
     }))
     setActiveChat?.(relatedSession)
   })

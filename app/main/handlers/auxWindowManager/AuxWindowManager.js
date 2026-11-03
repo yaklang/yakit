@@ -69,7 +69,11 @@ class AuxWindowManager {
   buildAuxAppLoadTarget(meta) {
     const query = this.buildAuxAppQuery(meta)
     if (isDev) {
-      return { type: 'url', value: `http://127.0.0.1:3000/yakit-aux.html?${query}` }
+      // 与主业务渲染器共用地址，兼容自定义开发端口和静态验收服务。
+      const url = new URL('yakit-aux.html', process.env.YAKIT_DEV_RENDERER_URL || 'http://127.0.0.1:3000')
+      url.search = query
+      url.hash = ''
+      return { type: 'url', value: url.toString() }
     }
     return {
       type: 'file',

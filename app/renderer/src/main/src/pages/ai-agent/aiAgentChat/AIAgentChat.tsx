@@ -155,12 +155,14 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
           setSetting?.((old) => ({
             ...old,
             SyncPerceptionTrigger: false,
-            EnablePlan: false,
+            EnablePlan: AIAgentSettingDefault.EnablePlan,
             Strategy: {
               EnableMultiAgent: false,
               EnableGoalMode: false,
               GoalMinIterations: AIAgentSettingDefault.Strategy?.GoalMinIterations,
               MaxSubAgents: AIAgentSettingDefault.Strategy?.MaxSubAgents,
+              GoalDurationSeconds: AIAgentSettingDefault.Strategy?.GoalDurationSeconds,
+              GoalAcceptanceCriteria: AIAgentSettingDefault.Strategy?.GoalAcceptanceCriteria,
             },
           }))
           setActiveChat?.(undefined)

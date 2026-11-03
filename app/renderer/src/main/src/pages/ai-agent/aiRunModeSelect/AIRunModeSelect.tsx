@@ -1,206 +1,35 @@
-import type React from 'react'
-import { memo, useState, type FC } from 'react'
-import { Tooltip } from 'antd'
-import { Dropdown } from 'antd'
+import React, { memo, useState } from 'react'
+import { Dropdown, Tooltip } from 'antd'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import {
-  OutlineBrainCircuitIcon,
-  OutlineCheckIcon,
-  OutlineChevrondownIcon,
-  OutlineFlagIcon,
-} from '@/assets/icon/outline'
+import { OutlineCheckIcon, OutlineChevrondownIcon } from '@/assets/icon/outline'
 import { SolidCheckIcon } from '@/assets/icon/solid'
-import { useCreation, useDebounceFn, useMemoizedFn } from 'ahooks'
-import classNames from 'classnames'
-import styles from './AIRunModeSelect.module.scss'
-import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInputNumber'
-import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
-import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
-import {
-  type AIExecutionStrategy,
-  type AIInputEvent,
-  AIInputEventHotPatchTypeEnum,
-} from '@/pages/ai-re-act/hooks/grpcApi'
-import emiter from '@/utils/eventBus/eventBus'
 import { OutlineViewGridIcon } from '@/components/yakChat/icon'
-import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
-import { useStore } from 'zustand'
-import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
+import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInputNumber'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { useAIRunMode } from './useAIRunMode'
+import { ModeOptionList } from './aiRunModeConstants'
+import { GoalConditionEditor } from './GoalConditionEditor'
+import styles from './AIRunModeSelect.module.scss'
 
-type ModeOptionKey = 'plan' | 'multiAgent' | 'goal'
-
-const ModeOptionList: {
-  key: ModeOptionKey
-  label: string
-  icon: FC
-}[] = [
-  {
-    key: 'plan',
-    label: 'Plan',
-    icon: OutlineBrainCircuitIcon,
-  },
-  {
-    key: 'multiAgent',
-    label: 'Multi-Agent',
-    icon: OutlineViewGridIcon,
-  },
-  {
-    key: 'goal',
-    label: 'Goal',
-    icon: OutlineFlagIcon,
-  },
-]
-
-/** TODO - 待修改为新版 */
 const AIRunModeSelect: React.FC = memo(() => {
-  const { setting, activeChat } = useAIAgentStore()
-  const { setSetting, onSend } = useAIAgentDispatcher()
-  const store = useCurrentStore()
-  const sessionId = useCurrentSessionId()
-  const execute = useStore(store, (state) => state.execute)
-
-  const enablePlan = useCreation(() => {
-    return !!setting?.EnablePlan
-  }, [setting?.EnablePlan])
-  const onSetPlan = useDebounceFn(
-    useMemoizedFn((checked) => {
-      if (execute) {
-        // ai运行才能热更新 plan
-        const info: AIInputEvent = {
-          IsConfigHotpatch: true,
-          HotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_EnablePlan,
-          Params: {
-            EnablePlan: checked,
-          },
-        }
-        onSend({ token: sessionId, type: '', params: info })
-      }
-      setSetting?.((v) => ({
-        ...v,
-        EnablePlan: checked,
-      }))
-      if (activeChat?.SessionID) {
-        emiter.emit(
-          'sessionData',
-          JSON.stringify({
-            type: 'updateSession',
-            sessionId: activeChat.SessionID,
-            updates: {
-              StartParams: {
-                ...(activeChat.StartParams || {}),
-                EnablePlan: checked,
-              },
-            },
-          }),
-        )
-      }
-    }),
-    { wait: 200, leading: true },
-  ).run
-  const enableMultiAgent = useCreation(
-    () => !!setting?.Strategy?.EnableMultiAgent,
-    [setting?.Strategy?.EnableMultiAgent],
-  )
-  const enableGoalMode = useCreation(() => !!setting?.Strategy?.EnableGoalMode, [setting?.Strategy?.EnableGoalMode])
-  const goalMinIterations = useCreation(
-    () => setting?.Strategy?.GoalMinIterations ?? 0,
-    [setting?.Strategy?.GoalMinIterations],
-  )
-  const maxSubAgents = useCreation(() => setting?.Strategy?.MaxSubAgents ?? 0, [setting?.Strategy?.MaxSubAgents])
-  const [modeVisible, setModeVisible] = useState<boolean>(false)
-  const onSetStrategy = useDebounceFn(
-    useMemoizedFn((next: AIExecutionStrategy) => {
-      if (execute) return
-      setSetting?.((v) => ({
-        ...v,
-        Strategy: { ...v.Strategy, ...next },
-      }))
-      if (activeChat?.SessionID) {
-        emiter.emit(
-          'sessionData',
-          JSON.stringify({
-            type: 'updateSession',
-            sessionId: activeChat.SessionID,
-            updates: {
-              StartParams: {
-                ...(activeChat.StartParams || {}),
-                Strategy: { ...(activeChat.StartParams?.Strategy || {}), ...next },
-              },
-            },
-          }),
-        )
-      }
-      // 热加载扩展点：后端支持 Strategy 热更新后取消下方注释启用 hotpatch
-      // handleSendConfigHotpatch({
-      //   hotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_Strategy,
-      //   params: { Strategy: { ...setting?.Strategy, ...next } },
-      // })
-    }),
-    { wait: 200, leading: true },
-  ).run
-
-  const isModeSelected = useMemoizedFn((key: ModeOptionKey) => {
-    switch (key) {
-      case 'plan':
-        return enablePlan
-      case 'multiAgent':
-        return enableMultiAgent
-      case 'goal':
-        return enableGoalMode
-      default:
-        return false
-    }
-  })
-
-  const selectedModes = useCreation(() => {
-    return ModeOptionList.filter((item) => {
-      switch (item.key) {
-        case 'plan':
-          return enablePlan
-        case 'multiAgent':
-          return enableMultiAgent
-        case 'goal':
-          return enableGoalMode
-        default:
-          return false
-      }
-    })
-  }, [enablePlan, enableMultiAgent, enableGoalMode])
-
-  const triggerDisplay = useCreation(() => {
-    const count = selectedModes.length
-    if (count === 0) {
-      return { Icon: OutlineViewGridIcon, label: '模式' }
-    }
-    if (count === 1) {
-      return { Icon: selectedModes[0].icon, label: selectedModes[0].label }
-    }
-    return { Icon: OutlineCheckIcon, label: '多模式' }
-  }, [selectedModes])
-
-  const onToggleMode = useMemoizedFn((key: ModeOptionKey) => {
-    // Plan 支持热更新，运行中可改；Multi-Agent / Goal 运行中不可改
-    if (execute && key !== 'plan') return
-    switch (key) {
-      case 'plan':
-        onSetPlan(!enablePlan)
-        break
-      case 'multiAgent':
-        onSetStrategy({ EnableMultiAgent: !enableMultiAgent })
-        break
-      case 'goal':
-        onSetStrategy({ EnableGoalMode: !enableGoalMode })
-        break
-      default:
-        break
-    }
-  })
-
-  const isModeLocked = useMemoizedFn((key: ModeOptionKey) => {
-    return execute && key !== 'plan'
-  })
-
-  const TriggerIcon = triggerDisplay.Icon
+  const { t } = useI18nNamespaces(['aiAgent'])
+  const {
+    enableMultiAgent,
+    enableGoalMode,
+    strategy,
+    maxSubAgents,
+    selectedModes,
+    isModeSelected,
+    onToggleMode,
+    onSetStrategy,
+  } = useAIRunMode()
+  const [modeVisible, setModeVisible] = useState(false)
+  const TriggerIcon =
+    selectedModes.length === 1 ? selectedModes[0].icon : selectedModes.length ? OutlineCheckIcon : OutlineViewGridIcon
+  const label =
+    selectedModes.length === 1
+      ? selectedModes[0].label
+      : t(selectedModes.length ? 'AIRunModeSelect.multiMode' : 'AIRunModeSelect.mode')
 
   return (
     <Dropdown
@@ -209,77 +38,58 @@ const AIRunModeSelect: React.FC = memo(() => {
       onVisibleChange={setModeVisible}
       overlayClassName={styles['mode-dropdown']}
       overlay={
-        <div className={styles['mode-menu']}>
-          <div className={styles['mode-menu-hint']}>
-            {execute ? 'AI 运行中，仅 Plan 可修改，Multi-Agent / Goal 暂不可改' : '请选择模式，可多选'}
-          </div>
-          <div className={styles['mode-list']}>
+        <div className={styles['mode-menu']} onKeyDown={(event) => event.stopPropagation()}>
+          <div className={styles['mode-menu-hint']}>{t('AIRunModeSelect.settingsHint')}</div>
+          <div className={styles['mode-list']} role="menu" aria-label={t('AIRunModeSelect.mode')}>
             {ModeOptionList.map((item) => {
               const Icon = item.icon
               const checked = isModeSelected(item.key)
-              const locked = isModeLocked(item.key)
               return (
-                <div
+                <button
+                  type="button"
                   key={item.key}
-                  className={classNames(styles['mode-option'], {
-                    [styles['mode-option-disabled']]: locked,
-                  })}
+                  role="menuitemcheckbox"
+                  aria-checked={checked}
+                  className={styles['mode-option']}
                   onClick={() => onToggleMode(item.key)}
                 >
-                  <div className={styles['mode-option-left']}>
-                    <div className={styles['mode-option-icon']}>
+                  <span className={styles['mode-option-left']}>
+                    <span className={styles['mode-option-icon']}>
                       <Icon />
-                    </div>
+                    </span>
                     <span className={styles['mode-option-label']}>{item.label}</span>
-                  </div>
+                  </span>
                   {checked ? (
                     <SolidCheckIcon className={styles['mode-option-check']} />
                   ) : (
                     <span className={styles['mode-option-check-placeholder']} />
                   )}
-                </div>
+                </button>
               )
             })}
           </div>
-
           {(enableMultiAgent || enableGoalMode) && <div className={styles['mode-panel-divider']} />}
           {enableMultiAgent && (
             <div className={styles['mode-goal-iter']}>
-              <span className={styles['mode-goal-iter-label']}>子 Agent 数量</span>
-              <Tooltip title="<=0 时由服务端使用默认值 3；最大 20">
-                <div onClick={(e) => e.stopPropagation()}>
-                  <YakitInputNumber
-                    type="horizontal"
-                    size="small"
-                    min={0}
-                    max={20}
-                    disabled={execute}
-                    value={maxSubAgents}
-                    onChange={(v) => onSetStrategy({ MaxSubAgents: (v as number) ?? 0 })}
-                    className={styles['mode-goal-iter-input']}
-                  />
-                </div>
+              <label htmlFor="mode-max-sub-agents" className={styles['mode-goal-iter-label']}>
+                {t('AIRunModeSelect.maxSubAgents')}
+              </label>
+              <Tooltip title={t('AIRunModeSelect.maxSubAgentsHelp')}>
+                <YakitInputNumber
+                  id="mode-max-sub-agents"
+                  type="horizontal"
+                  size="small"
+                  min={0}
+                  max={20}
+                  precision={0}
+                  value={maxSubAgents}
+                  onChange={(value) => onSetStrategy({ MaxSubAgents: Number(value) || 0 })}
+                  className={styles['mode-goal-iter-input']}
+                />
               </Tooltip>
             </div>
           )}
-          {enableGoalMode && (
-            <div className={styles['mode-goal-iter']}>
-              <span className={styles['mode-goal-iter-label']}>最小迭代次数</span>
-              <Tooltip title="<=0 时由服务端使用默认值">
-                <div onClick={(e) => e.stopPropagation()}>
-                  <YakitInputNumber
-                    type="horizontal"
-                    size="small"
-                    min={0}
-                    disabled={execute}
-                    value={goalMinIterations}
-                    onChange={(v) => onSetStrategy({ GoalMinIterations: (v as number) ?? 0 })}
-                    className={styles['mode-goal-iter-input']}
-                  />
-                </div>
-              </Tooltip>
-            </div>
-          )}
+          {enableGoalMode && <GoalConditionEditor strategy={strategy} onApply={onSetStrategy} />}
         </div>
       }
     >
@@ -288,10 +98,10 @@ const AIRunModeSelect: React.FC = memo(() => {
         radius="28px"
         isHover={modeVisible}
         icon={<TriggerIcon />}
-        onClick={(e) => e.stopPropagation()}
+        onClick={(event) => event.stopPropagation()}
         className={styles['mode-btn']}
       >
-        <span className={styles['mode-btn-label']}>{triggerDisplay.label}</span>
+        <span className={styles['mode-btn-label']}>{label}</span>
         <OutlineChevrondownIcon className={styles['mode-btn-arrow']} />
       </YakitButton>
     </Dropdown>

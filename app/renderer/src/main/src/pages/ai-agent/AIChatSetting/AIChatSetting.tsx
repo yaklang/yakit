@@ -321,7 +321,7 @@ const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
                 onClick={(e) => {
                   e.stopPropagation()
                   const restValue = {
-                    TimelineContentSizeLimit: AIAgentSettingDefault.TimelineContentSizeLimit,
+                    RuntimeContextSizeLimit: AIAgentSettingDefault.RuntimeContextSizeLimit,
                     AICallTokenLimit: AIAgentSettingDefault.AICallTokenLimit,
                     UserInteractLimit: AIAgentSettingDefault.UserInteractLimit,
                   }
@@ -334,12 +334,17 @@ const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
             }
           >
             <Form.Item
-              label={<>时间线上下文大小</>}
-              name="TimelineContentSizeLimit"
+              label={
+                <>
+                  {t('AIChatSetting.runtimeContextSize')}
+                  <Tooltip title={t('AIChatSetting.runtimeContextSizeHelp')}>
+                    <OutlineInformationcircleIcon className={styles['info-icon']} />
+                  </Tooltip>
+                </>
+              }
+              name="RuntimeContextSizeLimit"
               normalize={(value) => {
-                const num = Number(value.replace(/\D/g, ''))
-                if (isNaN(num)) return ''
-                return `${num}`
+                return `${value ?? ''}`.replace(/\D/g, '')
               }}
             >
               <YakitInput suffix="KB" size="small" className={styles['input-kb-suffix']} />

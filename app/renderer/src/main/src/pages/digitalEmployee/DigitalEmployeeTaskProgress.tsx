@@ -1,10 +1,15 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import classNames from 'classnames'
 import { AIToDoListStatusEnum } from '@/pages/ai-agent/defaultConstant'
 import { useCurrentRawData, useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import { useStore } from 'zustand'
 import { formatTaskTimestamp, getDigitalEmployeeTaskProgress } from './taskProgress'
 import styles from './DigitalEmployeeTaskProgress.module.scss'
+import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
+import { AITaskBoardView } from '@/pages/ai-agent/chatTemplate/aiTaskExecutionDetails/aiTaskBoard/AITaskBoardView'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 const statusLabel: Record<AIToDoListStatusEnum, string> = {
   [AIToDoListStatusEnum.Pending]: '待执行',
@@ -15,80 +20,114 @@ const statusLabel: Record<AIToDoListStatusEnum, string> = {
 }
 
 export const DigitalEmployeeTaskProgress: React.FC = React.memo(() => {
+  const { t } = useI18nNamespaces(['aiAgent'])
+  const sessionId = useCurrentSessionId()
+  const [boardVisible, setBoardVisible] = useState(false)
   const store = useCurrentStore()
   const rawData = useCurrentRawData()
   const questionID = useStore(store, (state) => state.currentChatStatus.questionID)
   const todoListUpdate = useStore(store, (state) => state.chatTodoListUpdate)
   const todoList = questionID ? rawData.taskDetailsMap.get(questionID)?.todoList : undefined
   const progress = getDigitalEmployeeTaskProgress(todoList)
+  useEffect(() => {
+    setBoardVisible(false)
+  }, [sessionId, questionID])
+  const board = (
+    <YakitModal
+      visible={boardVisible}
+      title={t('AITaskBoard.title')}
+      width={960}
+      style={{ maxWidth: 'calc(100vw - 32px)' }}
+      footer={null}
+      onCancel={() => setBoardVisible(false)}
+      destroyOnClose
+      bodyStyle={{ height: 'min(65vh, 560px)', display: 'flex', minHeight: 240 }}
+    >
+      <AITaskBoardView items={todoList?.items || []} />
+    </YakitModal>
+  )
 
   // toolListRenderNumber 是原版 todo 更新后的渲染信号；读取它保证计划原地更新时这里同步刷新。
   void todoListUpdate
 
   if (!progress.total) {
     return (
-      <div className={styles['empty']}>
-        <span aria-hidden="true" />
-        <strong>等待执行步骤</strong>
-        <p>当前任务暂未生成执行步骤，任务开始后会在这里实时同步。</p>
-      </div>
+      <>
+        <div className={styles['empty']}>
+          <span aria-hidden="true" />
+          <strong>等待执行步骤</strong>
+          <p>当前任务暂未生成执行步骤，任务开始后会在这里实时同步。</p>
+          {!!todoList?.items.length && (
+            <YakitButton size="small" onClick={() => setBoardVisible(true)}>
+              {t('AITaskBoard.openBoard')}
+            </YakitButton>
+          )}
+        </div>
+        {board}
+      </>
     )
   }
 
   return (
-    <div className={styles['progress-panel']}>
-      <div className={styles['progress-summary']}>
-        <div>
-          <strong>任务进度</strong>
-          <span>
-            {progress.completed} / {progress.total}
-          </span>
+    <>
+      <div className={styles['progress-panel']}>
+        <div className={styles['progress-summary']}>
+          <div>
+            <strong>任务进度</strong>
+            <span>
+              {progress.completed} / {progress.total}
+            </span>
+          </div>
+          <b>{progress.percent}%</b>
         </div>
-        <b>{progress.percent}%</b>
-      </div>
-      <div
-        className={styles['progress-track']}
-        role="progressbar"
-        aria-valuemin={0}
-        aria-valuemax={progress.total}
-        aria-valuenow={progress.completed}
-      >
-        <span style={{ width: `${progress.percent}%` }} />
-      </div>
-      <div className={styles['step-list']}>
-        {progress.items.map((item) => {
-          const doing = item.status === AIToDoListStatusEnum.Doing
-          const done = item.status === AIToDoListStatusEnum.Done
-          const skipped = item.status === AIToDoListStatusEnum.Skipped
-          const updatedTimeText = formatTaskTimestamp(item.updated_at)
-          const createdTimeText = formatTaskTimestamp(item.created_at)
-          const timeText = updatedTimeText || createdTimeText
-          const timeLabel = updatedTimeText ? '更新于' : '创建于'
-          return (
-            <div
-              key={item.id}
-              aria-label={`${item.content}，${statusLabel[item.status]}`}
-              className={classNames(styles['step'], {
-                [styles['step-doing']]: doing,
-                [styles['step-done']]: done,
-                [styles['step-skipped']]: skipped,
-              })}
-            >
-              <span className={styles['step-marker']} aria-hidden="true">
-                {done ? '✓' : ''}
-              </span>
-              <div>
-                <strong>{item.content}</strong>
-                {!!timeText && (
-                  <small>
-                    {timeLabel} {timeText}
-                  </small>
-                )}
+        <div
+          className={styles['progress-track']}
+          role="progressbar"
+          aria-valuemin={0}
+          aria-valuemax={progress.total}
+          aria-valuenow={progress.completed}
+        >
+          <span style={{ width: `${progress.percent}%` }} />
+        </div>
+        <YakitButton type="text" size="small" onClick={() => setBoardVisible(true)}>
+          {t('AITaskBoard.openBoard')}
+        </YakitButton>
+        <div className={styles['step-list']}>
+          {progress.items.map((item) => {
+            const doing = item.status === AIToDoListStatusEnum.Doing
+            const done = item.status === AIToDoListStatusEnum.Done
+            const skipped = item.status === AIToDoListStatusEnum.Skipped
+            const updatedTimeText = formatTaskTimestamp(item.updated_at)
+            const createdTimeText = formatTaskTimestamp(item.created_at)
+            const timeText = updatedTimeText || createdTimeText
+            const timeLabel = updatedTimeText ? '更新于' : '创建于'
+            return (
+              <div
+                key={item.id}
+                aria-label={`${item.content}，${statusLabel[item.status]}`}
+                className={classNames(styles['step'], {
+                  [styles['step-doing']]: doing,
+                  [styles['step-done']]: done,
+                  [styles['step-skipped']]: skipped,
+                })}
+              >
+                <span className={styles['step-marker']} aria-hidden="true">
+                  {done ? '✓' : ''}
+                </span>
+                <div>
+                  <strong>{item.content}</strong>
+                  {!!timeText && (
+                    <small>
+                      {timeLabel} {timeText}
+                    </small>
+                  )}
+                </div>
               </div>
-            </div>
-          )
-        })}
+            )
+          })}
+        </div>
       </div>
-    </div>
+      {board}
+    </>
   )
 })

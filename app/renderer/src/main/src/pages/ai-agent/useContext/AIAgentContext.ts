@@ -40,7 +40,7 @@ export default createContext<AIAgentContextValue>({
     setActiveChat: () => {},
 
     onStart: () => {},
-    onSend: () => {},
+    onSend: () => false,
     onClose: () => {},
     onUpdatePageId: () => {},
   },
