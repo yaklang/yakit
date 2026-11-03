@@ -549,6 +549,37 @@ describe('MainOperatorContent route picker', () => {
     }
   })
 
+  it('filters immediately after idle and debounces subsequent input for 300ms', () => {
+    setupPicker()
+    vi.useFakeTimers()
+    const view = render(<FirstTabRouteMenu softMode={undefined} />)
+    try {
+      const input = screen.getByRole('textbox', { name: 'YakitInput.search' })
+      act(() => vi.advanceTimersByTime(300))
+
+      fireEvent.change(input, { target: { value: '助手' } })
+      expect(input).toHaveValue('助手')
+      expect(screen.getByRole('listitem')).toHaveTextContent('智能助手')
+
+      act(() => vi.advanceTimersByTime(200))
+      fireEvent.change(input, { target: { value: '工具' } })
+      expect(input).toHaveValue('工具')
+      expect(screen.getByRole('listitem')).toHaveTextContent('智能助手')
+      act(() => vi.advanceTimersByTime(299))
+      expect(screen.getByRole('listitem')).toHaveTextContent('智能助手')
+      act(() => vi.advanceTimersByTime(1))
+      expect(screen.getByRole('listitem')).toHaveTextContent('工具')
+
+      act(() => vi.advanceTimersByTime(300))
+      fireEvent.change(input, { target: { value: '' } })
+      expect(input).toHaveValue('')
+      expect(screen.getAllByRole('listitem').map((item) => item.textContent)).toEqual(['智能助手', '工具'])
+    } finally {
+      view.unmount()
+      vi.useRealTimers()
+    }
+  })
+
   it('keeps the popup open after mouse leave and resets search when toggled closed and reopened', async () => {
     const app = setupPicker()
     await app.open()
