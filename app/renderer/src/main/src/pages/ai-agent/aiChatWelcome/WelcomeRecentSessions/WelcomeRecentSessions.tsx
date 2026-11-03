@@ -13,7 +13,7 @@ import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionCon
 import { JSONParseLog } from '@/utils/tool'
 import { grpcQueryAISession } from '../../grpc'
 import { openAIAgentChatTab } from '../../historyChat/HistoryChat'
-import { mergeAISessionUpdate } from '../../historyChat/mergeAISessionUpdate'
+import { mergeAISessionPatch, mergeAISessionUpdate } from '../../historyChat/mergeAISessionUpdate'
 import { getSessionDisplayTitle } from '../../historyChat/source'
 import { normalizeTimestamp } from '../../historyChat/HistoryChatList/HistoryChatList'
 import { idleSessionStore } from '../../historyChat/idleSessionStore'
@@ -22,6 +22,7 @@ import useAIAgentDispatcher from '../../useContext/useDispatcher'
 import useAIAgentStore from '../../useContext/useStore'
 import { AIAgentTabListEnum, SwitchAIAgentTabEventEnum } from '../../defaultConstant'
 import emiter from '@/utils/eventBus/eventBus'
+import { TransparentButton } from '../TransparentButton'
 import styles from './WelcomeRecentSessions.module.scss'
 
 const RECENT_SESSION_LIMIT = 5
@@ -64,7 +65,7 @@ interface WelcomeRecentSessionItemProps {
 }
 
 const WelcomeRecentSessionItem: FC<WelcomeRecentSessionItemProps> = memo(({ item, onSelect }) => {
-  const { t } = useI18nNamespaces(['aiAgent'])
+  const { t, i18nRefresh } = useI18nNamespaces(['aiAgent'])
   const store = useStore(globalSessionEngine.sessionStores, (stores) => stores.get(item.SessionID))
   const running = useStore(
     store ?? idleSessionStore,
@@ -73,11 +74,11 @@ const WelcomeRecentSessionItem: FC<WelcomeRecentSessionItemProps> = memo(({ item
   const title = useCreation(() => getSessionDisplayTitle(item), [item])
   const timeText = useCreation(
     () => formatRecentSessionTime(getRecentSessionTimestamp(item), t),
-    [item.LastUsedAt, item.UpdatedAt, item.CreatedAt, t],
+    [item.LastUsedAt, item.UpdatedAt, item.CreatedAt, i18nRefresh],
   )
 
   return (
-    <div className={styles['welcome-recent-item']} title={title} onClick={() => onSelect(item)}>
+    <TransparentButton className={styles['welcome-recent-item']} title={title} onClick={() => onSelect(item)}>
       <div className={styles['welcome-recent-item-main']}>
         <span className={styles['welcome-recent-item-status']}>
           {running ? (
@@ -91,7 +92,7 @@ const WelcomeRecentSessionItem: FC<WelcomeRecentSessionItemProps> = memo(({ item
         </span>
       </div>
       <span className={styles['welcome-recent-item-time']}>{timeText}</span>
-    </div>
+    </TransparentButton>
   )
 })
 
@@ -111,6 +112,8 @@ const WelcomeRecentSessions: FC<WelcomeRecentSessionsProps> = memo(({ density = 
   const { openChatInNewTab } = useAIAgentStore()
   // 递增作废在途查询，避免可见性抖动 / 并发 refresh 时旧响应覆盖新结果
   const loadGenRef = useRef(0)
+  // 查询在途时收到的 updateSession，返回后合并，避免旧快照盖掉增量
+  const pendingUpdatesRef = useRef(new Map<string, Partial<AISession>>())
   const visibleCount = VISIBLE_COUNT_BY_DENSITY[density]
   const visibleSessions = useCreation(() => sessions.slice(0, visibleCount), [sessions, visibleCount])
   const showViewMore = total > visibleCount
@@ -137,7 +140,15 @@ const WelcomeRecentSessions: FC<WelcomeRecentSessionsProps> = memo(({ density = 
     )
       .then((res) => {
         if (gen !== loadGenRef.current) return
-        setSessions((res.Data || []).slice(0, RECENT_SESSION_LIMIT))
+        setSessions(() => {
+          const pending = pendingUpdatesRef.current
+          const list = (res.Data || []).slice(0, RECENT_SESSION_LIMIT).map((session) => {
+            const updates = pending.get(session.SessionID)
+            return updates ? mergeAISessionUpdate(session, session.SessionID, updates) : session
+          })
+          pending.clear()
+          return list
+        })
         setTotal(res.Total || 0)
       })
       .catch(() => {})
@@ -153,6 +164,8 @@ const WelcomeRecentSessions: FC<WelcomeRecentSessionsProps> = memo(({ density = 
   }, [inViewport])
 
   const updateSession = useMemoizedFn((sessionId: string, updates: Partial<AISession>) => {
+    const pending = pendingUpdatesRef.current
+    pending.set(sessionId, mergeAISessionPatch(pending.get(sessionId), updates))
     setSessions((prev) => prev.map((session) => mergeAISessionUpdate(session, sessionId, updates)))
   })
 
@@ -176,6 +189,7 @@ const WelcomeRecentSessions: FC<WelcomeRecentSessionsProps> = memo(({ density = 
       if (payload.type === 'refresh' || payload.type === 'clear' || payload.type === 'prependSession') {
         if (payload.type === 'clear') {
           loadGenRef.current += 1
+          pendingUpdatesRef.current.clear()
           setSessions([])
           setTotal(0)
           return
@@ -224,10 +238,9 @@ const WelcomeRecentSessions: FC<WelcomeRecentSessionsProps> = memo(({ density = 
 
   return (
     <div className={styles['welcome-recent-sessions']} ref={containerRef} data-ai-ripple-disabled>
-      <div
+      <TransparentButton
         className={styles['welcome-recent-header']}
         onClick={() => setExpanded((prev) => !prev)}
-        role="button"
         aria-expanded={expanded}
       >
         <ClockOutlined className={styles['welcome-recent-header-icon']} color="currentColor" />
@@ -238,7 +251,7 @@ const WelcomeRecentSessions: FC<WelcomeRecentSessionsProps> = memo(({ density = 
           })}
           color="currentColor"
         />
-      </div>
+      </TransparentButton>
       <div
         className={classNames(styles['welcome-recent-list-wrapper'], {
           [styles['welcome-recent-list-wrapper-expanded']]: expanded,
@@ -251,10 +264,10 @@ const WelcomeRecentSessions: FC<WelcomeRecentSessionsProps> = memo(({ density = 
             ))}
           </div>
           {showViewMore && (
-            <div className={styles['welcome-recent-more']} onClick={handleViewMore} role="button">
+            <TransparentButton className={styles['welcome-recent-more']} onClick={handleViewMore}>
               {t('AIChatWelcome.viewMoreSessions')}
               <ChevronDownOutlined className={styles['welcome-recent-header-arrow']} color="currentColor" />
-            </div>
+            </TransparentButton>
           )}
         </div>
       </div>

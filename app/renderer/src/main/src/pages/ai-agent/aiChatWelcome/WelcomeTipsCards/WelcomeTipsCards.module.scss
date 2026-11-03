@@ -22,19 +22,14 @@
 }
 
 .welcome-tip-card-compact {
-  display: flex;
-  align-items: center;
   justify-content: space-between;
   gap: 4px;
   box-sizing: border-box;
-  width: 100%;
   height: 56px;
   padding: 8px;
   border-radius: 12px;
   border: 1px solid var(--Colors-Use-Neutral-Border);
   background: var(--Colors-Use-Basic-Background);
-  cursor: pointer;
-  user-select: none;
 }
 
 .welcome-tip-compact-left {
@@ -129,8 +124,6 @@
 }
 
 .welcome-tip-footer {
-  display: flex;
-  align-items: center;
   justify-content: space-between;
   color: var(--Colors-Use-Neutral-Text-3-Secondary);
   font-size: 12px;
@@ -139,7 +132,6 @@
   padding: 8px 12px;
   height: 32px;
   background: var(--Colors-Use-Neutral-Bg);
-  cursor: pointer;
   &:hover {
     background: var(--Colors-Use-Neutral-Bg-Hover);
     color: var(--Colors-Use-Main-Primary);

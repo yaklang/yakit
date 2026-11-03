@@ -11,6 +11,7 @@ import { useCustomFolder } from '../../components/aiFileSystemList/store/useCust
 import { useWelcomePanelStats } from '../hooks/useWelcomePanelStats'
 import styles from './WelcomeTipsCards.module.scss'
 import { ColorsRiskIcon, ColorsFlowIcon, ColorsFileSystemIcon } from '../icon'
+import { TransparentButton } from '../TransparentButton'
 
 type WelcomeTipKey = 'risk' | 'traffic' | 'file-system'
 
@@ -86,11 +87,10 @@ const WelcomeTipsCards: FC<WelcomeTipsCardsProps> = memo(({ compact = false }) =
     >
       {welcomeTipsList.map((item) =>
         compact ? (
-          <div
+          <TransparentButton
             className={styles['welcome-tip-card-compact']}
             key={item.key}
             onClick={() => handleTipClick(item.key)}
-            role="button"
           >
             <div className={styles['welcome-tip-compact-left']}>
               <div>{item.icon}</div>
@@ -107,7 +107,7 @@ const WelcomeTipsCards: FC<WelcomeTipsCardsProps> = memo(({ compact = false }) =
               </div>
               <ChevronRightOutlined className={styles['welcome-tip-footer-icon']} color="currentColor" />
             </div>
-          </div>
+          </TransparentButton>
         ) : (
           <div className={styles['welcome-tip-card']} key={item.key}>
             <div className={styles['welcome-tip-main']}>
@@ -125,10 +125,10 @@ const WelcomeTipsCards: FC<WelcomeTipsCardsProps> = memo(({ compact = false }) =
               </div>
             </div>
 
-            <div className={styles['welcome-tip-footer']} onClick={() => handleTipClick(item.key)} role="button">
+            <TransparentButton className={styles['welcome-tip-footer']} onClick={() => handleTipClick(item.key)}>
               <span>{item.description}</span>
               <ChevronRightOutlined className={styles['welcome-tip-footer-icon']} color="currentColor" />
-            </div>
+            </TransparentButton>
           </div>
         ),
       )}

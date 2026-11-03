@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { AISession } from '../../type/aiChat'
-import { mergeAISessionUpdate } from '../mergeAISessionUpdate'
+import { mergeAISessionPatch, mergeAISessionUpdate } from '../mergeAISessionUpdate'
 
 const baseSession = {
   SessionID: 's-1',
@@ -18,6 +18,29 @@ const baseSession = {
     },
   },
 } as AISession
+
+describe('mergeAISessionPatch', () => {
+  it('无底稿时直接返回增量', () => {
+    const extra = { Title: '新标题' }
+    expect(mergeAISessionPatch(undefined, extra)).toBe(extra)
+  })
+
+  it('叠两段 StartParams/Strategy，保留未改字段', () => {
+    expect(
+      mergeAISessionPatch(
+        { Title: 'a', StartParams: { EnablePlan: true, Strategy: { MaxSubAgents: 2, EnableMultiAgent: true } } },
+        { Title: 'b', StartParams: { SingleModelMode: true, Strategy: { MaxSubAgents: 9 } } },
+      ),
+    ).toMatchObject({
+      Title: 'b',
+      StartParams: {
+        EnablePlan: true,
+        SingleModelMode: true,
+        Strategy: { MaxSubAgents: 9, EnableMultiAgent: true },
+      },
+    })
+  })
+})
 
 describe('mergeAISessionUpdate', () => {
   it('sessionId 不匹配时返回原对象', () => {
