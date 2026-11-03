@@ -1,30 +1,18 @@
 import type React from 'react'
-import {
-  forwardRef,
-  memo,
-  type ReactNode,
-  type Ref,
-  type RefAttributes,
-  useEffect,
-  useImperativeHandle,
-  useRef,
-  useState,
-} from 'react'
-import {
-  type AIChatTextareaProps,
-  type AIChatTextareaSubmit,
-  AIInputFooterRightEnum,
-  AIInputInnerFeatureEnum,
-  type FileToChatQuestionList,
-  type FooterLeftTypesComponentProps,
-  type FooterRightTypesComponentProps,
-  type QSInputTextareaProps,
+import { forwardRef, memo, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import type { ReactNode, Ref, RefAttributes } from 'react'
+import { AIInputFooterRightEnum, AIInputInnerFeatureEnum } from './type'
+import type {
+  AIChatTextareaProps,
+  AIChatTextareaSubmit,
+  FileToChatQuestionList,
+  FooterLeftTypesComponentProps,
+  FooterRightTypesComponentProps,
+  QSInputTextareaProps,
 } from './type'
 import { Input } from 'antd'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
-import { ArrowUpOutlined, CogOutlined, Log2Outlined, XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
-import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
+import { AdjustmentsOutlined, ArrowUpOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { useCreation, useInViewport, useMemoizedFn } from 'ahooks'
 import type { TextAreaRef } from 'antd/lib/input/TextArea'
 import classNames from 'classnames'
@@ -33,10 +21,8 @@ import { AIMilkdownInput } from '../components/aiMilkdownInput/AIMilkdownInput'
 import type { EditorMilkdownProps } from '@/components/MilkdownEditor/MilkdownEditorType'
 import { callCommand, getMarkdown } from '@milkdown/kit/utils'
 import useAIChatDrop from '../aiChatWelcome/hooks/useAIChatDrop'
-import {
-  aiMentionCommand,
-  type AIMentionCommandParams,
-} from '../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
+import { aiMentionCommand } from '../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
+import type { AIMentionCommandParams } from '../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
 import emiter from '@/utils/eventBus/eventBus'
 import type { AIAgentTriggerEventInfo } from '../aiAgentType'
 import { extractDataWithMilkdown, setEditorValue, unescapeUnderscoreInPath } from '../components/aiMilkdownInput/utils'
@@ -45,22 +31,16 @@ import { convertKeyEventToKeyCombination } from '@/utils/globalShortcutKey/utils
 import { YakitKeyBoard } from '@/utils/globalShortcutKey/keyboard'
 import { AIModelSelect } from '../aiModelList/aiModelSelect/AIModelSelect'
 import AIReviewRuleSelect from '@/pages/ai-re-act/aiReviewRuleSelect/AIReviewRuleSelect'
-import { AIFocusMode } from '@/pages/ai-re-act/aiFocusMode/AIFocusMode'
-import { AIReasoningEffortSelect } from '@/pages/ai-re-act/aiReasoningEffortSelect/AIReasoningEffortSelect'
-import { isString } from 'lodash'
-import OpenFileDropdown, { type OpenFileDropdownItem } from '../aiChatWelcome/OpenFileDropdown/OpenFileDropdown'
-import { UploadFileButton } from '@/pages/ai-re-act/aiReActChat/AIReActComponent'
+import isString from 'lodash/isString'
+import type { OpenFileDropdownItem } from '../aiChatWelcome/OpenFileDropdown/OpenFileDropdown'
 import { AIInputSettingPopover } from '@/pages/ai-re-act/aiReActTaskChat/AIReActTaskChat'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { yakitNotify } from '@/utils/notification'
 import type { AIMilkdownInputRef } from '../components/aiMilkdownInput/type'
 import type { AICodeBlockCommandParams } from '../components/aiMilkdownInput/aiCodeBlock/aiCustomCodeBlockPlugin'
 import AIRunModeSelect from '../aiRunModeSelect/AIRunModeSelect'
-import { StrategySetupTags, useHasStrategySetupTags } from './StrategySetupTags'
-import {
-  aiHttpFlowCustomSchema,
-  type AIHttpFlowCommandParams,
-} from '../components/aiMilkdownInput/aiMilkdownHttpFlow/aiHttpFlowPlugin'
+import { aiHttpFlowCustomSchema } from '../components/aiMilkdownInput/aiMilkdownHttpFlow/aiHttpFlowPlugin'
+import type { AIHttpFlowCommandParams } from '../components/aiMilkdownInput/aiMilkdownHttpFlow/aiHttpFlowPlugin'
 
 const HTTP_FLOW_SUMMARY_THRESHOLD = 3
 
@@ -100,7 +80,6 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
       isOpen,
       filterMentionType,
       chatDataStoreKey,
-      onHttpFlowRemove,
     } = props
     const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
 
@@ -116,9 +95,6 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                 case AIInputInnerFeatureEnum.AIReviewRuleSelect:
                   node = { type: AIInputInnerFeatureEnum.AIReviewRuleSelect }
                   break
-                case AIInputInnerFeatureEnum.AIModelSelect:
-                  node = { type: AIInputInnerFeatureEnum.AIModelSelect, props: { isOpen } }
-                  break
                 default:
                   break
               }
@@ -130,10 +106,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
           .filter((ele) => !!ele?.type)
         return list
       }
-      return [
-        { type: AIInputInnerFeatureEnum.AIReviewRuleSelect },
-        { type: AIInputInnerFeatureEnum.AIModelSelect, props: { isOpen } },
-      ]
+      return [{ type: AIInputInnerFeatureEnum.AIReviewRuleSelect }]
     }, [props.footerLeftTypes, isOpen])
 
     const footerRightTypes: FooterRightTypesComponentProps[] = useCreation(() => {
@@ -157,12 +130,14 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
           .filter((ele) => !!ele?.type)
         return list
       }
-      return [{ type: AIInputFooterRightEnum.AIFocusMode }]
+      return [
+        { type: AIInputFooterRightEnum.AIFocusMode },
+        { type: AIInputFooterRightEnum.AIModelSelect, props: { isOpen } },
+      ]
     }, [props.footerRightTypes, isOpen])
 
     const [disabled, setDisabled] = useState<boolean>(!defaultValue?.trim())
     const [selectedHttpFlowIds, setSelectedHttpFlowIds] = useState<string[]>([])
-    const hasStrategySetupTags = useHasStrategySetupTags()
     const httpFlowReference: AIHttpFlowCommandParams = {
       flowIds: [...selectedHttpFlowIds],
       displayText:
@@ -302,15 +277,6 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
     const onSetHttpFlow = useMemoizedFn((ids: string[]) => {
       setSelectedHttpFlowIds([...new Set(ids.filter(Boolean))])
     })
-    const onHttpFlowTagClose = useMemoizedFn((event: React.MouseEvent, id: string) => {
-      event.stopPropagation()
-      onHttpFlowRemove?.(id, httpFlowReference.isSummary)
-    })
-    const onHttpFlowItemClose = useMemoizedFn((event: React.MouseEvent, id: string) => {
-      event.preventDefault()
-      event.stopPropagation()
-      onHttpFlowRemove?.(id, false)
-    })
     /**设置编辑器值 */
     const onSetValue = useMemoizedFn((value: string) => {
       if (!value) setSelectedHttpFlowIds([])
@@ -358,17 +324,6 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
             )
             node.push(<div className={styles['divider-style']} key={`divider-${index}`} />)
             break
-          case AIInputInnerFeatureEnum.AIModelSelect:
-            node.push(
-              item.component || (
-                <AIModelSelect
-                  key={item.type}
-                  {...item.props}
-                  className={classNames(styles['model-self-adaptive'], item.props?.className)}
-                />
-              ),
-            )
-            break
 
           default:
             break
@@ -380,15 +335,26 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
       const node: ReactNode[] = []
       types?.forEach((item, index) => {
         switch (item.type) {
-          case AIInputFooterRightEnum.AIFocusMode:
+          // case AIInputFooterRightEnum.AIFocusMode:
+          //   node.push(
+          //     item.component || (
+          //       <AIFocusMode
+          //         key={item.type}
+          //         value={focusMode}
+          //         onChange={setFocusMode}
+          //         {...item.props}
+          //         className={classNames(styles['focus-mode-self-adaptive'], item.props?.className)}
+          //       />
+          //     ),
+          //   )
+          //   break
+          case AIInputFooterRightEnum.AIModelSelect:
             node.push(
               item.component || (
-                <AIFocusMode
+                <AIModelSelect
                   key={item.type}
-                  value={focusMode}
-                  onChange={setFocusMode}
                   {...item.props}
-                  className={classNames(styles['focus-mode-self-adaptive'], item.props?.className)}
+                  className={classNames(styles['model-self-adaptive'], item.props?.className)}
                 />
               ),
             )
@@ -411,21 +377,6 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
       aiMilkdownInputRef.current?.setImage()
     })
 
-    const renderHttpFlowTag = (id: string) => (
-      <div key={id} className={styles['http-flow-reference']}>
-        <Log2Outlined className={styles['http-flow-reference-icon']} size={16} />
-        <span className={styles['http-flow-reference-label']}>
-          {httpFlowReference.isSummary ? httpFlowReference.displayText : `#${id}`}
-        </span>
-
-        <XOutlined
-          size={16}
-          className={styles['http-flow-reference-close']}
-          onClick={(event) => onHttpFlowTagClose(event, id)}
-        />
-      </div>
-    )
-
     return (
       <div
         data-ai-input-card
@@ -441,39 +392,6 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
       >
         {isHovering && <div className={styles['drag-hint']}>{t('AIChatTextarea.dropToAddToChat')}</div>}
         <div className={classNames(styles['textarea-wrapper'])} onKeyDown={handleTextareaKeyDown}>
-          {(hasStrategySetupTags || selectedHttpFlowIds.length > 0) && (
-            <div className={styles['http-flow-references']}>
-              <StrategySetupTags />
-              {httpFlowReference.isSummary ? (
-                <YakitPopover
-                  trigger="hover"
-                  placement="topLeft"
-                  classNames={{ root: styles['http-flow-reference-popover'] }}
-                  content={
-                    <div className={styles['http-flow-reference-ids']} role="list">
-                      <div className={styles['http-flow-reference-items']}>
-                        {selectedHttpFlowIds.map((id) => (
-                          <YakitTag
-                            key={id}
-                            className={styles['http-flow-reference-id']}
-                            role="listitem"
-                            closable
-                            onClose={(event) => onHttpFlowItemClose(event, id)}
-                          >
-                            <span title={`#${id}`}>#{id}</span>
-                          </YakitTag>
-                        ))}
-                      </div>
-                    </div>
-                  }
-                >
-                  {renderHttpFlowTag(selectedHttpFlowIds.join(','))}
-                </YakitPopover>
-              ) : (
-                selectedHttpFlowIds.map((id) => renderHttpFlowTag(id))
-              )}
-            </div>
-          )}
           <AIMilkdownInput
             ref={aiMilkdownInputRef}
             classNameWrapper={milkdownClassName}
@@ -487,20 +405,20 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
           <div className={styles['footer']}>
             {inputFooterLeft ?? (
               <div className={styles['footer-left']}>
+                {renderFooterLeftTypes(footerLeftTypes)}
                 <AIRunModeSelect />
-                <AIReasoningEffortSelect />
+                {/* <AIReasoningEffortSelect />
 
                 <OpenFileDropdown cb={onSetFileMention} onSelectImage={onSelectImage}>
                   <UploadFileButton title={t('YakitButton.openFolder')} className={styles['btn-base']} />
-                </OpenFileDropdown>
+                </OpenFileDropdown> */}
                 <AIInputSettingPopover visible={inputSettingVisible} setVisible={setInputSettingVisible}>
                   <YakitButton
                     type="text2"
-                    radius="50%"
-                    icon={<CogOutlined color="currentColor" />}
+                    icon={<AdjustmentsOutlined color="currentColor" />}
                     onClick={(e) => e.stopPropagation()}
                     className={styles['btn-base']}
-                    isHover={inputSettingVisible}
+                    isActive={inputSettingVisible}
                   />
                 </AIInputSettingPopover>
               </div>
@@ -508,6 +426,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
 
             <div className={styles['footer-right']}>
               {inputFooterRight}
+              {renderFooterRightTypes(footerRightTypes)}
               <YakitButton
                 className={styles['round-btn']}
                 radius="50%"
@@ -521,14 +440,6 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
               />
             </div>
           </div>
-        </div>
-        <div className={styles['ai-chat-textarea-footer']}>
-          {footer ?? (
-            <>
-              <div className={styles['footer-left']}>{renderFooterLeftTypes(footerLeftTypes)}</div>
-              <div className={styles['footer-right']}>{renderFooterRightTypes(footerRightTypes)}</div>
-            </>
-          )}
         </div>
         {children}
       </div>

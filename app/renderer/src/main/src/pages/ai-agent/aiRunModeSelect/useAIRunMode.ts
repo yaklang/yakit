@@ -1,20 +1,18 @@
 import { useCreation, useDebounceFn, useMemoizedFn } from 'ahooks'
 import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
 import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
-import {
-  type AIExecutionStrategy,
-  type AIInputEvent,
-  AIInputEventHotPatchTypeEnum,
-} from '@/pages/ai-re-act/hooks/grpcApi'
+import { AIInputEventHotPatchTypeEnum } from '@/pages/ai-re-act/hooks/grpcApi'
+import type { AIExecutionStrategy, AIInputEvent } from '@/pages/ai-re-act/hooks/grpcApi'
 import emiter from '@/utils/eventBus/eventBus'
 import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import { useStore } from 'zustand'
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
-import { type ModeOptionKey, ModeOptionList } from './aiRunModeConstants'
+import { ModeOptionList } from './aiRunModeConstants'
+import type { ModeOptionKey } from './aiRunModeConstants'
 import { clearGoalStrategy } from '../defaultConstant'
 
 /** Plan / Multi-Agent / Goal 开关与子配置（按钮下拉与 / 弹层共用） */
-export function useAIRunMode() {
+export const useAIRunMode = () => {
   const { setting, activeChat } = useAIAgentStore()
   const { setSetting, onSend } = useAIAgentDispatcher()
   const store = useCurrentStore()
@@ -142,7 +140,12 @@ export function useAIRunMode() {
           // 关闭 Goal：一并清掉验收/时长/最小迭代，避免残留 gate
           onSetStrategy(clearGoalStrategy())
         } else {
-          onSetStrategy({ EnableGoalMode: true })
+          onSetStrategy({
+            EnableGoalMode: true,
+            ...(!goalAcceptanceCriteria.trim() && goalDurationSeconds === 0
+              ? { GoalMinIterations: Math.max(1, goalMinIterations) }
+              : {}),
+          })
         }
         break
       default:

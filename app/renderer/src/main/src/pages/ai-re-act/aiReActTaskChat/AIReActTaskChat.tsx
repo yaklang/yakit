@@ -12,13 +12,15 @@ import classNames from 'classnames'
 import { ChevrondownButton } from '../aiReActChat/AIReActComponent'
 import {
   ArrowsExpandOutlined,
-  InformationCircleOutlined,
+  AdjustmentsOutlined,
   ArrowsCollapseOutlined,
+  RotateCcwOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { type AIInputEvent, AIInputEventHotPatchTypeEnum } from '../hooks/grpcApi'
-import { Form, Tooltip } from 'antd'
+import { AIInputEventHotPatchTypeEnum } from '../hooks/grpcApi'
+import type { AIInputEvent } from '../hooks/grpcApi'
+import { Form } from 'antd'
 import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
 import useRuntimeContextSizeLimit from '@/pages/ai-agent/useContext/useRuntimeContextSizeLimit'
 import emiter from '@/utils/eventBus/eventBus'
@@ -131,7 +133,7 @@ export default AIReActTaskChat
 
 export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React.memo((props) => {
   const { children } = props
-  const { t } = useI18nNamespaces(['aiAgent'])
+  const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
 
   const { onSend, setSetting, setActiveChat } = useAIAgentDispatcher()
 
@@ -198,7 +200,7 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
     },
   )
 
-  const onValuesChange = useMemoizedFn((changedValues: AIInputSettingFormProps) => {
+  const onValuesChange = useMemoizedFn((changedValues: Partial<AIInputSettingFormProps>) => {
     if (has(changedValues, 'AllowUserPrompt')) {
       const disallow = !changedValues.AllowUserPrompt
       if (
@@ -287,119 +289,169 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
     setVisible(v)
   })
 
+  const onReset = useMemoizedFn(() => {
+    const defaults = {
+      SingleModelMode: singleModelModeLocked ? effectiveSingleModelMode : !!AIAgentSettingDefault.SingleModelMode,
+      SyncPerceptionTrigger: !!AIAgentSettingDefault.SyncPerceptionTrigger,
+      RuntimeContextSizeLimit: AIAgentSettingDefault.RuntimeContextSizeLimit ?? 300,
+      AIPresetPrompt: '',
+      AIPlanPrompt: '',
+    }
+    form.setFieldsValue(defaults)
+    onValuesChange(defaults)
+  })
+
   return (
     <YakitPopover
       open={visible}
+      arrow={false}
+      placement="topLeft"
+      classNames={{ root: styles['ai-input-setting-popover'] }}
       content={
-        <Form
-          form={form}
-          labelCol={{ span: 10 }}
-          wrapperCol={{ span: 14 }}
-          onValuesChange={onValuesChange}
-          initialValues={{
-            AllowUserPrompt: allowUserPrompt,
-            SingleModelMode: effectiveSingleModelMode,
-            SyncPerceptionTrigger: setting.SyncPerceptionTrigger,
-            RuntimeContextSizeLimit: runtimeContextSizeLimit,
-            EnablePlan: setting.EnablePlan,
-            AIPresetPrompt: aiGlobalConfig.AIPresetPrompt || '',
-            AIPlanPrompt: aiGlobalConfig.AIPlanPrompt || '',
-          }}
-          className={styles['ai-input-setting-form']}
-          onClick={(e) => {
-            e.stopPropagation()
-          }}
+        <div
+          className={styles['ai-input-setting-panel']}
+          onClick={(event) => event.stopPropagation()}
+          onKeyDown={(event) => event.stopPropagation()}
         >
-          <Form.Item
-            label={
-              <>
-                {t('AIReActTaskChatContent.singleModelMode')}
-                <Tooltip
-                  classNames={{ root: styles['form-info-icon-tooltip'] }}
-                  title={
-                    globalSingleModelMode
-                      ? t('AIReActTaskChatContent.singleModelModeGlobalTip')
-                      : singleModelModeLocked
-                        ? t('AIReActTaskChatContent.singleModelModeSessionTip')
-                        : t('AIReActTaskChatContent.singleModelModeTip')
-                  }
-                >
-                  <InformationCircleOutlined className={styles['info-icon']} color="currentColor" />
-                </Tooltip>
-              </>
-            }
-            name="SingleModelMode"
-            valuePropName="checked"
-            className={styles['switch-form-item']}
+          <div className={styles['settings-header']}>
+            <div className={styles['settings-title']}>
+              <AdjustmentsOutlined size={16} color="currentColor" />
+              <span>{t('AIReActTaskChatContent.advancedConfiguration')}</span>
+            </div>
+            <YakitButton type="text2" size="small" className={styles['settings-reset']} onClick={onReset}>
+              {t('YakitButton.reset')}
+              <RotateCcwOutlined size={16} color="currentColor" />
+            </YakitButton>
+          </div>
+          <Form
+            form={form}
+            layout="vertical"
+            onValuesChange={onValuesChange}
+            initialValues={{
+              AllowUserPrompt: allowUserPrompt,
+              SingleModelMode: effectiveSingleModelMode,
+              SyncPerceptionTrigger: setting.SyncPerceptionTrigger,
+              RuntimeContextSizeLimit: runtimeContextSizeLimit,
+              EnablePlan: setting.EnablePlan,
+              AIPresetPrompt: aiGlobalConfig.AIPresetPrompt || '',
+              AIPlanPrompt: aiGlobalConfig.AIPlanPrompt || '',
+            }}
+            className={styles['ai-input-setting-form']}
+            onClick={(e) => {
+              e.stopPropagation()
+            }}
           >
-            <YakitSwitch disabled={singleModelModeLocked} />
-          </Form.Item>
-          <Form.Item
-            label={t('AIReActTaskChatContent.allowUserPrompt')}
-            name="AllowUserPrompt"
-            valuePropName="checked"
-            extra={t('AIReActTaskChatContent.allowUserPromptTip')}
-            className={styles['switch-form-item']}
-          >
-            <YakitSwitch aria-label={t('AIReActTaskChatContent.allowUserPrompt')} disabled={execute && !sessionId} />
-          </Form.Item>
-          <Form.Item
-            label={
-              <>
-                {t('AIReActTaskChatContent.syncPerceptionTrigger')}
-                <Tooltip
-                  classNames={{ root: styles['form-info-icon-tooltip'] }}
-                  title={t('AIReActTaskChatContent.syncPerceptionTriggerTip')}
-                >
-                  <InformationCircleOutlined className={styles['info-icon']} color="currentColor" />
-                </Tooltip>
-              </>
-            }
-            name="SyncPerceptionTrigger"
-            valuePropName="checked"
-            className={styles['switch-form-item']}
-          >
-            <YakitSwitch />
-          </Form.Item>
-          <Form.Item
-            label={
-              <>
-                {t('AIChatSetting.runtimeContextSize')}
-                <Tooltip
-                  classNames={{ root: styles['form-info-icon-tooltip'] }}
-                  title={t('AIChatSetting.runtimeContextSizeDesc')}
-                >
-                  <InformationCircleOutlined className={styles['info-icon']} color="currentColor" />
-                </Tooltip>
-              </>
-            }
-            name="RuntimeContextSizeLimit"
-          >
-            <YakitInputNumber
-              min={60}
-              precision={0}
-              suffix="K"
-              className={styles['runtime-context-size-input']}
-              wrapperClassName={styles['runtime-context-size-input']}
-            />
-          </Form.Item>
-          <Form.Item label={t('AIReActTaskChatContent.globalDirective')} name="AIPresetPrompt">
-            <YakitInput.TextArea
-              rows={2}
-              isShowResize={false}
-              placeholder={t('AIReActTaskChatContent.globalDirectiveDefault')}
-              maxLength={500}
-            />
-          </Form.Item>
-          <Form.Item label={t('AIReActTaskChatContent.planPrompt')} name="AIPlanPrompt">
-            <YakitInput.TextArea
-              rows={2}
-              isShowResize={false}
-              placeholder={t('AIReActTaskChatContent.planPromptPlaceholder')}
-              maxLength={2000}
-            />
-          </Form.Item>
-        </Form>
+            <div className={styles['settings-options']}>
+              <Form.Item
+                label={
+                  <div className={styles['setting-label']}>
+                    <span>{t('AIReActTaskChatContent.singleModelMode')}</span>
+                    <span className={styles['setting-description']}>
+                      {globalSingleModelMode
+                        ? t('AIReActTaskChatContent.singleModelModeGlobalTip')
+                        : singleModelModeLocked
+                          ? t('AIReActTaskChatContent.singleModelModeSessionTip')
+                          : t('AIReActTaskChatContent.singleModelModeDescription')}
+                    </span>
+                  </div>
+                }
+                name="SingleModelMode"
+                layout="horizontal"
+                valuePropName="checked"
+                className={styles['inline-form-item']}
+              >
+                <YakitSwitch
+                  aria-label={t('AIReActTaskChatContent.singleModelMode')}
+                  disabled={singleModelModeLocked}
+                  wrapperClassName={styles['setting-switch']}
+                />
+              </Form.Item>
+              <Form.Item
+                label={
+                  <div className={styles['setting-label']}>
+                    <span>{t('AIReActTaskChatContent.allowUserPrompt')}</span>
+                    <span className={styles['setting-description']}>
+                      {t('AIReActTaskChatContent.allowUserPromptTip')}
+                    </span>
+                  </div>
+                }
+                name="AllowUserPrompt"
+                layout="horizontal"
+                valuePropName="checked"
+                className={styles['inline-form-item']}
+              >
+                <YakitSwitch
+                  aria-label={t('AIReActTaskChatContent.allowUserPrompt')}
+                  disabled={execute && !sessionId}
+                  wrapperClassName={styles['setting-switch']}
+                />
+              </Form.Item>
+              <Form.Item
+                label={
+                  <div className={styles['setting-label']}>
+                    <span>{t('AIReActTaskChatContent.syncPerceptionTrigger')}</span>
+                    <span className={styles['setting-description']}>
+                      {t('AIReActTaskChatContent.syncPerceptionTriggerTip')}
+                    </span>
+                  </div>
+                }
+                name="SyncPerceptionTrigger"
+                layout="horizontal"
+                valuePropName="checked"
+                className={styles['inline-form-item']}
+              >
+                <YakitSwitch
+                  aria-label={t('AIReActTaskChatContent.syncPerceptionTrigger')}
+                  wrapperClassName={styles['setting-switch']}
+                />
+              </Form.Item>
+              <Form.Item
+                label={
+                  <div className={styles['setting-label']}>
+                    <span>{t('AIChatSetting.runtimeContextSize')}</span>
+                    <span className={styles['setting-description']}>{t('AIChatSetting.runtimeContextSizeDesc')}</span>
+                  </div>
+                }
+                name="RuntimeContextSizeLimit"
+                layout="horizontal"
+                className={styles['inline-form-item']}
+              >
+                <YakitInputNumber
+                  aria-label={t('AIChatSetting.runtimeContextSize')}
+                  min={60}
+                  precision={0}
+                  suffix="K"
+                  className={styles['runtime-context-size-input']}
+                  wrapperClassName={styles['runtime-context-size-input']}
+                />
+              </Form.Item>
+            </div>
+            <Form.Item
+              label={t('AIReActTaskChatContent.globalDirective')}
+              name="AIPresetPrompt"
+              className={styles['prompt-form-item']}
+            >
+              <YakitInput.TextArea
+                rows={2}
+                isShowResize={false}
+                placeholder={t('AIReActTaskChatContent.globalDirectiveDefault')}
+                maxLength={500}
+              />
+            </Form.Item>
+            <Form.Item
+              label={t('AIReActTaskChatContent.planPrompt')}
+              name="AIPlanPrompt"
+              className={styles['prompt-form-item']}
+            >
+              <YakitInput.TextArea
+                rows={2}
+                isShowResize={false}
+                placeholder={t('AIReActTaskChatContent.planPromptPlaceholder')}
+                maxLength={2000}
+              />
+            </Form.Item>
+          </Form>
+        </div>
       }
       onOpenChange={onVisibleChange}
       trigger={'click'}

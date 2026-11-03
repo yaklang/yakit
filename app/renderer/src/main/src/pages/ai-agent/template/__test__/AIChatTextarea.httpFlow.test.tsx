@@ -181,14 +181,6 @@ async function setup(defaultValue = '') {
   return { ...view, ref, onSubmit, onHttpFlowRemove, send }
 }
 
-function getHttpFlowTags(container: HTMLElement) {
-  return Array.from(container.querySelectorAll('[role="img"][tabindex="-1"]'), (icon) => icon.parentElement!)
-}
-
-function getHttpFlowCloseIcon(label: string) {
-  return screen.getByText(label).parentElement!.querySelector('[role="img"][tabindex="-1"]')!
-}
-
 describe('图片保存期间的提交保护', () => {
   it.each(['点击', '回车'])('%s 提交等待所有图片路径写回后，才读取最新正文和附件', async (method) => {
     const { ref, onSubmit, send } = await setup('正文')
@@ -246,117 +238,45 @@ describe('图片保存期间的提交保护', () => {
   })
 })
 
-describe('流量勾选引用区', () => {
-  it.each([1, 2, 3, 5, 6, 10])('%i 条流量按阈值显示 ID 或数量，正文和撤销记录不变', async (count) => {
-    const { ref, container } = await setup('保留这段正文')
+describe('流量勾选引用逻辑', () => {
+  it.each([1, 2, 3, 5, 6, 10])('%i 条流量不再显示标签，但保留提交数据、正文和撤销记录', async (count) => {
+    const { ref, container, onSubmit, send } = await setup('保留这段正文')
     const editor = editors[0]
     const previousState = editor.action((ctx) => ctx.get(editorViewCtx).state)
-    act(() => ref.current?.setHttpFlow(Array.from({ length: count }, (_, i) => `${i + 1}`)))
-    const label = count < 3 ? '#1' : `勾选了 ${count} 条流量`
-    const chip = screen.getByText(label)
-    expect(getHttpFlowTags(container)).toHaveLength(count < 3 ? count : 1)
-    if (count === 2) expect(screen.getByText('#2').parentElement).not.toBe(chip.parentElement)
-    const editorElement = screen.getByTestId('editor')
-    expect(chip.parentElement?.parentElement?.parentElement).toBe(editorElement.parentElement)
-    expect(chip.compareDocumentPosition(editorElement) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    const ids = Array.from({ length: count }, (_, i) => String(i + 1))
+    act(() => ref.current?.setHttpFlow(ids))
+
+    expect(screen.queryByText('#1')).not.toBeInTheDocument()
+    expect(screen.queryByText(`勾选了 ${count} 条流量`)).not.toBeInTheDocument()
+    expect(screen.queryByRole('list')).not.toBeInTheDocument()
     expect(container.querySelector('.ProseMirror')?.textContent).toBe('保留这段正文')
     expect(editor.action((ctx) => ctx.get(editorViewCtx).state)).toBe(previousState)
     expect(ref.current?.getValue()).toBe('保留这段正文')
-  })
 
-  it('去重、取消勾选与关闭引用仅更新引用区，关闭回调携带完整 ID', async () => {
-    const { ref, onHttpFlowRemove, onSubmit, send, container } = await setup('正文')
-    act(() => ref.current?.setHttpFlow(['1', '2', '2', '']))
-    expect(getHttpFlowTags(container)).toHaveLength(2)
-    const focusEditor = vi.spyOn(
-      editors[0].action((ctx) => ctx.get(editorViewCtx)),
-      'focus',
-    )
-    fireEvent.click(getHttpFlowCloseIcon('#1'))
-    expect(focusEditor).not.toHaveBeenCalled()
-    focusEditor.mockRestore()
-    expect(onHttpFlowRemove).toHaveBeenLastCalledWith('1', false)
-    expect(screen.queryByText('#1')).not.toBeInTheDocument()
-    expect(screen.getByText('#2')).toBeInTheDocument()
-    fireEvent.click(send)
-    expect(onSubmit.mock.calls[0][0].httpFlowList).toEqual([expect.objectContaining({ flowIds: ['2'] })])
-    fireEvent.click(getHttpFlowCloseIcon('#2'))
-    expect(onHttpFlowRemove).toHaveBeenLastCalledWith('2', false)
-    expect(getHttpFlowTags(container)).toHaveLength(0)
-    expect(ref.current?.getValue()).toBe('正文')
-    act(() => ref.current?.setHttpFlow(['3']))
-    act(() => ref.current?.setHttpFlow([]))
-    expect(getHttpFlowTags(container)).toHaveLength(0)
-    expect(onHttpFlowRemove).toHaveBeenCalledTimes(2)
-  })
-
-  it('达到 3 条后悬停展示完整 ID 列表，数量变化和关闭标签同步更新', async () => {
-    const { ref, container, onHttpFlowRemove } = await setup('正文')
-    act(() => ref.current?.setHttpFlow(['11', '12']))
-    fireEvent.mouseEnter(screen.getByText('#11').parentElement!)
-    expect(screen.queryByRole('list')).not.toBeInTheDocument()
-    act(() => ref.current?.setHttpFlow(['11', '12', '13']))
-    expect(screen.queryByRole('list')).not.toBeInTheDocument()
-    fireEvent.mouseEnter(screen.getByText('勾选了 3 条流量').parentElement!)
-    const list = await screen.findByRole('list')
-    expect(list.tagName).toBe('DIV')
-    within(list)
-      .getAllByRole('listitem')
-      .forEach((item) => expect(item).toHaveClass('ant-tag'))
-    expect(
-      within(list)
-        .getAllByRole('listitem')
-        .map((item) => item.textContent),
-    ).toEqual(['#11', '#12', '#13'])
-    fireEvent.mouseLeave(screen.getByText('勾选了 3 条流量').parentElement!)
-    await waitFor(() => expect(screen.queryByRole('list')).not.toBeInTheDocument())
-    fireEvent.mouseEnter(screen.getByText('勾选了 3 条流量').parentElement!)
-    await screen.findByRole('list')
-    act(() => ref.current?.setHttpFlow(Array.from({ length: 10 }, (_, i) => `${i + 11}`)))
-    expect(screen.getByText('勾选了 10 条流量')).toBeInTheDocument()
-    expect(
-      within(list)
-        .getAllByRole('listitem')
-        .map((item) => item.textContent),
-    ).toEqual(Array.from({ length: 10 }, (_, i) => `#${i + 11}`))
-    fireEvent.click(getHttpFlowCloseIcon('勾选了 10 条流量'))
-    expect(onHttpFlowRemove).toHaveBeenCalledExactlyOnceWith('11,12,13,14,15,16,17,18,19,20', true)
-    expect(getHttpFlowTags(container)).toHaveLength(0)
-    await waitFor(() => expect(screen.queryByRole('list')).not.toBeInTheDocument())
-    act(() => ref.current?.setHttpFlow(['21']))
-    expect(screen.getByText('#21').parentElement).toBeVisible()
-    act(() => ref.current?.setHttpFlow(['21', '22', '23']))
-    expect(getHttpFlowTags(container)).toHaveLength(1)
-    act(() => ref.current?.setHttpFlow(['21', '22']))
-    expect(getHttpFlowTags(container)).toHaveLength(2)
-    expect(screen.getByText('#21')).toBeInTheDocument()
-    expect(screen.getByText('#22')).toBeInTheDocument()
-    expect(screen.queryByText('勾选了 3 条流量')).not.toBeInTheDocument()
-  })
-
-  it('在汇总列表中逐项取消勾选，跨过汇总阈值后恢复普通标签，提交仅保留剩余 ID', async () => {
-    const { ref, onHttpFlowRemove, onSubmit, send, container } = await setup('正文')
-    act(() => ref.current?.setHttpFlow(['11', '12', '13', '14']))
-    fireEvent.mouseEnter(screen.getByText('勾选了 4 条流量').parentElement!)
-    const list = await screen.findByRole('list')
-    expect(list.querySelectorAll('.ant-tag-close-icon')).toHaveLength(4)
-    fireEvent.click(within(list).getByText('#12').closest('.ant-tag')!.querySelector('.ant-tag-close-icon')!)
-    expect(onHttpFlowRemove).toHaveBeenLastCalledWith('12', false)
-    expect(screen.getByText('勾选了 3 条流量')).toBeInTheDocument()
-    expect(within(list).queryByText('#12')).not.toBeInTheDocument()
-    expect(list.querySelectorAll('.ant-tag-close-icon')).toHaveLength(3)
-    fireEvent.click(within(list).getByText('#14').closest('.ant-tag')!.querySelector('.ant-tag-close-icon')!)
-    expect(onHttpFlowRemove).toHaveBeenLastCalledWith('14', false)
-    expect(onHttpFlowRemove).toHaveBeenCalledTimes(2)
-    await waitFor(() => expect(screen.queryByRole('list')).not.toBeInTheDocument())
-    expect(getHttpFlowTags(container)).toHaveLength(2)
-    expect(screen.getByText('#11')).toBeInTheDocument()
-    expect(screen.getByText('#13')).toBeInTheDocument()
-    expect(ref.current?.getValue()).toBe('正文')
     fireEvent.click(send)
     expect(onSubmit.mock.calls[0][0].httpFlowList).toEqual([
-      expect.objectContaining({ flowIds: ['11', '13'], isSummary: false }),
+      {
+        flowIds: ids,
+        displayText: count < 3 ? ids.map((id) => '#' + id).join(', ') : `勾选了 ${count} 条流量`,
+        isSummary: count >= 3,
+      },
     ])
+  })
+
+  it('去重、替换和清空勾选后，提交只包含当前选中的流量 ID', async () => {
+    const { ref, onSubmit, send } = await setup('正文')
+    act(() => ref.current?.setHttpFlow(['1', '2', '2', '']))
+    fireEvent.click(send)
+    expect(onSubmit.mock.calls[0][0].httpFlowList).toEqual([expect.objectContaining({ flowIds: ['1', '2'] })])
+
+    act(() => ref.current?.setHttpFlow(['3']))
+    fireEvent.click(send)
+    expect(onSubmit.mock.calls[1][0].httpFlowList).toEqual([expect.objectContaining({ flowIds: ['3'] })])
+
+    act(() => ref.current?.setHttpFlow([]))
+    fireEvent.click(send)
+    expect(onSubmit.mock.calls[2][0]).toEqual(expect.objectContaining({ qs: '正文', httpFlowList: [] }))
+    expect(ref.current?.getValue()).toBe('正文')
   })
 
   it.each(['', '请分析这些流量'])('正文为“%s”时，提交引用快照和可解析的消息协议，不向编辑器写回', async (text) => {
@@ -379,8 +299,7 @@ describe('流量勾选引用区', () => {
     })
     expect(flowIds).toEqual([['11', '12']])
     act(() => ref.current?.setValue(''))
-    expect(screen.queryByText('#11')).not.toBeInTheDocument()
-    expect(screen.queryByText('#12')).not.toBeInTheDocument()
+    await waitFor(() => expect(send).toBeDisabled())
     expect(payload.httpFlowList?.[0].flowIds).toEqual(['11', '12'])
   })
 
@@ -452,24 +371,50 @@ describe('流量勾选引用区', () => {
     expect(parsed?.firstChild?.firstChild?.attrs.isSummary).toBe(false)
   })
 
-  it('引用状态按输入组件实例隔离，编辑器未就绪也可以清空', () => {
-    deferEditor.value = true
+  it('引用状态按输入组件实例隔离，清空正文同步清空当前实例的流量选择', async () => {
     const first = createRef<AIChatTextareaRefProps>()
     const second = createRef<AIChatTextareaRefProps>()
+    const onSubmit = vi.fn()
     render(
       <>
         <section data-testid="first">
-          <AIChatTextarea ref={first} chatDataStoreKey="first" />
+          <AIChatTextarea ref={first} chatDataStoreKey="first" inputFooterLeft={<span />} footer={<span />} />
         </section>
         <section data-testid="second">
-          <AIChatTextarea ref={second} chatDataStoreKey="second" />
+          <AIChatTextarea
+            ref={second}
+            chatDataStoreKey="second"
+            inputFooterLeft={<span />}
+            footer={<span />}
+            onSubmit={onSubmit}
+          />
         </section>
       </>,
     )
+    await waitFor(() => expect(document.querySelectorAll('.ProseMirror')).toHaveLength(2))
+    await act(async () => {})
+    const firstSend = within(screen.getByTestId('first')).getByRole('button')
+    const secondSend = within(screen.getByTestId('second')).getByRole('button')
+
     act(() => first.current?.setHttpFlow(['1']))
-    expect(within(screen.getByTestId('first')).getByText('#1')).toBeInTheDocument()
-    expect(within(screen.getByTestId('second')).queryByText('#1')).not.toBeInTheDocument()
+    expect(firstSend).not.toBeDisabled()
+    expect(secondSend).toBeDisabled()
+    act(() => second.current?.setHttpFlow(['2']))
     act(() => first.current?.setValue(''))
-    expect(screen.queryByText('#1')).not.toBeInTheDocument()
+    expect(firstSend).toBeDisabled()
+    expect(secondSend).not.toBeDisabled()
+    fireEvent.click(secondSend)
+    expect(onSubmit.mock.calls[0][0].httpFlowList).toEqual([expect.objectContaining({ flowIds: ['2'] })])
+  })
+
+  it('编辑器未就绪也可以清空流量选择', () => {
+    deferEditor.value = true
+    const ref = createRef<AIChatTextareaRefProps>()
+    render(<AIChatTextarea ref={ref} chatDataStoreKey="deferred" inputFooterLeft={<span />} footer={<span />} />)
+    const send = screen.getByRole('button')
+    act(() => ref.current?.setHttpFlow(['1']))
+    expect(send).not.toBeDisabled()
+    act(() => ref.current?.setValue(''))
+    expect(send).toBeDisabled()
   })
 })
