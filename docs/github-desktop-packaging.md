@@ -1,5 +1,7 @@
 # GitHub 全平台打包
 
+项目维护策略与新对话交接见 [HANDOFF.md](HANDOFF.md)：官方引擎跟随最新，所有定制与官方 Memfit 功能同步在客户端进行。本页描述构建流程；不代表当前 HEAD 已完成所有平台验收。
+
 在 GitHub Actions 选择 **Multi-Platform Build Develop** → **Run workflow**。默认配置为：
 
 - platform: `mwl`（全部平台）
@@ -33,6 +35,6 @@ Mac 的无证书测试包也会生成本地 ad-hoc 签名，确保修改 Electro
 
 Mac 检查会挂载最终 DMG、复制应用到独立临时安装目录、卸载 DMG，再验证完整签名、字节码和实际启动。正式签名模式还检查系统评估与公证票据。该流程覆盖拖拽安装，避免只启动构建目录的应用而漏掉签名问题。
 
-自动升级开关未修改。汇总包仅包含安装包和构建清单；Windows 安装包签名完成后再计算校验值。
+本打包流程不负责开启已安装客户端的自动升级；当前 Memfit 的部分更新检查和入口已在客户端关闭。引擎版本留空时，构建开始读取一次官方 latest，再由全部目标使用该确定版本。汇总包仅包含安装包和构建清单；Windows 安装包签名完成后再计算校验值。
 
 本地验证构建辅助逻辑：`node --test scripts/__test__/desktop-packaging.test.cjs scripts/__test__/main-bytecode.test.cjs scripts/__test__/bytecode-electron.test.cjs scripts/__test__/main-runtime-assets.test.cjs scripts/__test__/mac-notarization.test.cjs scripts/__test__/release-assets.test.cjs scripts/__test__/report-template.test.cjs`。公证重试测试用模拟命令覆盖原始 CloudKit 错误、成功恢复、次数耗尽与永久失败，不访问 Apple 服务。在 Windows 本机不能验证 Linux/macOS 的真实启动，必须查看对应 GitHub 任务的执行结果。

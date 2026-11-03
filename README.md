@@ -1,4 +1,8 @@
 
+> **AI Senso 项目交接**：请先阅读 [当前交接入口](docs/HANDOFF.md)。维护策略为官方最新 Yak 引擎 + AI Senso 客户端定制 + 官方 Memfit 前端核心功能同步。另见 [同步流程与台账](docs/UPSTREAM_SYNC.md) 和 [项目导览](docs/PROJECT_OVERVIEW.zh-CN.md)。下方保留原 Yakit 项目介绍。
+
+> **当前增量更新**：[分批功能计划](docs/MEMFIT_INCREMENTAL_UPDATE_PLAN.md) · [测试与验收矩阵](docs/MEMFIT_INCREMENTAL_TEST_MATRIX.md) · [最新窗口交接](docs/HANDOFF-2026-11-02-NEXT-CHAT.md)。固定参考 `9fc639fbb`，保持 AI Senso 整体风格，允许功能需要的局部 UI 调整，按批交付，可一次完成几个边界清晰的功能单元。
+
 <p align="center">
   <a href="https://yaklang.io/"><img src="imgs/head.jpg" style="width: 400px"/></a>
  <h2 align="center">Yakit-交互式应用安全测试平台</h2>
