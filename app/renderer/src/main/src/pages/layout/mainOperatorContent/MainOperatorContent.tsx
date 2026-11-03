@@ -43,6 +43,7 @@ import {
   isWFCacheEdition,
   isYakit,
   isCommunityYakit,
+  isCommunityEdition,
   isEnpriTrace,
 } from '@/utils/envfile'
 import { useCreation, useGetState, useLongPress, useMemoizedFn, useThrottleFn, useUpdateEffect } from 'ahooks'
@@ -67,9 +68,6 @@ import { defaultUserInfo } from '@/pages/userInfoDefaults'
 import { useStore } from '@/store'
 import { getRemoteProjectValue, getRemoteValue, setRemoteProjectValue, setRemoteValue } from '@/utils/kv'
 import type { GroupCount, QueryYakScriptsResponse } from '@/pages/invoker/schema'
-const DownloadAllPlugin = React.lazy(() =>
-  import('@/pages/simpleDetect/SimpleDetect').then((m) => ({ default: m.DownloadAllPlugin })),
-)
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { yakitFailed, yakitNotify } from '@/utils/notification'
@@ -81,15 +79,21 @@ import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitMenu, type YakitMenuItemProps, type YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import type { ScrollProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import {
   ChevronDoubleLeftOutlined,
   ChevronDoubleRightOutlined,
   PlusOutlined,
+  PlusSmOutlined,
   SortAscendingOutlined,
   SortDescendingOutlined,
   StorageOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
+const DownloadAllPlugin = React.lazy(() =>
+  import('@/pages/simpleDetect/SimpleDetect').then((m) => ({ default: m.DownloadAllPlugin })),
+)
 
 import { getHotPatchCodeInfo } from '@/pages/fuzzer/fuzzerHotPatchUtils'
 import { type FuzzerCacheDataProps, getFuzzerCacheData } from '@/pages/fuzzer/fuzzerCacheData'
@@ -97,6 +101,7 @@ import type { ShareValueProps } from '@/pages/fuzzer/HTTPFuzzerPage'
 import type { AdvancedConfigValueProps } from '@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType'
 import { RenderFuzzerSequence, RenderSubPage } from './renderSubPage/RenderSubPage'
 import { SubTabCountDropdown } from './SubTabCountDropdown'
+import FirstTabRouteMenu from './FirstTabRouteMenu/FirstTabRouteMenu'
 import {
   initSubTabGlobalListeners,
   registerSubTabPageHandlers,
@@ -4226,7 +4231,8 @@ const PageBodyItem: React.FC<PageBodyItemProps> = React.memo((props) => {
 
 const TabList: React.FC<TabListProps> = React.memo((props) => {
   const { softMode, pageCache, setPageCache, currentTabKey, setCurrentTabKey, onDragEnd, onRemove } = props
-  const { t, i18n } = useI18nNamespaces(['layout', 'yakitUi'])
+  const { t } = useI18nNamespaces(['layout', 'yakitUi'])
+  const [routeMenuOpen, setRouteMenuOpen] = useState(false)
   const { clearFuzzerSequence } = useFuzzerSequence(
     (s) => ({
       clearFuzzerSequence: s.clearFuzzerSequence,
@@ -4355,36 +4361,65 @@ const TabList: React.FC<TabListProps> = React.memo((props) => {
     })
   })
   return (
-    <DragDropContext onDragEnd={onDragEnd}>
-      <Droppable droppableId="droppable1" direction="horizontal">
-        {(provided, snapshot) => {
-          return (
-            <div className={classNames(styles['tab-menu-first'])} {...provided.droppableProps} ref={provided.innerRef}>
-              {pageCache.map((item, index) => {
-                return (
-                  <React.Fragment key={item.routeKey}>
-                    <TabItem
-                      softMode={softMode}
-                      item={item}
-                      index={index}
-                      currentTabKey={currentTabKey}
-                      onSelect={(val, k) => {
-                        setCurrentTabKey(k)
-                      }}
-                      onRemove={onRemove}
-                      onContextMenu={(e) => {
-                        onRightClickOperation(e, index)
-                      }}
-                    />
-                  </React.Fragment>
-                )
-              })}
-              {provided.placeholder}
-            </div>
-          )
-        }}
-      </Droppable>
-    </DragDropContext>
+    <div className={styles['tab-menu-first-bar']}>
+      <DragDropContext onDragEnd={onDragEnd}>
+        <Droppable droppableId="droppable1" direction="horizontal">
+          {(provided, snapshot) => {
+            return (
+              <div
+                className={classNames(styles['tab-menu-first'])}
+                {...provided.droppableProps}
+                ref={provided.innerRef}
+              >
+                {pageCache.map((item, index) => {
+                  return (
+                    <React.Fragment key={item.routeKey}>
+                      <TabItem
+                        softMode={softMode}
+                        item={item}
+                        index={index}
+                        currentTabKey={currentTabKey}
+                        onSelect={(val, k) => {
+                          setCurrentTabKey(k)
+                        }}
+                        onRemove={onRemove}
+                        onContextMenu={(e) => {
+                          onRightClickOperation(e, index)
+                        }}
+                      />
+                    </React.Fragment>
+                  )
+                })}
+                {provided.placeholder}
+              </div>
+            )
+          }}
+        </Droppable>
+      </DragDropContext>
+      {isCommunityEdition() && (
+        <YakitPopover
+          trigger="click"
+          placement="bottomLeft"
+          destroyOnHidden
+          open={routeMenuOpen}
+          onOpenChange={setRouteMenuOpen}
+          classNames={{ root: styles['tab-route-popover'] }}
+          content={<FirstTabRouteMenu softMode={softMode} onSelect={() => setRouteMenuOpen(false)} />}
+        >
+          <div className={styles['tab-menu-first-add']}>
+            <YakitButton
+              type="text2"
+              size="small"
+              radius={4}
+              className={styles['tab-menu-first-add-button']}
+              aria-label={t('YakitButton.add')}
+            >
+              <PlusSmOutlined size={12} />
+            </YakitButton>
+          </div>
+        </YakitPopover>
+      )}
+    </div>
   )
 })
 const TabItem: React.FC<TabItemProps> = React.memo((props) => {

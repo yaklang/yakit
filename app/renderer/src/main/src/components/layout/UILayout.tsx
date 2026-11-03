@@ -31,6 +31,7 @@ import {
 import {
   getReleaseEditionName,
   isCommunityYakit,
+  isCommunityEdition,
   isEnpriTrace,
   isEnpriTraceAgent,
   isEnterpriseEdition,
@@ -51,9 +52,10 @@ import { useScreenRecorder } from '@/store/screenRecorder'
 import { type ResultObjProps, remoteOperation } from '@/pages/dynamicControl/remoteOperation'
 import { useEeSystemConfig, useStore, useYakitDynamicStatus } from '@/store'
 import { useTemporaryProjectStore } from '@/store/temporaryProject'
+import { useMenuHeight } from '@/store/menuHeight'
 import emiter from '@/utils/eventBus/eventBus'
 import type { RemoteLinkInfo } from './RemoteEngine/RemoteEngineType'
-import { CheckCircleSolid, HomeSolid, StopSolid } from '@yakit-libs/yakit-ui-icons/solid'
+import { CheckCircleSolid, HomeSolid, ParkAboveSolid, StopSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { setNowProjectDescription } from '@/pages/globalVariable'
 import { handleAIConfig, apiGetGlobalNetworkConfig, apiSetGlobalNetworkConfig } from '@/pages/spaceEngine/utils'
 import type { GlobalNetworkConfig } from '../configNetwork/ConfigNetworkPage'
@@ -159,6 +161,10 @@ export interface UILayoutProp {
 
 const UILayout: React.FC<UILayoutProp> = (props) => {
   const { t, i18n, i18nRefresh } = useI18nNamespaces(['layout', 'yakitUi', 'projectManage'])
+  const isMenuVisible = useMenuHeight((state) => state.isMenuVisible)
+  const isMenuVisibilityLoading = useMenuHeight((state) => state.isMenuVisibilityLoading)
+  const initMenuVisibility = useMenuHeight((state) => state.initMenuVisibility)
+  const toggleMenuVisibility = useMenuHeight((state) => state.toggleMenuVisibility)
   // #region 软件级功能设置
   // 顶部是否可以拖拽并移动软件位置
   const [drop, setDrop] = useState<boolean>(true)
@@ -1604,6 +1610,9 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
   const onLinkedEngine = useMemoizedFn(async () => {
     // EE & CE
     try {
+      if (isCommunityEdition()) {
+        await initMenuVisibility()
+      }
       const flag = await getRemoteValue(RemoteGV.TemporaryProjectNoPrompt)
       if (flag) {
         setTemporaryProjectNoPromptFlag(flag === 'true')
@@ -1712,6 +1721,43 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
   })
   const dropClassName = { [styles['header-title-drop']]: drop }
 
+  const headerNavigation = !isEnpriTraceAgent() ? (
+    <div className={styles['header-navigation-wrapper']}>
+      <div
+        className={classNames(styles['yakit-mode-icon'], {
+          [styles['yakit-mode-icon-reverse']]: system !== 'Darwin',
+          [styles['yakit-mode-selected']]: yakitMode === 'soft',
+        })}
+        onClick={() => changeYakitMode('soft')}
+      >
+        <HomeSolid className={styles['mode-icon-selected']} color="currentColor" />
+      </div>
+      {isCommunityEdition() && !showProjectManage && (
+        <div className={styles['park-above-wrapper']}>
+          <YakitSpin spinning={isMenuVisibilityLoading} size="small" wrapperClassName={styles['park-above-spin']}>
+            <Tooltip title={t(isMenuVisible ? 'UILayout.hideMenu' : 'UILayout.showMenu')} placement="bottom">
+              <div
+                className={classNames(styles['park-above-icon'], {
+                  [styles['park-above-icon-active']]: isMenuVisible,
+                })}
+                aria-label={t('UILayout.toggleMenu')}
+                aria-pressed={isMenuVisible}
+                aria-busy={isMenuVisibilityLoading}
+                aria-disabled={isMenuVisibilityLoading}
+                onClick={() => {
+                  if (isMenuVisibilityLoading) return
+                  toggleMenuVisibility()
+                }}
+              >
+                <ParkAboveSolid size={20} />
+              </div>
+            </Tooltip>
+          </YakitSpin>
+        </div>
+      )}
+    </div>
+  ) : null
+
   return (
     <div className={styles['ui-layout-wrapper']}>
       <div className={styles['ui-layout-container']}>
@@ -1728,7 +1774,10 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
           />
           <div id="yakit-header" className={styles['ui-layout-header']}>
             {system === 'Darwin' ? (
-              <div className={classNames(styles['header-body'], styles['mac-header-body'])}>
+              <div
+                className={classNames(styles['header-body'], styles['mac-header-body'])}
+                style={{ borderBottomWidth: isMenuVisible ? undefined : 0 }}
+              >
                 {/* 遮住底部边框线 */}
                 <div
                   style={{ left: yakitMode === 'soft' ? 76 : -45 }}
@@ -1749,16 +1798,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
                   {engineLink && (
                     <>
-                      {!isEnpriTraceAgent() && (
-                        <div
-                          className={classNames(styles['yakit-mode-icon'], {
-                            [styles['yakit-mode-selected']]: yakitMode === 'soft',
-                          })}
-                          onClick={() => changeYakitMode('soft')}
-                        >
-                          <HomeSolid className={styles['mode-icon-selected']} color="currentColor" />
-                        </div>
-                      )}
+                      {headerNavigation}
                       <div className={classNames(dropClassName)}>
                         <div className={styles['divider-wrapper']}></div>
                         <YakitGlobalHost isEngineLink={engineLink} />
@@ -1813,7 +1853,10 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 </div>
               </div>
             ) : (
-              <div className={classNames(styles['header-body'], styles['win-header-body'])}>
+              <div
+                className={classNames(styles['header-body'], styles['win-header-body'])}
+                style={{ borderBottomWidth: isMenuVisible ? undefined : 0 }}
+              >
                 <div
                   style={{ left: yakitMode === 'soft' ? 44 : -45 }}
                   className={styles['header-border-yakit-mask']}
@@ -1844,18 +1887,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                           onDevToolRefresh={onDevToolRefresh}
                           onOpenConsole={onOpenConsole}
                           consoleType={consoleType}
-                          homeIcon={
-                            !isEnpriTraceAgent() ? (
-                              <div
-                                className={classNames(styles['yakit-mode-icon'], styles['yakit-mode-icon-reverse'], {
-                                  [styles['yakit-mode-selected']]: yakitMode === 'soft',
-                                })}
-                                onClick={() => changeYakitMode('soft')}
-                              >
-                                <HomeSolid className={styles['mode-icon-selected']} color="currentColor" />
-                              </div>
-                            ) : null
-                          }
+                          homeIcon={headerNavigation}
                         />
                       </div>
                     </>
