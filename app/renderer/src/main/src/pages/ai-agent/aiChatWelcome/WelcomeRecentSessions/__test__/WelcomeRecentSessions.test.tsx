@@ -154,6 +154,23 @@ describe('WelcomeRecentSessions', () => {
     expect(screen.getByText('AIChatWelcome.viewMoreSessions')).toBeInTheDocument()
   })
 
+  it('compact 时默认收起，切回大屏自动展开', async () => {
+    const { container, rerender } = render(<WelcomeRecentSessions compact />)
+    await waitFor(() => expect(screen.getByText('AIChatWelcome.recentSessions')).toBeInTheDocument())
+    expect(container.querySelector('.welcome-recent-list-wrapper-expanded')).toBeNull()
+    expect(screen.getByRole('button', { name: /AIChatWelcome.recentSessions/ })).toHaveAttribute(
+      'aria-expanded',
+      'false',
+    )
+
+    rerender(<WelcomeRecentSessions compact={false} />)
+    expect(container.querySelector('.welcome-recent-list-wrapper-expanded')).toBeTruthy()
+    expect(screen.getByRole('button', { name: /AIChatWelcome.recentSessions/ })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    )
+  })
+
   it('Total 不超过 5 时不显示查看更多', async () => {
     vi.mocked(grpcQueryAISession).mockResolvedValue(queryResponse([makeSession()], 5))
     render(<WelcomeRecentSessions />)
