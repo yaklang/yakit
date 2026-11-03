@@ -59,7 +59,8 @@ export const normalizeTimestamp = (timestamp?: number | string) => {
 }
 
 export const getChatTimestamp = (item: AISession) => {
-  return normalizeTimestamp(item.UpdatedAt || item.CreatedAt)
+  // UpdatedAt 等 int64 经主进程 longs:String 后，零值可能是 '0'（真值），需先归一化再回退
+  return normalizeTimestamp(item.UpdatedAt) || normalizeTimestamp(item.CreatedAt)
 }
 
 const getChatGroupKey = (timestamp?: number | string): ChatGroupKey => {

@@ -48,6 +48,7 @@ import { shallow } from 'zustand/shallow'
 import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { syncAIAgentPageInfo } from '../utils/syncAIAgentPageInfo'
+import { mergeAISessionUpdate } from './mergeAISessionUpdate'
 
 const HISTORY_SOURCE_FILTER_OPTIONS: {
   key: HistorySourceFilter
@@ -369,17 +370,7 @@ const HistoryChat = memo(({ aiSource, embedded, title, className }: HistoryChatP
 
   // 合并会话增量参数，保留未修改字段，并同步当前会话
   const updateSession = useMemoizedFn((sessionId: string, updates: Partial<AISession>) => {
-    const mergeSession = (session: AISession): AISession => {
-      if (session.SessionID !== sessionId) return session
-      const next = { ...session, ...updates }
-      if (updates.StartParams) {
-        next.StartParams = { ...session.StartParams, ...updates.StartParams }
-        if (updates.StartParams.Strategy) {
-          next.StartParams.Strategy = { ...session.StartParams?.Strategy, ...updates.StartParams.Strategy }
-        }
-      }
-      return next
-    }
+    const mergeSession = (session: AISession) => mergeAISessionUpdate(session, sessionId, updates)
     dispatcher.setSessions((prev) => prev.map(mergeSession))
     if (activeChat?.SessionID === sessionId) {
       setActiveChat?.((prev) => (prev ? mergeSession(prev) : prev))
