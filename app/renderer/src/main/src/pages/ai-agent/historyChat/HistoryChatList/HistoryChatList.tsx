@@ -18,23 +18,19 @@ import { yakitNotify } from '@/utils/notification'
 import { onNewChat, openAIAgentChatTab } from '../HistoryChat'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import type { SessionListDispatcher } from './hook/useSessionList'
-import { AITaskStatus, type AITaskStatusType, type AISource } from '@/pages/ai-re-act/hooks/grpcApi'
+import { AITaskStatus, type AISource } from '@/pages/ai-re-act/hooks/grpcApi'
 import { getHistorySessionIconMeta, getSessionDisplayTitle } from '../source'
 import { handAIHistoryChatRemove, AISessionDeleteCancelledError } from '../utils'
+import { idleSessionStore } from '../idleSessionStore'
 import useGetChatDataStoreKey, { AI_AGENT_HISTORY_AI_SOURCES } from '@/pages/ai-re-act/hooks/useGetChatDataStoreKey'
 import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
 import type { HistoryChatListItemProps } from './type'
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
 import { useStore } from 'zustand'
-import { createStore } from 'zustand/vanilla'
 import { YakitSolidLoading } from '@/components/yakitUI/YakitSolidLoading/YakitSolidLoading'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { syncAIAgentPageInfo } from '../../utils/syncAIAgentPageInfo'
-
-// 未在前端绑定的历史记录共用空状态，不创建完整的会话数据。
-const idleSessionStore = createStore<{ currentChatStatus: { status?: AITaskStatusType } }>(() => ({
-  currentChatStatus: {},
-}))
+import emiter from '@/utils/eventBus/eventBus'
 
 export const HOUR_MS = 60 * 60 * 1000
 export const DAY_MS = 24 * HOUR_MS
@@ -244,6 +240,7 @@ const HistoryChatList: FC<{
           deleteSessionsParams: { sessionIds, source: [] },
         })
         setSessions && setSessions(newChats)
+        emiter.emit('sessionData', JSON.stringify({ type: 'refresh' }))
         // 删光或删的是当前会话：回欢迎页
         if (newChats.length === 0 || activeSessionId === SessionID) {
           onNewChat(false, pageId)

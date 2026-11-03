@@ -1,0 +1,139 @@
+import type { FC } from 'react'
+import { memo, useRef } from 'react'
+import { useCreation, useInViewport, useMemoizedFn } from 'ahooks'
+import classNames from 'classnames'
+import CountUp from 'react-countup'
+import { ChevronRightOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import emiter from '@/utils/eventBus/eventBus'
+import { AIAgentTabListEnum, AITabsEnum, SwitchAIAgentTabEventEnum } from '../../defaultConstant'
+import { useCustomFolder } from '../../components/aiFileSystemList/store/useCustomFolder'
+import { useWelcomePanelStats } from '../hooks/useWelcomePanelStats'
+import styles from './WelcomeTipsCards.module.scss'
+import { ColorsRiskIcon, ColorsFlowIcon, ColorsFileSystemIcon } from '../icon'
+
+type WelcomeTipKey = 'risk' | 'traffic' | 'file-system'
+
+interface WelcomeTipsCardsProps {
+  compact?: boolean
+}
+
+const WelcomeTipsCards: FC<WelcomeTipsCardsProps> = memo(({ compact = false }) => {
+  const { t } = useI18nNamespaces(['aiAgent'])
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [inViewport = true] = useInViewport(containerRef)
+  const { riskTotal, trafficTotal } = useWelcomePanelStats(inViewport)
+  const customFolder = useCustomFolder()
+
+  const welcomeTipsList = useCreation(
+    () => [
+      {
+        key: 'risk' as const,
+        title: t('AIChatWelcome.tipRiskTitle'),
+        number: riskTotal,
+        icon: <ColorsRiskIcon />,
+        description: t('AIChatWelcome.tipViewFullData'),
+        add: 0,
+      },
+      {
+        key: 'traffic' as const,
+        title: t('AIChatWelcome.tipTrafficTitle'),
+        number: trafficTotal ?? 0,
+        icon: <ColorsFlowIcon />,
+        description: t('AIChatWelcome.tipViewFullData'),
+        add: 0,
+      },
+      {
+        key: 'file-system' as const,
+        title: t('AIChatWelcome.tipFileSystemTitle'),
+        number: customFolder?.length ?? 0,
+        icon: <ColorsFileSystemIcon />,
+        description: t('AIChatWelcome.tipOpenFileTree'),
+        add: 0,
+      },
+    ],
+    [riskTotal, trafficTotal, customFolder, t],
+  )
+
+  const handleTipClick = useMemoizedFn((key: WelcomeTipKey) => {
+    switch (key) {
+      case 'file-system':
+        emiter.emit(
+          'switchAIAgentTab',
+          JSON.stringify({
+            type: SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE,
+            params: { active: AIAgentTabListEnum.File, show: true, toggle: true },
+          }),
+        )
+        break
+      case 'traffic':
+        emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.HTTP }))
+        break
+      case 'risk':
+        emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.Risk }))
+        break
+      default:
+        break
+    }
+  })
+
+  return (
+    <div
+      className={classNames(styles['welcome-tips-list'], {
+        [styles['welcome-tips-list-compact']]: compact,
+      })}
+      ref={containerRef}
+    >
+      {welcomeTipsList.map((item) =>
+        compact ? (
+          <div
+            className={styles['welcome-tip-card-compact']}
+            key={item.key}
+            onClick={() => handleTipClick(item.key)}
+            role="button"
+          >
+            <div className={styles['welcome-tip-compact-left']}>
+              <div>{item.icon}</div>
+              <div>
+                <span className={styles['welcome-tip-compact-title']}>{item.title}</span>
+                <div className={styles['welcome-tip-compact-add']}>
+                  {t('AIChatWelcome.tipAdded')} &nbsp;<span>{item.add}</span>
+                </div>
+              </div>
+            </div>
+            <div className={styles['welcome-tip-compact-right']}>
+              <div className={styles['welcome-tip-number']}>
+                <CountUp key={item.number} end={item.number} duration={1.2} separator="," />
+              </div>
+              <ChevronRightOutlined className={styles['welcome-tip-footer-icon']} color="currentColor" />
+            </div>
+          </div>
+        ) : (
+          <div className={styles['welcome-tip-card']} key={item.key}>
+            <div className={styles['welcome-tip-main']}>
+              <div className={styles['welcome-tip-header']}>
+                <div className={styles['welcome-tip-title']}>
+                  {item.icon}
+                  <span>{item.title}</span>
+                </div>
+                <div className={styles['welcome-tip-number']}>
+                  <CountUp key={item.number} end={item.number} duration={1.2} separator="," />
+                </div>
+              </div>
+              <div className={styles['welcome-tip-add']}>
+                {t('AIChatWelcome.tipAdded')} &nbsp;<span>{item.add}</span>
+              </div>
+            </div>
+
+            <div className={styles['welcome-tip-footer']} onClick={() => handleTipClick(item.key)} role="button">
+              <span>{item.description}</span>
+              <ChevronRightOutlined className={styles['welcome-tip-footer-icon']} color="currentColor" />
+            </div>
+          </div>
+        ),
+      )}
+    </div>
+  )
+})
+
+export default WelcomeTipsCards

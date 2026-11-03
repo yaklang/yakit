@@ -290,14 +290,6 @@ vi.mock('@/pages/ai-agent/chatTemplate/TimelineCard/TimelineCard', () => ({
   default: () => <div data-testid="timeline-pane" />,
 }))
 
-const WelcomeRightPanel = ({ refresh = true, ...props }: Pick<AIRightPanelProps, 'small'> & { refresh?: boolean }) => {
-  return (
-    <ViewportContext.Provider value={refresh}>
-      <AIRightPanel welcome {...props} layoutRef={{ current: null }} />
-    </ViewportContext.Provider>
-  )
-}
-
 const renderPanel = async (ui: React.ReactElement) => {
   const renderResult = render(ui)
   // 「任务详情」按条件渲染可能缺席，用常驻菜单「文件系统」作为就绪探针
@@ -884,162 +876,60 @@ describe('AIRightPanel', () => {
   })
 
   describe('首页模式', () => {
-    beforeEach(() => {
-      vi.mocked(grpcQueryHTTPFlows)
-        .mockReset()
-        .mockResolvedValue({
-          Total: 123,
-          Data: [],
-          Pagination: { Page: 1, Limit: 1, Order: 'desc', OrderBy: 'id' },
-        })
-      vi.mocked(apiRiskFieldGroup)
-        .mockReset()
-        .mockResolvedValue({
-          RiskIPGroup: [],
-          RiskTypeGroup: [],
-          RiskLevelGroup: [
-            { Name: 'critical', Total: 2 },
-            { Name: 'fatal', Total: 3 },
-            { Name: 'high', Total: 7 },
-            { Name: 'warning', Total: 11 },
-            { Name: 'medium', Total: 2 },
-            { Name: 'low', Total: 17 },
-            { Name: 'info', Total: 19 },
-            { Name: 'other', Total: 4 },
-          ].map((group) => ({ ...group, Verbose: '', Delta: 0 })),
-        })
-    })
-
-    it.each([false, true])('大小屏均只显示五个首页入口（小屏：%s）', async (small) => {
+    it.each([false, true])('welcome 模式不渲染右侧菜单与数据卡（小屏：%s）', async (small) => {
       casualTaskState.questionID = 'existing-task'
       try {
-        render(<WelcomeRightPanel small={small} />)
-        await screen.findByLabelText('文件系统')
+        const { container } = render(<AIRightPanel welcome small={small} layoutRef={{ current: null }} />)
+        expect(container.querySelector('[data-ai-right-panel]')).toBeInTheDocument()
         for (const label of ['文件系统', '浏览器实例', '流量', '漏洞', '会话历史']) {
-          expect(screen.getByLabelText(label)).toBeInTheDocument()
+          expect(screen.queryByLabelText(label)).not.toBeInTheDocument()
+          expect(screen.queryByText(label)).not.toBeInTheDocument()
         }
         for (const label of ['任务详情看板', '加载技能', '异步任务', '更多', '时间线', '导出日志', '查看日志']) {
           expect(screen.queryByLabelText(label)).not.toBeInTheDocument()
         }
         expect(screen.queryByText('运行时间')).not.toBeInTheDocument()
         expect(screen.queryByText('工具调用统计')).not.toBeInTheDocument()
-        fireEvent.click(screen.getByLabelText('会话历史'))
-        expect(mockEmit).toHaveBeenCalledWith(
-          'switchAIAgentTab',
-          JSON.stringify({ type: 'setTabActive', params: { active: 'session', show: true, toggle: true } }),
-        )
+        expect(grpcQueryHTTPFlows).not.toHaveBeenCalled()
+        expect(apiRiskFieldGroup).not.toHaveBeenCalled()
       } finally {
         resetMockStore()
       }
     })
 
-    it('欢迎页自行读取全量统计，不读取当前任务数据', async () => {
+    it('welcome 模式不读取当前任务数据，也不查询全量统计', async () => {
       setMockQuestionID('existing-task')
+      mockTaskDetailsMap.set('existing-task', {
+        uuid: 'stream-1',
+        execution: { http_flow_count: 999, risk_level_count: { critical: 888, total: 888 } },
+      })
       const readTask = vi.spyOn(mockTaskDetailsMap, 'get')
-      const result = await renderPanel(<AIRightPanel welcome />)
+      const { unmount } = render(<AIRightPanel welcome layoutRef={{ current: null }} />)
       try {
-        await waitFor(() => expect(screen.getByLabelText('流量')).toHaveTextContent('123'))
-        expect(screen.getByLabelText('漏洞')).toHaveTextContent('5｜7｜13｜17｜23')
+        expect(screen.queryByLabelText('流量')).not.toBeInTheDocument()
+        expect(screen.queryByLabelText('漏洞')).not.toBeInTheDocument()
         expect(readTask).not.toHaveBeenCalled()
-        result.rerender(<AIRightPanel welcome small />)
-        expect(screen.getByLabelText('漏洞 65')).toBeInTheDocument()
-        expect(readTask).not.toHaveBeenCalled()
+        expect(grpcQueryHTTPFlows).not.toHaveBeenCalled()
+        expect(apiRiskFieldGroup).not.toHaveBeenCalled()
       } finally {
-        result.unmount()
+        unmount()
         readTask.mockRestore()
         resetMockStore()
       }
     })
 
-    it('可见时无筛选查询全量统计，重渲染不重查，再次可见时刷新', async () => {
-      setMockQuestionID('stream-task')
-      mockTaskDetailsMap.set('stream-task', {
-        uuid: 'stream-1',
-        execution: { http_flow_count: 999, risk_level_count: { critical: 888, total: 888 } },
-      })
+    it('从会话模式切回 welcome 时关闭内容浮层', async () => {
+      const result = await renderPanel(<AIRightPanel />)
       try {
-        const result = await renderPanel(<WelcomeRightPanel refresh={false} />)
-        expect(grpcQueryHTTPFlows).not.toHaveBeenCalled()
-        expect(apiRiskFieldGroup).not.toHaveBeenCalled()
-        result.rerender(<WelcomeRightPanel refresh />)
-        await waitFor(() => expect(screen.getByLabelText('流量')).toHaveTextContent('123'))
-        expect(screen.getByLabelText('漏洞')).toHaveTextContent('5｜7｜13｜17｜23')
-        expect(grpcQueryHTTPFlows).toHaveBeenCalledExactlyOnceWith({ Pagination: { Page: 1, Limit: 1 } })
-        expect(apiRiskFieldGroup).toHaveBeenCalledExactlyOnceWith()
-
-        mockTaskDetailsMap.set('stream-task', {
-          uuid: 'stream-2',
-          execution: { http_flow_count: 1000, risk_level_count: { critical: 889, total: 889 } },
-        })
-        result.rerender(<WelcomeRightPanel small />)
-        expect(screen.getByLabelText('漏洞 65')).toBeInTheDocument()
-        result.rerender(<WelcomeRightPanel small={false} />)
-        expect(screen.getByLabelText('流量')).toHaveTextContent('123')
-        expect(screen.getByLabelText('漏洞')).toHaveTextContent('5｜7｜13｜17｜23')
-        expect(grpcQueryHTTPFlows).toHaveBeenCalledTimes(1)
-        expect(apiRiskFieldGroup).toHaveBeenCalledTimes(1)
-
-        result.rerender(<WelcomeRightPanel refresh={false} />)
-        expect(grpcQueryHTTPFlows).toHaveBeenCalledTimes(1)
-        expect(apiRiskFieldGroup).toHaveBeenCalledTimes(1)
-        vi.mocked(grpcQueryHTTPFlows).mockResolvedValueOnce({
-          Total: 456,
-          Data: [],
-          Pagination: { Page: 1, Limit: 1, Order: 'desc', OrderBy: 'id' },
-        })
-        vi.mocked(apiRiskFieldGroup).mockResolvedValueOnce({
-          RiskIPGroup: [],
-          RiskTypeGroup: [],
-          RiskLevelGroup: [{ Name: 'high', Total: 9, Verbose: '', Delta: 0 }],
-        })
-        result.rerender(<WelcomeRightPanel refresh />)
-        await waitFor(() => expect(screen.getByLabelText('流量')).toHaveTextContent('456'))
-        expect(screen.getByLabelText('漏洞')).toHaveTextContent('9')
-        await waitFor(() => expect(grpcQueryHTTPFlows).toHaveBeenCalledTimes(2))
-        expect(apiRiskFieldGroup).toHaveBeenCalledTimes(2)
+        fireEvent.click(screen.getByLabelText('加载技能'))
+        expect(screen.getByTestId('load-skills-pane')).toBeInTheDocument()
+        result.rerender(<AIRightPanel welcome layoutRef={{ current: null }} />)
+        await waitFor(() => expect(screen.queryByTestId('load-skills-pane')).not.toBeInTheDocument())
+        expect(screen.queryByLabelText('文件系统')).not.toBeInTheDocument()
       } finally {
+        result.unmount()
         resetMockStore()
       }
-    })
-
-    it.each(['traffic', 'risk'])(
-      '一个统计接口失败时错误提示照常暴露，另一个仍正常展示（失败：%s）',
-      async (failedApi) => {
-        if (failedApi === 'traffic') vi.mocked(grpcQueryHTTPFlows).mockRejectedValueOnce(new Error('query failed'))
-        else vi.mocked(apiRiskFieldGroup).mockRejectedValueOnce(new Error('query failed'))
-        await renderPanel(<WelcomeRightPanel />)
-        if (failedApi === 'traffic') {
-          await waitFor(() => expect(screen.getByLabelText('漏洞')).toHaveTextContent('5｜7｜13｜17｜23'))
-          expect(screen.getByLabelText('流量')).toHaveTextContent(/^流量$/)
-        } else {
-          await waitFor(() => expect(screen.getByLabelText('流量')).toHaveTextContent('123'))
-          expect(screen.getByLabelText('漏洞')).toHaveTextContent(/^漏洞$/)
-        }
-        // 失败要暴露错误提示：grpcQueryHTTPFlows 不传 hiddenError（真实实现内部会 yakitNotify 弹错误），
-        // apiRiskFieldGroup 无静默参数、失败必弹提示；组件侧 .catch 仅兜底未处理的 rejection。
-        expect(vi.mocked(grpcQueryHTTPFlows).mock.calls[0]?.[1]).toBeFalsy()
-        expect(apiRiskFieldGroup).toHaveBeenCalledExactlyOnceWith()
-        expect(grpcQueryHTTPFlows).toHaveBeenCalledTimes(1)
-      },
-    )
-
-    it('空统计不显示角标，自由对话不查询首页统计', async () => {
-      vi.mocked(grpcQueryHTTPFlows).mockResolvedValueOnce({
-        Total: 0,
-        Data: [],
-        Pagination: { Page: 1, Limit: 1, Order: 'desc', OrderBy: 'id' },
-      })
-      vi.mocked(apiRiskFieldGroup).mockResolvedValueOnce({ RiskIPGroup: [], RiskTypeGroup: [], RiskLevelGroup: [] })
-      const result = await renderPanel(<WelcomeRightPanel />)
-      await act(async () => {})
-      expect(screen.getByLabelText('流量')).toHaveTextContent(/^流量$/)
-      expect(screen.getByLabelText('漏洞')).toHaveTextContent(/^漏洞$/)
-      result.rerender(<WelcomeRightPanel small />)
-      expect(screen.queryByLabelText(/^漏洞 /)).not.toBeInTheDocument()
-      result.unmount()
-      await renderPanel(<AIRightPanel />)
-      expect(grpcQueryHTTPFlows).toHaveBeenCalledTimes(1)
-      expect(apiRiskFieldGroup).toHaveBeenCalledTimes(1)
     })
   })
 
@@ -1884,8 +1774,8 @@ describe('AIRightPanel', () => {
     }
   })
 
-  it('菜单点击：文件系统/浏览器/会话历史激活侧边栏对应页，流量/漏洞切换工作区（首页：false）', async () => {
-    await renderPanel(<AIRightPanel welcome />)
+  it('菜单点击：文件系统/浏览器/会话历史激活侧边栏对应页，流量/漏洞切换工作区', async () => {
+    await renderPanel(<AIRightPanel />)
     fireEvent.click(screen.getByText('文件系统'))
     expect(mockEmit).toHaveBeenCalledWith(
       'switchAIAgentTab',
