@@ -69,7 +69,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
       if (!el || typeof ResizeObserver === 'undefined') return
       const update = (width: number, height: number) => {
         const nextCompact = width < 720 || height < 680
-        // 中等高度：收紧边距、收起最近会话、头部区域可滚动（完整 compact 仍按上面阈值）
+        // 中等高度：收紧边距、最近会话展示 3 条、头部区域可滚动（完整 compact 仍按上面阈值）
         const nextShort = height <= 850
         setIsCompact((prev) => (prev === nextCompact ? prev : nextCompact))
         setIsShortHeight((prev) => (prev === nextShort ? prev : nextShort))
@@ -121,7 +121,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
               <Flex vertical gap={12} className={styles['welcome-tips-block']}>
                 <div className={styles['subtitle']}>{t('AIChatWelcome.WelcomeHomeSubTitle')}</div>
                 <WelcomeTipsCards compact={isCompact} />
-                <WelcomeRecentSessions compact={isCompact || isShortHeight} />
+                <WelcomeRecentSessions density={isCompact ? 'collapsed' : isShortHeight ? 'three' : 'full'} />
               </Flex>
             </Flex>
             <div className={styles['input-body-wrapper']}>

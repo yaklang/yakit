@@ -26,6 +26,15 @@ import styles from './WelcomeRecentSessions.module.scss'
 
 const RECENT_SESSION_LIMIT = 5
 
+/** 大屏 5 条；中等高 3 条；小屏默认收起（手动展开时也按 3 条） */
+export type WelcomeRecentSessionsDensity = 'full' | 'three' | 'collapsed'
+
+const VISIBLE_COUNT_BY_DENSITY: Record<WelcomeRecentSessionsDensity, number> = {
+  full: 5,
+  three: 3,
+  collapsed: 3,
+}
+
 export const getRecentSessionTimestamp = (item: AISession) => {
   // LastUsedAt 等 int64 经主进程 longs:String 后，零值可能是 '0'（真值），需先归一化再回退
   return normalizeTimestamp(item.LastUsedAt) || normalizeTimestamp(item.UpdatedAt) || normalizeTimestamp(item.CreatedAt)
@@ -87,25 +96,28 @@ const WelcomeRecentSessionItem: FC<WelcomeRecentSessionItemProps> = memo(({ item
 })
 
 interface WelcomeRecentSessionsProps {
-  /** 小屏时默认收起列表，用户仍可手动展开 */
-  compact?: boolean
+  /** 按可用高度：full=5 / three=3 / collapsed=默认收起 */
+  density?: WelcomeRecentSessionsDensity
 }
 
-const WelcomeRecentSessions: FC<WelcomeRecentSessionsProps> = memo(({ compact = false }) => {
+const WelcomeRecentSessions: FC<WelcomeRecentSessionsProps> = memo(({ density = 'full' }) => {
   const { t } = useI18nNamespaces(['aiAgent'])
   const containerRef = useRef<HTMLDivElement>(null)
   const [inViewport = true] = useInViewport(containerRef)
-  const [expanded, setExpanded] = useState(!compact)
+  const [expanded, setExpanded] = useState(density !== 'collapsed')
   const [sessions, setSessions] = useState<AISession[]>([])
-  const [hasMore, setHasMore] = useState(false)
+  const [total, setTotal] = useState(0)
   const { setActiveChat, setSetting } = useAIAgentDispatcher()
   const { openChatInNewTab } = useAIAgentStore()
   // 递增作废在途查询，避免可见性抖动 / 并发 refresh 时旧响应覆盖新结果
   const loadGenRef = useRef(0)
+  const visibleCount = VISIBLE_COUNT_BY_DENSITY[density]
+  const visibleSessions = useCreation(() => sessions.slice(0, visibleCount), [sessions, visibleCount])
+  const showViewMore = total > visibleCount
 
   useEffect(() => {
-    setExpanded(!compact)
-  }, [compact])
+    setExpanded(density !== 'collapsed')
+  }, [density])
 
   const loadRecentSessions = useMemoizedFn(() => {
     const gen = ++loadGenRef.current
@@ -126,7 +138,7 @@ const WelcomeRecentSessions: FC<WelcomeRecentSessionsProps> = memo(({ compact = 
       .then((res) => {
         if (gen !== loadGenRef.current) return
         setSessions((res.Data || []).slice(0, RECENT_SESSION_LIMIT))
-        setHasMore((res.Total || 0) > RECENT_SESSION_LIMIT)
+        setTotal(res.Total || 0)
       })
       .catch(() => {})
   })
@@ -165,7 +177,7 @@ const WelcomeRecentSessions: FC<WelcomeRecentSessionsProps> = memo(({ compact = 
         if (payload.type === 'clear') {
           loadGenRef.current += 1
           setSessions([])
-          setHasMore(false)
+          setTotal(0)
           return
         }
         loadRecentSessions()
@@ -234,12 +246,11 @@ const WelcomeRecentSessions: FC<WelcomeRecentSessionsProps> = memo(({ compact = 
       >
         <div className={styles['welcome-recent-list-inner']}>
           <div className={styles['welcome-recent-list']}>
-            {sessions.length !== 0 &&
-              sessions.map((item) => (
-                <WelcomeRecentSessionItem key={item.SessionID} item={item} onSelect={handleSelect} />
-              ))}
+            {visibleSessions.map((item) => (
+              <WelcomeRecentSessionItem key={item.SessionID} item={item} onSelect={handleSelect} />
+            ))}
           </div>
-          {hasMore && (
+          {showViewMore && (
             <div className={styles['welcome-recent-more']} onClick={handleViewMore} role="button">
               {t('AIChatWelcome.viewMoreSessions')}
               <ChevronDownOutlined className={styles['welcome-recent-header-arrow']} color="currentColor" />

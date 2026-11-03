@@ -178,8 +178,8 @@ describe('WelcomeRecentSessions', () => {
     expect(screen.getByText('AIChatWelcome.viewMoreSessions')).toBeInTheDocument()
   })
 
-  it('compact 时默认收起，切回大屏自动展开', async () => {
-    const { container, rerender } = render(<WelcomeRecentSessions compact />)
+  it('collapsed 时默认收起，切回 full 自动展开', async () => {
+    const { container, rerender } = render(<WelcomeRecentSessions density="collapsed" />)
     await waitFor(() => expect(screen.getByText('AIChatWelcome.recentSessions')).toBeInTheDocument())
     expect(container.querySelector('.welcome-recent-list-wrapper-expanded')).toBeNull()
     expect(screen.getByRole('button', { name: /AIChatWelcome.recentSessions/ })).toHaveAttribute(
@@ -187,7 +187,7 @@ describe('WelcomeRecentSessions', () => {
       'false',
     )
 
-    rerender(<WelcomeRecentSessions compact={false} />)
+    rerender(<WelcomeRecentSessions density="full" />)
     expect(container.querySelector('.welcome-recent-list-wrapper-expanded')).toBeTruthy()
     expect(screen.getByRole('button', { name: /AIChatWelcome.recentSessions/ })).toHaveAttribute(
       'aria-expanded',
@@ -195,7 +195,27 @@ describe('WelcomeRecentSessions', () => {
     )
   })
 
-  it('Total 不超过 5 时不显示查看更多', async () => {
+  it('density=three 时只展示 3 条，Total 超过 3 显示查看更多', async () => {
+    vi.mocked(grpcQueryAISession).mockResolvedValue(
+      queryResponse(
+        [
+          makeSession(),
+          makeSession({ SessionID: 's-2', Title: '会话二', Id: '2' }),
+          makeSession({ SessionID: 's-3', Title: '会话三', Id: '3' }),
+          makeSession({ SessionID: 's-4', Title: '会话四', Id: '4' }),
+        ],
+        4,
+      ),
+    )
+    render(<WelcomeRecentSessions density="three" />)
+    await waitFor(() => expect(screen.getByText('会话一')).toBeInTheDocument())
+    expect(screen.getByText('会话二')).toBeInTheDocument()
+    expect(screen.getByText('会话三')).toBeInTheDocument()
+    expect(screen.queryByText('会话四')).not.toBeInTheDocument()
+    expect(screen.getByText('AIChatWelcome.viewMoreSessions')).toBeInTheDocument()
+  })
+
+  it('Total 不超过展示上限时不显示查看更多', async () => {
     vi.mocked(grpcQueryAISession).mockResolvedValue(queryResponse([makeSession()], 5))
     render(<WelcomeRecentSessions />)
     await waitFor(() => expect(screen.getByText('会话一')).toBeInTheDocument())

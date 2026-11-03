@@ -11,6 +11,34 @@
 %transition-all {
   transition: all 0.2s;
 }
+// 细、半透明滚动条：默认更淡，悬停/拖动时略实一点
+%thin-transparent-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--Colors-Use-Neutral-Text-3-Secondary) 28%, transparent) transparent;
+
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background-color: color-mix(in srgb, var(--Colors-Use-Neutral-Text-3-Secondary) 22%, transparent);
+    border-radius: 999px;
+    border: 1px solid transparent;
+    background-clip: content-box;
+    transition: background-color 0.2s ease;
+    &:hover {
+      background-color: color-mix(in srgb, var(--Colors-Use-Neutral-Text-3-Secondary) 42%, transparent);
+    }
+    &:active {
+      background-color: color-mix(in srgb, var(--Colors-Use-Neutral-Text-3-Secondary) 55%, transparent);
+    }
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+}
 .ai-chat-welcome-wrapper {
   @extend %display-column-center;
   container: ai-chat-welcome / inline-size;
@@ -63,6 +91,7 @@
       display: flex;
       flex-direction: column;
       justify-content: center;
+      @extend %thin-transparent-scrollbar;
       .title {
         color: var(--Colors-Use-Neutral-Text-1-Title);
         text-align: center;

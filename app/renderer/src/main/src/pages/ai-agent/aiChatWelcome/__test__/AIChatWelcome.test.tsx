@@ -81,8 +81,8 @@ vi.mock('../../store/welcomeAnimationStore', () => ({
 // 隔离欢迎页新模块：避免 WelcomeRecentSessions → historyChat → lottie 在 jsdom 触发 canvas/ipc 错误。
 // 同时把 props 透出到 DOM，供集成层断言 compact 传递与挂载位置。
 vi.mock('../WelcomeRecentSessions/WelcomeRecentSessions', () => ({
-  default: ({ compact }: { compact?: boolean }) => (
-    <div data-testid="welcome-recent-sessions" data-compact={compact ? 'true' : 'false'} />
+  default: ({ density }: { density?: string }) => (
+    <div data-testid="welcome-recent-sessions" data-density={density || 'full'} />
   ),
 }))
 vi.mock('../WelcomeTipsCards/WelcomeTipsCards', () => ({
@@ -198,7 +198,7 @@ describe('AIChatWelcome 标题动画', () => {
 })
 
 describe('AIChatWelcome 欢迎区集成', () => {
-  it('TipsCards 与 RecentSessions 嵌在 welcome-tips-block 内，大屏 compact=false', () => {
+  it('TipsCards 与 RecentSessions 嵌在 welcome-tips-block 内，大屏 density=full', () => {
     const { container } = render(<AIChatWelcome onTriageSubmit={vi.fn()} onSetReAct={vi.fn()} />)
     const tipsBlock = container.querySelector('.welcome-tips-block') as HTMLElement
     expect(tipsBlock).toBeTruthy()
@@ -206,15 +206,15 @@ describe('AIChatWelcome 欢迎区集成', () => {
     expect(tipsBlock).toContainElement(screen.getByTestId('welcome-tips-cards'))
     expect(tipsBlock).toContainElement(screen.getByTestId('welcome-recent-sessions'))
     expect(screen.getByTestId('welcome-tips-cards')).toHaveAttribute('data-compact', 'false')
-    expect(screen.getByTestId('welcome-recent-sessions')).toHaveAttribute('data-compact', 'false')
+    expect(screen.getByTestId('welcome-recent-sessions')).toHaveAttribute('data-density', 'full')
     expect(container.querySelector('.input-wrapper-compact')).toBeNull()
     expect(container.querySelector('.input-wrapper-short')).toBeNull()
   })
 
-  it('高度 ≤850 时使用 short：收紧边距并收起最近会话', () => {
+  it('高度 ≤850 时使用 short：收紧边距且最近会话 density=three', () => {
     const { container } = render(<AIChatWelcome onTriageSubmit={vi.fn()} onSetReAct={vi.fn()} />)
     expect(container.querySelector('.input-wrapper-short')).toBeNull()
-    expect(screen.getByTestId('welcome-recent-sessions')).toHaveAttribute('data-compact', 'false')
+    expect(screen.getByTestId('welcome-recent-sessions')).toHaveAttribute('data-density', 'full')
 
     act(() => {
       resizeObservers.instances.at(-1)?.trigger(800, 750)
@@ -222,33 +222,33 @@ describe('AIChatWelcome 欢迎区集成', () => {
     expect(container.querySelector('.input-wrapper-short')).toBeTruthy()
     expect(container.querySelector('.input-wrapper-compact')).toBeNull()
     expect(screen.getByTestId('welcome-tips-cards')).toHaveAttribute('data-compact', 'false')
-    expect(screen.getByTestId('welcome-recent-sessions')).toHaveAttribute('data-compact', 'true')
+    expect(screen.getByTestId('welcome-recent-sessions')).toHaveAttribute('data-density', 'three')
 
     act(() => {
       resizeObservers.instances.at(-1)?.trigger(900, 900)
     })
     expect(container.querySelector('.input-wrapper-short')).toBeNull()
-    expect(screen.getByTestId('welcome-recent-sessions')).toHaveAttribute('data-compact', 'false')
+    expect(screen.getByTestId('welcome-recent-sessions')).toHaveAttribute('data-density', 'full')
   })
 
-  it('ResizeObserver 进入小屏时向 TipsCards/RecentSessions 传递 compact=true', () => {
+  it('ResizeObserver 进入小屏时 TipsCards compact，最近会话 density=collapsed', () => {
     const { container } = render(<AIChatWelcome onTriageSubmit={vi.fn()} onSetReAct={vi.fn()} />)
     expect(screen.getByTestId('welcome-tips-cards')).toHaveAttribute('data-compact', 'false')
-    expect(screen.getByTestId('welcome-recent-sessions')).toHaveAttribute('data-compact', 'false')
+    expect(screen.getByTestId('welcome-recent-sessions')).toHaveAttribute('data-density', 'full')
     expect(resizeObservers.instances.length).toBeGreaterThan(0)
 
     act(() => {
       resizeObservers.instances.at(-1)?.trigger(600, 500)
     })
     expect(screen.getByTestId('welcome-tips-cards')).toHaveAttribute('data-compact', 'true')
-    expect(screen.getByTestId('welcome-recent-sessions')).toHaveAttribute('data-compact', 'true')
+    expect(screen.getByTestId('welcome-recent-sessions')).toHaveAttribute('data-density', 'collapsed')
     expect(container.querySelector('.input-wrapper-compact')).toBeTruthy()
 
     act(() => {
       resizeObservers.instances.at(-1)?.trigger(900, 900)
     })
     expect(screen.getByTestId('welcome-tips-cards')).toHaveAttribute('data-compact', 'false')
-    expect(screen.getByTestId('welcome-recent-sessions')).toHaveAttribute('data-compact', 'false')
+    expect(screen.getByTestId('welcome-recent-sessions')).toHaveAttribute('data-density', 'full')
     expect(container.querySelector('.input-wrapper-compact')).toBeNull()
   })
 })
