@@ -25,7 +25,7 @@
 - preload 分别打包，本地共用代码内联，并检查沙箱外部引用。
 - 使用 `runtimePaths.js` 定位页面、preload、Proto 和资源，避免按原源码文件位置解释 `__dirname`。
 - 第三方预构建文件、原生模块和可执行文件按资源清单复制；`.node` 与进程枚举可执行文件配置 ASAR 解包。
-- 子窗口主题由根目录构建依赖 `@yakit-libs/color` 独立生成，不依赖渲染端依赖或产物。主题色、颜色库版本和内容哈希与 `build-info.json` 一致时复用上次 `dist/electron/resources/child-window/theme.css`，否则重新生成；删除 `dist/electron` 可清除缓存。
+- 子窗口加载页复用主渲染端 `yakit-aux.html?mode=child-loading` 和 `theme.css`。主题 CSS 由渲染端开发／构建流程生成，主进程不再独立生成或缓存。
 - E2E 初始化保持早于用户目录、缓存和业务模块加载；源码和 ASAR 启动均使用正确的资源根目录。
 
 发布压缩包括局部标识符、语法和空白，不混淆协议属性，不删除日志。安装包排除第一方主进程源码、测试、source map 和构建分析文件。source map 连同版本、Electron 版本及产物 SHA-256 单独归档到 `reports/electron-build`，发布 CI 保存为独立诊断 artifact。
