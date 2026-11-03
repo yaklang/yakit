@@ -140,6 +140,10 @@
   height: 32px;
   background: var(--Colors-Use-Neutral-Bg);
   cursor: pointer;
+  &:hover {
+    background: var(--Colors-Use-Neutral-Bg-Hover);
+    color: var(--Colors-Use-Main-Primary);
+  }
 }
 
 .welcome-tip-footer-icon {

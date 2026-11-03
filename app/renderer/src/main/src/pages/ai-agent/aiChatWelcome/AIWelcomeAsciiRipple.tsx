@@ -17,7 +17,7 @@ export const AIWelcomeAsciiRipple = memo(({ targetRef }: { targetRef: RefObject<
     const colorList = getAllYakitColorVars(theme)
     return {
       textColor: theme === 'dark' ? colorList['--yakit-colors-Neutral-20'] : colorList['--yakit-colors-Neutral-30'],
-      troughColor: colorList['--yakit-colors-Main-40'],
+      troughColor: colorList['--yakit-colors-Main-20'],
       rippleColor: colorList['--yakit-colors-Neutral-40'],
       textOpacity: 0.15,
     }

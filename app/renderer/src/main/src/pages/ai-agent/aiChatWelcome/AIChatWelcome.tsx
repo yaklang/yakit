@@ -27,9 +27,12 @@ import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { getMainOperatorPageBodyContainerOrBody } from '@/utils/getMainOperatorPageBodyContainer'
 import { yakitNotify } from '@/utils/notification'
 import { AIWelcomeAsciiRipple } from './AIWelcomeAsciiRipple'
+import { useWelcomeAnimationDisabled } from '../store/welcomeAnimationStore'
 import { Flex } from 'antd'
 import WelcomeRecentSessions from './WelcomeRecentSessions/WelcomeRecentSessions'
 import WelcomeTipsCards from './WelcomeTipsCards/WelcomeTipsCards'
+
+const WELCOME_TITLE = 'Memfit AI Agent'
 
 const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
   forwardRef((props, ref) => {
@@ -58,6 +61,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
     const settingCardRef = useRef<AIChatWelcomeSettingCardRef>(null)
 
     const welcomeRef = useRef<HTMLDivElement>(null)
+    const animationDisabled = useWelcomeAnimationDisabled()
     const [isCompact, setIsCompact] = useState(false)
     const [isShortHeight, setIsShortHeight] = useState(false)
     useEffect(() => {
@@ -101,7 +105,19 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
             })}
           >
             <Flex className={styles['input-heard']} align="center" vertical gap={16}>
-              <div className={styles['title']}>Memfit AI Agent</div>
+              <div className={styles['title']}>
+                {animationDisabled
+                  ? WELCOME_TITLE
+                  : WELCOME_TITLE.split('').map((ch, index) => (
+                      <span
+                        key={`${ch}-${index}`}
+                        className={styles['title-char']}
+                        style={{ animationDelay: `${index * 36}ms` }}
+                      >
+                        {ch === ' ' ? '\u00A0' : ch}
+                      </span>
+                    ))}
+              </div>
               <Flex vertical gap={12} className={styles['welcome-tips-block']}>
                 <div className={styles['subtitle']}>{t('AIChatWelcome.WelcomeHomeSubTitle')}</div>
                 <WelcomeTipsCards compact={isCompact} />

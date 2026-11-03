@@ -38,6 +38,10 @@ const resizeObservers = vi.hoisted(() => {
   return { instances, MockResizeObserver }
 })
 
+const welcomeAnimationMocks = vi.hoisted(() => ({
+  animationDisabled: false,
+}))
+
 vi.mock('../../template/template', () => ({
   AIChatTextarea: React.forwardRef<AIChatTextareaRefProps, AIChatTextareaProps>(function Input(props, ref) {
     const [revision, setRevision] = useState(0)
@@ -71,6 +75,9 @@ vi.mock('../AIChatWelcomeSideSetting', () => ({ SideSettingButton: () => null })
 vi.mock('../AIWelcomeAsciiRipple', () => ({
   AIWelcomeAsciiRipple: () => <div data-testid="welcome-ascii-ripple" aria-hidden="true" />,
 }))
+vi.mock('../../store/welcomeAnimationStore', () => ({
+  useWelcomeAnimationDisabled: () => welcomeAnimationMocks.animationDisabled,
+}))
 // 隔离欢迎页新模块：避免 WelcomeRecentSessions → historyChat → lottie 在 jsdom 触发 canvas/ipc 错误。
 // 同时把 props 透出到 DOM，供集成层断言 compact 传递与挂载位置。
 vi.mock('../WelcomeRecentSessions/WelcomeRecentSessions', () => ({
@@ -92,6 +99,8 @@ vi.mock('../AIChatWelcome.module.scss', () => ({
     'input-wrapper-short': 'input-wrapper-short',
     'input-wrapper-compact': 'input-wrapper-compact',
     'welcome-tips-block': 'welcome-tips-block',
+    title: 'title',
+    'title-char': 'title-char',
   },
 }))
 
@@ -102,6 +111,7 @@ const { default: AIChatWelcome } = await compileReactModule<typeof WelcomeModule
 
 beforeEach(() => {
   resizeObservers.instances.length = 0
+  welcomeAnimationMocks.animationDisabled = false
   vi.stubGlobal('ResizeObserver', resizeObservers.MockResizeObserver)
   // jsdom 默认 clientWidth/Height 为 0，会误判成 compact/short；先固定为大屏。
   Object.defineProperty(HTMLElement.prototype, 'clientWidth', { configurable: true, get: () => 900 })
@@ -113,6 +123,8 @@ afterEach(() => {
   vi.clearAllMocks()
   vi.unstubAllGlobals()
 })
+
+const WELCOME_TITLE = 'Memfit AI Agent'
 
 describe('AIChatWelcome 输入框转发', () => {
   it('转发输入方法，并在子输入框 handle 更换后使用最新 ref', () => {
@@ -166,6 +178,22 @@ describe('AIChatWelcome 输入框转发', () => {
       ['101,102', true],
     ])
     expect(onHttpFlowRemove).toHaveBeenCalledTimes(2)
+  })
+})
+
+describe('AIChatWelcome 标题动画', () => {
+  it('动画启用时按字符拆成 title-char span，关闭后回退为纯文本', () => {
+    const { container, rerender } = render(<AIChatWelcome onTriageSubmit={vi.fn()} onSetReAct={vi.fn()} />)
+    const title = container.querySelector('.title') as HTMLElement
+    expect(title).toBeTruthy()
+    expect(title.querySelectorAll('.title-char')).toHaveLength(WELCOME_TITLE.length)
+    expect(title).toHaveTextContent(WELCOME_TITLE)
+
+    welcomeAnimationMocks.animationDisabled = true
+    rerender(<AIChatWelcome onTriageSubmit={vi.fn()} onSetReAct={vi.fn()} />)
+    const staticTitle = container.querySelector('.title') as HTMLElement
+    expect(staticTitle.querySelectorAll('.title-char')).toHaveLength(0)
+    expect(staticTitle).toHaveTextContent(WELCOME_TITLE)
   })
 })
 
