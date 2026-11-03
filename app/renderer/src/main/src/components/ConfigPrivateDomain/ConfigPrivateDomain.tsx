@@ -7,7 +7,7 @@ import { loginOut } from '@/utils/login'
 import { useMemoizedFn, useGetState } from 'ahooks'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { useStore } from '@/store'
-import yakitImg from '@/assets/yakit.jpg'
+import yakitEE from '@/assets/yakitEE.png'
 import type { API } from '@/services/swagger/resposeType'
 import { YakitButton } from '../yakitUI/YakitButton/YakitButton'
 import { YakitAutoComplete, defYakitAutoCompleteRef } from '../yakitUI/YakitAutoComplete/YakitAutoComplete'
@@ -364,7 +364,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
         <YakitSpin spinning={loading}>
           <div className="login-title-show">
             <div className="icon-box">
-              <img src={yakitImg} className="type-icon-img" />
+              <img src={yakitEE} className="type-icon-img" />
             </div>
             <div className="title-box">{t('ConfigPrivateDomain.enterpriseLogin')}</div>
           </div>
@@ -386,7 +386,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
           {enterpriseLogin && (
             <div className="login-title-show">
               <div className="icon-box">
-                <img src={yakitImg} className="type-icon-img" />
+                <img src={yakitEE} className="type-icon-img" />
               </div>
               <div className="title-box">{t('ConfigPrivateDomain.enterpriseLogin')}</div>
             </div>
