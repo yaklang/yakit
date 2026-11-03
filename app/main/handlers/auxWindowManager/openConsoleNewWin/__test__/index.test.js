@@ -78,6 +78,22 @@ describe('engine console window', () => {
     expect(mainWindow.webContents.send).toHaveBeenLastCalledWith('engineConsole-window-hash', { hash: '' })
   })
 
+  it('keeps pushing live output when the terminal is ready before the load event', () => {
+    const { mainWindow, manager, handler, forward } = setup()
+    manager.getEntry.mockReturnValue({ meta: { route: 'engine-console' } })
+
+    handler.onAuxReady('console-1')
+    handler.onOpened({ singletonKey: 'engine-console', windowId: 'console-1' })
+    forward('later')
+
+    expect(manager.pushBySingletonKey).toHaveBeenCalledExactlyOnceWith('engine-console', {
+      type: 'xterm-data',
+      data: 'later',
+    })
+    expect(manager.push).not.toHaveBeenCalled()
+    expect(mainWindow.webContents.send).toHaveBeenCalledWith('engineConsole-window-hash', { hash: 'console-1' })
+  })
+
   it('keeps queued engine output when another aux window becomes ready', () => {
     const { manager, handler, forward } = setup()
     manager.getEntry.mockImplementation((windowId) => {
