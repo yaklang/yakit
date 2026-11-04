@@ -45,6 +45,8 @@ export enum AISourceEnum {
 export type AISource = `${AISourceEnum}`
 
 export interface AIStartParams {
+  Attach?: boolean
+  SingleModelMode?: boolean
   CoordinatorId?: string
   Sequence?: number
 
@@ -233,6 +235,7 @@ export enum AIInputEventHotPatchTypeEnum {
 
 /** AIInputEvent-SyncType 的可选值 */
 export enum AIInputEventSyncTypeEnum {
+  SYNC_TYPE_SESSION_SNAPSHOT_SYNC = 'session_snapshot_sync',
   /** 获取正在执行的任务树 */
   SYNC_TYPE_PLAN = 'plan',
   SYNC_TYPE_CONSUMPTION = 'consumption',
@@ -273,7 +276,32 @@ export enum AIInputEventSyncTypeEnum {
   SYNC_EXECUTE_DETACHED_PLAN = 'execute_detached_plan',
   /** 关闭浏览器进程 */
   SYNC_CLOSE_BROWSER = 'close_browser_sync',
+  /** 获取同会话内指定任务的物化快照 */
+  SYNC_TYPE_TASK_SNAPSHOT = 'task_snapshot_sync',
+  SYNC_TYPE_SKILL_LOADED = 'skill_loaded_sync',
+  SYNC_TYPE_SKILL_AVAILABLE = 'skill_available_sync',
+  SYNC_TYPE_SKILL_DETAIL = 'skill_detail_sync',
+  SYNC_TYPE_LOAD_SKILL = 'load_skill_sync',
 }
+
+/** 只读数据查询类同步：仅拉取展示数据，不修改任务与配置，发送前置条件不满足时可静默丢弃 */
+export const readonlySyncQueryTypes = new Set<`${AIInputEventSyncTypeEnum}`>([
+  AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN,
+  AIInputEventSyncTypeEnum.SYNC_TYPE_CONSUMPTION,
+  AIInputEventSyncTypeEnum.SYNC_TYPE_PING,
+  AIInputEventSyncTypeEnum.SYNC_TYPE_QUEUE_INFO,
+  AIInputEventSyncTypeEnum.SYNC_TYPE_TIMELINE,
+  AIInputEventSyncTypeEnum.SYNC_TYPE_MEMORY_CONTEXT,
+  AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN_EXEC_TASKS,
+  AIInputEventSyncTypeEnum.SYNC_CAPABILITY_INVENTORY,
+  AIInputEventSyncTypeEnum.SYNC_TYPE_SKILL_LOADED,
+  AIInputEventSyncTypeEnum.SYNC_TYPE_SKILL_AVAILABLE,
+  AIInputEventSyncTypeEnum.SYNC_TYPE_SKILL_DETAIL,
+  AIInputEventSyncTypeEnum.SYNC_TYPE_TASK_SNAPSHOT,
+])
+
+export const isReadonlySyncQuery = (syncType?: `${AIInputEventSyncTypeEnum}`): boolean =>
+  !!syncType && readonlySyncQueryTypes.has(syncType)
 
 export interface AIInputEvent {
   IsStart?: boolean
@@ -320,6 +348,7 @@ export interface AIOutputI18n {
 }
 
 export interface AIOutputEvent {
+  SessionId?: string
   ID: number
   CoordinatorId: string
   Type: string
@@ -373,7 +402,67 @@ export enum AITaskStatus {
 }
 export type AITaskStatusType = `${AITaskStatus}`
 
+export enum AISkillLoadStateEnum {
+  Metadata = 'metadata',
+  Loaded = 'loaded',
+}
+
 export declare namespace AIAgentGrpcApi {
+  /** skill_loaded / skill_available 返回的当前会话技能清单项 */
+  export interface SkillListEntry {
+    name: string
+    verbose_name: string
+    description: string
+    type: string
+    stage: string
+    position: string
+    is_fixed: boolean
+    data: {
+      skill_load_state: `${AISkillLoadStateEnum}` | ''
+      token_count?: number
+    }
+  }
+
+  /** skill_loaded 返回的全部已加载技能 */
+  export interface SkillLoadedResponse {
+    skills: SkillListEntry[]
+    total: number
+  }
+
+  /** skill_available 返回的可加载技能分页 */
+  export interface SkillAvailableResponse extends SkillLoadedResponse {
+    page: number
+    page_size: number
+    has_more: boolean
+  }
+
+  /** 可加载技能查询失败时返回错误，不携带分页信息 */
+  export interface SkillAvailableErrorResponse {
+    skills: SkillListEntry[]
+    query: string
+    error: string
+  }
+
+  /** skill_detail 返回的技能详情；有 error 时展示后端错误 */
+  export interface SkillDetail {
+    name: string
+    loaded: boolean
+    prompt_content?: string
+    skill_md?: string
+    file_tree?: string
+    url?: string
+    error?: string
+    meta?: {
+      name: string
+      description: string
+      license?: string
+      compatibility?: string
+      metadata?: Record<string, string>
+      disable_model_invocation?: boolean
+      body?: string
+    }
+  }
+
   /** 上传/下载 Token 量 */
   export interface Consumption {
     cache_hit_token: number
@@ -702,6 +791,45 @@ export declare namespace AIAgentGrpcApi {
     timestamp: number
   }
 
+  /** session_snapshot.tasks 中的轻量任务索引 */
+  export interface SessionSnapshotTaskSummary {
+    task_id: string
+    task_index?: string
+    task_name?: string
+    attempt: number
+    status: string
+    is_final: boolean
+    updated_at: number
+    todo_stats?: TodoListUpdateStats
+  }
+
+  /** session_snapshot / task_snapshot 内的扁平能力清单项 */
+  export interface CapabilityInventoryItem {
+    name: string
+    verbose_name?: string
+    description?: string
+    /** mcp | aitool | plugin | skill | forge | mcp_server */
+    type: 'mcp' | 'aitool' | 'plugin' | 'skill' | 'forge' | 'mcp_server'
+    /** loaded | metadata | schema | description */
+    stage: 'loaded' | 'metadata' | 'schema' | 'description'
+    /** FrozenBlock | Dynamic | SemiDynamic */
+    position: 'FrozenBlock' | 'Dynamic' | 'SemiDynamic'
+    is_fixed?: boolean
+    data?: Record<string, string | number | boolean>
+  }
+
+  export interface SessionSnapshotPerception {
+    summary?: string
+    topics?: string[]
+    keywords?: string[]
+    confidence?: number
+    changed?: boolean
+    epoch?: number
+    last_trigger?: string
+    intent_shift?: PerceptionData['intent_shift']
+    last_update_at?: number
+  }
+
   export interface SessionSnapshot {
     revision: number
     updated_at: number
@@ -725,9 +853,32 @@ export declare namespace AIAgentGrpcApi {
       status: 'running' // 枚举，目前只有 running
       started_at: number
     }[]
-    /** 下面两个字段暂时没有用，故不添加 */
-    // perception
-    // capabilities
+    perception?: SessionSnapshotPerception
+    capabilities?: CapabilityInventoryItem[]
+    tasks?: SessionSnapshotTaskSummary[]
+  }
+
+  /** task_snapshot_sync 回包中的待办投影 */
+  export interface SessionTaskTodoSnapshot {
+    items: TodoListUpdateItem[]
+    stats: TodoListUpdateStats
+    open_todos?: unknown[]
+    current_todo_id?: string
+    closed_todos?: unknown[]
+  }
+
+  /** task_snapshot_sync 回包：按 task_id 物化的任务详情 */
+  export interface SessionTaskSnapshot {
+    task_id: string
+    task_index?: string
+    task_name?: string
+    attempt: number
+    status: string
+    is_final: boolean
+    revision: number
+    updated_at: number
+    snapshot?: SessionSnapshot
+    todo?: SessionTaskTodoSnapshot
   }
 
   /** task_review_require */

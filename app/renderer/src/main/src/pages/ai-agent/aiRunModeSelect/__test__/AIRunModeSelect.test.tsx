@@ -35,6 +35,8 @@ const Harness = () => {
           onSend: () => false,
           onStart: () => {},
           onClose: () => {},
+          cancelPendingChat: () => {},
+          detachPendingChat: () => {},
           onUpdatePageId: () => {},
         },
       }}

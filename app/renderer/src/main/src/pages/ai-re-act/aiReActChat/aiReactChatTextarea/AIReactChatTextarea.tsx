@@ -11,7 +11,7 @@ import { AITaskStatus } from '../../hooks/grpcApi'
 
 export const AIReactChatTextarea: React.FC<AIReactChatTextareaProps> = React.memo(
   forwardRef((props, ref) => {
-    const { handleSubmit, externalParameters, handleStopCasualTask, defaultMentions } = props
+    const { handleSubmit, submitDisabled, externalParameters, handleStopCasualTask, defaultMentions } = props
 
     const store = useCurrentStore()
     const cancelChatLoading = useStore(store, (state) => state.cancelChatLoading)
@@ -23,6 +23,7 @@ export const AIReactChatTextarea: React.FC<AIReactChatTextareaProps> = React.mem
         ref={ref}
         loading={false}
         onSubmit={handleSubmit}
+        submitDisabled={submitDisabled}
         inputFooterRight={
           <div className={styles['extra-footer-right']}>
             {casualLoading && (

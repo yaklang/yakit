@@ -1,3 +1,5 @@
+import { PendingSessionNotice } from '../sessionStatus/PendingSessionNotice'
+import { useStartAIChat } from '../hooks/useStartAIChat'
 import React, { forwardRef, useEffect, useImperativeHandle, useRef } from 'react'
 
 import styles from './AIReActChat.module.scss'
@@ -45,7 +47,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
       startRequest,
       externalParameters,
     } = props
-    const { setActiveChat, getSetting, onStart, onSend } = useAIAgentDispatcher()
+    const { setActiveChat, getSetting, onStart, onSend, cancelPendingChat } = useAIAgentDispatcher()
 
     const sessionId = useCurrentSessionId()
     const store = useCurrentStore()
@@ -59,7 +61,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
       trigger: 'setShowFreeChat',
     })
 
-    const { activeChat, setting } = useAIAgentStore()
+    const { activeChat, setting, pendingChat } = useAIAgentStore()
     const { selectedAgent, selectionVersion } = useDigitalEmployee()
     const defaultEmployeeMentions = useCreation(() => {
       const mention = getDigitalEmployeeDefaultMention(selectedAgent)
@@ -126,6 +128,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
     // #region 问题相关逻辑
     // 初始化 AI ReAct
     const handleSubmit = useMemoizedFn((value: AIChatTextareaSubmit) => {
+      if (!activeChat && pendingChat) return
       if (!setting) {
         yakitNotify('error', '请先配置 AI ReAct 参数')
         return
@@ -139,98 +142,9 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
       externalParameters?.onAfterSubmit?.()
     })
 
-    const handleStart = useMemoizedFn((value: HandleStartParams) => {
-      const { qs, sessionId, enabledCapabilities } = value
-      const sessionID = activeChat?.SessionID || '' // 判断历史还是新建
-
-      const source = getSetting().Source ?? AISourceEnum.aiAgent // getSetting保证最新
-      const formattedSetting = formatAIAgentSetting(setting)
-      const request: AIStartParams = applyForgeNameToStartParams(
-        {
-          ...formattedSetting,
-          UserQuery: qs,
-          CoordinatorId: '',
-          Sequence: 1,
-          PreferSessionCachedConfig: true,
-          Source: source,
-          EnabledCapabilities: enabledCapabilities,
-        },
-        selectedAgent?.ForgeName,
-      )
-
-      const session = getSession(sessionId)
-
-      request.TimelineSessionID = session
-      const { attachedResourceInfo } = getAIReActRequestParams(value)
-      // 发送初始化参数
-      const aiInputEvent = applyDigitalEmployeeSkillToInputEvent<AIInputEvent>(
-        {
-          IsStart: true,
-          Params: {
-            ...request,
-          },
-          AttachedResourceInfo: attachedResourceInfo,
-          FocusModeLoop: value.focusMode,
-        },
-        selectedAgent,
-      )
-      const onStartChat = (res: AIHandleStartResProps) => {
-        const { params, extraParams, onChat } = res
-        let newChat: AISession | undefined = undefined
-        if (!sessionID) {
-          // 创建新的聊天记录
-          newChat = {
-            Id: extraParams?.chatId || session,
-            Title: qs || `AI Agent - ${new Date().toLocaleString()}`,
-            question: qs,
-            CreatedAt: new Date().getTime(),
-            UpdatedAt: new Date().getTime(),
-            StartParams: request,
-            SessionID: session,
-            TitleInitialized: false,
-            Source: request.Source ?? 'ai',
-            LastUsedAt: new Date().getTime(),
-            isCreate: true,
-          }
-          // setActiveChat && setActiveChat(newChat)
-          emiter.emit(
-            'sessionData',
-            JSON.stringify({ type: 'prependSession', payload: { ...newChat, isCreate: false } }),
-          )
-          // 新建的额外操作
-          onChat?.()
-        }
-        aiChatTextareaRef.current.setMention({
-          mentionId: params.FocusModeLoop || randomString(8),
-          mentionType: 'focusMode',
-          mentionName: params.FocusModeLoop || '',
-        })
-        onStart({
-          token: session,
-          params,
-          onLinkSuccess: () => {
-            // 必须成功链接后再设置 activeChat
-            if (!sessionID && newChat) setActiveChat && setActiveChat(newChat)
-          },
-        })
-      }
-      if (startRequest) {
-        startRequest({
-          params: aiInputEvent,
-        })
-          .then((res) => {
-            onStartChat(res)
-          })
-          .catch(() => {
-            onStartChat({
-              params: aiInputEvent,
-            })
-          })
-      } else {
-        onStartChat({
-          params: aiInputEvent,
-        })
-      }
+    const handleStart = useStartAIChat({
+      startRequest,
+      setMention: (mention) => aiChatTextareaRef.current.setMention(mention),
     })
 
     /**自由对话 */
@@ -330,6 +244,9 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
             })}
           >
             <div className={classNames(styles['chat-container'], chatContainerClassName)}>
+              {!activeChat && pendingChat && (
+                <PendingSessionNotice pending={pendingChat} onCancel={cancelPendingChat} />
+              )}
               <AIReActChatHeader
                 title={title}
                 chatContainerHeaderClassName={chatContainerHeaderClassName}
@@ -352,6 +269,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                       key={`digital-employee-input-${selectionVersion}`}
                       ref={aiChatTextareaRef}
                       handleSubmit={handleSubmit}
+                      submitDisabled={!activeChat && !!pendingChat}
                       externalParameters={externalParameters}
                       handleStopCasualTask={handleStopCasualTask}
                       defaultMentions={defaultEmployeeMentions}

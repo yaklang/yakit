@@ -63,35 +63,58 @@ import { AIToDoListDetail } from '@/pages/ai-re-act/aiReActChat/aiToDoList/AIToD
 import { useCurrentRawData, useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import { useStore } from 'zustand'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { AITaskStatisticsStatus } from './aiTaskStatisticsStatus/AITaskStatisticsStatus'
+import {
+  TODO_STATUS_FILTER_KEYS,
+  FILTER_KEY_TO_GANTT_LEGEND,
+  GANTT_LEGEND_TO_FILTER_KEY,
+  getTaskTodoPresentation,
+  reorderFilterKeys,
+  type TodoStatusFilterKey,
+} from './taskStatusUtils'
+import { AITaskGantt } from './aiTaskGantt/AITaskGantt'
+import { AITaskSelectDropdown } from './aiTaskSelectDropdown/AITaskSelectDropdown'
 import { AITaskBoardView } from './aiTaskBoard/AITaskBoardView'
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
 import useAIAgentDispatcher from '../../useContext/useDispatcher'
 import { randomString } from '@/utils/randomUtil'
 
 export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = React.memo((props) => {
-  const { taskId, taskGoal, taskName, onClose } = props
+  const sessionId = useCurrentSessionId()
+  return <TaskExecutionDetailsContent key={`${sessionId}:${props.taskId}`} {...props} />
+})
+
+const TaskExecutionDetailsContent: React.FC<AITaskExecutionDetailsProps> = (props) => {
+  const { taskId: initialTaskId, taskGoal, taskName, onClose } = props
+  const [taskId, setTaskId] = useState(initialTaskId)
   const rawData = useCurrentRawData()
-  const { t } = useI18nNamespaces(['aiAgent'])
+  const { t, i18nRefresh } = useI18nNamespaces(['aiAgent'])
   const sessionId = useCurrentSessionId()
   const store = useCurrentStore()
   const todoListUpdate = useStore(store, (state) => state.chatTodoListUpdate)
-  const [todoView, setTodoView] = useState<'list' | 'board'>('list')
+  const taskDetailsUpdate = useStore(store, (state) => state.taskDetailsUpdate)
+  const [hiddenStatusKeys, setHiddenStatusKeys] = useState<TodoStatusFilterKey[]>([])
+  const [statusOrder, setStatusOrder] = useState<TodoStatusFilterKey[]>(() => [...TODO_STATUS_FILTER_KEYS])
+  const [todoView, setTodoView] = useState<'list' | 'board' | 'gantt'>('list')
 
-  const [planItemDetailsData, setPlanItemDetailsData] = useState<PlanItemDetailsData>()
+  const [detailSnapshot, setDetailSnapshot] = useState<{ taskId: string; data: PlanItemDetailsData }>()
+  const planItemDetailsData = detailSnapshot?.taskId === taskId ? detailSnapshot.data : undefined
   const perPlanItemDetailsDataUUIdRef = useRef<string>('')
   useEffect(() => {
     onReset()
     setTodoView('list')
+    setHiddenStatusKeys([])
+    setStatusOrder([...TODO_STATUS_FILTER_KEYS])
     getData()
   }, [taskId, sessionId, rawData])
   useEffect(() => {
     getData()
-  }, [todoListUpdate])
+  }, [todoListUpdate, taskDetailsUpdate])
   useInterval(() => {
     getData()
   }, 5 * 1000)
   const onReset = useMemoizedFn(() => {
-    setPlanItemDetailsData(undefined)
+    setDetailSnapshot(undefined)
     perPlanItemDetailsDataUUIdRef.current = ''
   })
   const getData = useMemoizedFn(() => {
@@ -103,7 +126,7 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
     }
     if (perPlanItemDetailsDataUUIdRef.current === itemData.uuid) return
     perPlanItemDetailsDataUUIdRef.current = itemData.uuid
-    setPlanItemDetailsData(cloneDeep(itemData))
+    setDetailSnapshot({ taskId, data: cloneDeep(itemData) })
   })
   const perception = useCreation(() => {
     if (!planItemDetailsData) return
@@ -116,55 +139,66 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
   )
   const todoListCardData = useCreation(() => planItemDetailsData?.todoList, [planItemDetailsData?.todoList])
 
+  const toggleStatusFilter = useMemoizedFn((key: string) => {
+    if (key === 'created') {
+      setHiddenStatusKeys((prev) =>
+        TODO_STATUS_FILTER_KEYS.every((status) => prev.includes(status)) ? [] : [...TODO_STATUS_FILTER_KEYS],
+      )
+    } else if (TODO_STATUS_FILTER_KEYS.includes(key as TodoStatusFilterKey)) {
+      const status = key as TodoStatusFilterKey
+      setHiddenStatusKeys((prev) =>
+        prev.includes(status) ? prev.filter((value) => value !== status) : [...prev, status],
+      )
+    }
+  })
+  const onStatReorder = useMemoizedFn((fromKey: string, toKey: string) => {
+    setStatusOrder((prev) => reorderFilterKeys(prev, fromKey, toKey))
+  })
+  const hiddenLegendKinds = useCreation(
+    () => hiddenStatusKeys.map((key) => FILTER_KEY_TO_GANTT_LEGEND[key]),
+    [hiddenStatusKeys],
+  )
+  const legendKindOrder = useCreation(() => statusOrder.map((key) => FILTER_KEY_TO_GANTT_LEGEND[key]), [statusOrder])
   const todoData = useCreation(() => {
-    const unFinish: TodoListCardData['items'] = []
-    const finished: TodoListCardData['items'] = []
-    const progressNumber: AITaskStatisticsStatusProps['list'] = [
-      {
+    const data = getTaskTodoPresentation(planItemDetailsData?.todoList?.items || [], hiddenStatusKeys, statusOrder)
+    const metadata: Record<string, Omit<AITaskStatisticsStatusProps['list'][number], 'footerLeft'>> = {
+      created: { key: 'created', color: 'neutral-with-border', title: t('AITaskStatusControls.created') },
+      pending: {
         key: 'pending',
         color: 'neutral-with-border',
-        title: '待处理',
-        footerLeft: 0,
+        title: t('AITaskExecutionDetails.statusPending'),
         footerRight: <AIPendingNodeIcon />,
       },
-      { key: 'doing', color: 'main', title: '进行中', footerLeft: 0, footerRight: <AIDoingNodeIcon /> },
-      { key: 'done', color: 'green', title: '已完成', footerLeft: 0, footerRight: <AIDoneNodeIcon /> },
-      { key: 'skipped', color: 'neutral', title: '已跳过', footerLeft: 0, footerRight: <AISkippedNodeIcon /> },
-      { key: 'deleted', color: 'red', title: '已删除', footerLeft: 0, footerRight: <AIDeleteNodeIcon /> },
-    ]
-
-    for (const item of planItemDetailsData?.todoList?.items || []) {
-      switch (item.status) {
-        case 'PENDING':
-          progressNumber[0].footerLeft = progressNumber[0].footerLeft + 1
-          unFinish.push(item)
-          break
-
-        case 'DOING':
-          progressNumber[1].footerLeft = progressNumber[1].footerLeft + 1
-          unFinish.push(item)
-          break
-
-        case 'DONE':
-          progressNumber[2].footerLeft = progressNumber[2].footerLeft + 1
-          finished.push(item)
-          break
-
-        case 'SKIPPED':
-          progressNumber[3].footerLeft = progressNumber[3].footerLeft + 1
-          finished.push(item)
-          break
-
-        case 'DELETED':
-          progressNumber[4].footerLeft = progressNumber[4].footerLeft + 1
-          finished.push(item)
-          break
-        default:
-          break
-      }
+      doing: {
+        key: 'doing',
+        color: 'main',
+        title: t('AITaskExecutionDetails.statusDoing'),
+        footerRight: <AIDoingNodeIcon />,
+      },
+      done: {
+        key: 'done',
+        color: 'green',
+        title: t('AITaskExecutionDetails.statusDone'),
+        footerRight: <AIDoneNodeIcon />,
+      },
+      skipped: {
+        key: 'skipped',
+        color: 'neutral',
+        title: t('AITaskExecutionDetails.statusSkipped'),
+        footerRight: <AISkippedNodeIcon />,
+      },
+      deleted: {
+        key: 'deleted',
+        color: 'red',
+        title: t('AITaskExecutionDetails.statusDeleted'),
+        footerRight: <AIDeleteNodeIcon />,
+      },
     }
-    return { unFinish, finished, progressNumber }
-  }, [planItemDetailsData?.todoList?.items])
+    return {
+      ...data,
+      progressNumber: ['created', ...statusOrder].map((key) => ({ ...metadata[key], footerLeft: data.counts[key] })),
+    }
+  }, [planItemDetailsData?.todoList?.items, hiddenStatusKeys, statusOrder, i18nRefresh])
 
   const forgeFixedList = useCreation(() => {
     const forgeFixed: AIAgentGrpcApi.PlanItemDetailsFixedItem[] =
@@ -263,7 +297,13 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
           <div className={styles['header-title']}>
             <OutlinePresentationchartbarIcon className={styles['header-icon']} />
             <span className={styles['title-text']}>任务执行详情</span>
-            <div className={styles['header-subtitle']}>{taskName}</div>
+            <AITaskSelectDropdown
+              taskId={initialTaskId}
+              taskName={taskName}
+              value={taskId}
+              onChange={setTaskId}
+              taskDataUuid={planItemDetailsData?.uuid}
+            />
           </div>
           {onClose && <YakitButton icon={<OutlineXIcon />} type="text2" onClick={onClose} />}
         </div>
@@ -293,7 +333,7 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
         {/* 左侧目标与意图 + 右侧统计 */}
         <div className={styles['top-section']}>
           <div className={styles['top-left']}>
-            <AITaskExecutionDetailsCard title="任务目标" content={taskGoal} />
+            <AITaskExecutionDetailsCard title="任务目标" content={taskId === initialTaskId ? taskGoal : undefined} />
             <AITaskExecutionDetailsCard title="意图感知" content={perception?.summary} />
           </div>
           <div className={styles['task-statistics']}>
@@ -306,6 +346,7 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
                   options={[
                     { value: 'list', label: t('AITaskBoard.list') },
                     { value: 'board', label: t('AITaskBoard.board') },
+                    { value: 'gantt', label: t('AITaskGantt.title') },
                   ]}
                   onChange={(event) => setTodoView(event.target.value)}
                 />
@@ -315,9 +356,28 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
             {total ? (
               <>
                 {/* 状态统计区块 */}
-                <AITaskStatisticsStatus list={todoData.progressNumber} />
-                {todoView === 'board' ? (
-                  <AITaskBoardView items={todoListCardData?.items || []} />
+                <AITaskStatisticsStatus
+                  key={taskId}
+                  list={todoData.progressNumber}
+                  hiddenKeys={hiddenStatusKeys}
+                  onToggle={toggleStatusFilter}
+                  onReorder={onStatReorder}
+                />
+                {!todoData.visibleItems.length && (
+                  <div role="status" className={styles['filter-empty']}>
+                    {t('AITaskStatusControls.noVisibleTasks')}
+                  </div>
+                )}
+                {todoView === 'gantt' ? (
+                  <AITaskGantt
+                    key={taskId}
+                    items={todoData.visibleItems}
+                    hiddenLegendKinds={hiddenLegendKinds}
+                    legendKindOrder={legendKindOrder}
+                    onLegendToggle={(kind) => toggleStatusFilter(GANTT_LEGEND_TO_FILTER_KEY[kind])}
+                  />
+                ) : todoView === 'board' ? (
+                  <AITaskBoardView items={todoData.visibleItems} statusOrder={statusOrder} />
                 ) : (
                   <div className={styles['stats-content']}>
                     {/* 待办列表区块 */}
@@ -372,7 +432,7 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
           <div className={styles['section']}>
             {showForge && (
               <AITaskDetailsCardList
-                key="forge"
+                key={`${taskId}-forge`}
                 type="forge"
                 colTitle="技能"
                 taskId={taskId}
@@ -382,7 +442,7 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
             )}
             {showTool && (
               <AITaskDetailsCardList
-                key="tool"
+                key={`${taskId}-tool`}
                 type="tool"
                 colTitle={'工具'}
                 taskId={taskId}
@@ -392,7 +452,7 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
             )}
             {showPlugin && (
               <AITaskDetailsCardList
-                key="yak_plugin"
+                key={`${taskId}-yak_plugin`}
                 type="yak_plugin"
                 colTitle={'插件'}
                 taskId={taskId}
@@ -402,7 +462,7 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
             )}
             {showMCP && (
               <AITaskDetailsCardList
-                key="mcp"
+                key={`${taskId}-mcp`}
                 type="mcp"
                 colTitle={'MCP'}
                 taskId={taskId}
@@ -415,7 +475,7 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
       </div>
     </div>
   )
-})
+}
 
 const AIBrowserProcesses: React.FC<AIBrowserProcessesProps> = React.memo((props) => {
   const { list } = props
@@ -913,23 +973,6 @@ const AITaskExecutionDetailsCard: React.FC<AITaskExecutionDetailsCardProps> = Re
       <div className={styles['card-content']}>
         {content ? content : <span className={styles['empty-text']}>暂无信息...</span>}
       </div>
-    </div>
-  )
-})
-
-const AITaskStatisticsStatus: React.FC<AITaskStatisticsStatusProps> = React.memo((props) => {
-  const { list } = props
-  return (
-    <div className={styles['stats-overview']}>
-      {list.map((item) => (
-        <div key={item.key} className={classNames(styles['stat-box'], styles[`stat-${item.color}`])}>
-          <div className={styles['stat-label']}>{item.title}</div>
-          <div className={styles['stat-footer']}>
-            <div className={styles['stat-footer-left']}>{item.footerLeft}</div>
-            <div className={styles['stat-footer-right']}> {item.footerRight} </div>
-          </div>
-        </div>
-      ))}
     </div>
   )
 })

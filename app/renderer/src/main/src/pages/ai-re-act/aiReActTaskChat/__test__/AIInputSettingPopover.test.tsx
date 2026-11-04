@@ -86,12 +86,15 @@ vi.mock('@/components/yakitUI/YakitSwitch/YakitSwitch', () => ({
     checked,
     disabled,
     onChange,
+    id,
   }: {
+    id?: string
     checked?: boolean
     disabled?: boolean
     onChange?: (v: boolean) => void
   }) => (
     <input
+      id={id}
       type="checkbox"
       role="switch"
       checked={!!checked}
@@ -306,7 +309,7 @@ describe('runtime context hotpatch in the existing AI Senso input settings', () 
       runningSession()
       const { rerender } = render(<AIInputSettingPopover visible />)
       const context = () => changeLimit('600')
-      const perception = () => fireEvent.click(screen.getByRole('switch'))
+      const perception = () => fireEvent.click(screen.getByRole('switch', { name: /同步意图识别/ }))
       const changes = order === 'context-first' ? [context, perception] : [perception, context]
       changes.forEach((change) => {
         change()
@@ -326,9 +329,31 @@ describe('runtime context hotpatch in the existing AI Senso input settings', () 
     runningSession()
     mocks.onSend.mockReturnValue(false)
     render(<AIInputSettingPopover visible />)
-    fireEvent.click(screen.getByRole('switch'))
+    fireEvent.click(screen.getByRole('switch', { name: /同步意图识别/ }))
     expect(mocks.setActiveChat).not.toHaveBeenCalled()
     expect(emiter.emit).not.toHaveBeenCalled()
     expect(mocks.setting.SyncPerceptionTrigger).toBe(true)
+  })
+})
+
+describe('single model session configuration', () => {
+  it('sets new-session mode locally without a runtime patch', () => {
+    mocks.globalSingleModelMode = false
+    render(<AIInputSettingPopover visible />)
+    fireEvent.click(screen.getByRole('switch', { name: 'BatchModel.singleMode' }))
+    expect(mocks.setting.SingleModelMode).toBe(true)
+    expect(mocks.onSend).not.toHaveBeenCalled()
+  })
+  it('locks the mode for existing sessions and for a global override', () => {
+    mocks.globalSingleModelMode = true
+    render(<AIInputSettingPopover visible />)
+    const control = screen.getByRole('switch', { name: 'BatchModel.singleMode' })
+    expect(control).toBeDisabled()
+    expect(control).toBeChecked()
+    cleanup()
+    mocks.globalSingleModelMode = false
+    mocks.activeChat = { SessionID: 'session-id' }
+    render(<AIInputSettingPopover visible />)
+    expect(screen.getByRole('switch', { name: 'BatchModel.singleMode' })).toBeDisabled()
   })
 })

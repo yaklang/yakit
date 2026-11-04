@@ -335,6 +335,7 @@ export const grpcListAiModel: APIFunc<ListAiModelRequest, ListAiModelResponse> =
   })
 }
 export interface AIGlobalConfig {
+  SingleModelMode?: boolean
   Enabled: boolean
   /**调用模式 */
   RoutingPolicy: AIModelPolicyEnum
@@ -355,6 +356,8 @@ export interface AIGlobalConfig {
 }
 export type AIModelTypeFileName = keyof Pick<AIGlobalConfig, 'IntelligentModels' | 'LightweightModels' | 'VisionModels'>
 export interface AIModelConfig {
+  EffortProbed?: boolean
+  ProbedExtendedEfforts?: string[]
   ProviderId: string
   Provider: ThirdPartyApplicationConfig
   ModelName: string
@@ -490,3 +493,16 @@ export const grpcAIConfigHealthCheck: APIFunc<AIConfigHealthCheckRequest, AIConf
       })
   })
 }
+
+export interface ProbeReasoningEffortRequest {
+  Config: ThirdPartyApplicationConfig
+  Model: string
+}
+export interface ProbeReasoningEffortResponse {
+  XhighSupported: boolean
+  MaxSupported: boolean
+  XhighErrorMessage?: string
+  MaxErrorMessage?: string
+}
+export const grpcProbeReasoningEffort: APIFunc<ProbeReasoningEffortRequest, ProbeReasoningEffortResponse> = (request) =>
+  ipcRenderer.invoke('ProbeReasoningEffort', request)

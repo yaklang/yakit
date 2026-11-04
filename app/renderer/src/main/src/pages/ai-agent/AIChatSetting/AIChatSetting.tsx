@@ -88,6 +88,14 @@ const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
         labelWrap={true}
         onValuesChange={handleFormChange}
       >
+        <Form.Item
+          name="SingleModelMode"
+          valuePropName="checked"
+          label={t('BatchModel.singleMode')}
+          extra={t('BatchModel.singleHelp')}
+        >
+          <YakitSwitch />
+        </Form.Item>
         <YakitCollapse
           activeKey={activeKey}
           onChange={(key) => onSwitchCollapse(key)}

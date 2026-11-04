@@ -39,6 +39,8 @@ const connectedController = () => {
     ['session-a', 122880],
     ['session-b', 245760],
   ] as const) {
+    controller.ensureSession(id).meta.lifecycle.started = true
+    ;(controller as any).tokenBySessionId.set(id, id)
     controller.ensureSession(id).store.getState().updateState({ execute: true, initLoading: false })
     controller.updateSessionConfig(id, { RuntimeContextSizeLimit: limit, ForgeName: `${id}-forge` })
     // Simulate the existing pong/ready boundary; no real engine or disk writes.
@@ -80,7 +82,7 @@ describe('runtime context hotpatch transport boundary', () => {
 
   it('reports synchronous send failures instead of returning success', () => {
     const controller = connectedController()
-    vi.spyOn(console, 'error').mockImplementation(() => {})
+    vi.spyOn(console, 'error').mockImplementation(async () => {})
     ipcRendererMock.invoke.mockImplementationOnce(() => {
       throw new Error('send failed')
     })
@@ -89,7 +91,7 @@ describe('runtime context hotpatch transport boundary', () => {
 
   it.each([true, false])('preserves the controller acceptance result %s through useChatIPC', (accepted) => {
     const send = vi.spyOn(globalSessionEngine, 'handleSendMessage').mockReturnValue(accepted)
-    vi.spyOn(globalSessionEngine, 'onPageUnload').mockImplementation(() => {})
+    vi.spyOn(globalSessionEngine, 'onPageUnload').mockImplementation(async () => {})
     let onSend: ReturnType<typeof useChatIPC>['onSend'] | undefined
     const Probe = () => {
       onSend = useChatIPC(YakitRoute.AI_Agent, YakitRoute.AI_Agent).onSend

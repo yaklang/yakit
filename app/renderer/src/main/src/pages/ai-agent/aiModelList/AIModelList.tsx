@@ -445,6 +445,7 @@ const AIOnlineModeSetting: React.FC<AIOnlineModeSettingProps> = React.memo((prop
       form.setFieldsValue({
         RoutingPolicy: res.RoutingPolicy || AIModelPolicyEnum.PolicyAuto,
         DisableFallback: res.DisableFallback,
+        SingleModelMode: !!res.SingleModelMode,
       })
     })
   })
@@ -462,7 +463,8 @@ const AIOnlineModeSetting: React.FC<AIOnlineModeSettingProps> = React.memo((prop
     }
     if (
       aiGlobalConfigData?.aiGlobalConfigRef.current.RoutingPolicy === values.RoutingPolicy &&
-      aiGlobalConfigData?.aiGlobalConfigRef.current.DisableFallback === values.DisableFallback
+      aiGlobalConfigData?.aiGlobalConfigRef.current.DisableFallback === values.DisableFallback &&
+      !!aiGlobalConfigData?.aiGlobalConfigRef.current.SingleModelMode === !!values.SingleModelMode
     ) {
       return
     }
@@ -470,6 +472,7 @@ const AIOnlineModeSetting: React.FC<AIOnlineModeSettingProps> = React.memo((prop
       ...aiGlobalConfigData?.aiGlobalConfigRef.current,
       RoutingPolicy: values.RoutingPolicy,
       DisableFallback: values.DisableFallback,
+      SingleModelMode: !!values.SingleModelMode,
     }
     event.setAIGlobalConfig(config).then(() => {
       onRefresh()
@@ -489,6 +492,14 @@ const AIOnlineModeSetting: React.FC<AIOnlineModeSettingProps> = React.memo((prop
                 buttonStyle="solid"
                 options={AIModelPolicyOptions.map((item) => ({ ...item, label: t(item.label) }))}
               />
+            </Form.Item>
+            <Form.Item
+              name="SingleModelMode"
+              valuePropName="checked"
+              label={t('BatchModel.singleMode')}
+              extra={t('BatchModel.singleHelp')}
+            >
+              <YakitSwitch />
             </Form.Item>
             <Form.Item name="DisableFallback" valuePropName="checked" label={t('AIOnlineModeSetting.disableFallback')}>
               <YakitSwitch size="middle" />

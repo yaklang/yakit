@@ -1,0 +1,11 @@
+.header-task-select {
+  min-width: 0;
+  max-width: 100%;
+  font-size: 12px;
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+}
+.task-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

@@ -1,3 +1,4 @@
+import { providerToListAiModelConfig } from '../aiModelForm/providerConfig'
 import React, { useEffect, useRef, useState } from 'react'
 import type {
   AIModelEditContentItemProps,
@@ -552,12 +553,11 @@ const AIModelSelectList: React.FC<AIModelSelectListProps> = React.memo((props) =
   /** 强制刷新 */
   const onRefreshModelNameList = useDebounceFn(
     useMemoizedFn((item: AIModelConfig, index: number) => {
-      const params = {
-        Type: item?.Provider.Type,
-        api_key: item?.Provider.APIKey,
-        domain: item?.Provider.Domain,
-        no_https: item?.Provider.NoHttps,
-        proxy: item?.Provider.Proxy,
+      const config = providerToListAiModelConfig(item.Provider)
+      if (!config) {
+        modelNameListMapRef.current.set(index, { loading: false, list: [item.ModelName] })
+        setLoading(false)
+        return
       }
 
       let modelNames: string[] = []
@@ -569,7 +569,7 @@ const AIModelSelectList: React.FC<AIModelSelectListProps> = React.memo((props) =
         })
         setLoading(true)
       }
-      grpcListAiModel({ Config: JSON.stringify(params) })
+      grpcListAiModel({ Config: config })
         .then(({ ModelName }) => {
           modelNames = ModelName
         })

@@ -156,6 +156,14 @@ module.exports = (win, getClient) => {
     return await asyncListAIProviders(params)
   })
 
+  ipcMain.handle(
+    'ProbeReasoningEffort',
+    async (_event, params) =>
+      new Promise((resolve, reject) => {
+        getClient().ProbeReasoningEffort(params, (error, data) => (error ? reject(error) : resolve(data)))
+      }),
+  )
+
   const asyncAIConfigHealthCheck = (params) => {
     return new Promise((resolve, reject) => {
       getClient().AIConfigHealthCheck(params, (err, data) => {

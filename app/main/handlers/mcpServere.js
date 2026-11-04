@@ -1,3 +1,4 @@
+const { assertTrustedAppSender } = require('../security')
 const { ipcMain } = require('electron')
 
 module.exports = (win, getClient) => {
@@ -96,4 +97,15 @@ module.exports = (win, getClient) => {
   ipcMain.handle('SetMCPToolEnabled', async (e, params) => {
     return await asyncSetMCPToolEnabled(params)
   })
+
+  for (const method of ['QueryMCPToolCallHistory', 'GetMCPToolCallHistoryDetail', 'DeleteMCPToolCallHistory']) {
+    ipcMain.handle(method, async (event, params) => {
+      assertTrustedAppSender(event, method)
+      const client = getClient()
+      if (typeof client[method] !== 'function') throw new Error(`Yak engine does not expose ${method}`)
+      return new Promise((resolve, reject) =>
+        client[method](params, (error, response) => (error ? reject(error) : resolve(response))),
+      )
+    })
+  }
 }

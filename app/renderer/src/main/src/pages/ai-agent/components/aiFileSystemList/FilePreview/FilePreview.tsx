@@ -1,6 +1,7 @@
+import type { FileSearchEditorHighlight } from '@/components/FileTreeContentSearch/type'
 import type { FileNodeProps } from '@/pages/yakRunner/FileTree/FileTreeType'
 import { KeyToIcon } from '@/pages/yakRunner/FileTree/icon'
-import { useEffect, useMemo, useState, type FC } from 'react'
+import { useEffect, useMemo, useRef, useState, type FC } from 'react'
 import styles from './FilePreview.module.scss'
 import { OutlineFolderopenIcon } from '@/assets/icon/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -17,12 +18,13 @@ import type { FileInfo } from '../type'
 import { getLocalFileName } from '@/components/MilkdownEditor/CustomFile/utils'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
-const FilePreview: FC<{ data?: FileNodeProps }> = ({ data }) => {
+const FilePreview: FC<{ data?: FileNodeProps; highlights?: FileSearchEditorHighlight[] }> = ({ data, highlights }) => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const path = data?.path ?? ''
   const name = data?.name ?? ''
   const icon = data?.icon ?? 'default'
 
+  const requestEpoch = useRef(0)
   const [showFileHint, setShowFileHint] = useState(false)
   const [loading, setLoading] = useState(false)
   const [fileInfo, setFileInfo] = useState<FileInfo | null>(null)
@@ -34,22 +36,25 @@ const FilePreview: FC<{ data?: FileNodeProps }> = ({ data }) => {
 
   const fetchFileInfo = useMemoizedFn(async (targetPath: string) => {
     if (!targetPath) return
+    const epoch = ++requestEpoch.current
     try {
       setLoading(true)
-      const { size, isPlainText } = await getCodeSizeByPath(path)
+      const { size, isPlainText } = await getCodeSizeByPath(targetPath)
+      if (epoch !== requestEpoch.current) return
       if (size > MAX_FILE_SIZE_BYTES) {
         setFileInfo(null)
         setShowFileHint(true)
         return
       }
       setIsBinary(!isPlainText)
-      const content = await getCodeByPath(path)
-      const file = await getLocalFileName(path)
+      const content = await getCodeByPath(targetPath)
+      const file = await getLocalFileName(targetPath)
+      if (epoch !== requestEpoch.current) return
       setFileInfo({ path, size, isPlainText, content, language: monacaLanguageType(file.suffix) })
     } catch (err) {
-      yakitNotify('error', `Failed to load file:${err}`)
+      if (epoch === requestEpoch.current) yakitNotify('error', `Failed to load file:${err}`)
     } finally {
-      setLoading(false)
+      if (epoch === requestEpoch.current) setLoading(false)
     }
   })
 
@@ -58,6 +63,9 @@ const FilePreview: FC<{ data?: FileNodeProps }> = ({ data }) => {
     setShowFileHint(false)
     if (path) {
       fetchFileInfo(path)
+    }
+    return () => {
+      requestEpoch.current += 1
     }
   }, [path])
 
@@ -95,6 +103,7 @@ const FilePreview: FC<{ data?: FileNodeProps }> = ({ data }) => {
             />
           ) : (
             <YakitEditor
+              highLightFind={highlights}
               key={fileInfo?.path || 'empty-editor'}
               value={fileInfo?.content}
               readOnly

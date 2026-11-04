@@ -494,9 +494,9 @@ export const BatchExportAIforge = memo(
 
     const [exportExtra, setExportExtra] = useState<ImportExportModalExtra>({
       hint: false,
-      title: t('ForgeName.exportForge'),
+      title: t(props.isTool ? 'AIToolBatch.exportTool' : 'ForgeName.exportForge'),
       type: 'export',
-      apiKey: 'ExportAIForge',
+      apiKey: props.isTool ? 'ExportAITool' : 'ExportAIForge',
     })
     const logListRef = useRef<LogListInfo[]>([])
     const forgeExtraParams = useRef<ExportAIForgeRequest>(cloneDeep(defaultExportAIForgeRequest))
@@ -589,7 +589,11 @@ export const BatchExportAIforge = memo(
     if (!exportExtra.hint) return null
 
     return (
-      <ImportExportModal<ExportAIForgeFormValues, ExportAIForgeRequest, ExportImportAIForgeProgress>
+      <ImportExportModal<
+        ExportAIForgeFormValues,
+        ExportAIForgeRequest | Pick<ExportAIForgeRequest, 'ToolNames' | 'OutputName' | 'TargetPath' | 'Password'>,
+        ExportImportAIForgeProgress
+      >
         getContainer={document.getElementById(`main-operator-page-body-${currentRouteKey}`) || undefined}
         extra={exportExtra}
         getProgressValue={(p: ExportImportAIForgeProgress) => p.Percent / 100}
@@ -613,7 +617,11 @@ export const BatchExportAIforge = memo(
             <Form.Item label={t('ForgeName.fileName')} name="OutputName" rules={[{ required: true }]}>
               <YakitInput />
             </Form.Item>
-            <Form.Item label={t('ForgeName.tool')} name="ToolNames">
+            <Form.Item
+              label={t('ForgeName.tool')}
+              name="ToolNames"
+              rules={props.isTool ? [{ required: true, message: t('AIToolBatch.emptySelection') }] : undefined}
+            >
               <YakitSelect
                 showSearch
                 placeholder={t('ForgeName.chooseTool')}
@@ -658,10 +666,19 @@ export const BatchExportAIforge = memo(
             exportPath.current = await ipcRenderer.invoke('GenerateProjectsFilePath', name)
           } catch (error) {}
         }}
-        onSubmitForm={(values) => ({
-          ...forgeExtraParams.current,
-          ...values,
-        })}
+        onSubmitForm={(values) => {
+          const params = { ...forgeExtraParams.current, ...values }
+          if (props.isTool) {
+            if (!params.ToolNames?.length) throw new Error(t('AIToolBatch.emptySelection'))
+            return {
+              ToolNames: params.ToolNames,
+              TargetPath: params.TargetPath,
+              OutputName: params.OutputName,
+              Password: params.Password,
+            }
+          }
+          return params
+        }}
         isProgressFinished={(p: ExportImportAIForgeProgress) => p.Percent === 100 && p.MessageType === 'success'}
       />
     )
@@ -674,9 +691,9 @@ export const ImportAIforge = memo(
 
     const [importExtra, setImportExtra] = useState<ImportExportModalExtra>({
       hint: false,
-      title: t('ForgeName.importForge'),
+      title: t(props.isTool ? 'AIToolBatch.importTool' : 'ForgeName.importForge'),
       type: 'import',
-      apiKey: 'ImportAIForge',
+      apiKey: props.isTool ? 'ImportAITool' : 'ImportAIForge',
     })
     const logListRef = useRef<LogListInfo[]>([])
 
@@ -740,7 +757,7 @@ export const ImportAIforge = memo(
           Overwrite: true,
           ...values,
         })}
-        isProgressFinished={(p: ExportImportAIForgeProgress) => p.Percent === 100}
+        isProgressFinished={(p: ExportImportAIForgeProgress) => p.Percent === 100 && p.MessageType === 'success'}
       />
     )
   }),

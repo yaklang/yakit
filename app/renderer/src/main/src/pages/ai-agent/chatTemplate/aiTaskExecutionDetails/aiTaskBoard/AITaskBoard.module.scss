@@ -151,3 +151,10 @@
     border-right: none;
   }
 }
+
+@container task-details (max-width: 800px) {
+  .ai-task-board {
+    min-height: 200px;
+    flex: auto;
+  }
+}

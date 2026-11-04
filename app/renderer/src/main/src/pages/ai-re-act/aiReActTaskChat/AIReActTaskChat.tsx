@@ -164,6 +164,8 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
   const runtimeContextSizeLimit = useRuntimeContextSizeLimit()
   const [aiGlobalConfigData, aiGlobalConfigEvent] = useAIGlobalConfig()
   const aiGlobalConfig = aiGlobalConfigData.aiGlobalConfig
+  const effectiveSingleModel = !!aiGlobalConfig.SingleModelMode || !!setting.SingleModelMode
+  const singleModelLocked = !!aiGlobalConfig.SingleModelMode || !!activeChat?.SessionID || store.getState().execute
 
   const [visible, setVisible] = useControllableValue<boolean>(props, {
     defaultValue: false,
@@ -173,8 +175,9 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
   const [form] = Form.useForm<AIInputSettingFormProps>()
 
   useEffect(() => {
-    if (visible) form.setFieldsValue({ RuntimeContextSizeLimit: runtimeContextSizeLimit })
-  }, [visible, sessionId, runtimeContextSizeLimit, form])
+    if (visible)
+      form.setFieldsValue({ RuntimeContextSizeLimit: runtimeContextSizeLimit, SingleModelMode: effectiveSingleModel })
+  }, [visible, sessionId, runtimeContextSizeLimit, effectiveSingleModel, form])
 
   // 缓存弹窗打开时的文本域初始值，用于关闭时比较是否修改
   const promptSnapshotRef = useRef<{ AIPresetPrompt: string; AIPlanPrompt: string }>({
@@ -205,6 +208,8 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
     },
   )
   const onValuesChange = useMemoizedFn((changedValues: AIInputSettingFormProps) => {
+    if (has(changedValues, 'SingleModelMode') && !singleModelLocked)
+      setSetting?.((v) => ({ ...v, SingleModelMode: !!changedValues.SingleModelMode }))
     const limit = changedValues.RuntimeContextSizeLimit
     if (limit && limit >= 60 && Number.isSafeInteger(limit) && Number.isSafeInteger(limit * 1024)) {
       onHotConfigChange(AIInputEventHotPatchTypeEnum.HotPatchType_RuntimeContextSizeLimit, {
@@ -232,6 +237,7 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
       }
       form.setFieldsValue({
         RuntimeContextSizeLimit: runtimeContextSizeLimit,
+        SingleModelMode: effectiveSingleModel,
         AIPresetPrompt: aiGlobalConfig.AIPresetPrompt || '',
         AIPlanPrompt: aiGlobalConfig.AIPlanPrompt || '',
       })
@@ -260,6 +266,7 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
           wrapperCol={{ span: 14 }}
           onValuesChange={onValuesChange}
           initialValues={{
+            SingleModelMode: effectiveSingleModel,
             RuntimeContextSizeLimit: runtimeContextSizeLimit,
             SyncPerceptionTrigger: setting.SyncPerceptionTrigger,
             EnablePlan: setting.EnablePlan,
@@ -271,6 +278,14 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
             e.stopPropagation()
           }}
         >
+          <Form.Item
+            name="SingleModelMode"
+            valuePropName="checked"
+            label={t('BatchModel.singleMode')}
+            extra={t('BatchModel.singleHelp')}
+          >
+            <YakitSwitch disabled={singleModelLocked} />
+          </Form.Item>
           <Form.Item
             label={
               <>

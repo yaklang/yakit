@@ -1,67 +1,84 @@
-// useChatIPC.ts
-import { useEffect } from 'react'
-import type { ChatMultiSessionController } from './ChatMultiSessionController'
-import { globalSessionEngine } from './ChatMultiSessionController'
+import { useEffect, useRef, useState } from 'react'
+import { globalSessionEngine, type PendingAIChat } from './ChatMultiSessionController'
 import type { AIChatSendParams } from './type'
 import { useMemoizedFn } from 'ahooks'
 import type { UseChatIPCStartParams } from '@/pages/ai-agent/useContext/AIAgentContext'
 import type { YakitRouteType } from '@/enums/yakitRoute'
-import { yakitNotify } from '@/utils/notification'
-const { ipcRenderer } = window.require('electron')
 
-export function useChatIPC(route: YakitRouteType, pageId: string) {
-  /**
-   * isSessionReady 已连则直接返回（不动已有监听）→ 用入参 token 挂监听 → handleStartSession
-   * prepare 异步，invoke 晚于本同步栈挂监听，不会丢流；token 不依赖 React 闭包里的 SessionID
-   */
-  const onStart = useMemoizedFn(({ token, params, localSource, onLinkStart, onLinkSuccess }: UseChatIPCStartParams) => {
-    if (globalSessionEngine.isSessionReady(token)) {
-      yakitNotify('warning', '会话已经存在，请勿重复建立！')
-      return
-    }
-
-    ipcRenderer.removeAllListeners(`${token}-data`)
-    ipcRenderer.removeAllListeners(`${token}-error`)
-    ipcRenderer.removeAllListeners(`${token}-end`)
-    ipcRenderer.on(`${token}-data`, (e, res: any) => {
-      globalSessionEngine.handleGrpcOutputEvent(token, res)
-    })
-    ipcRenderer.on(`${token}-error`, (e, res: any) => {
-      globalSessionEngine.handleSessionError(token, res)
-    })
-    ipcRenderer.on(`${token}-end`, (e, res: any) => {
-      globalSessionEngine.handleSessionEnd(token, res)
-    })
-
-    let cb: Parameters<ChatMultiSessionController['handleStartSession']>[1] = undefined
-    if (onLinkStart || onLinkSuccess) {
-      cb = {
-        onLinkStart,
-        onLinkSuccess,
+export function useChatIPC(route: YakitRouteType, pageId: string, independentSessions = false) {
+  const [pendingChat, setPendingChat] = useState<PendingAIChat>()
+  const pendingToken = useRef<string | undefined>(undefined)
+  const pendingRef = useRef<PendingAIChat | undefined>(undefined)
+  const cancelPendingChat = useMemoizedFn(() => {
+    pendingRef.current = undefined
+    const token = pendingToken.current
+    pendingToken.current = undefined
+    if (token) globalSessionEngine.cancelPendingConnection(token)
+    setPendingChat(undefined)
+  })
+  // 只解除当前视图与 pending 的关联，连接继续由 Controller 持有。
+  const detachPendingChat = useMemoizedFn(() => {
+    pendingRef.current = undefined
+    pendingToken.current = undefined
+    setPendingChat(undefined)
+  })
+  const onStart = useMemoizedFn(({ onLinkStart, onLinkSuccess, ...input }: UseChatIPCStartParams) => {
+    // Agent 的不同会话可以同时连接；其他入口保持原有单 pending 行为。
+    if (!independentSessions || input.kind === 'new') {
+      if (pendingRef.current?.status === 'connecting') return
+      if (pendingToken.current) {
+        globalSessionEngine.cancelPendingConnection(pendingToken.current, {
+          keepDraft: pendingRef.current?.data.request?.TimelineSessionID === input.sessionId,
+        })
       }
+      detachPendingChat()
     }
-    globalSessionEngine.handleStartSession({ token, params, route, pageId, localSource }, cb)
+    let streamToken: string | undefined
+    globalSessionEngine.handleStartSession(
+      { ...input, route, pageId },
+      {
+        onLinkStart: (token) => {
+          streamToken = token
+          onLinkStart?.(token)
+        },
+        onPendingChange: (pending) => {
+          if (pending.status === 'connecting') pendingToken.current = pending.streamToken
+          if (pendingToken.current === pending.streamToken) {
+            const visiblePending: PendingAIChat = {
+              ...pending,
+              retry: () => {
+                onStart({ ...input, onLinkStart, onLinkSuccess })
+              },
+            }
+            pendingRef.current = visiblePending
+            setPendingChat(visiblePending)
+          }
+        },
+        onLinkSuccess: (sessionId) => {
+          const foreground = pendingToken.current === streamToken
+          onLinkSuccess?.(sessionId, foreground)
+          if (pendingToken.current === streamToken) {
+            pendingToken.current = undefined
+            pendingRef.current = undefined
+            setPendingChat(undefined)
+          }
+        },
+      },
+    )
   })
-
-  const onSend = useMemoizedFn((payload: AIChatSendParams) => {
-    return globalSessionEngine.handleSendMessage(payload)
-  })
-
+  const onSend = useMemoizedFn((payload: AIChatSendParams) => globalSessionEngine.handleSendMessage(payload))
   const onClose = useMemoizedFn((sessionIds: string[], onEnd?: () => void) => {
     globalSessionEngine.forceCloseSession({ sessionIds, onEnd })
   })
-
-  /** 将指定 session 换绑到本 hook 入参 pageId（pageId 为定值） */
-  const onUpdatePageId = useMemoizedFn((sessionId: string) => {
-    globalSessionEngine.rebindSessionPageId(sessionId, pageId)
-  })
-
-  // 组件卸载时拔插头，清理闭环
-  useEffect(() => {
-    return () => {
-      globalSessionEngine.onPageUnload(route, pageId)
-    }
-  }, [])
-
-  return { onStart, onSend, onClose, onUpdatePageId }
+  const onUpdatePageId = useMemoizedFn((sessionId: string) =>
+    globalSessionEngine.rebindSessionPageId(sessionId, pageId),
+  )
+  useEffect(
+    () => () => {
+      cancelPendingChat()
+      void globalSessionEngine.onPageUnload(route, pageId).catch(() => {})
+    },
+    [],
+  )
+  return { onStart, onSend, onClose, onUpdatePageId, pendingChat, cancelPendingChat, detachPendingChat }
 }

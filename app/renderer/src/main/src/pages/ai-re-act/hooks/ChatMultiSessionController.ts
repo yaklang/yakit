@@ -3,6 +3,7 @@ import {
   AIInputEventSyncTypeEnum,
   AISourceEnum,
   AITaskStatus,
+  isReadonlySyncQuery,
   type AIAgentGrpcApi,
   type AIEventQueryRequest,
   type AIInputEvent,
@@ -11,6 +12,9 @@ import {
   withServerRuntimeContextLimit,
 } from './grpcApi'
 import { createChatStore } from './chatStore'
+import { createStore } from 'zustand/vanilla'
+import { getImageStoreKeyByAISource } from './useGetChatDataStoreKey'
+import { SessionLifecycle } from './sessionLifecycle'
 import { sessionStatusStore, SessionDeleteStatus } from './sessionStatus/sessionStatusStore'
 import { Uint8ArrayToString } from '@/utils/str'
 import {
@@ -20,16 +24,12 @@ import {
   AttachedResourceTypeEnum,
 } from '@/pages/ai-agent/defaultConstant'
 import cloneDeep from 'lodash/cloneDeep'
-import {
-  DefaultAgentChatStatus,
-  DefaultAgentLoadingTitle,
-  DefaultMemoryList,
-  DefaultTaskPlanEndGate,
-} from './defaultConstant'
+import { DEFAULT_SKILL_PAGE_SIZE, DefaultMemoryList, DefaultTaskPlanEndGate } from './defaultConstant'
 import { grpcAIMessageHandlers } from './grpcStreamHandler/grpcAIOutputEventHandlers'
 import { genExecTasks, handleTaskPlanEnd, pushLogToOtherWindow } from './utils'
 import type { AIChatIPCStartParams, AIChatSendParams } from './type'
 import { yakitNotify } from '@/utils/notification'
+import emiter from '@/utils/eventBus/eventBus'
 import {
   type AIChatQSData,
   AIChatQSDataTypeEnum,
@@ -47,11 +47,16 @@ import {
   drainSessionContentWrites,
   persistIndependentItem,
   persistToolResultIfTerminal,
+  upsertSessionContent,
   applyHydratedStageSettled,
 } from './persist/contentPersistHelper'
 import type { DeleteSessionsAISourceType } from '@/pages/ai-agent/historyChat/utils'
+import { clearThoughtDurationCache } from '@/pages/ai-agent/components/thoughtDuration/ThoughtDuration'
+import i18n from '@/i18n/i18n'
 
 const { ipcRenderer } = window.require('electron')
+const tAgent = i18n.getFixedT(null, 'aiAgent')
+const formatNotifyError = (error: unknown) => (error instanceof Error ? error.message : String(error))
 
 /** deleteSessions 入参：按 id / 按 source 列表 / 全库清删（deleteAll） */
 export type DeleteSessionsParams = {
@@ -63,17 +68,6 @@ export type DeleteSessionsParams = {
   deleteAll?: boolean
 }
 
-/** 检查渲染树(element) 是否存在有效数据 */
-const hasSessionRenderTree = (content?: SessionRenderContent): boolean => {
-  if (!content) return false
-  return (
-    (content.chatElements?.length || 0) > 0 ||
-    Object.keys(content.items || {}).length > 0 ||
-    Object.keys(content.groups || {}).length > 0 ||
-    Object.keys(content.tasks || {}).length > 0
-  )
-}
-
 // #region 生成初始化数据
 /** 生成AI-Agent会话数据实例 */
 const genAIAgentChatData = (): AIAgentChatData => {
@@ -81,6 +75,9 @@ const genAIAgentChatData = (): AIAgentChatData => {
     httpFuzzRequest: undefined,
     httpFlowFuzzStatus: undefined,
     sessionTitle: '',
+    loadedSkills: { skills: [], total: 0 },
+    availableSkills: { skills: [], total: 0, page: 1, page_size: DEFAULT_SKILL_PAGE_SIZE, has_more: false },
+    skillDetails: new Map(),
     memoryList: DefaultMemoryList,
     systemStream: '',
     yaklangCodeChange: undefined,
@@ -158,6 +155,8 @@ const genAIAgentChatData = (): AIAgentChatData => {
 /** 生成AI-Agent会话的临时记录数据 */
 const genAIAgentChatMetaData = (): AIAgentChatMetaData => {
   return {
+    lifecycle: new SessionLifecycle(),
+    loadingStatusTimestamps: new Map(),
     createChatQuestion: undefined,
     onEnd: undefined,
     pingSyncID: '',
@@ -200,12 +199,18 @@ interface SessionOwner {
 /** 生成 route::pageId 的唯一标识 */
 const makePageKey = (route: YakitRouteType, pageId: string): PageKey => `${route}::${pageId}`
 
-/**
- * 从渲染树快照收集「首屏」正文 token：
- * casual / task 两侧顶层 elements 各取最后 topCount 条，并展开 group/task 的 childrenTokens。
- * 最多两层：group 的 children 是叶子 item；task 的 children 可能是 group 或 item，
- * group 下不再嵌套 group，所以固定两层展开即可。
- */
+// #endregion
+
+const hasSessionRenderTree = (content?: SessionRenderContent): boolean => {
+  if (!content) return false
+  return (
+    (content.chatElements?.length || 0) > 0 ||
+    Object.keys(content.items || {}).length > 0 ||
+    Object.keys(content.groups || {}).length > 0 ||
+    Object.keys(content.tasks || {}).length > 0
+  )
+}
+
 const collectTopLevelContentTokens = (content: SessionRenderContent, topCount: number): string[] => {
   const tokenSet = new Set<string>()
   const appendFromElements = (elements: SessionRenderContent['chatElements']) => {
@@ -232,18 +237,286 @@ const collectTopLevelContentTokens = (content: SessionRenderContent, topCount: n
 }
 // #endregion
 
+/** 新建会话尚未就绪的 UI 状态；失败后保留首问，供用户重试或取消。 */
+export interface PendingAIChat {
+  /** 本轮连接标识，用于取消连接和保持聊天列表的 React key 稳定。 */
+  streamToken: string
+  /** 与连接记录共享同一份数据，连接就绪后继续复用。 */
+  data: ReturnType<ChatMultiSessionController['ensureSession']>
+  status: 'connecting' | 'failed'
+  error?: string
+  /** UI 使用本次提交的固定参数重试，不依赖原输入组件仍然挂载。 */
+  retry?: () => void
+}
+
+type StartCallbacks = {
+  /** 连接记录创建后同步回传 token，此时实际 gRPC 流可能尚未启动。 */
+  onLinkStart?: (streamToken: string) => void
+  /** 新会话完成正式绑定、历史会话完成首批恢复后，回传业务 ID。 */
+  onLinkSuccess?: (sessionId: string, foreground?: boolean) => void
+  /** 将未绑定会话的连接中/失败状态同步到 React。 */
+  onPendingChange?: (pending: PendingAIChat) => void
+}
+
+/** 一次 gRPC 连接的运行状态；同一历史会话每次重连都会创建新的记录。 */
+type SessionConnection = {
+  /** IPC 通道及主进程流池的 key，与后端业务 SessionId 分开。 */
+  token: string
+  /** 启动时根据 Params.Source 推导，供未完成会话的图片清理使用。 */
+  imageStoreKey: ReturnType<typeof getImageStoreKeyByAISource>
+  /** 前端在提交前固定的正式会话 ID，与连接是否就绪无关。 */
+  sessionId: string
+  /** 新会话握手后注册数据；历史会话启动时已注册。 */
+  registered: boolean
+  /** 保留启动意图和页面归属，供重试、取消及关页使用。 */
+  input: AIChatIPCStartParams
+  data: ReturnType<ChatMultiSessionController['ensureSession']>
+  callbacks?: StartCallbacks
+  /** pong 确认前暂存的事件，绑定完成后按原顺序交给业务处理器。 */
+  buffered: AIOutputEvent[]
+  /** 等待有效 pong 的超时计时器，不覆盖后续历史恢复。 */
+  timer?: ReturnType<typeof setTimeout>
+  /** 仅表示 pong 已校验通过，数据登记可能尚未结束。 */
+  confirmed: boolean
+}
+
 export class ChatMultiSessionController {
+  /** 按连接 token 保存运行记录；失败的 pending 也保留到重试或取消。 */
+  private connectionsByToken = new Map<string, SessionConnection>()
+  /** 业务操作使用 SessionId，通过此表找到当前这轮连接的 token。 */
+  private tokenBySessionId = new Map<string, string>()
+
+  /** 创建内存数据；通过回调延迟获取业务 ID，避免把临时 token 当作 IDB 的键。 */
+  private createSessionData(getSessionId: () => string | undefined) {
+    const meta = genAIAgentChatMetaData()
+    meta.lifecycle.writable = false
+    return {
+      request: cloneDeep(AIAgentSettingDefault),
+      store: createChatStore({
+        onRenderStructureChange: () => {
+          const id = getSessionId()
+          if (id) this.markSessionRenderDirty(id)
+        },
+      }),
+      rawData: genAIAgentChatData(),
+      meta,
+    }
+  }
+
+  /** 将已有数据引用登记到正式会话池；保留首问及 React 对原 store 的订阅。 */
+  private registerSessionData(sessionId: string, data: ReturnType<ChatMultiSessionController['createSessionData']>) {
+    this.requestPool.set(sessionId, data.request)
+    this.rawDataPool.set(sessionId, data.rawData)
+    this.metaPool.set(sessionId, data.meta)
+    this.sessionStores.setState(new Map(this.storePool).set(sessionId, data.store), true)
+  }
+
+  /** 用户取消时删除草稿；重试只释放旧连接，沿用草稿。 */
+  public cancelPendingConnection(token: string, options: { keepDraft?: boolean } = {}) {
+    const connection = this.connectionsByToken.get(token)
+    if (!connection) return
+    if (connection.registered) {
+      // 已登记会话的连接走正式收尾，不在这里删除会话图片。
+      this.forceCloseSession({ sessionIds: [connection.sessionId] })
+      return
+    }
+    this.stopPendingConnection(connection)
+    if (!options.keepDraft) this.discardConnectionDraft(connection)
+  }
+
+  /** Existing upload ownership remains with the current attachment store. */
+  private discardConnectionDraft(_connection: SessionConnection) {}
+
+  /** 失败时停止收发，保留记录以便之后重试、取消或关页时处理草稿。 */
+  private stopPendingConnection(connection: SessionConnection, error?: string) {
+    const { lifecycle } = connection.data.meta
+    const wasCurrent = lifecycle.current
+    lifecycle.current = false
+    lifecycle.closing = true
+    // 先让排队中的回调失效；失败保留记录，用户取消或重试则释放记录。
+    this.releaseConnection(connection, error !== undefined)
+    // 失败后再次取消只需清理草稿，避免重复取消已经停止的流。
+    if (wasCurrent) void ipcRenderer.invoke('cancel-ai-re-act', connection.token).catch(() => {})
+    connection.data.store.getState().updateState({ execute: false, initLoading: false, pendingReply: false })
+    connection.callbacks?.onPendingChange?.({
+      streamToken: connection.token,
+      data: connection.data,
+      status: 'failed',
+      error,
+    })
+  }
+
+  /** 移除计时器和 IPC 监听；keepPending 仅保留失败记录，不继续接收事件。 */
+  private releaseConnection(connection: SessionConnection, keepPending = false) {
+    if (connection.timer) clearTimeout(connection.timer)
+    for (const suffix of ['data', 'end', 'error']) ipcRenderer.removeAllListeners(`${connection.token}-${suffix}`)
+    if (!keepPending) this.connectionsByToken.delete(connection.token)
+    // 旧连接收尾时，只删除仍指向自己的映射，避免误删新一轮重连的映射。
+    if (connection.sessionId && this.tokenBySessionId.get(connection.sessionId) === connection.token) {
+      this.tokenBySessionId.delete(connection.sessionId)
+    }
+  }
+
+  /** 按是否已登记会话数据分流错误：正式会话收尾，pending 保留首问和草稿。 */
+  private failConnection(connection: SessionConnection, error: unknown) {
+    if (!connection.data.meta.lifecycle.current || connection.data.meta.lifecycle.closing) return
+    const message = error instanceof Error ? error.message : String(error)
+    if (connection.registered) this.handleSessionError(connection.sessionId, error)
+    else {
+      yakitNotify('error', message)
+      this.stopPendingConnection(connection, message)
+    }
+  }
+
+  /** 先注册本轮 token 的监听再启动流，避免遗漏主进程立即回传的事件。 */
+  private startConnection(connection: SessionConnection, params: AIInputEvent) {
+    const { token, data } = connection
+    const { lifecycle } = data.meta
+    const current = () => this.connectionsByToken.get(token) === connection && lifecycle.current && !lifecycle.closing
+    ipcRenderer.on(`${token}-data`, (_event, res: AIOutputEvent) => {
+      if (!current()) return
+      // 同一连接串行处理事件，后续事件不能越过初始化和前序事件。
+      lifecycle.events = lifecycle.events
+        .then(async () => {
+          // 正式会话关闭时排完已接收事件；pending 取消、删除或旧连接替换仍通过 current 使队列失效。
+          if (!lifecycle.current) return
+          await this.processConnectionEvent(connection, res)
+        })
+        .catch((error) => this.failConnection(connection, error))
+    })
+    ipcRenderer.on(`${token}-error`, (_event, error: unknown) => {
+      if (current()) this.failConnection(connection, error)
+    })
+    ipcRenderer.on(`${token}-end`, () => {
+      if (this.connectionsByToken.get(token) !== connection) return
+      if (connection.registered) void this.handleSessionEnd(connection.sessionId)
+      else this.failConnection(connection, new Error(tAgent('ChatSessionNotify.endedBeforeReady')))
+    })
+    lifecycle.started = true
+    // 主进程在 start 后发送初始 ping；迟迟收不到有效 pong 时退出等待状态。
+    connection.timer = setTimeout(() => {
+      this.failConnection(connection, new Error(tAgent('ChatSessionNotify.initTimeout')))
+    }, 30000)
+    return ipcRenderer.invoke('start-ai-re-act', token, params)
+  }
+
+  /** 先完成握手及业务 ID 绑定，再进入已有的会话事件处理流程。 */
+  private async processConnectionEvent(connection: SessionConnection, res: AIOutputEvent) {
+    const { data, input } = connection
+    if (connection.confirmed) {
+      const sessionId = connection.sessionId!
+      // 握手完成后的业务异常按恢复/补载状态处理，不作为传输连接失败。
+      return this.processGrpcOutputEvent(sessionId, res, data.meta).catch((error) =>
+        this.handleGrpcOutputError(sessionId, res, data.meta, error),
+      )
+    }
+
+    const id = res.SessionId?.trim()
+    // 身份已由前端固定；旧引擎可以不回传 ID，但不能返回另一个会话的 ID。
+    if (id && id !== connection.sessionId) throw new Error(tAgent('ChatSessionNotify.sessionIdMismatch'))
+    if (res.Type !== 'pong') {
+      connection.buffered.push(res)
+      return
+    }
+    connection.confirmed = true
+    if (connection.timer) clearTimeout(connection.timer)
+
+    if (input.kind === 'new') return this.initializeNewSession(connection)
+
+    // 历史会话已有正式 ID，回放后继续处理 pong，由原有流程发起历史恢复。
+    for (const event of connection.buffered.splice(0))
+      await this.processGrpcOutputEvent(connection.sessionId!, event, data.meta)
+    await this.processGrpcOutputEvent(connection.sessionId!, res, data.meta)
+  }
+
+  /** 新会话握手后登记原数据、补写 IDB，发布 UI 并发送首问。 */
+  private async initializeNewSession(connection: SessionConnection) {
+    const { data, input, sessionId } = connection
+    if (this.storePool.has(sessionId)) throw new Error(tAgent('ChatSessionNotify.sessionIdOccupied'))
+    connection.registered = true
+    this.tokenBySessionId.set(sessionId, connection.token)
+    this.registerSessionData(sessionId, data)
+    this.registerSessionChannel(sessionId, {
+      route: input.route,
+      pageId: input.pageId,
+      source: input.localSource ?? input.params.Params?.Source,
+    })
+    // 图片从上传起就在正式 ID 目录，无需复制、替换路径或删除目录。
+    // 新会话直接使用本次成功回调，不进入历史恢复完成后的回调分支。
+    data.meta.onLinkSuccess = undefined
+    data.request.TimelineSessionID = sessionId
+    // 正文与渲染树加入 IDB 写队列，不等待事务提交才发布 UI。
+    data.meta.lifecycle.writable = true
+    data.store.getState().updateState({ initLoading: false })
+    for (const item of data.rawData.contents.values()) persistIndependentItem(sessionId, item, data.meta.lifecycle)
+    void this.flushSessionRender(sessionId)
+
+    // 先发布 UI/桥接订阅，再处理缓冲事件和发送首问。
+    connection.callbacks?.onLinkSuccess?.(sessionId)
+    for (const event of connection.buffered.splice(0)) await this.processGrpcOutputEvent(sessionId, event, data.meta)
+    if (!data.meta.lifecycle.current || data.meta.lifecycle.closing) return
+    const question = data.meta.createChatQuestion
+    // 取出后清空，避免后续重复 pong 等事件再次发送首问。
+    data.meta.createChatQuestion = undefined
+    if (question) {
+      this.requestMessage(sessionId, question)
+      data.store.getState().updateCurrentLoadingTitle({ casualTitle: tAgent('AIChatLoading.waitingReply') })
+    }
+    this.handleSessionStartSuccess(sessionId, true)
+  }
+
+  /** 生成待发送的首问；消息 UUID 同时用于握手前的本地展示，与连接 token 无关。 */
+  private makeFirstQuestion(params: AIInputEvent): AIInputEvent | undefined {
+    const text = (params.Params?.UserQuery || '').trim()
+    if (!text) return
+    return {
+      IsFreeInput: true,
+      FreeInput: text,
+      FocusModeLoop: params.FocusModeLoop,
+      AttachedResourceInfo: [
+        ...(params.AttachedResourceInfo || []),
+        {
+          Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_DEFAULT,
+          Type: AttachedResourceTypeEnum.USER_FREE_INPUT_UUID,
+          Value: uuidv4(),
+        },
+      ],
+    }
+  }
+
+  /** 只更新 pending 的内存正文和渲染树，握手成功后再统一补写 IDB。 */
+  private showFirstQuestion(data: ReturnType<ChatMultiSessionController['ensureSession']>) {
+    const question = data.meta.createChatQuestion
+    if (!question) return
+    const id = question.AttachedResourceInfo?.find(
+      (item) => item.Type === AttachedResourceTypeEnum.USER_FREE_INPUT_UUID,
+    )?.Value
+    if (typeof id !== 'string' || !id) return
+    const item: AIChatQSData = {
+      id,
+      chatType: 'reAct',
+      type: AIChatQSDataTypeEnum.QUESTION,
+      Timestamp: moment().unix(),
+      data: question.FreeInput || '',
+      AIService: '',
+      AIModelName: '',
+      extraValue: { showQS: question.FreeInput || '' },
+    }
+    data.rawData.contents.set(id, item)
+    data.store
+      .getState()
+      .dispatchStreamingNode({ chatType: 'reAct', node: { token: id, kind: 'item', type: item.type } })
+  }
+
   // #region 常量定义
   /** 渲染树-element debounce 落库 IDB 延迟时间 */
   private static readonly RENDER_PERSIST_DEBOUNCE_MS = 3000
   /** cancel 后等待真实 session-end 的最长时间，超时则合成 end */
   private static readonly SESSION_END_FALLBACK_MS = 5000
-  /** 恢复会话时首屏灌入 contents 的顶层条数（两侧列表各自截取） */
-  private static readonly INITIAL_CONTENT_TOP_COUNT = 20
   /** recovery_history 单次拉取条数 */
+  private static readonly INITIAL_CONTENT_TOP_COUNT = 20
   private static readonly RECOVERY_HISTORY_LIMIT = 60
-  /** ping请求探连成功的轮询时间 */
-  private static readonly PING_POLLING_INTERVAL = 3000
+  /** 进行中会话并发上限（跨所有 Tab / source 的连接中会话数，非 Tab 数）：未登录 2、已登录 5 */
   // #endregion
 
   // #region session-source-route-pageId 索引管理相关变量和逻辑
@@ -388,6 +661,22 @@ export class ChatMultiSessionController {
     return sessionIds.filter((sessionId) => this.getSessionExecute(sessionId))
   }
 
+  /** 只读查询已登记会话或 pending（含失败待重试）的归属，不创建会话数据。 */
+  public getSessionPageId(sessionId: string, route?: YakitRouteType): string | undefined {
+    const owner = this.sessionOwnerMap.get(sessionId)
+    if (owner) return !route || owner.route === route ? owner.pageId : undefined
+    for (const connection of this.connectionsByToken.values()) {
+      if (
+        !connection.registered &&
+        connection.sessionId === sessionId &&
+        (!route || connection.input.route === route)
+      ) {
+        return connection.input.pageId
+      }
+    }
+    return undefined
+  }
+
   /**
    * 只读查询 session 是否在执行中；无内存池时返回 false，不会 ensureSession 造空池
    */
@@ -395,10 +684,7 @@ export class ChatMultiSessionController {
     return this.storePool.get(sessionId)?.getState().execute === true
   }
 
-  /**
-   * 同 route 下换绑 pageId：更新 sessionOwnerMap.pageId，从旧 PageKey 摘除、写入新 PageKey
-   * route / source 不变；newPageId 与旧相同或 session 已 dispose 则 no-op
-   */
+  /** 进行中会话并发上限：未登录 2、已登录 5 */
   public rebindSessionPageId(sessionId: string, newPageId: string) {
     const owner = this.sessionOwnerMap.get(sessionId)
     if (!owner || owner.pageId === newPageId) return
@@ -415,28 +701,47 @@ export class ChatMultiSessionController {
   public isSessionReady(sessionId: string) {
     return this.readyChannels.has(sessionId)
   }
+
+  /** 关页后的收尾窗口：连接还在，但已经在停，不能再当成一次新的建立 */
+  public isSessionClosing(sessionId: string) {
+    return !!this.metaPool.get(sessionId)?.lifecycle.closing || this.pendingDisposeSessions.has(sessionId)
+  }
+
+  /** 等这次收尾结束。已经停完则立刻返回。 */
+  public whenSessionClosed(sessionId: string): Promise<void> {
+    if (!this.isSessionReady(sessionId) && !this.isSessionClosing(sessionId)) return Promise.resolve()
+    const ending = this.metaPool.get(sessionId)?.lifecycle.ending
+    if (ending)
+      return ending.then(
+        () => undefined,
+        () => undefined,
+      )
+    return this.waitSessionEnd(sessionId)
+  }
   /**
    * 待卸池的 session：forceClose 后保留监听与业务池，等 end / 兜底超时再 teardown
    * value 为 dispose 时的 deletePersist 标记
    */
   private pendingDisposeSessions = new Map<string, boolean>()
+  /** 删除事务进行中时禁止目标 id / source 新建联，避免扫尾误删新连接缓存。 */
+  private pendingDeletes = new Set<DeleteSessionsParams>()
 
   private requestPool = new Map<string, AIStartParams>()
-  private storePool = new Map<string, ReturnType<typeof createChatStore>>()
+  /** 历史列表只订阅已注册的 store，不为尚未就绪的新会话创建占位数据。 */
+  public readonly sessionStores = createStore(() => new Map<string, ReturnType<typeof createChatStore>>())
+  private get storePool() {
+    return this.sessionStores.getState()
+  }
   private rawDataPool = new Map<string, AIAgentChatData>()
   private metaPool = new Map<string, AIAgentChatMetaData>()
+
   /** 获取对应会话的所有数据集 */
   public ensureSession(sessionId: string) {
     if (!this.storePool.has(sessionId)) {
-      this.storePool.set(
+      this.registerSessionData(
         sessionId,
-        createChatStore({
-          onRenderStructureChange: () => this.markSessionRenderDirty(sessionId),
-        }),
+        this.createSessionData(() => sessionId),
       )
-      this.rawDataPool.set(sessionId, genAIAgentChatData())
-      this.requestPool.set(sessionId, cloneDeep(AIAgentSettingDefault))
-      this.metaPool.set(sessionId, genAIAgentChatMetaData())
     }
     return {
       request: this.requestPool.get(sessionId)!,
@@ -466,15 +771,16 @@ export class ChatMultiSessionController {
     return this.activeShowSession === sessionId
   }
 
-  // #region IndexedDB 持久化门面（薄封装 aiChatPersistStore，错误兜底不抛穿 UI）
+  // #region IndexedDB 持久化门面（读失败兜底，写失败记录并由收尾反馈）
   /**
    * sessionRender 写串行链：同一 session 的渲染树写排队执行。
    * 作用有二：
-   *  1. 保证 hydrate 快照写与随后的流式 flush 写不并发交叠（后写覆盖先写语义成立）
+   *  1. 保证历史恢复快照与随后的流式 flush 按入队顺序提交
    *  2. teardownDisposedSession 删除 IDB 前 drainRenderWrites 排干在飞写，
    *     避免 delete 后迟到的 put 又写回孤儿行
    */
   private renderWriteChains = new Map<string, Promise<unknown>>()
+  /** 同一会话的树写入串行执行，任务 Promise 覆盖完整 IDB 事务。 */
   private enqueueRenderWrite(sessionId: string, task: () => Promise<unknown>): Promise<unknown> {
     const next = (this.renderWriteChains.get(sessionId) || Promise.resolve()).then(task, task)
     this.renderWriteChains.set(sessionId, next)
@@ -485,7 +791,7 @@ export class ChatMultiSessionController {
     })
     return next
   }
-  /** 排干该 session 所有在飞的渲染树写；resolve 时链已排空 */
+  /** 等待当前树写队列；调用方先停止旧任务追加写入 */
   private drainRenderWrites(sessionId: string): Promise<unknown> {
     return this.renderWriteChains.get(sessionId)?.catch(() => {}) || Promise.resolve()
   }
@@ -501,18 +807,24 @@ export class ChatMultiSessionController {
     content: SessionRenderContent,
     grpcOffset?: number,
   ): Promise<unknown> {
-    // 显式删库窗口：禁止再写，避免与 dispose drain / by-source 扫尾竞态
-    if (this.pendingDisposeSessions.get(sessionId) === true) return Promise.resolve()
-
-    // 同步计算 offset / source 并闭包捕获，避免 enqueue 后 session 被 teardown 导致取不到
+    const lifecycle = this.metaPool.get(sessionId)?.lifecycle
+    if (!lifecycle?.current || !lifecycle.writable || this.pendingDisposeSessions.get(sessionId) === true) {
+      return Promise.resolve()
+    }
+    // 入队时捕获 source / offset 和连接身份，不能在旧任务执行时读取新连接。
     const offset = grpcOffset ?? this.rawDataPool.get(sessionId)?.grpcOffset ?? 0
     const source = this.resolvePersistSource(sessionId)
-    return this.enqueueRenderWrite(sessionId, () =>
-      aiChatPersistStore.setSessionRender(sessionId, source, content, offset).catch(() => {
-        // 持久化失败不打断主流程
-      }),
-    )
+    return this.enqueueRenderWrite(sessionId, async () => {
+      if (!lifecycle.current) return
+      try {
+        await aiChatPersistStore.setSessionRender(sessionId, source, content, offset)
+      } catch (error) {
+        lifecycle.error ??= error
+        console.error('AI session render write failed', error)
+      }
+    })
   }
+
   /** 获取会话渲染树和grpcOffset */
   private async persistGetSessionRender(sessionId: string) {
     try {
@@ -525,7 +837,9 @@ export class ChatMultiSessionController {
   /** 按 token 列表批量获取会话消息内容 */
   public async persistGetSessionContents(sessionId: string, tokens: string[]) {
     try {
-      return await aiChatPersistStore.getSessionContents(sessionId, tokens)
+      const lifecycle = this.metaPool.get(sessionId)?.lifecycle
+      const rows = await aiChatPersistStore.getSessionContents(sessionId, tokens)
+      return lifecycle?.current ? rows : []
     } catch {
       return []
     }
@@ -534,40 +848,29 @@ export class ChatMultiSessionController {
   /** 按 token 列表批量获取会话参考资料（按落库时间正序） */
   public async getSessionReferenceMaterials(sessionId: string, tokens: string[]) {
     try {
-      return await aiChatPersistStore.getSessionReferences(sessionId, tokens)
+      const lifecycle = this.metaPool.get(sessionId)?.lifecycle
+      const rows = await aiChatPersistStore.getSessionReferences(sessionId, tokens)
+      return lifecycle?.current ? rows : []
     } catch {
       return []
     }
   }
 
-  /** 按 source 清除该来源下所有 session 的持久化数据 */
-  public async persistDeleteBySource(source: DeleteSessionsAISourceType) {
-    try {
-      await aiChatPersistStore.deletePersistBySource(source)
-    } catch {
-      // 持久化失败不打断主流程
-    }
+  /** 按来源清理缓存；将事务失败交给删除流程处理，不能误报删除成功。 */
+  public persistDeleteBySource(source: DeleteSessionsAISourceType) {
+    return aiChatPersistStore.deletePersistBySource(source)
   }
 
-  /** 清空三表全部持久化数据 */
-  public async persistDeleteAll() {
-    try {
-      await aiChatPersistStore.deleteAllPersist()
-    } catch {
-      // 持久化失败不打断主流程
-    }
+  /** 清空三表缓存，等待事务提交。 */
+  public persistDeleteAll() {
+    return aiChatPersistStore.deleteAllPersist()
   }
 
-  /**
-   * 将渲染树写入 chatStore，并批量灌回首屏 contents。
-   * @param content 优先用 start 时暂存的树；未传则再读 IDB 整行
-   *
-   * 注意：必须先把 contents 灌进 Map，再 hydrate 渲染树。
-   * UI（StaticChatContent 等）靠 renderNum 订阅，rawData.contents 原地 set 不会触发重渲染；
-   * 若先 hydrate，组件会在 contents 仍空时读一次并卡住空白。
-   * 任务规划树不走本方法，由 handleSessionStartSuccess 的 PLAN_EXEC_TASKS sync 拉取。
-   */
-  private async loadSessionRenderToMemory(sessionId: string, content?: SessionRenderContent) {
+  private async loadSessionRenderToMemory(
+    sessionId: string,
+    content?: SessionRenderContent,
+    lifecycle = this.metaPool.get(sessionId)?.lifecycle,
+  ) {
     let tree = content
     if (!tree) {
       const row = await this.persistGetSessionRender(sessionId)
@@ -575,11 +878,13 @@ export class ChatMultiSessionController {
     }
     if (!hasSessionRenderTree(tree)) return false
 
+    if (!lifecycle?.current || lifecycle.closing || !this.storePool.has(sessionId)) return false
     const { store, rawData } = this.ensureSession(sessionId)
 
     const tokens = collectTopLevelContentTokens(tree!, ChatMultiSessionController.INITIAL_CONTENT_TOP_COUNT)
     if (tokens.length) {
       const rows = await this.persistGetSessionContents(sessionId, tokens)
+      if (!lifecycle.current || lifecycle.closing) return false
       for (const row of rows) {
         applyHydratedStageSettled(row.content)
         rawData.contents.set(row.token, row.content)
@@ -620,12 +925,13 @@ export class ChatMultiSessionController {
   /** chatStore.dispatchStreamingNode触发后防抖3s，无新变更再写入 sessionRender */
   private markSessionRenderDirty(sessionId: string) {
     // 已进入卸池流程：禁止再入内存，避免覆盖 dispose 时已 flush 的 IDB
-    if (this.pendingDisposeSessions.has(sessionId)) return
+    const lifecycle = this.metaPool.get(sessionId)?.lifecycle
+    if (!lifecycle?.current || !lifecycle.writable || this.pendingDisposeSessions.has(sessionId)) return
 
     this.clearSessionRenderPersistTimer(sessionId)
     const timer = setTimeout(() => {
       // 到期后统一走 flush：摘 timer、清 dirty、写 IDB（外部强制 flush 也走同一套）
-      this.flushSessionRender(sessionId)
+      if (lifecycle.current) void this.flushSessionRender(sessionId)
     }, ChatMultiSessionController.RENDER_PERSIST_DEBOUNCE_MS)
     this.renderPersistTimers.set(sessionId, timer)
   }
@@ -636,7 +942,7 @@ export class ChatMultiSessionController {
 
     const store = this.storePool.get(sessionId)
     const rawData = this.rawDataPool.get(sessionId)
-    if (!store || !rawData) return
+    if (!store || !rawData) return Promise.resolve()
     const state = store.getState()
     const content: SessionRenderContent = {
       items: { ...state.items },
@@ -644,13 +950,12 @@ export class ChatMultiSessionController {
       tasks: { ...state.tasks },
       chatElements: [...state.chatElements],
     }
-    void this.persistSetSessionRender(sessionId, content, rawData.grpcOffset)
+    return this.persistSetSessionRender(sessionId, content, rawData.grpcOffset)
   }
   // #endregion
 
   /**
-   * 无 UserQuery 建连进入恢复态：initLoading 为 true，
-   * 待 hydrate / recovery_history 结束后再关
+   * 建联统一进入恢复态，首批 gRPC 历史及其持久化完成后再结束 loading。
    */
   private sessionRestoreLoading = new Set<string>()
 
@@ -660,32 +965,29 @@ export class ChatMultiSessionController {
    */
   private sessionEndFallbackTimers = new Map<string, ReturnType<typeof setTimeout>>()
   /** 等待 session-end 的调用方；同一会话可被多个流程同时等待 */
-  private sessionEndWaiters = new Map<string, Set<() => void>>()
+  private sessionEndWaiters = new Map<string, Set<(error?: unknown) => void>>()
 
   /** 唤醒等待指定 session-end 的所有调用方 */
-  private resolveSessionEndWaiters(sessionId: string) {
+  private resolveSessionEndWaiters(sessionId: string, error?: unknown) {
     const waiters = this.sessionEndWaiters.get(sessionId)
     if (!waiters) return
     this.sessionEndWaiters.delete(sessionId)
-    waiters.forEach((resolve) => resolve())
+    waiters.forEach((settle) => settle(error))
   }
 
   /** 等待指定 session 的 end / dispose teardown 完成 */
   private waitSessionEnd(sessionId: string): Promise<void> {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       let waiters = this.sessionEndWaiters.get(sessionId)
       if (!waiters) {
         waiters = new Set()
         this.sessionEndWaiters.set(sessionId, waiters)
       }
-      waiters.add(resolve)
+      waiters.add((error) => (error ? reject(error) : resolve()))
     })
   }
 
-  /**
-   * 停止仍在执行的会话，并等待真实 session-end 或 fallback 完成。
-   * 无执行态会话时立即完成；所有 cancel 并发发出，等待上限不叠加。
-   */
+  /** 取消已有的 session-end 兜底定时器 */
   public async stopExecutingSessionsAndWait(sessionIds: string[]): Promise<void> {
     const executingSessionIds = [...new Set(this.filterExecutingSessionIds(sessionIds))]
     if (!executingSessionIds.length) return
@@ -698,7 +1000,7 @@ export class ChatMultiSessionController {
             waiters = new Set()
             this.sessionEndWaiters.set(sessionId, waiters)
           }
-          waiters.add(resolve)
+          waiters.add(() => resolve())
         }),
     )
 
@@ -706,7 +1008,6 @@ export class ChatMultiSessionController {
     await Promise.all(waitForEnd)
   }
 
-  /** 取消已有的 session-end 兜底定时器 */
   private clearSessionEndFallback(sessionId: string) {
     const timer = this.sessionEndFallbackTimers.get(sessionId)
     if (!timer) return
@@ -715,13 +1016,16 @@ export class ChatMultiSessionController {
   }
 
   /**
-   * 建立会话时，获取grpc库中最新数据ID和IDB里的数据
-   * 对齐offset，设置出最新的grpcOffset数据
-   * 将IDB里渲染树(element)暂存, 供 pong 后 hydrate。
-   * 不依赖会话 gRPC 已连通。
+   * 建联准备：旧写入结束 → 读取兼容缓存与事件游标 → 开启新写入。
+   * 保留本地已有历史，不在重连时清空三表。
    */
-  private async prepareSessionPersistBeforeStart(sessionId: string) {
-    const { rawData, meta } = this.ensureSession(sessionId)
+  private async prepareSessionPersistBeforeStart(sessionId: string, meta: AIAgentChatMetaData) {
+    const { lifecycle } = meta
+    await Promise.all([this.drainRenderWrites(sessionId), drainSessionContentWrites(sessionId)])
+    if (!lifecycle.current || lifecycle.closing) return
+    const rawData = this.rawDataPool.get(sessionId)
+    if (!rawData) return
+    lifecycle.writable = true
 
     try {
       const [eventRes, row] = await Promise.all([
@@ -735,6 +1039,7 @@ export class ChatMultiSessionController {
         this.persistGetSessionRender(sessionId),
       ])
 
+      if (!lifecycle.current || lifecycle.closing) return
       const latestId = eventRes?.Events?.[0]?.ID ?? 0
       const final = row?.grpcOffset !== undefined && row.grpcOffset !== null ? row.grpcOffset : latestId
       rawData.grpcOffset = final
@@ -745,151 +1050,160 @@ export class ChatMultiSessionController {
         meta.pendingSessionRender = undefined
       }
     } catch {
+      if (!lifecycle.current || lifecycle.closing) return
       rawData.grpcOffset = rawData.grpcOffset || 0
       meta.pendingSessionRender = undefined
     }
   }
 
   /**
-   * 建立指定 session 连接（新会话首问 / 打开历史 / 无问侧重连 共用）。
-   * 调用方应先用 isSessionReady 判重并挂好 IPC 监听，再调本方法（prepare 异步，invoke 晚于监听）。
-   * - 有 UserQuery：立刻上屏首问，pong 后发问；无树时不强制 recovery_history
-   * - 无 UserQuery：视为恢复态，置 initLoading，pong 后 hydrate 或发 recovery_history
-   * @returns 是否真正发起了建连
+   * 新建：先显示 pending 首问，握手成功后登记并发送。
+   * 重连：使用已有 ID，读取本地缓存并完成首批历史恢复后再发送。
+   * 同步返回本轮 streamToken；参数无效、删除中或重复连接时返回 false。
    */
-  public handleStartSession(
-    requestParams: AIChatIPCStartParams,
-    cb?: {
-      /** 会话建联开始的回调事件 */
-      onLinkStart?: (sessionId: string) => void
-      /** 会话建联成功后的回调事件 */
-      onLinkSuccess?: (sessionId: string) => void
-    },
-  ): boolean {
-    const { token: sessionId, params: inputParams, route, pageId, localSource } = requestParams
-    const params = { ...inputParams, Params: withServerRuntimeContextLimit(inputParams.Params || {}) }
-    if (this.readyChannels.has(sessionId)) {
-      yakitNotify('warning', '会话已经存在，请勿重复建立！')
+  public handleStartSession(requestParams: AIChatIPCStartParams, cb?: StartCallbacks): string | false {
+    const sessionId = (requestParams.sessionId ?? requestParams.token ?? '').trim()
+    const kind =
+      requestParams.kind ??
+      ((requestParams.params.Params?.UserQuery || '').trim() && !this.storePool.has(sessionId) ? 'new' : 'resume')
+    requestParams = { ...requestParams, sessionId, kind }
+    const { params, route, pageId, localSource } = requestParams
+    // 由 kind 明确区分新旧会话，避免配置中残留的 ID 将新建误判为重连。
+    if (!sessionId) return false
+    // 同一个新建请求的身份在握手前也已知，禁止历史恢复抢占或重复创建。
+    const pending = [...this.connectionsByToken.values()].find(
+      (item) => !item.registered && item.sessionId === sessionId,
+    )
+    if (pending) return false
+    if (kind === 'new' && this.storePool.has(sessionId)) return false
+    const source = localSource ?? params.Params?.Source ?? AISourceEnum.aiAgent
+    if (
+      [...this.pendingDeletes].some(
+        (item) =>
+          item.deleteAll ||
+          (item.sessionIds?.length
+            ? !!sessionId && item.sessionIds.includes(sessionId)
+            : item.source?.includes(source)),
+      )
+    ) {
+      yakitNotify('warning', tAgent('ChatSessionNotify.cacheDeleting'))
       return false
     }
-
-    this.registerSessionChannel(sessionId, {
-      route,
-      pageId,
-      // localSource 仅本地索引用（IM 按平台区分 im-Lark/im-DingTalk）；缺省回退 Params.Source
-      source: localSource ?? params.Params?.Source,
-    })
-
-    const { request, store, rawData, meta } = this.ensureSession(sessionId)
-    // 该行最好放在上面一行的后面，因为ensureSession方法初始化了session的数据环境
-    // 如果放到上行的前面，可能导致onLinkStart引起的UI变化，无法拿到对应session的数据环境
-    cb?.onLinkStart?.(sessionId)
-    const userQuery = (params.Params?.UserQuery || '').trim()
-
-    // 恢复态：遮罩防止 hydrate / recovery 期间误点（UI 订阅 store.initLoading）
-    if (userQuery) {
-      store.getState().updateState({
-        execute: true,
-        currentLoadingTitle: { casualTitle: '会话初始化中...', planTitle: '' },
-      })
-    } else {
-      store.getState().updateState({
-        execute: true,
-        initLoading: true,
-        currentLoadingTitle: { casualTitle: '获取历史数据中...', planTitle: '' },
-      })
+    if (sessionId && this.readyChannels.has(sessionId)) {
+      if (this.isSessionClosing(sessionId)) return false
+      if (pageId) this.rebindSessionPageId(sessionId, pageId)
+      return this.tokenBySessionId.get(sessionId) || false
+    }
+    // 每一轮连接都有独立 token；历史重连保留业务 ID，但不复用旧 IPC 通道。
+    const token = uuidv4()
+    let connection: SessionConnection
+    // 新会话先独立创建数据，不以 token 注册到正式会话池。
+    const data =
+      kind === 'resume'
+        ? this.ensureSession(sessionId)
+        : this.createSessionData(() => (connection?.registered ? sessionId : undefined))
+    if (kind === 'resume') {
+      // 重连复用 store、替换生命周期，让旧回调和未提交的旧写入失效。
+      data.meta.lifecycle.current = false
+      this.closeSessionTimers(data.meta)
+      this.clearSessionRenderPersistTimer(sessionId)
+      clearThoughtDurationCache(sessionId)
+      data.meta = genAIAgentChatMetaData()
+      this.metaPool.set(sessionId, data.meta)
+      this.registerSessionChannel(sessionId, { route, pageId, source })
+      this.tokenBySessionId.set(sessionId, token)
       this.sessionRestoreLoading.add(sessionId)
+      this.setActiveShowSession(sessionId)
     }
-
-    this.setActiveShowSession(sessionId)
-
-    Object.assign(request, params.Params)
-    if (userQuery) {
-      // 判断建立grpc连接时是否附带问题
-      // 如有，需要剥离出来，在grpc建立成功后再执行
-      const chatID = uuidv4()
-
-      const AttachedResourceInfos = params.AttachedResourceInfo || []
-      AttachedResourceInfos.push({
-        Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_DEFAULT,
-        Type: AttachedResourceTypeEnum.USER_FREE_INPUT_UUID,
-        Value: chatID,
-      })
-
-      meta.createChatQuestion = {
-        IsFreeInput: true,
-        FreeInput: userQuery,
-        AttachedResourceInfo: AttachedResourceInfos,
-        FocusModeLoop: params.FocusModeLoop,
-      }
-
-      // 用户问了问题后，立即显示到UI上
-      // 问题对应的re_act_task_id先由前端生成，并发送给后端
-      // 后续生成re_act_task_id时，会把前端生成的uuid替换为后端生成的re_act_task_id
-      const chatData: AIChatQSData = {
-        id: chatID,
-        chatType: 'reAct',
-        type: AIChatQSDataTypeEnum.QUESTION,
-        Timestamp: moment().unix(),
-        data: userQuery,
-        AIService: '',
-        AIModelName: '',
-        // showQS为了UI渲染方便，重新构建的字段
-        extraValue: { showQS: userQuery },
-      }
-      rawData.contents.set(chatData.id, chatData)
-      persistIndependentItem(sessionId, chatData)
-      store.getState().dispatchStreamingNode({
-        chatType: 'reAct',
-        node: {
-          token: chatData.id,
-          kind: 'item',
-          type: chatData.type,
-        },
-      })
-    }
-    meta.onLinkSuccess = cb?.onLinkSuccess
-
-    // 读 IDB + 查最新事件 id（不依赖本会话流），完成后再 IPC start
-    void this.prepareSessionPersistBeforeStart(sessionId).finally(() => {
-      ipcRenderer.invoke('start-ai-re-act', sessionId, params)
-
-      // 建立会话连接时，在主进程进行了一次ping请求
-      // 如果五秒没有返回pong消息，则再次进行ping请求
-      if (meta.pingTimer) clearInterval(meta.pingTimer)
-      meta.pingTimer = setInterval(() => {
-        meta.pingSyncID = uuidv4()
-        this.requestMessage(sessionId, {
-          IsSyncMessage: true,
-          SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PING,
-          SyncID: meta.pingSyncID,
-        })
-      }, ChatMultiSessionController.PING_POLLING_INTERVAL)
+    // 清理本次启动参数，避免修改调用方保留的重试入参。
+    const startParams = cloneDeep(params)
+    startParams.IsStart = true
+    startParams.Params = withServerRuntimeContextLimit({
+      ...startParams.Params,
+      TimelineSessionID: sessionId,
     })
-    return true
+    if (kind === 'new') {
+      // 新建使用前端的新 ID，不继承历史缓存配置。
+      startParams.Params.Attach = false
+      startParams.Params.PreferSessionCachedConfig = false
+    }
+    Object.assign(data.request, startParams.Params)
+    data.meta.lifecycle.writable = false
+    data.meta.createChatQuestion = this.makeFirstQuestion(startParams)
+    data.meta.onLinkSuccess = cb?.onLinkSuccess
+    data.store.getState().updateState({
+      execute: true,
+      initLoading: kind === 'resume',
+      pendingReply: !!data.meta.createChatQuestion,
+    })
+    connection = {
+      registered: kind === 'resume',
+      token,
+      sessionId,
+      // 图片目录按协议 Source 映射；localSource 仅用于本地归属索引。
+      imageStoreKey: getImageStoreKeyByAISource(startParams.Params.Source || AISourceEnum.aiAgent),
+      input: requestParams,
+      data,
+      callbacks: cb,
+      buffered: [],
+      confirmed: false,
+    }
+    this.connectionsByToken.set(token, connection)
+    if (kind === 'new') {
+      // 同步发布首问及连接中状态，握手成功后再登记到正式会话池。
+      this.showFirstQuestion(data)
+      data.store.getState().updateCurrentLoadingTitle({ casualTitle: tAgent('AIChatLoading.connectingSession') })
+      cb?.onPendingChange?.({
+        streamToken: token,
+        data,
+        status: 'connecting',
+      })
+    }
+    cb?.onLinkStart?.(token)
+    const { lifecycle } = data.meta
+    // 历史重连等待旧写队列并读取缓存；新会话直接建联。
+    lifecycle.preparation = (
+      kind === 'resume' ? this.prepareSessionPersistBeforeStart(sessionId, data.meta) : Promise.resolve()
+    )
+      .then(() => {
+        if (!lifecycle.current || lifecycle.closing) return
+        return this.startConnection(connection, startParams)
+      })
+      .catch((error) => this.failConnection(connection, error))
+    return token
   }
 
-  /** 主动向grpc发送请求 */
+  /** 初始化失败停止连接并释放占位，保留可见问题供用户重试。 */
+  private failSessionStart(sessionId: string, error: unknown) {
+    yakitNotify('error', tAgent('ChatSessionNotify.initFailed', { error: formatNotifyError(error) }))
+    this.finishSessionRestoreLoading(sessionId)
+    this.storePool.get(sessionId)?.getState().updateState({ initLoading: false, grpcLoadMoreLoading: false })
+    this.forceCloseSession({ sessionIds: [sessionId] })
+  }
+
+  /** 主动向grpc发送请求；达并发上限时返回 false，不改动当前会话内容 */
   public handleSendMessage(payload: AIChatSendParams): boolean {
     // console.log('handleSendMessage', payload)
     try {
       const { token, type, params, optionValue } = payload
+      // 只读同步查询（如弹窗打开时拉取用量）没有用户输入，守卫拦截时不应弹出面向发送操作的警告
+      const readonlySyncQuery = !!params.IsSyncMessage && isReadonlySyncQuery(params.SyncType)
       if (!this.readyChannels.has(token)) {
-        if (!this.isActiveShowSession(token)) return false
-        yakitNotify('warning', '会话不存在，无法发送消息')
+        if (!this.isActiveShowSession(token) || readonlySyncQuery) return false
+        yakitNotify('warning', tAgent('ChatSessionNotify.sessionMissing'))
         return false
       }
 
       const { store, rawData, meta } = this.ensureSession(token)
 
       // 向上加载历史（recovery_history）进行中时禁止发送消息，避免与 gRPC 查询并发导致后端表死锁
-      if (store.getState().grpcLoadMoreLoading) {
-        yakitNotify('warning', '历史消息加载中，请稍后再发送')
+      // 同步/热更新是 UI 自动触发的（如重开会话恢复 setting 时的配置热补丁），静默丢弃不提示
+      if (meta.lifecycle.closing || store.getState().initLoading || store.getState().grpcLoadMoreLoading) {
+        if (!params.IsSyncMessage && !params.IsConfigHotpatch) {
+          yakitNotify('warning', tAgent('ChatSessionNotify.historyLoading'))
+        }
         return false
       }
-
-      // 恢复尚未完成时不提交热补丁，也不让 UI 把未发送的值记成会话配置。
-      if (params.IsConfigHotpatch && store.getState().initLoading) return false
 
       if (params.IsFreeInput) {
         const { currentChatStatus } = store.getState()
@@ -898,7 +1212,10 @@ export class ChatMultiSessionController {
 
         if (isCasualIdle) {
           // 自由对话没有问题进行中时，才改变loading的title
-          store.getState().updateState({ currentLoadingTitle: { casualTitle: '等待AI回复...', planTitle: '' } })
+          store.getState().updateState({
+            pendingReply: true,
+            currentLoadingTitle: { casualTitle: tAgent('AIChatLoading.waitingReply'), planTitle: '' },
+          })
 
           const chatID = uuidv4()
           const AttachedResourceInfos = params.AttachedResourceInfo || []
@@ -920,7 +1237,7 @@ export class ChatMultiSessionController {
             extraValue: { showQS: params.FreeInput || '' },
           }
           rawData.contents.set(chatData.id, chatData)
-          persistIndependentItem(token, chatData)
+          persistIndependentItem(token, chatData, meta.lifecycle)
           store.getState().dispatchStreamingNode({
             chatType: 'reAct',
             node: {
@@ -935,6 +1252,7 @@ export class ChatMultiSessionController {
         if (!meta.queuePollingTimer) {
           meta.queuePollingEmptyCount = 0
           meta.queuePollingTimer = setInterval(() => {
+            if (!meta.lifecycle.current || meta.lifecycle.closing) return
             this.requestMessage(token, {
               IsSyncMessage: true,
               SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_QUEUE_INFO,
@@ -974,11 +1292,12 @@ export class ChatMultiSessionController {
 
       switch (type) {
         case 'casual':
+        case 'reAct':
           if (params.IsInteractiveMessage && params.InteractiveId) {
             const isExist = store.getState().currentReviewDetail.token === params.InteractiveId
             const review = rawData.contents.get(params.InteractiveId)
             if (!isExist || !review) {
-              yakitNotify('error', '未获取到 review 信息, 操作无效')
+              yakitNotify('error', tAgent('ChatSessionNotify.reviewMissing'))
               return false
             }
 
@@ -1007,7 +1326,7 @@ export class ChatMultiSessionController {
             const isExist = store.getState().currentReviewDetail.token === params.InteractiveId
             const review = rawData.contents.get(params.InteractiveId)
             if (!isExist || !review) {
-              yakitNotify('error', '未获取到 review 信息, 操作无效')
+              yakitNotify('error', tAgent('ChatSessionNotify.reviewMissing'))
               return false
             }
 
@@ -1066,16 +1385,25 @@ export class ChatMultiSessionController {
   /** 向连接中的会话发送请求 */
   private requestMessage(sessionId: string, request: AIInputEvent) {
     // console.log('requestMessage', sessionId, request)
-    ipcRenderer.invoke('send-ai-re-act', sessionId, request)
+    const lifecycle = this.metaPool.get(sessionId)?.lifecycle
+    if (!lifecycle?.current || lifecycle.closing || !lifecycle.started) return
+    // 业务层始终传 SessionId，只有操作主进程流池时才转换为本轮 token。
+    void ipcRenderer.invoke('send-ai-re-act', this.tokenBySessionId.get(sessionId), request).catch((error) => {
+      if (!lifecycle.current || lifecycle.closing) return
+      lifecycle.error ??= error
+      this.handleSessionError(sessionId, error)
+    })
   }
 
-  /** 发 recovery_history 拉更旧事件（grpcOffset 为起点，向前回溯 RECOVERY_HISTORY_LIMIT 条） */
-  public requestRecoveryHistory(sessionId: string) {
+  /** 拉取更旧事件；仅可发送时开启 loading，返回是否发起请求，供列表释放前插标记。 */
+  public requestRecoveryHistory(sessionId: string): boolean {
+    const lifecycle = this.metaPool.get(sessionId)?.lifecycle
+    // 关闭后仍可浏览已加载内容，但不能等待一个不会发出的历史请求。
+    if (!lifecycle?.current || lifecycle.closing || !lifecycle.started) return false
     const { store, rawData } = this.ensureSession(sessionId)
-    const initLoading = store.getState().initLoading
     const grpcLoadMoreLoading = store.getState().grpcLoadMoreLoading
-    if (!initLoading && grpcLoadMoreLoading) return
-    if (!initLoading && !grpcLoadMoreLoading) store.getState().updateState({ grpcLoadMoreLoading: true })
+    if (grpcLoadMoreLoading) return false
+    store.getState().updateState({ grpcLoadMoreLoading: true })
     this.requestMessage(sessionId, {
       IsSyncMessage: true,
       SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_RECOVERY_HISTORY,
@@ -1084,6 +1412,7 @@ export class ChatMultiSessionController {
         limit: ChatMultiSessionController.RECOVERY_HISTORY_LIMIT,
       }),
     })
+    return true
   }
 
   /** timeline 历史单次拉取条数 */
@@ -1094,10 +1423,22 @@ export class ChatMultiSessionController {
    * 拉回后 reverse 为时间正序，前插到 store.reActTimelines；更新 timelineBeforeId 游标。
    * @returns 是否还有更旧历史（Events.length === LIMIT）
    */
-  public async loadTimelineHistory(sessionId: string): Promise<boolean> {
-    const { rawData, store } = this.ensureSession(sessionId)
+  public async loadTimelineHistory(sessionId: string, refresh = false): Promise<boolean> {
+    const { rawData, store, meta } = this.ensureSession(sessionId)
+    const previousTimeline = refresh
+      ? {
+          items: store.getState().reActTimelines,
+          beforeId: rawData.timelineBeforeId,
+          noMore: rawData.timelineNoMore,
+        }
+      : undefined
     // 置 loading（驱动 TimelineCard 的 YakitSpin）；与 finally 一致用 store.getState() 取最新
     store.getState().updateState({ timelinesLoading: true })
+    if (refresh) {
+      rawData.timelineBeforeId = 0
+      rawData.timelineNoMore = false
+      store.setState({ reActTimelines: [] })
+    }
     try {
       const request: AIEventQueryRequest = {
         Filter: { SessionID: sessionId, NodeId: ['timeline_item'] },
@@ -1112,6 +1453,7 @@ export class ChatMultiSessionController {
         request.Pagination!.BeforeId = rawData.timelineBeforeId
       }
       const { Events, Total } = await grpcQueryAIEvent(request, true)
+      if (!meta.lifecycle.current) return false
       if (Number(Total) === 0) {
         // 已到最旧，置尽头标记，避免 hasMoreTimeline 误判导致无限空查询
         rawData.timelineNoMore = true
@@ -1133,9 +1475,15 @@ export class ChatMultiSessionController {
       if (!hasMore) rawData.timelineNoMore = true
       return hasMore
     } catch {
+      if (previousTimeline && meta.lifecycle.current) {
+        rawData.timelineBeforeId = previousTimeline.beforeId
+        rawData.timelineNoMore = previousTimeline.noMore
+        store.getState().setReActTimelines(previousTimeline.items)
+        yakitNotify('error', tAgent('AIRightPanel.timelineRefreshFailed'))
+      }
       return false
     } finally {
-      store.getState().updateState({ timelinesLoading: false })
+      if (meta.lifecycle.current) store.getState().updateState({ timelinesLoading: false })
     }
   }
 
@@ -1150,13 +1498,14 @@ export class ChatMultiSessionController {
    * 按 path 去重合并到 store.grpcFolders。无分页。
    */
   public async loadFileSystemHistory(sessionId: string) {
-    const { store } = this.ensureSession(sessionId)
+    const { store, meta } = this.ensureSession(sessionId)
     try {
       const request: AIEventQueryRequest = {
         Filter: { SessionID: sessionId, EventType: ['filesystem_pin_directory', 'filesystem_pin_filename'] },
         Pagination: { Page: 1, Limit: -1, OrderBy: 'created_at', Order: 'desc' },
       }
       const { Events, Total } = await grpcQueryAIEvent(request, true)
+      if (!meta.lifecycle.current) return false
       if (Total === 0) return
 
       const files: AIFileSystemPin[] = Events.map((item) => {
@@ -1174,56 +1523,100 @@ export class ChatMultiSessionController {
   }
 
   /** 会话建立成功后, 需要做的额外操作 */
-  private handleSessionStartSuccess(sessionId: string) {
-    const { store, meta } = this.ensureSession(sessionId)
+  private handleSessionStartSuccess(sessionId: string, isNew = false) {
+    const { meta } = this.ensureSession(sessionId)
 
-    // 获取任务规划历史任务树
+    // 新会话跳过启动时的规划历史查询；后续任务事件仍可触发实时同步。
+    if (!isNew)
+      this.requestMessage(sessionId, {
+        IsSyncMessage: true,
+        SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN_EXEC_TASKS,
+      })
+
+    // 新旧会话都需要当前状态，快照、记忆和队列同步不属于历史恢复。
+    // 会话流建立且 pong 校验通过后，通知后端做一次会话快照同步
     this.requestMessage(sessionId, {
       IsSyncMessage: true,
-      SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN_EXEC_TASKS,
+      SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_SESSION_SNAPSHOT_SYNC,
+    })
+
+    this.requestMessage(sessionId, {
+      IsSyncMessage: true,
+      SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_SKILL_LOADED,
+      SyncID: uuidv4(),
+    })
+
+    this.requestMessage(sessionId, {
+      IsSyncMessage: true,
+      SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_SKILL_AVAILABLE,
+      SyncID: uuidv4(),
+      SyncJsonInput: JSON.stringify({ page: 1, page_size: DEFAULT_SKILL_PAGE_SIZE }),
     })
 
     // 获取最新记忆列表数据, 并注册轮询定时器
     this.requestMessage(sessionId, { IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_MEMORY_CONTEXT })
     if (meta.memoryPollingTimer) clearInterval(meta.memoryPollingTimer)
     meta.memoryPollingTimer = setInterval(() => {
+      if (!meta.lifecycle.current || meta.lifecycle.closing) return
       this.requestMessage(sessionId, {
         IsSyncMessage: true,
         SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_MEMORY_CONTEXT,
       })
     }, 5000)
 
-    // 如果任务规划运行态有数据，则置空
-    store.getState().updateState({
-      currentChatStatus: cloneDeep(DefaultAgentChatStatus),
-      currentLoadingTitle: cloneDeep(DefaultAgentLoadingTitle),
+    // dequeue 是实时边沿事件，后端创建的任务可能在本次建连前已经出队。
+    // 建连后立即查询 queue_info，并短期轮询以恢复 current_task 与等待队列快照。
+    this.requestMessage(sessionId, {
+      IsSyncMessage: true,
+      SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_QUEUE_INFO,
     })
+    if (meta.queuePollingTimer) clearInterval(meta.queuePollingTimer)
+    meta.queuePollingEmptyCount = 0
+    meta.queuePollingTimer = setInterval(() => {
+      if (!meta.lifecycle.current || meta.lifecycle.closing) return
+      this.requestMessage(sessionId, {
+        IsSyncMessage: true,
+        SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_QUEUE_INFO,
+      })
+    }, 5000)
 
-    // 拉取 timeline 历史（首批）+ 文件系统历史（全量），不阻塞建连主流程
-    void this.loadTimelineHistory(sessionId)
-    void this.loadFileSystemHistory(sessionId)
+    // 仅重连拉取 timeline 历史和文件系统历史；新会话等待实时事件即可。
+    if (!isNew) {
+      void this.loadTimelineHistory(sessionId)
+      void this.loadFileSystemHistory(sessionId)
+    }
   }
 
-  /** 关闭恢复态 loading（hydrate 完成或 recovery 结束时调用） */
+  /** 首批历史恢复结束或初始化失败时解除恢复遮罩。 */
   private finishSessionRestoreLoading(sessionId: string) {
     if (!this.sessionRestoreLoading.has(sessionId)) return
     this.sessionRestoreLoading.delete(sessionId)
     const store = this.storePool.get(sessionId)
-    store?.getState().updateState({ initLoading: false })
+    if (!store) return
+    const { currentChatStatus, currentLoadingTitle } = store.getState()
+    store.getState().updateState({ initLoading: false })
+    // 恢复完成兜底：清掉建连时写入的「获取历史数据中...」占位文案，
+    // 否则 Footer（execute 恒为 true）会一直显示该 loading；
+    // 问题仍在执行（queue_info 已回填 questionExecuting）时不清，避免覆盖运行态文案
+    if (
+      currentLoadingTitle.casualTitle === tAgent('AIChatLoading.loadingHistory') &&
+      currentChatStatus.status !== AITaskStatus.inProgress
+    ) {
+      store.getState().updateCurrentLoadingTitle({ casualTitle: '' })
+    }
   }
 
-  /**
-   * pong 后：消费暂存树或发 recovery_history。
-   * @param needRecoveryHistory 无首问建连（恢复态）时为 true：空树则向后端拉历史
-   */
   private async restoreSessionAfterPong(sessionId: string, needRecoveryHistory: boolean) {
     const { store, rawData, meta } = this.ensureSession(sessionId)
+    const lifecycle = meta.lifecycle
+    if (!lifecycle.current || lifecycle.closing) return
     const pending = meta.pendingSessionRender
     meta.pendingSessionRender = undefined
 
     try {
       if (hasSessionRenderTree(pending)) {
-        await this.loadSessionRenderToMemory(sessionId, pending)
+        await this.loadSessionRenderToMemory(sessionId, pending, lifecycle)
+        if (!lifecycle.current || lifecycle.closing) return
         const state = store.getState()
         const content: SessionRenderContent = {
           items: { ...state.items },
@@ -1236,6 +1629,7 @@ export class ChatMultiSessionController {
       } else if (needRecoveryHistory) {
         // grpcOffset 为 0：无历史游标可续，不发 recovery_history
         if (!rawData.grpcOffset) {
+          if (!lifecycle.current || lifecycle.closing) return
           const state = store.getState()
           const content: SessionRenderContent = {
             items: { ...state.items },
@@ -1251,6 +1645,7 @@ export class ChatMultiSessionController {
         }
       } else {
         // 带首问的新会话：用当前 store 快照（可能已有首问）+ offset
+        if (!lifecycle.current || lifecycle.closing) return
         const state = store.getState()
         const content: SessionRenderContent = {
           items: { ...state.items },
@@ -1260,205 +1655,219 @@ export class ChatMultiSessionController {
         }
         await this.persistSetSessionRender(sessionId, content, rawData.grpcOffset)
       }
-    } catch {
-      this.finishSessionRestoreLoading(sessionId)
+    } catch (error) {
+      if (lifecycle.current && !lifecycle.closing) throw error
     }
   }
 
-  /** 💥 核心替换：接管原 useChatIPC 里的巨型数据分发逻辑！ */
-  public handleGrpcOutputEvent(sessionId: string, res: AIOutputEvent) {
-    try {
-      if (!this.readyChannels.has(sessionId)) return
+  /** 接收时捕获连接身份并串行处理；end 等待已接收事件，旧事件不能进入新连接。 */
+  public handleGrpcOutputEvent(sessionId: string, res: AIOutputEvent): Promise<void> {
+    const meta = this.metaPool.get(sessionId)
+    if (!this.readyChannels.has(sessionId) || !meta || meta.lifecycle.ending) return Promise.resolve()
+    const { lifecycle } = meta
+    lifecycle.events = lifecycle.events
+      .then(async () => {
+        if (!lifecycle.current) return
+        await this.processGrpcOutputEvent(sessionId, res, meta)
+      })
+      .catch((error) => this.handleGrpcOutputError(sessionId, res, meta, error))
+    return lifecycle.events
+  }
 
-      const ipcContent = Uint8ArrayToString(res.Content) || ''
-      // console.log('handleGrpcOutputEvent--', sessionId, '\n', res, '\n', ipcContent)
-
-      const { store, rawData, request, meta } = this.ensureSession(sessionId)
-
-      // 标识同步ID已处理
-      if (res.SyncID && meta.syncIDMap.has(res.SyncID)) {
-        meta.syncIDMap.delete(res.SyncID)
-        store.getState().updateStateCount('syncIDUpdate')
+  /** 新旧事件入口共用错误分类；首批恢复失败关闭会话，后续补载失败保留连接。 */
+  private handleGrpcOutputError(sessionId: string, res: AIOutputEvent, meta: AIAgentChatMetaData, error: unknown) {
+    const { lifecycle } = meta
+    if (!lifecycle.current) return
+    console.error('handleGrpcOutputEvent error', error)
+    if (this.sessionRestoreLoading.has(sessionId)) {
+      lifecycle.error ??= error
+      if (!lifecycle.closing) this.failSessionStart(sessionId, error)
+      return
+    }
+    const store = this.storePool.get(sessionId)
+    if (store?.getState().grpcLoadMoreLoading && !lifecycle.closing) {
+      // 补载坏数据直接跳过，继续处理后续事件；仅结束回执本身异常时结束本批 loading。
+      if (res.Type === 'structured' && res.NodeId === 'recovery_history') {
+        store.getState().updateState({ grpcLoadMoreLoading: false })
       }
+      return
+    }
+    lifecycle.error ??= error
+  }
 
-      // const mirrorToLogWindow = () => {
-      //   aiAgentLogEmitter.dispatch({
-      //     session: sessionId,
-      //     type: 'log',
-      //     Timestamp: res.Timestamp,
-      //     log: { level: 'log', message: ipcContent },
-      //   })
-      // }
+  /** 在会话事件队列内分发单条数据；恢复结束回执等待此前 handler 和写入完成。 */
+  private async processGrpcOutputEvent(sessionId: string, res: AIOutputEvent, meta: AIAgentChatMetaData) {
+    const ipcContent = Uint8ArrayToString(res.Content) || ''
+    // console.log('handleGrpcOutputEvent--', sessionId, '\n', res, '\n', ipcContent)
 
-      if (res.Type === 'pong') {
-        // 如果返回的pong没有值，但是pingSyncID有值，说明该条消息已经过期
-        if (!res.SyncID && meta.pingSyncID) return
-        // 如果返回的pong有值，但是和pingSyncID不一样，说明该条消息已经过期
-        if (res.SyncID && res.SyncID !== meta.pingSyncID) return
-        // 该条消息有效，不需要在轮询ping请求了
-        if (meta.pingTimer) clearInterval(meta.pingTimer)
-        meta.pingTimer = null
-        meta.pingSyncID = ''
+    const { store, rawData, request } = this.ensureSession(sessionId)
 
+    // 标识同步ID已处理
+    if (res.SyncID && meta.syncIDMap.has(res.SyncID)) {
+      meta.syncIDMap.delete(res.SyncID)
+      store.getState().updateStateCount('syncIDUpdate')
+    }
+
+    // const mirrorToLogWindow = () => {
+    //   aiAgentLogEmitter.dispatch({
+    //     session: sessionId,
+    //     type: 'log',
+    //     Timestamp: res.Timestamp,
+    //     log: { level: 'log', message: ipcContent },
+    //   })
+    // }
+
+    if (res.Type === 'pong') {
+      if (!meta.lifecycle.closing && this.sessionRestoreLoading.has(sessionId)) {
+        await this.restoreSessionAfterPong(sessionId, true)
+        if (!meta.lifecycle.current || meta.lifecycle.closing) return
+        if (!this.sessionRestoreLoading.has(sessionId)) {
+          const question = meta.createChatQuestion
+          meta.createChatQuestion = undefined
+          if (question) this.requestMessage(sessionId, question)
+          this.handleSessionStartSuccess(sessionId)
+          meta.onLinkSuccess?.(sessionId)
+          meta.onLinkSuccess = undefined
+        }
+      }
+      return
+    }
+
+    if (res.Type === 'structured' && res.NodeId === 'recovery_history') {
+      const recoveryHistory = JSON.parse(ipcContent) as AIAgentGrpcApi.RecoveryHistory & { error?: string }
+      if (recoveryHistory.error) throw new Error(recoveryHistory.error)
+      if (typeof recoveryHistory.next_start_id !== 'number')
+        throw new Error(tAgent('ChatSessionNotify.invalidHistoryCursor'))
+      rawData.grpcOffset = recoveryHistory.next_start_id
+      await this.flushSessionRender(sessionId)
+      await Promise.all([this.drainRenderWrites(sessionId), drainSessionContentWrites(sessionId)])
+      if (!meta.lifecycle.current || meta.lifecycle.closing) return
+      const restoring = this.sessionRestoreLoading.has(sessionId)
+      // 首屏仍要求完整恢复；补载写入失败保留错误供关闭时反馈，不阻止游标前进和后续补载。
+      if (restoring && meta.lifecycle.error) throw meta.lifecycle.error
+      store.getState().updateState({ grpcLoadMoreLoading: false })
+      if (store.getState().currentChatStatus.status !== AITaskStatus.inProgress) {
+        store.getState().updateState({ pendingReply: false })
+        store.getState().updateCurrentLoadingTitle({ casualTitle: '' })
+      }
+      this.finishSessionRestoreLoading(sessionId)
+      if (restoring) {
         if (meta.createChatQuestion) {
           this.requestMessage(sessionId, meta.createChatQuestion)
           meta.createChatQuestion = undefined
-          store.getState().updateCurrentLoadingTitle({ casualTitle: '等待AI回复...' })
+          store.getState().updateState({ pendingReply: true })
+          store.getState().updateCurrentLoadingTitle({ casualTitle: tAgent('AIChatLoading.waitingReply') })
+        }
+        this.handleSessionStartSuccess(sessionId)
+        meta.onLinkSuccess?.(sessionId)
+        meta.onLinkSuccess = undefined
+      }
+      return
+    }
 
-          // 因为有用户问题发送，所以注册 获取问题队列轮询器
-          if (meta.queuePollingTimer) clearInterval(meta.queuePollingTimer)
-          meta.queuePollingEmptyCount = 0
-          meta.queuePollingTimer = setInterval(() => {
-            this.requestMessage(sessionId, {
-              IsSyncMessage: true,
-              SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_QUEUE_INFO,
-            })
-          }, 5000)
+    // 先解析业务 funcKey（对齐旧 useChatIPC：业务 NodeId 优先于纯日志）
+    let funcKey = res.Type
+    if (
+      res.Type === 'structured' &&
+      [
+        'session_title',
+        'timeline_item',
+        'timeline',
+        'skill_loaded',
+        'skill_available',
+        'skill_detail',
+        'react_task_enqueue',
+        'react_task_dequeue',
+        'queue_info',
+        'react_task_status_changed',
+        'status',
+        'stream-finished',
+        'capability_inventory',
+        'react_task_created',
+        'plan_exec_tasks',
+        'skip_subtask_in_plan',
+      ].includes(res.NodeId)
+    ) {
+      funcKey = res.NodeId
+    } else if (res.Type === 'api_request_failed' && res.NodeId === 'ai_call_failure') {
+      funcKey = res.NodeId
+    } else if (res.Type === 'report_finish' && res.NodeId === 'report-finish') {
+      funcKey = res.NodeId
+    } else if (res.Type === 'structured' && res.NodeId === 'system') {
+      try {
+        const data = JSON.parse(ipcContent) || ''
+        if (data && typeof data === 'object' && data?.type === 'push_task') {
+          funcKey = 'push_task'
+        } else if (data && typeof data === 'object' && data?.type === 'pop_task') {
+          funcKey = 'pop_task'
+        }
+      } catch {
+        // system 非合法 JSON 时保持 funcKey=structured
+      }
+    } else if (res.Type === 'perception' && res.NodeId === 'perception') {
+      funcKey = 'perception'
+    } else if (res.Type === 'current_task_todo_list_update' && res.NodeId === 'current_task_todo_list') {
+      funcKey = 'current_task_todo_list_update'
+    } else if (res.Type === 'structured' && ['session_snapshot', 'task_snapshot'].includes(res.NodeId)) {
+      funcKey = res.NodeId
+    } else if (res.Type === 'detached_plan_require' && res.NodeId === 'detached-plan') {
+      funcKey = res.Type
+    }
 
-          void this.restoreSessionAfterPong(sessionId, false).finally(() => {
-            this.handleSessionStartSuccess(sessionId)
-            meta.onLinkSuccess?.(sessionId)
-            meta.onLinkSuccess = undefined
+    const handleFunc = grpcAIMessageHandlers[funcKey || '']
+
+    // 纯日志：structured + Log 结构 + 无业务 handler；不可无条件 JSON.parse（stream 等为纯文本）
+    if (!handleFunc && res.Type === 'structured') {
+      try {
+        const parsed = JSON.parse(ipcContent)
+        if (
+          parsed &&
+          typeof parsed === 'object' &&
+          typeof (parsed as AIAgentGrpcApi.Log).level === 'string' &&
+          typeof (parsed as AIAgentGrpcApi.Log).message === 'string'
+        ) {
+          aiAgentLogEmitter.dispatch({
+            session: sessionId,
+            type: 'log',
+            Timestamp: res.Timestamp,
+            log: parsed as AIAgentGrpcApi.Log,
           })
-        } else {
-          void this.restoreSessionAfterPong(sessionId, true).finally(() => {
-            this.handleSessionStartSuccess(sessionId)
-            meta.onLinkSuccess?.(sessionId)
-            meta.onLinkSuccess = undefined
-          })
+          return
         }
-        return
+      } catch {
+        // 非合法 JSON / 非 Log 结构，走下方通用抄送
       }
+    }
 
-      if (res.Type === 'structured' && res.NodeId === 'recovery_history') {
-        try {
-          const recoveryHistory = JSON.parse(ipcContent) as AIAgentGrpcApi.RecoveryHistory
-          if (typeof recoveryHistory.next_start_id === 'number') {
-            rawData.grpcOffset = recoveryHistory.next_start_id
-            const state = store.getState()
-            const content: SessionRenderContent = {
-              items: { ...state.items },
-              groups: { ...state.groups },
-              tasks: { ...state.tasks },
-              chatElements: [...state.chatElements],
-            }
-            void this.persistSetSessionRender(sessionId, content, rawData.grpcOffset)
-          }
-        } catch {
-          // ignore parse error
-        }
-        if (store.getState().grpcLoadMoreLoading) {
-          store.getState().updateState({ grpcLoadMoreLoading: false })
-        }
-        // recovery 批次结束：关闭旧会话 UI/逻辑 loading
-        this.finishSessionRestoreLoading(sessionId)
-        return
-      }
+    // 所有业务数据，均抄送一份到日志中
+    // mirrorToLogWindow()
 
-      // 先解析业务 funcKey（对齐旧 useChatIPC：业务 NodeId 优先于纯日志）
-      let funcKey = res.Type
-      if (
-        res.Type === 'structured' &&
-        [
-          'session_title',
-          'timeline_item',
-          'react_task_enqueue',
-          'react_task_dequeue',
-          'queue_info',
-          'react_task_status_changed',
-          'status',
-          'stream-finished',
-          'capability_inventory',
-          'react_task_created',
-          'plan_exec_tasks',
-          'skip_subtask_in_plan',
-        ].includes(res.NodeId)
-      ) {
-        funcKey = res.NodeId
-      } else if (res.Type === 'api_request_failed' && res.NodeId === 'ai_call_failure') {
-        funcKey = res.NodeId
-      } else if (res.Type === 'report_finish' && res.NodeId === 'report-finish') {
-        funcKey = res.NodeId
-      } else if (res.Type === 'structured' && res.NodeId === 'system') {
-        try {
-          const data = JSON.parse(ipcContent) || ''
-          if (data && typeof data === 'object' && data?.type === 'push_task') {
-            funcKey = 'push_task'
-          } else if (data && typeof data === 'object' && data?.type === 'pop_task') {
-            funcKey = 'pop_task'
-          }
-        } catch {
-          // system 非合法 JSON 时保持 funcKey=structured
-        }
-      } else if (res.Type === 'perception' && res.NodeId === 'perception') {
-        funcKey = 'perception'
-      } else if (res.Type === 'current_task_todo_list_update' && res.NodeId === 'current_task_todo_list') {
-        funcKey = 'current_task_todo_list_update'
-      } else if (res.NodeId === 'session_snapshot') {
-        funcKey = res.NodeId
-      } else if (res.Type === 'detached_plan_require' && res.NodeId === 'detached-plan') {
-        funcKey = res.Type
-      }
-
-      const handleFunc = grpcAIMessageHandlers[funcKey || '']
-
-      // 纯日志：structured + Log 结构 + 无业务 handler；不可无条件 JSON.parse（stream 等为纯文本）
-      if (!handleFunc && res.Type === 'structured') {
-        try {
-          const parsed = JSON.parse(ipcContent)
-          if (
-            parsed &&
-            typeof parsed === 'object' &&
-            typeof (parsed as AIAgentGrpcApi.Log).level === 'string' &&
-            typeof (parsed as AIAgentGrpcApi.Log).message === 'string'
-          ) {
-            aiAgentLogEmitter.dispatch({
-              session: sessionId,
-              type: 'log',
-              Timestamp: res.Timestamp,
-              log: parsed as AIAgentGrpcApi.Log,
-            })
-            return
-          }
-        } catch {
-          // 非合法 JSON / 非 Log 结构，走下方通用抄送
-        }
-      }
-
-      // 所有业务数据，均抄送一份到日志中
-      // mirrorToLogWindow()
-
-      if (handleFunc) {
-        const result = handleFunc({
-          sessionId,
-          res,
-          chatType: store.getState().currentChatStatus.coordinatorId === res.CoordinatorId ? 'task' : 'reAct',
-          store,
-          rawData,
-          request,
-          meta,
-          sendRequest: (request) => this.requestMessage(sessionId, request),
-          pushLog: (log) => {
-            if (res.IsSync) return
-            pushLogToOtherWindow({ sessionId: sessionId, Timestamp: res.Timestamp, ...log })
-          },
-        })
-        if (result && typeof result.then === 'function') {
-          void result.catch((error) => {
-            console.error('handleGrpcOutputEvent error', error)
-          })
-        }
-      }
-    } catch (error) {
-      console.error('handleGrpcOutputEvent error', error)
+    if (handleFunc) {
+      await handleFunc({
+        sessionId,
+        res,
+        chatType: store.getState().currentChatStatus.coordinatorId === res.CoordinatorId ? 'task' : 'reAct',
+        store,
+        rawData,
+        request,
+        meta,
+        sendRequest: (request) => {
+          if (meta.lifecycle.current) this.requestMessage(sessionId, request)
+        },
+        pushLog: (log) => {
+          if (res.IsSync || !meta.lifecycle.current) return
+          pushLogToOtherWindow({ sessionId: sessionId, Timestamp: res.Timestamp, ...log })
+        },
+      })
     }
   }
 
   /** 主动往列表里放入一条数据 */
   public pushDataToSession(sessionId: string, data: AIChatQSData) {
-    const { store, rawData } = this.ensureSession(sessionId)
+    const { store, rawData, meta } = this.ensureSession(sessionId)
+    if (!meta.lifecycle.current || meta.lifecycle.closing) return
     rawData.contents.set(data.id, data)
-    persistIndependentItem(sessionId, data)
+    persistIndependentItem(sessionId, data, meta.lifecycle)
     store.getState().dispatchStreamingNode({
       chatType: data.chatType,
       parentTaskId: data.TaskId,
@@ -1480,7 +1889,7 @@ export class ChatMultiSessionController {
     const { store, rawData } = this.ensureSession(sessionId)
     const reviewDetail = rawData.contents.get(reviewToken)
     if (!reviewDetail) {
-      yakitNotify('warning', '未获取到 review 信息, 操作无效')
+      yakitNotify('warning', tAgent('ChatSessionNotify.reviewMissing'))
       return
     }
 
@@ -1493,14 +1902,15 @@ export class ChatMultiSessionController {
 
   /** 更新某一个指定的工具卡片内容(AIChatQSDataTypeEnum.TOOL_RESULT) */
   public updateToolResult(sessionId: string, mapToken: string, toolResult: Partial<AIToolResult['tool']>) {
-    const { store, rawData } = this.ensureSession(sessionId)
+    const { store, rawData, meta } = this.ensureSession(sessionId)
+    if (!meta.lifecycle.current || meta.lifecycle.closing) return
 
     const chatDetail = rawData.contents.get(mapToken)
     if (!chatDetail || chatDetail.type !== AIChatQSDataTypeEnum.TOOL_RESULT) return
 
     Object.assign(chatDetail.data.tool, toolResult)
     store.getState().incrementNodeVersion(chatDetail.id, 'item')
-    persistToolResultIfTerminal(sessionId, chatDetail)
+    persistToolResultIfTerminal(sessionId, chatDetail, meta.lifecycle)
   }
 
   /** 设置指定 token 的卡片展开态（纯 UI，不触发渲染树落库） */
@@ -1522,81 +1932,61 @@ export class ChatMultiSessionController {
     })
   }
 
-  /**
-   * 停流并卸池（deleteSessions / onPageUnload）
-   * - 仍 ready：pendingDispose + forceClose，等 end/fallback 后 teardown
-   * - 已 end：直接 teardown
-   * - deletePersist=true 时 await drain + 删 IDB，再让 waiters resolve
-   */
+  /** 停流并卸池；删除先让旧操作失效，保留缓存则等待已接收事件及最终快照。 */
   private async disposeSessionMemory(sessionId: string, deletePersist = false): Promise<void> {
-    // 已在卸池：可升级为删 IDB，并复用同一次 end/teardown
+    const meta = this.metaPool.get(sessionId)
+    if (deletePersist && meta) {
+      meta.lifecycle.current = false
+      meta.lifecycle.writable = false
+    }
     if (this.pendingDisposeSessions.has(sessionId)) {
       if (deletePersist) this.pendingDisposeSessions.set(sessionId, true)
       await this.waitSessionEnd(sessionId)
       return
     }
-
-    // 已收到 session-end：无需 cancel，直接卸池
     if (!this.readyChannels.has(sessionId)) {
       await this.teardownDisposedSession(sessionId, deletePersist)
       return
     }
-
-    if (deletePersist) {
-      this.clearSessionRenderPersistTimer(sessionId)
-    } else {
-      this.flushSessionRender(sessionId)
-    }
-
+    this.clearSessionRenderPersistTimer(sessionId)
     const done = this.waitSessionEnd(sessionId)
-    // 先标记 pending，再 forceClose：关停窗口内迟到的结构变更不再 arm dirty
     this.pendingDisposeSessions.set(sessionId, deletePersist)
     this.forceCloseSession({ sessionIds: [sessionId] })
     await done
   }
 
-  /** end / 兜底超时后：摘池与归属索引；deletePersist 时 await drain + 删 IDB */
+  /** 等待写事务结束后删缓存/卸池；删除失败保持内存归属，方便重试。 */
   private async teardownDisposedSession(sessionId: string, deletePersist: boolean): Promise<void> {
-    // 卸池前清 debounce，避免空 ensureSession 后迟到 timer 把 IDB 盖成空树
     this.clearSessionRenderPersistTimer(sessionId)
-    this.sessionRestoreLoading.delete(sessionId)
-
-    this.readyChannels.delete(sessionId)
-
-    if (this.activeShowSession === sessionId) {
-      this.activeShowSession = ''
+    const meta = this.metaPool.get(sessionId)
+    if (meta) {
+      meta.lifecycle.writable = false
+      meta.lifecycle.current = false
+      await meta.lifecycle.preparation
+      await meta.lifecycle.events
     }
+    await Promise.all([this.drainRenderWrites(sessionId), drainSessionContentWrites(sessionId)])
+    if (deletePersist) await aiChatPersistStore.deleteSessionPersist(sessionId)
 
+    this.sessionRestoreLoading.delete(sessionId)
+    clearThoughtDurationCache(sessionId)
+    this.readyChannels.delete(sessionId)
+    if (this.activeShowSession === sessionId) this.activeShowSession = ''
     this.requestPool.delete(sessionId)
-    this.storePool.delete(sessionId)
     this.rawDataPool.delete(sessionId)
     this.metaPool.delete(sessionId)
-
+    const stores = new Map(this.storePool)
+    stores.delete(sessionId)
+    this.sessionStores.setState(stores, true)
     const owner = this.sessionOwnerMap.get(sessionId)
     if (owner) {
       this.removeFromPageSessionMap(owner, sessionId)
       this.sessionOwnerMap.delete(sessionId)
     }
-
-    if (deletePersist) {
-      // 先排干该 session 所有在飞的 IDB 写，再 delete，避免 delete 后迟到 put 写回孤儿行
-      try {
-        await Promise.all([this.drainRenderWrites(sessionId), drainSessionContentWrites(sessionId)])
-        await aiChatPersistStore.deleteSessionPersist(sessionId)
-      } catch {
-        // 持久化失败不打断主流程
-      }
-      return
-    }
-    // deletePersist=false（页面卸载）时不排干：dispose 已先 flush，异步写靠闭包完成即可
   }
 
   /** 关闭会话的所有定时器 */
   private closeSessionTimers(meta: ReturnType<ChatMultiSessionController['ensureSession']>['meta']) {
-    // 取消ping请求相关逻辑
-    if (meta.pingTimer) clearInterval(meta.pingTimer)
-    meta.pingTimer = null
-    meta.pingSyncID = ''
     // 清除通知消息消失的定时器
     if (meta.notifyMessageTimer) clearTimeout(meta.notifyMessageTimer)
     meta.notifyMessageTimer = null
@@ -1612,11 +2002,11 @@ export class ChatMultiSessionController {
     meta.memoryPollingTimer = null
   }
 
-  // 关闭ipc通道连接
+  /** 按业务 ID 找到对应连接，清理 token 命名的监听及连接映射。 */
   private closeIPCListeners(sessionId: string) {
-    ipcRenderer.removeAllListeners(`${sessionId}-data`)
-    ipcRenderer.removeAllListeners(`${sessionId}-end`)
-    ipcRenderer.removeAllListeners(`${sessionId}-error`)
+    const token = this.tokenBySessionId.get(sessionId)
+    const connection = token ? this.connectionsByToken.get(token) : undefined
+    if (connection) this.releaseConnection(connection)
   }
 
   /**
@@ -1632,80 +2022,119 @@ export class ChatMultiSessionController {
     this.sessionEndFallbackTimers.set(sessionId, timer)
   }
 
-  // 监听 session-error 事件
-  public handleSessionError(sessionId: string, error: any) {
-    // 暂无业务逻辑处理
-    console.error('handleSessionError--', sessionId, error)
-  }
-
-  // 监听 session-end 事件（含 cancel 后 5s 兜底合成）
-  public handleSessionEnd(sessionId: string, res?: any) {
-    this.clearSessionEndFallback(sessionId)
-
-    // 先取出 onEnd：须在 teardown 之后再调，避免回调里重启时池已被卸掉 / 仍占坑
-    let onEnd: (() => void) | undefined
-
-    // 池仍在：走完整收尾；若已 teardown 则只保证摘监听
-    if (this.storePool.has(sessionId)) {
-      const data = this.ensureSession(sessionId)
-      const { store, meta } = data
-
-      this.closeSessionTimers(meta)
-      // 任务规划结束后的相关逻辑
-      handleTaskPlanEnd({ ...data, sessionId }, true)
-      store.getState().updateState({ execute: false })
-      store.getState().updateCurrentChatStatus({ status: AITaskStatus.error })
-      store.getState().updateCurrentLoadingTitle({ casualTitle: '会话已关闭' })
-      this.readyChannels.delete(sessionId)
-
-      onEnd = meta.onEnd
-      meta.onEnd = undefined
-    }
-
-    this.closeIPCListeners(sessionId)
-
-    const pendingDeletePersist = this.pendingDisposeSessions.get(sessionId)
-    // dispose 窗口内可能仍有结构/内容变更：卸池前再刷一次树（显式删 IDB 时无需写）
-    if (this.storePool.has(sessionId) && pendingDeletePersist !== true) {
-      this.flushSessionRender(sessionId)
-    }
-
-    if (pendingDeletePersist !== undefined) {
-      this.pendingDisposeSessions.delete(sessionId)
-      // 等 teardown（含删 IDB 时的 drain）完成再唤醒 dispose waiters / onEnd
-      void this.teardownDisposedSession(sessionId, pendingDeletePersist).finally(() => {
-        this.resolveSessionEndWaiters(sessionId)
-        onEnd?.()
-      })
-      return
-    }
-
-    this.resolveSessionEndWaiters(sessionId)
-    onEnd?.()
+  /** 流错误同样进入收尾；主进程 error 后可能不再转发 end。 */
+  public handleSessionError(sessionId: string, error: unknown) {
+    const meta = this.metaPool.get(sessionId)
+    if (!meta || meta.lifecycle.closing) return
+    yakitNotify('error', tAgent('ChatSessionNotify.connectFailed', { error: formatNotifyError(error) }))
+    this.forceCloseSession({ sessionIds: [sessionId] })
   }
 
   /**
-   * 关闭会话连接（停流）
-   * - cancel IPC、更新 execute；不立刻摘 IPC（等 session-end，或 5s 兜底合成 end）
-   * - 有 onEnd 时写入 meta，在 session-end / 兜底 移除监听前执行
-   * - **不会**删除业务池与归属索引；关闭 ≠ 删除
+   * 冻结仍处于流式中的 STREAM 条目：主动停流时中断流不会再有 stream-finished 跟进
+   * （会话真实 end 时兜底再扫一次），不冻结会让「思考中」读秒在重开页面 / 已停会话上继续跑。
    */
-  public forceCloseSession(params: { sessionIds: string[]; onEnd?: () => void }) {
-    const { sessionIds, onEnd } = params
-    for (const session of sessionIds) {
+  private freezeUnfinishedStreams(sessionId: string) {
+    const store = this.storePool.get(sessionId)
+    const rawData = this.rawDataPool.get(sessionId)
+    const meta = this.metaPool.get(sessionId)
+    if (!store || !rawData || !meta) return
+    for (const item of rawData.contents.values()) {
+      if (item.type !== AIChatQSDataTypeEnum.STREAM || item.data.status === 'end') continue
+      item.data.status = 'end'
+      if (store.getState().items[item.id]) store.getState().incrementNodeVersion(item.id, 'item')
+      upsertSessionContent(sessionId, item.id, item, meta.lifecycle)
+    }
+  }
+
+  /**
+   * 真实 end / 兜底共用的收尾：停止接收 → 排完事件 → 最终快照 → 写事务 → 可选删除。
+   * ready 占位直到全部收尾结束，保证相同 sessionId 的下一轮不会与旧事务交错。
+   */
+  public handleSessionEnd(sessionId: string): Promise<void> {
+    const meta = this.metaPool.get(sessionId)
+    if (meta?.lifecycle.ending) return meta.lifecycle.ending
+    this.clearSessionEndFallback(sessionId)
+    this.closeIPCListeners(sessionId)
+    if (!meta) {
+      this.readyChannels.delete(sessionId)
+      this.resolveSessionEndWaiters(sessionId)
+      return Promise.resolve()
+    }
+    const { lifecycle } = meta
+    lifecycle.closing = true
+    this.closeSessionTimers(meta)
+    this.clearSessionRenderPersistTimer(sessionId)
+    const onEnd = meta.onEnd
+    meta.onEnd = undefined
+    meta.onLinkSuccess = undefined
+
+    lifecycle.ending = (async () => {
+      let failure: unknown
+      try {
+        await lifecycle.preparation
+        await lifecycle.events
+        const data = this.ensureSession(sessionId)
+        const { store } = data
+        if (lifecycle.current && this.pendingDisposeSessions.get(sessionId) !== true) {
+          handleTaskPlanEnd({ ...data, sessionId }, true)
+          // 收尾快照前冻结中断流，保证最终落库与 UI 都不再处于流式态
+          this.freezeUnfinishedStreams(sessionId)
+          const finalWrite = this.flushSessionRender(sessionId)
+          lifecycle.writable = false
+          await finalWrite
+        }
+        lifecycle.writable = false
+        store
+          .getState()
+          .updateState({ execute: false, initLoading: false, grpcLoadMoreLoading: false, pendingReply: false })
+        store.getState().updateCurrentChatStatus({ status: AITaskStatus.error })
+        store.getState().updateCurrentLoadingTitle({ casualTitle: tAgent('AIChatLoading.sessionClosed') })
+        await Promise.all([this.drainRenderWrites(sessionId), drainSessionContentWrites(sessionId)])
+        const deletePersist = this.pendingDisposeSessions.get(sessionId)
+        if (deletePersist !== undefined) await this.teardownDisposedSession(sessionId, deletePersist)
+        // 删除只要求旧事务结束；普通关闭则必须反馈旧写入的失败，不能误报保存成功。
+        if (deletePersist !== true && lifecycle.error) throw lifecycle.error
+      } catch (error) {
+        failure = error
+        yakitNotify('error', tAgent('ChatSessionNotify.finalizeFailed', { error: formatNotifyError(error) }))
+      } finally {
+        lifecycle.writable = false
+        this.sessionRestoreLoading.delete(sessionId)
+        this.pendingDisposeSessions.delete(sessionId)
+        this.readyChannels.delete(sessionId)
+        this.resolveSessionEndWaiters(sessionId, failure)
+        onEnd?.(failure)
+      }
+      if (failure) throw failure
+    })()
+    // IPC/定时器入口不一定 await；失败仍通过返回值、waiter 和提示反馈，不留下未处理拒绝。
+    void lifecycle.ending.catch(() => {})
+    return lifecycle.ending
+  }
+
+  /** 先停止连接；回调在已接收事件和 IDB 事务完成后执行，参数携带收尾失败。 */
+  public forceCloseSession(params: { sessionIds: string[]; onEnd?: (error?: unknown) => void }) {
+    for (const session of params.sessionIds) {
       const meta = this.metaPool.get(session)
-      if (meta && onEnd) {
-        meta.onEnd = onEnd
+      if (meta) {
+        if (params.onEnd) meta.onEnd = params.onEnd
+        meta.lifecycle.closing = true
+        this.closeSessionTimers(meta)
       }
-      // 等真实 -end；超时则手动 handleSessionEnd，避免监听泄漏 / onEnd 挂死
-      this.armSessionEndFallback(session)
-      ipcRenderer.invoke('cancel-ai-re-act', session).catch(() => {})
       const store = this.storePool.get(session)
-      if (store) {
-        store.getState().updateState({ execute: false })
-        store.getState().updateCurrentLoadingTitle({ casualTitle: '会话正在关闭...' })
+      store?.getState().updateState({ execute: false, pendingReply: false })
+      store?.getState().updateCurrentLoadingTitle({ casualTitle: tAgent('AIChatLoading.sessionClosing') })
+      // cancel 已发出就不会再有 stream-finished：立即冻结，收尾窗口内重开的页面不再显示「思考中」
+      this.freezeUnfinishedStreams(session)
+      if (meta && !meta.lifecycle.started) {
+        // 准备阶段没有实际流，立即收尾；preparation 返回后也不能再 start。
+        void this.handleSessionEnd(session)
+      } else {
+        this.armSessionEndFallback(session)
+        // 关闭的是当前 gRPC 流，主进程接收连接 token 而非业务 SessionId。
+        void ipcRenderer.invoke('cancel-ai-re-act', this.tokenBySessionId.get(session)).catch(() => {})
       }
-      if (meta) this.closeSessionTimers(meta)
     }
   }
 
@@ -1741,12 +2170,8 @@ export class ChatMultiSessionController {
       this.sessionOwnerMap.delete(sessionId)
     }
 
-    try {
-      await Promise.all([this.drainRenderWrites(sessionId), drainSessionContentWrites(sessionId)])
-      await aiChatPersistStore.deleteSessionPersist(sessionId)
-    } catch {
-      // 持久化失败不打断主流程
-    }
+    await Promise.all([this.drainRenderWrites(sessionId), drainSessionContentWrites(sessionId)])
+    await aiChatPersistStore.deleteSessionPersist(sessionId)
   }
 
   /**
@@ -1758,49 +2183,83 @@ export class ChatMultiSessionController {
    */
   public async deleteSessions(params: DeleteSessionsParams): Promise<void> {
     const { sessionIds, source, deleteAll } = params
+    // 未绑定的会话尚不在正式索引中；按来源或全量删除时也要停止它们并清理草稿。
+    for (const connection of [...this.connectionsByToken.values()]) {
+      if (connection.registered) continue
+      const source = connection.input.localSource ?? connection.input.params.Params?.Source ?? AISourceEnum.aiAgent
+      if (
+        params.deleteAll ||
+        params.sessionIds?.includes(connection.sessionId) ||
+        (!params.sessionIds?.length && params.source?.includes(source))
+      )
+        this.cancelPendingConnection(connection.token)
+    }
     const ids = this.resolveDeleteSessionIds(params)
     if (!ids) return
     // 标记目标会话为 deleting（UI 立即显示 loading + 禁用点击）
     sessionStatusStore.getState().setSessionsDeleteStatus(ids, SessionDeleteStatus.Deleting)
+    this.pendingDeletes.add(params)
 
-    const executingIds = new Set(this.filterExecutingSessionIds(ids))
-    const tasks: Promise<void>[] = []
+    try {
+      const executingIds = new Set(this.filterExecutingSessionIds(ids))
+      const tasks: Promise<void>[] = []
 
-    for (const sessionId of ids) {
-      if (executingIds.has(sessionId) || this.hasSessionMemory(sessionId)) {
-        tasks.push(this.disposeSessionMemory(sessionId, true))
-      } else {
-        tasks.push(this.deletePersistOnlySession(sessionId))
+      for (const sessionId of ids) {
+        if (executingIds.has(sessionId) || this.hasSessionMemory(sessionId)) {
+          tasks.push(this.disposeSessionMemory(sessionId, true))
+        } else {
+          tasks.push(this.deletePersistOnlySession(sessionId))
+        }
       }
-    }
 
-    // 屏障：全部逐 session 删完（含 drain）后再扫尾，避免与 by-source / 清库竞态
-    await Promise.all(tasks)
+      // 屏障：全部逐 session 删完（含 drain）后再扫尾，避免与 by-source / 清库竞态
+      const results = await Promise.allSettled(tasks)
+      const failure = results.find((result) => result.status === 'rejected')
+      if (failure?.status === 'rejected') throw failure.reason
 
-    if (deleteAll) {
-      await this.persistDeleteAll()
+      if (deleteAll) {
+        await this.persistDeleteAll()
+        // 标记 deleted
+        sessionStatusStore.getState().setSessionsDeleteStatus(ids, SessionDeleteStatus.Deleted)
+        return
+      }
+      if (!sessionIds?.length && source?.length) {
+        for (const s of source) {
+          await this.persistDeleteBySource(s)
+        }
+      }
       // 标记 deleted
       sessionStatusStore.getState().setSessionsDeleteStatus(ids, SessionDeleteStatus.Deleted)
-      return
+    } catch (error) {
+      sessionStatusStore.getState().setSessionsDeleteStatus(ids, SessionDeleteStatus.Idle)
+      throw error
+    } finally {
+      this.pendingDeletes.delete(params)
     }
-    if (!sessionIds?.length && source?.length) {
-      for (const s of source) {
-        await this.persistDeleteBySource(s)
-      }
-    }
-    // 标记 deleted
-    sessionStatusStore.getState().setSessionsDeleteStatus(ids, SessionDeleteStatus.Deleted)
   }
 
   /**
-   * 页面生命周期卸载：卸该「当前」page 下所有 source 的 session 内存（非仅 forceClose）
-   * 会 flush 渲染树后保留 IDB，供后续恢复；已 rebind 走的 session 不会被旧页清掉
+   * 页面卸载按归属停流，只处理 route 和 pageId 都对得上的会话
+   * （Fuzzer 页停自己的全部会话；AI 页只停当前页，不碰其他页和 Fuzzer）。
+   * 返回的 Promise 在该页全部会话收尾（end / 兜底、IDB 写、卸池）完成后 resolve：
+   * 确认关页场景 await 它即「先停会话再关 Tab」；组件卸载钩子忽略返回值则不阻塞卸载。
    */
-  public onPageUnload(route: YakitRouteType, pageId: string) {
-    const ids = this.resolvePageSessionIds(route, pageId)
-    for (const sessionId of ids) {
-      void this.disposeSessionMemory(sessionId, false)
+  public async onPageUnload(route: YakitRouteType, pageId: string): Promise<void> {
+    // pending 尚未登记正式会话索引，只取消属于当前 Tab 的连接。
+    for (const connection of [...this.connectionsByToken.values()]) {
+      if (!connection.registered && connection.input.route === route && connection.input.pageId === pageId)
+        this.cancelPendingConnection(connection.token)
     }
+    const ids = this.resolvePageSessionIds(route, pageId)
+    await Promise.all(
+      ids.map((sessionId) => {
+        const owner = this.sessionOwnerMap.get(sessionId)
+        if (!owner || owner.route !== route || owner.pageId !== pageId) return
+        return this.disposeSessionMemory(sessionId, false).catch((error) => {
+          console.error('AI session page unload failed', error)
+        })
+      }),
+    )
   }
 }
 

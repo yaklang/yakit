@@ -1,7 +1,6 @@
 import type { ForgesAndSkillsDynamicItem, PlanItemDetailsData } from '@/pages/ai-re-act/hooks/aiRender'
 import type { AIAgentGrpcApi } from '@/pages/ai-re-act/hooks/grpcApi'
 import type { PaginationSchema } from '@/pages/invoker/schema'
-import type { ThemeColorName } from '@yakit-libs/color'
 import type { ReactNode } from 'react'
 
 export interface AITaskExecutionDetailsProps {
@@ -19,7 +18,7 @@ export type PlanItemDetailsCategoryTypes = (
 )['category']
 
 export type PlanItemDetailsDynamicKeys = {
-  [K in keyof PlanItemDetailsData]: PlanItemDetailsData[K] extends { dynamic: any[] } ? K : never
+  [K in keyof PlanItemDetailsData]-?: PlanItemDetailsData[K] extends { dynamic: any[] } ? K : never
 }[keyof PlanItemDetailsData]
 export type PlanItemDetailsDynamicItem = PlanItemDetailsData[PlanItemDetailsDynamicKeys]['dynamic'][number]
 
@@ -53,16 +52,7 @@ export interface AITaskExecutionDetailsCardProps {
   className?: string
 }
 
-export interface AITaskStatisticsStatusItem {
-  key: string
-  color: Uncapitalize<ThemeColorName> | 'neutral-with-border'
-  title: ReactNode
-  footerLeft: number
-  footerRight: ReactNode
-}
-export interface AITaskStatisticsStatusProps {
-  list: AITaskStatisticsStatusItem[]
-}
+export type { AITaskStatisticsStatusItem, AITaskStatisticsStatusProps } from './aiTaskStatisticsStatus/type'
 
 export interface AIBrowserProcessesProps {
   list: AIAgentGrpcApi.SessionSnapshot['background_processes']

@@ -25,6 +25,7 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
   return createStore<ChatStoreState>()(
     immer((set) => ({
       execute: false,
+      pendingReply: false,
 
       httpFuzzRequestUpdate: 0,
       httpFlowFuzzStatusUpdate: 0,
@@ -32,6 +33,9 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
       memoryListUpdate: 0,
       updateSystemStream: 0,
       yaklangCodeChangeUpdate: 0,
+      loadedSkillsUpdate: 0,
+      availableSkillsUpdate: 0,
+      skillDetailsUpdate: 0,
       syncIDUpdate: 0,
 
       grpcFolders: [],
@@ -62,6 +66,10 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
 
       chatElements: [],
       chatTodoListUpdate: 0,
+      timelineDumpUpdate: 0,
+      taskDetailsUpdate: 0,
+      sessionTaskList: [],
+      sessionTaskListRevision: 0,
       currentPlan: cloneDeep(DefaultCurrentExecTaskTree),
       uiExpandMap: {},
 

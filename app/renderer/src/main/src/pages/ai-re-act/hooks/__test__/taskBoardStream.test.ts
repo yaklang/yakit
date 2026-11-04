@@ -14,7 +14,7 @@ afterEach(() => {
 })
 
 describe('actual todo stream into task board data', () => {
-  it('retains time fields, increments the normal update signal, and keeps task maps separate', () => {
+  it('retains time fields, increments the normal update signal, and keeps task maps separate', async () => {
     const controller = new ChatMultiSessionController()
     const session = controller.ensureSession('session-a')
     const send = (taskId: string, status: string, scope = '') => {

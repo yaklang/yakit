@@ -483,5 +483,28 @@
     "noProcess": "未识别到已启动的引擎进程",
     "killProcessFailed": "引擎进程(pid:{{pid}},port:{{port}})关闭失败 {{error}}",
     "closing": "进程关闭中，请稍等 ..."
+  },
+  "MCPHistory": {
+    "title": "MCP 调用历史",
+    "all": "全部",
+    "success": "成功",
+    "failed": "失败",
+    "unknownCaller": "未知调用方",
+    "clearTitle": "清空 MCP 调用历史",
+    "deleteFilteredTitle": "删除筛选结果",
+    "clearContent": "将清空全部 MCP 调用历史，此操作无法撤销。",
+    "deleteFilteredContent": "将删除当前筛选条件匹配的 {{total}} 条 MCP 调用记录，此操作无法撤销。",
+    "deleteFiltered": "删除筛选结果",
+    "clearHistoryTitle": "清空历史",
+    "searchPlaceholder": "搜索工具、Agent 或会话",
+    "emptyList": "暂无 MCP 调用记录",
+    "emptyDetail": "请选择左侧调用记录查看详情",
+    "caller": "调用方",
+    "callTime": "调用时间",
+    "duration": "耗时",
+    "sessionId": "会话 ID",
+    "arguments": "输入参数",
+    "result": "返回结果",
+    "error": "错误信息"
   }
 }

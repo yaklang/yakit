@@ -94,12 +94,12 @@ module.exports = (win, getClient) => {
     }
   })
   // 取消 AI ReAct
-  ipcMain.handle(
-    'cancel-ai-re-act',
-    handlerHelper.cancelHandler(aiReActTaskPool, (token) => {
-      aiWriteChainMap.delete(token)
-    }),
-  )
+  ipcMain.handle('cancel-ai-re-act', async (event, token) => {
+    const hadStream = aiReActTaskPool.has(token)
+    const result = await handlerHelper.cancelHandler(aiReActTaskPool, () => aiWriteChainMap.delete(token))(event, token)
+    if (hadStream && win && !win.isDestroyed()) win.webContents.send(`${token}-end`)
+    return result
+  })
   // #endregion
 
   // #region AI ReAct 定时任务

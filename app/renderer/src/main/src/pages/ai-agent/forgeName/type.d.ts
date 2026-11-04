@@ -35,11 +35,14 @@ export interface ExportImportAIForgeProgress {
 export interface BatchExportAIforgeRef {
   open: (params: Partial<ExportAIForgeRequest>) => void
 }
-export interface BatchExportAIforgeProps {}
+export interface BatchExportAIforgeProps {
+  isTool?: boolean
+}
 export interface ImportAIforgeRef {
   open: () => void
 }
 
 export interface ImportAIforgeProps {
+  isTool?: boolean
   onSuccess?: () => void
 }

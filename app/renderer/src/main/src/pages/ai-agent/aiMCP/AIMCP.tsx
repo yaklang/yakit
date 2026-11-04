@@ -1,3 +1,5 @@
+import MCPHistory from '../aiMCPHistory/MCPHistory'
+import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import React, { ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import {
   AIMCPListItemProps,
@@ -55,6 +57,8 @@ import { ConfigMcpModal } from '@/utils/ConfigSystemMcp'
 import { useYakMcpStream } from '@/store/yakMcpStream'
 
 const AIMCP: React.FC<AIMCPProps> = React.memo((props) => {
+  const { t } = useI18nNamespaces(['aiAgent'])
+  const [historyVisible, setHistoryVisible] = useState(false)
   const [listType, setListType] = useState<'mcp' | 'mcp-tool'>('mcp')
   const [currentMCP, setCurrentMCP] = useState<MCPServer>()
   const onSetCurrentMCP = useMemoizedFn((item: MCPServer) => {
@@ -79,58 +83,74 @@ const AIMCP: React.FC<AIMCPProps> = React.memo((props) => {
     }
     return content
   })
-  return <>{renderListContent()}</>
+  return (
+    <div style={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ padding: 8, display: 'flex', justifyContent: 'flex-end' }}>
+        <YakitButton type="outline1" onClick={() => setHistoryVisible(true)}>
+          {t('AIMCP.callHistory')}
+        </YakitButton>
+      </div>
+      {renderListContent()}
+      <YakitModal
+        title={t('AIMCP.callHistory')}
+        visible={historyVisible}
+        onCancel={() => setHistoryVisible(false)}
+        footer={null}
+        width="90vw"
+        destroyOnClose
+        bodyStyle={{ height: '72vh', padding: 0 }}
+      >
+        {historyVisible && <MCPHistory />}
+      </YakitModal>
+    </div>
+  )
 })
 export default AIMCP
 
-const AIMCPToolList: React.FC<AIMCPToolListProps> = React.memo((props) => {
+export const AIMCPToolList: React.FC<AIMCPToolListProps> = React.memo((props) => {
   const { onBack, item } = props
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const [mcpItem, setMCPItem] = useState<MCPServer>(item)
   const [loading, setLoading] = useState<boolean>(false)
   const [updateLoading, setUpdateLoading] = useState<boolean>(false)
+  const [toolLoaded, setToolLoaded] = useState(false)
+  const [loadError, setLoadError] = useState('')
+  const detailGeneration = useRef(0)
   useEffect(() => {
+    setMCPItem(item)
+    setToolLoaded(false)
     getMcpItem()
+    return () => {
+      detailGeneration.current += 1
+    }
   }, [item.ID])
-  const getMcpItem = useMemoizedFn(() => {
+  const getMcpItem = useMemoizedFn(async () => {
+    const generation = ++detailGeneration.current
     setLoading(true)
-    getMCPServersById(item.ID)
-      .then((res) => {
-        if (res.Enable) {
-          setMCPItem(res)
-        } else {
-          yakitNotify('info', t('AIMCP.enableServerRefreshTools'))
-        }
-      })
-      .finally(() =>
-        setTimeout(() => {
-          setLoading(false)
-        }, 200),
-      )
+    setLoadError('')
+    try {
+      const res = await getMCPServersById(item.ID)
+      if (generation !== detailGeneration.current) return
+      setMCPItem(res)
+      setToolLoaded(true)
+    } catch (error) {
+      if (generation === detailGeneration.current) setLoadError(String(error))
+    } finally {
+      if (generation === detailGeneration.current) setLoading(false)
+    }
   })
 
-  const updateMCPServer = useMemoizedFn(() => {
+  const updateMCPServer = useMemoizedFn(async () => {
+    const generation = detailGeneration.current
     setUpdateLoading(true)
-    const updateValue: UpdateMCPServerRequest = {
-      ...item,
-      Enable: true,
+    try {
+      await grpcUpdateMCPServer({ ...item, Enable: true })
+      if (generation === detailGeneration.current) await getMcpItem()
+    } catch (error) {
+      if (generation === detailGeneration.current) setLoadError(String(error))
+    } finally {
+      if (generation <= detailGeneration.current) setUpdateLoading(false)
     }
-    // 更新
-    grpcUpdateMCPServer(updateValue)
-      .then(() => {
-        getMCPServersById(item.ID)
-          .then((res) => {
-            setMCPItem(res)
-          })
-          .catch(() => {
-            setMCPItem({ ...item, Enable: true })
-          })
-      })
-      .finally(() =>
-        setTimeout(() => {
-          setUpdateLoading(false)
-        }, 200),
-      )
   })
   const toolLis: MCPServerTool[] = useCreation(() => {
     return mcpItem?.Tools || []
@@ -150,25 +170,40 @@ const AIMCPToolList: React.FC<AIMCPToolListProps> = React.memo((props) => {
         </YakitButton>
       </div>
       <div className={styles['ai-tool-list-container']}>
-        {mcpItem.Enable ? (
-          <RollingLoadList<MCPServerTool>
-            data={toolLis}
-            renderRow={(rowData: MCPServerTool, index: number) => {
-              return (
-                <React.Fragment key={rowData.Name}>
-                  <AIMCPToolItem toolItem={rowData} />
-                </React.Fragment>
-              )
-            }}
-            classNameRow={styles['ai-tool-list-item']}
-            classNameList={styles['ai-tool-list']}
-            defItemHeight={81}
-            rowKey="Name"
-            loadMoreData={() => {}}
-            page={1}
-            hasMore={false}
-            loading={false}
-          />
+        {loadError ? (
+          <div role="alert">
+            {loadError}
+            <YakitButton loading={loading} onClick={getMcpItem}>
+              {t('YakitButton.refresh')}
+            </YakitButton>
+          </div>
+        ) : !toolLoaded ? (
+          <YakitSpin spinning />
+        ) : mcpItem.Enable ? (
+          <>
+            <YakitButton type="outline1" loading={loading} onClick={getMcpItem}>
+              {t('YakitButton.refresh')}
+            </YakitButton>
+            {!toolLis.length && <YakitEmpty description={t('AIMCP.noToolsLoaded')} />}
+            <RollingLoadList<MCPServerTool>
+              data={toolLis}
+              renderRow={(rowData: MCPServerTool, index: number) => {
+                return (
+                  <React.Fragment key={rowData.Name}>
+                    <AIMCPToolItem toolItem={rowData} />
+                  </React.Fragment>
+                )
+              }}
+              classNameRow={styles['ai-tool-list-item']}
+              classNameList={styles['ai-tool-list']}
+              defItemHeight={81}
+              rowKey="Name"
+              loadMoreData={() => {}}
+              page={1}
+              hasMore={false}
+              loading={loading}
+            />
+          </>
         ) : (
           <YakitEmpty title={t('YakitEmpty.noData')} description={t('AIMCP.disabledRefreshTools')}>
             <div className={styles['ai-mcp-tool-empty-btns']}>

@@ -1,3 +1,4 @@
+import { TimelineDumpButton } from './TimelineDumpButton'
 import { type FC, useMemo, forwardRef, memo } from 'react'
 import styles from './TimelineCard.module.scss'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
@@ -112,31 +113,37 @@ const TimelineCard: FC = () => {
   const itemContent = useMemoizedFn((_: number, item: AIAgentGrpcApi.TimelineItem) => <TimelineRow item={item} />)
 
   return (
-    <div
-      className={classNames(styles['timeline-card-wrapper'], {
-        [styles['timeline-card-empty']]: reActTimelines.length === 0,
-      })}
-    >
-      <YakitSpin spinning={timelinesLoading}>
-        <Virtuoso
-          key={sessionId}
-          ref={virtuosoRef}
-          firstItemIndex={firstItemIndex}
-          data={reActTimelines}
-          components={components}
-          scrollerRef={setScrollerRef}
-          totalListHeightChanged={handleTotalListHeightChanged}
-          atBottomStateChange={setIsAtBottomRef}
-          initialTopMostItemIndex={reActTimelines.length > 0 ? reActTimelines.length - 1 : 0}
-          style={{ height: '100%', width: '100%' }}
-          increaseViewportBy={{ top: 300, bottom: 300 }}
-          atBottomThreshold={100}
-          followOutput={(isAtBottom) => (isAtBottom ? 'auto' : false)}
-          skipAnimationFrameInResizeObserver
-          startReached={handleLoadMore}
-          itemContent={itemContent}
-        />
-      </YakitSpin>
+    <div style={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ flexShrink: 0 }}>
+        <TimelineDumpButton />
+      </div>
+      <div
+        style={{ flex: 1, height: 'auto' }}
+        className={classNames(styles['timeline-card-wrapper'], {
+          [styles['timeline-card-empty']]: reActTimelines.length === 0,
+        })}
+      >
+        <YakitSpin spinning={timelinesLoading}>
+          <Virtuoso
+            key={sessionId}
+            ref={virtuosoRef}
+            firstItemIndex={firstItemIndex}
+            data={reActTimelines}
+            components={components}
+            scrollerRef={setScrollerRef}
+            totalListHeightChanged={handleTotalListHeightChanged}
+            atBottomStateChange={setIsAtBottomRef}
+            initialTopMostItemIndex={reActTimelines.length > 0 ? reActTimelines.length - 1 : 0}
+            style={{ height: '100%', width: '100%' }}
+            increaseViewportBy={{ top: 300, bottom: 300 }}
+            atBottomThreshold={100}
+            followOutput={(isAtBottom) => (isAtBottom ? 'auto' : false)}
+            skipAnimationFrameInResizeObserver
+            startReached={handleLoadMore}
+            itemContent={itemContent}
+          />
+        </YakitSpin>
+      </div>
     </div>
   )
 }

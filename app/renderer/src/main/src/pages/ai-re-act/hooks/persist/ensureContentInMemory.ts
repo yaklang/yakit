@@ -1,3 +1,4 @@
+import type { SessionLifecycle } from '../sessionLifecycle'
 import type { AIChatQSData } from '../aiRender'
 import { applyHydratedStageSettled, persistGetSessionContent } from './contentPersistHelper'
 
@@ -10,12 +11,15 @@ export const ensureContentInMemory = async (
   token: string,
   contents: Map<string, AIChatQSData>,
   create?: () => AIChatQSData | undefined,
+  lifecycle?: SessionLifecycle,
 ): Promise<AIChatQSData | undefined> => {
+  if (lifecycle && !lifecycle.current) return undefined
   const existing = contents.get(token)
   if (existing) return existing
 
   try {
     const persisted = await persistGetSessionContent(sessionId, token)
+    if (lifecycle && !lifecycle.current) return undefined
     if (persisted) {
       applyHydratedStageSettled(persisted)
       contents.set(token, persisted)
@@ -25,6 +29,7 @@ export const ensureContentInMemory = async (
     // 读盘失败不打断主流程，走 create
   }
 
+  if (lifecycle && !lifecycle.current) return undefined
   const created = create?.()
   if (created) {
     contents.set(token, created)

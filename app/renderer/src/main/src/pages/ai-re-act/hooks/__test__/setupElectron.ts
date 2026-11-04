@@ -15,3 +15,9 @@ window.yakitBridge = { release: { setEditionRaw: vi.fn().mockResolvedValue(undef
   if (name !== 'electron') throw new Error(`Unexpected require: ${name}`)
   return { ipcRenderer: ipcRendererMock }
 }
+
+export const resetIpcMocks = () => {
+  ipcRendererMock.invoke.mockReset().mockResolvedValue(undefined)
+  ipcRendererMock.on.mockClear()
+  ipcRendererMock.removeAllListeners.mockClear()
+}

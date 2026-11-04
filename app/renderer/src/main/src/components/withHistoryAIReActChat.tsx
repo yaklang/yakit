@@ -321,7 +321,10 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
     pushAIFuzzStatusRuntimeIdToWebFuzzerPage(pageId, runtimeId, { source: 'auto' })
   })
 
-  const { onStart, onSend, onClose, onUpdatePageId } = useChatIPC(route, pageId)
+  const { onStart, onSend, onClose, onUpdatePageId, pendingChat, cancelPendingChat, detachPendingChat } = useChatIPC(
+    route,
+    pageId,
+  )
 
   const store = globalSessionEngine.ensureSession(activeChat?.SessionID || '').store
   const casualLoading = useStore(store, (state) => state.currentChatStatus.status === AITaskStatus.inProgress)
@@ -523,8 +526,9 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
     return {
       setting: setting,
       activeChat: activeChat,
+      pendingChat,
     }
-  }, [setting, activeChat])
+  }, [setting, activeChat, pendingChat])
 
   const dispatchers: AIAgentContextDispatcher = useMemo(() => {
     return {
@@ -535,6 +539,8 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
       onSend,
       onClose,
       onUpdatePageId,
+      cancelPendingChat,
+      detachPendingChat,
     }
   }, [])
 

@@ -1,3 +1,15 @@
+import { probeFeedbackText, type ProbeFeedback } from '@/pages/ai-agent/aiModelList/aiModelForm/probeFeedback'
+import { probeWithTimeout } from '@/pages/ai-agent/aiModelList/aiModelForm/probeWithTimeout'
+import {
+  providerToListAiModelConfig,
+  YAK_SCRIPT_PROVIDER,
+} from '@/pages/ai-agent/aiModelList/aiModelForm/providerConfig'
+import { YakScriptModelFields } from './YakScriptModelFields'
+import {
+  buildReasoningEffortOptions,
+  effortProbeResultFromResponse,
+} from '@/pages/ai-agent/aiModelList/aiModelForm/reasoningEffort'
+import { grpcProbeReasoningEffort } from '@/pages/ai-agent/aiModelList/utils'
 /**
  * AI 专用第三方应用配置表单组件。
  */
@@ -312,6 +324,11 @@ const AIThirdPartyConfigReadonlyPanel: React.FC<AIThirdPartyConfigReadonlyPanelP
 })
 
 export interface AIThirdPartyApplicationConfig {
+  ReasoningEffort?: string
+  _EffortProbed?: boolean
+  _ProbedExtendedEfforts?: string[]
+  script?: string
+  enable_native_tool_calling?: boolean
   Type: string
   api_key?: string
   user_identifier?: string
@@ -359,6 +376,52 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
     const [form] = Form.useForm()
     const typeVal = Form.useWatch('Type', form)
     const [options, setOptions] = useState<SelectOptionsProps[]>([])
+    const currentEffort = Form.useWatch('ReasoningEffort', form)
+    const [probedEfforts, setProbedEfforts] = useState<string[]>(formValues._ProbedExtendedEfforts ?? [])
+    const [probingEffort, setProbingEffort] = useState(false)
+    const [effortFeedback, setEffortFeedback] = useState<ProbeFeedback>()
+    const watchedModel = Form.useWatch('model', form)
+    const probeEpoch = useRef(0)
+    useEffect(() => {
+      probeEpoch.current += 1
+      setProbingEffort(false)
+      setEffortFeedback(undefined)
+      return () => {
+        probeEpoch.current += 1
+      }
+    }, [typeVal, watchedModel])
+    const probeEffort = async () => {
+      const epoch = ++probeEpoch.current
+      const values = form.getFieldsValue()
+      setProbingEffort(true)
+      setEffortFeedback('running')
+      try {
+        const { buildAIConfigHealthCheckConfig } =
+          await import('@/pages/ai-agent/aiModelList/aiModelForm/providerFormConfig')
+        const response = await probeWithTimeout(
+          grpcProbeReasoningEffort({
+            Config: buildAIConfigHealthCheckConfig(values),
+            Model: values.model,
+          }),
+        )
+        if (epoch !== probeEpoch.current) return
+        const result = effortProbeResultFromResponse(response)
+        if (result.conclusive) {
+          setProbedEfforts(result.efforts)
+          setEffortFeedback(result.efforts.length ? 'supported' : 'unsupported')
+          form.setFieldsValue({ _EffortProbed: true, _ProbedExtendedEfforts: result.efforts })
+        } else {
+          setEffortFeedback('failed')
+        }
+      } catch (error) {
+        if (epoch === probeEpoch.current)
+          setEffortFeedback(
+            error instanceof Error && error.message === 'Reasoning probe timeout' ? 'timeout' : 'failed',
+          )
+      } finally {
+        if (epoch === probeEpoch.current) setProbingEffort(false)
+      }
+    }
     const [modelOptionLoading, setModelOptionLoading] = useState<boolean>(false)
     const [modelNameAllOptions, setModelNameAllOptions] = useState<SelectOptionsProps[]>([])
     const apiKeyWatch = Form.useWatch('api_key', form)
@@ -386,6 +449,8 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
         const templates = res.Templates
         let newOptions: SelectOptionsProps[] = []
         newOptions = templates.map((item) => ({ label: item.Verbose, value: item.Name }))
+        if (!newOptions.some((item) => item.value === YAK_SCRIPT_PROVIDER))
+          newOptions.push({ label: t('BatchModel.scriptProvider'), value: YAK_SCRIPT_PROVIDER })
         setOptions(newOptions)
       })
     }, [])
@@ -402,11 +467,24 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
 
     const { run: getModelNameOption, cancel: cancelModelNameOption } = useDebounceFn(
       useMemoizedFn(() => {
-        if (!execModelNameOption.current) return
+        if (!execModelNameOption.current || form.getFieldValue('Type') === YAK_SCRIPT_PROVIDER) return
         setModelOptionLoading(true)
         const v = form.getFieldsValue()
         ipcRenderer
-          .invoke('ListAiModel', { Config: JSON.stringify(v) })
+          .invoke('ListAiModel', {
+            Config: providerToListAiModelConfig({
+              Type: v.Type,
+              APIKey: v.api_key,
+              APIType: v.api_type,
+              Domain: v.domain,
+              Proxy: v.proxy,
+              NoHttps: v.no_https,
+              BaseURL: v.base_url,
+              Endpoint: v.endpoint,
+              EnableEndpoint: v.enable_endpoint,
+              Headers: v.Headers,
+            }),
+          })
           .then((res) => {
             if (!execModelNameOption.current) return
             const modalNamelist: SelectOptionsProps[] = res.ModelName.map((modelName: string) => ({
@@ -481,6 +559,19 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
 
     // 切换类型，渲染不同表单项（目前只有输入框、开关、下拉）
     const renderAllFormItems = useMemoizedFn(() => {
+      if (typeVal === YAK_SCRIPT_PROVIDER)
+        return (
+          <>
+            <Form.Item label={t('ConfigNetworkPage.modelType')} name="model_type" rules={[{ required: true }]}>
+              <YakitSelect options={aiModelTypeOptions(t)} disabled={IsOnline} />
+            </Form.Item>
+            <Form.Item label={t('BatchModel.modelName')} name="model" rules={[{ required: true, whitespace: true }]}>
+              <YakitInput disabled={IsOnline} />
+            </Form.Item>
+            <YakScriptModelFields disabled={IsOnline} />
+          </>
+        )
+
       return newDefaultAIFormItemsOfAI.map((item, index) => (
         <React.Fragment key={index}>{renderSingleFormItem(item)}</React.Fragment>
       ))
@@ -626,7 +717,14 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
     if (readOnly) {
       return (
         <div className={styles['config-form-wrapper']}>
-          <AIThirdPartyConfigReadonlyPanel merged={formValues} />
+          {formValues.Type === YAK_SCRIPT_PROVIDER ? (
+            <>
+              <pre style={{ whiteSpace: 'pre-wrap' }}>{formValues.script}</pre>
+              <span>{String(!!formValues.enable_native_tool_calling)}</span>
+            </>
+          ) : (
+            <AIThirdPartyConfigReadonlyPanel merged={formValues} />
+          )}
           {footer ? <div className={styles['config-footer']}>{footer}</div> : null}
         </div>
       )
@@ -641,8 +739,15 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
           wrapperCol={{ span: FormProps?.wrapperCol ?? 18 }}
           initialValues={initialValues}
           onValuesChange={(changedValues, allValues) => {
+            probeEpoch.current += 1
+            setProbingEffort(false)
+            setEffortFeedback(undefined)
+            if (Object.keys(changedValues).some((key) => key !== 'ReasoningEffort')) {
+              setProbedEfforts([])
+              form.setFieldsValue({ _EffortProbed: false, _ProbedExtendedEfforts: [] })
+            }
             // 当类型改变时，表单项的值采用默认值
-            if (changedValues.Type !== undefined) {
+            if (changedValues.Type !== undefined && changedValues.Type !== YAK_SCRIPT_PROVIDER) {
               allAIFormItemsOfAI.forEach((item) => {
                 form.setFieldsValue({
                   [item.Name]: ['string', 'list'].includes(item.Type)
@@ -688,101 +793,108 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
             )}
           </Form.Item>
           {renderAllFormItems()}
-          <YakitCollapse
-            activeKey={activeKey}
-            onChange={onChangeCollapse}
-            bordered={false}
-            className={styles['ai-third-party-application-config-collapse']}
-          >
-            <YakitCollapse.YakitPanel
-              header={
-                <div className={styles['panel-heard']}>
-                  <span className={styles['title']}>高级配置</span>
-                  <span className={styles['tip']}>可配置自定义 Endpoint / BaseURL 等</span>
-                </div>
-              }
-              key="1"
-              forceRender={true}
+          {typeVal !== YAK_SCRIPT_PROVIDER && (
+            <YakitCollapse
+              activeKey={activeKey}
+              onChange={onChangeCollapse}
+              bordered={false}
+              className={styles['ai-third-party-application-config-collapse']}
             >
-              {/* 可选的表单项 */}
-              {renderOptionalFormItems()}
-              <Form.Item label={'Header'} name="Headers">
-                {(headers || []).map((i, index) => {
-                  return (
-                    <YakitTag
-                      key={index}
-                      onClick={() => {
-                        if (IsOnline) return
-                        headerItemRef.current = {
-                          Header: i.Key,
-                          Value: i.Value,
-                        }
-                        headerItemIndexRef.current = index
-                        setVisibleHTTPHeader(true)
-                      }}
-                      closable={!IsOnline}
-                      onClose={() => {
-                        onRemoveHeaders(index)
-                      }}
-                    >
-                      {i.Key}
-                    </YakitTag>
-                  )
-                })}
+              <YakitCollapse.YakitPanel
+                header={
+                  <div className={styles['panel-heard']}>
+                    <span className={styles['title']}>高级配置</span>
+                    <span className={styles['tip']}>可配置自定义 Endpoint / BaseURL 等</span>
+                  </div>
+                }
+                key="1"
+                forceRender={true}
+              >
+                {/* 可选的表单项 */}
+                {renderOptionalFormItems()}
+                <Form.Item label={'Header'} name="Headers">
+                  {(headers || []).map((i, index) => {
+                    return (
+                      <YakitTag
+                        key={index}
+                        onClick={() => {
+                          if (IsOnline) return
+                          headerItemRef.current = {
+                            Header: i.Key,
+                            Value: i.Value,
+                          }
+                          headerItemIndexRef.current = index
+                          setVisibleHTTPHeader(true)
+                        }}
+                        closable={!IsOnline}
+                        onClose={() => {
+                          onRemoveHeaders(index)
+                        }}
+                      >
+                        {i.Key}
+                      </YakitTag>
+                    )
+                  })}
+                  <YakitButton
+                    type={'outline1'}
+                    disabled={IsOnline}
+                    onClick={() => {
+                      headerItemRef.current = undefined
+                      headerItemIndexRef.current = undefined
+                      setVisibleHTTPHeader(true)
+                    }}
+                  >
+                    添加
+                  </YakitButton>
+                </Form.Item>
+              </YakitCollapse.YakitPanel>
+              <YakitCollapse.YakitPanel
+                header={
+                  <div className={styles['panel-heard']}>
+                    <span className={styles['title']}>模型配置</span>
+                    <span className={styles['tip']}>以下值可以为空，为空代表不设置</span>
+                  </div>
+                }
+                key="2"
+              >
+                <Form.Item label="Enable Thinking" name="EnableThinkingOpt">
+                  <YakitSelect options={EnableThinkingOptions} />
+                </Form.Item>
+                <Form.Item label="Max Tokens" name="MaxTokens">
+                  <YakitInputNumber min={1} max={163840} />
+                </Form.Item>
+                <Form.Item label="Temperature" name="Temperature">
+                  <YakitInputNumber min={0} max={2} step={0.1} />
+                </Form.Item>
+                <Form.Item label="Top-P" name="TopP">
+                  <YakitInputNumber min={0} max={1} step={0.1} />
+                </Form.Item>
+                <Form.Item label="Top-K" name="TopK">
+                  <YakitInputNumber min={0} max={100} />
+                </Form.Item>
+                <Form.Item label="Frequency Penalty" name="FrequencyPenalty">
+                  <YakitInputNumber min={0} max={2} step={0.1} />
+                </Form.Item>
                 <YakitButton
-                  type={'outline1'}
-                  disabled={IsOnline}
-                  onClick={() => {
-                    headerItemRef.current = undefined
-                    headerItemIndexRef.current = undefined
-                    setVisibleHTTPHeader(true)
-                  }}
+                  type="text"
+                  loading={probingEffort}
+                  disabled={IsOnline || !form.getFieldValue('model')}
+                  onClick={probeEffort}
                 >
-                  添加
+                  {t(probingEffort ? 'BatchModel.probeRunning' : 'BatchModel.probe')}
                 </YakitButton>
-              </Form.Item>
-            </YakitCollapse.YakitPanel>
-            <YakitCollapse.YakitPanel
-              header={
-                <div className={styles['panel-heard']}>
-                  <span className={styles['title']}>模型配置</span>
-                  <span className={styles['tip']}>以下值可以为空，为空代表不设置</span>
-                </div>
-              }
-              key="2"
-            >
-              <Form.Item label="Enable Thinking" name="EnableThinkingOpt">
-                <YakitSelect options={EnableThinkingOptions} />
-              </Form.Item>
-              <Form.Item label="Max Tokens" name="MaxTokens">
-                <YakitInputNumber min={1} max={163840} />
-              </Form.Item>
-              <Form.Item label="Temperature" name="Temperature">
-                <YakitInputNumber min={0} max={2} step={0.1} />
-              </Form.Item>
-              <Form.Item label="Top-P" name="TopP">
-                <YakitInputNumber min={0} max={1} step={0.1} />
-              </Form.Item>
-              <Form.Item label="Top-K" name="TopK">
-                <YakitInputNumber min={0} max={100} />
-              </Form.Item>
-              <Form.Item label="Frequency Penalty" name="FrequencyPenalty">
-                <YakitInputNumber min={0} max={2} step={0.1} />
-              </Form.Item>
-              <Form.Item label="Reasoning Effort" name="ReasoningEffort">
-                <YakitSelect
-                  options={[
-                    { label: '不设置', value: 'no-set' },
-                    { label: 'none', value: 'none' },
-                    { label: 'low', value: 'low' },
-                    { label: 'middle', value: 'middle' },
-                    { label: 'high', value: 'high' },
-                    { label: 'xhigh', value: 'xhigh' },
-                  ]}
-                />
-              </Form.Item>
-            </YakitCollapse.YakitPanel>
-          </YakitCollapse>
+                <div style={{ fontSize: 12, marginBottom: 8 }}>{t('BatchModel.probeHelp')}</div>
+                {effortFeedback && (
+                  <div role={['failed', 'timeout'].includes(effortFeedback) ? 'alert' : 'status'}>
+                    {probeFeedbackText(t, effortFeedback, probedEfforts)}
+                  </div>
+                )}
+                <Form.Item label="Reasoning Effort" name="ReasoningEffort">
+                  <YakitSelect options={buildReasoningEffortOptions(t, probedEfforts, currentEffort)} />
+                </Form.Item>
+              </YakitCollapse.YakitPanel>
+            </YakitCollapse>
+          )}
         </Form>
         <div className={styles['config-footer']}>{footer}</div>
         <InputHTTPHeaderForm

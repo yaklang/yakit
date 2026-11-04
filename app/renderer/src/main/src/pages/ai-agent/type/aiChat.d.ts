@@ -1,3 +1,4 @@
+import type { SessionLifecycle } from '@/pages/ai-re-act/hooks/sessionLifecycle'
 import type { AIAgentGrpcApi, AIInputEvent, AIStartParams, AISource } from '@/pages/ai-re-act/hooks/grpcApi'
 import type { PlanItemDetailsData, SessionRenderContent, AIChatQSData } from '@/pages/ai-re-act/hooks/aiRender'
 import { type PaginationSchema } from '@/pages/invoker/schema'
@@ -127,6 +128,9 @@ export interface QueryAISessionRequest {
   }
 }
 export interface AIAgentChatData {
+  timelineDump?: string
+  timelineDumpSyncID?: string
+  timelineDumpError?: string
   /** http_fuzz_request_change事件通知数据 */
   httpFuzzRequest?: AIAgentGrpcApi.HttpFuzzRequestChange
   /** http_flow_fuzz_status事件通知数据 */
@@ -135,6 +139,12 @@ export interface AIAgentChatData {
   sessionTitle?: string
   /** 记忆列表 */
   memoryList: AIAgentGrpcApi.MemoryEntryList
+  loadedSkills: Omit<AIAgentGrpcApi.SkillLoadedResponse, 'skills'> & { skills: SessionSkillItem[] }
+  availableSkills: Omit<AIAgentGrpcApi.SkillAvailableResponse, 'skills'> & {
+    skills: SessionSkillItem[]
+    error?: string
+  }
+  skillDetails: Map<string, AIAgentGrpcApi.SkillDetail>
   /** 系统流信息(isSystem=true&type=stream) */
   systemStream: string
   /** yaklang_code_change 数据 */
@@ -180,10 +190,12 @@ export interface AIAgentChatData {
   contents: Map<string, AIChatQSData>
 }
 export interface AIAgentChatMetaData {
+  lifecycle: SessionLifecycle
+  loadingStatusTimestamps: Map<string, number>
   /** 会话通信流建立成功后的UI回调触发事件 */
   onLinkSuccess?: (sessionId: string) => void
   /** forceClose 传入的回调，在 grpc session-end 移除监听前执行 */
-  onEnd?: () => void
+  onEnd?: (error?: unknown) => void
   /** 通过用户问题创建会话时的问题 */
   createChatQuestion?: AIInputEvent
 
@@ -253,4 +265,11 @@ export interface AIAgentChatMetaData {
    * 这里记录的是任务的taskID，不是任务的唯一值(问题id-任务id)
    */
   casualSubTaskIDs: Set<string>
+}
+
+export interface SessionSkillItem {
+  name: string
+  description: string
+  skill_load_state: string
+  token_count?: number
 }

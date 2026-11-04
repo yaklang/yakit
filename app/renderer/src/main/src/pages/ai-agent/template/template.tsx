@@ -1,4 +1,6 @@
-import type React from 'react'
+import { InputToolbar } from './InputToolbar'
+import { AIReasoningEffortSelect } from '@/pages/ai-re-act/aiReasoningEffortSelect/AIReasoningEffortSelect'
+import React from 'react'
 import {
   forwardRef,
   memo,
@@ -331,11 +333,14 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
           case AIInputInnerFeatureEnum.AIModelSelect:
             node.push(
               item.component || (
-                <AIModelSelect
-                  key={item.type}
-                  {...item.props}
-                  className={classNames(styles['model-self-adaptive'], item.props?.className)}
-                />
+                <React.Fragment key={item.type}>
+                  <AIModelSelect
+                    key={item.type}
+                    {...item.props}
+                    className={classNames(styles['model-self-adaptive'], item.props?.className)}
+                  />
+                  <AIReasoningEffortSelect />
+                </React.Fragment>
               ),
             )
             break
@@ -405,7 +410,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
             filterMode={filterMentionType}
             chatDataStoreKey={chatDataStoreKey}
           />
-          <div className={styles['footer']}>
+          <InputToolbar className={styles['footer']}>
             {inputFooterLeft ?? (
               <div className={styles['footer-left']}>
                 <AIRunModeSelect />
@@ -459,16 +464,16 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                 }}
               />
             </div>
-          </div>
+          </InputToolbar>
         </div>
-        <div className={styles['ai-chat-textarea-footer']}>
+        <InputToolbar className={styles['ai-chat-textarea-footer']}>
           {footer ?? (
             <>
               <div className={styles['footer-left']}>{renderFooterLeftTypes(footerLeftTypes)}</div>
               <div className={styles['footer-right']}>{renderFooterRightTypes(footerRightTypes)}</div>
             </>
           )}
-        </div>
+        </InputToolbar>
         {children}
       </div>
     )

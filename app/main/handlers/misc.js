@@ -599,9 +599,7 @@ module.exports = (win, getClient) => {
       })
     })
   }
-  ipcMain.handle('RequestYakURL', async (e, params) => {
-    return await asyncRequestYakURL(params)
-  })
+  require('../yakURLRequests').registerYakURLRequests(ipcMain, getClient, asyncRequestYakURL)
 
   const streamReadFileMap = new Map()
   ipcMain.handle('cancel-ReadFile', handlerHelper.cancelHandler(streamReadFileMap))

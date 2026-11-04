@@ -4,6 +4,7 @@ import type { AIMentionCommandParams } from '@/pages/ai-agent/components/aiMilkd
 
 export interface AIReactChatTextareaProps {
   ref?: React.ForwardedRef<AIChatTextareaRefProps>
+  submitDisabled?: boolean
   handleSubmit: (v: AIChatTextareaSubmit) => void
   externalParameters: AIReActChatProps['externalParameters']
   handleStopCasualTask: () => void

@@ -103,14 +103,18 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
     setRemoteValue(RemoteAIAgentGV.AIAgentChatSetting, JSON.stringify(cache))
   }, [setting, activeChat?.SessionID, activeChat?.StartParams?.RuntimeContextSizeLimit])
 
-  const { onStart, onSend, onClose, onUpdatePageId } = useChatIPC(YakitRoute.AI_Agent, YakitRoute.AI_Agent)
+  const { onStart, onSend, onClose, onUpdatePageId, pendingChat, cancelPendingChat, detachPendingChat } = useChatIPC(
+    YakitRoute.AI_Agent,
+    YakitRoute.AI_Agent,
+  )
 
   const store: AIAgentContextStore = useMemo(() => {
     return {
       setting: setting,
       activeChat: activeChat,
+      pendingChat,
     }
-  }, [setting, activeChat])
+  }, [setting, activeChat, pendingChat])
   const dispatcher: AIAgentContextDispatcher = useMemo(() => {
     return {
       getSetting: getSetting,
@@ -120,6 +124,8 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
       onSend,
       onClose,
       onUpdatePageId,
+      cancelPendingChat,
+      detachPendingChat,
     }
   }, [])
 

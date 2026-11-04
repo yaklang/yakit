@@ -6,7 +6,10 @@ import type { DeleteSessionsAISourceType } from '@/pages/ai-agent/historyChat/ut
 
 /** 开始启动流接口的唯一token、请求参数和额外参数 */
 export interface AIChatIPCStartParams {
-  token: string
+  /** Legacy callers pass a business ID here; it is never reused as the IPC token. */
+  token?: string
+  sessionId?: string
+  kind?: 'new' | 'resume'
   params: AIInputEvent
   /** 会话归属路由（不可变） */
   route: YakitRouteType
@@ -23,7 +26,7 @@ export interface AIChatIPCStartParams {
 /** 执行流途中发送消息的参数 */
 export interface AIChatSendParams {
   token: string
-  type: 'casual' | 'task' | ''
+  type: 'casual' | 'reAct' | 'task' | ''
   params: AIInputEvent
   optionValue?: string
 }

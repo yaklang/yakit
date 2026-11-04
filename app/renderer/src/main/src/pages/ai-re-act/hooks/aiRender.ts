@@ -55,6 +55,8 @@ export interface PlanItemDetailsData {
   uuid: string
   /** 任务id */
   taskId: string
+  sessionSnapshotRevision?: number
+  taskSnapshotRevision?: number
   todoList: TodoListCardData
   tool: {
     fixed: AIAgentGrpcApi.PlanItemDetailsFixedItem[]
@@ -517,6 +519,7 @@ export interface CurrentExecTaskTree {
 export interface ChatStoreState {
   /** 会话执行状态 */
   execute: boolean
+  pendingReply: boolean
 
   /** aiChat.d.ts AIAgentChatData httpFuzzRequest */
   httpFuzzRequestUpdate: number
@@ -543,6 +546,9 @@ export interface ChatStoreState {
    */
   yaklangCodeChangeUpdate: number
   /** aiChat.d.ts AIAgentChatMetaData syncIDMap */
+  loadedSkillsUpdate: number
+  availableSkillsUpdate: number
+  skillDetailsUpdate: number
   syncIDUpdate: number
 
   /** 接口运行过程中的数据文件夹合集 */
@@ -600,6 +606,10 @@ export interface ChatStoreState {
   chatElements: SessionRenderContent['chatElements']
   /** 任务详情数据触发计数，对应 taskDetailsMap 的 todoList 更新 */
   chatTodoListUpdate: number
+  timelineDumpUpdate: number
+  taskDetailsUpdate: number
+  sessionTaskList: AIAgentGrpcApi.SessionSnapshotTaskSummary[]
+  sessionTaskListRevision: number
   currentPlan: CurrentExecTaskTree
 
   /**
@@ -637,8 +647,13 @@ export interface ChatStoreState {
       | 'memoryListUpdate'
       | 'updateSystemStream'
       | 'yaklangCodeChangeUpdate'
+      | 'loadedSkillsUpdate'
+      | 'availableSkillsUpdate'
+      | 'skillDetailsUpdate'
       | 'syncIDUpdate'
       | 'currentPlanReviewExtraUpdate'
+      | 'timelineDumpUpdate'
+      | 'taskDetailsUpdate'
       | 'chatTodoListUpdate',
   ) => void
 
@@ -665,6 +680,9 @@ export interface ChatStoreState {
         | 'memoryListUpdate'
         | 'updateSystemStream'
         | 'yaklangCodeChangeUpdate'
+        | 'loadedSkillsUpdate'
+        | 'availableSkillsUpdate'
+        | 'skillDetailsUpdate'
         | 'syncIDUpdate'
         | 'grpcFolders'
         | 'reActTimelines'
@@ -677,6 +695,8 @@ export interface ChatStoreState {
         | 'groups'
         | 'tasks'
         | 'chatElements'
+        | 'timelineDumpUpdate'
+        | 'taskDetailsUpdate'
         | 'chatTodoListUpdate'
         | 'uiExpandMap'
       >

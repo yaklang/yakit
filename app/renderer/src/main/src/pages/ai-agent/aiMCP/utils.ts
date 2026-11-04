@@ -1,3 +1,10 @@
+import type {
+  QueryMCPToolCallHistoryRequest,
+  QueryMCPToolCallHistoryResponse,
+  GetMCPToolCallHistoryDetailRequest,
+  MCPToolCallHistory,
+  DeleteMCPToolCallHistoryRequest,
+} from '../type/aiMCP'
 import { APIFunc } from '@/apiUtils/type'
 import { yakitNotify } from '@/utils/notification'
 import {
@@ -120,6 +127,56 @@ export const grpcSetMCPToolEnabled: APIFunc<SetMCPToolEnabledRequest, GeneralRes
       .then(resolve)
       .catch((err) => {
         if (!hiddenError) yakitNotify('error', 'grpcSetMCPToolEnabled 失败:' + err)
+        reject(err)
+      })
+  })
+}
+
+export const grpcQueryMCPToolCallHistory: APIFunc<QueryMCPToolCallHistoryRequest, QueryMCPToolCallHistoryResponse> = (
+  params,
+  hiddenError,
+) => {
+  return new Promise((resolve, reject) => {
+    ipcRenderer
+      .invoke('QueryMCPToolCallHistory', params)
+      .then((res: QueryMCPToolCallHistoryResponse) => {
+        resolve({
+          ...res,
+          Histories: res.Histories || [],
+        })
+      })
+      .catch((err) => {
+        if (!hiddenError) yakitNotify('error', 'grpcQueryMCPToolCallHistory 失败:' + err)
+        reject(err)
+      })
+  })
+}
+
+export const grpcGetMCPToolCallHistoryDetail: APIFunc<GetMCPToolCallHistoryDetailRequest, MCPToolCallHistory> = (
+  params,
+  hiddenError,
+) => {
+  return new Promise((resolve, reject) => {
+    ipcRenderer
+      .invoke('GetMCPToolCallHistoryDetail', params)
+      .then(resolve)
+      .catch((err) => {
+        if (!hiddenError) yakitNotify('error', 'grpcGetMCPToolCallHistoryDetail 失败:' + err)
+        reject(err)
+      })
+  })
+}
+
+export const grpcDeleteMCPToolCallHistory: APIFunc<DeleteMCPToolCallHistoryRequest, Record<string, never>> = (
+  params,
+  hiddenError,
+) => {
+  return new Promise((resolve, reject) => {
+    ipcRenderer
+      .invoke('DeleteMCPToolCallHistory', params)
+      .then(resolve)
+      .catch((err) => {
+        if (!hiddenError) yakitNotify('error', 'grpcDeleteMCPToolCallHistory 失败:' + err)
         reject(err)
       })
   })

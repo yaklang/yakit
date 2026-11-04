@@ -132,6 +132,7 @@ export const formatAIAgentSetting = (setting: AIAgentSetting): AIAgentSetting =>
       data.ReActMaxIteration = setting.ReActMaxIteration || AIAgentSettingDefault.ReActMaxIteration
     }
     // 设置页为 KB，只在这里换算一次；缺省或无效值由服务端决定。
+    data.SingleModelMode = setting.SingleModelMode ?? AIAgentSettingDefault.SingleModelMode
     data.RuntimeContextSizeLimit = (setting.RuntimeContextSizeLimit ?? 0) * 1024
 
     // AICallTokenLimit 单位是KB，但传到后端需要转换为字节

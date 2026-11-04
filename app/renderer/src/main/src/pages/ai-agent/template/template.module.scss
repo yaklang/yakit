@@ -36,8 +36,9 @@ textarea.qs-input-textarea {
     display: flex;
     align-items: center;
     gap: 4px;
-    height: 38px;
-    overflow: hidden;
+    min-height: 38px;
+    height: auto;
+    flex-wrap: wrap;
     justify-content: space-between;
     padding: 6px 12px 8px 12px;
     %self-adaptive {
@@ -56,6 +57,9 @@ textarea.qs-input-textarea {
     }
     .footer-left {
       @extend %self-adaptive;
+      overflow: visible;
+      min-width: 0;
+      flex-wrap: wrap;
       align-items: center;
       gap: 4px;
       flex-shrink: 1;

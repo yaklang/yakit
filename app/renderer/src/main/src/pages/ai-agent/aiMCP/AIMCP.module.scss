@@ -19,6 +19,8 @@
   @extend %display-column;
   gap: 12px;
   height: 100%;
+  flex: 1;
+  min-height: 0;
   .ai-mcp-list-header {
     @extend %display-flex-center;
     justify-content: space-between;

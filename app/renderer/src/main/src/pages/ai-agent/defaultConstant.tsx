@@ -89,6 +89,7 @@ export const AIMentionTabs: YakitSideTabProps['yakitTabs'] = [
 
 /** ai-agent 聊天全局配置参数默认值 */
 export const AIAgentSettingDefault: AIAgentSetting = {
+  SingleModelMode: false,
   EnableSystemFileSystemOperator: true,
   UseDefaultAIConfig: true,
   ForgeName: '',
@@ -174,6 +175,7 @@ export enum SwitchAIAgentTabEventEnum {
   SET_TAB_SHOW = 'setTabShow',
 }
 export enum AITabsEnum {
+  Skills = 'session-skills',
   Task_Content = 'task-content',
   File_System = 'file-system',
   HTTP = 'http',
@@ -182,6 +184,7 @@ export enum AITabsEnum {
 }
 /** @name AI 默认展示的tab集合 */
 export const AITabs = {
+  'session-skills': { label: 'AITabs.skills', value: AITabsEnum.Skills },
   'task-content': { label: 'AITabs.taskContent', value: AITabsEnum.Task_Content },
   'file-system': { label: 'AITabs.fileSystem', value: AITabsEnum.File_System },
   http: { label: 'AITabs.httpTraffic', value: AITabsEnum.HTTP },
@@ -361,6 +364,7 @@ export const AIModelTypeInterFileNameEnum: { [K in AIModelTypeFileName]: K } = {
 }
 
 export const defaultAIGlobalConfig: AIGlobalConfig = {
+  SingleModelMode: false,
   Enabled: false,
   RoutingPolicy: AIModelPolicyEnum.PolicyAuto,
   DisableFallback: false,

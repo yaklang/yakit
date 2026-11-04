@@ -1,3 +1,13 @@
+import {
+  buildAIConfigHealthCheckConfig,
+  buildAIConfigHealthCheckFormValues,
+  formValueToAIConfigProvider,
+  getEnableThinkingOpt,
+  parseEnableThinkingOptValue,
+  parseValidStringOption,
+  parseValidNumberOption,
+} from './providerFormConfig'
+
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import type {
   AIConfigAPIKeyFormItemProps,
@@ -30,7 +40,7 @@ import { AIModelTypeEnum, type AIModelTypeEnumType, AIModelTypeInterFileNameEnum
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { yakitNotify } from '@/utils/notification'
 import emiter from '@/utils/eventBus/eventBus'
-import { cloneDeep, has, isNil } from 'lodash'
+import { cloneDeep } from 'lodash'
 import type { ThirdPartyApplicationConfig } from '@/components/configNetwork/ConfigNetworkPage'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import styles from './AIModelForm.module.scss'
@@ -45,6 +55,16 @@ import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitR
 import { setRemoteValue } from '@/utils/kv'
 import { RemoteAIAgentGV } from '@/enums/aiAgent'
 import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
+
+export {
+  buildAIConfigHealthCheckConfig,
+  buildAIConfigHealthCheckFormValues,
+  formValueToAIConfigProvider,
+  getEnableThinkingOpt,
+  parseEnableThinkingOptValue,
+  parseValidStringOption,
+  parseValidNumberOption,
+} from './providerFormConfig'
 
 const defaultFormValues = {
   Type: '',
@@ -115,145 +135,6 @@ export const getModelLabelByModelType = (type: AIModelTypeEnumType) => {
   }
   return label
 }
-export const buildAIConfigHealthCheckConfig = (values): ThirdPartyApplicationConfig => {
-  const config: ThirdPartyApplicationConfig = {
-    Type: values.Type || '',
-    APIKey: values.api_key || '',
-    Domain: values.domain || '',
-    Proxy: values.proxy || '',
-    NoHttps: !!values.no_https,
-    APIType: values.api_type || '',
-    ExtraParams: [],
-    BaseURL: values.base_url || '',
-    Endpoint: values.endpoint || '',
-    EnableEndpoint: !!values.enable_endpoint,
-    Headers: values.Headers || [],
-    /** 下面这些字段ai中没有 */
-    // UserIdentifier: values.user_identifier || "",
-    // UserSecret: values.user_secret || "",
-    // Namespace: values.namespace || "",
-    // WebhookURL: values.webhook_url || "",
-  }
-
-  const builtInFieldSet = new Set([
-    'Type',
-    'api_key',
-    'user_identifier',
-    'user_secret',
-    'namespace',
-    'domain',
-    'proxy',
-    'no_https',
-    'api_type',
-    'base_url',
-    'endpoint',
-    'enable_endpoint',
-    'Headers',
-    'webhook_url',
-    'api_key_id', //测试不需要传这个给后端
-  ])
-
-  Object.entries(values).forEach(([key, value]) => {
-    if (builtInFieldSet.has(key)) return
-    if (value === undefined || value === null || value === '') return
-    config.ExtraParams?.push({
-      Key: key,
-      Value: `${value}`,
-    })
-  })
-
-  if (!config.ExtraParams?.length) {
-    delete config.ExtraParams
-  }
-
-  return config
-}
-
-export const buildAIConfigHealthCheckFormValues = (config: ThirdPartyApplicationConfig) => {
-  return {
-    Type: config.Type ?? '',
-    api_key: config.APIKey ?? '',
-    api_type: normalizeAIAPIType(config.APIType ?? ''),
-    domain: config.Domain ?? '',
-    proxy: config.Proxy ?? '',
-    no_https: config.NoHttps ?? false,
-    base_url: config.BaseURL ?? '',
-    endpoint: config.Endpoint ?? '',
-    enable_endpoint: config.EnableEndpoint ?? false,
-    Headers: config.Headers ?? [],
-    EnableThinkingOpt: getEnableThinkingOpt(config),
-    MaxTokens: config?.MaxTokens,
-    Temperature: config?.Temperature,
-    TopP: config?.TopP,
-    TopK: config?.TopK,
-    FrequencyPenalty: config?.FrequencyPenalty,
-    ReasoningEffort: config?.ReasoningEffort || 'no-set',
-  } as AIThirdPartyApplicationConfig
-}
-export const getEnableThinkingOpt = (config: ThirdPartyApplicationConfig) => {
-  return has(config, 'EnableThinkingOpt') ? `${config.EnableThinkingOpt === true ? 'open' : 'close'}` : 'no-set'
-}
-
-export const parseEnableThinkingOptValue = (val: any): boolean | undefined => {
-  if (isNil(val) || val === 'no-set') return undefined
-  return val === 'open'
-}
-
-export const parseValidStringOption = (val: any): string | undefined => {
-  if (isNil(val) || val === 'no-set') return undefined
-  return val
-}
-
-export const parseValidNumberOption = (val: any): number | undefined => {
-  if (isNil(val) || val === '') return undefined
-  return Number(val)
-}
-// 常规数字字段
-const numberFields: Array<keyof ThirdPartyApplicationConfig> = [
-  'MaxTokens',
-  'Temperature',
-  'TopP',
-  'TopK',
-  'FrequencyPenalty',
-]
-type NumberFieldKey = (typeof numberFields)[number]
-export const formValueToAIConfigProvider = (res) => {
-  const date: ThirdPartyApplicationConfig = {
-    Type: res.Type,
-    APIKey: res.api_key,
-    APIType: normalizeAIAPIType(res.api_type),
-    Domain: res.domain,
-    Proxy: res.proxy,
-    NoHttps: res.no_https,
-    ExtraParams: [],
-    BaseURL: res.base_url,
-    Endpoint: res.endpoint,
-    EnableEndpoint: res.enable_endpoint,
-    Headers: res.Headers,
-    /** 下面这些字段ai中没有 */
-    // UserIdentifier: "",
-    // UserSecret: "",
-    // Namespace: "",
-    // WebhookURL: "",
-    // Disabled: false
-  }
-  // 1. 单独处理特殊规则字段
-  const enableThinkingOpt = parseEnableThinkingOptValue(res.EnableThinkingOpt)
-  if (enableThinkingOpt !== undefined) date.EnableThinkingOpt = enableThinkingOpt
-
-  const reasoningEffort = parseValidStringOption(res.ReasoningEffort)
-  if (reasoningEffort !== undefined) date.ReasoningEffort = reasoningEffort
-
-  const extraData: Partial<Record<NumberFieldKey, number>> = {}
-  numberFields.forEach((key) => {
-    const val = parseValidNumberOption(res[key])
-    if (val !== undefined) {
-      extraData[key] = val
-    }
-  })
-  Object.assign(date, extraData)
-  return date
-}
 export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
   const { item, aiModelType, onSuccess, onClose } = props
 
@@ -284,6 +165,8 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
         model_type: aiModelType,
         api_key_id: item.ProviderId,
         model: item.ModelName,
+        _EffortProbed: item.EffortProbed,
+        _ProbedExtendedEfforts: item.ProbedExtendedEfforts,
         ...buildAIConfigHealthCheckFormValues(item.Provider),
       }
     } else {
@@ -308,6 +191,7 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
 
   const onOk = useMemoizedFn(() => {
     formRef.current?.form?.validateFields().then((res) => {
+      res = { ...formRef.current?.form?.getFieldsValue(true), ...res }
       if (!aiGlobalConfigData?.aiGlobalConfigRef.current) {
         yakitNotify('error', 'AI全局配置获取失败，请稍后再试')
         return
@@ -330,6 +214,8 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
         ModelName: res.model,
         ExtraParams: [],
         ...(item?.IsOnline ? { IsOnline: true } : {}),
+        EffortProbed: !!res._EffortProbed,
+        ProbedExtendedEfforts: res._EffortProbed ? (res._ProbedExtendedEfforts ?? []) : [],
       }
       const setConfigOptions = {
         modelType: res.model_type,

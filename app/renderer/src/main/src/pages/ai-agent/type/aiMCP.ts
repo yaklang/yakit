@@ -135,3 +135,44 @@ export interface SetMCPToolEnabledRequest {
 export interface GetMCPToolDetailRequest {
   ToolName: string
 }
+
+export interface MCPToolCallHistory {
+  ID: number
+  ToolName: string
+  Arguments: string
+  Result: string
+  Success: boolean
+  ErrorMessage: string
+  DurationMillis: number
+  ClientID: string
+  SessionID: string
+  ClientName: string
+  ClientVersion: string
+  CreatedAt: number
+}
+
+export type MCPToolCallHistorySummary = Omit<MCPToolCallHistory, 'Arguments' | 'Result'>
+
+export interface QueryMCPToolCallHistoryRequest {
+  Keyword: string
+  Status: '' | 'success' | 'failed'
+  Pagination: PaginationSchema
+}
+
+export interface QueryMCPToolCallHistoryResponse {
+  Histories: MCPToolCallHistorySummary[]
+  Pagination: PaginationSchema
+  Total: number
+}
+
+export interface GetMCPToolCallHistoryDetailRequest {
+  ID: number
+}
+
+export interface DeleteMCPToolCallHistoryRequest {
+  IDs?: number[]
+  DeleteAll?: boolean
+  DeleteFiltered?: boolean
+  Keyword?: string
+  Status?: QueryMCPToolCallHistoryRequest['Status']
+}

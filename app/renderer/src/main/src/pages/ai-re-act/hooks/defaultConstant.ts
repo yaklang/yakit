@@ -11,6 +11,8 @@ import { AITaskStatus } from './grpcApi'
 import type { AIOutputI18n, AIAgentGrpcApi } from './grpcApi'
 import type { AIAgentChatMetaData } from '@/pages/ai-agent/type/aiChat'
 
+export const DEFAULT_SKILL_PAGE_SIZE = 50
+
 /** 工具执行结果-默认值 */
 export const DefaultAIToolResult: AIToolResult = {
   type: 'create',

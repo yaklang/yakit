@@ -251,7 +251,8 @@
     "taskContent": "Task Content",
     "fileSystem": "File System",
     "httpTraffic": "HTTP Traffic",
-    "readWriteLog": "Read/Write Log"
+    "readWriteLog": "Read/Write Log",
+    "skills": "Skills"
   },
   "AIReviewRuleOptions": {
     "manualLabel": "manual",
@@ -465,7 +466,9 @@
     "command": "Command: {{command}}",
     "toolFetchFailed": "Tool fetch failed",
     "toolCount": "{{count}} tools",
-    "disableConfirm": "Are you sure you want to disable {{name}}?"
+    "disableConfirm": "Are you sure you want to disable {{name}}?",
+    "callHistory": "Call history",
+    "noToolsLoaded": "Server enabled; no tools returned. Refresh to retry."
   },
   "AIMCPForm": {
     "serverUrl": "Server URL",
@@ -686,6 +689,136 @@
     "labelEnd": "End",
     "labelCreated": "Created",
     "labelSkipped": "Skipped",
-    "labelDeleted": "Deleted"
+    "labelDeleted": "Deleted",
+    "selectTask": "Switch task",
+    "noTasks": "No tasks",
+    "statusPending": "Pending",
+    "statusDoing": "In progress",
+    "statusDone": "Done",
+    "statusSkipped": "Skipped",
+    "statusDeleted": "Deleted",
+    "ganttToNow": "to now"
+  },
+  "AITaskGantt": {
+    "title": "Gantt",
+    "noTime": "No timing data",
+    "statusHint": "Colors indicate task status phases, not independently measured phase durations"
+  },
+  "AITaskStatusControls": {
+    "created": "Created",
+    "sortHint": "Click to show or hide; drag to reorder statuses, or press Alt + Left/Right",
+    "noVisibleTasks": "No tasks match the filters. Select a status card to show tasks again."
+  },
+  "FileTreeSearch": {
+    "keyword": "Keyword",
+    "regexp": "Regexp",
+    "all": "All",
+    "currentOpen": "Current Open",
+    "matchCount": "{{count}} matches",
+    "expandMatches": "Expand matches",
+    "collapseMatches": "Collapse matches",
+    "searchFailed": "File search failed",
+    "engineUnsupported": "Current engine does not support file content search. Please upgrade the yaklang engine.",
+    "emptyHint": "Enter a keyword to search file content",
+    "emptyNoResult": "No matched content",
+    "changeSearchScope": "Change search scope",
+    "cancelSearch": "Cancel search"
+  },
+  "BatchModel": {
+    "scriptProvider": "Yak script model",
+    "modelName": "Model name",
+    "singleMode": "Single model mode",
+    "singleHelp": "Use only the intelligent model. Global mode overrides session settings; fixed after session creation.",
+    "probe": "Probe effort",
+    "effort": "Reasoning effort",
+    "probeHelp": "Checks whether this model supports xhigh / max reasoning. May send test requests; does not change the selected effort.",
+    "probeRunning": "Probing…",
+    "probeSupported": "Confirmed support:",
+    "probeUnsupported": "Probe complete: xhigh / max are unsupported. Basic levels remain available.",
+    "probeFailed": "Probe incomplete. Check the model configuration or connection and retry. Existing levels are unchanged.",
+    "probeTimeout": "Probe timed out after 15 seconds. Check the connection and retry.",
+    "probeSaveFailed": "Failed to save the configuration or probe result. Please retry."
+  },
+  "AIToolBatch": {
+    "exportTool": "Export tools",
+    "importTool": "Import tools",
+    "emptySelection": "Select at least one tool",
+    "exportFailed": "Could not resolve export selection. Retry."
+  },
+  "BatchFiles": {
+    "search": "Search file contents",
+    "scope": "Search scope",
+    "all": "Folders and files in the file tree",
+    "open": "Open files",
+    "mode": "Match mode",
+    "keyword": "Keyword",
+    "regex": "Regular expression",
+    "ignoreCase": "Ignore case",
+    "cancel": "Cancel search",
+    "empty": "No matches",
+    "close": "Close",
+    "searchPlaceholder": "Enter content and press Enter to search"
+  },
+  "BatchDump": {
+    "title": "Timeline dump",
+    "refresh": "Refresh",
+    "copy": "Copy",
+    "failed": "Could not fetch. Previous content retained; retry.",
+    "copyFailed": "Copy failed. Retry.",
+    "loading": "Loading…",
+    "empty": "No dump content"
+  },
+  "ChatSessionNotify": {
+    "connectionStopped": "Connection stopped",
+    "cacheDeleting": "Session cache is being deleted. Try connecting again later.",
+    "duplicateSession": "This session already exists. Do not connect again.",
+    "initFailed": "Failed to initialize the AI session: {{error}}",
+    "sessionMissing": "Session does not exist. Unable to send the message.",
+    "historyLoading": "History is still loading. Try sending again later.",
+    "reviewMissing": "Review details are unavailable. The action was ignored.",
+    "connectFailed": "AI session connection failed: {{error}}",
+    "finalizeFailed": "Failed to finish the AI session: {{error}}",
+    "endedBeforeReady": "The session connection ended before initialization completed",
+    "initTimeout": "AI session initialization timed out. Check the engine connection and try again.",
+    "sessionIdMismatch": "The engine returned inconsistent session IDs.",
+    "sessionIdOccupied": "The engine returned a session ID that already exists.",
+    "invalidHistoryCursor": "History recovery did not return a valid cursor."
+  },
+  "AIChatLoading": {
+    "sessionInitializing": "Initializing session...",
+    "connectingSession": "Connecting session...",
+    "loadingHistory": "Loading history...",
+    "waitingReply": "Waiting for AI reply...",
+    "processingRequest": "Processing your request...",
+    "executingSessionsLimitLoggedIn": "Concurrent AI sessions limit reached. Max {{count}} at once",
+    "executingSessionsLimitLoggedOutPrefix": "Concurrent AI sessions limit reached. Max 2 at once. ",
+    "executingSessionsLimitLogin": "Log in",
+    "executingSessionsLimitLoggedOutSuffix": " to run up to 5",
+    "sessionClosing": "Closing session...",
+    "sessionClosed": "Session closed"
+  },
+  "SessionSkills": {
+    "loaded": "Loaded",
+    "available": "Available",
+    "refresh": "Refresh",
+    "searchPlaceholder": "Search skill names or descriptions",
+    "search": "Search",
+    "sendFailed": "Request not sent. Connect and retry.",
+    "timeout": "Timed out waiting for skill data. Refresh to retry.",
+    "loadedSuccess": "Confirmed loaded: {{name}}",
+    "disconnected": "Session disconnected. Resume it to query or load skills.",
+    "load": "Load",
+    "loading": "Fetching skill data…",
+    "empty": "No skills",
+    "more": "Load more",
+    "fileTree": "File tree",
+    "refreshDetail": "Refresh details",
+    "selectDetail": "Select a skill to view read-only details"
+  },
+  "SessionStatus": {
+    "connecting": "Connecting; your first message will be sent after confirmation…",
+    "failed": "Connection failed: {{error}}. Your first message is retained.",
+    "retry": "Retry",
+    "cancel": "Cancel connection"
   }
 }

@@ -40,18 +40,22 @@ describe('session startup runtime context boundary', () => {
         EnablePlan: true,
       })
       const event = { IsStart: true, Params: original as AIStartParams }
-      expect(
-        controller.handleStartSession({
-          token: 'saved-session',
-          params: event,
-          route: YakitRoute.AI_Agent,
-          pageId: YakitRoute.AI_Agent,
-        }),
-      ).toBe(true)
+      const streamToken = controller.handleStartSession({
+        token: 'saved-session',
+        params: event,
+        route: YakitRoute.AI_Agent,
+        pageId: YakitRoute.AI_Agent,
+      })
+      expect(typeof streamToken).toBe('string')
       await vi.advanceTimersByTimeAsync(0)
-      expect(ipcRendererMock.invoke).toHaveBeenCalledWith('start-ai-re-act', 'saved-session', {
+      expect(ipcRendererMock.invoke).toHaveBeenCalledWith('start-ai-re-act', streamToken, {
         IsStart: true,
-        Params: { RuntimeContextSizeLimit: expected, ForgeName: 'employee-forge', EnablePlan: true },
+        Params: {
+          RuntimeContextSizeLimit: expected,
+          ForgeName: 'employee-forge',
+          EnablePlan: true,
+          TimelineSessionID: 'saved-session',
+        },
       })
       expect(event.Params).toBe(original)
       expect(original.TimelineContentSizeLimit).toBe(61440)

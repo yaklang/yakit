@@ -251,7 +251,8 @@
     "taskContent": "任务内容",
     "fileSystem": "文件系统",
     "httpTraffic": "HTTP 流量",
-    "readWriteLog": "读写日志"
+    "readWriteLog": "读写日志",
+    "skills": "技能"
   },
   "AIReviewRuleOptions": {
     "manualLabel": "人工",
@@ -465,7 +466,9 @@
     "command": "命令: {{command}}",
     "toolFetchFailed": "工具获取失败",
     "toolCount": "{{count}}个工具",
-    "disableConfirm": "确定要停用 {{name}} 吗？"
+    "disableConfirm": "确定要停用 {{name}} 吗？",
+    "callHistory": "调用历史",
+    "noToolsLoaded": "服务已启用，当前未返回工具，可点击刷新重试。"
   },
   "AIMCPForm": {
     "serverUrl": "服务器URL",
@@ -686,6 +689,136 @@
     "labelEnd": "结束",
     "labelCreated": "创建",
     "labelSkipped": "跳过",
-    "labelDeleted": "删除"
+    "labelDeleted": "删除",
+    "selectTask": "切换任务",
+    "noTasks": "暂无任务",
+    "statusPending": "待处理",
+    "statusDoing": "进行中",
+    "statusDone": "已完成",
+    "statusSkipped": "已跳过",
+    "statusDeleted": "已删除",
+    "ganttToNow": "至今"
+  },
+  "AITaskGantt": {
+    "title": "甘特图",
+    "noTime": "暂无时间数据",
+    "statusHint": "颜色表示任务状态阶段，不代表独立测量的阶段耗时"
+  },
+  "AITaskStatusControls": {
+    "created": "已创建",
+    "sortHint": "点击显示或隐藏；拖动调整状态顺序，或按 Alt + 左右方向键",
+    "noVisibleTasks": "没有符合当前筛选的任务，可点击状态卡片恢复显示"
+  },
+  "FileTreeSearch": {
+    "keyword": "关键字",
+    "regexp": "正则",
+    "all": "全部",
+    "currentOpen": "当前打开",
+    "matchCount": "{{count}} 处命中",
+    "expandMatches": "展开命中行",
+    "collapseMatches": "收起命中行",
+    "searchFailed": "文件搜索失败",
+    "engineUnsupported": "当前引擎不支持文件内容搜索，请升级 yaklang 引擎后重试",
+    "emptyHint": "请输入关键字搜索文件内容",
+    "emptyNoResult": "未搜索到匹配内容",
+    "changeSearchScope": "更改搜索范围",
+    "cancelSearch": "取消搜索"
+  },
+  "BatchModel": {
+    "scriptProvider": "Yak 脚本模型",
+    "modelName": "模型名称",
+    "singleMode": "单模型模式",
+    "singleHelp": "仅使用高质模型；全局开启后覆盖会话设置，新会话创建后不可调整。",
+    "probe": "探测强度",
+    "effort": "推理强度",
+    "probeHelp": "检测当前模型是否支持 xhigh / max 扩展推理档位，可能发送测试请求；不会自动切换强度。",
+    "probeRunning": "探测中…",
+    "probeSupported": "已确认支持：",
+    "probeUnsupported": "探测完成：不支持 xhigh / max，继续使用基础档位。",
+    "probeFailed": "探测未完成，请检查模型配置或连接后重试；现有档位未更改。",
+    "probeTimeout": "探测超时（15 秒），请检查连接后重试。",
+    "probeSaveFailed": "保存配置或探测结果失败，请重试。"
+  },
+  "AIToolBatch": {
+    "exportTool": "导出工具",
+    "importTool": "导入工具",
+    "emptySelection": "请至少选择一个工具",
+    "exportFailed": "读取导出范围失败，请重试"
+  },
+  "BatchFiles": {
+    "search": "文件内容搜索",
+    "scope": "搜索范围",
+    "all": "当前文件树目录与文件",
+    "open": "当前打开的文件",
+    "mode": "匹配方式",
+    "keyword": "关键词",
+    "regex": "正则表达式",
+    "ignoreCase": "忽略大小写",
+    "cancel": "取消搜索",
+    "empty": "暂无匹配内容",
+    "close": "关闭",
+    "searchPlaceholder": "输入内容后按 Enter 搜索"
+  },
+  "BatchDump": {
+    "title": "时间线 Dump",
+    "refresh": "刷新",
+    "copy": "复制",
+    "failed": "获取失败，可重试；已保留上次内容",
+    "copyFailed": "复制失败，请重试",
+    "loading": "获取中…",
+    "empty": "暂无 Dump 内容"
+  },
+  "ChatSessionNotify": {
+    "connectionStopped": "连接已停止",
+    "cacheDeleting": "会话缓存删除中，请稍后再连接",
+    "duplicateSession": "会话已经存在，请勿重复建立！",
+    "initFailed": "AI 会话初始化失败: {{error}}",
+    "sessionMissing": "会话不存在，无法发送消息",
+    "historyLoading": "历史消息加载中，请稍后再发送",
+    "reviewMissing": "未获取到 review 信息, 操作无效",
+    "connectFailed": "AI 会话连接失败: {{error}}",
+    "finalizeFailed": "AI 会话收尾失败: {{error}}",
+    "endedBeforeReady": "会话连接已结束，尚未完成初始化",
+    "initTimeout": "AI 会话初始化超时，请检查引擎连接后重试",
+    "sessionIdMismatch": "引擎返回的会话 ID 不一致",
+    "sessionIdOccupied": "引擎返回了已存在的会话 ID",
+    "invalidHistoryCursor": "历史恢复未返回有效游标"
+  },
+  "AIChatLoading": {
+    "sessionInitializing": "会话初始化中...",
+    "connectingSession": "正在连接会话...",
+    "loadingHistory": "获取历史数据中...",
+    "waitingReply": "等待AI回复...",
+    "processingRequest": "正在处理你的请求...",
+    "executingSessionsLimitLoggedIn": "进行中会话数已达上限，最多同时{{count}}个",
+    "executingSessionsLimitLoggedOutPrefix": "进行中会话数已达上限，最多同时2个，",
+    "executingSessionsLimitLogin": "登录",
+    "executingSessionsLimitLoggedOutSuffix": "后可同时5个",
+    "sessionClosing": "会话正在关闭...",
+    "sessionClosed": "会话已关闭"
+  },
+  "SessionSkills": {
+    "loaded": "已加载",
+    "available": "可用技能",
+    "refresh": "刷新",
+    "searchPlaceholder": "搜索技能名称或描述",
+    "search": "搜索",
+    "sendFailed": "请求未发送，请连接会话后重试。",
+    "timeout": "请求超时，未收到技能数据；请刷新重试。",
+    "loadedSuccess": "已确认加载 {{name}}",
+    "disconnected": "会话未连接。恢复会话后可查询和加载技能。",
+    "load": "加载",
+    "loading": "正在获取技能数据…",
+    "empty": "暂无技能",
+    "more": "加载更多",
+    "fileTree": "文件树",
+    "refreshDetail": "刷新详情",
+    "selectDetail": "点击技能名称查看只读详情"
+  },
+  "SessionStatus": {
+    "connecting": "正在建立会话，首问将在连接确认后发送…",
+    "failed": "连接失败：{{error}}。首问已保留。",
+    "retry": "重试连接",
+    "cancel": "取消连接"
   }
 }

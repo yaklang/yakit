@@ -113,6 +113,8 @@ export interface GlobalNetworkConfig {
   MaxContentLength: number | string
 }
 export interface ThirdPartyApplicationConfig {
+  Script?: string
+  EnableNativeToolCalling?: boolean
   //zoomeye / hunter / shodan / fofa / github / openai / token
   Type:
     | 'zoomeye'

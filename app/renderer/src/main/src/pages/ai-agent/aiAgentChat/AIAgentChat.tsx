@@ -1,3 +1,4 @@
+import { useStartAIChat } from '@/pages/ai-re-act/hooks/useStartAIChat'
 import React, { memo, useEffect, useRef, useState } from 'react'
 import type { AIAgentChatMode, AIAgentChatProps, AIReActTaskChatReviewProps, HandleStartParams } from './type'
 import { useCreation, useDebounceFn, useInViewport, useMemoizedFn, useSafeState } from 'ahooks'
@@ -47,8 +48,8 @@ const AIChatWelcome = React.lazy(() => import('../aiChatWelcome/AIChatWelcome'))
 export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
 
-  const { activeChat } = useAIAgentStore()
-  const { setActiveChat, setSetting, onStart, onClose } = useAIAgentDispatcher()
+  const { activeChat, pendingChat } = useAIAgentStore()
+  const { setActiveChat, setSetting, onStart, onClose, cancelPendingChat, detachPendingChat } = useAIAgentDispatcher()
   const { selectAgentByForgeName } = useDigitalEmployee()
 
   /** 当前对话唯一ID */
@@ -75,6 +76,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
 
   useEffect(() => {
     if (activeChat?.SessionID) {
+      detachPendingChat()
       onSetReAct()
       onReStart({ activeChat, onStart })
     }
@@ -86,12 +88,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
       emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.Task_Content }))
     }, 100)
   })
-  /** 等自由对话渲染出来再发送 */
-  const handleStart = useMemoizedFn((value: HandleStartParams) => {
-    setTimeout(() => {
-      aiReActChatRef.current?.handleStart(value)
-    })
-  })
+  const handleStart = useStartAIChat()
 
   const onStop = useMemoizedFn(() => {
     if (execute && sessionId) {
@@ -152,6 +149,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
       switch (data.type as ReActChatEventEnum) {
         // 新开聊天对话窗
         case ReActChatEventEnum.NEW_CHAT:
+          cancelPendingChat()
           setSetting?.((old) => ({
             ...old,
             SyncPerceptionTrigger: false,

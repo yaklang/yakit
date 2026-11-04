@@ -1,3 +1,4 @@
+import { SessionSkills } from '@/pages/ai-re-act/sessionSkills/SessionSkills'
 import React, { forwardRef, type ReactNode, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import type { AIAgentTabPayload, AIChatContentProps } from './type'
 import styles from './AIChatContent.module.scss'
@@ -128,7 +129,11 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
     }, [runTimeId])
 
     const yakitTabs = useCreation(() => {
-      const tab: YakitSideTabProps['yakitTabs'] = [AITabs[AITabsEnum.Task_Content], AITabs[AITabsEnum.File_System]]
+      const tab: YakitSideTabProps['yakitTabs'] = [
+        AITabs[AITabsEnum.Task_Content],
+        AITabs[AITabsEnum.File_System],
+        AITabs[AITabsEnum.Skills],
+      ]
 
       if (httpTabShow || !!RelatedRuntimeIDs.length) {
         tab.push(AITabs[AITabsEnum.HTTP])
@@ -226,6 +231,8 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
         ),
       ]
       switch (activeKey) {
+        case AITabsEnum.Skills:
+          return <SessionSkills key={activeChat?.SessionID || 'pending'} />
         case AITabsEnum.Task_Content:
           return (
             <AIReActTaskChat

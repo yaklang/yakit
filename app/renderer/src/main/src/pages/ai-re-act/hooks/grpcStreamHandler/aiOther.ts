@@ -14,6 +14,21 @@ import {
 import { ensureToolResultOnUI } from './aiToolResult'
 import type { AIAgentChatMetaData } from '@/pages/ai-agent/type/aiChat'
 
+const handleTimelineDump: AIMessageHandler = ({ res, rawData, store }) => {
+  if (!res.IsSync || !res.IsJson || !rawData.timelineDumpSyncID) return
+  if (res.SyncID && res.SyncID !== rawData.timelineDumpSyncID) return
+  try {
+    const data = JSON.parse(Uint8ArrayToString(res.Content))
+    if (typeof data?.dump !== 'string') throw new Error('Invalid timeline dump')
+    rawData.timelineDump = data.dump
+    rawData.timelineDumpError = undefined
+  } catch {
+    rawData.timelineDumpError = 'invalid'
+  }
+  rawData.timelineDumpSyncID = undefined
+  store.getState().updateStateCount('timelineDumpUpdate')
+}
+
 const handleHttpFuzzRequestChange: AIMessageHandler = (request) => {
   const { res, store, rawData } = request
   if (res.Type !== 'http_fuzz_request_change') return
@@ -115,7 +130,7 @@ const handleEndPlanAndExecution: AIMessageHandler = (requestInfo) => {
       data: '',
     }
     rawData.contents.set(chatData.id, chatData)
-    persistIndependentItem(requestInfo.sessionId, chatData)
+    persistIndependentItem(requestInfo.sessionId, chatData, requestInfo.meta.lifecycle)
     store.getState().dispatchStreamingNode({
       chatType: 'task',
       node: { token: chatData.id, kind: 'item', type: chatData.type },
@@ -247,13 +262,13 @@ const handleReactTaskDequeue: AIMessageHandler = (requestInfo) => {
   }
   rawData.contents.set(chatData.id, chatData)
 
-  persistIndependentItem(requestInfo.sessionId, chatData)
+  persistIndependentItem(requestInfo.sessionId, chatData, requestInfo.meta.lifecycle)
   if (data.react_task_user_input_uuid) {
     const qsDetail = store.getState().items[data.react_task_user_input_uuid]
     if (qsDetail && qsDetail.type === AIChatQSDataTypeEnum.QUESTION) {
       rawData.contents.delete(data.react_task_user_input_uuid)
       // 清掉前端临时 uuid 对应的 IDB 孤儿行
-      deletePersistedContent(requestInfo.sessionId, data.react_task_user_input_uuid)
+      deletePersistedContent(requestInfo.sessionId, data.react_task_user_input_uuid, requestInfo.meta.lifecycle)
       store.getState().replaceItemToken(data.react_task_user_input_uuid, chatData.id)
       return
     }
@@ -390,7 +405,7 @@ const handleReactTaskStatusChanged: AIMessageHandler = (request) => {
   if (!taskDetail || taskDetail.type !== AIChatQSDataTypeEnum.TASK_NODE_GROUP) return
   taskDetail.data.status = info.react_task_now_status as AITaskStatusType
   store.getState().incrementNodeVersion(taskDetail.id, 'task')
-  persistIndependentItem(request.sessionId, taskDetail)
+  persistIndependentItem(request.sessionId, taskDetail, request.meta.lifecycle)
 }
 
 const handleTrafficCount: AIMessageHandler = (request) => {
@@ -458,7 +473,7 @@ const handleTrafficCount: AIMessageHandler = (request) => {
   if (!update) return
   ensureToolResultOnUI(request, toolResult)
   // 流量/风险计数：仅工具已终态时追加写正文
-  persistToolResultIfTerminal(request.sessionId, toolResult)
+  persistToolResultIfTerminal(request.sessionId, toolResult, request.meta.lifecycle)
 }
 
 const handlePlan: AIMessageHandler = (requestInfo) => {
@@ -520,7 +535,7 @@ const handleReactTaskCreated: AIMessageHandler = (requestInfo) => {
   } as AIChatQSData
 
   rawData.contents.set(chatData.id, chatData)
-  persistIndependentItem(requestInfo.sessionId, chatData)
+  persistIndependentItem(requestInfo.sessionId, chatData, requestInfo.meta.lifecycle)
   // taskDetailsMap 按 react_task_id 初始化主任务详情条目
   rawData.taskDetailsMap.set(info.react_task_id, cloneDeep(DefaultPlanItemDetailsData))
   store.getState().dispatchStreamingNode({
@@ -551,6 +566,7 @@ const handleSkipSubtaskInPlan: AIMessageHandler = (requestInfo) => {
 }
 
 export const aiOtherDataHandlers = {
+  timeline: handleTimelineDump,
   http_fuzz_request_change: handleHttpFuzzRequestChange,
   http_flow_fuzz_status: handleHttpFlowFuzzStatus,
   session_title: handleSessionTitle,

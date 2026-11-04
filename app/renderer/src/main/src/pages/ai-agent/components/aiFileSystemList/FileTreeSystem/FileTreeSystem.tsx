@@ -1,3 +1,7 @@
+import { FileContentSearchPanel } from '@/components/FileTreeContentSearch/FileContentSearchPanel'
+import { useFilePreviewTabs } from '../FilePreview/useFilePreviewTabs'
+import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import type { FileNodeProps } from '@/pages/yakRunner/FileTree/FileTreeType'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -24,20 +28,30 @@ const FileTreeSystem = (props: FileTreeSystemProps) => {
   const store = useCurrentStore()
 
   // 单选
-  const [selected, setSelected] = useState<FileNodeProps>()
+  const [selected, setSelectedNode] = useState<FileNodeProps>()
+  const sessionId = useCurrentSessionId()
+  const scope = sessionId || 'welcome'
+  const preview = useFilePreviewTabs(scope)
+  const setSelected = (file?: FileNodeProps) => {
+    setSelectedNode(file)
+    if (file && !file.isFolder) preview.open(file)
+  }
+  useEffect(() => {
+    setSelectedNode(undefined)
+  }, [scope])
   // ai的文件夹
 
   const grpcFolders = useStore(store, (state) => state.grpcFolders)
   // 用户文件夹
   const customFolder = useCustomFolder()
 
-  const filePreviewData = useMemo(() => {
-    if (selected?.isFolder) return undefined
-    return selected
-  }, [selected])
-
+  const filePreviewData = preview.state.files.find((file) => file.path === preview.state.active)
   const hasPreview = !!filePreviewData
-
+  const searchRoots = useMemo(
+    () => [...new Map([...grpcFolders, ...customFolder].map((root) => [root.path, root])).values()],
+    [grpcFolders, customFolder],
+  )
+  const openedFiles = useMemo(() => preview.state.files.map((file) => ({ path: file.path })), [preview.state.files])
   const hasEmittedRef = useRef(false)
 
   // 与任务内容时间线一致：有预览时左侧 30%
@@ -90,6 +104,15 @@ const FileTreeSystem = (props: FileTreeSystemProps) => {
       secondNodeStyle={secondNodeStyle}
       firstNode={
         <div className={styles.fileTreeSystemLeft}>
+          <FileContentSearchPanel
+            key={scope}
+            roots={searchRoots}
+            openedFiles={openedFiles}
+            onOpen={(file, highlights) => {
+              setSelectedNode(file)
+              preview.open(file, highlights)
+            }}
+          />
           <div className={styles.topPanel}>
             <FileTreeSystemListWrapper
               key="aiFolder"
@@ -123,7 +146,38 @@ const FileTreeSystem = (props: FileTreeSystemProps) => {
           </div>
         </div>
       }
-      secondNode={<FilePreview data={filePreviewData} />}
+      secondNode={
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minWidth: 0 }}>
+          <div role="tablist" style={{ display: 'flex', overflowX: 'auto', flexShrink: 0 }}>
+            {preview.state.files.map((file) => (
+              <div key={file.path} style={{ display: 'flex', alignItems: 'center' }}>
+                <YakitButton
+                  role="tab"
+                  aria-selected={preview.state.active === file.path}
+                  title={file.path}
+                  onClick={() => preview.activate(file.path)}
+                >
+                  {file.name || file.path}
+                </YakitButton>
+                <YakitButton
+                  aria-label={`${t('BatchFiles.close')} ${file.name || file.path}`}
+                  type="text"
+                  onClick={() => preview.close(file.path)}
+                >
+                  ×
+                </YakitButton>
+              </div>
+            ))}
+          </div>
+          <div style={{ flex: 1, minHeight: 0 }}>
+            <FilePreview
+              key={filePreviewData?.path || 'empty'}
+              data={filePreviewData}
+              highlights={preview.state.highlights[preview.state.active]}
+            />
+          </div>
+        </div>
+      }
     />
   )
 }

@@ -73,3 +73,30 @@ describe('read-only official task board adapted to AI Senso', () => {
     expect(within(screen.getByRole('list', { name: 'AITaskBoard.DOING' })).queryAllByRole('listitem')).toHaveLength(0)
   })
 })
+
+it('reorders board columns while keeping skipped and deleted grouped and the default wrapper unchanged', async () => {
+  const { AITaskBoardView } = await import('../AITaskBoardView')
+  const items = ['PENDING', 'DOING', 'DONE', 'SKIPPED', 'DELETED'].map((status, index) => ({
+    id: `${index}`,
+    content: status,
+    status: status as any,
+    created_at: 1,
+    updated_at: 1,
+  }))
+  const { rerender } = render(<AITaskBoardView items={items} />)
+  expect(screen.getAllByRole('list').map((x) => x.getAttribute('aria-label'))).toEqual([
+    'AITaskBoard.PENDING',
+    'AITaskBoard.DOING',
+    'AITaskBoard.DONE',
+    'AITaskBoard.SKIPPED_DELETED',
+  ])
+  rerender(<AITaskBoardView items={items} statusOrder={['deleted', 'skipped', 'done', 'doing', 'pending']} />)
+  expect(screen.getAllByRole('list').map((x) => x.getAttribute('aria-label'))).toEqual([
+    'AITaskBoard.SKIPPED_DELETED',
+    'AITaskBoard.DONE',
+    'AITaskBoard.DOING',
+    'AITaskBoard.PENDING',
+  ])
+  expect(screen.getByText('SKIPPED')).toBeInTheDocument()
+  expect(screen.getByText('DELETED')).toBeInTheDocument()
+})

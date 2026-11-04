@@ -1,0 +1,48 @@
+.panel {
+  flex: 0 0 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+  border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+  font-size: 12px;
+}
+.selectors {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 96px;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.options {
+  display: flex;
+  align-items: center;
+  min-height: 20px;
+}
+.panel .ignoreCase {
+  width: auto;
+  height: auto;
+  display: inline-flex;
+  white-space: nowrap;
+}
+.results {
+  min-height: 0;
+  max-height: min(240px, 25vh);
+  overflow: auto;
+  &:empty {
+    display: none;
+  }
+}
+.resultFile {
+  min-width: 0;
+  margin-bottom: 4px;
+}
+.match {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
