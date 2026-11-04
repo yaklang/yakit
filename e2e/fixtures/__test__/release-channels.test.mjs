@@ -340,7 +340,7 @@ describe('release state across fresh and failed-job reruns', () => {
       await complete(plan, environment)
       const release = releaseFor(plan.tag)
       expect(release.isDraft).toBe(true)
-      expect(JSON.parse(release.assets.get('release-state.json'))).toMatchObject({
+      expect(JSON.parse(release.assets.get('release-complete.json'))).toMatchObject({
         status: 'complete',
         finalizeRunId: '456',
         candidate: plan.candidate,
@@ -414,7 +414,7 @@ describe('release state across fresh and failed-job reruns', () => {
     await candidate(plan.version, 'yakit,yakitEE')
     await expect(complete(plan, environment)).resolves.toBeUndefined()
     expect(channels.get('vip/latest/yakit-version.txt')).toBe(plan.version)
-    expect(JSON.parse(releaseFor(plan.tag).assets.get('release-state.json')).status).toBe('complete')
+    expect(JSON.parse(releaseFor(plan.tag).assets.get('release-complete.json')).status).toBe('complete')
   })
 
   it('refuses an owner retry if the verified manifest changed after promotion started', async () => {
@@ -430,6 +430,35 @@ describe('release state across fresh and failed-job reruns', () => {
     await expect(complete(plan, environment)).rejects.toThrow(/already publishing/)
     expect(uploadOss).not.toHaveBeenCalled()
     expect(run.mock.calls.some(([, args]) => ['upload', 'edit'].includes(args[1]))).toBe(false)
+  })
+
+  it('retains the immutable reservation if the completion marker upload fails', async () => {
+    const plan = await candidate('1.4.9-1104', 'yakitEE')
+    await prepareCandidate(plan)
+    const normalRun = run.getMockImplementation()
+    vi.mocked(run).mockImplementation(async (command, args, options) => {
+      if (args[1] === 'upload' && args.includes('.release/release-complete.json'))
+        throw new Error('Completion upload failed')
+      return normalRun(command, args, options)
+    })
+    await expect(complete(plan, environment)).rejects.toThrow('Completion upload failed')
+    const release = releaseFor(plan.tag)
+    const reservation = Buffer.from(release.assets.get('release-state.json'))
+    expect(JSON.parse(reservation).status).toBe('publishing')
+    expect(release.assets.has('release-complete.json')).toBe(false)
+    vi.mocked(uploadOss).mockClear()
+    await expect(loadCandidate({ ...environment, GITHUB_RUN_ID: '789' })).rejects.toThrow(/already publishing/)
+    await expect(upload(plan)).rejects.toThrow(/already publishing/)
+    expect(uploadOss).not.toHaveBeenCalled()
+    vi.mocked(run).mockImplementation(normalRun)
+    await expect(complete(plan, environment)).resolves.toBeUndefined()
+    expect(release.assets.get('release-state.json')).toEqual(reservation)
+    expect(JSON.parse(release.assets.get('release-complete.json')).status).toBe('complete')
+    const markerWrites = run.mock.calls.filter(
+      ([, args]) => args[1] === 'upload' && args.some((arg) => /release-(state|complete)\.json$/.test(arg)),
+    )
+    expect(markerWrites).toHaveLength(3)
+    expect(markerWrites.every(([, args]) => !args.includes('--clobber'))).toBe(true)
   })
 
   it('fails closed if the release state cannot be read', async () => {

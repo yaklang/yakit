@@ -40,6 +40,8 @@ export function assertReleaseBinding(plan, binding, engineVersion) {
 async function assertReleaseWritable(plan, env, { release, manifestSha256 } = {}) {
   release ??= await ghJson(['release', 'view', plan.tag, '--json', 'isDraft,assets'])
   if (!release.isDraft) throw new Error('This software release is already public; prepare a new version')
+  if (release.assets.some((asset) => asset.name === 'release-complete.json'))
+    throw new Error('This software release is already completed; prepare a new version')
   if (!release.assets.some((asset) => asset.name === 'release-state.json')) return null
   await run('gh', [
     'release',
@@ -274,8 +276,10 @@ export async function complete(plan, env = process.env) {
     }
     if (publicRelease) await run('gh', ['release', 'edit', plan.tag, '--draft=false', `--latest=${markLatest}`])
     // EE-only releases remain private drafts and use this durable terminal state.
-    await writeJson('.release/release-state.json', { ...state, status: 'complete' })
-    await run('gh', ['release', 'upload', plan.tag, '.release/release-state.json', '--clobber'])
+    // Keep the reservation immutable: --clobber deletes before uploading, which
+    // could lose the only protection if the replacement upload failed.
+    await writeJson('.release/release-complete.json', { ...state, status: 'complete' })
+    await run('gh', ['release', 'upload', plan.tag, '.release/release-complete.json'])
   }
   await appendFile(
     env.GITHUB_STEP_SUMMARY,
