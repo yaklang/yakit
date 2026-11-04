@@ -47,6 +47,12 @@
   overflow-y: auto;
 }
 
+.tab-route-popover {
+  :global(.ant-popover-inner) {
+    padding: 0;
+  }
+}
+
 .sub-tab-count-submenu.sub-tab-count-submenu:global(.ant-menu-submenu-popup) {
   padding: 0 6px;
   max-height: 400px;
@@ -141,21 +147,13 @@
   height: 100%;
   color: var(--Colors-Use-Neutral-Text-1-Title);
 
-  .tab-menu-first {
+  .tab-menu-first-bar {
     display: flex;
-    flex-wrap: nowrap;
     align-items: center;
     position: relative;
     background-color: var(--Colors-Use-Neutral-Bg);
-
-    overflow-x: auto;
-    overflow-y: hidden;
+    min-width: 0;
     flex-shrink: 0;
-
-    // 下面是滚动条的样式
-    &::-webkit-scrollbar {
-      display: none;
-    }
 
     &::before {
       @extend .grey-link;
@@ -166,9 +164,41 @@
       @extend .grey-link;
       bottom: 0;
     }
+  }
+
+  .tab-menu-first-add {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 36px;
+    height: 24px;
+    padding: 0 8px;
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  }
+
+  .tab-menu-first-add-button {
+    width: 20px;
+    height: 20px;
+    padding: 3px;
+  }
+
+  .tab-menu-first {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    position: relative;
+    flex: 0 1 auto;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+
+    &::-webkit-scrollbar {
+      height: 4px;
+    }
 
     .tab-menu-first-item {
       display: flex;
+      flex-shrink: 1;
       height: 24px;
       // padding: 4px 8px;
       padding: 4px 4px;
@@ -183,7 +213,7 @@
       border-right: 1px solid var(--Colors-Use-Neutral-Border);
       overflow: hidden;
       max-width: 200px;
-      min-width: 24px;
+      min-width: 60px;
       justify-content: space-between;
       position: relative;
       // 上横线画在盒子内，避免 height:0 伪元素被 border-box / overflow 裁掉
@@ -230,22 +260,24 @@
         overflow: hidden;
         padding-left: 8px;
         flex: 1;
-        max-width: 200px;
+        // fit-content 的内容宽度需扣除外层右内边距及边框
+        max-width: calc(200px - 4px - 1px);
 
         .tab-menu-item-verbose {
           @extend .flex-align-center;
           overflow: hidden;
         }
 
-        span {
+        .tab-menu-first-label > span {
           white-space: nowrap;
           overflow: hidden;
-          min-width: 12px;
+          min-width: 24px;
         }
       }
 
       .remove-icon {
         @extend .base-operate-icon;
+        flex-shrink: 0;
         height: 16px;
         width: 16px;
 
@@ -264,13 +296,14 @@
       }
     }
 
-    .tab-menu-first-item-active {
+    .tab-menu-first-item.tab-menu-first-item-active {
+      min-width: fit-content;
+      max-width: 200px;
       background: var(--Colors-Use-Basic-Background);
       color: var(--Colors-Use-Neutral-Text-1-Title);
       position: relative;
       border-top-width: 0;
       border-bottom-width: 0;
-      min-width: fit-content;
       box-shadow: none;
 
       &::before {
@@ -299,6 +332,10 @@
       padding-left: 6px;
       max-width: 120px;
       min-width: 30px;
+
+      .tab-menu-first-label {
+        max-width: calc(200px - 6px - 4px - 1px);
+      }
     }
   }
 

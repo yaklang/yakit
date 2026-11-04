@@ -3,6 +3,8 @@ import { Suspense, lazy, useEffect, useMemo, useState } from 'react'
 import styles from './ChildNewApp.module.scss'
 import { useDebounceFn, useMemoizedFn } from 'ahooks'
 import { coordinate } from '@/pages/globalVariable'
+import { defaultUserInfo } from '@/pages/userInfoDefaults'
+import { useStore, type UserInfoProps } from '@/store'
 import TitleBar from '@/components/BaseTitleBar'
 
 const OpenPacketNewWindow = lazy(() => import('@/components/OpenPacketNewWindow/OpenPacketNewWindow'))
@@ -22,9 +24,40 @@ interface ParentWindowData {
 interface ChildNewAppProps {}
 const ChildNewApp: React.FC<ChildNewAppProps> = (props) => {
   const [parentWinData, setParentWinData] = useState<ParentWindowData>()
+  const setStoreUserInfo = useStore((state) => state.setStoreUserInfo)
   const requestLatestParentData = useMemoizedFn(() => {
     ipcRenderer.send('request-parent-data')
   })
+
+  // 子窗口不挂主界面，内存里的登录态默认是未登录。处置记录只看这份状态，
+  // 所以打开时读主进程 USER_INFO，并跟上之后的登录与退出。
+  // version 用来丢掉过期的首次查询：期间若已收到登录或退出，不再用旧结果覆盖。
+  useEffect(() => {
+    let cancelled = false
+    let version = 0
+    const snapshot = ++version
+    ipcRenderer
+      .invoke('get-login-user-info', {})
+      .then((info: UserInfoProps) => {
+        if (!cancelled && snapshot === version && info) setStoreUserInfo(info)
+      })
+      .catch(() => {})
+    const onToken = (_event: unknown, info: UserInfoProps) => {
+      version += 1
+      if (!cancelled && info) setStoreUserInfo(info)
+    }
+    const onLogout = () => {
+      version += 1
+      if (!cancelled) setStoreUserInfo(defaultUserInfo)
+    }
+    ipcRenderer.on('fetch-signin-token', onToken)
+    ipcRenderer.on('login-out', onLogout)
+    return () => {
+      cancelled = true
+      ipcRenderer.removeListener('fetch-signin-token', onToken)
+      ipcRenderer.removeListener('login-out', onLogout)
+    }
+  }, [setStoreUserInfo])
 
   useEffect(() => {
     requestLatestParentData()

@@ -55,7 +55,7 @@ function analyzerPlugin(): Plugin | null {
  */
 const ANTD_COMPONENT_STYLE_RE = /(^|[\\/])antd[\\/](es|lib)[\\/][\w-]+[\\/]style([\\/](index\.(less|css)|css(\.js)?))?$/
 
-/** public/theme.css 已从版本库移除，dev/build 启动时重新生成（含子窗口副本） */
+/** public/theme.css 已从版本库移除，dev/build 启动时重新生成 */
 function generateThemeCssPlugin(): Plugin {
   return {
     name: 'generate-theme-css',
@@ -334,6 +334,12 @@ export default defineConfig(({ mode, command }) => {
         output: {
           codeSplitting: {
             groups: [
+              {
+                // aux 静态加载入口只需要动态导入辅助代码，避免它被并入 Monaco 等重型包。
+                name: 'vite-preload',
+                test: /\0vite\/preload-helper\.js$/,
+                priority: 70,
+              },
               {
                 // react 本体会被 rolldown 合并进 monaco/streamdown 组，导致任何引 react 的 chunk
                 // 都必须整包 import 3.5MB 的 vendor-monaco。这里用更高优先级把 react 单独抽出。
