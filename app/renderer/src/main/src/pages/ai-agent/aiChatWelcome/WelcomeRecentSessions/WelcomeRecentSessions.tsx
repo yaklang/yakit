@@ -108,6 +108,7 @@ const WelcomeRecentSessions: FC<WelcomeRecentSessionsProps> = memo(({ density = 
   const [expanded, setExpanded] = useState(density !== 'collapsed')
   const [sessions, setSessions] = useState<AISession[]>([])
   const [total, setTotal] = useState(0)
+  const [loadError, setLoadError] = useState(false)
   const { setActiveChat, setSetting } = useAIAgentDispatcher()
   const { openChatInNewTab } = useAIAgentStore()
   // 递增作废在途查询，避免可见性抖动 / 并发 refresh 时旧响应覆盖新结果
@@ -140,6 +141,7 @@ const WelcomeRecentSessions: FC<WelcomeRecentSessionsProps> = memo(({ density = 
     )
       .then((res) => {
         if (gen !== loadGenRef.current) return
+        setLoadError(false)
         setSessions(() => {
           const pending = pendingUpdatesRef.current
           const list = (res.Data || []).slice(0, RECENT_SESSION_LIMIT).map((session) => {
@@ -151,7 +153,10 @@ const WelcomeRecentSessions: FC<WelcomeRecentSessionsProps> = memo(({ density = 
         })
         setTotal(res.Total || 0)
       })
-      .catch(() => {})
+      .catch(() => {
+        if (gen !== loadGenRef.current) return
+        setLoadError(true)
+      })
   })
 
   useEffect(() => {
@@ -190,6 +195,7 @@ const WelcomeRecentSessions: FC<WelcomeRecentSessionsProps> = memo(({ density = 
         if (payload.type === 'clear') {
           loadGenRef.current += 1
           pendingUpdatesRef.current.clear()
+          setLoadError(false)
           setSessions([])
           setTotal(0)
           return
@@ -234,44 +240,75 @@ const WelcomeRecentSessions: FC<WelcomeRecentSessionsProps> = memo(({ density = 
     )
   })
 
-  if (sessions.length === 0) return null
+  const showError = loadError && sessions.length === 0
+  const showList = sessions.length > 0
 
   return (
-    <div className={styles['welcome-recent-sessions']} ref={containerRef} data-ai-ripple-disabled>
-      <TransparentButton
-        className={styles['welcome-recent-header']}
-        onClick={() => setExpanded((prev) => !prev)}
-        aria-expanded={expanded}
-      >
-        <ClockOutlined className={styles['welcome-recent-header-icon']} color="currentColor" />
-        <span className={styles['welcome-recent-title']}>{t('AIChatWelcome.recentSessions')}</span>
-        <ChevronDownOutlined
-          className={classNames(styles['welcome-recent-header-arrow'], {
-            [styles['welcome-recent-header-arrow-collapsed']]: !expanded,
-          })}
-          color="currentColor"
-        />
-      </TransparentButton>
-      <div
-        className={classNames(styles['welcome-recent-list-wrapper'], {
-          [styles['welcome-recent-list-wrapper-expanded']]: expanded,
-        })}
-        inert={!expanded || undefined}
-      >
-        <div className={styles['welcome-recent-list-inner']}>
-          <div className={styles['welcome-recent-list']}>
-            {visibleSessions.map((item) => (
-              <WelcomeRecentSessionItem key={item.SessionID} item={item} onSelect={handleSelect} />
-            ))}
+    <div
+      className={classNames(styles['welcome-recent-sessions'], {
+        [styles['welcome-recent-sessions-sentinel']]: !showList && !showError,
+      })}
+      ref={containerRef}
+      data-ai-ripple-disabled
+    >
+      {showError ? (
+        <>
+          <div className={styles['welcome-recent-header']}>
+            <ClockOutlined className={styles['welcome-recent-header-icon']} color="currentColor" />
+            <span className={styles['welcome-recent-title']}>{t('AIChatWelcome.recentSessions')}</span>
           </div>
-          {showViewMore && (
-            <TransparentButton className={styles['welcome-recent-more']} onClick={handleViewMore}>
-              {t('AIChatWelcome.viewMoreSessions')}
-              <ChevronDownOutlined className={styles['welcome-recent-header-arrow']} color="currentColor" />
-            </TransparentButton>
-          )}
-        </div>
-      </div>
+          <TransparentButton
+            className={styles['welcome-recent-item']}
+            onClick={() => loadRecentSessions()}
+            aria-label={t('AIChatWelcome.retry')}
+          >
+            <span
+              className={classNames(styles['welcome-recent-item-title'], 'yakit-content-single-ellipsis')}
+              role="alert"
+            >
+              {t('AIChatWelcome.recentSessionsLoadFailed')}
+            </span>
+            <span className={styles['welcome-recent-retry']}>{t('AIChatWelcome.retry')}</span>
+          </TransparentButton>
+        </>
+      ) : showList ? (
+        <>
+          <TransparentButton
+            className={styles['welcome-recent-header']}
+            onClick={() => setExpanded((prev) => !prev)}
+            aria-expanded={expanded}
+          >
+            <ClockOutlined className={styles['welcome-recent-header-icon']} color="currentColor" />
+            <span className={styles['welcome-recent-title']}>{t('AIChatWelcome.recentSessions')}</span>
+            <ChevronDownOutlined
+              className={classNames(styles['welcome-recent-header-arrow'], {
+                [styles['welcome-recent-header-arrow-collapsed']]: !expanded,
+              })}
+              color="currentColor"
+            />
+          </TransparentButton>
+          <div
+            className={classNames(styles['welcome-recent-list-wrapper'], {
+              [styles['welcome-recent-list-wrapper-expanded']]: expanded,
+            })}
+            inert={!expanded || undefined}
+          >
+            <div className={styles['welcome-recent-list-inner']}>
+              <div className={styles['welcome-recent-list']}>
+                {visibleSessions.map((item) => (
+                  <WelcomeRecentSessionItem key={item.SessionID} item={item} onSelect={handleSelect} />
+                ))}
+              </div>
+              {showViewMore && (
+                <TransparentButton className={styles['welcome-recent-more']} onClick={handleViewMore}>
+                  {t('AIChatWelcome.viewMoreSessions')}
+                  <ChevronDownOutlined className={styles['welcome-recent-header-arrow']} color="currentColor" />
+                </TransparentButton>
+              )}
+            </div>
+          </div>
+        </>
+      ) : null}
     </div>
   )
 })

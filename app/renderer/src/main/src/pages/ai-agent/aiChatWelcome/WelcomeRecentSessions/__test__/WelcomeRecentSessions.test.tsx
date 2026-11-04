@@ -73,6 +73,9 @@ vi.mock('../WelcomeRecentSessions.module.scss', () => ({
     'welcome-recent-more': 'welcome-recent-more',
     'welcome-recent-list-wrapper': 'welcome-recent-list-wrapper',
     'welcome-recent-list-wrapper-expanded': 'welcome-recent-list-wrapper-expanded',
+    'welcome-recent-sessions-sentinel': 'welcome-recent-sessions-sentinel',
+    'welcome-recent-error': 'welcome-recent-error',
+    'welcome-recent-retry': 'welcome-recent-retry',
   },
 }))
 
@@ -241,6 +244,55 @@ describe('WelcomeRecentSessions', () => {
     expect(screen.queryByText('AIChatWelcome.viewMoreSessions')).not.toBeInTheDocument()
   })
 
+  it('首次查询失败后可通过 sessionData refresh 恢复', async () => {
+    vi.mocked(grpcQueryAISession)
+      .mockRejectedValueOnce(new Error('offline'))
+      .mockResolvedValueOnce(queryResponse([makeSession()]))
+    render(<WelcomeRecentSessions />)
+    await waitFor(() => expect(screen.getByText('AIChatWelcome.recentSessionsLoadFailed')).toBeInTheDocument())
+    expect(screen.queryByText('会话一')).not.toBeInTheDocument()
+
+    await act(async () => {
+      emiter.emit('sessionData', JSON.stringify({ type: 'refresh' }))
+    })
+    await waitFor(() => expect(screen.getByText('会话一')).toBeInTheDocument())
+    expect(grpcQueryAISession).toHaveBeenCalledTimes(2)
+  })
+
+  it('首次查询失败仍保留观察容器，可点重试恢复', async () => {
+    vi.mocked(grpcQueryAISession)
+      .mockRejectedValueOnce(new Error('offline'))
+      .mockResolvedValueOnce(queryResponse([makeSession()]))
+    const { container } = render(<WelcomeRecentSessions />)
+    await waitFor(() => expect(screen.getByText('AIChatWelcome.recentSessionsLoadFailed')).toBeInTheDocument())
+    expect(container.querySelector('.welcome-recent-sessions')).not.toBeNull()
+    expect(container.querySelector('.welcome-recent-sessions-sentinel')).toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: 'AIChatWelcome.retry' }))
+    await waitFor(() => expect(screen.getByText('会话一')).toBeInTheDocument())
+    expect(screen.queryByText('AIChatWelcome.recentSessionsLoadFailed')).not.toBeInTheDocument()
+    expect(grpcQueryAISession).toHaveBeenCalledTimes(2)
+  })
+
+  it('首次查询失败后切回页面会重新加载', async () => {
+    vi.mocked(grpcQueryAISession)
+      .mockRejectedValueOnce(new Error('offline'))
+      .mockResolvedValueOnce(queryResponse([makeSession({ Title: '恢复后的会话' })]))
+    render(<WelcomeRecentSessions />)
+    await waitFor(() => expect(screen.getByText('AIChatWelcome.recentSessionsLoadFailed')).toBeInTheDocument())
+    expect(grpcQueryAISession).toHaveBeenCalledTimes(1)
+
+    await act(async () => {
+      mocks.setViewport(false)
+    })
+    await act(async () => {
+      mocks.setViewport(true)
+    })
+    await waitFor(() => expect(screen.getByText('恢复后的会话')).toBeInTheDocument())
+    expect(screen.queryByText('AIChatWelcome.recentSessionsLoadFailed')).not.toBeInTheDocument()
+    expect(grpcQueryAISession).toHaveBeenCalledTimes(2)
+  })
+
   it('sessionData refresh 会重新拉取列表', async () => {
     vi.mocked(grpcQueryAISession)
       .mockResolvedValueOnce(queryResponse([makeSession()]))
@@ -265,6 +317,7 @@ describe('WelcomeRecentSessions', () => {
     })
     await waitFor(() => expect(screen.queryByText('会话一')).not.toBeInTheDocument())
     expect(screen.queryByText('AIChatWelcome.recentSessions')).not.toBeInTheDocument()
+    expect(document.querySelector('.welcome-recent-sessions')).not.toBeNull()
   })
 
   it('sessionData updateSession 合并标题与 StartParams，保留未改字段', async () => {
@@ -515,9 +568,10 @@ describe('WelcomeRecentSessions', () => {
 
   it('不可见时不发起查询', () => {
     mocks.viewport.visible = false
-    render(<WelcomeRecentSessions />)
+    const { container } = render(<WelcomeRecentSessions />)
     expect(grpcQueryAISession).not.toHaveBeenCalled()
     expect(screen.queryByText('AIChatWelcome.recentSessions')).not.toBeInTheDocument()
+    expect(container.querySelector('.welcome-recent-sessions')).not.toBeNull()
   })
 
   it('隐藏后作废在途查询，恢复可见时重新加载', async () => {

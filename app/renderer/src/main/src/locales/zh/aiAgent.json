@@ -44,6 +44,8 @@
     "refresh": "换一换",
     "homeRecommend": "首页推荐",
     "recentSessions": "最近会话",
+    "recentSessionsLoadFailed": "最近会话加载失败",
+    "retry": "重试",
     "viewMoreSessions": "查看更多",
     "justNow": "刚刚",
     "minutesAgo": "{{count}} 分钟前",
