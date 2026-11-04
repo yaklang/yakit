@@ -2357,7 +2357,10 @@ message AIStartParams {
   bool DisableMemoryTriage = 49;
   // Session-local opt-in; a globally enabled single-model mode still wins.
   bool SingleModelMode = 50;
-  string ClientUI = 52;
+  // Opt-in complete model HTTP diagnostics. Includes credentials/prompts, stored locally and exported with AI logs.
+  optional bool NetworkDebug = 52;
+  // Connection-local, build-generated component catalog and interaction capabilities.
+  string ClientUI = 53;
 }
 
 message AIExecutionStrategy {

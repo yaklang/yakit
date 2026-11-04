@@ -15,6 +15,21 @@ const packageDefinition = protoLoader.loadSync(path.resolve(process.cwd(), 'app/
 })
 const { ypb } = grpc.loadPackageDefinition(packageDefinition)
 
+describe('interactive UI gRPC contract', () => {
+  it.each([
+    [false, '00'],
+    [true, '01'],
+  ])('keeps UI capabilities separate from session network debugging (%s)', (networkDebug, flag) => {
+    const method = ypb.Yak.service.StartAIReAct
+    // Encoded by the backend proto: NetworkDebug is field 52, ClientUI is field 53.
+    const wire = Buffer.from(`08011208a003${flag}aa03027b7d`, 'hex')
+    const payload = { IsStart: true, Params: { NetworkDebug: networkDebug, ClientUI: '{}' } }
+
+    expect(method.requestDeserialize(wire)).toMatchObject(payload)
+    expect(method.requestSerialize(payload)).toEqual(wire)
+  })
+})
+
 describe('single-model gRPC contract', () => {
   it('preserves the session flag in StartAIReAct serialization', () => {
     const method = ypb.Yak.service.StartAIReAct
