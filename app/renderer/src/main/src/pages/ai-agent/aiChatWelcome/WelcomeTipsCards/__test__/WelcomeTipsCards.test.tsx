@@ -34,6 +34,9 @@ vi.mock('../WelcomeTipsCards.module.scss', () => ({
     'welcome-tip-card-compact': 'welcome-tip-card-compact',
     'welcome-tip-footer': 'welcome-tip-footer',
     'welcome-tip-number': 'welcome-tip-number',
+    'welcome-tip-title': 'welcome-tip-title',
+    'welcome-tip-title-text': 'welcome-tip-title-text',
+    'welcome-tip-compact-title': 'welcome-tip-compact-title',
   },
 }))
 
@@ -52,6 +55,18 @@ describe('WelcomeTipsCards', () => {
     expect(screen.getByText('AIChatWelcome.tipTrafficTitle')).toBeInTheDocument()
     expect(screen.getByText('AIChatWelcome.tipFileSystemTitle')).toBeInTheDocument()
     expect(screen.getAllByTestId('count-up').map((node) => node.textContent)).toEqual(['12', '34', '2'])
+  })
+
+  it('三列标题可截断，完整文案放在 title 上', () => {
+    const { container } = render(<WelcomeTipsCards />)
+    const titles = [...container.querySelectorAll('.welcome-tip-title-text')]
+    expect(titles).toHaveLength(3)
+    expect(titles.map((node) => node.getAttribute('title'))).toEqual([
+      'AIChatWelcome.tipRiskTitle',
+      'AIChatWelcome.tipTrafficTitle',
+      'AIChatWelcome.tipFileSystemTitle',
+    ])
+    expect(titles.every((node) => node.classList.contains('yakit-content-single-ellipsis'))).toBe(true)
   })
 
   it('点击漏洞卡片切换 Risk tab', () => {
