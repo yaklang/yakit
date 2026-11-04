@@ -1,100 +1,147 @@
 .reasoning-effort-select {
-  :global {
-    .ant-select,
-    .ant-select-single:not(.ant-select-customize-input) .ant-select-selector {
-      border-radius: 20px;
-    }
+  position: relative;
+  margin: 4px -4px -6px;
+  border-top: 1px solid var(--Colors-Use-Neutral-Border);
+
+  &.reasoning-effort-select-open {
+    background: var(--Colors-Use-Neutral-Bg-Hover);
   }
 }
 
-/* 选择关闭思考（off）：整个选择器降透明度呈现，与可执行档位区分 */
-.reasoning-effort-select-off {
-  opacity: 0.5;
-}
-
-/* 下拉面板容器 */
-.drop-select-wrapper {
-  max-width: 320px;
-  :global {
-    .ant-select-item-option-grouped {
-      padding-left: 8px;
-    }
-    .ant-select-item {
-      margin-bottom: 4px;
-    }
-  }
-  /* 标题行两侧对齐：左侧脑图标+标题+帮助，右侧探测状态 */
-  .select-title {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 4px;
-    color: var(--Colors-Use-Neutral-Text-1-Title);
-    font-size: 12px;
-    font-weight: 600;
-    padding: 2px 12px 4px 12px;
-  }
-}
-
-.select-title-left {
+.effort-trigger {
   display: flex;
   align-items: center;
-  gap: 4px;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  height: 40px;
+  padding: 8px 12px;
+  box-sizing: border-box;
+  cursor: pointer;
+  border: none;
+  border-radius: 0 0 3px 3px;
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0.5px;
+
   svg {
-    color: var(--Colors-Use-Neutral-Text-2-Primary);
-    width: 16px;
-    height: 16px;
+    width: 12px;
+    height: 12px;
+  }
+
+  &:not([aria-disabled='true']):hover,
+  &[aria-expanded='true'] {
+    background: var(--Colors-Use-Neutral-Bg-Hover);
+  }
+
+  &[aria-disabled='true'] {
+    cursor: not-allowed;
+    opacity: 0.5;
   }
 }
 
-/* 探测状态（展示在下拉标题行右侧）；无 svg 尺寸覆盖，loading 按自身 var(--size) 取值 */
-.select-title-probing {
+.effort-title,
+.effort-value {
   display: flex;
   align-items: center;
-  gap: 4px;
-  font-size: 10px;
-  color: var(--Colors-Use-Neutral-Text-4-Help-text);
 }
 
-/* 收起态 pill：脑图标（或探测 loading）+ 文案 */
-.select-option {
-  display: flex;
-  align-items: center;
+.effort-title {
   gap: 4px;
+  font-weight: 600;
   color: var(--Colors-Use-Neutral-Text-1-Title);
 
-  font-size: 12px;
-  font-style: normal;
-  font-weight: 400;
-  line-height: 16px;
-  overflow: hidden;
+  svg {
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  }
+}
 
-  .select-option-text {
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    overflow: hidden;
-    word-break: break-all;
-    line-height: 16px;
+.effort-value {
+  gap: 2px;
+  font-weight: 400;
+  color: var(--Colors-Use-Neutral-Text-4-Help-text);
+
+  svg {
+    color: var(--Colors-Use-Neutral-Text-4-Help-text);
   }
-  @container ai-chat-textarea (max-width: 300px) {
-    .select-option-text {
-      display: none;
-    }
-  }
-  .icon-wrapper {
-    display: flex;
-    width: 16px;
-    height: 16px;
-    color: var(--Colors-Use-Neutral-Text-2-Primary);
+
+  .effort-error-tag {
+    gap: 4px;
+    margin-inline-end: 6px;
+    padding: 0 4px !important;
+    background: var(--Colors-Use-Error-Focus);
+    font-size: 12px;
+    cursor: help;
+
     svg {
-      width: 16px;
-      height: 16px;
+      width: 14px;
+      height: 14px;
+      color: var(--Colors-Use-Error-Primary);
     }
   }
 }
 
-/* 下拉选项文本：单层包裹，12px 字号 */
-.option-text {
+.effort-error-tooltip:global(.ant-tooltip) {
+  max-width: min(440px, calc(100vw - 24px));
+
+  :global(.ant-tooltip-inner) {
+    display: block;
+    box-sizing: border-box;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+}
+
+.effort-error-details {
   display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.effort-popover:global(.ant-popover) {
+  > :global(.ant-popover-content) > :global(.ant-popover-inner) {
+    padding: 0;
+    border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
+    border-radius: 12px;
+    box-shadow: 0 8px 16px var(--Colors-Use-Basic-Shadow);
+  }
+}
+
+.effort-menu {
+  display: flex;
+  flex-direction: column;
+  width: 184px;
+  padding: 8px 4px;
+  box-sizing: border-box;
+}
+
+.effort-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  width: 100%;
+  height: 24px;
+  padding: 4px 8px;
+  box-sizing: border-box;
+  cursor: pointer;
+  border: none;
+  border-radius: 4px;
+  color: var(--Colors-Use-Neutral-Text-1-Title);
   font-size: 12px;
+  font-weight: 400;
+  line-height: 16px;
+  letter-spacing: 0.5px;
+
+  &:hover {
+    background: var(--Colors-Use-Neutral-Bg-Hover);
+  }
+
+  svg {
+    flex-shrink: 0;
+    color: var(--Colors-Use-Main-Primary);
+  }
 }

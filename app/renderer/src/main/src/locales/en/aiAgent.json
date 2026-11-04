@@ -841,6 +841,8 @@
     "focusModeTooltip": "Use a framework for complex scenarios and limit the AI's thinking scope"
   },
   "AIReasoningEffort": {
+    "probeUnsupported": "This model does not support this effort level",
+    "selectQuality": "Thinking quality",
     "tooltip": "Off disables thinking; default follows the model default; Very High / Maximum are extended tiers shown only after probe confirmation",
     "probing": "Probing..."
   },
