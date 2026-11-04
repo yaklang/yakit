@@ -576,7 +576,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
           filtersType: 'input',
           filterIcon: <SearchOutlined className={styles['filter-icon']} color="currentColor" />,
         },
-        render: (_, record) => record?.TitleVerbose || record.Title || '-',
+        render: (_, record) => (i18n.language === 'en' ? record.Title : record?.TitleVerbose) || '-',
       },
       {
         title: t('YakitRiskTable.type'),
@@ -2213,7 +2213,7 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
     boxStyle,
     detailClassName = '',
   } = props
-  const { t, i18nRefresh } = useI18nNamespaces(['risk', 'yakitUi'])
+  const { t, i18n, i18nRefresh } = useI18nNamespaces(['risk', 'yakitUi'])
   const { userInfo } = useStore()
   const isEnterprise = isEnterpriseEdition()
   const [isShowCode, setIsShowCode] = useState<boolean>(true)
@@ -2487,7 +2487,7 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
             <Divider type="vertical" style={{ height: 40, margin: '0 16px' }} />
             <div className={styles['content-heard-body']}>
               <div className={classNames(styles['content-heard-body-title'], 'content-ellipsis')}>
-                {info.Title || '-'}
+                {(i18n.language === 'en' ? info.Title : info.TitleVerbose) || '-'}
               </div>
               <div className={styles['content-heard-body-description']}>
                 <YakitTag color="info" style={{ cursor: 'pointer' }} onClick={onClickIP}>
@@ -2791,7 +2791,7 @@ export const YakitCodeScanRiskDetails: React.FC<YakitCodeScanRiskDetailsProps> =
           <Divider type="vertical" style={{ height: 40, margin: '0 16px' }} />
           <div className={styles['content-heard-body']}>
             <div className={classNames(styles['content-heard-body-title'], 'content-ellipsis')}>
-              {info?.TitleVerbose || info.Title || '-'}
+              {(i18n.language === 'en' ? info.Title : info?.TitleVerbose) || '-'}
             </div>
             <div className={styles['content-heard-body-description']}>
               <YakitTag color="info" style={{ cursor: 'pointer' }} onClick={onClickIP}>
