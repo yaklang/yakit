@@ -92,6 +92,7 @@
     "syncConfig": "Sync Config",
     "allTraffic": "All Traffic",
     "response_overflow": "Response count exceeds {{maxData}}. To avoid excessive frontend rendering pressure, some packets will be discarded for display here. Please click",
+    "responseSizeTooLarge": "Total response content exceeds {{mb}} MB. Drop some packets or lower the frontend render limit, then send again. Otherwise the page may go blank under the render load.",
     "view_all_suffix": "to view all data",
     "advanced_filter_suggestion": "For advanced filtering, multi-condition combined queries, or other complex operations, it is recommended to click and jump to ",
     "performAction": " to perform the action",
