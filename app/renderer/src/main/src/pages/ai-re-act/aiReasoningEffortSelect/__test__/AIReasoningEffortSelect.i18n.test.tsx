@@ -17,11 +17,11 @@ vi.hoisted(() => {
 vi.mock('i18next-resources-to-backend', () => {
   const resources: Record<string, Record<string, unknown>> = {
     zh: {
-      aiAgent: { AiAgengt: { reasoningEffort: '思考' } },
+      aiAgent: { AIReasoningEffort: { selectQuality: '思考质量选择' } },
       configNetwork: { ConfigNetworkPage: { effortDefault: '默认' } },
     },
     en: {
-      aiAgent: { AiAgengt: { reasoningEffort: 'Thinking' } },
+      aiAgent: { AIReasoningEffort: { selectQuality: 'Reasoning quality' } },
       configNetwork: { ConfigNetworkPage: { effortDefault: 'Default' } },
     },
   }
@@ -47,12 +47,12 @@ const captured: { i18n?: any } = {}
 const Probe: React.FC = () => {
   const { i18n } = useI18nNamespaces(['aiAgent', 'configNetwork'] as any)
   captured.i18n = i18n
-  return <AIReasoningEffortSelect />
+  return <AIReasoningEffortSelect onChange={() => undefined} />
 }
 
 describe('AIReasoningEffortSelect 语言切换', () => {
   it(
-    'changeLanguage 后 pill 文案应随语言更新（aiAgent + 懒加载 configNetwork 双命名空间）',
+    'changeLanguage 后标题和当前档位随语言更新（aiAgent + 懒加载 configNetwork 双命名空间）',
     { timeout: 20000 },
     async () => {
       const { container } = render(
@@ -60,15 +60,16 @@ describe('AIReasoningEffortSelect 语言切换', () => {
           <Probe />
         </React.Suspense>,
       )
-      const pill = () => container.querySelector('.ant-select-selection-item')?.textContent || ''
+      const trigger = () => container.querySelector('[role="button"][aria-haspopup="menu"]')
 
-      // 懒加载 configNetwork 与防抖刷新完成后，pill 显示 no-set 选项文案（去括号后为「默认」）
-      await waitFor(() => expect(pill()).toContain('默认'), { timeout: 5000 })
+      await waitFor(() => expect(trigger()).toHaveTextContent('默认'), { timeout: 5000 })
+      expect(trigger()).toHaveTextContent('思考质量选择')
 
       await act(async () => {
         await captured.i18n?.changeLanguage('en')
       })
-      await waitFor(() => expect(pill()).toContain('Default'), { timeout: 5000 })
+      await waitFor(() => expect(trigger()).toHaveTextContent('Default'), { timeout: 5000 })
+      expect(trigger()).toHaveTextContent('Reasoning quality')
     },
   )
 })

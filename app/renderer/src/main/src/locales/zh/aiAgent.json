@@ -800,6 +800,8 @@
     "focusModeTooltip": "复杂场景限定使用框架，限制AI思考范围"
   },
   "AIReasoningEffort": {
+    "probeUnsupported": "此模型不支持该档位",
+    "selectQuality": "思考质量选择",
     "tooltip": "关闭不进行思考；默认则跟随模型默认；极高 / 最高 为扩展档位，仅探测确认支持后展示",
     "probing": "探测中..."
   },

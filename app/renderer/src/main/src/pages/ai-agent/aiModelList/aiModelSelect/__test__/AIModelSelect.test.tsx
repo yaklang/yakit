@@ -16,10 +16,12 @@ const mocks = vi.hoisted(() => ({
   latest: vi.fn<() => Promise<AIGlobalConfig>>(),
   notify: vi.fn(),
   configure: vi.fn(),
+  probe: vi.fn(),
 }))
 vi.mock('../../utils', () => ({
   isForcedSetAIModal: mocks.load,
   grpcListAiModel: mocks.names,
+  grpcProbeReasoningEffort: mocks.probe,
   getModelName: (name?: string) => name ?? '',
   isMemfitStart: () => false,
   isFreeEnd: () => false,
@@ -78,6 +80,7 @@ const createModel = (ModelName: string, Type: string, builtin = false): AIModelC
   ProviderId: Type,
   ExtraParams: builtin ? [{ Key: 'isBuildin', Value: 'true' }] : [],
   Provider: { Type, APIKey: 'test-key', Domain: 'models.test', Proxy: 'http://proxy.test', NoHttps: true },
+  EffortProbed: true,
 })
 let config: AIGlobalConfig
 let latestConfig: AIGlobalConfig
@@ -107,6 +110,7 @@ beforeEach(() => {
     return Promise.resolve()
   })
   mocks.latest.mockReset().mockImplementation(() => Promise.resolve(latestConfig))
+  mocks.probe.mockReset().mockRejectedValue(new Error('probe unavailable'))
   mocks.names.mockReset().mockImplementation(({ Config }) =>
     Promise.resolve({
       ModelName:
@@ -159,6 +163,24 @@ const expectModelRequest = (Type: string) =>
   })
 
 describe('AIModelSelect', () => {
+  it.each([
+    [undefined, 'effortDefault'],
+    ['off', 'effortOff'],
+    ['low', 'effortLow'],
+    ['medium', 'effortMedium'],
+    ['high', 'effortHigh'],
+    ['xhigh', 'effortXhigh'],
+    ['max', 'effortMax'],
+  ])('在已选模型名称后展示思考强度 %s', async (effort, label) => {
+    config.IntelligentModels[0].Provider.ReasoningEffort = effort
+    useAIGlobalConfigStore.getState().setAIGlobalConfig(config)
+    render(<AIModelSelect />)
+    const selected = await screen.findByTestId('selected-model')
+    const modelName = within(selected).getByText('configured-a')
+    expect(modelName.nextElementSibling).toHaveTextContent(`ConfigNetworkPage.${label}`)
+    expect(mocks.save).not.toHaveBeenCalled()
+  })
+
   it.each(['memfit', 'yakitEE'])('%s 的脚本模型使用已配置名称，不触发模型发现', async (edition) => {
     vi.stubEnv('YAKIT_EDITION', edition)
     config = {
@@ -224,11 +246,14 @@ describe('AIModelSelect', () => {
     const dropdown = await openModels()
     expect(within(dropdown).getByRole('button', { name: 'AIModelSelect.resetModel' })).toBeVisible()
     expect(within(dropdown).queryByRole('button', { name: 'YakitButton.edit' })).not.toBeInTheDocument()
-    fireEvent.click(within(dropdown).getByRole('option', { name: 'remote-model-2' }))
+    await act(async () => fireEvent.click(within(dropdown).getByRole('option', { name: 'remote-model-2' })))
     closeModels()
     expect(mocks.save).toHaveBeenCalledWith({
       ...config,
-      IntelligentModels: [{ ...config.IntelligentModels[0], ModelName: 'remote-model-2' }, config.IntelligentModels[1]],
+      IntelligentModels: [
+        { ...config.IntelligentModels[0], ModelName: 'remote-model-2', EffortProbed: undefined },
+        config.IntelligentModels[1],
+      ],
     })
     expect(mocks.load).toHaveBeenCalledTimes(1)
   })
@@ -332,8 +357,15 @@ describe('AIModelSelect', () => {
     expect(mocks.latest).not.toHaveBeenCalled()
   })
 
-  it('管理模型仍打开配置页，刷新只更新 grpcListAiModel 返回的列表', async () => {
+  it('管理模型打开配置页，刷新同时更新模型名称和当前模型的思考档位', async () => {
     const emit = vi.spyOn(emiter, 'emit')
+    const currentModel = {
+      ...config.IntelligentModels[0],
+      Provider: { ...config.IntelligentModels[0].Provider, ReasoningEffort: 'max' },
+      ProbedExtendedEfforts: ['max'],
+    }
+    config = { ...config, IntelligentModels: [currentModel, config.IntelligentModels[1]] }
+    useAIGlobalConfigStore.getState().setAIGlobalConfig(config)
     const dropdown = await openModels()
     fireEvent.click(within(dropdown).getByRole('button', { name: 'AIModelSelect.manageModels' }))
     expect(emit).toHaveBeenCalledWith(
@@ -341,6 +373,11 @@ describe('AIModelSelect', () => {
       JSON.stringify({ route: YakitRoute.Settings, params: { anchor: 'ai-model' } }),
     )
     mocks.names.mockResolvedValueOnce({ ModelName: ['refreshed-model'] })
+    mocks.probe.mockResolvedValueOnce({
+      XhighSupported: true,
+      MaxSupported: false,
+      MaxErrorMessage: JSON.stringify({ error: { message: '最高档位需要升级客户端' } }),
+    })
     fireEvent.click(within(dropdown).getByRole('button', { name: 'YakitButton.refresh' }))
     expect(await within(dropdown).findByRole('option', { name: 'refreshed-model' })).toBeVisible()
     expect(within(dropdown).getAllByRole('option')).toHaveLength(1)
@@ -348,9 +385,63 @@ describe('AIModelSelect', () => {
     expect(mocks.load).toHaveBeenCalledTimes(1)
     expect(mocks.latest).not.toHaveBeenCalled()
     expectModelRequest('current-provider')
+    expect(mocks.probe).toHaveBeenCalledExactlyOnceWith({
+      Config: config.IntelligentModels[0].Provider,
+      Model: 'configured-a',
+    })
+    const effortTrigger = within(dropdown).getByRole('button', { name: 'AIReasoningEffort.selectQuality' })
+    expect(effortTrigger).toHaveTextContent('ConfigNetworkPage.effortMax')
+    fireEvent.mouseEnter(within(effortTrigger).getByText('Error'))
+    expect(await screen.findByText('最高档位需要升级客户端')).toBeInTheDocument()
+    fireEvent.click(effortTrigger)
+    expect(await screen.findByRole('menuitemradio', { name: 'ConfigNetworkPage.effortXhigh' })).toBeInTheDocument()
+    expect(screen.queryByRole('menuitemradio', { name: 'ConfigNetworkPage.effortMax' })).not.toBeInTheDocument()
   })
 
-  it('选择接口返回的名称只更新当前模型名称，保留原有连接配置和其他条目', async () => {
+  it('重新打开有 Error 的模型时探测一次，恢复后再次打开不探测', async () => {
+    mocks.probe
+      .mockResolvedValueOnce({ MaxSupported: false, XhighSupported: true, MaxErrorMessage: 'probe failed' })
+      .mockResolvedValueOnce({ MaxSupported: true, XhighSupported: true })
+    const dropdown = await openModels()
+    fireEvent.click(within(dropdown).getByRole('button', { name: 'YakitButton.refresh' }))
+    expect(await within(dropdown).findByText('Error')).toBeVisible()
+    expect(mocks.probe).toHaveBeenCalledTimes(1)
+    closeModels()
+
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: '打开选择' })))
+    expect(mocks.probe).toHaveBeenCalledTimes(2)
+    expect(mocks.probe).toHaveBeenLastCalledWith({
+      Config: config.IntelligentModels[0].Provider,
+      Model: 'configured-a',
+    })
+    expect(screen.queryByText('Error')).not.toBeInTheDocument()
+    closeModels()
+
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: '打开选择' })))
+    expect(mocks.probe).toHaveBeenCalledTimes(2)
+  })
+
+  it('悬停 Error 标签按档位显示两个错误，切换模型后不沿用上一模型的错误', async () => {
+    mocks.probe.mockResolvedValueOnce({
+      MaxSupported: false,
+      XhighSupported: false,
+      MaxErrorMessage: JSON.stringify({ error: { message: '最高档位的错误' } }),
+      XhighErrorMessage: JSON.stringify({ error: { message: '极高档位的错误' } }),
+    })
+    const dropdown = await openModels()
+    fireEvent.click(within(dropdown).getByRole('button', { name: 'YakitButton.refresh' }))
+    fireEvent.mouseEnter(await within(dropdown).findByText('Error'))
+    const maxError = await screen.findByText('最高档位的错误')
+    const xhighError = screen.getByText('极高档位的错误')
+    expect(maxError.parentElement).toHaveTextContent('ConfigNetworkPage.effortMax')
+    expect(xhighError.parentElement).toHaveTextContent('ConfigNetworkPage.effortXhigh')
+
+    await act(async () => fireEvent.click(within(dropdown).getByRole('option', { name: 'remote-model-2' })))
+    expect(within(dropdown).queryByText('Error')).not.toBeInTheDocument()
+    expect(dropdown).toBeVisible()
+  })
+
+  it('选择接口返回的名称时保留连接配置和其他条目，清除旧模型的探测状态', async () => {
     const dropdown = await openModels()
     fireEvent.click(within(dropdown).getByRole('option', { name: 'remote-model-2' }))
     expect(screen.getByTestId('selected-model')).toHaveTextContent('remote-model-2')
@@ -362,7 +453,7 @@ describe('AIModelSelect', () => {
       expect(mocks.save).toHaveBeenCalledWith({
         ...config,
         IntelligentModels: [
-          { ...config.IntelligentModels[0], ModelName: 'remote-model-2' },
+          { ...config.IntelligentModels[0], ModelName: 'remote-model-2', EffortProbed: undefined },
           config.IntelligentModels[1],
         ],
       }),
@@ -400,7 +491,7 @@ describe('AIModelSelect', () => {
     const expectedConfig = {
       ...initialConfig,
       IntelligentModels: [
-        { ...initialConfig.IntelligentModels[0], ModelName: 'remote-model-2' },
+        { ...initialConfig.IntelligentModels[0], ModelName: 'remote-model-2', EffortProbed: undefined },
         initialConfig.IntelligentModels[1],
       ],
     }
@@ -591,11 +682,13 @@ describe('AIModelSelect', () => {
     ).toEqual(['builtin-default', 'builtin-alternative'])
     expect(within(dropdown).getByRole('button', { name: 'YakitButton.refresh' })).toBeEnabled()
     expect(mocks.save).not.toHaveBeenCalled()
-    fireEvent.click(within(dropdown).getByRole('option', { name: 'builtin-alternative' }))
+    await act(async () => fireEvent.click(within(dropdown).getByRole('option', { name: 'builtin-alternative' })))
     closeModels()
     expect(mocks.save).toHaveBeenCalledWith({
       ...config,
-      IntelligentModels: [{ ...config.IntelligentModels[0], ModelName: 'builtin-alternative' }],
+      IntelligentModels: [
+        { ...config.IntelligentModels[0], ModelName: 'builtin-alternative', EffortProbed: undefined },
+      ],
     })
   })
 
@@ -612,7 +705,30 @@ describe('AIModelSelect', () => {
     expect(mocks.names).toHaveBeenCalledTimes(2)
     await act(async () => fireEvent.click(refreshButton))
     expect(mocks.names).toHaveBeenCalledTimes(3)
+    expect(mocks.probe).toHaveBeenCalledTimes(2)
     expect(mocks.latest).not.toHaveBeenCalled()
+  })
+
+  it('同名模型重新打开不重复探测，切换名称后只探测一次', async () => {
+    const first = { ...config.IntelligentModels[0], ModelName: 'remote-model-1', EffortProbed: undefined }
+    const second = { ...first, ModelName: 'remote-model-2', EffortProbed: true }
+    config = { ...config, IntelligentModels: [first, second] }
+    useAIGlobalConfigStore.getState().setAIGlobalConfig(config)
+
+    const dropdown = await openModels()
+    const effort = within(dropdown).getByRole('button', { name: 'AIReasoningEffort.selectQuality' })
+    fireEvent.click(effort)
+    fireEvent.click(effort)
+    expect(mocks.probe).toHaveBeenCalledExactlyOnceWith({ Config: first.Provider, Model: first.ModelName })
+    closeModels()
+
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: '打开选择' })))
+    fireEvent.click(screen.getByRole('button', { name: 'AIReasoningEffort.selectQuality' }))
+    fireEvent.click(screen.getByRole('option', { name: first.ModelName }))
+    expect(mocks.probe).toHaveBeenCalledTimes(1)
+    await act(async () => fireEvent.click(screen.getByRole('option', { name: second.ModelName })))
+    expect(mocks.probe).toHaveBeenNthCalledWith(2, { Config: second.Provider, Model: second.ModelName })
+    expect(mocks.probe).toHaveBeenCalledTimes(2)
   })
 
   it('同一连接重置也重新读取配置并获取模型列表', async () => {
@@ -649,7 +765,7 @@ describe('AIModelSelect', () => {
     expect(mocks.names).toHaveBeenCalledTimes(1)
   })
 
-  it('列表加载超过 500ms 时仍禁用刷新和重置，完成后恢复', async () => {
+  it('列表加载超过 500ms 时仍禁用刷新、重置和思考质量，完成后恢复', async () => {
     let resolveNames!: (value: { ModelName: string[] }) => void
     mocks.names.mockImplementationOnce(
       () =>
@@ -661,16 +777,23 @@ describe('AIModelSelect', () => {
     vi.useFakeTimers()
     const refreshButton = within(dropdown).getByRole('button', { name: 'YakitButton.refresh' })
     const resetButton = within(dropdown).getByRole('button', { name: 'AIModelSelect.resetModel' })
+    const effortTrigger = within(dropdown).getByRole('button', { name: 'AIReasoningEffort.selectQuality' })
     expect(refreshButton).toBeDisabled()
     expect(resetButton).toBeDisabled()
+    expect(effortTrigger).toHaveAttribute('aria-disabled', 'true')
     await act(async () => vi.advanceTimersByTimeAsync(1000))
     fireEvent.click(refreshButton)
     fireEvent.click(resetButton)
+    fireEvent.click(effortTrigger)
+    expect(effortTrigger).toHaveAttribute('aria-expanded', 'false')
     expect(mocks.names).toHaveBeenCalledTimes(1)
     expect(mocks.latest).not.toHaveBeenCalled()
     await act(async () => resolveNames({ ModelName: ['remote-model-1'] }))
     expect(refreshButton).toBeEnabled()
     expect(resetButton).toBeEnabled()
+    expect(effortTrigger).toHaveAttribute('aria-disabled', 'false')
+    fireEvent.click(effortTrigger)
+    expect(effortTrigger).toHaveAttribute('aria-expanded', 'true')
   })
 
   it('重置获取配置和模型列表期间持续禁用两个按钮，完成后恢复', async () => {
@@ -735,24 +858,76 @@ describe('AIModelSelect', () => {
     expect(mocks.save).not.toHaveBeenCalled()
   })
 
-  it('同步思考强度和探测结果后，切换模型名称不会用旧配置覆盖它们', async () => {
+  it('模型名称和思考档位在同一次关闭时保存，子菜单选择不丢失模型草稿', async () => {
     const dropdown = await openModels()
-    const updatedModel = {
+    fireEvent.click(within(dropdown).getByRole('option', { name: 'remote-model-2' }))
+    fireEvent.click(within(dropdown).getByRole('button', { name: 'AIReasoningEffort.selectQuality' }))
+    fireEvent.click(await screen.findByRole('menuitemradio', { name: 'ConfigNetworkPage.effortHigh' }))
+    expect(screen.getByTestId('selected-model')).toHaveTextContent('remote-model-2')
+    expect(dropdown).toBeVisible()
+    expect(within(screen.getByTestId('selected-model')).getByText('ConfigNetworkPage.effortHigh')).toBeVisible()
+    expect(within(dropdown).getByRole('button', { name: 'AIReasoningEffort.selectQuality' })).toHaveTextContent(
+      'ConfigNetworkPage.effortHigh',
+    )
+    expect(mocks.save).not.toHaveBeenCalled()
+    expect(useAIGlobalConfigStore.getState().aiGlobalConfig).toEqual(config)
+
+    closeModels()
+    await waitFor(() => expect(mocks.save).toHaveBeenCalledTimes(1))
+    expect(mocks.save).toHaveBeenCalledWith({
+      ...config,
+      IntelligentModels: [
+        {
+          ...config.IntelligentModels[0],
+          ModelName: 'remote-model-2',
+          EffortProbed: undefined,
+          Provider: { ...config.IntelligentModels[0].Provider, ReasoningEffort: 'high' },
+        },
+        config.IntelligentModels[1],
+      ],
+    })
+  })
+
+  it('按名称读取思考档位和探测结果，切换到未配置的模型时回到默认', async () => {
+    const source = {
       ...config.IntelligentModels[0],
+      ModelName: 'remote-model-1',
       Provider: { ...config.IntelligentModels[0].Provider, ReasoningEffort: 'high' },
-      EffortProbed: true,
+    }
+    const target = {
+      ...source,
+      ModelName: 'remote-model-2',
+      Provider: { ...source.Provider, ReasoningEffort: 'xhigh' },
       ProbedExtendedEfforts: ['xhigh'],
     }
-    const updatedConfig = { ...config, IntelligentModels: [updatedModel, config.IntelligentModels[1]] }
-    act(() => useAIGlobalConfigStore.getState().setAIGlobalConfig(updatedConfig))
-    fireEvent.click(within(dropdown).getByRole('option', { name: 'remote-model-2' }))
-    closeModels()
-    await waitFor(() =>
-      expect(mocks.save).toHaveBeenCalledWith({
-        ...updatedConfig,
-        IntelligentModels: [{ ...updatedModel, ModelName: 'remote-model-2' }, config.IntelligentModels[1]],
-      }),
+    config = { ...config, IntelligentModels: [source, target, config.IntelligentModels[1]] }
+    useAIGlobalConfigStore.getState().setAIGlobalConfig(config)
+    mocks.names.mockResolvedValueOnce({ ModelName: ['remote-model-1', 'remote-model-2', 'new-model'] })
+    const dropdown = await openModels()
+    await act(async () => fireEvent.click(within(dropdown).getByRole('option', { name: 'remote-model-2' })))
+    expect(screen.getByTestId('selected-model')).toHaveTextContent('ConfigNetworkPage.effortXhigh')
+    const getEffortTrigger = () => within(dropdown).getByRole('button', { name: 'AIReasoningEffort.selectQuality' })
+    fireEvent.click(getEffortTrigger())
+    expect(await screen.findByRole('menuitemradio', { name: 'ConfigNetworkPage.effortXhigh' })).toHaveAttribute(
+      'aria-checked',
+      'true',
     )
+    await act(async () => fireEvent.click(within(dropdown).getByRole('option', { name: 'new-model' })))
+    expect(screen.getByTestId('selected-model')).toHaveTextContent('ConfigNetworkPage.effortDefault')
+    expect(getEffortTrigger()).toHaveAttribute('aria-expanded', 'false')
+    expect(getEffortTrigger()).toHaveTextContent('ConfigNetworkPage.effortDefault')
+    await waitFor(() => expect(mocks.probe).toHaveBeenCalledWith(expect.objectContaining({ Model: 'new-model' })))
+    fireEvent.click(getEffortTrigger())
+    expect(await screen.findByRole('menuitemradio', { name: 'ConfigNetworkPage.effortDefault' })).toHaveAttribute(
+      'aria-checked',
+      'true',
+    )
+    expect(screen.queryByRole('menuitemradio', { name: 'ConfigNetworkPage.effortXhigh' })).not.toBeInTheDocument()
+
+    await act(async () => fireEvent.click(within(dropdown).getByRole('option', { name: 'remote-model-1' })))
+    expect(screen.getByTestId('selected-model')).toHaveTextContent('ConfigNetworkPage.effortHigh')
+    closeModels()
+    expect(mocks.save).not.toHaveBeenCalled()
     expect(mocks.names).toHaveBeenCalledTimes(1)
     expect(mocks.load).toHaveBeenCalledTimes(1)
   })
@@ -797,9 +972,10 @@ describe('AIModelSelect', () => {
       },
     )
     const dropdown = await openModels()
-    fireEvent.click(within(dropdown).getByRole('option', { name: 'remote-model-2' }))
     act(() => resizeInput(600, 120))
-    act(() => resizeInput(600, 240))
+    await act(async () => fireEvent.click(within(dropdown).getByRole('option', { name: 'remote-model-2' })))
+    act(() => resizeInput(640, 120))
+    act(() => resizeInput(640, 240))
     expect(dropdown).toBeVisible()
     act(() => resizeInput(width, 240))
     expect(screen.queryByRole('region', { name: '模型列表' })).not.toBeInTheDocument()

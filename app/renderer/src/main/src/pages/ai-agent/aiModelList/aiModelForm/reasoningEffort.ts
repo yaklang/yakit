@@ -1,5 +1,5 @@
-import { isNil } from 'lodash'
-import { type TFunction } from '@/i18n/useI18nNamespaces'
+import isNil from 'lodash/isNil'
+import type { TFunction } from '@/i18n/useI18nNamespaces'
 import type { SelectOptionsProps } from '@/demoComponents/itemSelect/ItemSelectType'
 import type { ProbeReasoningEffortResponse } from '../utils'
 
@@ -47,13 +47,13 @@ export const buildReasoningEffortOptions = (
 }
 
 export interface EffortProbeResult {
-  /**false=存在档位探测出错（限流/网络失败等瞬时错误），结果不可缓存、需保留重试 */
+  /** 所有扩展档位是否都得到了无错误的探测结果 */
   conclusive: boolean
-  /**探测确认支持的扩展档位（conclusive 时才可信） */
+  /**本次探测确认支持的扩展档位 */
   efforts: string[]
 }
 
-/**探测响应转换：Supported=false 且 ErrorMessage 非空视为瞬时错误（未得出结论），不算"不支持" */
+/** 收集明确支持的档位。有错误说明的否定结果不视为已完成探测。 */
 export const effortProbeResultFromResponse = (resp: ProbeReasoningEffortResponse): EffortProbeResult => {
   const efforts: string[] = []
   let conclusive = true

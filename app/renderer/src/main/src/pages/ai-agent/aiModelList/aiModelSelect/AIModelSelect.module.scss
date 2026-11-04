@@ -1,3 +1,7 @@
+div.model-select-popup:global(.ant-select-dropdown) {
+  border-radius: 12px;
+}
+
 .drop-select-wrapper {
   width: 360px;
   display: flex;
@@ -52,6 +56,12 @@
     text-overflow: ellipsis;
     overflow: hidden;
     word-break: break-all;
+  }
+  .select-option-effort {
+    flex-shrink: 0;
+    color: var(--Colors-Use-Neutral-Text-4-Help-text);
+    line-height: 16px;
+    letter-spacing: 0.5px;
   }
   svg {
     width: 16px;
