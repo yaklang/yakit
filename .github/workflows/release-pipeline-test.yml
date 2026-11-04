@@ -5,9 +5,12 @@ on:
     paths:
       - '.github/workflows/release-*.yml'
       - '.github/workflows/build-multi*-prod.yml'
+      - '.github/workflows/publish-oss-version.yml'
       - '.github/actions/release-toolchain/**'
       - 'scripts/release/**'
       - 'e2e/fixtures/__test__/release-pipeline.test.mjs'
+      - 'e2e/fixtures/__test__/release-identity.test.mjs'
+      - 'e2e/fixtures/__test__/release-channels.test.mjs'
       - 'packageScript/**'
       - 'scripts/build-electron.mjs'
 

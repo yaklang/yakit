@@ -142,12 +142,13 @@ jobs:
     needs: [plan, package]
     runs-on: ubuntu-24.04
     concurrency:
-      group: release-publish-${{ needs.plan.outputs.version }}
+      # Shared with publish-oss-version.yml; different versions write the same channels.
+      group: release-channel-promotion
       cancel-in-progress: false
     steps:
+      # Use the same coordinator revision as plan, including its publication
+      # guards, even when the selected candidate predates a guard fix.
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ needs.plan.outputs.sha }}
       - uses: actions/download-artifact@v4
         with:
           name: finalize-plan

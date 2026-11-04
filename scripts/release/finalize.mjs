@@ -13,6 +13,7 @@ import {
 } from './model.mjs'
 import { hashFile, run } from './io.mjs'
 import { uploadOss } from './oss.mjs'
+import { assertChannelPromotion, shouldMarkGitHubLatest } from './channels.mjs'
 
 const ghJson = async (args) => JSON.parse(await run('gh', args, { capture: true }))
 const isPublic = (edition) => ['yakit', 'irify', 'memfit'].includes(edition)
@@ -191,7 +192,7 @@ export function assertResults(plan, results, env = process.env) {
   }
 }
 
-async function complete(plan, env = process.env) {
+export async function complete(plan, env = process.env) {
   await run('gh', [
     'release',
     'download',
@@ -211,6 +212,11 @@ async function complete(plan, env = process.env) {
     await run('gh', ['release', 'upload', plan.candidate, '.release/release-manifest.json', '--clobber'])
   }
   if (env.RELEASE_PUBLISH === 'true') {
+    // The workflow holds the shared promotion lock across these reads and all
+    // channel writes. A late older run must not replace a newer channel pointer.
+    await assertChannelPromotion(plan)
+    const publicRelease = plan.editions.some(isPublic)
+    const markLatest = publicRelease && (await shouldMarkGitHubLatest(plan.version, env))
     await run('gh', ['release', 'upload', plan.tag, '.release/release-manifest.json', '--clobber'])
     // No channel is changed until every native package, signature, engine check and upload succeeded.
     for (const edition of plan.editions) {
@@ -218,7 +224,7 @@ async function complete(plan, env = process.env) {
       await writeFile(file, `${plan.version}\n`)
       await uploadOss(file, `${products[edition].oss}/latest/yakit-version.txt`)
     }
-    if (plan.editions.some(isPublic)) await run('gh', ['release', 'edit', plan.tag, '--draft=false', '--latest'])
+    if (publicRelease) await run('gh', ['release', 'edit', plan.tag, '--draft=false', `--latest=${markLatest}`])
   }
   await appendFile(
     env.GITHUB_STEP_SUMMARY,

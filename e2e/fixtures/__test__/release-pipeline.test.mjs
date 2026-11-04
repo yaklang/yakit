@@ -81,7 +81,12 @@ describe('release identity and native matrix', () => {
     expect(() => createPlan({ ...plan(), editions: 'yakit', ref: 'v1.4.9-1023', refType: 'tag' })).toThrow()
   })
   it('keeps existing installer names across all products and targets', () => {
-    const candidate = plan('yakit,yakitEE,irify,irifyEE,memfit')
+    const candidate = createPlan({
+      ...plan(),
+      editions: 'yakit,yakitEE,irify,irifyEE,memfit',
+      ref: 'test-all-products',
+      refType: 'branch',
+    })
     for (const target of candidate.targets) expect(artifactName(candidate, target)).not.toContain('undefined')
     expect(artifactName(candidate, candidate.targets[0])).toBe('Yakit-1.4.9-1030-windows-amd64.exe')
     const mac = candidate.targets.find(
