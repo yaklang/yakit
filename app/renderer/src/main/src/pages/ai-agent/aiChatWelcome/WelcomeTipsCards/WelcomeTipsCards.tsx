@@ -94,8 +94,10 @@ const WelcomeTipsCards: FC<WelcomeTipsCardsProps> = memo(({ compact = false }) =
           >
             <div className={styles['welcome-tip-compact-left']}>
               <div>{item.icon}</div>
-              <div>
-                <span className={styles['welcome-tip-compact-title']}>{item.title}</span>
+              <div className={styles['welcome-tip-compact-copy']}>
+                <span className={styles['welcome-tip-compact-title']} title={item.title}>
+                  {item.title}
+                </span>
                 <div className={styles['welcome-tip-compact-add']}>
                   {t('AIChatWelcome.tipAdded')} &nbsp;<span>{item.add}</span>
                 </div>
@@ -114,7 +116,12 @@ const WelcomeTipsCards: FC<WelcomeTipsCardsProps> = memo(({ compact = false }) =
               <div className={styles['welcome-tip-header']}>
                 <div className={styles['welcome-tip-title']}>
                   {item.icon}
-                  <span>{item.title}</span>
+                  <span
+                    className={classNames(styles['welcome-tip-title-text'], 'yakit-content-single-ellipsis')}
+                    title={item.title}
+                  >
+                    {item.title}
+                  </span>
                 </div>
                 <div className={styles['welcome-tip-number']}>
                   <CountUp key={item.number} end={item.number} duration={1.2} separator="," />

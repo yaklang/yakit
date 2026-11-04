@@ -37,7 +37,17 @@
   align-items: center;
   gap: 6px;
   min-width: 0;
+  > :first-child {
+    flex-shrink: 0;
+  }
+  .welcome-tip-compact-copy {
+    min-width: 0;
+  }
   .welcome-tip-compact-title {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     color: var(--Colors-Use-Neutral-Text-2-Primary);
     font-size: 14px;
     font-weight: 500;
@@ -104,14 +114,26 @@
   align-items: center;
   gap: 6px;
   min-width: 0;
-  white-space: nowrap;
+  overflow: hidden;
   color: var(--Colors-Use-Neutral-Text-2-Primary);
   font-size: 14px;
   font-weight: 500;
   line-height: 20px;
+  > :first-child {
+    flex-shrink: 0;
+  }
+}
+
+.welcome-tip-title-text {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .welcome-tip-number {
+  flex-shrink: 0;
   color: var(--Colors-Use-Neutral-Text-1-Title);
   font-size: 24px;
   font-weight: 500;
