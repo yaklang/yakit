@@ -55,6 +55,7 @@ import {
   useFuzzerResponseRaw,
 } from '../../fuzzerRawStore'
 import { YakitAlert } from '@/components/yakitUI/YakitAlert/YakitAlert'
+import { YakitCopyText } from '@/components/yakitUI/YakitCopyText/YakitCopyText'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -510,7 +511,9 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                 sorter: true,
               },
               render: (v) => {
-                return v ? v.join(',') : '-'
+                if (!v?.length) return '-'
+                const text = v.join(',')
+                return <YakitCopyText showText={text} />
               },
             },
             ...(!hasExtractorRules ? [extractedResultsColumn] : []),
