@@ -69,7 +69,7 @@ import type { CustomPluginExecuteFormValue } from '@/pages/plugins/operator/loca
 import { getValueByType, getYakExecutorParam } from '@/pages/plugins/editDetails/utils'
 import { grpcFetchLocalPluginDetail } from '@/pages/pluginHub/utils/grpc'
 import type { HTTPRequestBuilderParams } from '@/models/HTTPRequestBuilder'
-import { YakitDropdownMenu } from '../yakitUI/YakitDropdownMenu/YakitDropdownMenu'
+import { YakitDropdownMenu } from '../yakitUICompat/YakitDropdownMenu'
 import {
   grpcFetchIntranetYakitVersion,
   grpcFetchLatestYakitVersion,

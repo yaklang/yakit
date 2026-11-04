@@ -129,9 +129,22 @@ export default defineConfig(({ mode, command }) => {
       }),
     ].filter(Boolean),
     resolve: {
-      dedupe: ['react', 'react-dom', 'react/jsx-runtime', 'react/jsx-dev-runtime', 'ahooks'],
+      dedupe: [
+        'react',
+        'react-dom',
+        'react/jsx-runtime',
+        'react/jsx-dev-runtime',
+        'ahooks',
+        // 本地联调 @yakit-libs/yakit-ui（file: 依赖）：防其携带的嵌套 react 软链形成双 React 实例
+        '@yakit-libs/yakit-ui',
+      ],
       alias: [
         { find: '@', replacement: path.resolve(rootDir, 'src') },
+        // yakit-ui 库本地联调：旧 YakitDropdownMenu 整体替换为库内实现（兼容层承接 data→items 等旧 API）
+        {
+          find: /^@\/components\/yakitUI\/YakitDropdownMenu\/YakitDropdownMenu$/,
+          replacement: path.resolve(rootDir, 'src/components/yakitUICompat/YakitDropdownMenu.tsx'),
+        },
         // antd / pro-layout less 里的 ~antd 写法
         { find: /^~antd/, replacement: path.resolve(rootDir, 'node_modules/antd') },
         { find: /^~/, replacement: '' },
@@ -175,6 +188,13 @@ export default defineConfig(({ mode, command }) => {
       strictPort: true,
       // Electron 通过 localhost 加载，无需 gzip/brotli 压缩，关闭可省 CPU
       compress: false,
+      // 本地联调 @yakit-libs/yakit-ui（file: 依赖在仓库外，需放行其 dist 的 CSS 请求）
+      fs: {
+        allow: [
+          rootDir,
+          'C:/Users/ke/Desktop/project/yakit-components-library/packages/yakit-ui',
+        ],
+      },
       // 首屏前预热：Vite 8 warmup 只跟静态 import，动态 import 必须显式列出。
       // 非阻塞提示，不是 React 单实例保证；不穷尽全部 lazy 页，只覆盖启动无需再交互就会触发的边界。
       warmup: {

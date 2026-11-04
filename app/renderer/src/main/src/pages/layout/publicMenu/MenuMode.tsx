@@ -42,6 +42,7 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import classNames from 'classnames'
 import styles from './MenuMode.module.scss'
 import { openMenuRoute } from './openMenuRoute'
+import { Menu } from '@yakit-libs/yakit-ui'
 import {
   MemfitAIAgentIcon,
   MemfitKnowledgeBaseIcon,
@@ -74,59 +75,63 @@ export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
   return (
     <div className={styles['menu-mode-wrapper']}>
       {mode === '渗透测试' && (
-        <>
-          <div className={styles['vertical-menu-wrapper']} onClick={() => onMenu(YakitRoute.MITMHacker)}>
-            <div className={styles['menu-icon-wrapper']}>
-              <div className={styles['icon-wrapper']}>
-                <PublicMitmIcon />
-              </div>
-            </div>
-            <div className={styles['title-style']}>MITM</div>
-          </div>
-          <div className={styles['divider-style']}></div>
-          <div className={styles['parent-menu-wrapper']} onClick={() => onMenu(YakitRoute.HTTPFuzzer)}>
-            <div className={styles['childs-menu-wrapper']}>
-              <Tooltip placement="bottom" title={tooltipTitle(YakitRoute.HTTPFuzzer)}>
-                <div
-                  className={classNames(styles['icon-wrapper'], styles['child-icon-wrapper'])}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onMenu(YakitRoute.HTTPFuzzer)
-                  }}
-                >
-                  <PublicWebFuzzerIcon />
-                </div>
-              </Tooltip>
-              <Tooltip placement="bottom" title={tooltipTitle(YakitRoute.WebsocketFuzzer)}>
-                <div
-                  className={classNames(styles['icon-wrapper'], styles['child-icon-wrapper'])}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onMenu(YakitRoute.WebsocketFuzzer)
-                  }}
-                >
-                  <PublicWebsocketFuzzerIcon />
-                </div>
-              </Tooltip>
-            </div>
-            <div className={styles['title-style']}>{t('YakitRoute.fuzzer')}</div>
-          </div>
-          <div className={styles['divider-style']}></div>
-          <div>
-            <div className={styles['horizontal-menu-wrapper']} onClick={() => onMenu(YakitRoute.Codec)}>
-              <div className={styles['icon-wrapper']}>
-                <PublicCodecIcon />
-              </div>
-              <div className={styles['title-style']}>{t('YakitRoute.Codec')}</div>
-            </div>
-            <div className={styles['horizontal-menu-wrapper']} onClick={() => onMenu(YakitRoute.DataCompare)}>
-              <div className={styles['icon-wrapper']}>
-                <PublicDataCompareIcon />
-              </div>
-              <div className={styles['title-style']}>{t('YakitRoute.dataCompare')}</div>
-            </div>
-          </div>
-        </>
+        <Menu className={styles['pentest-menu']}>
+          <Menu.Group>
+            <Menu.Item
+              icon={<PublicMitmIcon />}
+              label="MITM"
+              size="large"
+              itemKey={YakitRoute.MITMHacker}
+              onClick={() => onMenu(YakitRoute.MITMHacker)}
+            />
+          </Menu.Group>
+          <Menu.Group>
+            <Menu.SubGroup label={t('YakitRoute.fuzzer')} onClick={() => onMenu(YakitRoute.HTTPFuzzer)}>
+              <Menu.Item
+                icon={<PublicWebFuzzerIcon />}
+                size="medium"
+                vertical={false}
+                itemKey={YakitRoute.HTTPFuzzer}
+                title={tooltipTitle(YakitRoute.HTTPFuzzer)}
+                aria-label={tooltipTitle(YakitRoute.HTTPFuzzer)}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onMenu(YakitRoute.HTTPFuzzer)
+                }}
+              />
+              <Menu.Item
+                icon={<PublicWebsocketFuzzerIcon />}
+                size="medium"
+                vertical={false}
+                itemKey={YakitRoute.WebsocketFuzzer}
+                title={tooltipTitle(YakitRoute.WebsocketFuzzer)}
+                aria-label={tooltipTitle(YakitRoute.WebsocketFuzzer)}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onMenu(YakitRoute.WebsocketFuzzer)
+                }}
+              />
+            </Menu.SubGroup>
+          </Menu.Group>
+          <Menu.Group divided={false} className={styles['pentest-stack-group']}>
+            <Menu.Item
+              icon={<PublicCodecIcon />}
+              label={t('YakitRoute.Codec')}
+              size="medium"
+              vertical={false}
+              itemKey={YakitRoute.Codec}
+              onClick={() => onMenu(YakitRoute.Codec)}
+            />
+            <Menu.Item
+              icon={<PublicDataCompareIcon />}
+              label={t('YakitRoute.dataCompare')}
+              size="medium"
+              vertical={false}
+              itemKey={YakitRoute.DataCompare}
+              onClick={() => onMenu(YakitRoute.DataCompare)}
+            />
+          </Menu.Group>
+        </Menu>
       )}
       {mode === '安全工具' && (
         <>

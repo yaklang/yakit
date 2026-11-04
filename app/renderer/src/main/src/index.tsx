@@ -2,6 +2,8 @@ import '@ant-design/v5-patch-for-react-19'
 /** 该样式必须放在APP组件的前面，因为里面有antd样式，放后面会把APP组件内的样式覆盖 */
 import 'antd/dist/reset.css'
 import './styles/index.css'
+/** yakit-ui 组件库样式（本地联调：Dropdown 等原生重写组件的样式来源） */
+import '@yakit-libs/yakit-ui/style.css'
 import NewApp from './newApp/NewApp'
 import { ConfigProvider } from 'antd'
 import { YakitAntdProvider } from './theme/antdTheme'

@@ -94,3 +94,17 @@
     gap: 0;
   }
 }
+
+/* Side-by-side migration: 渗透测试 uses @yakit-libs/yakit-ui Menu */
+.pentest-menu {
+  height: 72px;
+  flex-shrink: 0;
+}
+
+/* Codec / 数据对比 keep original vertical stack */
+.pentest-stack-group {
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  gap: 0;
+}

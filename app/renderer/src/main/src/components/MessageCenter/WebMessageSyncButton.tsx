@@ -7,7 +7,7 @@ import { failed, yakitNotify } from '@/utils/notification'
 import { randomString } from '@/utils/randomUtil'
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitButton } from '../yakitUI/YakitButton/YakitButton'
-import { YakitDropdownMenu } from '../yakitUI/YakitDropdownMenu/YakitDropdownMenu'
+import { YakitDropdownMenu } from '../yakitUICompat/YakitDropdownMenu'
 import { apiHTTPFlowsFromOnline, apiRisksFromOnline, type WebMessageSyncType } from './utils'
 
 export const WebMessageSyncButton = ({ onSuccess }: { onSuccess?: () => void }) => {

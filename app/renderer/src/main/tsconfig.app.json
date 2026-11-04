@@ -22,6 +22,9 @@
     "noUncheckedSideEffectImports": false,
     "paths": {
       "@/*": ["./src/*"],
+      "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu": [
+        "./src/components/yakitUICompat/YakitDropdownMenu.tsx"
+      ],
       "react-resize-detector": ["./src/utils/shims/reactResizeDetector.tsx"],
       "xterm-for-react": ["./src/utils/shims/xtermForReact.tsx"]
     }
