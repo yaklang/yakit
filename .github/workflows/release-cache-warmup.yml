@@ -1,0 +1,62 @@
+name: Warm Release Caches
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'package.json'
+      - 'yarn.lock'
+      - 'app/renderer/src/main/package.json'
+      - 'app/renderer/src/main/yarn.lock'
+      - 'app/renderer/engine-link-startup/package.json'
+      - 'app/renderer/engine-link-startup/yarn.lock'
+      - '.github/actions/release-toolchain/**'
+      - '.github/workflows/release-cache-warmup.yml'
+      - 'scripts/release/toolchain.mjs'
+  # Default-branch caches are available to future release tags. Refresh them
+  # before GitHub's seven-day inactivity eviction, without creating a candidate.
+  schedule:
+    - cron: '30 21 * * 0,3'
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-cache-warmup-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  HUSKY: '0'
+
+jobs:
+  renderers:
+    timeout-minutes: 20
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/release-toolchain
+        with:
+          mode: build
+          renderers: 'true'
+
+  packaging:
+    timeout-minutes: 15
+    runs-on: ${{ matrix.target.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - { runner: windows-2022, arch: x64 }
+          - { runner: ubuntu-24.04, arch: x64 }
+          - { runner: ubuntu-24.04-arm, arch: arm64 }
+          - { runner: macos-15-intel, arch: x64 }
+          - { runner: macos-15, arch: arm64 }
+        electron: ['27.0.0', '22.3.27']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/release-toolchain
+        with:
+          electron-version: ${{ matrix.electron }}
+          electron-arch: ${{ matrix.target.arch }}

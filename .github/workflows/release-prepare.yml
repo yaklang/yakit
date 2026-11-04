@@ -87,24 +87,15 @@ jobs:
         with:
           ref: ${{ env.SOURCE_SHA }}
       - uses: ./.github/actions/release-toolchain
-      - uses: actions/setup-node@v4
         with:
-          node-version: '22.22.1'
-          cache: yarn
-          cache-dependency-path: |
-            app/renderer/src/main/yarn.lock
-            app/renderer/engine-link-startup/yarn.lock
-      - name: Install locked renderer dependencies
-        run: |
-          yarn --cwd app/renderer/src/main install --frozen-lockfile --ignore-scripts --non-interactive
-          yarn --cwd app/renderer/engine-link-startup install --frozen-lockfile --ignore-scripts --non-interactive
+          mode: build
+          renderers: 'true'
       - name: Build both renderers and the production Electron entries
         env:
           EDITION: ${{ matrix.edition }}
         run: |
           node scripts/release/prepare.mjs version
           yarn cli build -v "$EDITION"
-          yarn build:electron
       - name: Freeze the Chrome extension with the frontend
         shell: bash
         run: |
@@ -123,7 +114,9 @@ jobs:
   preassemble:
     timeout-minutes: 40
     needs: [plan, render]
-    runs-on: ${{ matrix.runner }}
+    # Engine-free assembly can cross-package Intel Electron on Apple Silicon.
+    # Integration tests and finalization still execute on each native runner.
+    runs-on: ${{ !inputs.test_only && matrix.platform == 'darwin' && 'macos-15' || matrix.runner }}
     strategy:
       fail-fast: false
       max-parallel: 20
@@ -142,6 +135,10 @@ jobs:
         with:
           ref: ${{ env.SOURCE_SHA }}
       - uses: ./.github/actions/release-toolchain
+        with:
+          electron-version: ${{ matrix.electronVersion }}
+          electron-arch: ${{ matrix.arch }}
+          installer-tools: ${{ inputs.test_only }}
       - uses: actions/download-artifact@v4
         with:
           name: release-plan

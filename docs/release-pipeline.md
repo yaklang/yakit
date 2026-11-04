@@ -19,6 +19,8 @@
 - 完成生产依赖筛选、`app.asar`、Electron 外壳、图标、平台标记和应用版本等准备。
 - 全部目标成功后才写入候选的 `candidate.json` 就绪标记。构建结束后释放 runner，不等待后端。
 
+未签名的 macOS 预装配统一使用 Apple Silicon runner，按目标架构下载对应 Electron，包括 Intel x64。收尾与 PR 安装包测试仍使用各自的原生 runner；Intel 引擎启动、应用签名和安装包封装继续在 Intel Mac 执行。
+
 收尾下载指定版本的引擎并校验官方 SHA256。社区版优先 slim，只在该产物确实返回 404 时退回 full；网络错误或哈希不符直接失败。收尾保留主渲染端和 Electron `app.asar` 的原始哈希，不重新编译前端、不切换依赖版本。
 
 macOS 在注入引擎后签名应用，普通版按现有策略公证，兼容版保留原有不公证策略。签名遇到 Apple 时间戳服务暂不可用时最多尝试 3 次；票据校验遇到 Apple 网络断连时只重试该查询，最多 3 次。证书、签名或无效票据错误不重试。Windows 在本平台封装任务中完成安装包签名。保留原有文件名和 EE Linux legacy `.run` 安装包。
@@ -33,7 +35,13 @@ macOS 在注入引擎后签名应用，普通版按现有策略公证，兼容�
 
 候选草稿保留用于预演、重试和排查。确认不再需要后，可由维护者删除对应的 `ci-release-*` 草稿；不要删除正在准备或收尾的候选。删除后，该 run ID 不再能用于发版。
 
-工具链按平台、架构和根 `yarn.lock` 缓存。缓存缺失时以 frozen lockfile 安装；普通版和兼容版通过 electron-builder 的 `electronVersion` 选择运行时，发版期间不修改 package.json 中的依赖或 yarn.lock。
+构建与打包工具分开缓存。渲染构建保留完整开发依赖；原生预装配和收尾仅安装根生产依赖与固定版本的 Electron、electron-builder、esbuild、公证工具，省去测试框架和 TypeScript 等依赖。依赖版本从根清单读取，使用现有 `yarn.lock` 的 frozen 安装，不修改根清单或锁文件。
+
+两个渲染端缓存已安装的 `node_modules`，命中后不重复执行依赖安装。缓存按系统、架构、Node 版本、依赖声明及锁文件内容区分，软件版本号变化不使依赖缓存失效。Electron ZIP 按系统、目标架构、精确版本单独缓存；安装器工具在收尾阶段单独缓存。主进程只构建一次，预装配直接移动应用目录，避免复制完整 Electron 外壳。
+
+**Warm Release Caches** 在主分支依赖或缓存配置变更后自动执行，并于每周一、四北京时间 05:30 刷新。它只准备依赖和 Electron，不构建应用、不下载引擎、不创建候选、不触发发布。默认分支缓存可被新正式 tag 读取；不同 tag 之间不能直接共享缓存，因此不能用某个旧 tag 的热缓存代替主分支预热。合并后可从 Actions 手动执行一次预热；缓存失效时仍自动按锁文件安装。
+
+主渲染端生产构建使用 Vite 8 的 Oxc JS 压缩器，CSS 保留现有 esbuild 压缩及顺序配置。预装配和收尾仍执行产物哈希、真实引擎、签名与公证检查。GitHub 排队、冷缓存和 Apple 服务延迟会影响总耗时，缓存命中不代表工作流没有等待时间。
 
 ## 分支验证
 
@@ -44,6 +52,8 @@ Windows Azure 和 Apple 签名/公证、OSS 真实写入需要仓库 secrets。�
 ### 在未合并分支上验证完整交接
 
 GitHub 的手动入口需要默认分支上已有对应工作流文件。PR 合并前，可借助现有入口在同一测试分支执行两次独立任务：
+
+测速前可先手动运行 **Verify Yakit Sign and Notarize Build**，选择测试分支并勾选 `warm_release_cache`。这次任务仅调用缓存预热，其余签名与收尾任务跳过。分支预热缓存仅供该分支及允许访问的 PR 使用；正式 tag 依赖合并后在默认分支执行的预热。完整矩阵测试与预装配测速分开运行，避免同时占用 macOS 配额。
 
 1. 手动运行 **Prepare Yakit Release**（文件 `build-multi-prod.yml`），选择测试分支，发行版选择 `yakit,yakitEE`，软件版本可填写 `1.4.9-ci.4461`。此阶段只预装配，不下载引擎；全部完成后，从 Summary 复制 Prepare run ID。
 2. 手动运行 **Verify Yakit Sign and Notarize Build**，选择同一分支，填写该 Prepare run ID 和明确的已发布引擎版本。留空 run ID 时仍执行原有 macOS 签名检查。

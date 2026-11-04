@@ -95,6 +95,10 @@ jobs:
         with:
           ref: ${{ needs.plan.outputs.sha }}
       - uses: ./.github/actions/release-toolchain
+        with:
+          electron-version: ${{ matrix.electronVersion }}
+          electron-arch: ${{ matrix.arch }}
+          installer-tools: 'true'
       - uses: actions/download-artifact@v4
         with:
           name: finalize-plan

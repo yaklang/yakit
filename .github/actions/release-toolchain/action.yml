@@ -1,26 +1,87 @@
 name: Release toolchain
 description: Reuse locked packaging tools on standard GitHub-hosted runners
+inputs:
+  mode:
+    description: Full build dependencies or the smaller packaging toolchain
+    default: packaging
+  renderers:
+    description: Restore installed dependencies for both renderers
+    default: 'false'
+  electron-version:
+    description: Optional exact Electron runtime to cache
+    default: ''
+  electron-arch:
+    description: Target Electron architecture (may differ from the packaging host)
+    default: ''
+  installer-tools:
+    description: Restore installer tools during finalization
+    default: 'false'
 runs:
   using: composite
   steps:
     - uses: actions/setup-node@v4
       with:
         node-version: '22.22.1'
+    - name: Calculate dependency identities
+      id: identity
+      shell: bash
+      env:
+        RELEASE_TOOLCHAIN_MODE: ${{ inputs.mode }}
+      run: node scripts/release/toolchain.mjs keys
     - uses: actions/cache@v4
       id: tools
       with:
-        path: |
-          node_modules
-          ~/.cache/electron
-          ~/.cache/electron-builder
-          ~/Library/Caches/electron
-          ~/Library/Caches/electron-builder
-          ~/AppData/Local/electron/Cache
-          ~/AppData/Local/electron-builder/Cache
-        key: release-tools-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('yarn.lock') }}
-    - name: Install locked packaging tools on a cold cache
-      if: steps.tools.outputs.cache-hit != 'true'
+        path: node_modules
+        key: release-tools-v2-${{ inputs.mode }}-${{ runner.os }}-${{ runner.arch }}-node22.22.1-${{ steps.identity.outputs.tools }}
+    - name: Install full build tools on a cold cache
+      if: steps.tools.outputs.cache-hit != 'true' && inputs.mode == 'build'
       shell: bash
       env:
         HUSKY: '0'
       run: yarn install --frozen-lockfile --ignore-scripts --non-interactive --network-timeout 120000
+    - name: Install the smaller packaging toolchain on a cold cache
+      if: steps.tools.outputs.cache-hit != 'true' && inputs.mode == 'packaging'
+      shell: bash
+      env:
+        HUSKY: '0'
+      run: |
+        node scripts/release/toolchain.mjs manifest
+        yarn --cwd .release/toolchain install --modules-folder "$GITHUB_WORKSPACE/node_modules" --frozen-lockfile --ignore-scripts --non-interactive --network-timeout 120000
+    - uses: actions/cache@v4
+      if: inputs.renderers == 'true'
+      id: renderers
+      with:
+        path: |
+          app/renderer/src/main/node_modules
+          app/renderer/engine-link-startup/node_modules
+        key: release-render-deps-v1-${{ runner.os }}-${{ runner.arch }}-node22.22.1-${{ steps.identity.outputs.renderers }}
+    - name: Install both renderers on a cold cache
+      if: inputs.renderers == 'true' && steps.renderers.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        yarn --cwd app/renderer/src/main install --frozen-lockfile --ignore-scripts --non-interactive --network-timeout 120000
+        yarn --cwd app/renderer/engine-link-startup install --frozen-lockfile --ignore-scripts --non-interactive --network-timeout 120000
+    - uses: actions/cache@v4
+      if: inputs.electron-version != ''
+      id: electron
+      with:
+        path: |
+          ~/.cache/electron
+          ~/Library/Caches/electron
+          ~/AppData/Local/electron/Cache
+        key: release-electron-v1-${{ runner.os }}-${{ inputs.electron-arch || runner.arch }}-${{ inputs.electron-version }}
+    - name: Download the selected Electron runtime on a cold cache
+      if: inputs.electron-version != '' && steps.electron.outputs.cache-hit != 'true'
+      shell: bash
+      env:
+        RELEASE_ELECTRON_VERSION: ${{ inputs.electron-version }}
+        RELEASE_ELECTRON_ARCH: ${{ inputs.electron-arch }}
+      run: node scripts/release/toolchain.mjs electron
+    - uses: actions/cache@v4
+      if: inputs.installer-tools == 'true'
+      with:
+        path: |
+          ~/.cache/electron-builder
+          ~/Library/Caches/electron-builder
+          ~/AppData/Local/electron-builder/Cache
+        key: release-installer-tools-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('yarn.lock') }}

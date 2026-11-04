@@ -14,6 +14,7 @@ import {
   sha256,
 } from '../../../scripts/release/model.mjs'
 import { archive, extract } from '../../../scripts/release/io.mjs'
+import { dependencyKey, packagingManifest } from '../../../scripts/release/toolchain.mjs'
 import {
   downloadEngine,
   engineFile,
@@ -159,6 +160,49 @@ describe('engine-free preassembly', () => {
     expect(await readFile(path.join(restored, 'binary'), 'utf8')).toBe('engine-free application')
     expect((await stat(path.join(restored, 'binary'))).mode & 0o111).toBe(0o111)
     expect(await readlink(path.join(restored, 'framework-current'))).toBe('binary')
+  })
+})
+
+describe('release dependency caches', () => {
+  const manifest = {
+    version: '1.4.9-1030',
+    dependencies: { '@grpc/grpc-js': '^1.3.6' },
+    devDependencies: {
+      '@electron/notarize': '^2.5.0',
+      electron: '27.0.0',
+      'electron-builder': '26.15.3',
+      esbuild: '0.28.1',
+      typescript: '6.0.3',
+      webdriverio: '9.30.0',
+    },
+    resolutions: { 'some-transitive-dependency': '1.0.0' },
+  }
+  it('preserves production dependencies and pinned packaging tools without test and compiler packages', () => {
+    const tools = packagingManifest(manifest)
+    expect(tools.dependencies).toEqual({
+      ...manifest.dependencies,
+      '@electron/notarize': '^2.5.0',
+      electron: '27.0.0',
+      'electron-builder': '26.15.3',
+      esbuild: '0.28.1',
+    })
+    expect(tools.resolutions).toEqual(manifest.resolutions)
+    expect(tools).not.toHaveProperty('scripts')
+    expect(manifest.devDependencies).toHaveProperty('webdriverio')
+  })
+  it('reuses installed dependencies across software version bumps', () => {
+    expect(dependencyKey({ ...manifest, version: '1.4.9-1106' }, 'locked bytes')).toBe(
+      dependencyKey(manifest, 'locked bytes'),
+    )
+  })
+  it('invalidates dependencies when direct versions, resolutions, or lockfile bytes change', () => {
+    const key = dependencyKey(manifest, 'locked bytes')
+    expect(dependencyKey({ ...manifest, dependencies: { '@grpc/grpc-js': '^1.4.0' } }, 'locked bytes')).not.toBe(key)
+    expect(dependencyKey({ ...manifest, resolutions: {} }, 'locked bytes')).not.toBe(key)
+    expect(dependencyKey(manifest, 'new locked bytes')).not.toBe(key)
+  })
+  it('gives full build tools and packaging-only tools different identities', () => {
+    expect(dependencyKey(packagingManifest(manifest), 'locked bytes')).not.toBe(dependencyKey(manifest, 'locked bytes'))
   })
 })
 

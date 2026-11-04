@@ -1,4 +1,4 @@
-import { chmod, cp, mkdir, rm, stat } from 'node:fs/promises'
+import { chmod, cp, mkdir, rename, rm, stat } from 'node:fs/promises'
 import path from 'node:path'
 import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
@@ -64,9 +64,6 @@ export async function validatePrebuilt(plan, target) {
     if ((await hashFile(path.join('dist/electron', file))) !== info.hashes[file])
       throw new Error(`Stale Electron entry: ${file}`)
   }
-  if ((await hashFile('dist/electron/resources/child-window/theme.css')) !== info.theme.sha256) {
-    throw new Error('Stale Electron theme')
-  }
   if (['win32', 'darwin'].includes(target.platform)) {
     const suffix = target.platform === 'win32' ? '-msvc' : ''
     await stat(`dist/electron/resources/screenshots/node-screenshots.${target.platform}-${target.arch}${suffix}.node`)
@@ -96,10 +93,7 @@ export async function preparePackage(plan, target) {
       ? `mac${target.arch === 'arm64' ? '-arm64' : ''}`
       : `${target.platform === 'win32' ? 'win' : 'linux'}${target.arch === 'arm64' ? '-arm64' : ''}-unpacked`
   await rm('.release/app', { recursive: true, force: true })
-  await cp(path.join(config.directories.output, outputName), '.release/app', {
-    recursive: true,
-    verbatimSymlinks: true,
-  })
+  await rename(path.join(config.directories.output, outputName), '.release/app')
   const paths = appPaths(plan, target)
   const { extractFile } = require('@electron/asar')
   const appManifest = JSON.parse(extractFile(path.join(paths.resources, 'app.asar'), 'package.json').toString())

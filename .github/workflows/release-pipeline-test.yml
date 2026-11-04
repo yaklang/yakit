@@ -6,6 +6,7 @@ on:
       - '.github/workflows/release-*.yml'
       - '.github/workflows/build-multi*-prod.yml'
       - '.github/actions/release-toolchain/**'
+      - 'app/renderer/src/main/vite.config.mts'
       - 'scripts/release/**'
       - 'e2e/fixtures/__test__/release-pipeline.test.mjs'
       - 'packageScript/**'
@@ -27,6 +28,8 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
       - uses: ./.github/actions/release-toolchain
+        with:
+          mode: build
       - name: Verify release contracts and the Electron build
         run: |
           yarn typecheck:electron
