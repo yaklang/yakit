@@ -44,6 +44,8 @@
     "refresh": "Refresh",
     "homeRecommend": "Home Recommendation",
     "recentSessions": "Recent sessions",
+    "recentSessionsLoadFailed": "Failed to load recent sessions",
+    "retry": "Retry",
     "viewMoreSessions": "View more",
     "justNow": "Just now",
     "minutesAgo": "{{count}} min ago",

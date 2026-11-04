@@ -44,6 +44,8 @@
     "refresh": "換一換",
     "homeRecommend": "首頁推薦",
     "recentSessions": "最近會話",
+    "recentSessionsLoadFailed": "最近會話載入失敗",
+    "retry": "重試",
     "viewMoreSessions": "查看更多",
     "justNow": "剛剛",
     "minutesAgo": "{{count}} 分鐘前",

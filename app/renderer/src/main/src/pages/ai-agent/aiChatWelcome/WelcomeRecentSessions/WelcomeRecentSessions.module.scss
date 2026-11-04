@@ -6,7 +6,27 @@
   background-color: var(--Colors-Use-Basic-Background);
 }
 
+.welcome-recent-sessions-sentinel {
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0;
+  gap: 0;
+}
+
+.welcome-recent-retry {
+  flex-shrink: 0;
+  width: auto;
+  color: var(--Colors-Use-Main-Primary);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+}
+
 .welcome-recent-header {
+  display: flex;
+  align-items: center;
   gap: 8px;
   color: var(--Colors-Use-Neutral-Text-1-Title);
   height: 20px;
