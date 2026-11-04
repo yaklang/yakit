@@ -44,4 +44,13 @@ describe('getMentionQueryDeleteRange', () => {
   it('@ 后已有空白：不删（已结束 mention）', () => {
     expect(getMentionQueryDeleteRange(6, '@abc ')).toBeNull()
   })
+
+  it('换行后的 @：上一段以换行隔开时只删本行 @query', () => {
+    expect(getMentionQueryDeleteRange(8, 'hello\n@')).toEqual({ from: 7, to: 8 })
+    expect(getMentionQueryDeleteRange(11, 'hello\n@foo')).toEqual({ from: 7, to: 11 })
+  })
+
+  it('上一段直接粘在 @ 前：匹配失败（换段时漏了换行分隔就会这样）', () => {
+    expect(getMentionQueryDeleteRange(15, 'yaklang-system@')).toBeNull()
+  })
 })
