@@ -55,6 +55,14 @@ function analyzerPlugin(): Plugin | null {
  */
 const ANTD_COMPONENT_STYLE_RE = /(^|[\\/])antd[\\/](es|lib)[\\/][\w-]+[\\/]style([\\/](index\.(less|css)|css(\.js)?))?$/
 
+/**
+ * nodePolyfills 的 banner 会在每个预构建包顶部 import 这两个 shim，
+ * 同时把 shim 的绝对路径放进 optimizeDeps.exclude。绝对路径匹配不到裸说明符，
+ * 首屏才会发现它们并触发二次预构建（Electron 黑屏）。
+ * 裸说明符必须留在 exclude：放进 include 会把 banner 打进 shim 自身，形成自引用。
+ */
+const POLYFILL_SHIM_IDS = ['vite-plugin-node-polyfills/shims/global', 'vite-plugin-node-polyfills/shims/buffer']
+
 /** public/theme.css 已从版本库移除，dev/build 启动时重新生成 */
 function generateThemeCssPlugin(): Plugin {
   return {
@@ -238,6 +246,8 @@ export default defineConfig(({ mode, command }) => {
         '!src/**/__tests__/**',
         '!src/alibaba/ali-react-table-dist/**', // 第三方 dist 仅含 .d.ts，无需 crawl
       ],
+      // 裸说明符排除；插件还会并入 shim 绝对路径。见 POLYFILL_SHIM_IDS
+      exclude: [...POLYFILL_SHIM_IDS],
       // 重型 CJS 编辑器栈显式预构建（与 entries 互补；新增 lazy 页一般无需再改此处）
       include: [
         'react',
