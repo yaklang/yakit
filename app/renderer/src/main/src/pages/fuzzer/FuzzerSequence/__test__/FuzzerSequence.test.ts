@@ -3,6 +3,7 @@ import { Buffer } from 'node:buffer'
 import { EventEmitter } from 'node:events'
 import ts from 'typescript'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { fuzzerRawStore, fuzzerSequenceScope, saveFuzzerRaw } from '../../fuzzerRawStore'
 
 // Exercise the actual parameter builder and start guard without loading Monaco/Electron.
 const source = ts.createSourceFile(
@@ -84,6 +85,11 @@ describe('browser gateway group execution boundary', () => {
         resetResponse: vi.fn(),
         updateConcurrentLoad: vi.fn(),
         resetDroppedCount: vi.fn(),
+        rawScopesRef: { current: new Set<string>() },
+        fuzzerRawStore,
+        fuzzerSequenceScope,
+        props: { groupId: 'group' },
+        selectGroupId: 'group',
         droppedSequenceIndexMapRef: { current: new Map() },
         setShowAllRes: vi.fn(),
         setCurrentSelectResponse: vi.fn(),
@@ -179,6 +185,12 @@ describe('FuzzerSequence response release queue', () => {
       runtimeIdBufferRef: { current: new Map() },
       filterColorTag: () => undefined,
       successBufferRef,
+      saveFuzzerRaw,
+      fuzzerSequenceScope,
+      fuzzerRawStore,
+      props: { groupId: 'group' },
+      selectGroupId: 'group',
+      rawScopesRef: { current: new Set<string>() },
       fuzzerTableMaxDataRef: {
         current: new Map<string, number>([
           ['alpha', 100],
@@ -271,6 +283,17 @@ describe('FuzzerSequence response release queue', () => {
     expect(bindings.fuzzerIndexArr.current).toEqual(['alpha', 'beta'])
     vi.advanceTimersByTime(500)
     expect(clearIntervalSpy).toHaveBeenCalled()
+    dispose()
+  })
+
+  it('keeps the request on the row and stores the response', async () => {
+    const { bindings, send, alphaRows, dispose } = setup()
+    send('alpha', 'alpha-body')
+    const row = alphaRows[0]
+    expect(Array.from(row.RequestRaw)).toEqual([1])
+    expect(row.ResponseRaw).toHaveLength(0)
+    expect(Array.from((await fuzzerRawStore.get('alpha-body')) || [])).toEqual([2])
+    expect(bindings.rawScopesRef.current.has(fuzzerSequenceScope('group', 'sequence', 'alpha'))).toBe(true)
     dispose()
   })
 })

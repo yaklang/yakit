@@ -16,6 +16,7 @@ import { type IMonacoEditor, NewHTTPCard, NewHTTPPacketEditor, type RenderTypeOp
 import { failed, yakitNotify } from '../utils/notification'
 import { FuzzableParamList } from './FuzzableParamList'
 import type { FuzzerResponse, RandomChunkedResponse } from '../pages/fuzzer/HTTPFuzzerPage'
+import { fillFuzzerRaw } from '../pages/fuzzer/fuzzerRawStore'
 import type { HTTPHistorySourcePageType, HTTPPacketFuzzable } from './HTTPHistory'
 import { Buffer } from 'buffer'
 import { Uint8ArrayToString } from '@/utils/str'
@@ -129,11 +130,20 @@ export const FuzzerResponseToHTTPFlowDetail = (rsp: FuzzerResponseToHTTPFlowDeta
   const [index, setIndex] = useState<number>()
   const [id, setId] = useState(0)
   const [loading, setLoading] = useState(false)
+  const loadTicketRef = useRef(0)
+  const showFilledResponse = useMemoizedFn((row: FuzzerResponse | undefined, nextIndex?: number) => {
+    if (!row) return
+    const ticket = ++loadTicketRef.current
+    void fillFuzzerRaw(row).then((full) => {
+      if (ticket !== loadTicketRef.current) return
+      setResponse(full)
+      setIndex(nextIndex)
+    })
+  })
 
   useEffect(() => {
-    setResponse(rsp.response)
-    setIndex(rsp.index)
-  }, [rsp.response])
+    showFilledResponse(rsp.response, rsp.index)
+  }, [rsp.response, rsp.index])
 
   useEffect(() => {
     if (!response) {
@@ -155,15 +165,10 @@ export const FuzzerResponseToHTTPFlowDetail = (rsp: FuzzerResponseToHTTPFlowDeta
 
   const fetchInfo = (kind: number) => {
     if (index === undefined || !rsp.data || rsp.data.length === 0) return
-
-    if (kind === 1) {
-      setResponse(rsp.data[index - 1])
-      setIndex(index - 1)
-    }
-    if (kind === 2) {
-      setResponse(rsp.data[index + 1])
-      setIndex(index + 1)
-    }
+    const nextIndex = kind === 1 ? index - 1 : kind === 2 ? index + 1 : index
+    const next = rsp.data[nextIndex]
+    if (!next || nextIndex === index) return
+    showFilledResponse(next, nextIndex)
   }
 
   return (

@@ -80,6 +80,7 @@ import type { HTTPHeader } from '../mitm/MITMContentReplacerHeaderOperator'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import _ from 'lodash'
 import { createHTTPFuzzerRun } from './httpFuzzerRun'
+import { fuzzerPageScope, fuzzerRawStore, fillFuzzerRaw, saveFuzzerRaw, useFuzzerResponseRaw } from './fuzzerRawStore'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { FUZZER_LABEL_LIST_NUMBER } from './HTTPFuzzerEditorMenu'
 import { BlastingAnimationAemonstration } from './AnimationAemonstration'
@@ -148,6 +149,7 @@ import { availableColors } from '@/components/HTTPFlowTable/HTTPFlowTable.availa
 import PluginTabs from '@/components/businessUI/PluginTabs/PluginTabs'
 import {
   DefFuzzerTableMaxData,
+  FuzzerResponseSizeWarnBytes,
   defaultAdvancedConfigShow,
   defaultPostTemplate,
   emptyFuzzer,
@@ -343,6 +345,8 @@ export interface FuzzerResponse {
   BodyLength: number
   DurationMs: number
   UUID: string
+  /** 原文写入 IndexedDB 的次数。详情用它知道要重新读取。 */
+  RawVersion?: number
   Timestamp: number
   RequestRaw: Uint8Array
   // GuessResponseEncoding: string;
@@ -982,6 +986,18 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
   const successFuzzerRef = useRef<FuzzerResponse[]>([]) // 成功的响应
   const failedFuzzerRef = useRef<FuzzerResponse[]>([]) // 失败的响应
   const fuzzerResChartDataBufferRef = useRef<FuzzerResChartData[]>([]) // 图表数据
+  /** 当前列表里响应大小的累计。超过 设置的值 只提示一次，重新发送后清零。 */
+  const responseBytesRef = useRef(0)
+  const responseSizeWarnedRef = useRef(false)
+  const addListResponseBytes = useMemoizedFn((delta: number | string) => {
+    // BodyLength 运行时可能是字符串，直接 += 会拼成超长数字
+    const bytes = Number(delta) || 0
+    if (!bytes) return
+    responseBytesRef.current += bytes
+    if (responseSizeWarnedRef.current || responseBytesRef.current <= FuzzerResponseSizeWarnBytes) return
+    responseSizeWarnedRef.current = true
+    yakitNotify('warning', t('HTTPFuzzerPage.responseSizeTooLarge', { mb: FuzzerResponseSizeWarnBytes / 1024 / 1024 }))
+  })
   /** 不可见 Tab 仍累计计数，切回时一次性刷 UI，避免后台 Tab 拖垮主线程 */
   const successCountRef = useRef(0)
   const failedCountRef = useRef(0)
@@ -1323,6 +1339,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
   const resetResponse = useMemoizedFn(() => {
     // 每次发送都换一个新 token：token 变化会触发流监听 effect 重挂，旧流的迟到
     // error/end 落在旧频道上无人接收，不会再终止新请求；dispose 让旧 run 立即失效
+    void fuzzerRawStore.deleteScope(fuzzerPageScope(props.id))
     streamRunRef.current?.dispose()
     tokenRef.current = randomString(60)
     setStreamToken(tokenRef.current)
@@ -1333,6 +1350,8 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     setFirstResponse({ ...emptyFuzzer })
     successFuzzerRef.current = []
     failedFuzzerRef.current = []
+    responseBytesRef.current = 0
+    responseSizeWarnedRef.current = false
     setFuzzerListVersion((v) => v + 1)
     updateConcurrentLoad('rps', [])
     updateConcurrentLoad('cps', [])
@@ -1732,10 +1751,18 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
             const { item } = releaseQueue.shift()!
             item.RequestRaw = null as unknown as Uint8Array
             item.ResponseRaw = null as unknown as Uint8Array
+            if (item.UUID) void fuzzerRawStore.deleteUuid(item.UUID)
             batch--
           }
         }, 500)
       }
+    }
+    const dropOldest = (list: FuzzerResponse[]) => {
+      if (list.length <= fuzzerTableMaxDataRef.current) return
+      const oldest = list.shift()
+      if (!oldest) return
+      addListResponseBytes(-(oldest.BodyLength || 0))
+      scheduleRelease(oldest)
     }
 
     const run = createHTTPFuzzerRun({
@@ -1798,11 +1825,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
         r.cellClassName = colors
       }
 
-      // 设置第一个 response（首包立即刷 UI，后续流式 upsert 并入 updateData 节流）
-      if (getFirstResponse().RequestRaw?.length === 0) {
-        markFirstResponse(r, true)
-      }
-
+      const rawScope = fuzzerPageScope(props.id)
       const tryUpsertByUUID = (list: FuzzerResponse[], item: FuzzerResponse): boolean => {
         if (!item.UUID) return false
         const idx = list.findIndex((i) => i.UUID === item.UUID)
@@ -1815,14 +1838,19 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
 
         // Streaming updates may send `ResponseRaw` only on the first packet (header),
         // and keep it empty afterwards. Preserve the first header to avoid UI losing it.
+        const prevRequestRaw = existed.RequestRaw
         const prevResponseRaw = existed.ResponseRaw
         const prevHeaders = existed.Headers
         const prevContentType = existed.ContentType
         const prevStatusCode = existed.StatusCode
+        const prevBodyLength = existed.BodyLength || 0
 
         Object.assign(existed, item)
         existed.Count = keepCount
 
+        if ((!existed.RequestRaw || existed.RequestRaw.length === 0) && prevRequestRaw?.length) {
+          existed.RequestRaw = prevRequestRaw
+        }
         if ((!existed.ResponseRaw || existed.ResponseRaw.length === 0) && prevResponseRaw?.length) {
           existed.ResponseRaw = prevResponseRaw
         }
@@ -1856,6 +1884,8 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
           existed.RandomChunkedData = merged.length > 2048 ? merged.slice(merged.length - 2048) : merged
         }
 
+        saveFuzzerRaw(rawScope, existed)
+        addListResponseBytes((existed.BodyLength || 0) - prevBodyLength)
         const first = getFirstResponse()
         if (first?.UUID && first.UUID === existed.UUID) {
           // 原地 mutate 后标记脏，由 updateData 节流刷新引用
@@ -1872,12 +1902,10 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
         } else {
           run.state.successCount++
           successCountRef.current = run.state.successCount
+          saveFuzzerRaw(rawScope, r)
           successFuzzerRef.current.push(r)
-          // 超过最大显示 展示最新数据
-          if (successFuzzerRef.current.length > fuzzerTableMaxDataRef.current) {
-            const oldest = successFuzzerRef.current.shift()
-            if (oldest) scheduleRelease(oldest)
-          }
+          addListResponseBytes(r.BodyLength || 0)
+          dropOldest(successFuzzerRef.current)
         }
       } else {
         const upserted = tryUpsertByUUID(failedFuzzerRef.current, r) || tryUpsertByUUID(successFuzzerRef.current, r)
@@ -1886,8 +1914,15 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
         } else {
           run.state.failedCount++
           failedCountRef.current = run.state.failedCount
+          saveFuzzerRaw(rawScope, r)
           failedFuzzerRef.current.push(r)
+          addListResponseBytes(r.BodyLength || 0)
+          dropOldest(failedFuzzerRef.current)
         }
+      }
+
+      if (isNewRow && !getFirstResponse().UUID) {
+        markFirstResponse(r, true)
       }
 
       if (isNewRow) {
@@ -1933,6 +1968,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
       ipcRenderer.removeAllListeners(errToken)
       ipcRenderer.removeAllListeners(dataToken)
       ipcRenderer.removeAllListeners(endToken)
+      void fuzzerRawStore.deleteScope(fuzzerPageScope(props.id))
     }
   }, [streamToken])
 
@@ -3145,13 +3181,19 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     : keepConfigType
   const leftPanelSuspenseFallback = <>{t('YakitSpin.loading')}...</>
 
+  const oneStoredRaw = useFuzzerResponseRaw(
+    onlyOneResponse ? httpResponse.UUID : undefined,
+    httpResponse.RawVersion,
+    inViewport,
+  )
+  const oneResponsePacket = httpResponse.ResponseRaw?.byteLength ? httpResponse.ResponseRaw : oneStoredRaw
   const oneResponseValue = useMemo(() => {
     if (!onlyOneResponse) return undefined
     return {
-      originValue: Uint8ArrayToString(httpResponse.ResponseRaw),
-      originalPackage: httpResponse.ResponseRaw,
+      originValue: Uint8ArrayToString(oneResponsePacket),
+      originalPackage: oneResponsePacket,
     }
-  }, [onlyOneResponse, httpResponse.ResponseRaw])
+  }, [onlyOneResponse, oneResponsePacket])
 
   const matcherValue = useMemo(
     () => ({
@@ -3173,11 +3215,18 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     })
   })
 
-  const defaultHttpResponse = useMemo(
-    () =>
-      configKeepAlive ? Uint8ArrayToString(multipleReturnsHttpResponse.ResponseRaw || new Uint8Array()) || '' : '',
-    [configKeepAlive, multipleReturnsHttpResponse.ResponseRaw],
+  const sampleStoredRaw = useFuzzerResponseRaw(
+    multipleReturnsHttpResponse.UUID,
+    multipleReturnsHttpResponse.RawVersion,
+    configKeepAlive && inViewport,
   )
+  const defaultHttpResponse = useMemo(() => {
+    if (!configKeepAlive) return ''
+    const raw = sampleStoredRaw.byteLength
+      ? sampleStoredRaw
+      : multipleReturnsHttpResponse.ResponseRaw || new Uint8Array()
+    return Uint8ArrayToString(raw) || ''
+  }, [configKeepAlive, sampleStoredRaw, multipleReturnsHttpResponse.ResponseRaw])
 
   return (
     <>
@@ -3204,7 +3253,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                     onValuesChange={onGetFormValue}
                     defaultHttpResponse={defaultHttpResponse}
                     webFuzzerValue={requestRef.current}
-                    outsideShowResponseMatcherAndExtraction={onlyOneResponse && !!httpResponse.ResponseRaw?.length}
+                    outsideShowResponseMatcherAndExtraction={onlyOneResponse && !!httpResponse.UUID}
                     onShowResponseMatcherAndExtraction={onShowResponseMatcherAndExtraction}
                     inViewportCurrent={inViewport === true}
                     id={props.id}
@@ -3438,30 +3487,32 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                     <YakitButton
                       onClick={() => {
                         setLoading(true)
-                        const redirectRequestProps: RedirectRequestParams = {
-                          Request: Buffer.from(httpResponse.RequestRaw).toString('utf8'),
-                          Response: Buffer.from(httpResponse.ResponseRaw).toString('utf8'),
-                          IsHttps: advancedConfigValue.isHttps,
-                          IsGmTLS: advancedConfigValue.isGmTLS,
-                          PerRequestTimeoutSeconds: advancedConfigValue.timeout,
-                          Proxy: (advancedConfigValue.proxy || [])
-                            .filter((item) => !item.startsWith('route'))
-                            .join(','),
-                          Extractors: advancedConfigValue.extractors,
-                          Matchers: advancedConfigValue.matchers,
-                          Params: advancedConfigValue.params || [],
-                        }
-                        ipcRenderer
-                          .invoke('RedirectRequest', redirectRequestProps)
-                          .then((rsp: FuzzerResponse) => {
-                            setRedirectedResponse(rsp)
-                          })
-                          .catch((e) => {
-                            failed(`"ERROR in: ${e}"`)
-                          })
-                          .finally(() => {
-                            setTimeout(() => setLoading(false), 300)
-                          })
+                        void fillFuzzerRaw(httpResponse).then((full) => {
+                          const redirectRequestProps: RedirectRequestParams = {
+                            Request: Buffer.from(full.RequestRaw).toString('utf8'),
+                            Response: Buffer.from(full.ResponseRaw).toString('utf8'),
+                            IsHttps: advancedConfigValue.isHttps,
+                            IsGmTLS: advancedConfigValue.isGmTLS,
+                            PerRequestTimeoutSeconds: advancedConfigValue.timeout,
+                            Proxy: (advancedConfigValue.proxy || [])
+                              .filter((item) => !item.startsWith('route'))
+                              .join(','),
+                            Extractors: advancedConfigValue.extractors,
+                            Matchers: advancedConfigValue.matchers,
+                            Params: advancedConfigValue.params || [],
+                          }
+                          ipcRenderer
+                            .invoke('RedirectRequest', redirectRequestProps)
+                            .then((rsp: FuzzerResponse) => {
+                              setRedirectedResponse(rsp)
+                            })
+                            .catch((e) => {
+                              failed(`"ERROR in: ${e}"`)
+                            })
+                            .finally(() => {
+                              setTimeout(() => setLoading(false), 300)
+                            })
+                        })
                       }}
                       type="outline2"
                     >
@@ -3484,14 +3535,16 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                       <YakitButton
                         type="text2"
                         icon={<SwitchHorizontalOutlined color="currentColor" />}
-                        onClick={() =>
-                          showBrowserTransformPackets(
-                            httpResponse,
-                            browserTransformSelection?.profileId === httpResponse.BrowserTransformProfileId
-                              ? browserTransformSelection
-                              : undefined,
-                          )
-                        }
+                        onClick={() => {
+                          void fillFuzzerRaw(httpResponse).then((full) => {
+                            showBrowserTransformPackets(
+                              full,
+                              browserTransformSelection?.profileId === httpResponse.BrowserTransformProfileId
+                                ? browserTransformSelection
+                                : undefined,
+                            )
+                          })
+                        }}
                       >
                         明文 / 线上
                       </YakitButton>
@@ -3615,6 +3668,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                             <div style={{ height: '100%', overflow: 'hidden' }}>
                               <ResponseViewer
                                 pageId={props.id}
+                                inViewport={inViewport}
                                 keepSearchName="fuzzer-response"
                                 isHttps={advancedConfigValue.isHttps}
                                 ref={responseViewerRef}
@@ -4292,7 +4346,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
         <YakitButton
           type="primary"
           onClick={() => {
-            analyzeFuzzerResponse(rsp)
+            void fillFuzzerRaw(rsp).then((full) => analyzeFuzzerResponse(full))
           }}
           size={size}
         >
@@ -4961,6 +5015,8 @@ interface ResponseViewerProps {
 
   keepSearchName?: string
   pageId?: string
+  /** 隐藏页签时不把原文留在详情状态里 */
+  inViewport?: boolean
   foldBinaryFuzztag?: boolean
   onFoldBinaryFuzztagChange?: (enabled: boolean) => void
 }
@@ -4985,6 +5041,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
       secondNodeExtra,
       webFuzzerValue,
       request,
+      inViewport = true,
       keepSearchName,
       onSetOnlyOneResEditor,
       loading,
@@ -4993,6 +5050,8 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
       onFoldBinaryFuzztagChange,
     } = props
     const { t, i18nRefresh } = useI18nNamespaces(['webFuzzer'])
+    const storedRaw = useFuzzerResponseRaw(fuzzerResponse?.UUID, fuzzerResponse?.RawVersion, inViewport !== false)
+    const responsePacket = fuzzerResponse?.ResponseRaw?.byteLength ? fuzzerResponse.ResponseRaw : storedRaw
 
     const [showMatcherAndExtraction, setShowMatcherAndExtraction] = useControllableValue<boolean>(props, {
       defaultValuePropName: 'showMatcherAndExtraction',
@@ -5107,7 +5166,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
     const [codeLoading, setCodeLoading] = useState<boolean>(false)
     const [codeValue, setCodeValue] = useState<string>('')
     useEffect(() => {
-      if (fuzzerResponse.ResponseRaw) {
+      if (responsePacket.byteLength || fuzzerResponse?.UUID) {
         getRemoteValue(FuzzerRemoteGV.WebFuzzerOneResEditorBeautifyRender).then((res) => {
           if (res) {
             setResTypeOptionVal(res)
@@ -5126,7 +5185,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
           }
         })
       }
-    }, [fuzzerResponse])
+    }, [fuzzerResponse, responsePacket])
 
     // 仅当存在响应方向的 chunk（SSE 等响应增量）时才算流式响应；
     // 请求分块（Direction=REQUEST）不应触发流式响应展示路径。
@@ -5134,7 +5193,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
       !!loading && (fuzzerResponse?.RandomChunkedData || []).filter(isResponseChunkedData).length > 0
 
     const assembledResponsePackage = useCreation(() => {
-      const header = fuzzerResponse?.ResponseRaw || new Uint8Array()
+      const header = responsePacket
       // 仅拼接响应方向的 chunk（SSE 等响应增量）。请求分块（Direction=REQUEST，
       // 随机分块传输发送的请求 body）不能拼到响应里，否则会出现「开启分块传输后
       // 响应回显请求 body」的 bug。缺省 Direction（兼容旧后端）按响应处理。
@@ -5163,16 +5222,11 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
       out.set(header, 0)
       out.set(boundedBody, header.length)
       return out
-    }, [
-      fuzzerResponse?.ResponseRaw,
-      fuzzerResponse?.RandomChunkedData,
-      fuzzerResponse?.BodyLength,
-      fuzzerResponse?.DurationMs,
-    ])
+    }, [responsePacket, fuzzerResponse?.RandomChunkedData, fuzzerResponse?.BodyLength, fuzzerResponse?.DurationMs])
 
     const responseHeaderString = useCreation(() => {
-      return Uint8ArrayToString(fuzzerResponse?.ResponseRaw || new Uint8Array())
-    }, [fuzzerResponse?.ResponseRaw])
+      return Uint8ArrayToString(responsePacket)
+    }, [responsePacket])
 
     const responseRawString = useCreation(() => {
       // Streaming mode: the body is appended into Monaco via `useChunkAutoScrollToBottom`,
@@ -5215,9 +5269,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
         ? responseRawString
         : codeValue || responseRawString
 
-    const currentOriginalPackage = isStreamingResponse
-      ? fuzzerResponse?.ResponseRaw || new Uint8Array()
-      : assembledResponsePackage
+    const currentOriginalPackage = isStreamingResponse ? responsePacket : assembledResponsePackage
 
     // 自动滚动到底部 hook（仅在流式加载时启用）
     const { handleEditorMount } = useChunkAutoScrollToBottom({

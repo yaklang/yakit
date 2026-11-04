@@ -17,6 +17,8 @@ Host: www.example.com
 
 // WebFuzzer表格默认显示数量
 export const DefFuzzerTableMaxData = 2000
+// 单页列表里响应大小累计超过这个值就提示一次，单位字节
+export const FuzzerResponseSizeWarnBytes = 500 * 1024 * 1024
 // 发包配置默认显示数量
 export const DefFuzzerConcurrent = 20
 

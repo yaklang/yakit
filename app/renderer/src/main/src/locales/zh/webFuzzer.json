@@ -92,6 +92,7 @@
     "syncConfig": "同步配置",
     "allTraffic": "全部流量",
     "response_overflow": "响应数量超过{{maxData}}，为避免前端渲染压力过大，这里将丢弃部分数据包进行展示，请点击",
+    "responseSizeTooLarge": "当前响应内容累计超过{{mb}}M，建议丢弃部分数据包或将前端渲染数量调小后重新发送，否则可能会因为渲染压力过大导致白屏",
     "view_all_suffix": "查看所有数据",
     "advanced_filter_suggestion": "需要进行高级筛选，多条件组合查询或其他复杂操作时，建议点击跳转到",
     "performAction": "进行操作",
