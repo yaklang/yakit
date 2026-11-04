@@ -385,10 +385,10 @@ describe('AIModelSelect', () => {
     expect(mocks.load).toHaveBeenCalledTimes(1)
     expect(mocks.latest).not.toHaveBeenCalled()
     expectModelRequest('current-provider')
-    expect(mocks.probe).toHaveBeenCalledExactlyOnceWith({
-      Config: config.IntelligentModels[0].Provider,
-      Model: 'configured-a',
-    })
+    expect(mocks.probe).toHaveBeenCalledExactlyOnceWith(
+      { Config: config.IntelligentModels[0].Provider, Model: 'configured-a' },
+      true,
+    )
     const effortTrigger = within(dropdown).getByRole('button', { name: 'AIReasoningEffort.selectQuality' })
     expect(effortTrigger).toHaveTextContent('ConfigNetworkPage.effortMax')
     fireEvent.mouseEnter(within(effortTrigger).getByText('Error'))
@@ -410,10 +410,10 @@ describe('AIModelSelect', () => {
 
     await act(async () => fireEvent.click(screen.getByRole('button', { name: '打开选择' })))
     expect(mocks.probe).toHaveBeenCalledTimes(2)
-    expect(mocks.probe).toHaveBeenLastCalledWith({
-      Config: config.IntelligentModels[0].Provider,
-      Model: 'configured-a',
-    })
+    expect(mocks.probe).toHaveBeenLastCalledWith(
+      { Config: config.IntelligentModels[0].Provider, Model: 'configured-a' },
+      true,
+    )
     expect(screen.queryByText('Error')).not.toBeInTheDocument()
     closeModels()
 
@@ -439,6 +439,29 @@ describe('AIModelSelect', () => {
     await act(async () => fireEvent.click(within(dropdown).getByRole('option', { name: 'remote-model-2' })))
     expect(within(dropdown).queryByText('Error')).not.toBeInTheDocument()
     expect(dropdown).toBeVisible()
+  })
+
+  it('切换模型后只提示当前模型的探测失败，忽略旧请求迟到的错误', async () => {
+    let rejectPreviousProbe!: (error: Error) => void
+    mocks.probe
+      .mockImplementationOnce(
+        () =>
+          new Promise((_, reject) => {
+            rejectPreviousProbe = reject
+          }),
+      )
+      .mockRejectedValueOnce(new Error('current probe failed'))
+    const dropdown = await openModels()
+    fireEvent.click(within(dropdown).getByRole('option', { name: 'remote-model-1' }))
+    expect(mocks.probe).toHaveBeenNthCalledWith(1, expect.objectContaining({ Model: 'remote-model-1' }), true)
+
+    await act(async () => fireEvent.click(within(dropdown).getByRole('option', { name: 'remote-model-2' })))
+    expect(mocks.probe).toHaveBeenNthCalledWith(2, expect.objectContaining({ Model: 'remote-model-2' }), true)
+    await act(async () => rejectPreviousProbe(new Error('previous probe failed')))
+    expect(mocks.notify).toHaveBeenCalledExactlyOnceWith(
+      'error',
+      'grpcProbeReasoningEffort 失败:Error: current probe failed',
+    )
   })
 
   it('选择接口返回的名称时保留连接配置和其他条目，清除旧模型的探测状态', async () => {
@@ -719,7 +742,7 @@ describe('AIModelSelect', () => {
     const effort = within(dropdown).getByRole('button', { name: 'AIReasoningEffort.selectQuality' })
     fireEvent.click(effort)
     fireEvent.click(effort)
-    expect(mocks.probe).toHaveBeenCalledExactlyOnceWith({ Config: first.Provider, Model: first.ModelName })
+    expect(mocks.probe).toHaveBeenCalledExactlyOnceWith({ Config: first.Provider, Model: first.ModelName }, true)
     closeModels()
 
     await act(async () => fireEvent.click(screen.getByRole('button', { name: '打开选择' })))
@@ -727,7 +750,7 @@ describe('AIModelSelect', () => {
     fireEvent.click(screen.getByRole('option', { name: first.ModelName }))
     expect(mocks.probe).toHaveBeenCalledTimes(1)
     await act(async () => fireEvent.click(screen.getByRole('option', { name: second.ModelName })))
-    expect(mocks.probe).toHaveBeenNthCalledWith(2, { Config: second.Provider, Model: second.ModelName })
+    expect(mocks.probe).toHaveBeenNthCalledWith(2, { Config: second.Provider, Model: second.ModelName }, true)
     expect(mocks.probe).toHaveBeenCalledTimes(2)
   })
 
@@ -916,7 +939,7 @@ describe('AIModelSelect', () => {
     expect(screen.getByTestId('selected-model')).toHaveTextContent('ConfigNetworkPage.effortDefault')
     expect(getEffortTrigger()).toHaveAttribute('aria-expanded', 'false')
     expect(getEffortTrigger()).toHaveTextContent('ConfigNetworkPage.effortDefault')
-    await waitFor(() => expect(mocks.probe).toHaveBeenCalledWith(expect.objectContaining({ Model: 'new-model' })))
+    await waitFor(() => expect(mocks.probe).toHaveBeenCalledWith(expect.objectContaining({ Model: 'new-model' }), true))
     fireEvent.click(getEffortTrigger())
     expect(await screen.findByRole('menuitemradio', { name: 'ConfigNetworkPage.effortDefault' })).toHaveAttribute(
       'aria-checked',

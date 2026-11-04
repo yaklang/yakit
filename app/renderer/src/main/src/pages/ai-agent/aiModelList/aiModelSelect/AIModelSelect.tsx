@@ -161,7 +161,7 @@ const CurrentAIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
     data: effortProbe,
   } = useRequest(
     (model: AIModelConfig) =>
-      grpcProbeReasoningEffort({ Config: model.Provider, Model: model.ModelName }).then((response) => ({
+      grpcProbeReasoningEffort({ Config: model.Provider, Model: model.ModelName }, true).then((response) => ({
         modelKey: getModelEffortKey(model),
         response,
       })),
@@ -175,7 +175,11 @@ const CurrentAIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
             : current,
         )
       },
-      onError: () => {},
+      onError: (error, [model]) => {
+        if (getModelEffortKey(model) === effortModelKey) {
+          yakitNotify('error', 'grpcProbeReasoningEffort 失败:' + String(error))
+        }
+      },
     },
   )
 
