@@ -37,6 +37,35 @@ export function assertReleaseBinding(plan, binding, engineVersion) {
   }
 }
 
+async function assertReleaseWritable(plan, env, { release, manifestSha256 } = {}) {
+  release ??= await ghJson(['release', 'view', plan.tag, '--json', 'isDraft,assets'])
+  if (!release.isDraft) throw new Error('This software release is already public; prepare a new version')
+  if (!release.assets.some((asset) => asset.name === 'release-state.json')) return null
+  await run('gh', [
+    'release',
+    'download',
+    plan.tag,
+    '--pattern',
+    'release-state.json',
+    '--dir',
+    '.release/state',
+    '--clobber',
+  ])
+  const state = await readJson('.release/state/release-state.json')
+  assertReleaseBinding(plan, state, env.ENGINE_VERSION)
+  // Once promotion starts, installers are frozen. Only the original publish job
+  // may resume a partial promotion, using exactly the same verified manifest.
+  if (
+    state.schema === 1 &&
+    state.status === 'publishing' &&
+    state.finalizeRunId === env.GITHUB_RUN_ID &&
+    state.manifestSha256 === manifestSha256 &&
+    /^[a-f0-9]{64}$/.test(manifestSha256 || '')
+  )
+    return state
+  throw new Error('This software release is already publishing or completed; retry only its original publish job')
+}
+
 export async function loadCandidate(env = process.env) {
   if (!/^\d+$/.test(env.PREPARE_RUN_ID || '')) throw new Error('Supply a prepare workflow run ID')
   assertVersion(env.ENGINE_VERSION, 'engine version')
@@ -62,11 +91,11 @@ export async function loadCandidate(env = process.env) {
     if (!env.OSS_KEY_ID || !env.OSS_KEY_SECRET) throw new Error('Missing OSS publishing credentials')
     let current
     try {
-      current = await ghJson(['release', 'view', plan.tag, '--json', 'isDraft'])
+      current = await ghJson(['release', 'view', plan.tag, '--json', 'isDraft,assets'])
     } catch (error) {
       if (error.code !== 1) throw error
     }
-    if (current && !current.isDraft) throw new Error('This software release is already public; prepare a new version')
+    if (current) await assertReleaseWritable(plan, env, { release: current })
     if (!current)
       await run('gh', [
         'release',
@@ -126,6 +155,8 @@ export async function uploadResult(plan, target, env = process.env) {
   receipt.finalizeRunId = env.GITHUB_RUN_ID
   const result = `.release/result-${env.GITHUB_RUN_ID}-${target.id}.json`
   if (env.RELEASE_PUBLISH === 'true') {
+    // A failed-job rerun can reuse a successful plan from before another run published.
+    await assertReleaseWritable(plan, env)
     const uploads = files.map((name) =>
       uploadOss(path.join('.release/output', name), `${products[target.edition].oss}/${plan.version}/${name}`),
     )
@@ -204,7 +235,7 @@ export async function complete(plan, env = process.env) {
     '--clobber',
   ])
   const results = await Promise.all(
-    (await readdir('.release/results')).map((file) => readJson(path.join('.release/results', file))),
+    (await readdir('.release/results')).sort().map((file) => readJson(path.join('.release/results', file))),
   )
   assertResults(plan, results, env)
   await writeJson('.release/release-manifest.json', { ...plan, engineVersion: env.ENGINE_VERSION, results })
@@ -212,11 +243,28 @@ export async function complete(plan, env = process.env) {
     await run('gh', ['release', 'upload', plan.candidate, '.release/release-manifest.json', '--clobber'])
   }
   if (env.RELEASE_PUBLISH === 'true') {
+    const manifestSha256 = await hashFile('.release/release-manifest.json')
+    const previousState = await assertReleaseWritable(plan, env, { manifestSha256 })
     // The workflow holds the shared promotion lock across these reads and all
     // channel writes. A late older run must not replace a newer channel pointer.
     await assertChannelPromotion(plan)
     const publicRelease = plan.editions.some(isPublic)
     const markLatest = publicRelease && (await shouldMarkGitHubLatest(plan.version, env))
+    const state = previousState || {
+      schema: 1,
+      status: 'publishing',
+      candidate: plan.candidate,
+      sha: plan.sha,
+      version: plan.version,
+      engineVersion: env.ENGINE_VERSION,
+      finalizeRunId: env.GITHUB_RUN_ID,
+      manifestSha256,
+    }
+    if (!previousState) {
+      await writeJson('.release/release-state.json', state)
+      // Reserve promotion before the first channel changes; never replace another owner.
+      await run('gh', ['release', 'upload', plan.tag, '.release/release-state.json'])
+    }
     await run('gh', ['release', 'upload', plan.tag, '.release/release-manifest.json', '--clobber'])
     // No channel is changed until every native package, signature, engine check and upload succeeded.
     for (const edition of plan.editions) {
@@ -225,6 +273,9 @@ export async function complete(plan, env = process.env) {
       await uploadOss(file, `${products[edition].oss}/latest/yakit-version.txt`)
     }
     if (publicRelease) await run('gh', ['release', 'edit', plan.tag, '--draft=false', `--latest=${markLatest}`])
+    // EE-only releases remain private drafts and use this durable terminal state.
+    await writeJson('.release/release-state.json', { ...state, status: 'complete' })
+    await run('gh', ['release', 'upload', plan.tag, '.release/release-state.json', '--clobber'])
   }
   await appendFile(
     env.GITHUB_STEP_SUMMARY,

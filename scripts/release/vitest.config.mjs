@@ -12,6 +12,7 @@ export default defineConfig({
       'e2e/fixtures/__test__/release-pipeline.test.mjs',
       'e2e/fixtures/__test__/release-identity.test.mjs',
       'e2e/fixtures/__test__/release-channels.test.mjs',
+      'e2e/fixtures/__test__/release-io.test.mjs',
       'e2e/fixtures/__test__/electron-build.test.mjs',
       'e2e/fixtures/__test__/cli-build.test.mjs',
     ],

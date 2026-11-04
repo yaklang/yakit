@@ -135,11 +135,17 @@ jobs:
               throw "Invalid installer signature: $($_.Name)"
             }
           }
+      # Restoring an older candidate must not restore its older upload guards.
+      - name: Load the coordinator's current publication guards
+        uses: actions/checkout@v4
+        with:
+          path: .release/coordinator
+          sparse-checkout: scripts/release
       - name: Upload this platform directly and record its final checksums
         env:
           OSS_KEY_ID: ${{ secrets.OSS_KEY_ID }}
           OSS_KEY_SECRET: ${{ secrets.OSS_KEY_SECRET }}
-        run: node scripts/release/finalize.mjs upload
+        run: node .release/coordinator/scripts/release/finalize.mjs upload
 
   publish:
     timeout-minutes: 10

@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
-import { complete } from '../../../scripts/release/finalize.mjs'
+import { complete, loadCandidate, uploadResult } from '../../../scripts/release/finalize.mjs'
 import { artifactName, createPlan } from '../../../scripts/release/model.mjs'
 import { run } from '../../../scripts/release/io.mjs'
 import { uploadOss } from '../../../scripts/release/oss.mjs'
@@ -17,11 +17,19 @@ let previousDirectory
 let channels
 let latestTag
 let environment
+let releases
+
+function releaseFor(tag) {
+  if (!releases.has(tag)) releases.set(tag, { isDraft: true, assets: new Map() })
+  return releases.get(tag)
+}
+
 beforeEach(async () => {
   previousDirectory = process.cwd()
   directory = await mkdtemp(path.join(os.tmpdir(), 'release-channels-'))
   process.chdir(directory)
   channels = new Map()
+  releases = new Map()
   latestTag = null
   environment = {
     GITHUB_RUN_ID: '456',
@@ -30,8 +38,55 @@ beforeEach(async () => {
     GITHUB_REPOSITORY: 'yaklang/yakit',
     GITHUB_STEP_SUMMARY: path.join(directory, 'summary'),
     GH_TOKEN: 'test-token',
+    PREPARE_RUN_ID: '123',
+    GITHUB_OUTPUT: path.join(directory, 'outputs'),
+    OSS_KEY_ID: 'test-key',
+    OSS_KEY_SECRET: 'test-secret',
   }
-  vi.mocked(run).mockReset().mockResolvedValue('')
+  vi.mocked(run)
+    .mockReset()
+    .mockImplementation(async (command, args) => {
+      if (command !== 'gh') throw new Error(`Unexpected command: ${command}`)
+      if (args[0] === 'api') {
+        return JSON.stringify(
+          args[1].includes('/commits/')
+            ? { sha: 'a'.repeat(40) }
+            : {
+                id: 123,
+                head_sha: 'a'.repeat(40),
+                conclusion: 'success',
+                status: 'completed',
+                event: 'push',
+                path: '.github/workflows/release-prepare.yml',
+              },
+        )
+      }
+      const release = releaseFor(args[2])
+      if (args[1] === 'view')
+        return JSON.stringify({
+          isDraft: release.isDraft,
+          assets: [...release.assets.keys()].map((name) => ({ name })),
+        })
+      if (args[1] === 'download') {
+        const name = args[args.indexOf('--pattern') + 1]
+        if (!name.startsWith('result-')) {
+          const destination = args[args.indexOf('--dir') + 1]
+          await mkdir(destination, { recursive: true })
+          if (!release.assets.has(name)) throw new Error(`Missing mock asset: ${name}`)
+          await writeFile(path.join(destination, name), release.assets.get(name))
+        }
+      }
+      if (args[1] === 'upload') {
+        for (const file of args.slice(3).filter((arg) => arg !== '--clobber')) {
+          const name = path.basename(file)
+          if (release.assets.has(name) && !args.includes('--clobber'))
+            throw Object.assign(new Error('Asset already exists'), { code: 1 })
+          release.assets.set(name, await readFile(file))
+        }
+      }
+      if (args[1] === 'edit' && args.includes('--draft=false')) release.isDraft = false
+      return ''
+    })
   vi.mocked(uploadOss)
     .mockReset()
     .mockImplementation(async (file, object) => {
@@ -85,6 +140,35 @@ async function candidate(version, editions = 'yakit') {
     )
   }
   return plan
+}
+
+async function prepareCandidate(plan) {
+  plan.prepared = plan.targets.map((target) => ({
+    target: target.id,
+    sha: plan.sha,
+    version: plan.version,
+    sha256: 'b'.repeat(64),
+  }))
+  releaseFor(plan.candidate).assets.set('candidate.json', Buffer.from(JSON.stringify(plan)))
+  releaseFor(plan.tag).assets.set(
+    'release-binding.json',
+    Buffer.from(
+      JSON.stringify({
+        candidate: plan.candidate,
+        sha: plan.sha,
+        version: plan.version,
+        engineVersion: environment.ENGINE_VERSION,
+      }),
+    ),
+  )
+}
+
+async function upload(plan) {
+  const target = plan.targets[0]
+  await mkdir('.release/output', { recursive: true })
+  await writeFile(`.release/output/${artifactName(plan, target)}`, 'signed installer bytes')
+  await writeFile(`.release/result-${target.id}.json`, await readFile(`.release/results/${target.id}.json`))
+  await uploadResult(plan, target, environment)
 }
 
 describe('final release channel promotion', () => {
@@ -212,5 +296,146 @@ describe('legacy manual channel entry point', () => {
     expect(checkout(finalize.jobs.plan).with?.ref).toBeUndefined()
     expect(checkout(finalize.jobs.publish).with?.ref).toBeUndefined()
     expect(checkout(finalize.jobs.package).with.ref).toBe('${{ needs.plan.outputs.sha }}')
+    const coordinator = finalize.jobs.package.steps.find((step) => step.with?.path === '.release/coordinator')
+    expect(coordinator.uses).toBe('actions/checkout@v4')
+    expect(coordinator.with.ref).toBeUndefined()
+    expect(coordinator.with['sparse-checkout']).toBe('scripts/release')
+    expect(finalize.jobs.package.steps.find((step) => step.name?.startsWith('Upload this platform')).run).toBe(
+      'node .release/coordinator/scripts/release/finalize.mjs upload',
+    )
+  })
+})
+
+describe('release state across fresh and failed-job reruns', () => {
+  it('uploads installers while the release is still unpublished', async () => {
+    const plan = await candidate('1.4.9-1104')
+    await upload(plan)
+    expect(uploadOss).toHaveBeenCalledTimes(1)
+    expect(releaseFor(plan.tag).assets.has(artifactName(plan, plan.targets[0]))).toBe(true)
+  })
+
+  it.each(['plan', 'upload', 'complete'])('rejects a stale %s after a different run publishes', async (step) => {
+    const plan = await candidate('1.4.9-1104')
+    await prepareCandidate(plan)
+    await complete(plan, { ...environment, RELEASE_PUBLISH: 'true' })
+    const published = Buffer.from(releaseFor(plan.tag).assets.get('release-manifest.json'))
+    // A has an already-successful plan; only its failed package/publish jobs rerun.
+    environment.GITHUB_RUN_ID = '789'
+    await candidate(plan.version)
+    vi.mocked(uploadOss).mockClear()
+    vi.mocked(run).mockClear()
+    const execution =
+      step === 'plan' ? loadCandidate(environment) : step === 'upload' ? upload(plan) : complete(plan, environment)
+    await expect(execution).rejects.toThrow(/already public/)
+    expect(uploadOss).not.toHaveBeenCalled()
+    expect(run.mock.calls.some(([, args]) => ['upload', 'edit'].includes(args[1]))).toBe(false)
+    expect(releaseFor(plan.tag).assets.get('release-manifest.json')).toEqual(published)
+  })
+
+  it.each(['yakitEE', 'irifyEE'])(
+    'persists private completion and refuses %s reruns at every entry',
+    async (edition) => {
+      const plan = await candidate('1.4.9-1104', edition)
+      await prepareCandidate(plan)
+      await complete(plan, environment)
+      const release = releaseFor(plan.tag)
+      expect(release.isDraft).toBe(true)
+      expect(JSON.parse(release.assets.get('release-state.json'))).toMatchObject({
+        status: 'complete',
+        finalizeRunId: '456',
+        candidate: plan.candidate,
+        engineVersion: environment.ENGINE_VERSION,
+      })
+      expect(channels.get(`${edition === 'yakitEE' ? 'vip' : 'svip'}/latest/yakit-version.txt`)).toBe(plan.version)
+      environment.GITHUB_RUN_ID = '789'
+      await candidate(plan.version, edition)
+      vi.mocked(uploadOss).mockClear()
+      vi.mocked(run).mockClear()
+      await expect(loadCandidate(environment)).rejects.toThrow(/completed/)
+      await expect(upload(plan)).rejects.toThrow(/completed/)
+      await expect(complete(plan, environment)).rejects.toThrow(/completed/)
+      expect(uploadOss).not.toHaveBeenCalled()
+      expect(run.mock.calls.some(([, args]) => ['upload', 'edit'].includes(args[1]))).toBe(false)
+    },
+  )
+
+  it('allows the same candidate and engine to retry before promotion starts', async () => {
+    const plan = await candidate('1.4.9-1104')
+    await prepareCandidate(plan)
+    await expect(loadCandidate(environment)).resolves.toMatchObject({ candidate: plan.candidate })
+    await upload(plan)
+    expect(uploadOss).toHaveBeenCalledTimes(1)
+  })
+
+  it('refuses even the original publish job after an EE-only release completed', async () => {
+    const plan = await candidate('1.4.9-1104', 'yakitEE')
+    await complete(plan, environment)
+    vi.mocked(uploadOss).mockClear()
+    vi.mocked(run).mockClear()
+    await expect(complete(plan, environment)).rejects.toThrow(/completed/)
+    expect(uploadOss).not.toHaveBeenCalled()
+    expect(run.mock.calls.some(([, args]) => ['upload', 'edit'].includes(args[1]))).toBe(false)
+  })
+
+  it('does not publish a manifest or channel if the atomic state reservation fails', async () => {
+    const plan = await candidate('1.4.9-1104')
+    const normalRun = run.getMockImplementation()
+    vi.mocked(run).mockImplementation(async (command, args, options) => {
+      if (args[1] === 'upload' && args.includes('.release/release-state.json')) throw new Error('Reservation failed')
+      return normalRun(command, args, options)
+    })
+    await expect(complete(plan, environment)).rejects.toThrow('Reservation failed')
+    expect(uploadOss).not.toHaveBeenCalled()
+    expect(releaseFor(plan.tag).assets.has('release-manifest.json')).toBe(false)
+  })
+
+  it('freezes packages before channel writes and lets only the owner resume a partial promotion', async () => {
+    const plan = await candidate('1.4.9-1104', 'yakit,yakitEE')
+    await prepareCandidate(plan)
+    const normalUpload = uploadOss.getMockImplementation()
+    vi.mocked(uploadOss).mockImplementation(async (file, object) => {
+      expect(JSON.parse(releaseFor(plan.tag).assets.get('release-state.json')).status).toBe('publishing')
+      if (object.startsWith('vip/')) throw new Error('OSS interrupted')
+      return normalUpload(file, object)
+    })
+    await expect(complete(plan, environment)).rejects.toThrow('OSS interrupted')
+    expect(channels.get('yak/latest/yakit-version.txt')).toBe(plan.version)
+    expect(channels.has('vip/latest/yakit-version.txt')).toBe(false)
+    vi.mocked(uploadOss).mockClear().mockImplementation(normalUpload)
+    vi.mocked(run).mockClear()
+    await expect(loadCandidate({ ...environment, GITHUB_RUN_ID: '789' })).rejects.toThrow(/already publishing/)
+    await expect(upload(plan)).rejects.toThrow(/already publishing/)
+    environment.GITHUB_RUN_ID = '789'
+    await candidate(plan.version, 'yakit,yakitEE')
+    await expect(complete(plan, environment)).rejects.toThrow(/already publishing/)
+    expect(uploadOss).not.toHaveBeenCalled()
+    expect(run.mock.calls.some(([, args]) => ['upload', 'edit'].includes(args[1]))).toBe(false)
+    environment.GITHUB_RUN_ID = '456'
+    await candidate(plan.version, 'yakit,yakitEE')
+    await expect(complete(plan, environment)).resolves.toBeUndefined()
+    expect(channels.get('vip/latest/yakit-version.txt')).toBe(plan.version)
+    expect(JSON.parse(releaseFor(plan.tag).assets.get('release-state.json')).status).toBe('complete')
+  })
+
+  it('refuses an owner retry if the verified manifest changed after promotion started', async () => {
+    const plan = await candidate('1.4.9-1104', 'yakitEE')
+    vi.mocked(uploadOss).mockRejectedValueOnce(new Error('OSS interrupted'))
+    await expect(complete(plan, environment)).rejects.toThrow('OSS interrupted')
+    const file = `.release/results/${plan.targets[0].id}.json`
+    const receipt = JSON.parse(await readFile(file, 'utf8'))
+    receipt.files[0].sha256 = 'd'.repeat(64)
+    await writeFile(file, JSON.stringify(receipt))
+    vi.mocked(uploadOss).mockClear()
+    vi.mocked(run).mockClear()
+    await expect(complete(plan, environment)).rejects.toThrow(/already publishing/)
+    expect(uploadOss).not.toHaveBeenCalled()
+    expect(run.mock.calls.some(([, args]) => ['upload', 'edit'].includes(args[1]))).toBe(false)
+  })
+
+  it('fails closed if the release state cannot be read', async () => {
+    const plan = await candidate('1.4.9-1104')
+    vi.mocked(run).mockRejectedValueOnce(new Error('GitHub unavailable'))
+    await expect(upload(plan)).rejects.toThrow('GitHub unavailable')
+    expect(uploadOss).not.toHaveBeenCalled()
   })
 })
