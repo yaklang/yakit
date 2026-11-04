@@ -28,6 +28,22 @@ export function releaseVersion(tag) {
   return assertVersion(tag.replace(/^v/, '').replace(/-(irify|memfit)$/, ''), 'release version')
 }
 
+export function assertReleaseIdentity(tag, editions, version) {
+  assertVersion(version, 'release version')
+  const suffix = /-(irify|memfit)$/.exec(tag)?.[0] || ''
+  const allowed = suffix === '-irify' ? ['irify', 'irifyEE'] : suffix === '-memfit' ? ['memfit'] : ['yakit', 'yakitEE']
+  // One canonical tag must own each product/version OSS directory. A different
+  // product's tag must not bypass the release binding for the same installers.
+  if (
+    tag !== `v${version}${suffix}` ||
+    /-render$/.test(tag) ||
+    !editions.length ||
+    editions.some((edition) => !allowed.includes(edition))
+  ) {
+    throw new Error('Release tag must match the canonical tag and selected product editions')
+  }
+}
+
 export function createPlan({ editions, version, sha, runId, repository, ref, refType }) {
   assertVersion(version)
   if (!/^[a-f0-9]{40}$/.test(sha || '')) throw new Error('Invalid source commit')
@@ -40,7 +56,7 @@ export function createPlan({ editions, version, sha, runId, repository, ref, ref
   ) {
     throw new Error('Select supported, unique editions')
   }
-  if (refType === 'tag' && releaseVersion(ref) !== version) throw new Error('Tag and software version differ')
+  if (refType === 'tag') assertReleaseIdentity(ref, selected, version)
   const targets = selected.flatMap((edition) =>
     platforms.flatMap((platform) =>
       [false, true].map((legacy) => ({
