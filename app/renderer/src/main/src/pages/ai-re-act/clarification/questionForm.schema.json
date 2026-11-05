@@ -12,6 +12,10 @@
         "type": {
           "const": "object"
         },
+        "description": {
+          "type": "string",
+          "maxLength": 256
+        },
         "properties": {
           "type": "object",
           "maxProperties": 30,

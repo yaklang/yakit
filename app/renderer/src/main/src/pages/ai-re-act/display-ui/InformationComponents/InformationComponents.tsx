@@ -4,8 +4,8 @@ import { YakitAlert } from '@/components/yakitUI/YakitAlert/YakitAlert'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitSegmented } from '@/components/yakitUI/YakitSegmented/YakitSegmented'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import type { NodeProps } from './ComponentCard'
-import styles from './interactive.module.scss'
+import type { NodeProps } from '../ComponentCard/ComponentCard'
+import styles from './InformationComponents.module.scss'
 
 export function InformationAlert({ node }: NodeProps) {
   return (

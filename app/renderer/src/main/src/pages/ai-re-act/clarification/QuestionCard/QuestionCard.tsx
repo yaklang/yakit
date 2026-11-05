@@ -5,10 +5,16 @@ import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { YakitAlert } from '@/components/yakitUI/YakitAlert/YakitAlert'
+import {
+  CheckOutlined,
+  ChevronsDownUpOutlined,
+  ChevronsUpDownOutlined,
+  QuestionMarkCircleOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import type { AIChatQSData } from '../hooks/aiRender'
-import type { AIChatQSDataTypeEnum } from '../hooks/aiRender'
-import { globalSessionEngine } from '../hooks/ChatMultiSessionController'
+import type { AIChatQSData } from '../../hooks/aiRender'
+import type { AIChatQSDataTypeEnum } from '../../hooks/aiRender'
+import { globalSessionEngine } from '../../hooks/ChatMultiSessionController'
 import {
   emptyAnswer,
   questionAnswers,
@@ -16,17 +22,23 @@ import {
   formAnswerText,
   type QuestionOption,
   type QuestionDraft,
-} from './types'
-import styles from './interactive.module.scss'
-import { QuestionFormFields } from './QuestionFormFields'
-import { readQuestionForm } from './formValidation'
+} from '../../interactive-ui/types'
+import { questionStatusLabel } from '../questionStatus'
+import styles from './QuestionCard.module.scss'
+import { QuestionFormFields } from '../QuestionFormFields/QuestionFormFields'
+import { readQuestionForm } from '../formValidation'
+import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 
 export function QuestionCard({
   item,
   floating = false,
+  queueCount = 0,
+  onCycleQueue,
 }: {
   item: Extract<AIChatQSData, { type: AIChatQSDataTypeEnum.UI_QUESTION }>
   floating?: boolean
+  queueCount?: number
+  onCycleQueue?: () => void
 }) {
   const { request, sessionId } = item.data
   const { t } = useI18nNamespaces(['aiAgent'])
@@ -251,25 +263,15 @@ export function QuestionCard({
   }
   const optionLabel = (option: QuestionOption, index: number) => (
     <span className={styles.optionContent}>
+      {index < 10 && <span className={styles.shortcut}>{index === 9 ? '0' : index + 1}</span>}
       <span>
-        {(index + 1) % 10}. {option.label}
+        {option.label}
         {option.recommended && t('InteractiveUI.recommended')}
       </span>
       {option.description && <span className={styles.secondary}>{option.description}</span>}
     </span>
   )
-  const status =
-    outcome === 'submitted'
-      ? t('InteractiveUI.answered')
-      : outcome === 'skipped'
-        ? t('InteractiveUI.skipped')
-        : outcome === 'cancelled'
-          ? t('InteractiveUI.cancelled')
-          : outcome === 'expired'
-            ? t('InteractiveUI.expired')
-            : request.mode === 'blocking'
-              ? t('InteractiveUI.waiting')
-              : t('InteractiveUI.continuing')
+  const status = questionStatusLabel(outcome, request.mode, t)
   return (
     <section
       className={floating ? styles.questionFloating : styles.card}
@@ -288,23 +290,47 @@ export function QuestionCard({
       }}
     >
       <div className={styles.toolbar}>
-        <strong>{status}</strong>
-        {!draft.touched && !request.touched && request.deadline && outcome === 'pending' ? (
-          <span className={styles.secondary} aria-live="polite">
-            {t('InteractiveUI.countdown', { seconds: Math.max(0, Math.ceil((request.deadline - now) / 1000)) })}
-          </span>
-        ) : null}
-        <YakitButton
-          type="text2"
-          size="small"
-          onClick={() => save({ ...current.current, collapsed: !draft.collapsed })}
-        >
-          {draft.collapsed
-            ? submitted
-              ? t('InteractiveUI.viewAnswers')
-              : t('InteractiveUI.expand')
-            : t('InteractiveUI.collapse')}
-        </YakitButton>
+        <span className={styles.toolbarStatus}>
+          <QuestionMarkCircleOutlined />
+          {status}
+        </span>
+        <div className={styles.toolbarRight}>
+          {!draft.touched && !request.touched && request.deadline && outcome === 'pending' ? (
+            <span className={styles.secondary} aria-live="polite">
+              {t('InteractiveUI.countdown', { seconds: Math.max(0, Math.ceil((request.deadline - now) / 1000)) })}
+            </span>
+          ) : null}
+          {floating && queueCount > 0 ? (
+            onCycleQueue ? (
+              <YakitButton type="text" size="small" onClick={onCycleQueue}>
+                {t('InteractiveUI.questionQueue')}
+                <YakitTag size="small" fullRadius>
+                  {queueCount}
+                </YakitTag>
+              </YakitButton>
+            ) : (
+              <span className={styles.questionQueue}>
+                {t('InteractiveUI.questionQueue')}
+                <YakitTag size="small" fullRadius>
+                  {queueCount}
+                </YakitTag>
+              </span>
+            )
+          ) : null}
+          <YakitButton
+            type="text2"
+            size="small"
+            onClick={() => save({ ...current.current, collapsed: !draft.collapsed })}
+            icon={!draft.collapsed ? <ChevronsDownUpOutlined /> : <ChevronsUpDownOutlined />}
+            iconPosition="end"
+          >
+            {draft.collapsed
+              ? submitted
+                ? t('InteractiveUI.viewAnswers')
+                : t('InteractiveUI.expand')
+              : t('InteractiveUI.collapse')}
+          </YakitButton>
+        </div>
       </div>
       {error && !terminal && <YakitAlert type="error" message={error} />}
       {!draft.collapsed && terminal && !form && (
@@ -360,21 +386,15 @@ export function QuestionCard({
             q && (
               <>
                 <div className={styles.toolbar}>
-                  <strong>{q.title}</strong>
-                  <span>
-                    {page + 1} / {questions.length}
-                  </span>
-                </div>
-                <p className={styles.prompt}>{q.prompt}</p>
-                <div className={styles.secondary}>
-                  {q.multiple ? t('InteractiveUI.multiple') : t('InteractiveUI.single')}
+                  <div>{q.title}</div>
+                  <div className={styles.prompt}>{q.prompt}</div>
                 </div>
                 {q.multiple ? (
                   <div role="group" aria-label={q.title} className={styles.options}>
                     {q.options.map((option, index) => (
                       <YakitCheckbox
                         key={option.id}
-                        wrapperClassName={`${styles.option} ${answer.selected.includes(option.id) ? styles.selected : ''}`}
+                        wrapperClassName={`${styles.option}`}
                         checked={answer.selected.includes(option.id)}
                         disabled={busy}
                         onChange={() => choose(option.id)}
@@ -425,17 +445,18 @@ export function QuestionCard({
           )}
           <div className={styles.actions}>
             <div className={styles.questionActionGroup}>
-              {!form && (
+              {!form && page > 0 && (
                 <YakitButton
                   type="outline2"
-                  disabled={page === 0 || busy}
+                  disabled={busy}
                   onClick={() => save({ ...current.current, page: page - 1 })}
                 >
                   {t('InteractiveUI.previous')}
                 </YakitButton>
               )}
-              <YakitButton type="primary" loading={busy} onClick={nextPage}>
+              <YakitButton type="primary" radius={16} loading={busy} onClick={nextPage}>
                 {form || page === questions.length - 1 ? t('InteractiveUI.submit') : t('InteractiveUI.next')}
+                {form || page === questions.length - 1 ? <CheckOutlined /> : null}
               </YakitButton>
             </div>
             <div className={`${styles.questionActionGroup} ${styles.questionSecondaryActions}`}>
@@ -452,6 +473,23 @@ export function QuestionCard({
                   {t('InteractiveUI.cancelWait')}
                 </YakitButton>
               )}
+              {!form && questions.length > 1 ? (
+                <span className={styles.questionProgress}>
+                  {page + 1}/{questions.length}
+                  <span
+                    className={styles.questionProgressTrack}
+                    role="progressbar"
+                    aria-valuemin={1}
+                    aria-valuemax={questions.length}
+                    aria-valuenow={page + 1}
+                  >
+                    <span
+                      className={styles.questionProgressFill}
+                      style={{ width: `${((page + 1) / questions.length) * 100}%` }}
+                    />
+                  </span>
+                </span>
+              ) : null}
               <YakitButton type="text2" disabled={busy} onClick={skip}>
                 {t('InteractiveUI.skipQuestion')}
               </YakitButton>

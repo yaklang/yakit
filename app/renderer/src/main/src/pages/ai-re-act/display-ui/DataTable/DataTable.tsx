@@ -2,8 +2,8 @@ import React, { useRef } from 'react'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import type { NodeProps } from './ComponentCard'
-import styles from './interactive.module.scss'
+import type { NodeProps } from '../ComponentCard/ComponentCard'
+import styles from './DataTable.module.scss'
 
 type Column = {
   key: string

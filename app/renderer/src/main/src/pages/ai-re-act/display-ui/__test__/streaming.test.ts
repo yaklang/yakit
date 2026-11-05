@@ -1,4 +1,4 @@
-import type { UISubmission } from '../types'
+import type { UISubmission } from '../../interactive-ui/types'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { handleComponentStream, handleComponentUI, UI_CONTENT_TYPE } from '../../hooks/grpcStreamHandler/aiComponentUI'
 import { AIChatQSDataTypeEnum } from '../../hooks/aiRender'

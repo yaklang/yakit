@@ -2,8 +2,8 @@ import type React from 'react'
 import { useRef, useState } from 'react'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import type { NodeProps } from './ComponentCard'
-import styles from './interactive.module.scss'
+import type { NodeProps } from '../ComponentCard/ComponentCard'
+import styles from './DataCharts.module.scss'
 
 const colors = [
   'var(--Colors-Use-Main-Primary)',

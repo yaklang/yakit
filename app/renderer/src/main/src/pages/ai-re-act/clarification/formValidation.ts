@@ -1,8 +1,8 @@
 import validator from '@rjsf/validator-ajv8'
 import type { RJSFSchema } from '@rjsf/utils'
-import { normalize, matchesSchema } from './validate'
+import { normalize, matchesSchema } from '../interactive-ui/validate'
 import contract from './questionForm.schema.json'
-import type { QuestionForm } from './types'
+import type { QuestionForm } from '../interactive-ui/types'
 
 export function readQuestionForm(value: QuestionForm): QuestionForm | undefined {
   let invalid = false

@@ -1,6 +1,6 @@
 import { AIChatQSDataTypeEnum } from '@/pages/ai-re-act/hooks/aiRender'
-import { QuestionSummary } from '@/pages/ai-re-act/interactive-ui/QuestionSummary'
-import { ComponentCard } from '@/pages/ai-re-act/interactive-ui/ComponentCard'
+import { QuestionSummary } from '@/pages/ai-re-act/clarification/QuestionSummary/QuestionSummary'
+import { ComponentCard } from '@/pages/ai-re-act/display-ui/ComponentCard/ComponentCard'
 import { type FC, memo } from 'react'
 import { AIModelErrorPrompt } from '../../aiChatListItem/aiModelErrorPrompt/AIModelErrorPrompt'
 import { AIHttpFlowFuzzStatusCard } from '../../aiHttpFlowFuzzStatusCard/AIHttpFlowFuzzStatusCard'

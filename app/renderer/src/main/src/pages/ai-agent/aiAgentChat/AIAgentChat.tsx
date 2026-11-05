@@ -1,4 +1,3 @@
-import { ClarificationPanel } from '@/pages/ai-re-act/interactive-ui/ClarificationPanel'
 import React, { memo, useEffect, useRef, useState } from 'react'
 import type { AIAgentChatMode, AIAgentChatProps, AIReActTaskChatReviewProps, AIChatSubmitParams } from './type'
 import { useCreation, useDebounceFn, useInViewport, useMemoizedFn, useSafeState } from 'ahooks'
@@ -675,7 +674,7 @@ export const AIReActTaskChatReview: React.FC<AIReActTaskChatReviewProps> = React
       </div>
     )
   })
-  if (!reviewInfo) return <ClarificationPanel />
+  if (!reviewInfo) return null
   return (
     <div className={styles['review-box']}>
       <div

@@ -92,6 +92,7 @@ vi.mock('@/utils/eventBus/eventBus', () => ({ default: { emit: vi.fn() } }))
 
 vi.mock('../../hooks/useCurrentDataBySession', () => ({
   useCurrentStore: () => chatStore,
+  useCurrentRawData: () => ({ contents: new Map() }),
 }))
 vi.mock('../../hooks/useCurrentSessionId', () => ({ default: () => 'test-session' }))
 vi.mock('../../hooks/useSessionId', () => ({ default: () => ({ getSession: () => 'test-session' }) }))

@@ -37,6 +37,7 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useStartAIChat } from '../hooks/useStartAIChat'
 import { isCommunityEdition } from '@/utils/envfile'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import { ClarificationPanel } from '../clarification/ClarificationPanel/ClarificationPanel'
 
 export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
   forwardRef((props, ref) => {
@@ -288,6 +289,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
               </div>
               <div className={classNames(styles['chat-footer'])}>
                 <div className={styles['footer-body']}>
+                  <ClarificationPanel />
                   <div className={styles['footer-inputs']}>
                     <AITaskQuery />
                     <div className={classNames(styles['footer-inputs-file-list'])}>

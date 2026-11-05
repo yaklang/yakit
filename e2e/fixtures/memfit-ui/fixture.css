@@ -15,10 +15,17 @@ main {
   bottom: 28px;
   left: 16px;
   right: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 8px;
 }
 .composer > textarea {
-  position: absolute;
-  bottom: 0;
   width: 100%;
   height: 110px;
+  flex-shrink: 0;
+  border: 1px solid var(--Colors-Use-Neutral-Border);
+  border-radius: 12px;
+  padding: 12px;
+  box-sizing: border-box;
 }

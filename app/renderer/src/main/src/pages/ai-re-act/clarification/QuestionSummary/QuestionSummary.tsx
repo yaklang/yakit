@@ -1,9 +1,10 @@
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import type { AIChatQSDataTypeEnum, AIChatQSData } from '../hooks/aiRender'
-import { globalSessionEngine } from '../hooks/ChatMultiSessionController'
-import { questionAnswers, questionText, formAnswerText, type QuestionDraft } from './types'
-import styles from './interactive.module.scss'
+import type { AIChatQSDataTypeEnum, AIChatQSData } from '../../hooks/aiRender'
+import { globalSessionEngine } from '../../hooks/ChatMultiSessionController'
+import { questionAnswers, questionText, formAnswerText, type QuestionDraft } from '../../interactive-ui/types'
+import { questionStatusLabel } from '../questionStatus'
+import styles from './QuestionSummary.module.scss'
 
 export function QuestionSummary({
   item,
@@ -17,18 +18,7 @@ export function QuestionSummary({
   const draft = item.uiState as QuestionDraft | undefined
   const outcome = request.state === 'submitted' ? 'submitted' : draft?.outcome || request.state
   const canAnswer = outcome === 'pending' || outcome === 'expired'
-  const status =
-    outcome === 'submitted'
-      ? t('InteractiveUI.answered')
-      : outcome === 'cancelled'
-        ? t('InteractiveUI.cancelled')
-        : outcome === 'skipped'
-          ? t('InteractiveUI.skipped')
-          : outcome === 'expired'
-            ? t('InteractiveUI.expired')
-            : request.mode === 'blocking'
-              ? t('InteractiveUI.waiting')
-              : t('InteractiveUI.continuing')
+  const status = questionStatusLabel(outcome, request.mode, t)
   const answers = request.answers || (draft ? questionAnswers(request, draft) : [])
   return (
     <section className={styles.card} aria-label={t('InteractiveUI.questionRegion')}>

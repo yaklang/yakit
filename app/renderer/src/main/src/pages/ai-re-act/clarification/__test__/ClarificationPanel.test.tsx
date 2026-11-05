@@ -2,10 +2,10 @@ import type React from 'react'
 import { cleanup, fireEvent, render, screen, act } from '@testing-library/react'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 import { createStore } from 'zustand/vanilla'
-import { ClarificationPanel } from '../ClarificationPanel'
-import { QuestionSummary } from '../QuestionSummary'
+import { ClarificationPanel } from '../ClarificationPanel/ClarificationPanel'
+import { QuestionSummary } from '../QuestionSummary/QuestionSummary'
 import { AIChatQSDataTypeEnum, type ChatStoreState } from '../../hooks/aiRender'
-import { syncQuestionPanel } from '../questionPanel'
+import { syncQuestionPanel } from '../../interactive-ui/questionPanel'
 
 const context = vi.hoisted(() => ({ store: undefined as any, contents: new Map<string, any>() }))
 const send = vi.hoisted(() => vi.fn().mockResolvedValue(undefined))
@@ -28,7 +28,10 @@ vi.mock('@/i18n/useI18nNamespaces', async () => {
   const { default: locale } = await import('@/locales/zh/aiAgent.json')
   return {
     useI18nNamespaces: () => ({
-      t: (key: string) => (locale.InteractiveUI as Record<string, string>)[key.replace('InteractiveUI.', '')] || key,
+      t: (key: string, options?: Record<string, unknown>) => {
+        const label = (locale.InteractiveUI as Record<string, string>)[key.replace('InteractiveUI.', '')] || key
+        return label.replace(/\{\{(\w+)\}\}/g, (_, name) => String(options?.[name] ?? ''))
+      },
     }),
   }
 })
@@ -95,9 +98,9 @@ it('queues requests, preserves drafts when switching and removes completed contr
   render(<ClarificationPanel />)
   fireEvent.click(screen.getAllByRole('checkbox')[1])
   fireEvent.change(screen.getByRole('textbox'), { target: { value: '保留这段补充' } })
-  fireEvent.click(screen.getByText('下一组问题'))
+  fireEvent.click(screen.getByRole('button', { name: /问卷队列/ }))
   expect(screen.getByText('选择 second')).toBeTruthy()
-  fireEvent.click(screen.getByText('下一组问题'))
+  fireEvent.click(screen.getByRole('button', { name: /问卷队列/ }))
   expect(screen.getAllByRole('checkbox')[1]).toBeChecked()
   expect(screen.getByRole('textbox')).toHaveValue('保留这段补充')
   await act(async () => {

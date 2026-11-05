@@ -1,10 +1,10 @@
 import type React from 'react'
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { QuestionCard } from '../QuestionCard'
+import { QuestionCard } from '../QuestionCard/QuestionCard'
 import { AIChatQSDataTypeEnum } from '../../hooks/aiRender'
-import type { QuestionRequest } from '../types'
-import { questionText } from '../types'
+import type { QuestionRequest } from '../../interactive-ui/types'
+import { questionText } from '../../interactive-ui/types'
 
 const send = vi.hoisted(() => vi.fn().mockResolvedValue(undefined))
 vi.mock('../../hooks/ChatMultiSessionController', () => ({

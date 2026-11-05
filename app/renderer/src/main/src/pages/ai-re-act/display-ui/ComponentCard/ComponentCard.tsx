@@ -1,14 +1,14 @@
 import type React from 'react'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import type { AIChatQSDataTypeEnum } from '../hooks/aiRender'
-import { type AIChatQSData } from '../hooks/aiRender'
-import { globalSessionEngine } from '../hooks/ChatMultiSessionController'
-import { readDocument, type UINode } from './validate'
-import { catalog } from './catalog.mjs'
-import styles from './interactive.module.scss'
-import { DataChart } from './DataCharts'
-import { DataTable } from './DataTable'
-import { InformationAlert, InformationHint, ViewTabs } from './InformationComponents'
+import type { AIChatQSDataTypeEnum } from '../../hooks/aiRender'
+import { type AIChatQSData } from '../../hooks/aiRender'
+import { globalSessionEngine } from '../../hooks/ChatMultiSessionController'
+import { readDocument, type UINode } from '../../interactive-ui/validate'
+import { catalog } from '../../interactive-ui/catalog.mjs'
+import styles from './ComponentCard.module.scss'
+import { DataChart } from '../DataCharts/DataCharts'
+import { DataTable } from '../DataTable/DataTable'
+import { InformationAlert, InformationHint, ViewTabs } from '../InformationComponents/InformationComponents'
 
 type ComponentItem = Extract<AIChatQSData, { type: AIChatQSDataTypeEnum.UI_COMPONENT }>
 type State = Record<string, { value: Record<string, unknown>; view?: Record<string, any> }>

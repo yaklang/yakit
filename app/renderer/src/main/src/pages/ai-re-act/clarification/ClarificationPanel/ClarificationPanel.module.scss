@@ -1,0 +1,16 @@
+.questionDock {
+  width: 100%;
+  border: 1px solid var(--Colors-Use-Neutral-Border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--Colors-Use-Basic-Background);
+  box-shadow:
+    0 3px 6px -4px rgba(0, 0, 0, 0.12),
+    0 6px 16px 0 rgba(0, 0, 0, 0.08),
+    0 9px 28px 8px rgba(0, 0, 0, 0.05);
+}
+.questionPanel {
+  max-height: min(50vh, 480px);
+  overflow: auto;
+  overscroll-behavior: contain;
+}

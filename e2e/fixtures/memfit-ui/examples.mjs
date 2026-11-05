@@ -149,11 +149,17 @@ export function questionForm(mode = 'async', deadline, typed = false) {
           title: '部署分析参数',
           schema: {
             type: 'object',
+            description: '希望了解哪些内容？',
             properties: {
               name: { type: 'string', title: '任务名称', minLength: 2 },
               environment: { type: 'string', title: '环境', enum: ['测试', '生产'], default: '测试' },
               replicas: { type: 'integer', title: '副本数', minimum: 1, maximum: 10, default: 2 },
-              backup: { type: 'boolean', title: '启用备份', default: false },
+              backup: {
+                type: 'boolean',
+                title: '启用备份',
+                description: '这里是文案描述，启用后会怎么样',
+                default: false,
+              },
               focus: {
                 type: 'array',
                 title: '关注方面',

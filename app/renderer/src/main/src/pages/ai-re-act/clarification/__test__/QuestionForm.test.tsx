@@ -1,10 +1,10 @@
 import type React from 'react'
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
-import { QuestionCard } from '../QuestionCard'
-import { QuestionSummary } from '../QuestionSummary'
+import { QuestionCard } from '../QuestionCard/QuestionCard'
+import { QuestionSummary } from '../QuestionSummary/QuestionSummary'
 import { readQuestionForm } from '../formValidation'
-import { matchesSchema } from '../validate'
+import { matchesSchema } from '../../interactive-ui/validate'
 import { AIChatQSDataTypeEnum } from '../../hooks/aiRender'
 const send = vi.hoisted(() => vi.fn().mockResolvedValue(undefined))
 beforeAll(() => {
@@ -137,7 +137,7 @@ describe('forms use the clarification channel', () => {
     expect(answers()).toHaveLength(0)
     fireEvent.click(screen.getByRole('checkbox', { name: '数据流' }))
     fireEvent.change(screen.getByRole('spinbutton'), { target: { value: '3' } })
-    fireEvent.click(screen.getByRole('checkbox', { name: '启用' }))
+    fireEvent.click(screen.getByRole('switch', { name: '启用' }))
     fireEvent.mouseDown(screen.getByRole('combobox'))
     fireEvent.click(screen.getByText('2', { selector: '.ant-select-item-option-content' }))
     await act(async () => {

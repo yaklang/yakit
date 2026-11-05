@@ -1,6 +1,6 @@
 import React from 'react'
-import { QuestionSummary } from '@/pages/ai-re-act/interactive-ui/QuestionSummary'
-import { ComponentCard } from '@/pages/ai-re-act/interactive-ui/ComponentCard'
+import { QuestionSummary } from '@/pages/ai-re-act/clarification/QuestionSummary/QuestionSummary'
+import { ComponentCard } from '@/pages/ai-re-act/display-ui/ComponentCard/ComponentCard'
 import type { AINodeItemProps } from './type'
 import { AIChatQSDataTypeEnum } from '@/pages/ai-re-act/hooks/aiRender'
 import {
