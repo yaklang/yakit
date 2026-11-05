@@ -509,7 +509,9 @@ describe('HotPatchManagement 全局热加载自启动', () => {
         Value: LOCAL_GLOBAL,
       }),
     )
-    expect(screen.getByRole('switch', { name: 'GlobalHotPatch.auto_start' })).toHaveAttribute('aria-checked', 'true')
+    await waitFor(() =>
+      expect(screen.getByRole('switch', { name: 'GlobalHotPatch.auto_start' })).toHaveAttribute('aria-checked', 'true'),
+    )
   })
 
   it('写入自启动失败时开关保持关闭', async () => {

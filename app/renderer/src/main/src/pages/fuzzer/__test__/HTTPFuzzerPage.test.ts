@@ -433,6 +433,68 @@ describe('HTTPFuzzerPage real IPC control paths', () => {
     dispose()
   })
 
+  it('does not delete a response that is inserted again before the overflow timer', async () => {
+    const { api, bindings: b, ipc, token, dispose } = setup()
+    api.submitToHTTPFuzzer()
+    b.fuzzerTableMaxDataRef.current = 1
+    const emit = (id: string, raw: number[]) =>
+      ipc.emit(
+        `${token()}-data`,
+        {},
+        {
+          UUID: id,
+          TaskId: '42',
+          RuntimeID: 'runtime-a',
+          Ok: true,
+          RequestRaw: new Uint8Array([1]),
+          ResponseRaw: new Uint8Array(raw),
+        },
+      )
+    emit('same', [1])
+    emit('other', [2])
+    expect(b.successFuzzerRef.current.map((row: { UUID: string }) => row.UUID)).toEqual(['other'])
+    emit('same', [9])
+    expect(b.successFuzzerRef.current.map((row: { UUID: string }) => row.UUID)).toEqual(['same'])
+    await vi.advanceTimersByTimeAsync(2500)
+    const kept = b.successFuzzerRef.current[0]
+    expect(kept.RequestRaw).not.toBeNull()
+    expect(Array.from((await fuzzerRawStore.get(fuzzerPageScope('page'), 'same')) || [])).toEqual([9])
+    dispose()
+  })
+
+  it('keeps raw scope and version across an empty streaming update, then advances the version', async () => {
+    const { api, bindings: b, ipc, token, dispose } = setup()
+    api.submitToHTTPFuzzer()
+    const emit = (raw?: number[]) =>
+      ipc.emit(
+        `${token()}-data`,
+        {},
+        {
+          UUID: 'stream',
+          TaskId: '42',
+          RuntimeID: 'runtime-a',
+          Ok: true,
+          RequestRaw: new Uint8Array([1]),
+          ResponseRaw: raw ? new Uint8Array(raw) : new Uint8Array(),
+        },
+      )
+    emit([2])
+    const row = b.successFuzzerRef.current[0]
+    const scope = fuzzerPageScope('page')
+    expect(row.RawScope).toBe(scope)
+    expect(row.RawVersion).toBe(1)
+    expect(Array.from((await fuzzerRawStore.get(scope, 'stream')) || [])).toEqual([2])
+    emit()
+    expect(b.successFuzzerRef.current).toHaveLength(1)
+    expect(row.RawScope).toBe(scope)
+    expect(row.RawVersion).toBe(1)
+    expect(Array.from((await fuzzerRawStore.get(scope, 'stream')) || [])).toEqual([2])
+    emit([9])
+    expect(row.RawVersion).toBe(2)
+    expect(Array.from((await fuzzerRawStore.get(scope, 'stream')) || [])).toEqual([9])
+    dispose()
+  })
+
   it('warns once when listed response size exceeds the limit and again after a new send', () => {
     const { api, bindings: b, ipc, token, dispose } = setup()
     api.submitToHTTPFuzzer()
@@ -813,6 +875,7 @@ describe('keyword search across scopes', () => {
     )
     expect(table).toContain('const scope = row.RawScope || fallbackScope')
     expect(table).toContain('fuzzerRawStore.getMany(scope, ids)')
+    expect(table).toContain('found.set(item.key, bytes)')
   })
 })
 

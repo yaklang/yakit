@@ -1,10 +1,13 @@
+import { readFileSync } from 'node:fs'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { act, renderHook, waitFor } from '@testing-library/react'
 import {
+  assignFuzzerTableRowKeys,
   createKeywordSearchCache,
   fillFuzzerRawList,
   fuzzerRawStore,
   fuzzerPageScope,
+  fuzzerTableRowKey,
   saveFuzzerRaw,
   removeSessionRecords,
   STALE_MS,
@@ -17,26 +20,28 @@ const bytes = (values: number[]) => new Uint8Array(values)
 const asArray = (value?: Uint8Array) => Array.from(value || [])
 
 // 最小的 IDBDatabase 替身：游标按索引键升序遍历，记录被删除的主键
-type FakeRow = { key: string; session?: string; at?: number }
+type FakeRow = { key: string; session?: string; scope?: string; at?: number }
+const openIndexedCursor = (name: string, range: { lower: unknown } | undefined, rows: FakeRow[]) => {
+  const field = name === 'byAt' ? 'at' : name === 'byScope' ? 'scope' : 'session'
+  const sorted = [...rows].sort((a, b) => Number(a.at) - Number(b.at))
+  const source = field === 'at' ? sorted : rows
+  const list = range ? source.filter((row) => row[field] === range.lower) : source
+  const req: any = {}
+  let i = 0
+  const step = () => {
+    const row = list[i]
+    req.result = row ? { key: row[field], primaryKey: row.key, value: row, continue: () => (i++, step()) } : null
+    queueMicrotask(() => req.onsuccess?.())
+  }
+  queueMicrotask(step)
+  return req
+}
 const fakeDb = (rows: FakeRow[]) => {
   const deleted: string[] = []
   const store = {
     index: (name: string) => ({
-      openKeyCursor: (range?: { lower: unknown }) => {
-        const field = name === 'byAt' ? 'at' : 'session'
-        const sorted = [...rows].sort((a, b) => Number(a.at) - Number(b.at))
-        const source = field === 'at' ? sorted : rows
-        const list = range ? source.filter((row) => row[field] === range.lower) : source
-        const req: any = {}
-        let i = 0
-        const step = () => {
-          const row = list[i]
-          req.result = row ? { key: row[field], primaryKey: row.key, continue: () => (i++, step()) } : null
-          queueMicrotask(() => req.onsuccess?.())
-        }
-        queueMicrotask(step)
-        return req
-      },
+      openKeyCursor: (range?: { lower: unknown }) => openIndexedCursor(name, range, rows),
+      openCursor: (range?: { lower: unknown }) => openIndexedCursor(name, range, rows),
     }),
     delete: (key: string) => deleted.push(key),
   }
@@ -62,6 +67,16 @@ describe('sweepStaleRecords', () => {
     ])
     await sweepStaleRecords(db, now - STALE_MS)
     expect(deleted).toEqual(['old-crash-1', 'old-crash-2'])
+  })
+
+  it('keeps an old response when its window is still heartbeating', async () => {
+    const { db, deleted } = fakeDb([
+      { key: 'old-live', session: 'still-open', at: now - STALE_MS - 5000 },
+      { key: 'old-crash', session: 'gone', at: now - STALE_MS - 4000 },
+      { key: 'fresh-other-window', at: now - 1000 },
+    ])
+    await sweepStaleRecords(db, now - STALE_MS, new Set(['still-open']))
+    expect(deleted).toEqual(['old-crash'])
   })
 
   it('never touches another live window when everything is recent', async () => {
@@ -245,6 +260,68 @@ describe('createKeywordSearchCache', () => {
     expect(calls).toBe(2)
     expect(cache.matches(row, 'x')).toBe(false)
     expect(cache.prepare('x', [row])).toEqual([])
+  })
+
+  it('does not reuse a hit when the same uuid is stored in two scopes', async () => {
+    const cache = createKeywordSearchCache((b) => String.fromCharCode(...b))
+    const hit = {
+      UUID: 'same',
+      RawScope: 'scope-a',
+      RawVersion: 1,
+      ResponseRaw: bytes([]),
+    } as FuzzerResponse
+    const miss = {
+      UUID: 'same',
+      RawScope: 'scope-b',
+      RawVersion: 1,
+      ResponseRaw: bytes([]),
+    } as FuzzerResponse
+    const readMany = vi.fn(async (keys: string[]) => {
+      const found = new Map<string, Uint8Array>()
+      keys.forEach((key) => {
+        if (key === 'scope-a\0same') found.set(key, bytes([120]))
+        if (key === 'scope-b\0same') found.set(key, bytes([121]))
+      })
+      return found
+    })
+    await cache.fill('x', [hit, miss], readMany)
+    expect(readMany).toHaveBeenCalledWith(['scope-a\0same', 'scope-b\0same'])
+    expect(cache.matches(hit, 'x')).toBe(true)
+    expect(cache.matches(miss, 'x')).toBe(false)
+    await cache.fill('x', [hit, miss], readMany)
+    expect(readMany).toHaveBeenCalledTimes(1)
+    expect(cache.matches(hit, 'x')).toBe(true)
+    expect(cache.matches(miss, 'x')).toBe(false)
+  })
+
+  it('reads again after the scope is reset even if the version is 1 again', async () => {
+    const cache = createKeywordSearchCache((b) => String.fromCharCode(...b))
+    const scope = fuzzerPageScope('rerun')
+    const row = { UUID: 'same', RawScope: scope, RawVersion: 1, ResponseRaw: bytes([]) } as FuzzerResponse
+    const readMany = vi.fn(async () => new Map([[`${scope}\0same`, bytes([120])]]))
+    await cache.fill('x', [row], readMany)
+    expect(cache.matches(row, 'x')).toBe(true)
+    await fuzzerRawStore.deleteScope(scope)
+    expect(cache.prepare('x', [row])).toEqual([`${scope}\0same`])
+  })
+})
+
+describe('fuzzer table row key', () => {
+  it('keeps the same uuid from two scopes as two rows', () => {
+    const left = { UUID: 'same', RawScope: 'seq:group:concurrency:a', RowKey: '' }
+    const right = { UUID: 'same', RawScope: 'seq:group:concurrency:b', RowKey: '' }
+    const plain = { UUID: 'only', RowKey: '' }
+    assignFuzzerTableRowKeys([left, right, plain])
+    expect(fuzzerTableRowKey(left)).toBe('seq:group:concurrency:a|same')
+    expect(left.RowKey).not.toBe(right.RowKey)
+    expect(new Map([left, right].map((row) => [row.RowKey, row])).size).toBe(2)
+    expect(plain.RowKey).toBe('only')
+    const table = readFileSync(
+      'app/renderer/src/main/src/pages/fuzzer/components/HTTPFuzzerPageTable/HTTPFuzzerPageTable.tsx',
+      'utf8',
+    )
+    expect(table).toContain('renderKey="RowKey"')
+    expect(table).toContain('assignFuzzerTableRowKeys')
   })
 })
 
@@ -533,11 +610,13 @@ const createHoldableIndexedDB = () => {
 }
 
 const storedBodies = (records: Map<string, { uuid: string; scope: string; response: ArrayBuffer }>) =>
-  [...records.values()].map((row) => ({
-    uuid: row.uuid,
-    scope: row.scope,
-    bytes: Array.from(new Uint8Array(row.response)),
-  }))
+  [...records.values()]
+    .filter((row) => row.scope !== '__session__')
+    .map((row) => ({
+      uuid: row.uuid,
+      scope: row.scope,
+      bytes: Array.from(new Uint8Array(row.response)),
+    }))
 
 describe('fuzzer raw IndexedDB transactions', () => {
   afterEach(() => {

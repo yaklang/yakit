@@ -395,7 +395,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
           successList.push(r)
           if (successList.length > fuzzerTableMaxData) {
             const oldest = successList.shift()
-            if (oldest?.UUID) setTimeout(() => void fuzzerRawStore.deleteUuid(rawScope, oldest.UUID), 2000)
+            scheduleOverflowDelete(rawScope, oldest?.UUID)
           }
           successBufferRef.current.set(FuzzerIndex, successList)
         } else {
@@ -407,7 +407,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
           failedList.push(r)
           if (failedList.length > fuzzerTableMaxData) {
             const oldest = failedList.shift()
-            if (oldest?.UUID) setTimeout(() => void fuzzerRawStore.deleteUuid(rawScope, oldest.UUID), 2000)
+            scheduleOverflowDelete(rawScope, oldest?.UUID)
           }
           failedBufferRef.current.set(FuzzerIndex, failedList)
         } else {
@@ -539,6 +539,23 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
   const failedCountRef = useRef<Map<string, number>>(new Map())
   const successBufferRef = useRef<Map<string, FuzzerResponse[]>>(new Map())
   const rawScopesRef = useRef<Set<string>>(new Set())
+  // 延迟删除按 scope 记轮次。只重跑或重匹配一部分节点时，别的 scope 上还没执行的删除仍然要发生。
+  const rawEvictGenerationRef = useRef(new Map<string, number>())
+  const cancelPendingRawDeletes = useMemoizedFn((scopes?: string[]) => {
+    const targets = scopes ?? [...rawScopesRef.current]
+    targets.forEach((scope) => {
+      if (!scope) return
+      rawEvictGenerationRef.current.set(scope, (rawEvictGenerationRef.current.get(scope) || 0) + 1)
+    })
+  })
+  const scheduleOverflowDelete = useMemoizedFn((scope: string, uuid?: string) => {
+    if (!scope || !uuid) return
+    const generation = rawEvictGenerationRef.current.get(scope) || 0
+    setTimeout(() => {
+      if (generation !== (rawEvictGenerationRef.current.get(scope) || 0)) return
+      void fuzzerRawStore.deleteUuid(scope, uuid)
+    }, 2000)
+  })
   const failedBufferRef = useRef<Map<string, FuzzerResponse[]>>(new Map())
   const countRef = useRef<Map<string, number>>(new Map())
   const runtimeIdBufferRef = useRef<Map<string, string[]>>(new Map())
@@ -619,10 +636,16 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
 
     // 淘汰行在表格节流刷新前仍可能挂在界面上，字节需保底存活一段时间，避免点到旧行时编辑器内容为空
     const RELEASE_GRACE_MS = 2000
-    const releaseQueue: { item: FuzzerResponse; at: number }[] = []
+    const releaseQueue: { item: FuzzerResponse; at: number; scope: string; generation: number }[] = []
     let releaseTimer: NodeJS.Timeout | null = null
     const scheduleRelease = (item: FuzzerResponse) => {
-      releaseQueue.push({ item, at: Date.now() })
+      const scope = item.RawScope || ''
+      releaseQueue.push({
+        item,
+        at: Date.now(),
+        scope,
+        generation: rawEvictGenerationRef.current.get(scope) || 0,
+      })
       if (!releaseTimer) {
         releaseTimer = setInterval(() => {
           if (releaseQueue.length === 0) {
@@ -634,10 +657,13 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
           const now = Date.now()
           let batch = Math.max(50, Math.ceil(releaseQueue.length / 5))
           while (batch > 0 && releaseQueue.length > 0 && now - releaseQueue[0].at >= RELEASE_GRACE_MS) {
-            const { item } = releaseQueue.shift()!
+            const { item, generation, scope } = releaseQueue.shift()!
             item.RequestRaw = null as unknown as Uint8Array
             item.ResponseRaw = null as unknown as Uint8Array
-            if (item.RawScope && item.UUID) void fuzzerRawStore.deleteUuid(item.RawScope, item.UUID)
+            // 这个 scope 又开始新一轮时，不要删掉新写进去的同一条 UUID。
+            if (generation === (rawEvictGenerationRef.current.get(scope) || 0) && item.RawScope && item.UUID) {
+              void fuzzerRawStore.deleteUuid(item.RawScope, item.UUID)
+            }
             batch--
           }
         }, 500)
@@ -787,6 +813,9 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
       ipcRenderer.removeAllListeners(errToken)
       ipcRenderer.removeAllListeners(dataToken)
       ipcRenderer.removeAllListeners(endToken)
+      if (releaseTimer) clearInterval(releaseTimer)
+      releaseQueue.length = 0
+      cancelPendingRawDeletes()
       rawScopesRef.current.forEach((scope) => {
         void fuzzerRawStore.deleteScope(scope)
       })
@@ -1175,8 +1204,11 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     const httpParams = getHttpParams()
     if (!httpParams.length) return
     // 只清当前模式这次要重跑的节点，另一个模式的原文还留着。
-    currentList.forEach((item) => {
-      const scope = fuzzerSequenceScope(props.groupId, isConcurrency ? 'concurrency' : 'sequence', item.id)
+    const rerunScopes = currentList.map((item) =>
+      fuzzerSequenceScope(props.groupId, isConcurrency ? 'concurrency' : 'sequence', item.id),
+    )
+    cancelPendingRawDeletes(rerunScopes)
+    rerunScopes.forEach((scope) => {
       void fuzzerRawStore.deleteScope(scope)
       rawScopesRef.current.delete(scope)
     })
@@ -1254,6 +1286,13 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     try {
       const requests = getHttpParams()
       if (!requests.length) return
+      // 批量重匹配会复用这些并发节点的 scope。先丢掉上一轮原文，别的模式不动。
+      const rematchScopes = currentList.map((item) => fuzzerSequenceScope(props.groupId, 'concurrency', item.id))
+      cancelPendingRawDeletes(rematchScopes)
+      rematchScopes.forEach((scope) => {
+        void fuzzerRawStore.deleteScope(scope)
+        rawScopesRef.current.delete(scope)
+      })
       onClearRef()
       resetResponse()
       resetDroppedCount()
@@ -1321,6 +1360,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
       // 清空当前项的所有缓存数据
       const itemId = currentSequenceItem.id
       const rematchScope = fuzzerSequenceScope(props.groupId, isConcurrency ? 'concurrency' : 'sequence', itemId)
+      cancelPendingRawDeletes([rematchScope])
       void fuzzerRawStore.deleteScope(rematchScope)
       rawScopesRef.current.delete(rematchScope)
       successCountRef.current.set(itemId, 0)

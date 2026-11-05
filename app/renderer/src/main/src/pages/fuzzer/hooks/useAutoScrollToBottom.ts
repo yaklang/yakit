@@ -208,14 +208,15 @@ export const useChunkAutoScrollToBottom = (
       }
     }, 500)
     return () => {
-      // 组件卸载时，如有剩余内容则追加
+      // 组件卸载时，如有剩余内容则追加。
+      // 下标不能在这里清掉：流结束会重跑这个 effect，清掉之后同一批 chunk 会被当成第一次加载，正文再追加一遍。
+      // 换一条响应时，下面的 id 变化会重新装载。
       if (addStreamContentRef.current) {
         appendText()
       }
       if (timeRef.current) {
         clearInterval(timeRef.current)
       }
-      addStreamIndexRef.current = undefined
     }
   }, [isStreamLoad])
 

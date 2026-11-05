@@ -85,6 +85,7 @@ describe('browser gateway group execution boundary', () => {
         resetResponse: vi.fn(),
         updateConcurrentLoad: vi.fn(),
         resetDroppedCount: vi.fn(),
+        cancelPendingRawDeletes: vi.fn(),
         rawScopesRef: { current: new Set<string>() },
         fuzzerRawStore,
         fuzzerSequenceScope,
@@ -130,6 +131,7 @@ describe('browser gateway group execution boundary', () => {
       })
       if (isConcurrency) expect(bindings.startConcurrency).toHaveBeenCalledWith(requests)
       else expect(bindings.ipcRenderer.invoke).toHaveBeenCalledWith('HTTPFuzzerSequence', requests, 'token')
+      expect(bindings.cancelPendingRawDeletes).toHaveBeenCalledTimes(1)
       expect(bindings.fuzzerTableMaxDataRef.current.get('ordinary')).toBe(100)
       expect(bindings.fuzzerTableMaxDataRef.current.get('gateway')).toBe(100)
     },
@@ -162,6 +164,7 @@ describe('FuzzerSequence response release queue', () => {
       }
       return trimmed
     }
+    const rawEvictGenerationRef = { current: new Map<string, number>() }
     const alphaRows: any[] = []
     const betaRows: any[] = []
     const trimmedAlpha = track(alphaRows)
@@ -172,6 +175,7 @@ describe('FuzzerSequence response release queue', () => {
         ['beta', betaRows],
       ]),
     }
+    const rawScopesRef = { current: new Set<string>() }
     const bindings: Record<string, any> = {
       useEffect: (fn: () => () => void) => {
         cleanup = fn() || (() => {})
@@ -190,7 +194,15 @@ describe('FuzzerSequence response release queue', () => {
       fuzzerRawStore,
       props: { groupId: 'group' },
       selectGroupId: 'group',
-      rawScopesRef: { current: new Set<string>() },
+      rawScopesRef,
+      rawEvictGenerationRef,
+      cancelPendingRawDeletes: (scopes?: string[]) => {
+        const targets = scopes?.length ? scopes : [...rawScopesRef.current]
+        targets.forEach((scope) => {
+          const generations = rawEvictGenerationRef.current
+          generations.set(scope, (generations.get(scope) || 0) + 1)
+        })
+      },
       fuzzerTableMaxDataRef: {
         current: new Map<string, number>([
           ['alpha', 100],
@@ -297,5 +309,117 @@ describe('FuzzerSequence response release queue', () => {
     ).toEqual([2])
     expect(bindings.rawScopesRef.current.has(fuzzerSequenceScope('group', 'sequence', 'alpha'))).toBe(true)
     dispose()
+  })
+
+  it('does not delete a newer response when sequence release runs after the next execution', async () => {
+    const { bindings, send, trimmedAlpha, dispose } = setup()
+    bindings.fuzzerTableMaxDataRef.current.set('alpha', 1)
+    send('alpha', 'same')
+    send('alpha', 'next')
+    expect(trimmedAlpha.map((row) => row.UUID)).toEqual(['same'])
+    const scope = fuzzerSequenceScope('group', 'sequence', 'alpha')
+    bindings.cancelPendingRawDeletes([scope])
+    await fuzzerRawStore.save(scope, 'same', new Uint8Array([9]))
+    await vi.advanceTimersByTimeAsync(2500)
+    expect(trimmedAlpha[0].ResponseRaw).toBeNull()
+    expect(Array.from((await fuzzerRawStore.get(scope, 'same')) || [])).toEqual([9])
+    dispose()
+  })
+
+  it('does not let a concurrency overflow timer delete the next run', async () => {
+    const rawEvictGenerationRef = { current: new Map<string, number>() }
+    const rawScopesRef = { current: new Set<string>() }
+    const api = new Function(
+      'useMemoizedFn',
+      'fuzzerRawStore',
+      'rawEvictGenerationRef',
+      'rawScopesRef',
+      `${declarations(['cancelPendingRawDeletes', 'scheduleOverflowDelete'])}\nreturn {cancelPendingRawDeletes, scheduleOverflowDelete}`,
+    )((fn: unknown) => fn, fuzzerRawStore, rawEvictGenerationRef, rawScopesRef)
+    const scope = fuzzerSequenceScope('group', 'concurrency', 'overflow')
+    await fuzzerRawStore.save(scope, 'stale', new Uint8Array([1]))
+    api.scheduleOverflowDelete(scope, 'stale')
+    await vi.advanceTimersByTimeAsync(2000)
+    expect(await fuzzerRawStore.get(scope, 'stale')).toBeUndefined()
+
+    await fuzzerRawStore.save(scope, 'same', new Uint8Array([1]))
+    api.scheduleOverflowDelete(scope, 'same')
+    api.cancelPendingRawDeletes([scope])
+    await fuzzerRawStore.save(scope, 'same', new Uint8Array([9]))
+    await vi.advanceTimersByTimeAsync(2000)
+    expect(Array.from((await fuzzerRawStore.get(scope, 'same')) || [])).toEqual([9])
+  })
+
+  it('still deletes another scope when only one scope starts again', async () => {
+    const rawEvictGenerationRef = { current: new Map<string, number>() }
+    const rawScopesRef = { current: new Set<string>() }
+    const api = new Function(
+      'useMemoizedFn',
+      'fuzzerRawStore',
+      'rawEvictGenerationRef',
+      'rawScopesRef',
+      `${declarations(['cancelPendingRawDeletes', 'scheduleOverflowDelete'])}\nreturn {cancelPendingRawDeletes, scheduleOverflowDelete}`,
+    )((fn: unknown) => fn, fuzzerRawStore, rawEvictGenerationRef, rawScopesRef)
+    const rerun = fuzzerSequenceScope('group', 'concurrency', 'rerun')
+    const other = fuzzerSequenceScope('group', 'concurrency', 'other')
+    await fuzzerRawStore.save(rerun, 'old', new Uint8Array([1]))
+    await fuzzerRawStore.save(other, 'old', new Uint8Array([2]))
+    api.scheduleOverflowDelete(rerun, 'old')
+    api.scheduleOverflowDelete(other, 'old')
+    api.cancelPendingRawDeletes([rerun])
+    await fuzzerRawStore.save(rerun, 'old', new Uint8Array([9]))
+    await vi.advanceTimersByTimeAsync(2000)
+    expect(Array.from((await fuzzerRawStore.get(rerun, 'old')) || [])).toEqual([9])
+    expect(await fuzzerRawStore.get(other, 'old')).toBeUndefined()
+  })
+
+  it('drops the previous concurrency responses on batch rematch and keeps another mode', async () => {
+    const rawEvictGenerationRef = { current: new Map<string, number>() }
+    const rawScopesRef = { current: new Set<string>() }
+    const currentList = [
+      { id: 'node-a', pageId: 'page-a' },
+      { id: 'node-b', pageId: 'page-b' },
+    ]
+    const bindings = {
+      useMemoizedFn: (fn: unknown) => fn,
+      fuzzerRawStore,
+      fuzzerSequenceScope,
+      rawEvictGenerationRef,
+      rawScopesRef,
+      props: { groupId: 'group' },
+      currentList,
+      pageGroupData: { pageParamsInfo: { ConcurrencyAdvancedConfigValue: { matchers: [], extractors: [] } } },
+      getHttpParams: () => [{ FuzzerIndex: 'node-a' }],
+      onClearRef: vi.fn(),
+      resetResponse: vi.fn(),
+      resetDroppedCount: vi.fn(),
+      droppedSequenceIndexMapRef: { current: new Map() },
+      updateConcurrentLoad: vi.fn(),
+      getAllConcurrencyResponse: () => ({ successFuzzer: [{ TaskId: 'task' }] }),
+      startConcurrency: vi.fn(),
+      setHasExtractorRules: vi.fn(),
+      yakitFailed: vi.fn(),
+    }
+    const submit = new Function(
+      ...Object.keys(bindings),
+      `${declarations(['cancelPendingRawDeletes', 'onConcurrencyMatchSubmit'])}\nreturn onConcurrencyMatchSubmit`,
+    )(...Object.values(bindings))
+    const scopeA = fuzzerSequenceScope('group', 'concurrency', 'node-a')
+    const scopeB = fuzzerSequenceScope('group', 'concurrency', 'node-b')
+    const sequenceScope = fuzzerSequenceScope('group', 'sequence', 'node-a')
+    rawScopesRef.current.add(scopeA)
+    rawScopesRef.current.add(scopeB)
+    rawScopesRef.current.add(sequenceScope)
+    await fuzzerRawStore.save(scopeA, 'old-a', new Uint8Array([1]))
+    await fuzzerRawStore.save(scopeB, 'old-b', new Uint8Array([2]))
+    await fuzzerRawStore.save(sequenceScope, 'keep', new Uint8Array([3]))
+    submit()
+    await vi.advanceTimersByTimeAsync(400)
+    expect(await fuzzerRawStore.get(scopeA, 'old-a')).toBeUndefined()
+    expect(await fuzzerRawStore.get(scopeB, 'old-b')).toBeUndefined()
+    expect(Array.from((await fuzzerRawStore.get(sequenceScope, 'keep')) || [])).toEqual([3])
+    await fuzzerRawStore.save(scopeA, 'new-a', new Uint8Array([9]))
+    expect(Array.from((await fuzzerRawStore.get(scopeA, 'new-a')) || [])).toEqual([9])
+    expect(bindings.startConcurrency).toHaveBeenCalled()
   })
 })

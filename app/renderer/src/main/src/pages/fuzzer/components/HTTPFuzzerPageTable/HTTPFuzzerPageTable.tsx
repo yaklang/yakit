@@ -47,12 +47,15 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import type { ExportDataType } from '@/utils/exporter'
 import { ExtractedFilter, TableFilterAndSorter, StatusCodeInputFilter } from './extractedFilter'
 import { useChunkAutoScrollToBottom } from '../../hooks/useAutoScrollToBottom'
+import { fuzzerTablePreview, type FuzzerPreviewMemory } from './fuzzerTablePreview'
 import {
   createKeywordSearchCache,
   fuzzerPageScope,
+  fuzzerRawSearchKey,
   fuzzerRawStore,
   fillFuzzerRaw,
   fillFuzzerRawList,
+  assignFuzzerTableRowKeys,
   useFuzzerResponseRaw,
 } from '../../fuzzerRawStore'
 import { YakitAlert } from '@/components/yakitUI/YakitAlert/YakitAlert'
@@ -774,22 +777,28 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
           if (keyWord) {
             // 并发组的总表会拼上多个请求的响应，每行 scope 不同，不能拿第一行的 scope 去读全部。
             const fallbackScope = pageId ? fuzzerPageScope(pageId) : ''
-            await keywordCache.fill(keyWord, newDataTable, async (uuids) => {
-              const wanted = new Set(uuids)
-              const groups = new Map<string, string[]>()
+            await keywordCache.fill(keyWord, newDataTable, async (keys) => {
+              const wanted = new Set(keys)
+              const groups = new Map<string, { uuid: string; key: string }[]>()
               newDataTable.forEach((row) => {
-                if (!row.UUID || !wanted.has(row.UUID)) return
+                const key = fuzzerRawSearchKey(row)
+                if (!key || !wanted.has(key) || !row.UUID) return
                 const scope = row.RawScope || fallbackScope
                 if (!scope) return
+                const item = { uuid: row.UUID, key }
                 const list = groups.get(scope)
-                if (list) list.push(row.UUID)
-                else groups.set(scope, [row.UUID])
+                if (list) list.push(item)
+                else groups.set(scope, [item])
               })
               const found = new Map<string, Uint8Array>()
               await Promise.all(
-                [...groups].map(async ([scope, ids]) => {
+                [...groups].map(async ([scope, items]) => {
+                  const ids = items.map((item) => item.uuid)
                   const part = await fuzzerRawStore.getMany(scope, ids)
-                  part.forEach((bytes, uuid) => found.set(uuid, bytes))
+                  items.forEach((item) => {
+                    const bytes = part.get(item.uuid)
+                    if (bytes) found.set(item.key, bytes)
+                  })
                 }),
               )
               return found
@@ -921,11 +930,13 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                 searchList.push(record)
               }
             }
+            assignFuzzerTableRowKeys(searchList)
             setListTable(searchList)
             if (searchList.length > 0) {
               scrollUpdate(searchList.length)
             }
           } else {
+            assignFuzzerTableRowKeys(newDataTable)
             setListTable(newDataTable)
             if (newDataTable.length > 0) {
               scrollUpdate(newDataTable.length)
@@ -1046,9 +1057,28 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
       () => (responseBytes.byteLength ? Uint8ArrayToString(responseBytes) : ''),
       [responseBytes],
     )
+    // 流式时库里通常只有响应头，而且是后读到的。头回到来之前先记住，页签藏起来清掉字节也不能把基座变空。
+    const streamingHeaderRef = useRef<FuzzerPreviewMemory>({ header: '' })
+    const previewChunks = useMemo(
+      () =>
+        (currentSelectItem?.RandomChunkedData || []).map((chunk) => ({
+          Direction: chunk.Direction,
+          IsFinal: chunk.IsFinal,
+          text: chunk.Data?.byteLength ? Uint8ArrayToString(chunk.Data) : '',
+        })),
+      [currentSelectItem?.RandomChunkedData],
+    )
+    const preview = fuzzerTablePreview({
+      uuid: currentSelectItem?.UUID,
+      chunks: previewChunks,
+      showingResponse: currentSelectShowType === 'response',
+      responseText: responseRawValue,
+      memory: streamingHeaderRef.current,
+    })
+    streamingHeaderRef.current = preview.memory
     const originReqOrResValue = useMemo(() => {
-      return currentSelectShowType === 'request' ? requestRawValue : responseRawValue
-    }, [currentSelectShowType, requestRawValue, responseRawValue])
+      return currentSelectShowType === 'request' ? requestRawValue : preview.responseText
+    }, [currentSelectShowType, requestRawValue, preview.responseText])
 
     const contextMenuPacket = useMemo(() => {
       return {
@@ -1102,6 +1132,8 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
     const { handleEditorMount } = useChunkAutoScrollToBottom({
       chunkedData: currentSelectItem?.RandomChunkedData || [],
       id: currentSelectItem?.UUID,
+      // 还在收正文时，响应头一变或预览重新挂上，就把已经收到的正文再追加一遍。
+      resetKey: preview.resetKey,
     })
 
     return (
@@ -1146,7 +1178,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                   isRefresh={isRefresh || loading}
                   titleHeight={0.01}
                   renderTitle={<></>}
-                  renderKey="UUID"
+                  renderKey="RowKey"
                   data={listTable}
                   loading={loading}
                   enableDrag={true}

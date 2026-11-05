@@ -356,6 +356,8 @@ export interface FuzzerResponse {
   RawVersion?: number
   /** 原文所在页签。同一 UUID 可以同时出现在多个页签里。 */
   RawScope?: string
+  /** 表格行键。有 RawScope 时带上 scope，避免并发总表里相同 UUID 叠成一行。 */
+  RowKey?: string
   Timestamp: number
   RequestRaw: Uint8Array
   // GuessResponseEncoding: string;
@@ -1766,7 +1768,13 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
             const { item } = releaseQueue.shift()!
             item.RequestRaw = null as unknown as Uint8Array
             item.ResponseRaw = null as unknown as Uint8Array
-            if (item.RawScope && item.UUID) void fuzzerRawStore.deleteUuid(item.RawScope, item.UUID)
+            // 淘汰之后同一条流又来了一包，会按原 UUID 重新插入。这时不能再删库。
+            const uuid = item.UUID
+            const cameBack =
+              !!uuid &&
+              (successFuzzerRef.current.some((row) => row.UUID === uuid) ||
+                failedFuzzerRef.current.some((row) => row.UUID === uuid))
+            if (!cameBack && item.RawScope && uuid) void fuzzerRawStore.deleteUuid(item.RawScope, uuid)
             batch--
           }
         }, 500)
@@ -1859,9 +1867,14 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
         const prevContentType = existed.ContentType
         const prevStatusCode = existed.StatusCode
         const prevBodyLength = existed.BodyLength || 0
+        const prevRawScope = existed.RawScope
+        const prevRawVersion = existed.RawVersion
 
         Object.assign(existed, item)
         existed.Count = keepCount
+        // 后续包通常不带这两个字段。先放回去，有新正文时 saveFuzzerRaw 再把版本加一。
+        if (prevRawScope) existed.RawScope = prevRawScope
+        existed.RawVersion = prevRawVersion
 
         if ((!existed.RequestRaw || existed.RequestRaw.length === 0) && prevRequestRaw?.length) {
           existed.RequestRaw = prevRequestRaw

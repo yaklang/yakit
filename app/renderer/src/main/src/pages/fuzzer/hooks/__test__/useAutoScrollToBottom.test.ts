@@ -25,6 +25,7 @@ vi.mock('../../HTTPFuzzerPage', () => ({
 }))
 
 import type { RandomChunkedResponse } from '../../HTTPFuzzerPage'
+import { fuzzerTablePreview, type FuzzerPreviewMemory } from '../../components/HTTPFuzzerPageTable/fuzzerTablePreview'
 import { useChunkAutoScrollToBottom } from '../useAutoScrollToBottom'
 
 const body = (text: string, index: number): RandomChunkedResponse => ({
@@ -119,5 +120,73 @@ describe('streamed response body', () => {
   it('page keeps the streaming header as the editor base', () => {
     const page = readFileSync('app/renderer/src/main/src/pages/fuzzer/HTTPFuzzerPage.tsx', 'utf8')
     expect(page).toContain('resetKey: isStreamingResponse ? streamingHeaderText : undefined')
+  })
+
+  it('quick preview replays the body when the header arrives and when the editor is mounted again', async () => {
+    const edits: string[] = []
+    const chunks = [body('hello', 1), body(' world', 2)]
+    // 和组件一样：每次渲染都把返回的 memory 留到下一次。
+    let memory: FuzzerPreviewMemory = { header: '' }
+    const showing = (responseText: string, nextChunks = chunks) => {
+      const seen = fuzzerTablePreview({
+        uuid: 'row-1',
+        chunks: nextChunks,
+        showingResponse: true,
+        responseText,
+        memory,
+      })
+      memory = seen.memory
+      return seen
+    }
+
+    let preview = showing('', [])
+    const { result, rerender } = renderHook(
+      ({ chunkedData, resetKey }: { chunkedData: RandomChunkedResponse[]; resetKey?: string }) =>
+        useChunkAutoScrollToBottom({
+          chunkedData,
+          id: 'row-1',
+          resetKey,
+        }),
+      {
+        initialProps: {
+          chunkedData: [] as RandomChunkedResponse[],
+          resetKey: preview.resetKey,
+        },
+      },
+    )
+    act(() => {
+      result.current.handleEditorMount(editorWith(edits) as never)
+    })
+
+    // 正文先到，响应头还在库里。
+    preview = showing('')
+    rerender({ chunkedData: chunks, resetKey: preview.resetKey })
+    await waitFor(() => expect(edits.join('')).toBe('hello world'), { timeout: 2500 })
+
+    // 响应头读回来，编辑器基座被换成响应头，已追加的正文要再放一遍。
+    preview = showing('HTTP/1.1 200')
+    expect(preview.responseText).toBe('HTTP/1.1 200')
+    rerender({ chunkedData: chunks, resetKey: preview.resetKey })
+    await waitFor(() => expect(edits.join('')).toBe('hello worldhello world'), { timeout: 2500 })
+
+    // 页签藏起来再打开：字节被清掉，基座仍是刚才的响应头，重新挂载后再放一遍。
+    preview = showing('')
+    expect(preview.responseText).toBe('HTTP/1.1 200')
+    expect(preview.resetKey).toBe('HTTP/1.1 200')
+    act(() => {
+      result.current.handleEditorMount(editorWith(edits) as never)
+    })
+    await waitFor(() => expect(edits.join('')).toBe('hello worldhello worldhello world'), { timeout: 2500 })
+
+    // 最后一块到了就停。不能因为流结束把已经追加过的正文再追加一遍。
+    const finished = chunks.map((chunk, index) => (index === chunks.length - 1 ? { ...chunk, IsFinal: true } : chunk))
+    preview = showing('HTTP/1.1 200', finished)
+    expect(preview.resetKey).toBeUndefined()
+    expect(preview.responseText).toBe('HTTP/1.1 200')
+    rerender({ chunkedData: finished, resetKey: preview.resetKey })
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 700))
+    })
+    expect(edits.join('')).toBe('hello worldhello worldhello world')
   })
 })
