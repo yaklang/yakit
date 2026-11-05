@@ -411,9 +411,10 @@ export interface RandomChunkedResponse {
    *   RESPONSE = 响应增量（如 SSE，Data 是响应 body 的 delta）
    * 缺省值（0 / 未设置）兼容旧后端，按 RESPONSE 语义处理。
    * 前端应按方向分别渲染，避免把请求分块当成响应内容回显。
+   * Electron proto-loader 使用 enums: String，需同时兼容枚举名称与数字值。
    * @see ChunkedDataDirection
    */
-  Direction?: number
+  Direction?: number | string
 }
 
 /**
@@ -435,7 +436,12 @@ export enum ChunkedDataDirection {
 export const isResponseChunkedData = (chunk?: RandomChunkedResponse): boolean => {
   if (!chunk) return false
   const dir = chunk.Direction ?? ChunkedDataDirection.UNSPECIFIED
-  return dir === ChunkedDataDirection.UNSPECIFIED || dir === ChunkedDataDirection.RESPONSE
+  return (
+    dir === ChunkedDataDirection.UNSPECIFIED ||
+    dir === ChunkedDataDirection.RESPONSE ||
+    dir === 'CHUNKED_DATA_DIRECTION_UNSPECIFIED' ||
+    dir === 'CHUNKED_DATA_DIRECTION_RESPONSE'
+  )
 }
 
 /**
@@ -443,7 +449,7 @@ export const isResponseChunkedData = (chunk?: RandomChunkedResponse): boolean =>
  */
 export const isRequestChunkedData = (chunk?: RandomChunkedResponse): boolean => {
   if (!chunk) return false
-  return chunk.Direction === ChunkedDataDirection.REQUEST
+  return chunk.Direction === ChunkedDataDirection.REQUEST || chunk.Direction === 'CHUNKED_DATA_DIRECTION_REQUEST'
 }
 
 const BrowserTransformPacketComparison: React.FC<{
