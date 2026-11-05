@@ -460,6 +460,9 @@ describe('AIConfigSettings', () => {
     await waitFor(() =>
       expect(grpcSetAIGlobalConfig).toHaveBeenCalledExactlyOnceWith({
         ...savedGlobalConfig,
+        IntelligentModels: savedGlobalConfig.IntelligentModels.map((model) => ({ ...model, ProviderId: '0' })),
+        LightweightModels: savedGlobalConfig.LightweightModels.map((model) => ({ ...model, ProviderId: '0' })),
+        VisionModels: savedGlobalConfig.VisionModels.map((model) => ({ ...model, ProviderId: '0' })),
         RetryForever: false,
         NetworkDebug: false,
         ModelRequestsPerMinute: 0,
