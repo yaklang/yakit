@@ -1,11 +1,12 @@
 import type React from 'react'
 import { cleanup, fireEvent, render, screen, act } from '@testing-library/react'
-import { afterEach, beforeEach, expect, it, vi } from 'vitest'
+import { afterEach, beforeAll, beforeEach, expect, it, vi } from 'vitest'
 import { createStore } from 'zustand/vanilla'
 import { ClarificationPanel } from '../ClarificationPanel/ClarificationPanel'
 import { QuestionSummary } from '../QuestionSummary/QuestionSummary'
 import { AIChatQSDataTypeEnum, type ChatStoreState } from '../../hooks/aiRender'
 import { syncQuestionPanel } from '../../interactive-ui/questionPanel'
+import { createChatStore } from '../../hooks/chatStore'
 
 const context = vi.hoisted(() => ({ store: undefined as any, contents: new Map<string, any>() }))
 const send = vi.hoisted(() => vi.fn().mockResolvedValue(undefined))
@@ -65,6 +66,34 @@ const item = (id: string): React.ComponentProps<typeof QuestionSummary>['item'] 
       ],
     },
   },
+})
+const formItem = (id: string) => {
+  const data = item(id)
+  data.data.request.questions = undefined
+  data.data.request.form = {
+    title: `参数表单 ${id}`,
+    schema: {
+      type: 'object',
+      properties: { target: { type: 'string', title: '目标名称', minLength: 1 } },
+      required: ['target'],
+    },
+  }
+  return data
+}
+beforeAll(() => {
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    value: vi.fn().mockImplementation((query) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener() {},
+      removeListener() {},
+      addEventListener() {},
+      removeEventListener() {},
+      dispatchEvent() {},
+    })),
+  })
 })
 beforeEach(() => {
   context.contents.clear()
@@ -128,4 +157,76 @@ it('does not reopen expired requests until the user chooses to answer', () => {
     syncQuestionPanel(context.store, data, true)
   })
   expect(screen.getByText('选择 expired')).toBeTruthy()
+})
+it('keeps one editor when a choice request arrives during form editing and restores both drafts', async () => {
+  const producer = createChatStore()
+  context.store = producer.renderStore
+  const first = formItem('form-first')
+  const second = item('choice-second')
+  context.contents.set(first.id, first)
+  syncQuestionPanel(producer, first)
+  const view = render(<ClarificationPanel />)
+  fireEvent.change(screen.getByLabelText(/目标名称/), { target: { value: '授权演示系统' } })
+  act(() => {
+    context.contents.set(second.id, second)
+    syncQuestionPanel(producer, second)
+  })
+  expect(view.container.querySelectorAll('section')).toHaveLength(1)
+  expect(screen.getByLabelText(/目标名称/)).toHaveValue('授权演示系统')
+  expect(screen.queryByRole('checkbox')).toBeNull()
+
+  fireEvent.click(screen.getByRole('button', { name: /问卷队列/ }))
+  expect(view.container.querySelectorAll('section')).toHaveLength(1)
+  expect(view.container.querySelector('form')).toBeNull()
+  fireEvent.click(screen.getAllByRole('checkbox')[1])
+  fireEvent.change(screen.getByRole('textbox'), { target: { value: '选择问卷的补充' } })
+  fireEvent.click(screen.getByRole('button', { name: /问卷队列/ }))
+  expect(screen.getByLabelText(/目标名称/)).toHaveValue('授权演示系统')
+  expect(screen.queryByRole('checkbox')).toBeNull()
+
+  await act(async () => {
+    fireEvent.click(screen.getByText('提交'))
+  })
+  expect(producer.getState().questionPanelTokens).toEqual([second.id])
+  expect(view.container.querySelectorAll('section')).toHaveLength(1)
+  expect(view.container.querySelector('form')).toBeNull()
+  expect(screen.getAllByRole('checkbox')[1]).toBeChecked()
+  expect(screen.getByRole('textbox')).toHaveValue('选择问卷的补充')
+  const submissions = send.mock.calls.filter(([, event]) => event.IsFreeInput)
+  expect(submissions).toHaveLength(1)
+  expect(JSON.parse(submissions[0][1].UserInteraction)).toMatchObject({
+    requestId: first.data.request.id,
+    values: { target: '授权演示系统' },
+  })
+})
+it('does not reopen or replace a collapsed questionnaire when a different form arrives', () => {
+  const producer = createChatStore()
+  context.store = producer.renderStore
+  const first = item('collapsed-first')
+  const second = formItem('later-form')
+  context.contents.set(first.id, first)
+  syncQuestionPanel(producer, first)
+  const view = render(<ClarificationPanel />)
+  fireEvent.click(screen.getAllByRole('checkbox')[0])
+  fireEvent.click(screen.getByText('收起'))
+  act(() => {
+    context.contents.set(second.id, second)
+    syncQuestionPanel(producer, second)
+  })
+  expect(producer.getState().questionPanelTokens).toEqual([first.id, second.id])
+  expect(view.container.querySelectorAll('section')).toHaveLength(1)
+  expect(screen.getByText('展开问题')).toBeTruthy()
+  expect(screen.queryByRole('checkbox')).toBeNull()
+  expect(view.container.querySelector('form')).toBeNull()
+
+  fireEvent.click(screen.getByRole('button', { name: /问卷队列/ }))
+  expect(screen.getByLabelText(/目标名称/)).toBeInTheDocument()
+  expect(view.container.querySelectorAll('section')).toHaveLength(1)
+  fireEvent.click(screen.getByRole('button', { name: /问卷队列/ }))
+  expect(screen.getByText('展开问题')).toBeTruthy()
+  expect(view.container.querySelector('form')).toBeNull()
+  fireEvent.click(screen.getByText('展开问题'))
+  expect(screen.getAllByRole('checkbox')[0]).toBeChecked()
+  expect(view.container.querySelectorAll('section')).toHaveLength(1)
+  expect(send.mock.calls.some(([, event]) => event.IsFreeInput)).toBe(false)
 })
