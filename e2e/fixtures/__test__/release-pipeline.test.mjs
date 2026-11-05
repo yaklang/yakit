@@ -272,22 +272,25 @@ describe('pinned engine download and offline payload', () => {
 })
 
 describe('publish gate', () => {
-  it('reserves a release version for one candidate and engine before any platform uploads', () => {
+  it('reserves a release version for one candidate, engine and finalize run before platform uploads', () => {
     const candidate = plan()
     const binding = {
       candidate: candidate.candidate,
       sha: candidate.sha,
       version: candidate.version,
       engineVersion: '1.4.9-beta5',
+      finalizeRunId: '456',
     }
-    expect(() => assertReleaseBinding(candidate, binding, '1.4.9-beta5')).not.toThrow()
+    expect(() => assertReleaseBinding(candidate, binding, '1.4.9-beta5', '456')).not.toThrow()
     for (const change of [
       { candidate: 'ci-release-124' },
       { sha: 'b'.repeat(40) },
       { version: '1.4.9-1103' },
       { engineVersion: '1.4.9-beta6' },
+      { finalizeRunId: '789' },
+      { finalizeRunId: undefined },
     ]) {
-      expect(() => assertReleaseBinding(candidate, { ...binding, ...change }, '1.4.9-beta5')).toThrow()
+      expect(() => assertReleaseBinding(candidate, { ...binding, ...change }, '1.4.9-beta5', '456')).toThrow()
     }
   })
   const environment = { GITHUB_RUN_ID: '456', ENGINE_VERSION: '1.4.9-beta5' }

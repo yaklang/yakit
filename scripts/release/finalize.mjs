@@ -18,6 +18,63 @@ import { assertChannelPromotion, shouldMarkGitHubLatest } from './channels.mjs'
 const ghJson = async (args) => JSON.parse(await run('gh', args, { capture: true }))
 const isPublic = (edition) => ['yakit', 'irify', 'memfit'].includes(edition)
 
+async function readReleaseAsset(tag, name) {
+  await mkdir('.release/metadata', { recursive: true })
+  await run('gh', ['release', 'download', tag, '--pattern', name, '--dir', '.release/metadata', '--clobber'])
+  return readJson(path.join('.release/metadata', name))
+}
+
+function planSnapshotName(env) {
+  if (!/^\d+$/.test(env.PREPARE_RUN_ID || '') || !/^\d+$/.test(env.GITHUB_RUN_ID || ''))
+    throw new Error('Supply valid prepare and finalize workflow run IDs')
+  return `finalize-plan-${env.GITHUB_RUN_ID}.json`
+}
+
+function assertPlanSnapshot(snapshot, env) {
+  if (
+    snapshot.schema !== 1 ||
+    snapshot.finalizeRunId !== env.GITHUB_RUN_ID ||
+    snapshot.engineVersion !== env.ENGINE_VERSION ||
+    snapshot.publish !== (env.RELEASE_PUBLISH === 'true') ||
+    snapshot.testOss !== (env.RELEASE_TEST_OSS === 'true') ||
+    snapshot.plan?.candidate !== `ci-release-${env.PREPARE_RUN_ID}` ||
+    snapshot.plan?.repository !== env.GITHUB_REPOSITORY
+  )
+    throw new Error('Saved finalize plan does not match this workflow run and its inputs')
+  assertReady(snapshot.plan, snapshot.plan.prepared)
+  return snapshot.plan
+}
+
+async function savePlanSnapshot(plan, env) {
+  const name = planSnapshotName(env)
+  const snapshot = {
+    schema: 1,
+    finalizeRunId: env.GITHUB_RUN_ID,
+    engineVersion: env.ENGINE_VERSION,
+    publish: env.RELEASE_PUBLISH === 'true',
+    testOss: env.RELEASE_TEST_OSS === 'true',
+    plan,
+  }
+  await writeJson(path.join('.release', name), snapshot)
+  try {
+    await run('gh', ['release', 'upload', plan.candidate, path.join('.release', name)])
+  } catch (error) {
+    if (error.code !== 1) throw error
+    const saved = await readReleaseAsset(plan.candidate, name)
+    assertPlanSnapshot(saved, env)
+    if (JSON.stringify(saved) !== JSON.stringify(snapshot)) throw new Error('Saved finalize plan changed')
+  }
+}
+
+export async function restoreFinalizationPlan(env = process.env) {
+  const name = planSnapshotName(env)
+  assertVersion(env.ENGINE_VERSION, 'engine version')
+  const plan = assertPlanSnapshot(await readReleaseAsset(`ci-release-${env.PREPARE_RUN_ID}`, name), env)
+  if (env.RELEASE_PUBLISH === 'true') await assertReleaseOwner(plan, env)
+  await writeJson('.release/plan.json', plan)
+  return plan
+}
+
 export function testOssObject(plan, target, name, env = process.env) {
   if (plan.tag || env.RELEASE_PUBLISH === 'true' || !/^\d+$/.test(env.GITHUB_RUN_ID || '')) {
     throw new Error('Isolated OSS verification requires an unpublished branch candidate')
@@ -26,15 +83,39 @@ export function testOssObject(plan, target, name, env = process.env) {
   return `${products[target.edition].oss}/ci-release-tests/${env.GITHUB_RUN_ID}/${name}`
 }
 
-export function assertReleaseBinding(plan, binding, engineVersion) {
+export function assertReleaseBinding(plan, binding, engineVersion, finalizeRunId) {
   if (
     binding.candidate !== plan.candidate ||
     binding.sha !== plan.sha ||
     binding.version !== plan.version ||
-    binding.engineVersion !== engineVersion
+    binding.engineVersion !== engineVersion ||
+    !/^\d+$/.test(finalizeRunId || '') ||
+    binding.finalizeRunId !== finalizeRunId
   ) {
-    throw new Error('This release version is already bound to a different candidate or engine')
+    throw new Error(
+      'This release version is already bound to a different candidate, engine or finalize run; retry its original failed jobs',
+    )
   }
+}
+
+async function assertReleaseOwner(plan, env) {
+  assertReleaseBinding(
+    plan,
+    await readReleaseAsset(plan.tag, 'release-binding.json'),
+    env.ENGINE_VERSION,
+    env.GITHUB_RUN_ID,
+  )
+}
+
+function assertPublicationState(plan, state, env, manifestSha256, status = 'publishing') {
+  assertReleaseBinding(plan, state, env.ENGINE_VERSION, env.GITHUB_RUN_ID)
+  if (
+    state.schema !== 1 ||
+    state.status !== status ||
+    state.manifestSha256 !== manifestSha256 ||
+    !/^[a-f0-9]{64}$/.test(manifestSha256 || '')
+  )
+    throw new Error('Publication state or manifest differs from the original finalize run')
 }
 
 async function assertReleaseWritable(plan, env, { release, manifestSha256 } = {}) {
@@ -43,33 +124,41 @@ async function assertReleaseWritable(plan, env, { release, manifestSha256 } = {}
   if (release.assets.some((asset) => asset.name === 'release-complete.json'))
     throw new Error('This software release is already completed; prepare a new version')
   if (!release.assets.some((asset) => asset.name === 'release-state.json')) return null
-  await run('gh', [
-    'release',
-    'download',
-    plan.tag,
-    '--pattern',
-    'release-state.json',
-    '--dir',
-    '.release/state',
-    '--clobber',
-  ])
-  const state = await readJson('.release/state/release-state.json')
-  assertReleaseBinding(plan, state, env.ENGINE_VERSION)
+  const state = await readReleaseAsset(plan.tag, 'release-state.json')
   // Once promotion starts, installers are frozen. Only the original publish job
   // may resume a partial promotion, using exactly the same verified manifest.
-  if (
-    state.schema === 1 &&
-    state.status === 'publishing' &&
-    state.finalizeRunId === env.GITHUB_RUN_ID &&
-    state.manifestSha256 === manifestSha256 &&
-    /^[a-f0-9]{64}$/.test(manifestSha256 || '')
-  )
+  if (state.finalizeRunId === env.GITHUB_RUN_ID && manifestSha256) {
+    assertPublicationState(plan, state, env, manifestSha256)
     return state
+  }
   throw new Error('This software release is already publishing or completed; retry only its original publish job')
 }
 
+async function recoverPublicCompletion(plan, env, release, manifestSha256) {
+  if (!plan.editions.some(isPublic)) throw new Error('Cannot recover a public release for private editions')
+  const state = await readReleaseAsset(plan.tag, 'release-state.json')
+  assertPublicationState(plan, state, env, manifestSha256)
+  await readReleaseAsset(plan.tag, 'release-manifest.json')
+  if ((await hashFile('.release/metadata/release-manifest.json')) !== manifestSha256)
+    throw new Error('Public release manifest differs from this finalize run')
+  if (release.assets.some((asset) => asset.name === 'release-complete.json')) {
+    assertPublicationState(
+      plan,
+      await readReleaseAsset(plan.tag, 'release-complete.json'),
+      env,
+      manifestSha256,
+      'complete',
+    )
+    return
+  }
+  // Recovery after publication may only add the missing marker. Installers,
+  // manifests, update channels and GitHub latest must remain untouched.
+  await writeJson('.release/release-complete.json', { ...state, status: 'complete' })
+  await run('gh', ['release', 'upload', plan.tag, '.release/release-complete.json'])
+}
+
 export async function loadCandidate(env = process.env) {
-  if (!/^\d+$/.test(env.PREPARE_RUN_ID || '')) throw new Error('Supply a prepare workflow run ID')
+  planSnapshotName(env)
   assertVersion(env.ENGINE_VERSION, 'engine version')
   const candidate = `ci-release-${env.PREPARE_RUN_ID}`
   const release = await ghJson(['release', 'view', candidate, '--json', 'isDraft'])
@@ -115,6 +204,7 @@ export async function loadCandidate(env = process.env) {
       sha: plan.sha,
       version: plan.version,
       engineVersion: env.ENGINE_VERSION,
+      finalizeRunId: env.GITHUB_RUN_ID,
     }
     await writeJson('.release/release-binding.json', binding)
     try {
@@ -133,10 +223,16 @@ export async function loadCandidate(env = process.env) {
         '.release/binding',
         '--clobber',
       ])
-      assertReleaseBinding(plan, await readJson('.release/binding/release-binding.json'), env.ENGINE_VERSION)
+      assertReleaseBinding(
+        plan,
+        await readJson('.release/binding/release-binding.json'),
+        env.ENGINE_VERSION,
+        env.GITHUB_RUN_ID,
+      )
     }
   }
   await writeJson('.release/plan.json', plan)
+  await savePlanSnapshot(plan, env)
   await appendFile(
     env.GITHUB_OUTPUT,
     `matrix=${JSON.stringify({ include: plan.targets })}\nsha=${plan.sha}\nversion=${plan.version}\ncandidate=${plan.candidate}\n`,
@@ -159,6 +255,7 @@ export async function uploadResult(plan, target, env = process.env) {
   if (env.RELEASE_PUBLISH === 'true') {
     // A failed-job rerun can reuse a successful plan from before another run published.
     await assertReleaseWritable(plan, env)
+    await assertReleaseOwner(plan, env)
     const uploads = files.map((name) =>
       uploadOss(path.join('.release/output', name), `${products[target.edition].oss}/${plan.version}/${name}`),
     )
@@ -246,7 +343,19 @@ export async function complete(plan, env = process.env) {
   }
   if (env.RELEASE_PUBLISH === 'true') {
     const manifestSha256 = await hashFile('.release/release-manifest.json')
-    const previousState = await assertReleaseWritable(plan, env, { manifestSha256 })
+    const release = await ghJson(['release', 'view', plan.tag, '--json', 'isDraft,assets'])
+    // Check the durable upload owner even when a successful plan is reused.
+    if (!release.isDraft) {
+      await assertReleaseOwner(plan, env)
+      await recoverPublicCompletion(plan, env, release, manifestSha256)
+      await appendFile(
+        env.GITHUB_STEP_SUMMARY,
+        `## Published\n\nRecovered completion for ${plan.version}; installers and channels were not rewritten.\n`,
+      )
+      return
+    }
+    const previousState = await assertReleaseWritable(plan, env, { release, manifestSha256 })
+    await assertReleaseOwner(plan, env)
     // The workflow holds the shared promotion lock across these reads and all
     // channel writes. A late older run must not replace a newer channel pointer.
     await assertChannelPromotion(plan)
@@ -290,10 +399,11 @@ export async function complete(plan, env = process.env) {
 if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
   const command = process.argv[2]
   if (command === 'plan') await loadCandidate()
+  else if (command === 'restore-plan') await restoreFinalizationPlan()
   else {
     const plan = await readJson('.release/plan.json')
     if (command === 'upload') await uploadResult(plan, targetFromEnv(plan))
     else if (command === 'complete') await complete(plan)
-    else throw new Error('Usage: finalize.mjs plan|upload|complete')
+    else throw new Error('Usage: finalize.mjs plan|restore-plan|upload|complete')
   }
 }

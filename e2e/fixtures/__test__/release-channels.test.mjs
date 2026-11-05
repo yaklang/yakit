@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
-import { complete, loadCandidate, uploadResult } from '../../../scripts/release/finalize.mjs'
+import { complete, loadCandidate, restoreFinalizationPlan, uploadResult } from '../../../scripts/release/finalize.mjs'
 import { artifactName, createPlan } from '../../../scripts/release/model.mjs'
 import { run } from '../../../scripts/release/io.mjs'
 import { uploadOss } from '../../../scripts/release/oss.mjs'
@@ -139,6 +139,20 @@ async function candidate(version, editions = 'yakit') {
       }),
     )
   }
+  if (!releaseFor(plan.tag).assets.has('release-binding.json')) {
+    releaseFor(plan.tag).assets.set(
+      'release-binding.json',
+      Buffer.from(
+        JSON.stringify({
+          candidate: plan.candidate,
+          sha: plan.sha,
+          version: plan.version,
+          engineVersion: environment.ENGINE_VERSION,
+          finalizeRunId: environment.GITHUB_RUN_ID,
+        }),
+      ),
+    )
+  }
   return plan
 }
 
@@ -150,25 +164,27 @@ async function prepareCandidate(plan) {
     sha256: 'b'.repeat(64),
   }))
   releaseFor(plan.candidate).assets.set('candidate.json', Buffer.from(JSON.stringify(plan)))
-  releaseFor(plan.tag).assets.set(
-    'release-binding.json',
-    Buffer.from(
-      JSON.stringify({
-        candidate: plan.candidate,
-        sha: plan.sha,
-        version: plan.version,
-        engineVersion: environment.ENGINE_VERSION,
-      }),
-    ),
-  )
+  if (!releaseFor(plan.tag).assets.has('release-binding.json'))
+    releaseFor(plan.tag).assets.set(
+      'release-binding.json',
+      Buffer.from(
+        JSON.stringify({
+          candidate: plan.candidate,
+          sha: plan.sha,
+          version: plan.version,
+          engineVersion: environment.ENGINE_VERSION,
+          finalizeRunId: environment.GITHUB_RUN_ID,
+        }),
+      ),
+    )
 }
 
-async function upload(plan) {
+async function upload(plan, env = environment, bytes = 'signed installer bytes') {
   const target = plan.targets[0]
   await mkdir('.release/output', { recursive: true })
-  await writeFile(`.release/output/${artifactName(plan, target)}`, 'signed installer bytes')
+  await writeFile(`.release/output/${artifactName(plan, target)}`, bytes)
   await writeFile(`.release/result-${target.id}.json`, await readFile(`.release/results/${target.id}.json`))
-  await uploadResult(plan, target, environment)
+  await uploadResult(plan, target, env)
 }
 
 describe('final release channel promotion', () => {
@@ -326,7 +342,7 @@ describe('release state across fresh and failed-job reruns', () => {
     vi.mocked(run).mockClear()
     const execution =
       step === 'plan' ? loadCandidate(environment) : step === 'upload' ? upload(plan) : complete(plan, environment)
-    await expect(execution).rejects.toThrow(/already public/)
+    await expect(execution).rejects.toThrow(/already public|already bound/)
     expect(uploadOss).not.toHaveBeenCalled()
     expect(run.mock.calls.some(([, args]) => ['upload', 'edit'].includes(args[1]))).toBe(false)
     expect(releaseFor(plan.tag).assets.get('release-manifest.json')).toEqual(published)
@@ -427,7 +443,7 @@ describe('release state across fresh and failed-job reruns', () => {
     await writeFile(file, JSON.stringify(receipt))
     vi.mocked(uploadOss).mockClear()
     vi.mocked(run).mockClear()
-    await expect(complete(plan, environment)).rejects.toThrow(/already publishing/)
+    await expect(complete(plan, environment)).rejects.toThrow(/manifest/)
     expect(uploadOss).not.toHaveBeenCalled()
     expect(run.mock.calls.some(([, args]) => ['upload', 'edit'].includes(args[1]))).toBe(false)
   })
@@ -466,5 +482,224 @@ describe('release state across fresh and failed-job reruns', () => {
     vi.mocked(run).mockRejectedValueOnce(new Error('GitHub unavailable'))
     await expect(upload(plan)).rejects.toThrow('GitHub unavailable')
     expect(uploadOss).not.toHaveBeenCalled()
+  })
+})
+
+describe('durable finalize plans and upload ownership', () => {
+  it('restores a frozen plan from Draft after the Actions artifact and local files are gone', async () => {
+    const plan = await candidate('1.4.9-1105')
+    await prepareCandidate(plan)
+    await loadCandidate(environment)
+    const frozen = Buffer.from(releaseFor(plan.candidate).assets.get('finalize-plan-456.json'))
+    await rm('.release', { recursive: true, force: true })
+    vi.mocked(run).mockClear()
+    await expect(restoreFinalizationPlan(environment)).resolves.toEqual(plan)
+    expect(JSON.parse(await readFile('.release/plan.json', 'utf8'))).toEqual(plan)
+    expect(releaseFor(plan.candidate).assets.get('finalize-plan-456.json')).toEqual(frozen)
+    expect(run.mock.calls.every(([, args]) => args[0] === 'release' && args[1] === 'download')).toBe(true)
+  })
+
+  it('restores and completes the original partial promotion without rerunning plan or native jobs', async () => {
+    const plan = await candidate('1.4.9-1105', 'yakitEE')
+    await prepareCandidate(plan)
+    await loadCandidate(environment)
+    const receipts = await Promise.all(
+      plan.targets.map(async (target) => [
+        `result-456-${target.id}.json`,
+        await readFile(`.release/results/${target.id}.json`),
+      ]),
+    )
+    const normalUpload = uploadOss.getMockImplementation()
+    vi.mocked(uploadOss).mockRejectedValueOnce(new Error('OSS interrupted'))
+    await expect(complete(plan, environment)).rejects.toThrow('OSS interrupted')
+    await rm('.release', { recursive: true, force: true })
+    const normalRun = run.getMockImplementation()
+    vi.mocked(run)
+      .mockClear()
+      .mockImplementation(async (command, args, options) => {
+        if (args[1] === 'download' && args.includes('result-456-*.json')) {
+          await mkdir('.release/results', { recursive: true })
+          for (const [name, bytes] of receipts) await writeFile(path.join('.release/results', name), bytes)
+        }
+        return normalRun(command, args, options)
+      })
+    vi.mocked(uploadOss).mockImplementation(normalUpload)
+    const restored = await restoreFinalizationPlan(environment)
+    await expect(complete(restored, environment)).resolves.toBeUndefined()
+    expect(JSON.parse(releaseFor(plan.tag).assets.get('release-complete.json')).status).toBe('complete')
+    expect(run.mock.calls.some(([, args]) => args[0] === 'api')).toBe(false)
+    expect(
+      run.mock.calls
+        .filter(([, args]) => args[1] === 'upload')
+        .every(
+          ([, args]) =>
+            args[2] === plan.tag &&
+            ['.release/release-manifest.json', '.release/release-complete.json'].includes(args[3]),
+        ),
+    ).toBe(true)
+  })
+
+  it.each([
+    { GITHUB_RUN_ID: '789' },
+    { ENGINE_VERSION: '1.4.9-beta6' },
+    { RELEASE_PUBLISH: 'false' },
+    { RELEASE_TEST_OSS: 'true' },
+    { PREPARE_RUN_ID: '124' },
+  ])('rejects a saved plan with different workflow inputs: %j', async (change) => {
+    const plan = await candidate('1.4.9-1105')
+    await prepareCandidate(plan)
+    await loadCandidate(environment)
+    if (change.GITHUB_RUN_ID)
+      releaseFor(plan.candidate).assets.set(
+        'finalize-plan-789.json',
+        releaseFor(plan.candidate).assets.get('finalize-plan-456.json'),
+      )
+    if (change.PREPARE_RUN_ID)
+      releaseFor('ci-release-124').assets.set(
+        'finalize-plan-456.json',
+        releaseFor(plan.candidate).assets.get('finalize-plan-456.json'),
+      )
+    await expect(restoreFinalizationPlan({ ...environment, ...change })).rejects.toThrow(/does not match/)
+  })
+
+  it('keeps the first immutable snapshot when the same plan job retries', async () => {
+    const plan = await candidate('1.4.9-1105')
+    await prepareCandidate(plan)
+    await loadCandidate(environment)
+    const frozen = Buffer.from(releaseFor(plan.candidate).assets.get('finalize-plan-456.json'))
+    await expect(loadCandidate(environment)).resolves.toEqual(plan)
+    expect(releaseFor(plan.candidate).assets.get('finalize-plan-456.json')).toEqual(frozen)
+    const writes = run.mock.calls.filter(
+      ([, args]) => args[1] === 'upload' && args[3].endsWith('finalize-plan-456.json'),
+    )
+    expect(writes).toHaveLength(2)
+    expect(writes.every(([, args]) => !args.includes('--clobber'))).toBe(true)
+  })
+
+  it('does not depend on an expiring Actions artifact in packaging or publication', async () => {
+    const workflow = parse(
+      await readFile(new URL('../../../.github/workflows/release-finalize.yml', import.meta.url), 'utf8'),
+    )
+    for (const job of Object.values(workflow.jobs)) {
+      expect(job.steps.some((step) => /^actions\/(upload|download)-artifact@/.test(step.uses || ''))).toBe(false)
+    }
+    expect(workflow.env.PREPARE_RUN_ID).toBe('${{ inputs.prepare_run_id }}')
+    for (const job of [workflow.jobs.package, workflow.jobs.publish])
+      expect(job.steps.some((step) => step.run?.endsWith('finalize.mjs restore-plan'))).toBe(true)
+  })
+
+  it('blocks A -> B -> retry A interleaving before B can replace any signed installers', async () => {
+    const plan = await candidate('1.4.9-1105')
+    await prepareCandidate(plan)
+    releaseFor(plan.tag).assets.delete('release-binding.json')
+    await loadCandidate(environment)
+    expect(JSON.parse(releaseFor(plan.tag).assets.get('release-binding.json')).finalizeRunId).toBe('456')
+    await upload(plan, environment, 'installer signed by A')
+    const target = plan.targets[0]
+    const name = artifactName(plan, target)
+    const aReceipt = releaseFor(plan.candidate).assets.get(`result-456-${target.id}.json`)
+    const second = { ...environment, GITHUB_RUN_ID: '789' }
+    vi.mocked(uploadOss).mockClear()
+    await expect(loadCandidate(second)).rejects.toThrow(/already bound/)
+    // A previously successful plan for B must not bypass the ownership check.
+    await expect(upload(plan, second, 'installer resigned by B')).rejects.toThrow(/already bound/)
+    for (const current of plan.targets) {
+      const file = `.release/results/${current.id}.json`
+      const receipt = JSON.parse(await readFile(file, 'utf8'))
+      await writeFile(file, JSON.stringify({ ...receipt, finalizeRunId: '789' }))
+    }
+    await expect(complete(plan, second)).rejects.toThrow(/already bound/)
+    expect(uploadOss).not.toHaveBeenCalled()
+    expect(releaseFor(plan.tag).assets.get(name).toString()).toBe('installer signed by A')
+    expect(channels.get(`yak/${plan.version}/${name}`)).toBe('installer signed by A')
+    for (const current of plan.targets) {
+      const file = `.release/results/${current.id}.json`
+      const receipt = JSON.parse(await readFile(file, 'utf8'))
+      await writeFile(file, JSON.stringify({ ...receipt, finalizeRunId: '456' }))
+    }
+    await writeFile(`.release/results/${target.id}.json`, aReceipt)
+    await complete(plan, environment)
+    const manifest = JSON.parse(releaseFor(plan.tag).assets.get('release-manifest.json'))
+    expect(manifest.results.find((item) => item.target === target.id).files[0].sha256).toBe(
+      JSON.parse(aReceipt).files[0].sha256,
+    )
+  })
+
+  it('fails closed on legacy bindings without a unique owner', async () => {
+    const plan = await candidate('1.4.9-1105')
+    const binding = JSON.parse(releaseFor(plan.tag).assets.get('release-binding.json'))
+    delete binding.finalizeRunId
+    releaseFor(plan.tag).assets.set('release-binding.json', Buffer.from(JSON.stringify(binding)))
+    await expect(upload(plan)).rejects.toThrow(/already bound/)
+    expect(uploadOss).not.toHaveBeenCalled()
+  })
+})
+
+describe('marker-only recovery after public publication', () => {
+  async function interruptedPublicRelease() {
+    const plan = await candidate('1.4.9-1105')
+    const normalRun = run.getMockImplementation()
+    vi.mocked(run).mockImplementation(async (command, args, options) => {
+      if (args[1] === 'upload' && args.includes('.release/release-complete.json'))
+        throw new Error('Completion upload failed')
+      return normalRun(command, args, options)
+    })
+    await expect(complete(plan, environment)).rejects.toThrow('Completion upload failed')
+    expect(releaseFor(plan.tag).isDraft).toBe(false)
+    vi.mocked(run).mockClear().mockImplementation(normalRun)
+    vi.mocked(uploadOss).mockClear()
+    vi.mocked(fetch).mockClear()
+    return plan
+  }
+
+  it('only adds the missing completion marker for the original owner and manifest', async () => {
+    const plan = await interruptedPublicRelease()
+    const release = releaseFor(plan.tag)
+    const manifest = Buffer.from(release.assets.get('release-manifest.json'))
+    channels.set('yak/latest/yakit-version.txt', '1.4.9-1106')
+    latestTag = 'v1.4.9-1106'
+    await expect(complete(plan, environment)).resolves.toBeUndefined()
+    expect(uploadOss).not.toHaveBeenCalled()
+    expect(fetch).not.toHaveBeenCalled()
+    expect(release.assets.get('release-manifest.json')).toEqual(manifest)
+    expect(channels.get('yak/latest/yakit-version.txt')).toBe('1.4.9-1106')
+    expect(
+      run.mock.calls.filter(([, args]) => ['upload', 'edit'].includes(args[1])).map(([, args]) => args.slice(0, 4)),
+    ).toEqual([['release', 'upload', plan.tag, '.release/release-complete.json']])
+    expect(JSON.parse(release.assets.get('release-complete.json'))).toMatchObject({
+      status: 'complete',
+      finalizeRunId: '456',
+    })
+    vi.mocked(run).mockClear()
+    await expect(complete(plan, environment)).resolves.toBeUndefined()
+    expect(run.mock.calls.some(([, args]) => ['upload', 'edit'].includes(args[1]))).toBe(false)
+  })
+
+  it('refuses another owner even when that run has valid-looking receipts', async () => {
+    const plan = await interruptedPublicRelease()
+    environment.GITHUB_RUN_ID = '789'
+    await candidate(plan.version)
+    await expect(complete(plan, environment)).rejects.toThrow(/already bound/)
+    expect(uploadOss).not.toHaveBeenCalled()
+    expect(run.mock.calls.some(([, args]) => ['upload', 'edit'].includes(args[1]))).toBe(false)
+  })
+
+  it('refuses recovery if the public manifest no longer matches the sealed bytes', async () => {
+    const plan = await interruptedPublicRelease()
+    releaseFor(plan.tag).assets.set('release-manifest.json', Buffer.from('{"changed":true}'))
+    await expect(complete(plan, environment)).rejects.toThrow(/Public release manifest differs/)
+    expect(uploadOss).not.toHaveBeenCalled()
+    expect(run.mock.calls.some(([, args]) => ['upload', 'edit'].includes(args[1]))).toBe(false)
+  })
+
+  it('refuses changed receipts rather than rewriting the public version', async () => {
+    const plan = await interruptedPublicRelease()
+    const file = `.release/results/${plan.targets[0].id}.json`
+    const receipt = JSON.parse(await readFile(file, 'utf8'))
+    receipt.files[0].sha256 = 'd'.repeat(64)
+    await writeFile(file, JSON.stringify(receipt))
+    await expect(complete(plan, environment)).rejects.toThrow(/manifest/)
+    expect(uploadOss).not.toHaveBeenCalled()
+    expect(run.mock.calls.some(([, args]) => ['upload', 'edit'].includes(args[1]))).toBe(false)
   })
 })
