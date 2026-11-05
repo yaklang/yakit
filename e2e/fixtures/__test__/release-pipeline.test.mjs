@@ -24,7 +24,12 @@ import {
   validateStapledTicket,
 } from '../../../scripts/release/engine.mjs'
 import { makeConfig } from '../../../scripts/release/package.mjs'
-import { assertReleaseBinding, assertResults, rehearsalAssetName, testOssObject } from '../../../scripts/release/finalize.mjs'
+import {
+  assertReleaseBinding,
+  assertResults,
+  rehearsalAssetName,
+  testOssObject,
+} from '../../../scripts/release/finalize.mjs'
 import { ossAuthorization, verifyOssEtag } from '../../../scripts/release/oss.mjs'
 
 const require = createRequire(import.meta.url)
@@ -328,8 +333,7 @@ describe('publish gate', () => {
     const candidate = { ...plan(), tag: null }
     const env = { ...environment, RELEASE_PUBLISH: 'false', RELEASE_TEST_OSS: 'true' }
     const valid = receipts(candidate)
-    for (const result of valid)
-      for (const file of result.files) file.assetName = `rehearsal-456-${file.name}`
+    for (const result of valid) for (const file of result.files) file.assetName = `rehearsal-456-${file.name}`
     expect(() => assertResults(candidate, valid, env)).toThrow('OSS verification receipt missing')
     for (const [index, result] of valid.entries()) {
       result.testObjects = result.files.map((file) => ({
@@ -347,8 +351,7 @@ describe('publish gate', () => {
       const candidate = { ...plan(), tag: null }
       const env = { ...environment, RELEASE_PUBLISH: 'false' }
       const valid = receipts(candidate)
-      for (const result of valid)
-        for (const file of result.files) file.assetName = `rehearsal-456-${file.name}`
+      for (const result of valid) for (const file of result.files) file.assetName = `rehearsal-456-${file.name}`
       expect(() => assertResults(candidate, valid, env)).not.toThrow()
       valid[0].files[0].assetName = assetName
       expect(() => assertResults(candidate, valid, env)).toThrow('Rehearsal asset does not belong')
@@ -369,9 +372,7 @@ describe('publish gate', () => {
 describe('isolated branch upload boundaries', () => {
   it('names rehearsal installers and manifests with the finalize run, preserving the original extension', () => {
     const env = { GITHUB_RUN_ID: '456' }
-    expect(rehearsalAssetName('Yakit-1.4.9-windows-amd64.exe', env)).toBe(
-      'rehearsal-456-Yakit-1.4.9-windows-amd64.exe',
-    )
+    expect(rehearsalAssetName('Yakit-1.4.9-windows-amd64.exe', env)).toBe('rehearsal-456-Yakit-1.4.9-windows-amd64.exe')
     expect(rehearsalAssetName('release-manifest.json', env)).toBe('rehearsal-456-release-manifest.json')
   })
   it.each(['', '../456', '456/789', '456x'])('rejects an invalid rehearsal run ID: %s', (id) => {

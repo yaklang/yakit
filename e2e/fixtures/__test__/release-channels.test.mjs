@@ -138,7 +138,9 @@ async function candidate(version, editions = 'yakit') {
         files: names.map((name) => ({
           name,
           sha256: 'c'.repeat(64),
-          ...(environment.RELEASE_PUBLISH !== 'true' ? { assetName: `rehearsal-${environment.GITHUB_RUN_ID}-${name}` } : {}),
+          ...(environment.RELEASE_PUBLISH !== 'true'
+            ? { assetName: `rehearsal-${environment.GITHUB_RUN_ID}-${name}` }
+            : {}),
         })),
       }),
     )
@@ -659,8 +661,7 @@ describe('rehearsal interleaved failed-job retries', () => {
         await rm(destination, { recursive: true, force: true })
         await mkdir(destination, { recursive: true })
         for (const [name, bytes] of release.assets)
-          if (name.startsWith(prefix) && name.endsWith('.json'))
-            await writeFile(path.join(destination, name), bytes)
+          if (name.startsWith(prefix) && name.endsWith('.json')) await writeFile(path.join(destination, name), bytes)
         return ''
       }
       return normalRun(command, args, options)
@@ -696,9 +697,7 @@ describe('rehearsal interleaved failed-job retries', () => {
     for (const target of plan.targets) await uploadTarget(target, second)
     await complete(plan, second)
     const bManifest = Buffer.from(release.assets.get('rehearsal-789-release-manifest.json'))
-    const bInstallers = new Map(
-      [...release.assets].filter(([name]) => name.startsWith('rehearsal-789-')),
-    )
+    const bInstallers = new Map([...release.assets].filter(([name]) => name.startsWith('rehearsal-789-')))
     await uploadTarget(plan.targets.at(-1), first)
     await complete(plan, first)
     const aManifest = Buffer.from(release.assets.get('rehearsal-456-release-manifest.json'))
@@ -706,7 +705,10 @@ describe('rehearsal interleaved failed-job retries', () => {
     expect(release.assets.get('rehearsal-456-release-manifest.json')).toEqual(aManifest)
     expect(release.assets.get('rehearsal-789-release-manifest.json')).toEqual(bManifest)
     for (const [name, bytes] of bInstallers) expect(release.assets.get(name)).toEqual(bytes)
-    for (const [env, bytes] of [[first, aManifest], [second, bManifest]]) {
+    for (const [env, bytes] of [
+      [first, aManifest],
+      [second, bManifest],
+    ]) {
       const manifest = JSON.parse(bytes)
       expect(manifest.engineVersion).toBe(env.ENGINE_VERSION)
       expect(manifest.results).toHaveLength(20)

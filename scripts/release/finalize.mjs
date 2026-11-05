@@ -289,13 +289,7 @@ export async function uploadResult(plan, target, env = process.env) {
         return file
       }),
     )
-    await run('gh', [
-      'release',
-      'upload',
-      plan.candidate,
-      ...staged,
-      '--clobber',
-    ])
+    await run('gh', ['release', 'upload', plan.candidate, ...staged, '--clobber'])
     if (env.RELEASE_TEST_OSS === 'true') {
       receipt.testObjects = await Promise.all(
         receipt.files.map(async ({ name, assetName }) => {
@@ -361,9 +355,7 @@ export async function complete(plan, env = process.env) {
   assertResults(plan, results, env)
   const manifest = path.join(
     '.release',
-    env.RELEASE_PUBLISH === 'true'
-      ? 'release-manifest.json'
-      : rehearsalAssetName('release-manifest.json', env),
+    env.RELEASE_PUBLISH === 'true' ? 'release-manifest.json' : rehearsalAssetName('release-manifest.json', env),
   )
   await writeJson(manifest, { ...plan, engineVersion: env.ENGINE_VERSION, results })
   if (env.RELEASE_PUBLISH !== 'true') {
