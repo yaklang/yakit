@@ -752,8 +752,8 @@ const GetScreenAndScreenshotMenuItems = (
   return items
 }
 
-/** 试验性功能中仅 Memfit 保留的入口，其它发行版不展示 */
-const MEMFIT_ONLY_EXPERIMENTAL_MENU_KEYS = new Set([
+/** 受版本限制的试验性入口：Memfit 全部保留，Yakit 企业版额外开放 AI Agent 和知识库 */
+const RESTRICTED_EXPERIMENTAL_MENU_KEYS = new Set([
   'bas-chaosmaker',
   'debug-monaco-editor',
   'debug-traffic-analize',
@@ -904,7 +904,12 @@ const GetUIOpSettingMenu = (
         { key: 'ssa-compile-history', label: t('FuncDomain.ssaCompileHistory') },
         { key: 'c-headers', label: t('FuncDomain.cHeaders') },
         { key: 'memory-base', label: t('FuncDomain.memoryBase') },
-      ].filter((item) => isMemfit() || !MEMFIT_ONLY_EXPERIMENTAL_MENU_KEYS.has(item.key)),
+      ].filter(
+        (item) =>
+          isMemfit() ||
+          !RESTRICTED_EXPERIMENTAL_MENU_KEYS.has(item.key) ||
+          (isYakit() && isEnpriTrace() && (item.key === 'ai-agent' || item.key === 'ai-repository')),
+      ),
     },
     {
       key: 'link',

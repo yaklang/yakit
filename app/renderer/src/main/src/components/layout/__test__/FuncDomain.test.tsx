@@ -465,10 +465,14 @@ describe('FuncDomain 设置菜单（UIOpSetting）', () => {
     queryRisks.mockResolvedValue({ Data: [] })
     screenRecorderState.isRecording = false
     edition.memfit = false
+    edition.enterprise = false
+    edition.yakit = true
   })
 
   afterEach(() => {
     edition.memfit = false
+    edition.enterprise = false
+    edition.yakit = true
   })
 
   /** 设置入口（UIOpSetting 触发按钮）；定位用 testid，勿用 class 选择器（根 vitest 配置会把 scss stub 成空对象） */
@@ -482,7 +486,7 @@ describe('FuncDomain 设置菜单（UIOpSetting）', () => {
     fireEvent.mouseEnter(explab.closest('.ant-menu-submenu-title') ?? explab)
   }
 
-  const memfitOnlyExperimentalLabels = [
+  const restrictedExperimentalLabels = [
     'FuncDomain.basChaosmaker',
     'FuncDomain.debugMonacoEditor',
     'FuncDomain.debugTrafficAnalize',
@@ -556,7 +560,13 @@ describe('FuncDomain 设置菜单（UIOpSetting）', () => {
     expect(payload).toContain('"anchor":"general"')
   })
 
-  it('非 Memfit 的试验性功能不展示 AI 相关入口，其余项保留', async () => {
+  it.each([
+    ['Yakit 社区版', true, false],
+    ['IRify 社区版', false, false],
+    ['IRify 企业版', false, true],
+  ] as const)('%s 的试验性功能不展示 AI 相关入口，其余项保留', async (_name, yakit, enterprise) => {
+    edition.yakit = yakit
+    edition.enterprise = enterprise
     render(<FuncDomain {...baseProps} />)
     await openExperimentalMenu()
 
@@ -564,9 +574,32 @@ describe('FuncDomain 设置菜单（UIOpSetting）', () => {
     for (const label of sharedExperimentalLabels) {
       expect(screen.getByText(label)).toBeInTheDocument()
     }
-    for (const label of memfitOnlyExperimentalLabels) {
+    for (const label of restrictedExperimentalLabels) {
       expect(screen.queryByText(label)).not.toBeInTheDocument()
     }
+  })
+
+  it.each([
+    ['AI Agent', 'ai-agent'],
+    ['FuncDomain.aiRepository', 'ai-repository'],
+  ])('Yakit 企业版展示 %s 且点击打开对应页面', async (label, route) => {
+    edition.enterprise = true
+    render(<FuncDomain {...baseProps} />)
+    await openExperimentalMenu()
+
+    expect(await screen.findByText('AI Agent')).toBeInTheDocument()
+    expect(screen.getByText('FuncDomain.aiRepository')).toBeInTheDocument()
+    for (const hiddenLabel of restrictedExperimentalLabels.filter(
+      (item) => item !== 'AI Agent' && item !== 'FuncDomain.aiRepository',
+    )) {
+      expect(screen.queryByText(hiddenLabel)).not.toBeInTheDocument()
+    }
+    for (const sharedLabel of sharedExperimentalLabels) {
+      expect(screen.getByText(sharedLabel)).toBeInTheDocument()
+    }
+
+    fireEvent.click(screen.getByText(label))
+    expect(emiter.emit).toHaveBeenCalledWith('menuOpenPage', JSON.stringify({ route }))
   })
 
   it('Memfit 的试验性功能保留 AI 相关入口与其余项', async () => {
@@ -575,7 +608,7 @@ describe('FuncDomain 设置菜单（UIOpSetting）', () => {
     await openExperimentalMenu()
 
     expect(await screen.findByText('FuncDomain.basChaosmaker')).toBeInTheDocument()
-    for (const label of [...memfitOnlyExperimentalLabels, ...sharedExperimentalLabels]) {
+    for (const label of [...restrictedExperimentalLabels, ...sharedExperimentalLabels]) {
       expect(screen.getByText(label)).toBeInTheDocument()
     }
   })
