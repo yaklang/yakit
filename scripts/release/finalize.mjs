@@ -1,4 +1,4 @@
-import { appendFile, mkdir, readdir, writeFile } from 'node:fs/promises'
+import { appendFile, mkdir, readdir, rename, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import {
@@ -81,6 +81,12 @@ export function testOssObject(plan, target, name, env = process.env) {
   }
   if (!/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(name)) throw new Error('Invalid test artifact name')
   return `${products[target.edition].oss}/ci-release-tests/${env.GITHUB_RUN_ID}/${name}`
+}
+
+export function rehearsalAssetName(name, env = process.env) {
+  if (!/^\d+$/.test(env.GITHUB_RUN_ID || '') || !/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(name))
+    throw new Error('Invalid rehearsal run ID or asset name')
+  return `rehearsal-${env.GITHUB_RUN_ID}-${name}`
 }
 
 export function assertReleaseBinding(plan, binding, engineVersion, finalizeRunId) {
@@ -248,7 +254,11 @@ export async function uploadResult(plan, target, env = process.env) {
   if (target.edition === 'yakitEE' && target.platform === 'linux' && target.legacy)
     files.push(expected.replace(/\.AppImage$/, '.run'))
   receipt.files = await Promise.all(
-    files.map(async (name) => ({ name, sha256: await hashFile(path.join('.release/output', name)) })),
+    files.map(async (name) => ({
+      name,
+      sha256: await hashFile(path.join('.release/output', name)),
+      ...(env.RELEASE_PUBLISH !== 'true' ? { assetName: rehearsalAssetName(name, env) } : {}),
+    })),
   )
   receipt.finalizeRunId = env.GITHUB_RUN_ID
   const result = `.release/result-${env.GITHUB_RUN_ID}-${target.id}.json`
@@ -271,19 +281,26 @@ export async function uploadResult(plan, target, env = process.env) {
       )
     await Promise.all(uploads)
   } else {
-    // A dry run keeps signed installers in the private candidate, never in the public release or OSS channels.
+    // Each rehearsal owns separate assets, including when failed jobs reuse old receipts.
+    const staged = await Promise.all(
+      receipt.files.map(async ({ name, assetName }) => {
+        const file = path.join('.release/output', assetName)
+        await rename(path.join('.release/output', name), file)
+        return file
+      }),
+    )
     await run('gh', [
       'release',
       'upload',
       plan.candidate,
-      ...files.map((name) => path.join('.release/output', name)),
+      ...staged,
       '--clobber',
     ])
     if (env.RELEASE_TEST_OSS === 'true') {
       receipt.testObjects = await Promise.all(
-        files.map(async (name) => {
+        receipt.files.map(async ({ name, assetName }) => {
           const object = testOssObject(plan, target, name, env)
-          return { object, etag: await uploadOss(path.join('.release/output', name), object) }
+          return { object, etag: await uploadOss(path.join('.release/output', assetName), object) }
         }),
       )
     }
@@ -313,6 +330,11 @@ export function assertResults(plan, results, env = process.env) {
     )
       throw new Error(`Final verification failed: ${target.id}`)
     if (
+      env.RELEASE_PUBLISH !== 'true' &&
+      result.files.some((file) => file.assetName !== rehearsalAssetName(file.name, env))
+    )
+      throw new Error(`Rehearsal asset does not belong to this finalize run: ${target.id}`)
+    if (
       env.RELEASE_TEST_OSS === 'true' &&
       (JSON.stringify(result.testObjects?.map((item) => item.object)) !==
         JSON.stringify(names.map((name) => testOssObject(plan, target, name, env))) ||
@@ -337,9 +359,15 @@ export async function complete(plan, env = process.env) {
     (await readdir('.release/results')).sort().map((file) => readJson(path.join('.release/results', file))),
   )
   assertResults(plan, results, env)
-  await writeJson('.release/release-manifest.json', { ...plan, engineVersion: env.ENGINE_VERSION, results })
+  const manifest = path.join(
+    '.release',
+    env.RELEASE_PUBLISH === 'true'
+      ? 'release-manifest.json'
+      : rehearsalAssetName('release-manifest.json', env),
+  )
+  await writeJson(manifest, { ...plan, engineVersion: env.ENGINE_VERSION, results })
   if (env.RELEASE_PUBLISH !== 'true') {
-    await run('gh', ['release', 'upload', plan.candidate, '.release/release-manifest.json', '--clobber'])
+    await run('gh', ['release', 'upload', plan.candidate, manifest, '--clobber'])
   }
   if (env.RELEASE_PUBLISH === 'true') {
     const manifestSha256 = await hashFile('.release/release-manifest.json')
@@ -392,7 +420,7 @@ export async function complete(plan, env = process.env) {
   }
   await appendFile(
     env.GITHUB_STEP_SUMMARY,
-    `## ${env.RELEASE_PUBLISH === 'true' ? 'Published' : 'Dry run passed'}\n\nFrontend: ${plan.version} (${plan.sha})\n\nEngine: ${env.ENGINE_VERSION}\n\nTargets: ${results.length}\n\nAll app.asar files were reused from the prepared candidate.\n`,
+    `## ${env.RELEASE_PUBLISH === 'true' ? 'Published' : 'Dry run passed'}\n\nFrontend: ${plan.version} (${plan.sha})\n\nEngine: ${env.ENGINE_VERSION}\n\nTargets: ${results.length}\n\nManifest asset: ${path.basename(manifest)}\n\nAll app.asar files were reused from the prepared candidate.\n`,
   )
 }
 

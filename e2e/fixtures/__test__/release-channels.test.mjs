@@ -3,7 +3,7 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import { complete, loadCandidate, restoreFinalizationPlan, uploadResult } from '../../../scripts/release/finalize.mjs'
-import { artifactName, createPlan } from '../../../scripts/release/model.mjs'
+import { artifactName, createPlan, sha256 } from '../../../scripts/release/model.mjs'
 import { run } from '../../../scripts/release/io.mjs'
 import { uploadOss } from '../../../scripts/release/oss.mjs'
 import { compareVersions, publishVersionTag } from '../../../scripts/release/channels.mjs'
@@ -135,7 +135,11 @@ async function candidate(version, editions = 'yakit') {
         signed: true,
         finalizeRunId: environment.GITHUB_RUN_ID,
         engine: { version: environment.ENGINE_VERSION, sha256: 'b'.repeat(64) },
-        files: names.map((name) => ({ name, sha256: 'c'.repeat(64) })),
+        files: names.map((name) => ({
+          name,
+          sha256: 'c'.repeat(64),
+          ...(environment.RELEASE_PUBLISH !== 'true' ? { assetName: `rehearsal-${environment.GITHUB_RUN_ID}-${name}` } : {}),
+        })),
       }),
     )
   }
@@ -252,6 +256,7 @@ describe('final release channel promotion', () => {
     expect(run.mock.calls.some(([, args]) => ['upload', 'edit'].includes(args[1]))).toBe(false)
   })
   it('does not read or change production channels during a dry run', async () => {
+    environment.RELEASE_PUBLISH = 'false'
     await complete(await candidate('1.4.9-1104'), { ...environment, RELEASE_PUBLISH: 'false' })
     expect(fetch).not.toHaveBeenCalled()
     expect(uploadOss).not.toHaveBeenCalled()
@@ -632,6 +637,100 @@ describe('durable finalize plans and upload ownership', () => {
     releaseFor(plan.tag).assets.set('release-binding.json', Buffer.from(JSON.stringify(binding)))
     await expect(upload(plan)).rejects.toThrow(/already bound/)
     expect(uploadOss).not.toHaveBeenCalled()
+  })
+})
+
+describe('rehearsal interleaved failed-job retries', () => {
+  it.each([false, true])('isolates A -> B -> retry A installers and manifests, test OSS=%s', async (testOss) => {
+    const first = { ...environment, RELEASE_PUBLISH: 'false', RELEASE_TEST_OSS: String(testOss) }
+    const second = { ...first, GITHUB_RUN_ID: '789', ENGINE_VERSION: '1.4.9-beta6' }
+    const plan = { ...(await candidate('1.4.9-1105', 'yakit,yakitEE')), tag: null }
+    await prepareCandidate(plan)
+    const release = releaseFor(plan.candidate)
+    const historical = Buffer.from('assets from an older rehearsal')
+    release.assets.set('release-manifest.json', historical)
+    release.assets.set(artifactName(plan, plan.targets[0]), historical)
+    const normalRun = run.getMockImplementation()
+    vi.mocked(run).mockImplementation(async (command, args, options) => {
+      const pattern = args[args.indexOf('--pattern') + 1]
+      if (args[1] === 'download' && pattern?.startsWith('result-')) {
+        const destination = args[args.indexOf('--dir') + 1]
+        const prefix = pattern.slice(0, pattern.indexOf('*'))
+        await rm(destination, { recursive: true, force: true })
+        await mkdir(destination, { recursive: true })
+        for (const [name, bytes] of release.assets)
+          if (name.startsWith(prefix) && name.endsWith('.json'))
+            await writeFile(path.join(destination, name), bytes)
+        return ''
+      }
+      return normalRun(command, args, options)
+    })
+    vi.mocked(uploadOss).mockImplementation(async (file, object) => {
+      channels.set(object, await readFile(file))
+      return 'd'.repeat(32)
+    })
+    async function uploadTarget(target, env) {
+      const name = artifactName(plan, target)
+      const names = [name]
+      if (target.edition === 'yakitEE' && target.platform === 'linux' && target.legacy)
+        names.push(name.replace(/\.AppImage$/, '.run'))
+      await mkdir('.release/output', { recursive: true })
+      for (const file of names)
+        await writeFile(`.release/output/${file}`, `run ${env.GITHUB_RUN_ID}; engine ${env.ENGINE_VERSION}; ${file}`)
+      await writeFile(
+        `.release/result-${target.id}.json`,
+        JSON.stringify({
+          target: target.id,
+          sha: plan.sha,
+          version: plan.version,
+          signed: true,
+          engine: { version: env.ENGINE_VERSION, sha256: sha256(env.ENGINE_VERSION) },
+        }),
+      )
+      await uploadResult(plan, target, env)
+    }
+    await loadCandidate(first)
+    for (const target of plan.targets.slice(0, -1)) await uploadTarget(target, first)
+    await expect(complete(plan, first)).rejects.toThrow('Missing finalized targets')
+    await loadCandidate(second)
+    for (const target of plan.targets) await uploadTarget(target, second)
+    await complete(plan, second)
+    const bManifest = Buffer.from(release.assets.get('rehearsal-789-release-manifest.json'))
+    const bInstallers = new Map(
+      [...release.assets].filter(([name]) => name.startsWith('rehearsal-789-')),
+    )
+    await uploadTarget(plan.targets.at(-1), first)
+    await complete(plan, first)
+    const aManifest = Buffer.from(release.assets.get('rehearsal-456-release-manifest.json'))
+    await complete(plan, first)
+    expect(release.assets.get('rehearsal-456-release-manifest.json')).toEqual(aManifest)
+    expect(release.assets.get('rehearsal-789-release-manifest.json')).toEqual(bManifest)
+    for (const [name, bytes] of bInstallers) expect(release.assets.get(name)).toEqual(bytes)
+    for (const [env, bytes] of [[first, aManifest], [second, bManifest]]) {
+      const manifest = JSON.parse(bytes)
+      expect(manifest.engineVersion).toBe(env.ENGINE_VERSION)
+      expect(manifest.results).toHaveLength(20)
+      const files = manifest.results.flatMap((receipt) => {
+        expect(receipt.finalizeRunId).toBe(env.GITHUB_RUN_ID)
+        expect(receipt.engine.version).toBe(env.ENGINE_VERSION)
+        for (const file of receipt.files) {
+          expect(file.assetName).toBe(`rehearsal-${env.GITHUB_RUN_ID}-${file.name}`)
+          const installer = release.assets.get(file.assetName)
+          expect(sha256(installer)).toBe(file.sha256)
+          expect(installer.toString()).toContain(`run ${env.GITHUB_RUN_ID}; engine ${env.ENGINE_VERSION};`)
+        }
+        if (testOss)
+          for (const [index, object] of receipt.testObjects.entries())
+            expect(sha256(channels.get(object.object))).toBe(receipt.files[index].sha256)
+        return receipt.files
+      })
+      expect(files).toHaveLength(22)
+    }
+    expect(release.assets.get('release-manifest.json')).toEqual(historical)
+    expect(release.assets.get(artifactName(plan, plan.targets[0]))).toEqual(historical)
+    expect(release.isDraft).toBe(true)
+    expect(await readFile(environment.GITHUB_STEP_SUMMARY, 'utf8')).toContain('rehearsal-456-release-manifest.json')
+    if (!testOss) expect(uploadOss).not.toHaveBeenCalled()
   })
 })
 

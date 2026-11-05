@@ -24,7 +24,7 @@ import {
   validateStapledTicket,
 } from '../../../scripts/release/engine.mjs'
 import { makeConfig } from '../../../scripts/release/package.mjs'
-import { assertReleaseBinding, assertResults, testOssObject } from '../../../scripts/release/finalize.mjs'
+import { assertReleaseBinding, assertResults, rehearsalAssetName, testOssObject } from '../../../scripts/release/finalize.mjs'
 import { ossAuthorization, verifyOssEtag } from '../../../scripts/release/oss.mjs'
 
 const require = createRequire(import.meta.url)
@@ -293,7 +293,7 @@ describe('publish gate', () => {
       expect(() => assertReleaseBinding(candidate, { ...binding, ...change }, '1.4.9-beta5', '456')).toThrow()
     }
   })
-  const environment = { GITHUB_RUN_ID: '456', ENGINE_VERSION: '1.4.9-beta5' }
+  const environment = { GITHUB_RUN_ID: '456', ENGINE_VERSION: '1.4.9-beta5', RELEASE_PUBLISH: 'true' }
   function receipts(candidate) {
     return candidate.targets.map((target) => ({
       target: target.id,
@@ -326,8 +326,10 @@ describe('publish gate', () => {
   })
   it('requires matching isolated OSS receipts when exercising real test uploads', () => {
     const candidate = { ...plan(), tag: null }
-    const env = { ...environment, RELEASE_TEST_OSS: 'true' }
+    const env = { ...environment, RELEASE_PUBLISH: 'false', RELEASE_TEST_OSS: 'true' }
     const valid = receipts(candidate)
+    for (const result of valid)
+      for (const file of result.files) file.assetName = `rehearsal-456-${file.name}`
     expect(() => assertResults(candidate, valid, env)).toThrow('OSS verification receipt missing')
     for (const [index, result] of valid.entries()) {
       result.testObjects = result.files.map((file) => ({
@@ -339,6 +341,19 @@ describe('publish gate', () => {
     valid[0].testObjects[0].object = 'yak/latest/yakit-version.txt'
     expect(() => assertResults(candidate, valid, env)).toThrow('OSS verification receipt missing')
   })
+  it.each([undefined, 'installer.exe', 'rehearsal-789-installer.exe'])(
+    'rejects a rehearsal receipt without its own run asset: %s',
+    (assetName) => {
+      const candidate = { ...plan(), tag: null }
+      const env = { ...environment, RELEASE_PUBLISH: 'false' }
+      const valid = receipts(candidate)
+      for (const result of valid)
+        for (const file of result.files) file.assetName = `rehearsal-456-${file.name}`
+      expect(() => assertResults(candidate, valid, env)).not.toThrow()
+      valid[0].files[0].assetName = assetName
+      expect(() => assertResults(candidate, valid, env)).toThrow('Rehearsal asset does not belong')
+    },
+  )
   it('constructs OSS authorization with the content checksum and exact versioned object path', () => {
     const value = ossAuthorization({
       keyId: 'test-key',
@@ -352,6 +367,19 @@ describe('publish gate', () => {
 })
 
 describe('isolated branch upload boundaries', () => {
+  it('names rehearsal installers and manifests with the finalize run, preserving the original extension', () => {
+    const env = { GITHUB_RUN_ID: '456' }
+    expect(rehearsalAssetName('Yakit-1.4.9-windows-amd64.exe', env)).toBe(
+      'rehearsal-456-Yakit-1.4.9-windows-amd64.exe',
+    )
+    expect(rehearsalAssetName('release-manifest.json', env)).toBe('rehearsal-456-release-manifest.json')
+  })
+  it.each(['', '../456', '456/789', '456x'])('rejects an invalid rehearsal run ID: %s', (id) => {
+    expect(() => rehearsalAssetName('release-manifest.json', { GITHUB_RUN_ID: id })).toThrow()
+  })
+  it.each(['../installer.exe', 'a/b.dmg', 'a\\b.exe', '.hidden'])('rejects an unsafe rehearsal asset: %s', (name) => {
+    expect(() => rehearsalAssetName(name, { GITHUB_RUN_ID: '456' })).toThrow()
+  })
   it('places CE and EE files under run-specific test directories', () => {
     const candidate = { ...plan(), tag: null }
     const env = { GITHUB_RUN_ID: '456', RELEASE_PUBLISH: 'false' }

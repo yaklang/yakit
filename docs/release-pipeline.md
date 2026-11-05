@@ -12,6 +12,8 @@
 4. 首次验证保持 `publish` 未勾选：生成并签名全部安装包，将结果放入候选草稿，不触碰正式 Release、OSS 安装包目录或升级入口。确认后再运行一次，勾选 `publish` 完成正式发版。
 5. 常规发版验证成熟后，可以直接勾选 `publish`，一次人工触发完成引擎下载、签名、安装包生成和发布。
 
+预演安装包在候选 Draft 中使用 `rehearsal-<收尾 run ID>-<原安装包名>`，清单使用 `rehearsal-<收尾 run ID>-release-manifest.json`；Summary 会给出清单资产名，每份回执的 `files[].assetName` 指向该次预演的安装包。同一候选可使用不同引擎分别预演，补跑原任务只更新该任务自己的资产，不覆盖其他预演或历史共享清单。run ID 自动取自 CI，无需额外输入；正式发布继续使用原安装包名和 `release-manifest.json`。
+
 分支构建只允许预演。正式发布要求候选来自成功的本仓库 Prepare 工作流、来源为正式 tag，且 tag 仍指向原提交。已公开的软件版本不能被新的手动执行覆盖。正式收尾开始时，以原子创建的草稿资产绑定该软件版本、前端候选、引擎版本和唯一的收尾 run ID；上传和汇总时再次核对所有权。同一候选和引擎也不能由另一个正式任务接管，防止多个部分失败的任务交错重跑后混用已重新签名的安装包。
 
 正式 tag 与发行版必须匹配：`v<版本>` 只允许 Yakit CE/EE，`v<版本>-irify` 只允许 IRify CE/EE，`v<版本>-memfit` 只允许 Memfit；渲染端 tag、无 `v` 前缀以及跨产品组合均不能用于正式候选。Finalize 会再次校验已保存的候选，旧的错误候选也会被拒绝。发布阶段使用与预检相同的工作流源码版本执行保护检查；只有安装包封装阶段检出候选提交，旧候选不会替换新的升级入口保护逻辑。
@@ -70,7 +72,7 @@ GitHub 的手动入口需要默认分支上已有对应工作流文件。PR 合�
 1. 手动运行 **Prepare Yakit Release**（文件 `build-multi-prod.yml`），选择测试分支，发行版选择 `yakit,yakitEE`，软件版本可填写 `1.4.9-ci.4461`。此阶段只预装配，不下载引擎；全部完成后，从 Summary 复制 Prepare run ID。
 2. 手动运行 **Verify Yakit Sign and Notarize Build**，选择同一分支，填写该 Prepare run ID 和明确的已发布引擎版本。留空 run ID 时仍执行原有 macOS 签名检查。
 3. 新任务调用同一 Finalize Release，强制 `publish=false`，在新 runner 上下载候选、校验归档并还原，然后注入引擎、签名、封装。
-4. 签名安装包保存在候选 Draft Release，并实际上传至 `yak/ci-release-tests/<收尾 run ID>/`、`vip/ci-release-tests/<收尾 run ID>/`。每次上传后通过 HEAD 校验远端 ETag 与本地 Content-MD5 一致；只有全部目标上传和校验成功，完整 `release-manifest.json` 才记录预演成功。
+4. 签名安装包按上述 run ID 命名保存在候选 Draft Release，并实际上传至 `yak/ci-release-tests/<收尾 run ID>/`、`vip/ci-release-tests/<收尾 run ID>/`。每次上传后通过 HEAD 校验远端 ETag 与本地 Content-MD5 一致；只有全部目标上传和校验成功，`rehearsal-<收尾 run ID>-release-manifest.json` 才记录预演成功。
 
 这个专用分支测试入口不会创建正式软件 Release，不会写入正式版本目录或 `latest`，不会切换升级入口。普通 Finalize 预演仍只上传候选草稿；额外的 OSS 测试开关仅在可复用工作流调用时提供，并拒绝正式 tag 候选或 `publish=true`。
 
