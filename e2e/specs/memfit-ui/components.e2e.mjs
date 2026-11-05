@@ -327,6 +327,62 @@ describe('Memfit real Chromium component regression', () => {
     }
   }
 
+  for (const theme of ['light', 'dark']) {
+    it(`${theme} question options have separate rows, hover, selection and keyboard focus feedback`, async () => {
+      await setTheme(theme)
+      await show('question')
+      const region = $('[data-testid="composer"] section')
+      const appearance = (element) =>
+        browser.execute((element) => {
+          const style = getComputedStyle(element)
+          const rect = element.getBoundingClientRect()
+          return {
+            border: style.borderWidth,
+            borderColor: style.borderColor,
+            background: style.backgroundColor,
+            cursor: style.cursor,
+            shadow: style.boxShadow,
+            top: rect.top,
+            bottom: rect.bottom,
+            height: rect.height,
+          }
+        }, element)
+      for (const kind of ['radio', 'checkbox']) {
+        if (kind === 'checkbox') await button('下一题').click()
+        await region.$('button').moveTo()
+        const selector = kind === 'radio' ? 'label.ant-radio-button-wrapper' : 'label.ant-checkbox-wrapper'
+        const rows = await region.$$(selector)
+        const first = await appearance(rows[0])
+        const second = await appearance(rows[1])
+        assert.equal(first.border, '1px', `${kind}: each option has a visible boundary`)
+        assert.equal(second.border, '1px', `${kind}: the next option has a visible boundary`)
+        assert.equal(first.cursor, 'pointer', `${kind}: the whole row is clickable`)
+        assert.ok(first.height > second.height, `${kind}: descriptions grow the row instead of overflowing`)
+        assert.ok(second.top - first.bottom >= 7, `${kind}: option rows stay separated`)
+        await rows[0].moveTo()
+        await browser.waitUntil(async () => (await appearance(rows[0])).background !== first.background, {
+          timeoutMsg: `${kind}: hovering should highlight the whole row`,
+        })
+        await capture(`ask-${kind}-${theme}-hover`)
+        await rows[0].click()
+        await region.$('button').moveTo()
+        await expect(rows[0].$('input')).toBeChecked()
+        const selected = await appearance(rows[0])
+        assert.notEqual(selected.background, first.background, `${kind}: selection keeps a background highlight`)
+        assert.notEqual(selected.borderColor, first.borderColor, `${kind}: selection keeps a highlighted border`)
+        await browser.keys('ArrowDown')
+        assert.equal(
+          await browser.execute((element) => document.activeElement === element.querySelector('input'), rows[1]),
+          true,
+          `${kind}: the keyboard can move focus to the next option`,
+        )
+        assert.notEqual((await appearance(rows[1])).shadow, 'none', `${kind}: keyboard focus is visible`)
+        await capture(`ask-${kind}-${theme}-selected-focus`)
+      }
+      assert.equal((await messages()).length, 0, 'Hovering, selecting and focusing do not submit answers')
+    })
+  }
+
   for (const mode of ['blocking', 'async']) {
     it(`${mode} form can be dismissed without sending an answer`, async () => {
       await show('question', { mode, form: true })

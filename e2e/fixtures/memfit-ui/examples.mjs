@@ -109,7 +109,12 @@ export function question(mode = 'async', deadline) {
         multiple: false,
         allowFreeText: true,
         options: [
-          { id: 'dev', label: '开发者', recommended: true },
+          {
+            id: 'dev',
+            label: '开发者',
+            recommended: true,
+            description: '包含模块边界、调用关系与主要数据流，适合需要阅读实现细节和继续排查问题的开发者。',
+          },
           { id: 'pm', label: '产品经理' },
         ],
       },
@@ -120,7 +125,11 @@ export function question(mode = 'async', deadline) {
         multiple: true,
         allowFreeText: false,
         options: [
-          { id: 'data', label: '数据流' },
+          {
+            id: 'data',
+            label: '数据流',
+            description: '从输入来源到处理过程与最终输出，说明数据如何在模块之间传递，并标出需要重点核对的边界。',
+          },
           { id: 'deploy', label: '部署方式' },
         ],
       },

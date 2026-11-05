@@ -119,42 +119,34 @@
   gap: 8px;
 }
 .optionContent {
-  display: flex;
-  gap: 4px;
+  display: grid;
+  grid-template-columns: 12px minmax(0, 1fr);
+  gap: 4px 8px;
+  min-width: 0;
   text-align: left;
   white-space: normal;
-  align-items: center;
+  overflow-wrap: anywhere;
+  align-items: start;
 }
-.shortcut {
+.options .optionContent .shortcut {
   flex: none;
   min-width: 12px;
   color: var(--Colors-Use-Neutral-Text-4-Help-text);
   font-size: 12px;
   font-weight: 400;
-  line-height: 16px;
+  line-height: 20px;
 }
 .options .optionContent > span.secondary {
+  grid-column: 2;
   color: var(--Colors-Use-Neutral-Text-4-Help-text);
   font-size: 12px;
   font-weight: 400;
   line-height: 16px;
 }
 .options .option {
-  height: 24px;
-  :global(.ant-checkbox-wrapper) {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    padding: 0 8px;
-    height: 24px;
-    color: var(--Colors-Use-Neutral-Text-1-Title);
-    font-size: 12px;
-    font-weight: 400;
-    line-height: 16px;
-    &:hover {
-      background: var(--Colors-Use-Neutral-Bg-Hover);
-    }
-  }
+  display: block;
+  width: 100%;
+  height: auto;
   :global(.ant-checkbox) {
     margin-top: 2px;
   }
@@ -164,17 +156,58 @@
   gap: 8px;
   width: 100%;
   :global(.ant-radio-button-wrapper) {
-    border-radius: 8px;
-    height: 24px;
-    color: var(--Colors-Use-Neutral-Text-1-Title);
-    font-size: 12px;
-    font-weight: 400;
-    line-height: 16px;
-    border: 0px;
+    &:first-child,
+    &:last-child {
+      border-radius: 4px;
+    }
+    &::before {
+      display: none;
+    }
   }
-  :global(.ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled)) {
+}
+.options .option :global(.ant-checkbox-wrapper),
+.options .radioOptions :global(.ant-radio-button-wrapper) {
+  display: flex;
+  align-items: flex-start;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 36px;
+  height: auto;
+  padding: 8px 12px;
+  border: 1px solid var(--Colors-Use-Neutral-Border);
+  border-radius: 4px;
+  background: var(--Colors-Use-Basic-Background);
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 20px;
+  white-space: normal;
+  cursor: pointer;
+  > span:last-child {
+    flex: 1;
+    min-width: 0;
+  }
+  &:focus-within {
+    box-shadow: 0 0 0 2px var(--Colors-Use-Main-Focus);
+  }
+}
+.options .option :global(.ant-checkbox-wrapper:not(.ant-checkbox-wrapper-disabled):hover),
+.options .radioOptions :global(.ant-radio-button-wrapper:not(.ant-radio-button-wrapper-disabled):hover) {
+  border-color: var(--Colors-Use-Main-Border);
+  background: var(--Colors-Use-Neutral-Bg-Hover);
+}
+.options .option :global(.ant-checkbox-wrapper-checked:not(.ant-checkbox-wrapper-disabled)),
+.options .radioOptions :global(.ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled)) {
+  border-color: var(--Colors-Use-Main-Primary);
+  background: var(--Colors-Use-Main-Bg);
+  &:hover {
+    border-color: var(--Colors-Use-Main-Primary);
     background: var(--Colors-Use-Main-Bg-Hover);
   }
+}
+.options .option :global(.ant-checkbox-wrapper-disabled),
+.options .radioOptions :global(.ant-radio-button-wrapper-disabled) {
+  cursor: not-allowed;
 }
 .freeText {
   margin-top: 12px;
