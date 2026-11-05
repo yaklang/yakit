@@ -136,6 +136,7 @@ const setup = () => {
     fuzzerTableMaxDataRef: 100,
     responseSearchDraftRef: '',
     requestRef: '',
+    previewNetworkRef: undefined,
     loadingRef: false,
     mcpExecutionSlotRef: createMcpWebFuzzerExecutionSlot(),
     startMcpExecutionRef: () => {},

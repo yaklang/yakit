@@ -499,6 +499,8 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                             response: {
                               originValue: flow.ResponseString,
                               originalPackage: flow.Response,
+                              url: flow.Url,
+                              defaultHttps: flow.IsHTTPS,
                             },
                           })
                         }}
@@ -556,6 +558,8 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                             response: {
                               originValue: flow.ResponseString,
                               originalPackage: flow.Response,
+                              url: flow.Url,
+                              defaultHttps: flow.IsHTTPS,
                             },
                           })
                         }}

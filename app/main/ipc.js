@@ -278,6 +278,7 @@ module.exports = {
     require('./handlers/mitmV2')(win, getClient)
     require('./handlers/queryHTTPFlow')(win, getClient)
     require('./handlers/httpFuzzer')(win, getClient)
+    require('./handlers/httpPreview')(win, getClient)
     require('./handlers/httpAnalyzer')(win, getClient)
     require('./handlers/codec')(win, getClient)
     require('./handlers/contextMenu')(win, getClient)

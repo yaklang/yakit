@@ -1532,6 +1532,7 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
   const [renderAndHexTypeOptions, setRenderAndHexTypeOptions] = useState<RenderAndHexTypeOptions[]>([])
   const [renderAndHexTag, setRenderAndHexTag] = useState<RenderAndHexTypeOptionVal>()
   const [renderHtml, setRenderHtml] = useState<React.ReactNode>()
+  const previewController = useRef<AbortController | undefined>(undefined)
   const updateRender = useMemoizedFn(() => {
     setRenderAndHexTypeOptions([
       {
@@ -1584,18 +1585,34 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
     }
   })
   const onSetRenderHTML = useMemoizedFn(async () => {
-    const renderValue = await prettifyPacketRender(StringToUint8Array(modifiedPacket))
+    previewController.current?.abort()
+    const controller = new AbortController()
+    previewController.current = controller
+    const renderValue = await prettifyPacketRender(StringToUint8Array(modifiedPacket), {
+      url: info.URL,
+      request: requestPacket,
+      https: info.IsHttps,
+      signal: controller.signal,
+    })
+    if (controller.signal.aborted) return
     setRenderHtml(
-      <iframe srcDoc={renderValue as string} style={{ width: '100%', height: '100%', border: 'none' }} sandbox="" />,
+      <iframe
+        srcDoc={renderValue as string}
+        style={{ width: '100%', height: '100%', border: 'none' }}
+        sandbox=""
+        referrerPolicy="no-referrer"
+      />,
     )
   })
   useEffect(() => {
+    previewController.current?.abort()
     if (renderAndHexTag === 'render') {
       onSetRenderHTML()
     } else {
       setRenderHtml(undefined)
     }
-  }, [renderAndHexTag])
+    return () => previewController.current?.abort()
+  }, [renderAndHexTag, modifiedPacket, info.URL, info.IsHttps])
   // #endregion
 
   return (

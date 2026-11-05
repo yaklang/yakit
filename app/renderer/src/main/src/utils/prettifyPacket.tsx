@@ -1,3 +1,4 @@
+import { loadHTTPPreviewResources, type PreviewNetwork } from './httpPreviewResources'
 import { type IMonacoCodeEditor, YakEditor } from '@/utils/editors'
 import { StringToUint8Array, Uint8ArrayToString } from '@/utils/str'
 import { failed, yakitNotify } from '@/utils/notification'
@@ -8,7 +9,9 @@ import espreeParser from 'prettier/plugins/estree'
 import xmlParser from '@prettier/plugin-xml'
 import xmlFormatter from 'xml-formatter'
 import { debugYakitModalAny } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
-import DOMPurify from 'isomorphic-dompurify'
+import { renderStaticHtml } from './staticHtmlPreview'
+import { replayCapturedImages } from './capturedImageReplay'
+import type { CapturedImageContext } from './capturedImageReplay'
 import i18n from '@/i18n/i18n'
 
 const tOriginal = i18n.getFixedT(null, 'utils')
@@ -27,91 +30,7 @@ interface PacketPrettifyHelperResponse {
  * 安全渲染 HTML，保留样式，禁止 JS 执行
  */
 export const safeRenderBody = (body: string, onFinished: (html: string) => void) => {
-  try {
-    // hook 1: 替换 <a> 为 <span>
-    DOMPurify.addHook('afterSanitizeElements', (node) => {
-      if (node.tagName && node.tagName.toLowerCase() === 'a') {
-        const span = document.createElement('span')
-        span.innerHTML = node.innerHTML
-
-        // 保留基本样式，让它看起来像链接（可自定义）
-        span.setAttribute(
-          'style',
-          node.getAttribute('style') || 'color: blue; text-decoration: underline; cursor: pointer;',
-        )
-
-        node.parentNode?.replaceChild(span, node)
-      }
-    })
-
-    // hook 2: 额外保险，清理 href/src 中的危险协议
-    DOMPurify.addHook('afterSanitizeAttributes', (node) => {
-      if ('href' in node) {
-        const href = node.getAttribute('href') || ''
-        if (/^(javascript|vbscript|data):/i.test(href.trim())) {
-          node.removeAttribute('href')
-        }
-      }
-      if ('src' in node) {
-        const src = node.getAttribute('src') || ''
-        if (/^(javascript|vbscript|data):/i.test(src.trim())) {
-          node.removeAttribute('src')
-        }
-      }
-    })
-
-    const purify = DOMPurify.sanitize(body, {
-      ALLOWED_ATTR: [
-        'class',
-        'style',
-        'id',
-        'src',
-        'alt',
-        'title',
-        'width',
-        'height',
-        'colspan',
-        'rowspan',
-        'align',
-        'valign',
-        'border',
-        'cellpadding',
-        'cellspacing',
-        'href',
-      ],
-      FORBID_TAGS: ['script', 'iframe', 'object', 'embed', 'link', 'meta'],
-      FORBID_ATTR: [
-        'onerror',
-        'onclick',
-        'onload',
-        'onmouseover',
-        'onfocus',
-        'onmouseenter',
-        'onmouseleave',
-        'onsubmit',
-      ],
-      SANITIZE_DOM: true,
-    })
-
-    // 生成安全 HTML
-    const iframeHtml = `<!doctype html>
-<html>
-  <head>
-    <meta charset="utf-8">
-  </head>
-  <body>
-    ${purify}
-  </body>
-</html>`
-
-    onFinished(iframeHtml)
-  } catch (e) {
-    const fallback = `<!doctype html><html><head><meta charset="utf-8"></head><body>${body}</body></html>`
-    onFinished(fallback)
-  } finally {
-    // 清理 hook，避免污染其他地方
-    DOMPurify.removeAllHooks()
-  }
+  onFinished(renderStaticHtml(body))
 }
 
 function extractAndCompareCode(originalCode: string, formattedCode: string) {
@@ -311,34 +230,56 @@ export const prettifyPacketCode = (text: string) => {
 }
 
 // 渲染功能(Html + Image)
-export const formatPacketRender = (packet: Uint8Array, onFormatted: (packet?: string) => any) => {
+export const formatPacketRender = (
+  packet: Uint8Array,
+  onFormatted: (packet?: string) => any,
+  context?: CapturedImageContext & { network?: PreviewNetwork },
+) => {
+  if (packet.length === 0) {
+    onFormatted()
+    return
+  }
   if (packet.length > 0) {
     ipcRenderer
       .invoke('PacketPrettifyHelper', {
         Packet: packet,
       })
-      .then((rsp: PacketPrettifyHelperResponse) => {
+      .then(async (rsp: PacketPrettifyHelperResponse) => {
         const contentType = rsp.ContentType.toLowerCase()
         if (contentType.includes('html')) {
-          safeRenderBody(Uint8ArrayToString(rsp.Body), (data: string) => {
-            onFormatted(data)
-          })
+          const body = Uint8ArrayToString(rsp.Body)
+          onFormatted(
+            context
+              ? context.network
+                ? await loadHTTPPreviewResources(body, { ...context, network: context.network }, (channel, ...args) =>
+                    ipcRenderer.invoke(channel, ...args),
+                  )
+                : await replayCapturedImages(body, context, (channel, params) => ipcRenderer.invoke(channel, params))
+              : renderStaticHtml(body),
+          )
         } else if (rsp.IsImage) {
-          onFormatted(Uint8ArrayToString(rsp.ImageHtmlTag))
+          onFormatted(renderStaticHtml(Uint8ArrayToString(rsp.ImageHtmlTag)))
         } else {
           onFormatted()
         }
       })
-      .catch(onFormatted)
+      .catch(() => onFormatted())
   }
 }
 
-export const prettifyPacketRender = (text: Uint8Array) => {
+export const prettifyPacketRender = (
+  text: Uint8Array,
+  context?: CapturedImageContext & { network?: PreviewNetwork },
+) => {
   return new Promise((resolve, reject) => {
     try {
-      formatPacketRender(text, (packet) => {
-        resolve(packet)
-      })
+      formatPacketRender(
+        text,
+        (packet) => {
+          resolve(packet)
+        },
+        context,
+      )
     } catch (error) {
       failed('editor exec codec failed')
     }
