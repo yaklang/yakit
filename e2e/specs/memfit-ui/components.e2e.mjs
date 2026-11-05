@@ -106,6 +106,56 @@ describe('Memfit real Chromium component regression', () => {
     }
   }
 
+  for (const theme of ['light', 'dark']) {
+    it(`${theme} tables retain grid borders, cell spacing and header backgrounds`, async () => {
+      await setTheme(theme)
+      for (const name of ['DataTable', 'ComparisonTable', 'BarChart', 'LineChart']) {
+        await show(name)
+        if (name.endsWith('Chart')) await $('main details summary').click()
+        const actual = await browser.execute(() => {
+          const table = document.querySelector('main table')
+          const probe = document.createElement('div')
+          probe.style.border = '1px solid var(--Colors-Use-Neutral-Border)'
+          probe.style.background = 'var(--Colors-Use-Neutral-Bg)'
+          table.parentElement.appendChild(probe)
+          const expected = {
+            borderColor: getComputedStyle(probe).borderColor,
+            background: getComputedStyle(probe).backgroundColor,
+          }
+          probe.remove()
+          return {
+            expected,
+            collapse: getComputedStyle(table).borderCollapse,
+            cells: Array.from(table.querySelectorAll('th, td')).map((cell) => {
+              const style = getComputedStyle(cell)
+              return {
+                tag: cell.tagName,
+                borderWidth: style.borderWidth,
+                borderStyle: style.borderStyle,
+                borderColor: style.borderColor,
+                padding: style.padding,
+                align: style.textAlign,
+                background: style.backgroundColor,
+              }
+            }),
+          }
+        })
+        assert.equal(actual.collapse, 'collapse', `${name}: collapsed grid`)
+        assert.ok(actual.cells.some((cell) => cell.tag === 'TH') && actual.cells.some((cell) => cell.tag === 'TD'))
+        for (const cell of actual.cells) {
+          const label = `${theme}/${name}/${cell.tag}`
+          assert.equal(cell.borderWidth, '1px', `${label}: visible cell border`)
+          assert.equal(cell.borderStyle, 'solid', `${label}: solid grid`)
+          assert.equal(cell.borderColor, actual.expected.borderColor, `${label}: theme border color`)
+          assert.equal(cell.padding, '8px', `${label}: cell spacing`)
+          assert.equal(cell.align, 'left', `${label}: left-aligned content`)
+          if (cell.tag === 'TH')
+            assert.equal(cell.background, actual.expected.background, `${label}: header background`)
+        }
+      }
+    })
+  }
+
   it('real chart geometry and legend survive reparsing', async () => {
     await show('BarChart')
     assert.equal(await $$('rect[data-point]').length, 3)
