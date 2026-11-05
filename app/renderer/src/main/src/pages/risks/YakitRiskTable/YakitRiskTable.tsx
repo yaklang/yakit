@@ -576,7 +576,8 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
           filtersType: 'input',
           filterIcon: <SearchOutlined className={styles['filter-icon']} color="currentColor" />,
         },
-        render: (_, record) => (i18n.language === 'en' ? record.Title : record?.TitleVerbose) || '-',
+        render: (_, record) =>
+          (i18n.language === 'en' ? record.Title || record?.TitleVerbose : record?.TitleVerbose || record.Title) || '-',
       },
       {
         title: t('YakitRiskTable.type'),
@@ -2487,7 +2488,7 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
             <Divider type="vertical" style={{ height: 40, margin: '0 16px' }} />
             <div className={styles['content-heard-body']}>
               <div className={classNames(styles['content-heard-body-title'], 'content-ellipsis')}>
-                {(i18n.language === 'en' ? info.Title : info.TitleVerbose) || '-'}
+                {(i18n.language === 'en' ? info.Title || info.TitleVerbose : info.TitleVerbose || info.Title) || '-'}
               </div>
               <div className={styles['content-heard-body-description']}>
                 <YakitTag color="info" style={{ cursor: 'pointer' }} onClick={onClickIP}>
@@ -2791,7 +2792,7 @@ export const YakitCodeScanRiskDetails: React.FC<YakitCodeScanRiskDetailsProps> =
           <Divider type="vertical" style={{ height: 40, margin: '0 16px' }} />
           <div className={styles['content-heard-body']}>
             <div className={classNames(styles['content-heard-body-title'], 'content-ellipsis')}>
-              {(i18n.language === 'en' ? info.Title : info?.TitleVerbose) || '-'}
+              {(i18n.language === 'en' ? info.Title || info?.TitleVerbose : info?.TitleVerbose || info.Title) || '-'}
             </div>
             <div className={styles['content-heard-body-description']}>
               <YakitTag color="info" style={{ cursor: 'pointer' }} onClick={onClickIP}>

@@ -499,13 +499,17 @@ describe('YakitRiskTable 批量操作', () => {
   })
 
   it.each([
-    ['zh', '中文标题'],
-    ['en', 'English title'],
-  ])('标题列在 %s 语言下展示对应标题', async (language, expected) => {
+    ['zh', 'English title', '中文标题', '中文标题'],
+    ['zh', 'English title', undefined, 'English title'],
+    ['zh', undefined, undefined, '-'],
+    ['en', 'English title', '中文标题', 'English title'],
+    ['en', undefined, '中文标题', '中文标题'],
+    ['en', undefined, undefined, '-'],
+  ])('标题列在 %s 语言下 Title=%s TitleVerbose=%s 展示 %s', async (language, title, titleVerbose, expected) => {
     mocks.language = language
     await renderTable()
     const column = mocks.columns.find((item) => item.dataKey === 'TitleVerbose')
-    const cell = render(column.render('', { ...rows[0], Title: 'English title', TitleVerbose: '中文标题' }))
+    const cell = render(column.render('', { ...rows[0], Title: title, TitleVerbose: titleVerbose }))
     expect(cell.container).toHaveTextContent(expected)
   })
 
