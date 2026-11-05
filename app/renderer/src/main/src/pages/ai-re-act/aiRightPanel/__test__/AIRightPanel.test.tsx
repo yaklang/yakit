@@ -1632,6 +1632,27 @@ describe('AIRightPanel', () => {
     }
   })
 
+  it('运行时间优先使用 execution_seconds，不采用墙钟跨度', async () => {
+    setMockQuestionID('task-seconds')
+    mockTaskDetailsMap.set('task-seconds', {
+      uuid: 'uuid-seconds',
+      execution: {
+        execution_seconds: 4 * 3600,
+        execution_minutes: 240,
+        started_at: 1000,
+        ended_at: 1000 + 13 * 86400,
+      },
+    })
+    const result = await renderPanel(<AIRightPanel />)
+    try {
+      expect(screen.getByText('运行时间').nextElementSibling).toHaveTextContent('14400s')
+      expect(screen.queryByText(`${13 * 86400}s`)).not.toBeInTheDocument()
+    } finally {
+      result.unmount()
+      resetMockStore()
+    }
+  })
+
   it('数据源：任务执行中展示「执行中」，无执行数据时保留占位卡片，恢复后更新数值', async () => {
     setMockQuestionID('task-2')
     mockTaskDetailsMap.set('task-2', {

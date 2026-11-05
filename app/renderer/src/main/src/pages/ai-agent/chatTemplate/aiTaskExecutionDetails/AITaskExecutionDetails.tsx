@@ -67,7 +67,7 @@ import { grpcGetAllMCPServers } from '../../aiMCP/utils'
 import type { GetAllMCPServersRequest, MCPServerTool } from '../../type/aiMCP'
 import { HorizontalScrollCardItemInfoMultiple } from '@/pages/plugins/operator/horizontalScrollCard/HorizontalScrollCard'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
-import { timeDiffWithMoment } from '@/utils/timeUtil'
+import { formatSessionSnapshotExecutionDuration } from '@/pages/ai-re-act/hooks/sessionSnapshotExecution'
 import { AITaskActionItem, AITaskExecutionList } from './aiTaskExecutionList/AITaskExecutionList'
 import { AITaskBoard } from './aiTaskBoard/AITaskBoard'
 import { AITaskGantt } from './aiTaskGantt/AITaskGantt'
@@ -288,14 +288,13 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
     i18nRefresh,
   ])
   const executionMinutes = useCreation(() => {
-    const startedAt = planItemDetailsData?.execution?.started_at || 0
-    const endedAt = planItemDetailsData?.execution?.ended_at || 0
-    if (!startedAt) return t('AITaskExecutionDetails.noData')
-    if (startedAt && !endedAt) return t('AITaskExecutionDetails.executing')
-
-    return timeDiffWithMoment(startedAt, endedAt)
+    return formatSessionSnapshotExecutionDuration(planItemDetailsData?.execution, {
+      empty: t('AITaskExecutionDetails.noData'),
+      running: t('AITaskExecutionDetails.executing'),
+    })
   }, [
-    planItemDetailsData?.execution?.status,
+    planItemDetailsData?.execution?.execution_seconds,
+    planItemDetailsData?.execution?.execution_minutes,
     planItemDetailsData?.execution?.started_at,
     planItemDetailsData?.execution?.ended_at,
     i18nRefresh,

@@ -12,7 +12,7 @@ import useCurrentTaskExecution from '../hooks/useCurrentTaskData/useCurrentTaskE
 import { useWelcomePanelStats } from '@/pages/ai-agent/aiChatWelcome/hooks/useWelcomePanelStats'
 import classNames from 'classnames'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { timeDiffWithMoment } from '@/utils/timeUtil'
+import { formatSessionSnapshotExecutionDuration } from '../hooks/sessionSnapshotExecution'
 import { AISourceEnum, AISkillLoadStateEnum } from '../hooks/grpcApi'
 import type { AIAgentGrpcApi } from '../hooks/grpcApi'
 import type { AISkillLoadState } from './AISkillLoadingPane/type'
@@ -235,12 +235,16 @@ const DataCards: React.FC<{ executionData?: AIAgentGrpcApi.SessionSnapshot['exec
     })
 
     const executionDuration = useCreation(() => {
-      const startedAt = executionData?.started_at || 0
-      const endedAt = executionData?.ended_at || 0
-      if (!startedAt) return PLACEHOLDER
-      if (startedAt && !endedAt) return t('AIRightPanel.running')
-      return timeDiffWithMoment(startedAt, endedAt)
-    }, [executionData?.started_at, executionData?.ended_at])
+      return formatSessionSnapshotExecutionDuration(executionData, {
+        empty: PLACEHOLDER,
+        running: t('AIRightPanel.running'),
+      })
+    }, [
+      executionData?.execution_seconds,
+      executionData?.execution_minutes,
+      executionData?.started_at,
+      executionData?.ended_at,
+    ])
 
     return (
       <div className={styles['data-cards']}>
