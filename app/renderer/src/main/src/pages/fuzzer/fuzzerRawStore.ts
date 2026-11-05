@@ -9,11 +9,13 @@ import type { FuzzerResponse } from './HTTPFuzzerPage'
  * 每条记录带 session 和写入时间 at；窗口关闭时尽力删掉自己 session 的记录，
  * 启动时只删超过 STALE_MS 的记录（崩溃残留），较新的数据一律不碰。
  * 窗口内每个 fuzzer 页签再按 scope（page:<id>）各自记录、各自删除。
+ * 同一条历史在不同页签里 UUID 相同，所以主键是 session + scope + uuid。
+ * 关掉或重发其中一个页签，不会删掉另一个页签的原文。
  */
 
 const DB_NAME = 'yakit-fuzzer-raw'
 const STORE = 'packets'
-const DB_VERSION = 3
+const DB_VERSION = 4
 export const STALE_MS = 3 * 24 * 60 * 60 * 1000
 
 export const RAW_SESSION_ID = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`
@@ -23,6 +25,8 @@ export const EMPTY_RAW = new Uint8Array()
 const SEARCH_BATCH_SIZE = 200
 
 interface FuzzerRawRecord {
+  /** session、scope、uuid 拼成的主键 */
+  id: string
   uuid: string
   scope: string
   session: string
@@ -31,6 +35,7 @@ interface FuzzerRawRecord {
 }
 
 interface PendingRaw {
+  uuid: string
   scope: string
   response: ArrayBuffer
   /** 入队时的 scope 代数。flush 时对不上就丢掉，避免重发后把旧包写回去。 */
@@ -38,7 +43,7 @@ interface PendingRaw {
 }
 const pending = new Map<string, PendingRaw>()
 const epochs = new Map<string, number>()
-/** 等着和这一批写入放进同一个事务里删掉的 uuid */
+/** 等着和这一批写入放进同一个事务里删掉的记录 id */
 const pendingDeletes = new Set<string>()
 const memory = new Map<string, FuzzerRawRecord>()
 /** 批量写库和按 scope 删除共用一条队列，避免「快照已删又 put 回去」。 */
@@ -51,6 +56,8 @@ let startupSweep: Promise<void> | null = null
 export const fuzzerPageScope = (pageId: string) => `page:${pageId}`
 export const fuzzerSequenceScope = (groupId: string, mode: string, fuzzerIndex: string) =>
   `seq:${groupId || 'group'}:${mode}:${fuzzerIndex}`
+
+const recordId = (scope: string, uuid: string) => `${RAW_SESSION_ID}\u0000${scope}\u0000${uuid}`
 
 const copyBuffer = (bytes: Uint8Array) => bytes.slice().buffer as ArrayBuffer
 
@@ -77,7 +84,7 @@ const openDatabase = () => {
       const db = req.result
       // 旧版本的数据没有写入时间，只是崩溃残留，升级时直接丢弃
       if (db.objectStoreNames.contains(STORE)) db.deleteObjectStore(STORE)
-      const store = db.createObjectStore(STORE, { keyPath: 'uuid' })
+      const store = db.createObjectStore(STORE, { keyPath: 'id' })
       store.createIndex('byScope', 'scope', { unique: false })
       store.createIndex('bySession', 'session', { unique: false })
       store.createIndex('byAt', 'at', { unique: false })
@@ -153,23 +160,23 @@ const ensureBackend = async () => {
   }
 }
 
-const readRecords = async (uuids: string[]) => {
+const readRecords = async (ids: string[]) => {
   await ensureBackend()
   if (backend === 'memory') {
-    return uuids.map((uuid) => memory.get(uuid))
+    return ids.map((id) => memory.get(id))
   }
   const db = await openDatabase()
   return new Promise<(FuzzerRawRecord | undefined)[]>((resolve, reject) => {
     const tx = db.transaction(STORE, 'readonly')
     const store = tx.objectStore(STORE)
     const rows: (FuzzerRawRecord | undefined)[] = []
-    let left = uuids.length
+    let left = ids.length
     if (!left) {
       resolve(rows)
       return
     }
-    uuids.forEach((uuid, index) => {
-      const req = store.get(uuid)
+    ids.forEach((id, index) => {
+      const req = store.get(id)
       req.onsuccess = () => {
         rows[index] = req.result as FuzzerRawRecord | undefined
         left -= 1
@@ -181,7 +188,7 @@ const readRecords = async (uuids: string[]) => {
 }
 
 /**
- * 一段时间内的写入和按 uuid 删除合成一个事务。
+ * 一段时间内的写入和按记录删除合成一个事务。
  * 高压发包时不用每条响应各开一次 IndexedDB 事务。
  */
 const FLUSH_DELAY_MS = 300
@@ -192,13 +199,17 @@ const armFlush = () => {
   if (!flushTimer) flushTimer = setTimeout(() => void flushPending(), FLUSH_DELAY_MS)
 }
 
-const writeBatch = async (writes: { uuid: string; scope: string; response: ArrayBuffer }[], deletes: string[]) => {
+const writeBatch = async (
+  writes: { id: string; uuid: string; scope: string; response: ArrayBuffer }[],
+  deletes: string[],
+) => {
   await ensureBackend()
   if (!writes.length && !deletes.length) return
   if (backend === 'memory') {
-    deletes.forEach((uuid) => memory.delete(uuid))
+    deletes.forEach((id) => memory.delete(id))
     writes.forEach((item) => {
-      memory.set(item.uuid, {
+      memory.set(item.id, {
+        id: item.id,
         uuid: item.uuid,
         scope: item.scope,
         session: RAW_SESSION_ID,
@@ -211,9 +222,10 @@ const writeBatch = async (writes: { uuid: string; scope: string; response: Array
   const db = await openDatabase()
   const tx = db.transaction(STORE, 'readwrite')
   const store = tx.objectStore(STORE)
-  deletes.forEach((uuid) => store.delete(uuid))
+  deletes.forEach((id) => store.delete(id))
   writes.forEach((item) => {
     store.put({
+      id: item.id,
       uuid: item.uuid,
       scope: item.scope,
       session: RAW_SESSION_ID,
@@ -226,14 +238,14 @@ const writeBatch = async (writes: { uuid: string; scope: string; response: Array
 
 const flushPending = () => {
   flushTimer = undefined
+  // 入队时冻住这一批。前面的事务还没结束时，重发会先排上 deleteScope，
+  // 新响应再进 pending。等到本批真正写库才去读 pending，就会把新响应写进去，接着被 scope 删除清掉。
+  const deleteSet = new Set(pendingDeletes)
+  const writes = [...pending.entries()].filter(([id, item]) => !deleteSet.has(id) && epochOf(item.scope) === item.epoch)
   return runWrite(async () => {
-    const deleteSet = new Set(pendingDeletes)
-    const writes = [...pending.entries()].filter(
-      ([uuid, item]) => !deleteSet.has(uuid) && epochOf(item.scope) === item.epoch,
-    )
     try {
       await writeBatch(
-        writes.map(([uuid, item]) => ({ uuid, scope: item.scope, response: item.response })),
+        writes.map(([id, item]) => ({ id, uuid: item.uuid, scope: item.scope, response: item.response })),
         [...deleteSet],
       )
     } catch {
@@ -247,19 +259,19 @@ const flushPending = () => {
       return
     }
     flushRetried = false
-    // 写的过程中如果同一个 uuid 换成了新对象，或 scope 已换代，保留它
-    writes.forEach(([uuid, item]) => {
-      if (pending.get(uuid) === item && epochOf(item.scope) === item.epoch) pending.delete(uuid)
+    // 写的过程中如果同一条记录换成了新对象，或 scope 已换代，保留它
+    writes.forEach(([id, item]) => {
+      if (pending.get(id) === item && epochOf(item.scope) === item.epoch) pending.delete(id)
     })
-    deleteSet.forEach((uuid) => pendingDeletes.delete(uuid))
+    deleteSet.forEach((id) => pendingDeletes.delete(id))
   })
 }
 
 const removeScopeRecords = async (scope: string) => {
   await ensureBackend()
   if (backend === 'memory') {
-    for (const [uuid, record] of memory) {
-      if (record.scope === scope) memory.delete(uuid)
+    for (const [id, record] of memory) {
+      if (record.scope === scope && record.session === RAW_SESSION_ID) memory.delete(id)
     }
     return
   }
@@ -270,7 +282,7 @@ const removeScopeRecords = async (scope: string) => {
   req.onsuccess = () => {
     const cursor = req.result
     if (!cursor) return
-    cursor.delete()
+    if (cursor.value?.session === RAW_SESSION_ID) cursor.delete()
     cursor.continue()
   }
   await waitTransaction(tx)
@@ -283,45 +295,51 @@ const dropPending = (scope: string) => {
 }
 
 export const fuzzerRawStore = {
-  async get(uuid?: string): Promise<Uint8Array | undefined> {
-    if (!uuid) return undefined
+  async get(scope: string, uuid?: string): Promise<Uint8Array | undefined> {
+    if (!scope || !uuid) return undefined
     try {
-      return (await this.getMany([uuid])).get(uuid)
+      return (await this.getMany(scope, [uuid])).get(uuid)
     } catch {
       return undefined
     }
   },
 
-  async getMany(uuids: string[]) {
+  async getMany(scope: string, uuids: string[]) {
     const found = new Map<string, Uint8Array>()
+    if (!scope) return found
     const missing: string[] = []
     uuids.forEach((uuid) => {
       if (!uuid || found.has(uuid)) return
-      const staged = pending.get(uuid)
+      const id = recordId(scope, uuid)
+      const staged = pending.get(id)
       if (staged) found.set(uuid, toResponse(staged.response))
-      else if (!pendingDeletes.has(uuid)) missing.push(uuid)
+      else if (!pendingDeletes.has(id)) missing.push(uuid)
     })
     if (!missing.length) return found
-    const rows = await readRecords(missing)
+    const rows = await readRecords(missing.map((uuid) => recordId(scope, uuid)))
     rows.forEach((record) => {
-      if (record) found.set(record.uuid, toResponse(record.response))
+      if (record && record.scope === scope && record.session === RAW_SESSION_ID) {
+        found.set(record.uuid, toResponse(record.response))
+      }
     })
     return found
   },
 
   save(scope: string, uuid: string, response?: Uint8Array) {
     if (!scope || !uuid || !response?.byteLength) return Promise.resolve()
+    const id = recordId(scope, uuid)
     // 同一条又写回来时，取消还没落库的删除。读的时候先看 pending，不用等这 300ms。
-    pendingDeletes.delete(uuid)
-    pending.set(uuid, { scope, epoch: epochOf(scope), response: copyBuffer(response) })
+    pendingDeletes.delete(id)
+    pending.set(id, { uuid, scope, epoch: epochOf(scope), response: copyBuffer(response) })
     armFlush()
     return Promise.resolve()
   },
 
-  deleteUuid(uuid: string) {
-    if (!uuid) return Promise.resolve()
-    pending.delete(uuid)
-    pendingDeletes.add(uuid)
+  deleteUuid(scope: string, uuid: string) {
+    if (!scope || !uuid) return Promise.resolve()
+    const id = recordId(scope, uuid)
+    pending.delete(id)
+    pendingDeletes.add(id)
     armFlush()
     return Promise.resolve()
   },
@@ -342,6 +360,7 @@ export const fuzzerRawStore = {
 /** 把行上的响应原文存进库，行上改成空的。请求原文留在行上。后面的空响应不会盖掉已经存好的。 */
 export function saveFuzzerRaw(scope: string, item: FuzzerResponse) {
   if (!scope || !item?.UUID) return
+  item.RawScope = scope
   const response = item.ResponseRaw
   if (response?.byteLength) item.RawVersion = (item.RawVersion || 0) + 1
   item.ResponseRaw = EMPTY_RAW
@@ -351,23 +370,36 @@ export function saveFuzzerRaw(scope: string, item: FuzzerResponse) {
 
 /** 给这一行补上库里的响应原文。行上已经有原文的不动。 */
 export async function fillFuzzerRaw<T extends FuzzerResponse>(row: T): Promise<T> {
-  if (!row?.UUID || row.ResponseRaw?.byteLength) return row
-  const response = await fuzzerRawStore.get(row.UUID)
+  if (!row?.UUID || !row.RawScope || row.ResponseRaw?.byteLength) return row
+  const response = await fuzzerRawStore.get(row.RawScope, row.UUID)
   if (!response?.byteLength) return row
   return { ...row, ResponseRaw: response }
 }
 
-/** 给多行补上库里的响应原文。行上已经有原文的不动。 */
+/** 给多行补上库里的响应原文。行上已经有原文的不动。不同页签分开读，避免同 UUID 串数据。 */
 export async function fillFuzzerRawList<T extends FuzzerResponse>(rows: T[]) {
-  let bodies: Map<string, Uint8Array>
+  const groups = new Map<string, string[]>()
+  rows.forEach((row) => {
+    if (!row?.UUID || !row.RawScope || row.ResponseRaw?.byteLength) return
+    const list = groups.get(row.RawScope)
+    if (list) list.push(row.UUID)
+    else groups.set(row.RawScope, [row.UUID])
+  })
+  if (!groups.size) return rows
+  const bodies = new Map<string, Uint8Array>()
   try {
-    bodies = await fuzzerRawStore.getMany(rows.map((row) => row.UUID).filter((uuid): uuid is string => !!uuid))
+    await Promise.all(
+      [...groups].map(async ([scope, uuids]) => {
+        const found = await fuzzerRawStore.getMany(scope, uuids)
+        found.forEach((bytes, uuid) => bodies.set(`${scope}\u0000${uuid}`, bytes))
+      }),
+    )
   } catch {
     return rows
   }
   return rows.map((row) => {
-    if (!row?.UUID || row.ResponseRaw?.byteLength) return row
-    const response = bodies.get(row.UUID)
+    if (!row?.UUID || !row.RawScope || row.ResponseRaw?.byteLength) return row
+    const response = bodies.get(`${row.RawScope}\u0000${row.UUID}`)
     if (!response?.byteLength) return row
     return { ...row, ResponseRaw: response }
   })
@@ -408,19 +440,31 @@ export function createKeywordSearchCache(toText: (bytes: Uint8Array) => string) 
       const uncached = this.prepare(nextKeyWord, rows)
       const byUuid = new Map(rows.map((row) => [row.UUID, row]))
       for (let start = 0; start < uncached.length; start += batchSize) {
-        const chunk = uncached.slice(start, start + batchSize)
-        const bodies = await readMany(chunk).catch(() => undefined)
-        // 读库失败不记成未命中，下次搜索还要再读
-        if (!bodies) return
-        // 读库期间关键字已经被后一次搜索换掉，这批结果属于旧关键字，直接丢弃
-        if (keyWord !== nextKeyWord) return
-        chunk.forEach((uuid) => {
-          const row = byUuid.get(uuid)
-          if (!row) return
-          // 库里没有响应的行（失败结果、空响应）也记成未命中，避免每次搜索都重复读库
-          if (!bodies.get(uuid)?.byteLength) hits.set(uuid, { version: row.RawVersion || 0, hit: false })
-          else this.matches(row, nextKeyWord, bodies.get(uuid))
-        })
+        let chunk = uncached.slice(start, start + batchSize)
+        // 读库期间流式 upsert 会改同一行并抬高 RawVersion。版本变了就丢掉这批字节再读，
+        // 否则旧正文会被记到新版本上，后面的搜索不再重读。
+        for (let attempt = 0; chunk.length && attempt < 3; attempt++) {
+          const seen = new Map(chunk.map((uuid) => [uuid, byUuid.get(uuid)?.RawVersion || 0]))
+          const bodies = await readMany(chunk).catch(() => undefined)
+          // 这一批读失败不记结果，继续读后面的行；下次搜索会把没记下的再读一遍
+          if (!bodies) continue
+          // 读库期间关键字已经被后一次搜索换掉，这批结果属于旧关键字，直接丢弃
+          if (keyWord !== nextKeyWord) return
+          const again: string[] = []
+          chunk.forEach((uuid) => {
+            const row = byUuid.get(uuid)
+            if (!row) return
+            const version = seen.get(uuid) || 0
+            if ((row.RawVersion || 0) !== version) {
+              again.push(uuid)
+              return
+            }
+            // 库里没有响应的行（失败结果、空响应）也记成未命中，避免每次搜索都重复读库
+            if (!bodies.get(uuid)?.byteLength) hits.set(uuid, { version, hit: false })
+            else this.matches(row, nextKeyWord, bodies.get(uuid))
+          })
+          chunk = again
+        }
       }
     },
     matches(row: FuzzerResponse, word: string, stored?: Uint8Array) {
@@ -437,24 +481,24 @@ export function createKeywordSearchCache(toText: (bytes: Uint8Array) => string) 
 }
 
 /** 界面上读响应原文。页签隐藏时不读，已经读出来的也马上丢掉。 */
-export function useFuzzerResponseRaw(uuid?: string, version?: number, enabled = true): Uint8Array {
-  const active = !!enabled && !!uuid
+export function useFuzzerResponseRaw(uuid?: string, version?: number, enabled = true, scope?: string): Uint8Array {
+  const active = !!enabled && !!uuid && !!scope
   const [packet, setPacket] = useState<Uint8Array>(EMPTY_RAW)
-  const [seen, setSeen] = useState({ uuid, active })
-  // 换行或页签被藏起来时，在渲染阶段丢掉已读字节，避免在 effect 里同步 setState
-  if (seen.uuid !== uuid || seen.active !== active) {
-    setSeen({ uuid, active })
+  const [seen, setSeen] = useState({ uuid, scope, active })
+  // 换行、换页签或被藏起来时，在渲染阶段丢掉已读字节，避免在 effect 里同步 setState
+  if (seen.uuid !== uuid || seen.scope !== scope || seen.active !== active) {
+    setSeen({ uuid, scope, active })
     setPacket(EMPTY_RAW)
   }
   useEffect(() => {
-    if (!active || !uuid) return
+    if (!active || !uuid || !scope) return
     let cancel = false
-    fuzzerRawStore.get(uuid).then((body) => {
+    fuzzerRawStore.get(scope, uuid).then((body) => {
       if (!cancel) setPacket(body || EMPTY_RAW)
     })
     return () => {
       cancel = true
     }
-  }, [active, uuid, version])
+  }, [active, uuid, version, scope])
   return active ? packet : EMPTY_RAW
 }

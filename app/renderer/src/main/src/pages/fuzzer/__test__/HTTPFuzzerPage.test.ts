@@ -473,7 +473,7 @@ describe('HTTPFuzzerPage real IPC control paths', () => {
     const row = b.successFuzzerRef.current[0]
     expect(Array.from(row.RequestRaw)).toEqual([1])
     expect(row.ResponseRaw).toHaveLength(0)
-    expect(Array.from((await fuzzerRawStore.get('body-1')) || [])).toEqual([2])
+    expect(Array.from((await fuzzerRawStore.get(fuzzerPageScope('page'), 'body-1')) || [])).toEqual([2])
     dispose()
   })
 
@@ -798,6 +798,23 @@ const setupRestoreFlow = (
   )
   return { api, bindings, invoke, page, requestRef, tokenRef, resolveProbe }
 }
+
+describe('batch response extract', () => {
+  it('hydrates stored responses before the extractor reads them', () => {
+    expect(source.getFullText()).toContain('fillFuzzerRawList(successResponses())')
+  })
+})
+
+describe('keyword search across scopes', () => {
+  it('reads each row from its own raw scope', () => {
+    const table = readFileSync(
+      'app/renderer/src/main/src/pages/fuzzer/components/HTTPFuzzerPageTable/HTTPFuzzerPageTable.tsx',
+      'utf8',
+    )
+    expect(table).toContain('const scope = row.RawScope || fallbackScope')
+    expect(table).toContain('fuzzerRawStore.getMany(scope, ids)')
+  })
+})
 
 describe('history restore through the real loadHistory path', () => {
   beforeEach(() => vi.useFakeTimers())

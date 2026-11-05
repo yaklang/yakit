@@ -49,6 +49,7 @@ import { ExtractedFilter, TableFilterAndSorter, StatusCodeInputFilter } from './
 import { useChunkAutoScrollToBottom } from '../../hooks/useAutoScrollToBottom'
 import {
   createKeywordSearchCache,
+  fuzzerPageScope,
   fuzzerRawStore,
   fillFuzzerRaw,
   fillFuzzerRawList,
@@ -221,7 +222,8 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
     const bodyLengthRef = useRef<any>()
     const durationMsRef = useRef<any>()
     const tableRef = useRef<any>(null)
-    const storedRaw = useFuzzerResponseRaw(currentSelectItem?.UUID, currentSelectItem?.RawVersion, inViewport)
+    const rawScope = currentSelectItem?.RawScope || (pageId ? fuzzerPageScope(pageId) : undefined)
+    const storedRaw = useFuzzerResponseRaw(currentSelectItem?.UUID, currentSelectItem?.RawVersion, inViewport, rawScope)
     const requestBytes = currentSelectItem?.RequestRaw || new Uint8Array()
     const responseBytes = currentSelectItem?.ResponseRaw?.byteLength ? currentSelectItem.ResponseRaw : storedRaw
 
@@ -770,7 +772,28 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
           const keyWord = query?.keyWord
           const keywordCache = keywordCacheRef.current
           if (keyWord) {
-            await keywordCache.fill(keyWord, newDataTable, (uuids) => fuzzerRawStore.getMany(uuids))
+            // 并发组的总表会拼上多个请求的响应，每行 scope 不同，不能拿第一行的 scope 去读全部。
+            const fallbackScope = pageId ? fuzzerPageScope(pageId) : ''
+            await keywordCache.fill(keyWord, newDataTable, async (uuids) => {
+              const wanted = new Set(uuids)
+              const groups = new Map<string, string[]>()
+              newDataTable.forEach((row) => {
+                if (!row.UUID || !wanted.has(row.UUID)) return
+                const scope = row.RawScope || fallbackScope
+                if (!scope) return
+                const list = groups.get(scope)
+                if (list) list.push(row.UUID)
+                else groups.set(scope, [row.UUID])
+              })
+              const found = new Map<string, Uint8Array>()
+              await Promise.all(
+                [...groups].map(async ([scope, ids]) => {
+                  const part = await fuzzerRawStore.getMany(scope, ids)
+                  part.forEach((bytes, uuid) => found.set(uuid, bytes))
+                }),
+              )
+              return found
+            })
           } else {
             keywordCache.prepare('', [])
           }

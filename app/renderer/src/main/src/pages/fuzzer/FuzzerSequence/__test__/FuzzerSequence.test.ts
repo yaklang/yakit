@@ -292,7 +292,9 @@ describe('FuzzerSequence response release queue', () => {
     const row = alphaRows[0]
     expect(Array.from(row.RequestRaw)).toEqual([1])
     expect(row.ResponseRaw).toHaveLength(0)
-    expect(Array.from((await fuzzerRawStore.get('alpha-body')) || [])).toEqual([2])
+    expect(
+      Array.from((await fuzzerRawStore.get(fuzzerSequenceScope('group', 'sequence', 'alpha'), 'alpha-body')) || []),
+    ).toEqual([2])
     expect(bindings.rawScopesRef.current.has(fuzzerSequenceScope('group', 'sequence', 'alpha'))).toBe(true)
     dispose()
   })

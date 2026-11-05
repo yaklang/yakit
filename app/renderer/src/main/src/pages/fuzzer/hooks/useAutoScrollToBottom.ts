@@ -14,6 +14,11 @@ interface UseChunkAutoScrollToBottomOptions {
   id?: string
   /** 编辑器挂载后的额外回调 */
   onEditorMount?: (editor: IMonacoEditor) => void
+  /**
+   * 编辑器基座文本。变化说明已追加的正文被覆盖，需要把收到的 chunk 重放一遍。
+   * 流式结束时传 undefined，避免把 chunk 再追加到已经拼好的全文上。
+   */
+  resetKey?: string
 }
 
 interface UseChunkAutoScrollToBottomReturn {
@@ -36,7 +41,7 @@ interface UseChunkAutoScrollToBottomReturn {
 export const useChunkAutoScrollToBottom = (
   options: UseChunkAutoScrollToBottomOptions,
 ): UseChunkAutoScrollToBottomReturn => {
-  const { chunkedData, id, onEditorMount } = options
+  const { chunkedData, id, onEditorMount, resetKey } = options
   // 仅保留响应方向的 chunk（SSE 等响应增量）。请求分块（Direction=REQUEST，
   // 随机分块传输发送的请求 body）不应被追加到响应编辑器，否则会出现
   // 「开启分块传输后响应回显请求 body」的 bug。缺省 Direction 按响应处理（兼容旧后端）。
@@ -101,6 +106,11 @@ export const useChunkAutoScrollToBottom = (
     editorRef.current = editor
     setupScrollListener(editor)
     onEditorMount?.(editor)
+    // 页签切走再回来，编辑器按响应头重建，已追加的正文没了。流式期间重新挂上时，把 chunk 再追加一遍。
+    if (resetKey !== undefined && addStreamIndexRef.current && responseChunks.length) {
+      addStreamIndexRef.current = responseChunks.length
+      addStreamContentRef.current = responseChunks.slice()
+    }
   })
 
   // id 变化时，重置滚动状态
@@ -218,6 +228,16 @@ export const useChunkAutoScrollToBottom = (
       scrollToBottom()
     }, 100)
   }, [id])
+
+  // 基座被换掉（例如响应头刚读回来）时，编辑器里已追加的正文没了，从头重放。
+  useUpdateEffect(() => {
+    if (resetKey === undefined) return
+    addStreamIndexRef.current = responseChunks.length
+    addStreamContentRef.current = responseChunks.slice()
+    setTimeout(() => {
+      scrollToBottom()
+    }, 100)
+  }, [resetKey])
 
   return {
     handleEditorMount,

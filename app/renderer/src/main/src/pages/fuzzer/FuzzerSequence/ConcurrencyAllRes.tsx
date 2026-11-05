@@ -92,7 +92,7 @@ export const ConcurrencyAllRes: React.FC<ConcurrencyAllResProps> = React.memo((p
   }, [failedCount, successCount])
 
   const sampleRow = successFuzzer[0]
-  const sampleRaw = useFuzzerResponseRaw(sampleRow?.UUID, sampleRow?.RawVersion, inViewport)
+  const sampleRaw = useFuzzerResponseRaw(sampleRow?.UUID, sampleRow?.RawVersion, inViewport, sampleRow?.RawScope)
   const defaultHttpResponse = useMemo(() => {
     const raw = sampleRaw.byteLength ? sampleRaw : sampleRow?.ResponseRaw
     return raw?.byteLength ? new TextDecoder().decode(raw) : ''

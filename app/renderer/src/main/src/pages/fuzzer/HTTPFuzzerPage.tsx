@@ -80,7 +80,14 @@ import type { HTTPHeader } from '../mitm/MITMContentReplacerHeaderOperator'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import _ from 'lodash'
 import { createHTTPFuzzerRun } from './httpFuzzerRun'
-import { fuzzerPageScope, fuzzerRawStore, fillFuzzerRaw, saveFuzzerRaw, useFuzzerResponseRaw } from './fuzzerRawStore'
+import {
+  fuzzerPageScope,
+  fuzzerRawStore,
+  fillFuzzerRaw,
+  fillFuzzerRawList,
+  saveFuzzerRaw,
+  useFuzzerResponseRaw,
+} from './fuzzerRawStore'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { FUZZER_LABEL_LIST_NUMBER } from './HTTPFuzzerEditorMenu'
 import { BlastingAnimationAemonstration } from './AnimationAemonstration'
@@ -347,6 +354,8 @@ export interface FuzzerResponse {
   UUID: string
   /** 原文写入 IndexedDB 的次数。详情用它知道要重新读取。 */
   RawVersion?: number
+  /** 原文所在页签。同一 UUID 可以同时出现在多个页签里。 */
+  RawScope?: string
   Timestamp: number
   RequestRaw: Uint8Array
   // GuessResponseEncoding: string;
@@ -1757,7 +1766,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
             const { item } = releaseQueue.shift()!
             item.RequestRaw = null as unknown as Uint8Array
             item.ResponseRaw = null as unknown as Uint8Array
-            if (item.UUID) void fuzzerRawStore.deleteUuid(item.UUID)
+            if (item.RawScope && item.UUID) void fuzzerRawStore.deleteUuid(item.RawScope, item.UUID)
             batch--
           }
         }, 500)
@@ -3191,6 +3200,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     onlyOneResponse ? httpResponse.UUID : undefined,
     httpResponse.RawVersion,
     inViewport,
+    httpResponse.RawScope || fuzzerPageScope(props.id),
   )
   const oneResponsePacket = httpResponse.ResponseRaw?.byteLength ? httpResponse.ResponseRaw : oneStoredRaw
   const oneResponseValue = useMemo(() => {
@@ -3225,6 +3235,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     multipleReturnsHttpResponse.UUID,
     multipleReturnsHttpResponse.RawVersion,
     configKeepAlive && inViewport,
+    multipleReturnsHttpResponse.RawScope || fuzzerPageScope(props.id),
   )
   const defaultHttpResponse = useMemo(() => {
     if (!configKeepAlive) return ''
@@ -4138,6 +4149,8 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
   const [extractedResults, setExtractedResults] = useState<string>()
 
   const [responseExtractorVisible, setResponseExtractorVisible] = useState<boolean>(false)
+  // 行上的 ResponseRaw 已经外置。打开提取器前从库里补回，null 表示这一次还没补完。
+  const [extractorResponses, setExtractorResponses] = useState<FuzzerResponse[] | null>(null)
   const bodyLengthRef = useRef<any>()
   const durationMsRef = useRef<any>()
 
@@ -4152,6 +4165,20 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
     onCommitSearch?.(searchValue)
   })
   const successResponses = useMemoizedFn(() => getSuccessResponses?.() || [])
+  useEffect(() => {
+    if (!responseExtractorVisible) {
+      setExtractorResponses(null)
+      return
+    }
+    let cancel = false
+    setExtractorResponses(null)
+    void fillFuzzerRawList(successResponses()).then((rows) => {
+      if (!cancel) setExtractorResponses(rows)
+    })
+    return () => {
+      cancel = true
+    }
+  }, [responseExtractorVisible])
 
   useEffect(() => {
     setStatusCode(query?.StatusCode)
@@ -4738,9 +4765,9 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
           closable={true}
           bodyStyle={{ padding: 0 }}
         >
-          {responseExtractorVisible ? (
+          {responseExtractorVisible && extractorResponses && extractorResponses.length > 0 ? (
             <React.Suspense fallback={null}>
-              <WebFuzzerResponseExtractor responses={successResponses()} sendPayloadsType={sendPayloadsType} />
+              <WebFuzzerResponseExtractor responses={extractorResponses} sendPayloadsType={sendPayloadsType} />
             </React.Suspense>
           ) : null}
         </YakitModal>
@@ -5056,7 +5083,13 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
       onFoldBinaryFuzztagChange,
     } = props
     const { t, i18nRefresh } = useI18nNamespaces(['webFuzzer'])
-    const storedRaw = useFuzzerResponseRaw(fuzzerResponse?.UUID, fuzzerResponse?.RawVersion, inViewport !== false)
+    const rawScope = fuzzerResponse?.RawScope || (pageId ? fuzzerPageScope(pageId) : undefined)
+    const storedRaw = useFuzzerResponseRaw(
+      fuzzerResponse?.UUID,
+      fuzzerResponse?.RawVersion,
+      inViewport !== false,
+      rawScope,
+    )
     const responsePacket = fuzzerResponse?.ResponseRaw?.byteLength ? fuzzerResponse.ResponseRaw : storedRaw
 
     const [showMatcherAndExtraction, setShowMatcherAndExtraction] = useControllableValue<boolean>(props, {
@@ -5230,9 +5263,22 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
       return out
     }, [responsePacket, fuzzerResponse?.RandomChunkedData, fuzzerResponse?.BodyLength, fuzzerResponse?.DurationMs])
 
+    // 切走页签时原文 hook 会把已读响应头丢掉。流式正文是追加进编辑器的，基座一变空，已追加的 body 就被覆盖，
+    // 且增量下标不会回头。响应头文本不变就沿用同一个字符串，编辑器不会重建。
+    const streamingHeaderRef = useRef<{ uuid?: string; text: string }>({ text: '' })
+    if (streamingHeaderRef.current.uuid !== fuzzerResponse?.UUID) {
+      streamingHeaderRef.current = { uuid: fuzzerResponse?.UUID, text: '' }
+    }
+    if (isStreamingResponse && responsePacket.byteLength) {
+      const text = Uint8ArrayToString(responsePacket)
+      if (text !== streamingHeaderRef.current.text) streamingHeaderRef.current.text = text
+    }
+    const streamingHeaderText = streamingHeaderRef.current.text
+
     const responseHeaderString = useCreation(() => {
+      if (isStreamingResponse) return streamingHeaderText
       return Uint8ArrayToString(responsePacket)
-    }, [responsePacket])
+    }, [isStreamingResponse, streamingHeaderText, responsePacket])
 
     const responseRawString = useCreation(() => {
       // Streaming mode: the body is appended into Monaco via `useChunkAutoScrollToBottom`,
@@ -5282,6 +5328,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
       chunkedData: fuzzerResponse.RandomChunkedData,
       id: fuzzerResponse?.UUID,
       onEditorMount: onSetOnlyOneResEditor,
+      resetKey: isStreamingResponse ? streamingHeaderText : undefined,
     })
 
     return (

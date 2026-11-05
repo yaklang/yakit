@@ -395,7 +395,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
           successList.push(r)
           if (successList.length > fuzzerTableMaxData) {
             const oldest = successList.shift()
-            if (oldest?.UUID) setTimeout(() => void fuzzerRawStore.deleteUuid(oldest.UUID), 2000)
+            if (oldest?.UUID) setTimeout(() => void fuzzerRawStore.deleteUuid(rawScope, oldest.UUID), 2000)
           }
           successBufferRef.current.set(FuzzerIndex, successList)
         } else {
@@ -407,7 +407,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
           failedList.push(r)
           if (failedList.length > fuzzerTableMaxData) {
             const oldest = failedList.shift()
-            if (oldest?.UUID) setTimeout(() => void fuzzerRawStore.deleteUuid(oldest.UUID), 2000)
+            if (oldest?.UUID) setTimeout(() => void fuzzerRawStore.deleteUuid(rawScope, oldest.UUID), 2000)
           }
           failedBufferRef.current.set(FuzzerIndex, failedList)
         } else {
@@ -637,7 +637,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             const { item } = releaseQueue.shift()!
             item.RequestRaw = null as unknown as Uint8Array
             item.ResponseRaw = null as unknown as Uint8Array
-            if (item.UUID) void fuzzerRawStore.deleteUuid(item.UUID)
+            if (item.RawScope && item.UUID) void fuzzerRawStore.deleteUuid(item.RawScope, item.UUID)
             batch--
           }
         }, 500)
@@ -1720,7 +1720,12 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
       ? currentSelectResponse.successFuzzer[0]
       : currentSelectResponse.onlyOneResponse
     : undefined
-  const sampleRaw = useFuzzerResponseRaw(sampleRow?.UUID, sampleRow?.RawVersion, inViewport === true)
+  const sampleRaw = useFuzzerResponseRaw(
+    sampleRow?.UUID,
+    sampleRow?.RawVersion,
+    inViewport === true,
+    sampleRow?.RawScope,
+  )
   /** 多条结果时用第一条的响应原文，只有一条时用那一条。原文在 IndexedDB 里。 */
   const defaultHttpResponse = useMemo(() => {
     const raw = sampleRaw.byteLength ? sampleRaw : sampleRow?.ResponseRaw
@@ -2754,6 +2759,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
       onlyOneResponse ? httpResponse?.UUID : undefined,
       httpResponse?.RawVersion,
       inViewport,
+      httpResponse?.RawScope,
     )
     const sequenceResponsePacket = httpResponse?.ResponseRaw?.byteLength ? httpResponse.ResponseRaw : sequenceStoredRaw
 
