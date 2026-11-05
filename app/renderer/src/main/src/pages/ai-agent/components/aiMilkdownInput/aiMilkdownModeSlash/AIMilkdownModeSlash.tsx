@@ -33,7 +33,11 @@ import {
 import { PANEL_GAP, PANEL_OFFSET_UP, PANEL_WIDTH_EXTRA_EACH } from '../constants'
 import { tryClaimMilkdownPopup, releaseMilkdownPopup } from '../panelMutex'
 import { shouldSkipModeSlashEnterConfirm, type SlashStep } from './modeSlashEnterGuard'
-import { extractModeSlashFilterKeyword, getModeSlashQueryDeleteRange } from './modeSlashQuery'
+import {
+  extractModeSlashFilterKeyword,
+  getModeSlashQueryDeleteRange,
+  modeSlashTextBeforeCursor,
+} from './modeSlashQuery'
 
 export const aiModeSlashFactory = slashFactory('ai-mode-slash-commands')
 export type { SlashStep }
@@ -447,7 +451,7 @@ export const AIMilkdownModeSlash: React.FC = () => {
   const deleteSlashTrigger = useMemoizedFn(() => {
     const { state, dispatch } = view
     const { from } = state.selection
-    const textBefore = state.doc.textBetween(Math.max(0, from - 64), from, undefined, '\uFFFC')
+    const textBefore = modeSlashTextBeforeCursor(state.doc, from)
     const range = getModeSlashQueryDeleteRange(from, textBefore)
     if (!range) return
     dispatch(state.tr.deleteRange(range.from, range.to).scrollIntoView())

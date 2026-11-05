@@ -39,4 +39,13 @@ describe('getModeSlashQueryDeleteRange', () => {
     expect(getModeSlashQueryDeleteRange(5, 'hello')).toBeNull()
     expect(getModeSlashQueryDeleteRange(22, 'http://localhost:3000/')).toBeNull()
   })
+
+  it('换行后的 /：上一段以换行隔开时只删本行 /query', () => {
+    expect(getModeSlashQueryDeleteRange(8, 'hello\n/')).toEqual({ from: 7, to: 8 })
+    expect(getModeSlashQueryDeleteRange(12, 'hello\n/plan')).toEqual({ from: 7, to: 12 })
+  })
+
+  it('上一段直接粘在 / 前：匹配失败（换段时漏了换行分隔就会这样）', () => {
+    expect(getModeSlashQueryDeleteRange(11, 'yaklang-plan/')).toBeNull()
+  })
 })
