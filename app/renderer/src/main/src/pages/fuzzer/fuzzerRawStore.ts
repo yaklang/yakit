@@ -44,7 +44,7 @@ interface PendingRaw {
 }
 const pending = new Map<string, PendingRaw>()
 const epochs = new Map<string, number>()
-/** 同一 scope+uuid 的原文版本。行被淘汰后新对象回流时继续累加，避免搜索缓存命中旧结果。 */
+/** 每个 scope 一个递增版本。正文更新时分配，淘汰单行不用逐 UUID 记账。 */
 const rawVersions = new Map<string, number>()
 /** 等着和这一批写入放进同一个事务里删掉的记录 id */
 const pendingDeletes = new Set<string>()
@@ -52,20 +52,14 @@ const memory = new Map<string, FuzzerRawRecord>()
 /** 批量写库和按 scope 删除共用一条队列，避免「快照已删又 put 回去」。 */
 let writeChain: Promise<void> = Promise.resolve()
 
-const versionKey = (scope: string, uuid: string) => `${scope}\u0000${uuid}`
-
-const nextRawVersion = (scope: string, uuid: string, current?: number) => {
-  const key = versionKey(scope, uuid)
-  const next = Math.max(rawVersions.get(key) || 0, current || 0) + 1
-  rawVersions.set(key, next)
+const nextRawVersion = (scope: string, current?: number) => {
+  const next = Math.max(rawVersions.get(scope) || 0, current || 0) + 1
+  rawVersions.set(scope, next)
   return next
 }
 
 const clearRawVersions = (scope: string) => {
-  const prefix = `${scope}\u0000`
-  for (const key of rawVersions.keys()) {
-    if (key.startsWith(prefix)) rawVersions.delete(key)
-  }
+  rawVersions.delete(scope)
 }
 
 let backend: 'idb' | 'memory' | null = null
@@ -437,7 +431,7 @@ export function saveFuzzerRaw(scope: string, item: FuzzerResponse) {
   if (!scope || !item?.UUID) return
   item.RawScope = scope
   const response = item.ResponseRaw
-  if (response?.byteLength) item.RawVersion = nextRawVersion(scope, item.UUID, item.RawVersion)
+  if (response?.byteLength) item.RawVersion = nextRawVersion(scope, item.RawVersion)
   item.ResponseRaw = EMPTY_RAW
   if (!response?.byteLength) return
   void fuzzerRawStore.save(scope, item.UUID, response).catch(() => undefined)

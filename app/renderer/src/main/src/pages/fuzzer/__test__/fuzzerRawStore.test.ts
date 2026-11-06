@@ -306,6 +306,31 @@ describe('createKeywordSearchCache', () => {
     expect(cache.prepare('x', [row])).toEqual([`${scope}\0same`])
   })
 
+  it('keeps one increasing version per scope after rows are evicted', async () => {
+    const scope = fuzzerPageScope('ver')
+    const other = fuzzerPageScope('ver-other')
+    const first = { UUID: 'a', ResponseRaw: bytes([1]) } as FuzzerResponse
+    const second = { UUID: 'b', ResponseRaw: bytes([2]) } as FuzzerResponse
+    const third = { UUID: 'c', ResponseRaw: bytes([3]) } as FuzzerResponse
+    saveFuzzerRaw(scope, first)
+    saveFuzzerRaw(scope, second)
+    expect(first.RawVersion).toBe(1)
+    expect(second.RawVersion).toBe(2)
+    // 淘汰单行不重置计数，下一条继续累加
+    await fuzzerRawStore.deleteUuid(scope, 'a')
+    saveFuzzerRaw(scope, third)
+    expect(third.RawVersion).toBe(3)
+    const otherRow = { UUID: 'a', ResponseRaw: bytes([9]) } as FuzzerResponse
+    saveFuzzerRaw(other, otherRow)
+    expect(otherRow.RawVersion).toBe(1)
+    await fuzzerRawStore.deleteScope(scope)
+    const restarted = { UUID: 'a', ResponseRaw: bytes([4]) } as FuzzerResponse
+    saveFuzzerRaw(scope, restarted)
+    expect(restarted.RawVersion).toBe(1)
+    await fuzzerRawStore.deleteScope(scope)
+    await fuzzerRawStore.deleteScope(other)
+  })
+
   it('re-reads after the same uuid is evicted then flows back with a new body', async () => {
     const cache = createKeywordSearchCache((b) => String.fromCharCode(...b))
     const scope = fuzzerPageScope('reflow')

@@ -199,4 +199,56 @@ describe('streamed response body', () => {
     })
     expect(edits.join('')).toBe('hello worldhello worldhello world')
   })
+
+  it('does not append chunks when the selected response is already finished', async () => {
+    const edits: string[] = []
+    const finished = [{ ...body('hello', 1), IsFinal: true }]
+    const { result } = renderHook(() =>
+      useChunkAutoScrollToBottom({
+        chunkedData: finished,
+        id: 'done-row',
+        resetKey: undefined,
+      }),
+    )
+    act(() => {
+      result.current.handleEditorMount(editorWith(edits) as never)
+    })
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 700))
+    })
+    expect(edits.join('')).toBe('')
+  })
+
+  it('does not append chunks when switching onto a finished response', async () => {
+    const edits: string[] = []
+    const streaming = [body('hello', 1)]
+    const finished = [{ ...body('hello', 1), IsFinal: true }]
+    const { result, rerender } = renderHook(
+      ({ id, chunkedData, resetKey }: { id: string; chunkedData: RandomChunkedResponse[]; resetKey?: string }) =>
+        useChunkAutoScrollToBottom({
+          chunkedData,
+          id,
+          resetKey,
+        }),
+      {
+        initialProps: {
+          id: 'row-a',
+          chunkedData: [] as RandomChunkedResponse[],
+          resetKey: 'HTTP/1.1 200' as string | undefined,
+        },
+      },
+    )
+    act(() => {
+      result.current.handleEditorMount(editorWith(edits) as never)
+    })
+    rerender({ id: 'row-a', chunkedData: streaming, resetKey: 'HTTP/1.1 200' })
+    await waitFor(() => expect(edits.join('')).toBe('hello'), { timeout: 2500 })
+
+    // 换到一条已经结束的响应：基座已是完整正文，不能再把 chunk 追成 hellohello
+    rerender({ id: 'row-b', chunkedData: finished, resetKey: undefined })
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 700))
+    })
+    expect(edits.join('')).toBe('hello')
+  })
 })

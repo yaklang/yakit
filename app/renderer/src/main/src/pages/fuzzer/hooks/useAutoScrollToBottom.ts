@@ -59,6 +59,15 @@ export const useChunkAutoScrollToBottom = (
     const lastChunk = responseChunks[responseChunks.length - 1]
     return !lastChunk.IsFinal
   }, [responseChunks])
+  // 最后一块已到：编辑器基座就是完整正文，不能再把 chunk 追加上去
+  const streamFinished = responseChunks.length > 0 && !isStreamLoad
+  const streamFinishedRef = useRef(streamFinished)
+  streamFinishedRef.current = streamFinished
+
+  const dropFinishedQueue = useMemoizedFn(() => {
+    addStreamIndexRef.current = responseChunks.length
+    addStreamContentRef.current = []
+  })
 
   // 滚动到底部
   const scrollToBottom = useMemoizedFn(() => {
@@ -176,10 +185,14 @@ export const useChunkAutoScrollToBottom = (
     }
   })
 
-  // chunkedData 变化时，追加内容
+  // chunkedData 变化时，追加内容。流已经结束就只记住位置，不再入队。
   useThrottleEffect(
     () => {
       if (!editorRef.current || responseChunks.length === 0) return
+      if (streamFinished) {
+        dropFinishedQueue()
+        return
+      }
       // 初次加载时，记录位置并加载内容
       if (!addStreamIndexRef.current) {
         addStreamIndexRef.current = responseChunks.length
@@ -203,15 +216,21 @@ export const useChunkAutoScrollToBottom = (
 
   useEffect(() => {
     timeRef.current = setInterval(() => {
+      // 完成态的正文已经在编辑器基座里，丢掉还没写出的 chunk
+      if (streamFinishedRef.current) {
+        addStreamContentRef.current = []
+        return
+      }
       if (addStreamContentRef.current) {
         appendText()
       }
     }, 500)
     return () => {
-      // 组件卸载时，如有剩余内容则追加。
-      // 下标不能在这里清掉：流结束会重跑这个 effect，清掉之后同一批 chunk 会被当成第一次加载，正文再追加一遍。
-      // 换一条响应时，下面的 id 变化会重新装载。
-      if (addStreamContentRef.current) {
+      // 流结束或换到一条已完成的响应时，基座已是全文，不再追加。
+      // 仍在流式时才把剩余内容写完。下标不能在这里清掉，否则同一批 chunk 会被当成第一次加载。
+      if (streamFinishedRef.current) {
+        addStreamContentRef.current = []
+      } else if (addStreamContentRef.current) {
         appendText()
       }
       if (timeRef.current) {
@@ -220,8 +239,12 @@ export const useChunkAutoScrollToBottom = (
     }
   }, [isStreamLoad])
 
-  // id 变化时，重新加载增量数据
+  // id 变化时，重新加载增量数据。已完成的响应不再整段追加。
   useUpdateEffect(() => {
+    if (streamFinished) {
+      dropFinishedQueue()
+      return
+    }
     addStreamIndexRef.current = responseChunks.length
     addStreamContentRef.current = responseChunks
     // 延迟执行，等待编辑器内容更新完成
