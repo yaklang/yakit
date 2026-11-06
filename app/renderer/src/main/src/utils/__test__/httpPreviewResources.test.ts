@@ -1,6 +1,10 @@
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { Buffer } from 'buffer'
+import postcss from 'postcss'
+import valueParser from 'postcss-value-parser'
 import { loadHTTPPreviewResources } from '../httpPreviewResources'
+
+afterEach(() => vi.restoreAllMocks())
 
 const page = 'https://target.test/path/page'
 const bytes = (value: string) => new Uint8Array(Buffer.from(value))
@@ -141,4 +145,114 @@ describe('manual HTTP static resource loading', () => {
     expect(calls[0][1].Network).not.toHaveProperty('HotPatchCode')
     expect(calls[0][1].Network).not.toHaveProperty('RequestRaw')
   })
+  it('fetches current bytes on an online render even when a capture exists', async () => {
+    const old = 'data:image/png;base64,b2xk'
+    const reader = fixture({ 'https://target.test/logo.png': ['image/png', 'fresh'] })
+    const invoke = vi.fn(async (channel: string, params: any) => {
+      if (channel === 'QueryHTTPFlows') return { Data: [{ Id: 1, Url: params.SearchURL, StatusCode: 200 }] }
+      if (channel === 'GetHTTPFlowById')
+        return { Url: 'https://target.test/logo.png', StatusCode: 200, Response: bytes('packet') }
+      if (channel === 'PacketPrettifyHelper')
+        return { IsImage: true, Body: bytes('old'), ImageHtmlTag: bytes(`<img src="${old}">`) }
+      return reader(channel, params)
+    })
+    const result = await loadHTTPPreviewResources(
+      '<img src="/logo.png">',
+      { url: page, network: { Proxy: 'http://new-proxy' } },
+      invoke,
+    )
+    expect(reader).toHaveBeenCalledWith(
+      'FetchHTTPPreviewResource',
+      expect.objectContaining({ URL: 'https://target.test/logo.png' }),
+    )
+    expect(html(result).querySelector('img')?.getAttribute('src')).toBe('data:image/png;base64,ZnJlc2g=')
+  })
+
+  it.each([
+    ['layer(theme)', ['layer:theme']],
+    ['layer', ['layer:']],
+    ['layer()', ['layer:']],
+    ['supports((display: grid) and (color: red))', ['supports:((display: grid) and (color: red))']],
+    ['supports(display: grid)', ['supports:(display: grid)']],
+    [
+      'layer(theme) supports(display: grid) screen and (min-width:1px)',
+      ['supports:(display: grid)', 'media:screen and (min-width:1px)', 'layer:theme'],
+    ],
+  ])('preserves import conditions: %s', async (condition, expected) => {
+    const invoke = fixture({ 'https://target.test/theme.css': ['text/css', 'h1{color:red}'] })
+    const result = await loadHTTPPreviewResources(
+      `<style>@import "../theme.css" ${condition};</style>`,
+      { url: page, network: {} },
+      invoke,
+    )
+    const root = postcss.parse(html(result).querySelector('style')?.textContent || '')
+    const wrappers: string[] = []
+    root.walkAtRules((rule) => {
+      wrappers.push(`${rule.name}:${rule.params}`)
+    })
+    expect(wrappers).toEqual(expected)
+    expect(root.toString()).toContain('color:red')
+    expect(root.toString()).not.toContain('@import')
+  })
+
+  it.each(['image-set', 'url-list', 'declarations', 'inline', 'imported', 'many-inline'])(
+    'bounds %s expansion before serialization',
+    async (mode) => {
+      let oversizedSerialization = false
+      let serializedCssChars = 0
+      const maxChars = 24 * 1024 * 1024
+      const parserStringify = valueParser.prototype.toString
+      vi.spyOn(valueParser.prototype, 'toString').mockImplementation(function (this: ReturnType<typeof valueParser>) {
+        let chars = 0
+        this.walk((node) => {
+          if (node.type !== 'function') chars += node.value.length
+        })
+        if (chars > maxChars) {
+          oversizedSerialization = true
+          throw new Error('unsafe CSS allocation')
+        }
+        return parserStringify.call(this)
+      })
+      const rootStringify = postcss.Node.prototype.toString
+      vi.spyOn(postcss.Node.prototype, 'toString').mockImplementation(function (this: postcss.Node, ...args) {
+        if (this.type === 'root') {
+          let chars = 0
+          const root = this as postcss.Root
+          root.walkDecls((decl) => {
+            chars += decl.value.length
+          })
+          serializedCssChars += chars
+          if (chars > maxChars || serializedCssChars > maxChars) {
+            oversizedSerialization = true
+            throw new Error('unsafe stylesheet allocation')
+          }
+        }
+        return rootStringify.apply(this, args)
+      })
+      const large = 'x'.repeat(4 * 1024 * 1024)
+      const references = Array(50).fill('url(/large.png)').join(',')
+      const css =
+        mode === 'image-set'
+          ? `body{background-image:image-set(${Array(50).fill('"/large.png" 1x').join(',')})}`
+          : mode === 'declarations'
+            ? Array.from({ length: 50 }, (_, i) => `.n${i}{background:url(/large.png)}`).join('')
+            : `body{background-image:${references}}`
+      const invoke = fixture({
+        'https://target.test/main.css': ['text/css', mode === 'imported' ? '@import "child.css";' : css],
+        'https://target.test/child.css': ['text/css', css],
+        'https://target.test/large.png': ['image/png', large],
+      })
+      const source =
+        mode === 'many-inline'
+          ? Array(40).fill(`<div style='background-image:url(/large.png)'></div>`).join('')
+          : mode === 'inline'
+            ? `<div style='background-image:${references}'></div>`
+            : '<link rel="stylesheet" href="/main.css">'
+      const result = await loadHTTPPreviewResources(source, { url: page, network: {} }, invoke)
+      expect(oversizedSerialization).toBe(false)
+      expect(result.length).toBeLessThanOrEqual(maxChars)
+      expect(result).toContain('data:image/png;base64,')
+    },
+    15000,
+  )
 })

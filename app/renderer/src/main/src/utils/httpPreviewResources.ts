@@ -60,15 +60,14 @@ export const loadHTTPPreviewResources = async (body: string, context: OnlinePrev
     BrowserExtensionDeviceId,
     BrowserTransformProfileId,
   }
-  const images = new Map<string, string>()
-  const offline = await replayCapturedImages(body, { ...context, images }, invoke)
+  const offline = await replayCapturedImages(body, context, invoke)
   const pageUrl = capturedImageBaseURL(context)
   if (!pageUrl || context.signal?.aborted) return offline
   const controller = new AbortController()
   const abort = () => controller.abort()
   context.signal?.addEventListener('abort', abort, { once: true })
   const deadline = setTimeout(abort, 15000)
-  const assets = new Map<string, string>(images)
+  const assets = new Map<string, string>()
   const styles = new Map<string, string>()
   const seen = new Set<string>()
   const pending: { url: string; kind: Kind; depth: number }[] = []
@@ -76,6 +75,7 @@ export const loadHTTPPreviewResources = async (body: string, context: OnlinePrev
   let total = 0
   let unsupported = false
   let sequence = 0
+  let cssBudget = 24 * 1024 * 1024
   const enqueue = (value: string, base: string | undefined, kind: Kind, depth = 0) => {
     const url = resolvePreviewImageURL(value, base)
     if (!url || seen.has(url) || seen.size >= 64 || depth > 3 || assets.has(url)) return
@@ -85,9 +85,21 @@ export const loadHTTPPreviewResources = async (body: string, context: OnlinePrev
   const transformCss = (css: string, base: string | undefined, depth = 0, collect = false): string => {
     try {
       if (css.length > 6 * 1024 * 1024) return ''
-      let expanded = css.length
+      let remaining = 6 * 1024 * 1024
+      const reserve = (size: number) => {
+        if (size > remaining || size > cssBudget) return false
+        remaining -= size
+        cssBudget -= size
+        return true
+      }
+      // Account for raw-text escaping before parsing or allocating expanded CSS.
+      let escapedSize = css.length
+      for (let i = 0; i < css.length; i++) if (css[i] === '<') escapedSize += 3
+      if (!collect && !reserve(escapedSize)) return ''
       const root = postcss.parse(css)
-      root.walkAtRules('import', (rule) => {
+      const compiledDeclarations = new WeakSet<postcss.Declaration>()
+      root.walkAtRules((rule) => {
+        if (rule.name.toLowerCase() !== 'import') return
         const nodes = valueParser(rule.params).nodes.filter((n) => n.type !== 'space' && n.type !== 'comment')
         const first = nodes[0]
         const raw =
@@ -97,42 +109,94 @@ export const loadHTTPPreviewResources = async (body: string, context: OnlinePrev
               ? valueParser.stringify(first.nodes).replace(/^(['"])(.*)\1$/, '$2')
               : ''
         const url = resolvePreviewImageURL(unescapeCss(raw), base)
-        if (collect && url) enqueue(url, undefined, 'css', depth + 1)
-        const imported = !collect && url && depth < 3 ? compileSheet(url, depth + 1) : undefined
-        // Drop imports that are absent, cyclic, unsupported, or beyond the depth cap.
-        if (imported && expanded + imported.length <= 6 * 1024 * 1024) {
-          expanded += imported.length
-          const media = rule.params.slice(first.sourceEndIndex).trim()
-          rule.replaceWith(postcss.parse(media ? `@media ${media}{${imported}}` : imported).nodes)
-        } else rule.remove()
+        if (collect) {
+          if (url) enqueue(url, undefined, 'css', depth + 1)
+          return
+        }
+        const imported = url && depth < 3 ? compileSheet(url, depth + 1) : undefined
+        if (!imported || !reserve(imported.length + rule.params.length + 64)) {
+          rule.remove()
+          return
+        }
+        let index = 1
+        let layer: string | undefined
+        let supports: string | undefined
+        const layerNode = nodes[index]
+        if (
+          (layerNode?.type === 'word' || layerNode?.type === 'function') &&
+          layerNode.value.toLowerCase() === 'layer'
+        ) {
+          layer = layerNode.type === 'function' ? valueParser.stringify(layerNode.nodes).trim() : ''
+          index++
+        }
+        const supportsNode = nodes[index]
+        if (supportsNode?.type === 'function' && supportsNode.value.toLowerCase() === 'supports') {
+          supports = valueParser.stringify(supportsNode.nodes).trim()
+          if (!supports) {
+            rule.remove()
+            return
+          }
+          index++
+        }
+        const media = rule.params.slice(nodes[index - 1].sourceEndIndex).trim()
+        // Conditions enclose the layer so unsupported imports do not introduce it.
+        const importedRoot = postcss.parse(imported)
+        importedRoot.walkDecls((decl) => {
+          compiledDeclarations.add(decl)
+        })
+        let children: postcss.ChildNode[] = importedRoot.nodes
+        const wrappers: [string, string | undefined][] = [
+          ['layer', layer],
+          ['media', media || undefined],
+          ['supports', supports ? `(${supports})` : undefined],
+        ]
+        for (const [name, params] of wrappers) {
+          if (params === undefined) continue
+          const wrapper = postcss.atRule({ name, params })
+          wrapper.append(children)
+          children = [wrapper]
+        }
+        rule.replaceWith(children)
       })
       root.walkDecls((decl) => {
+        if (compiledDeclarations.has(decl)) return
         const kind: Kind =
           decl.parent?.type === 'atrule' && decl.parent.name.toLowerCase() === 'font-face' ? 'font' : 'image'
         const parsed = valueParser(decl.value)
         const replace = (raw: string) => {
           const url = resolvePreviewImageURL(unescapeCss(raw), base)
-          if (collect) enqueue(unescapeCss(raw), base, kind, depth)
-          return (
+          if (collect) {
+            enqueue(unescapeCss(raw), base, kind, depth)
+            return ''
+          }
+          const value =
             (url && assets.get(url)) ||
             (embeddedImage.test(raw) || /^data:font\/(?:woff2?|otf|ttf);base64,[a-z\d+/=\s]+$/i.test(raw) ? raw : '')
-          )
+          // Reserve every occurrence before placing a data URL in the value AST.
+          // Repeated url()/image-set() entries must never reach serialization first.
+          return value && reserve(value.length + 16) ? value : ''
         }
         parsed.walk((node) => {
           if (node.type !== 'function') return
           if (node.value.toLowerCase() === 'url') {
             const raw = node.nodes.length === 1 ? node.nodes[0].value : valueParser.stringify(node.nodes)
             const value = replace(raw.trim())
-            node.nodes = [{ type: 'string', quote: '"', value, sourceIndex: 0, sourceEndIndex: value.length }]
+            if (!collect)
+              node.nodes = [{ type: 'string', quote: '"', value, sourceIndex: 0, sourceEndIndex: value.length }]
             return false
           }
           if (/^(?:-webkit-)?image-set$/i.test(node.value)) {
-            for (const child of node.nodes) if (child.type === 'string') child.value = replace(child.value)
+            for (const child of node.nodes) {
+              if (child.type !== 'string') continue
+              const value = replace(child.value)
+              if (!collect) child.value = value
+            }
           }
         })
-        decl.value = parsed.toString()
+        if (!collect) decl.value = parsed.toString()
       })
-      return root.toString().replace(/</g, '\\3c ')
+      // Discovery only inspects original values; it never expands or serializes.
+      return collect ? css : root.toString().replace(/</g, '\\3c ')
     } catch {
       return ''
     }

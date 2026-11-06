@@ -209,4 +209,18 @@ describe('captured image replay', () => {
     expect(doc.querySelectorAll('img[src]')).toHaveLength(0)
     expect(reader.mock.calls.filter(([channel]) => channel === 'QueryHTTPFlows')).toHaveLength(1)
   })
+  it('accepts protobuf string status codes and rejects non-successful details', async () => {
+    const flow = { ...captured('https://target.test/logo.gif'), StatusCode: '200' }
+    const detail = { ...flow }
+    const invoke = vi.fn(async (channel: string) => {
+      if (channel === 'QueryHTTPFlows') return { Data: [flow] }
+      if (channel === 'GetHTTPFlowById') return detail
+      return decoded()
+    })
+    const result = await replayCapturedImages('<img src="/logo.gif">', { url: page }, invoke)
+    expect(parse(result).querySelector('img')?.getAttribute('src')).toBe(image)
+    detail.StatusCode = '302'
+    const rejected = await replayCapturedImages('<img src="/logo.gif">', { url: page }, invoke)
+    expect(parse(rejected).querySelector('img')?.hasAttribute('src')).toBe(false)
+  })
 })

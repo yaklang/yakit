@@ -73,6 +73,7 @@ export const renderStaticHtml = (body: string, options: StaticHtmlOptions = {}):
       return value
     }
     const pictureSources = new WeakMap<Node, string[]>()
+    const compiledStyles = new WeakSet<Node>()
     const imageFor = (value: string): string | undefined => {
       if (embeddedImage.test(value.trim())) return reserve(value.trim())
       const url = resolvePreviewImageURL(value, baseUrl)
@@ -82,7 +83,7 @@ export const renderStaticHtml = (body: string, options: StaticHtmlOptions = {}):
       return image && embeddedImage.test(image) ? reserve(image) : undefined
     }
     const rewriteCss = (css: string): string => {
-      if (options.cssTransform) css = options.cssTransform(css, baseUrl)
+      if (options.cssTransform) return reserve(options.cssTransform(css, baseUrl)) || ''
       if (!options.onImageUrl && !options.images) return css
       const parsed = valueParser(css)
       parsed.walk((node) => {
@@ -125,6 +126,7 @@ export const renderStaticHtml = (body: string, options: StaticHtmlOptions = {}):
             const css = reserve(options.styles?.get(url))
             if (css !== undefined) {
               const style = node.ownerDocument!.createElement('style')
+              compiledStyles.add(style)
               style.textContent = css.replace(/</g, '\\3c ')
               const media = element.getAttribute('media')
               if (media) style.setAttribute('media', media)
@@ -133,7 +135,8 @@ export const renderStaticHtml = (body: string, options: StaticHtmlOptions = {}):
           }
         }
       }
-      if (node.nodeName === 'STYLE') node.textContent = rewriteCss(node.textContent || '').replace(/</g, '\\3c ')
+      if (node.nodeName === 'STYLE' && !compiledStyles.has(node))
+        node.textContent = rewriteCss(node.textContent || '').replace(/</g, '\\3c ')
     })
     purifier.addHook('beforeSanitizeAttributes', (node) => {
       if (node.nodeName !== 'IMG') return

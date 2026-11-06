@@ -6,7 +6,6 @@ export interface CapturedImageContext {
   request?: string
   https?: boolean
   signal?: AbortSignal
-  images?: Map<string, string>
 }
 
 type Invoke = (channel: string, params: unknown) => Promise<any>
@@ -40,7 +39,7 @@ export const replayCapturedImages = async (
   })
   if (!urls.size || context.signal?.aborted) return initial
 
-  const images = context.images || new Map<string, string>()
+  const images = new Map<string, string>()
   const pending = [...urls.keys()]
   let totalBytes = 0
   let stopped = false
@@ -59,7 +58,7 @@ export const replayCapturedImages = async (
       })
       // SearchURL is fuzzy. Validate the full URL, including its query, locally.
       const matches = (result.Data || [])
-        .filter((flow) => resolvePreviewImageURL(flow.Url) === url && flow.StatusCode === 200)
+        .filter((flow) => resolvePreviewImageURL(flow.Url) === url && Number(flow.StatusCode) === 200)
         .sort((a, b) => Number(b.Id) - Number(a.Id))
         .slice(0, 3)
       for (const candidate of matches) {
@@ -69,7 +68,7 @@ export const replayCapturedImages = async (
           stopped ||
           context.signal?.aborted ||
           resolvePreviewImageURL(flow.Url) !== url ||
-          flow.StatusCode !== 200 ||
+          Number(flow.StatusCode) !== 200 ||
           flow.IsTooLargeResponse ||
           !flow.Response?.length ||
           flow.BodyLength > maxImageBytes ||
