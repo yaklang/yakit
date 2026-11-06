@@ -4,6 +4,8 @@ import ts from 'typescript'
 import _ from 'lodash'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createHTTPFuzzerRun } from '../httpFuzzerRun'
+import { fuzzerPageScope, fuzzerRawStore, saveFuzzerRaw } from '../fuzzerRawStore'
+import { FuzzerResponseSizeWarnBytes } from '@/defaultConstants/HTTPFuzzerPage'
 import { createMcpWebFuzzerExecutionSlot } from '../mcpWebFuzzerExecutionSlot'
 
 // Execute the real page control paths without loading Monaco and the Electron UI.
@@ -40,7 +42,14 @@ const streamEffect = findOne(
     node.expression.expression.getText(source) === 'useEffect' &&
     node.getText(source).includes('const dataToken = `${token}-data`'),
 )
-const executable = ts.transpileModule([...declarations, streamEffect].join('\n'), {
+const addListResponseBytesDecl = findOne(
+  (node) =>
+    ts.isVariableStatement(node) &&
+    node.declarationList.declarations.some(
+      (declaration) => declaration.name.getText(source) === 'addListResponseBytes',
+    ),
+)
+const executable = ts.transpileModule([...declarations, addListResponseBytesDecl, streamEffect].join('\n'), {
   compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None },
 }).outputText
 
@@ -57,6 +66,11 @@ const setup = () => {
   const bindings: Record<string, any> = {
     _,
     createHTTPFuzzerRun,
+    saveFuzzerRaw,
+    fuzzerPageScope,
+    fuzzerRawStore,
+    FuzzerResponseSizeWarnBytes,
+    props: { id: 'page' },
     useMemoizedFn: (fn: unknown) => fn,
     useEffect: (fn: () => () => void) => {
       streamEffectFn = fn
@@ -134,6 +148,8 @@ const setup = () => {
     inViewportRef: true,
     restoreOpRef: 0,
     fuzzerTableMaxDataRef: 100,
+    responseBytesRef: 0,
+    responseSizeWarnedRef: false,
     responseSearchDraftRef: '',
     requestRef: '',
     previewNetworkRef: undefined,
@@ -418,6 +434,112 @@ describe('HTTPFuzzerPage real IPC control paths', () => {
     dispose()
   })
 
+  it('does not delete a response that is inserted again before the overflow timer', async () => {
+    const { api, bindings: b, ipc, token, dispose } = setup()
+    api.submitToHTTPFuzzer()
+    b.fuzzerTableMaxDataRef.current = 1
+    const emit = (id: string, raw: number[]) =>
+      ipc.emit(
+        `${token()}-data`,
+        {},
+        {
+          UUID: id,
+          TaskId: '42',
+          RuntimeID: 'runtime-a',
+          Ok: true,
+          RequestRaw: new Uint8Array([1]),
+          ResponseRaw: new Uint8Array(raw),
+        },
+      )
+    emit('same', [1])
+    emit('other', [2])
+    expect(b.successFuzzerRef.current.map((row: { UUID: string }) => row.UUID)).toEqual(['other'])
+    emit('same', [9])
+    expect(b.successFuzzerRef.current.map((row: { UUID: string }) => row.UUID)).toEqual(['same'])
+    await vi.advanceTimersByTimeAsync(2500)
+    const kept = b.successFuzzerRef.current[0]
+    expect(kept.RequestRaw).not.toBeNull()
+    expect(Array.from((await fuzzerRawStore.get(fuzzerPageScope('page'), 'same')) || [])).toEqual([9])
+    dispose()
+  })
+
+  it('keeps raw scope and version across an empty streaming update, then advances the version', async () => {
+    const { api, bindings: b, ipc, token, dispose } = setup()
+    api.submitToHTTPFuzzer()
+    const emit = (raw?: number[]) =>
+      ipc.emit(
+        `${token()}-data`,
+        {},
+        {
+          UUID: 'stream',
+          TaskId: '42',
+          RuntimeID: 'runtime-a',
+          Ok: true,
+          RequestRaw: new Uint8Array([1]),
+          ResponseRaw: raw ? new Uint8Array(raw) : new Uint8Array(),
+        },
+      )
+    emit([2])
+    const row = b.successFuzzerRef.current[0]
+    const scope = fuzzerPageScope('page')
+    expect(row.RawScope).toBe(scope)
+    expect(row.RawVersion).toBe(1)
+    expect(Array.from((await fuzzerRawStore.get(scope, 'stream')) || [])).toEqual([2])
+    emit()
+    expect(b.successFuzzerRef.current).toHaveLength(1)
+    expect(row.RawScope).toBe(scope)
+    expect(row.RawVersion).toBe(1)
+    expect(Array.from((await fuzzerRawStore.get(scope, 'stream')) || [])).toEqual([2])
+    emit([9])
+    expect(row.RawVersion).toBe(2)
+    expect(Array.from((await fuzzerRawStore.get(scope, 'stream')) || [])).toEqual([9])
+    dispose()
+  })
+
+  it('warns once when listed response size exceeds the limit and again after a new send', () => {
+    const { api, bindings: b, ipc, token, dispose } = setup()
+    api.submitToHTTPFuzzer()
+    const emit = (id: string, bodyLength: number) =>
+      ipc.emit(
+        `${token()}-data`,
+        {},
+        {
+          UUID: id,
+          TaskId: '42',
+          RuntimeID: 'runtime-a',
+          Ok: true,
+          BodyLength: bodyLength,
+          RequestRaw: new Uint8Array([1]),
+          ResponseRaw: new Uint8Array([2]),
+        },
+      )
+    const sizeWarnings = () =>
+      b.yakitNotify.mock.calls.filter(
+        (call: unknown[]) => call[0] === 'warning' && call[1] === 'HTTPFuzzerPage.responseSizeTooLarge',
+      )
+    emit('small', 1)
+    expect(sizeWarnings()).toHaveLength(0)
+    emit('big', FuzzerResponseSizeWarnBytes + 1)
+    expect(sizeWarnings()).toHaveLength(1)
+    emit('again', 1)
+    expect(sizeWarnings()).toHaveLength(1)
+    api.submitToHTTPFuzzer()
+    emit('big-again', FuzzerResponseSizeWarnBytes + 1)
+    expect(sizeWarnings()).toHaveLength(2)
+    dispose()
+  })
+
+  it('stores each response outside the list and keeps the request on the row', async () => {
+    const { api, bindings: b, send, dispose } = setup()
+    api.submitToHTTPFuzzer()
+    send('body-1')
+    const row = b.successFuzzerRef.current[0]
+    expect(Array.from(row.RequestRaw)).toEqual([1])
+    expect(row.ResponseRaw).toHaveLength(0)
+    expect(Array.from((await fuzzerRawStore.get(fuzzerPageScope('page'), 'body-1')) || [])).toEqual([2])
+    dispose()
+  })
+
   it('decodes defaultHttpResponse only while the config panel stays open', () => {
     const declaration = findOne(
       (node) =>
@@ -432,6 +554,7 @@ describe('HTTPFuzzerPage real IPC control paths', () => {
       const caseBindings = {
         useMemo: (factory: () => unknown) => factory(),
         configKeepAlive,
+        sampleStoredRaw: new Uint8Array(),
         multipleReturnsHttpResponse: { ResponseRaw: new Uint8Array([1, 2, 3]) },
         Uint8ArrayToString: decode,
       }
@@ -713,6 +836,8 @@ const setupRestoreFlow = (
     t: (value: string) => value,
     YakitRoute: { HTTPFuzzer: 'fuzzer' },
     props: { id: 'page' },
+    fuzzerRawStore,
+    fuzzerPageScope,
     inViewport: true,
     streamRunRef: { current: null },
     tokenRef,
@@ -722,6 +847,8 @@ const setupRestoreFlow = (
     successFuzzerRef: { current: [] },
     failedFuzzerRef: { current: [] },
     fuzzerResChartDataBufferRef: { current: [] },
+    responseBytesRef: { current: 0 },
+    responseSizeWarnedRef: { current: false },
     successCountRef: { current: 0 },
     failedCountRef: { current: 0 },
     retryRef: { current: false },
@@ -734,6 +861,24 @@ const setupRestoreFlow = (
   )
   return { api, bindings, invoke, page, requestRef, tokenRef, resolveProbe }
 }
+
+describe('batch response extract', () => {
+  it('hydrates stored responses before the extractor reads them', () => {
+    expect(source.getFullText()).toContain('fillFuzzerRawList(successResponses())')
+  })
+})
+
+describe('keyword search across scopes', () => {
+  it('reads each row from its own raw scope', () => {
+    const table = readFileSync(
+      'app/renderer/src/main/src/pages/fuzzer/components/HTTPFuzzerPageTable/HTTPFuzzerPageTable.tsx',
+      'utf8',
+    )
+    expect(table).toContain('const scope = row.RawScope || fallbackScope')
+    expect(table).toContain('fuzzerRawStore.getMany(scope, ids)')
+    expect(table).toContain('found.set(item.key, bytes)')
+  })
+})
 
 describe('history restore through the real loadHistory path', () => {
   beforeEach(() => vi.useFakeTimers())

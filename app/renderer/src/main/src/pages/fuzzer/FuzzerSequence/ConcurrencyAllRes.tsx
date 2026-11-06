@@ -28,6 +28,7 @@ import {
 import { FuzzerConcurrentLoad } from '../FuzzerConcurrentLoad/FuzzerConcurrentLoad'
 import { SecondNodeTitle, SecondNodeExtra, type FuzzerShowSuccess } from '../HTTPFuzzerPage'
 import { emptyFuzzer } from '@/defaultConstants/HTTPFuzzerPage'
+import { useFuzzerResponseRaw } from '../fuzzerRawStore'
 
 import styles from './ConcurrencyAllRes.module.scss'
 import type { DebugProps } from './FuzzerPageSetting'
@@ -90,13 +91,12 @@ export const ConcurrencyAllRes: React.FC<ConcurrencyAllResProps> = React.memo((p
     return failedCount + successCount
   }, [failedCount, successCount])
 
-  const defaultHttpResponse: string = useMemo(() => {
-    if (responseInfo && successFuzzer.length > 0) {
-      const firstSuccessResponse = successFuzzer[0]
-      return new TextDecoder().decode(firstSuccessResponse.ResponseRaw || new Uint8Array())
-    }
-    return ''
-  }, [responseInfo, successFuzzer])
+  const sampleRow = successFuzzer[0]
+  const sampleRaw = useFuzzerResponseRaw(sampleRow?.UUID, sampleRow?.RawVersion, inViewport, sampleRow?.RawScope)
+  const defaultHttpResponse = useMemo(() => {
+    const raw = sampleRaw.byteLength ? sampleRaw : sampleRow?.ResponseRaw
+    return raw?.byteLength ? new TextDecoder().decode(raw) : ''
+  }, [sampleRaw, sampleRow?.ResponseRaw])
 
   useEffect(() => {
     getRemoteValue(RemoteGV.FuzzerSequenceSettingShow).then((data) => {

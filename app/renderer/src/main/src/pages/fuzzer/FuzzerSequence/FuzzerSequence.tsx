@@ -69,6 +69,7 @@ import {
   SecondNodeTitle,
   advancedConfigValueToFuzzerRequests,
 } from '../HTTPFuzzerPage'
+import { fuzzerRawStore, fuzzerSequenceScope, saveFuzzerRaw, useFuzzerResponseRaw } from '../fuzzerRawStore'
 import { randomString } from '@/utils/randomUtil'
 import { getRemoteValue } from '@/utils/kv'
 import type { AdvancedConfigValueProps } from '../HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType'
@@ -372,7 +373,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
       const r = {
         ...Response,
         Headers: Response.Headers || [],
-        UUID: Response.UUID,
+        UUID: Response.UUID || randomString(16),
         Count: countRef.current.get(FuzzerIndex),
         cellClassName: '',
       } as FuzzerResponse
@@ -382,14 +383,19 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         r.cellClassName = colors
       }
 
-      // 分类存储成功/失败响应
+      // 用组件自己的 groupId 而不是全局 selectGroupId：多组常驻渲染时，
+      // 后台组的流数据不能写进当前选中组的 scope，否则切组重跑会误删
+      const rawScope = fuzzerSequenceScope(props.groupId, 'concurrency', FuzzerIndex)
+      rawScopesRef.current.add(rawScope)
+      saveFuzzerRaw(rawScope, r)
+      const fuzzerTableMaxData = fuzzerTableMaxDataRef.current.get(FuzzerIndex) || DefFuzzerTableMaxData
       if (Response.Ok) {
         const successList = successBufferRef.current.get(FuzzerIndex)
-        const fuzzerTableMaxData = fuzzerTableMaxDataRef.current.get(FuzzerIndex) || DefFuzzerTableMaxData
         if (successList) {
           successList.push(r)
           if (successList.length > fuzzerTableMaxData) {
-            successList.shift()
+            const oldest = successList.shift()
+            scheduleOverflowDelete(rawScope, oldest?.UUID)
           }
           successBufferRef.current.set(FuzzerIndex, successList)
         } else {
@@ -399,6 +405,10 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         const failedList = failedBufferRef.current.get(FuzzerIndex)
         if (failedList) {
           failedList.push(r)
+          if (failedList.length > fuzzerTableMaxData) {
+            const oldest = failedList.shift()
+            scheduleOverflowDelete(rawScope, oldest?.UUID)
+          }
           failedBufferRef.current.set(FuzzerIndex, failedList)
         } else {
           failedBufferRef.current.set(FuzzerIndex, [r])
@@ -529,6 +539,30 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
   const failedCountRef = useRef<Map<string, number>>(new Map())
   const successBufferRef = useRef<Map<string, FuzzerResponse[]>>(new Map())
   const failedBufferRef = useRef<Map<string, FuzzerResponse[]>>(new Map())
+  const rawScopesRef = useRef<Set<string>>(new Set())
+  // 延迟删除按 scope 记轮次。只重跑或重匹配一部分节点时，别的 scope 上还没执行的删除仍然要发生。
+  const rawEvictGenerationRef = useRef(new Map<string, number>())
+  const cancelPendingRawDeletes = useMemoizedFn((scopes?: string[]) => {
+    const targets = scopes ?? [...rawScopesRef.current]
+    targets.forEach((scope) => {
+      if (!scope) return
+      rawEvictGenerationRef.current.set(scope, (rawEvictGenerationRef.current.get(scope) || 0) + 1)
+    })
+  })
+  const responseStillListed = (scope: string, uuid: string) =>
+    [successBufferRef.current, failedBufferRef.current].some((rowsByIndex) =>
+      [...rowsByIndex.values()].some((rows) => rows.some((row) => row?.UUID === uuid && row?.RawScope === scope)),
+    )
+  const scheduleOverflowDelete = useMemoizedFn((scope: string, uuid?: string) => {
+    if (!scope || !uuid) return
+    const generation = rawEvictGenerationRef.current.get(scope) || 0
+    setTimeout(() => {
+      if (generation !== (rawEvictGenerationRef.current.get(scope) || 0)) return
+      // 同一条 UUID 又写回表格时，不能把新正文删掉
+      if (responseStillListed(scope, uuid)) return
+      void fuzzerRawStore.deleteUuid(scope, uuid)
+    }, 2000)
+  })
   const countRef = useRef<Map<string, number>>(new Map())
   const runtimeIdBufferRef = useRef<Map<string, string[]>>(new Map())
   const fuzzerTableMaxDataRef = useRef<Map<string, number>>(new Map())
@@ -608,10 +642,16 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
 
     // 淘汰行在表格节流刷新前仍可能挂在界面上，字节需保底存活一段时间，避免点到旧行时编辑器内容为空
     const RELEASE_GRACE_MS = 2000
-    const releaseQueue: { item: FuzzerResponse; at: number }[] = []
+    const releaseQueue: { item: FuzzerResponse; at: number; scope: string; generation: number }[] = []
     let releaseTimer: NodeJS.Timeout | null = null
     const scheduleRelease = (item: FuzzerResponse) => {
-      releaseQueue.push({ item, at: Date.now() })
+      const scope = item.RawScope || ''
+      releaseQueue.push({
+        item,
+        at: Date.now(),
+        scope,
+        generation: rawEvictGenerationRef.current.get(scope) || 0,
+      })
       if (!releaseTimer) {
         releaseTimer = setInterval(() => {
           if (releaseQueue.length === 0) {
@@ -623,9 +663,26 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
           const now = Date.now()
           let batch = Math.max(50, Math.ceil(releaseQueue.length / 5))
           while (batch > 0 && releaseQueue.length > 0 && now - releaseQueue[0].at >= RELEASE_GRACE_MS) {
-            const { item } = releaseQueue.shift()!
+            const { item, generation, scope } = releaseQueue.shift()!
             item.RequestRaw = null as unknown as Uint8Array
             item.ResponseRaw = null as unknown as Uint8Array
+            // 这个 scope 又开始新一轮，或同一条 UUID 还在表里时，不要删掉新写进去的正文。
+            const uuid = item.UUID
+            const stillListed =
+              !!uuid &&
+              [successBufferRef.current, failedBufferRef.current].some((rowsByIndex) =>
+                [...rowsByIndex.values()].some((rows) =>
+                  rows.some((row) => row?.UUID === uuid && row?.RawScope === scope),
+                ),
+              )
+            if (
+              generation === (rawEvictGenerationRef.current.get(scope) || 0) &&
+              item.RawScope &&
+              uuid &&
+              !stillListed
+            ) {
+              void fuzzerRawStore.deleteUuid(item.RawScope, uuid)
+            }
             batch--
           }
         }, 500)
@@ -680,7 +737,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
       let r = {
         ...Response,
         Headers: Response.Headers || [],
-        UUID: Response.UUID,
+        UUID: Response.UUID || randomString(16),
         Count: countRef.current.get(FuzzerIndex),
         cellClassName: '',
       } as FuzzerResponse
@@ -690,15 +747,21 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         r.cellClassName = colors
       }
 
+      // 同上：用 props.groupId，避免后台组写错 scope
+      const rawScope = fuzzerSequenceScope(props.groupId, 'sequence', FuzzerIndex)
+      rawScopesRef.current.add(rawScope)
+      saveFuzzerRaw(rawScope, r)
+      const fuzzerTableMaxData = fuzzerTableMaxDataRef.current.get(FuzzerIndex) || DefFuzzerTableMaxData
       if (Response.Ok) {
         const successList = successBufferRef.current.get(FuzzerIndex)
-        const fuzzerTableMaxData = fuzzerTableMaxDataRef.current.get(FuzzerIndex) || DefFuzzerTableMaxData
         if (successList) {
           successList.push(r)
           // 超过最大显示 展示最新数据
           if (successList.length > fuzzerTableMaxData) {
             const oldest = successList.shift()
-            if (oldest) scheduleRelease(oldest)
+            if (oldest) {
+              scheduleRelease(oldest)
+            }
           }
           successBufferRef.current.set(FuzzerIndex, successList)
         } else {
@@ -708,6 +771,12 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         const failedList = failedBufferRef.current.get(FuzzerIndex)
         if (failedList) {
           failedList.push(r)
+          if (failedList.length > fuzzerTableMaxData) {
+            const oldest = failedList.shift()
+            if (oldest) {
+              scheduleRelease(oldest)
+            }
+          }
           failedBufferRef.current.set(FuzzerIndex, failedList)
         } else {
           failedBufferRef.current.set(FuzzerIndex, [r])
@@ -763,6 +832,12 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
       ipcRenderer.removeAllListeners(errToken)
       ipcRenderer.removeAllListeners(dataToken)
       ipcRenderer.removeAllListeners(endToken)
+      if (releaseTimer) clearInterval(releaseTimer)
+      releaseQueue.length = 0
+      cancelPendingRawDeletes()
+      rawScopesRef.current.forEach((scope) => {
+        void fuzzerRawStore.deleteScope(scope)
+      })
     }
   }, [])
 
@@ -1147,6 +1222,15 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     }
     const httpParams = getHttpParams()
     if (!httpParams.length) return
+    // 只清当前模式这次要重跑的节点，另一个模式的原文还留着。
+    const rerunScopes = currentList.map((item) =>
+      fuzzerSequenceScope(props.groupId, isConcurrency ? 'concurrency' : 'sequence', item.id),
+    )
+    cancelPendingRawDeletes(rerunScopes)
+    rerunScopes.forEach((scope) => {
+      void fuzzerRawStore.deleteScope(scope)
+      rawScopesRef.current.delete(scope)
+    })
     !isConcurrency && setLoading(true)
     onClearRef()
     resetResponse()
@@ -1221,6 +1305,13 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     try {
       const requests = getHttpParams()
       if (!requests.length) return
+      // 批量重匹配会复用这些并发节点的 scope。先丢掉上一轮原文，别的模式不动。
+      const rematchScopes = currentList.map((item) => fuzzerSequenceScope(props.groupId, 'concurrency', item.id))
+      cancelPendingRawDeletes(rematchScopes)
+      rematchScopes.forEach((scope) => {
+        void fuzzerRawStore.deleteScope(scope)
+        rawScopesRef.current.delete(scope)
+      })
       onClearRef()
       resetResponse()
       resetDroppedCount()
@@ -1287,6 +1378,10 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
 
       // 清空当前项的所有缓存数据
       const itemId = currentSequenceItem.id
+      const rematchScope = fuzzerSequenceScope(props.groupId, isConcurrency ? 'concurrency' : 'sequence', itemId)
+      cancelPendingRawDeletes([rematchScope])
+      void fuzzerRawStore.deleteScope(rematchScope)
+      rawScopesRef.current.delete(rematchScope)
       successCountRef.current.set(itemId, 0)
       failedCountRef.current.set(itemId, 0)
       successBufferRef.current.set(itemId, [])
@@ -1679,20 +1774,22 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
       updatePagesDataCacheById(YakitRoute.HTTPFuzzer, { ...newCurrentItem })
     }
   })
-  /**多条数据返回的第一条数据的ResponseRaw,一条数据就返回这一条的 ResponseRaw */
-  const defaultHttpResponse: string = useMemo(() => {
-    if (currentSelectResponse) {
-      const { onlyOneResponse, successFuzzer } = currentSelectResponse
-      if (successFuzzer.length > 1) {
-        const firstSuccessResponse = successFuzzer[0]
-        return Uint8ArrayToString(firstSuccessResponse.ResponseRaw || '')
-      } else {
-        return Uint8ArrayToString(onlyOneResponse.ResponseRaw || '')
-      }
-    } else {
-      return Uint8ArrayToString(emptyFuzzer.ResponseRaw || '')
-    }
-  }, [currentSelectResponse, currentSelectRequest])
+  const sampleRow = currentSelectResponse
+    ? currentSelectResponse.successFuzzer.length > 1
+      ? currentSelectResponse.successFuzzer[0]
+      : currentSelectResponse.onlyOneResponse
+    : undefined
+  const sampleRaw = useFuzzerResponseRaw(
+    sampleRow?.UUID,
+    sampleRow?.RawVersion,
+    inViewport === true,
+    sampleRow?.RawScope,
+  )
+  /** 多条结果时用第一条的响应原文，只有一条时用那一条。原文在 IndexedDB 里。 */
+  const defaultHttpResponse = useMemo(() => {
+    const raw = sampleRaw.byteLength ? sampleRaw : sampleRow?.ResponseRaw
+    return Uint8ArrayToString(raw || new Uint8Array())
+  }, [sampleRaw, sampleRow?.ResponseRaw])
   /**提取器和匹配器的值 */
   const matcherAndExtractionValue: MatcherAndExtractionValueProps = useCreation(() => {
     const matchData: MatcherValueProps = {
@@ -2717,6 +2814,13 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
     const onlyOneResponse: boolean = useCreation(() => {
       return cachedTotal === 1
     }, [cachedTotal])
+    const sequenceStoredRaw = useFuzzerResponseRaw(
+      onlyOneResponse ? httpResponse?.UUID : undefined,
+      httpResponse?.RawVersion,
+      inViewport,
+      httpResponse?.RawScope,
+    )
+    const sequenceResponsePacket = httpResponse?.ResponseRaw?.byteLength ? httpResponse.ResponseRaw : sequenceStoredRaw
 
     const { queryPagesDataById, updatePagesDataCacheById } = usePageInfo(
       (s) => ({
@@ -3025,8 +3129,8 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                 oneResponseValue={
                   onlyOneResponse
                     ? {
-                        originValue: Uint8ArrayToString(httpResponse.ResponseRaw),
-                        originalPackage: httpResponse.ResponseRaw,
+                        originValue: Uint8ArrayToString(sequenceResponsePacket),
+                        originalPackage: sequenceResponsePacket,
                       }
                     : undefined
                 }
@@ -3040,11 +3144,12 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
               {onlyOneResponse ? (
                 <ResponseViewer
                   ref={responseViewerRef}
+                  inViewport={inViewport}
                   fuzzerResponse={httpResponse}
                   defaultResponseSearch={defaultResponseSearch}
                   request={requestHttpRef.current}
                   isHttps={advancedConfigValue.isHttps}
-                  webFuzzerValue={Uint8ArrayToString(httpResponse.ResponseRaw)}
+                  webFuzzerValue={Uint8ArrayToString(sequenceResponsePacket)}
                   showMatcherAndExtraction={showMatcherAndExtraction}
                   setShowMatcherAndExtraction={setShowMatcherAndExtraction}
                   matcherValue={matcherValue}

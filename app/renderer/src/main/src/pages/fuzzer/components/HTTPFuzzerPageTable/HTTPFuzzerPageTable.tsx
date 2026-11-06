@@ -48,7 +48,19 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import type { ExportDataType } from '@/utils/exporter'
 import { ExtractedFilter, TableFilterAndSorter, StatusCodeInputFilter } from './extractedFilter'
 import { useChunkAutoScrollToBottom } from '../../hooks/useAutoScrollToBottom'
+import { fuzzerTablePreview, type FuzzerPreviewMemory } from './fuzzerTablePreview'
+import {
+  createKeywordSearchCache,
+  fuzzerPageScope,
+  fuzzerRawSearchKey,
+  fuzzerRawStore,
+  fillFuzzerRaw,
+  fillFuzzerRawList,
+  assignFuzzerTableRowKeys,
+  useFuzzerResponseRaw,
+} from '../../fuzzerRawStore'
 import { YakitAlert } from '@/components/yakitUI/YakitAlert/YakitAlert'
+import { YakitCopyText } from '@/components/yakitUI/YakitCopyText/YakitCopyText'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -215,8 +227,10 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
     const bodyLengthRef = useRef<any>()
     const durationMsRef = useRef<any>()
     const tableRef = useRef<any>(null)
-    // 同一 ResponseRaw 引用复用解码结果，避免关键词过滤每批全量 Uint8ArrayToString
-    const responseSearchTextCacheRef = useRef(new WeakMap<object, string>())
+    const rawScope = currentSelectItem?.RawScope || (pageId ? fuzzerPageScope(pageId) : undefined)
+    const storedRaw = useFuzzerResponseRaw(currentSelectItem?.UUID, currentSelectItem?.RawVersion, inViewport, rawScope)
+    const requestBytes = currentSelectItem?.RequestRaw || new Uint8Array()
+    const responseBytes = currentSelectItem?.ResponseRaw?.byteLength ? currentSelectItem.ResponseRaw : storedRaw
 
     const [scrollToIndex, setScrollToIndex] = useState<number>()
     const [alertHeight, setAlertHeight] = useState<number>(0)
@@ -504,7 +518,9 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                 sorter: true,
               },
               render: (v) => {
-                return v ? v.join(',') : '-'
+                if (!v?.length) return '-'
+                const text = v.join(',')
+                return <YakitCopyText showText={text} />
               },
             },
             ...(!hasExtractorRules ? [extractedResultsColumn] : []),
@@ -571,18 +587,26 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                           <HollowLightningBoltIcon
                             onClick={(e) => {
                               e.stopPropagation()
-                              if (onDebug) {
-                                onDebug({
-                                  httpResponse: Uint8ArrayToString(record.ResponseRaw),
-                                  httpRequest: record.RequestRaw ? Uint8ArrayToString(record.RequestRaw) : undefined,
-                                  isHttps: record?.IsHTTPS,
+                              void fillFuzzerRaw(record)
+                                .then((full) => {
+                                  if (onDebug) {
+                                    onDebug({
+                                      httpResponse: Uint8ArrayToString(full.ResponseRaw),
+                                      httpRequest: full.RequestRaw?.byteLength
+                                        ? Uint8ArrayToString(full.RequestRaw)
+                                        : undefined,
+                                      isHttps: full?.IsHTTPS,
+                                    })
+                                  } else {
+                                    emiter.emit(
+                                      'openMatcherAndExtraction',
+                                      JSON.stringify({ httpResponseCode: Uint8ArrayToString(full.ResponseRaw) }),
+                                    )
+                                  }
                                 })
-                              } else {
-                                const value = {
-                                  httpResponseCode: Uint8ArrayToString(record.ResponseRaw),
-                                }
-                                emiter.emit('openMatcherAndExtraction', JSON.stringify(value))
-                              }
+                                .catch((err) => {
+                                  yakitFailed(t('YakitNotification.loadFailed', { error: err + '' }))
+                                })
                             }}
                             style={{
                               color: !isCellRedSingleColor(record.cellClassName) ? '' : '#fff',
@@ -698,7 +722,11 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
       })
     })
     const onDetails = useMemoizedFn((record, index: number) => {
-      analyzeFuzzerResponse(record, index, data)
+      void fillFuzzerRaw(record)
+        .then((full) => analyzeFuzzerResponse(full, index, data))
+        .catch((err) => {
+          yakitFailed(t('YakitNotification.loadFailed', { error: err + '' }))
+        })
     })
     const onTableChange = useMemoizedFn((page: number, limit: number, sorter: SortProps, filters: any, extra?: any) => {
       const l = bodyLengthRef?.current?.getValue() || {}
@@ -743,169 +771,211 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
     /**
      * @description 前端搜索
      */
+    const queryTokenRef = useRef(0)
+    const keywordCacheRef = useRef(createKeywordSearchCache(Uint8ArrayToString))
     const queryData = useMemoizedFn(() => {
       if (!inViewport) return
-      try {
-        // ------------  搜索 开始  ------------
-        const newDataTable = sortedData
-        // 有搜索条件才循环
-        if (
-          query?.keyWord ||
-          (query?.StatusCode && query?.StatusCode?.length > 0) ||
-          (query?.Color && query?.Color?.length > 0) ||
-          query?.afterBodyLength ||
-          query?.beforeBodyLength ||
-          query?.afterDurationMs ||
-          query?.beforeDurationMs ||
-          (query?.ExtractedResults && query?.ExtractedResults?.length > 0) ||
-          query?.ExtractedResultsNotEmpty
-        ) {
-          const l = newDataTable.length
-          const searchList: FuzzerResponse[] = []
-          const statusCodes = query?.StatusCode ? parseStatusCodes(query.StatusCode) : []
-          for (let index = 0; index < l; index++) {
-            const record = newDataTable[index]
-            // 关键字搜索是否满足，默认 满足，以下同理,搜索同时为true时，push新数组
-            let keyWordIsPush = true
-            let statusCodeIsPush = true
-            let bodyLengthMinIsPush = true
-            let bodyLengthMaxIsPush = true
-            let durationMsMinIsPush = true
-            let durationMsMaxIsPush = true
-            let isHaveDataIsPush = true
-            let colorIsPush = true
-            // 搜索满足条件 交集
-            // 颜色搜索
-            // 去掉record.MatchedByMatcher bug：有些MatchedByMatcher为false的也需要被筛选掉
-            if (query?.Color && query?.Color?.length > 0) {
-              const cLength = query.Color
-              let colorFlag = false
-              for (let index = 0; index < cLength.length; index++) {
-                const element = query.Color[index]
-                if (record.HitColor.toUpperCase().indexOf(element) > -1) {
-                  colorFlag = true
-                  break
+      const token = ++queryTokenRef.current
+      void (async () => {
+        try {
+          // ------------  搜索 开始  ------------
+          const newDataTable = sortedData
+          // 有搜索条件才循环
+          // 只缓存「响应是否命中关键字」，只读取还没算过的行，不把响应文本留在内存里
+          const keyWord = query?.keyWord
+          const keywordCache = keywordCacheRef.current
+          if (keyWord) {
+            // 并发组的总表会拼上多个请求的响应，每行 scope 不同，不能拿第一行的 scope 去读全部。
+            const fallbackScope = pageId ? fuzzerPageScope(pageId) : ''
+            await keywordCache.fill(keyWord, newDataTable, async (keys) => {
+              const wanted = new Set(keys)
+              const groups = new Map<string, { uuid: string; key: string }[]>()
+              newDataTable.forEach((row) => {
+                const key = fuzzerRawSearchKey(row)
+                if (!key || !wanted.has(key) || !row.UUID) return
+                const scope = row.RawScope || fallbackScope
+                if (!scope) return
+                const item = { uuid: row.UUID, key }
+                const list = groups.get(scope)
+                if (list) list.push(item)
+                else groups.set(scope, [item])
+              })
+              const found = new Map<string, Uint8Array>()
+              await Promise.all(
+                [...groups].map(async ([scope, items]) => {
+                  const ids = items.map((item) => item.uuid)
+                  const part = await fuzzerRawStore.getMany(scope, ids)
+                  items.forEach((item) => {
+                    const bytes = part.get(item.uuid)
+                    if (bytes) found.set(item.key, bytes)
+                  })
+                }),
+              )
+              return found
+            })
+          } else {
+            keywordCache.prepare('', [])
+          }
+          if (token !== queryTokenRef.current) return
+          if (
+            query?.keyWord ||
+            (query?.StatusCode && query?.StatusCode?.length > 0) ||
+            (query?.Color && query?.Color?.length > 0) ||
+            query?.afterBodyLength ||
+            query?.beforeBodyLength ||
+            query?.afterDurationMs ||
+            query?.beforeDurationMs ||
+            (query?.ExtractedResults && query?.ExtractedResults?.length > 0) ||
+            query?.ExtractedResultsNotEmpty
+          ) {
+            const l = newDataTable.length
+            const searchList: FuzzerResponse[] = []
+            const statusCodes = query?.StatusCode ? parseStatusCodes(query.StatusCode) : []
+            for (let index = 0; index < l; index++) {
+              const record = newDataTable[index]
+              // 关键字搜索是否满足，默认 满足，以下同理,搜索同时为true时，push新数组
+              let keyWordIsPush = true
+              let statusCodeIsPush = true
+              let bodyLengthMinIsPush = true
+              let bodyLengthMaxIsPush = true
+              let durationMsMinIsPush = true
+              let durationMsMaxIsPush = true
+              let isHaveDataIsPush = true
+              let colorIsPush = true
+              // 搜索满足条件 交集
+              // 颜色搜索
+              // 去掉record.MatchedByMatcher bug：有些MatchedByMatcher为false的也需要被筛选掉
+              if (query?.Color && query?.Color?.length > 0) {
+                const cLength = query.Color
+                let colorFlag = false
+                for (let index = 0; index < cLength.length; index++) {
+                  const element = query.Color[index]
+                  if (record.HitColor.toUpperCase().indexOf(element) > -1) {
+                    colorFlag = true
+                    break
+                  }
                 }
+                colorIsPush = colorFlag
               }
-              colorIsPush = colorFlag
-            }
-            // 关键字搜索
-            if (query?.keyWord) {
-              const responseRaw = record.ResponseRaw || new Uint8Array()
-              let responseString = responseSearchTextCacheRef.current.get(responseRaw)
-              if (responseString === undefined) {
-                responseString = Uint8ArrayToString(responseRaw)
-                responseSearchTextCacheRef.current.set(responseRaw, responseString)
-              }
-              const payloadsString = (record.Payloads || []).join('')
-              let extractedResultsString = ''
-              if (extractedMap.size > 0) {
-                extractedResultsString = extractedMap.get(record['UUID']) || ''
-              } else {
-                extractedResultsString = (record.ExtractedResults || [])
-                  .map((item) => `${item.Key}: ${item.Value}`)
-                  .join('')
-              }
-              keyWordIsPush = (responseString + payloadsString + extractedResultsString).includes(query.keyWord)
-            }
-            // 状态码搜索
-            if (query?.StatusCode && query?.StatusCode?.length > 0) {
-              statusCodeIsPush = statusCodes.includes(record.StatusCode)
-            }
-            // 响应大小搜索
-            if (query?.afterBodyLength) {
-              // 最小
-              bodyLengthMinIsPush = Number(record.BodyLength) >= query.afterBodyLength
-            }
-            if (query?.beforeBodyLength) {
-              // 最大
-              bodyLengthMaxIsPush = Number(record.BodyLength) <= query.beforeBodyLength
-            }
-            // 延迟搜索
-            if (query?.afterDurationMs) {
-              // 最小
-              durationMsMinIsPush = Number(record.DurationMs) >= query.afterDurationMs
-            }
-            if (query?.beforeDurationMs) {
-              // 最大
-              durationMsMaxIsPush = Number(record.DurationMs) <= query.beforeDurationMs
-            }
-            // 是否有提取数据
-            if (query?.ExtractedResults || query?.ExtractedResultsNotEmpty) {
-              let extractedResultsString = ''
-              if (extractedMap.size > 0) {
-                extractedResultsString = extractedMap.get(record['UUID']) || ''
-              } else {
-                extractedResultsString = (record.ExtractedResults || [])
-                  .map((item) => `${item.Key}: ${item.Value}`)
-                  .join('')
-              }
-
-              // 不为空判断
-              if (query?.ExtractedResultsNotEmpty) {
-                isHaveDataIsPush = extractedMap.size
-                  ? extractedResultsString.trim().length > 0
-                  : (record.ExtractedResults || []).some((item) => item.Value && item.Value.trim().length > 0)
-              }
-
-              // 关键字匹配判断（如果有关键字）
-              if (query?.ExtractedResults && query.ExtractedResults.length > 0) {
-                const keyword = query.ExtractedResults.trim().toLocaleLowerCase()
-                const content = extractedResultsString.toLocaleLowerCase()
-                const matchType = query?.ExtractedResultsMatchType || 'includes'
-
-                const matchResult = matchType === 'includes' ? content.includes(keyword) : !content.includes(keyword)
-
-                // 如果同时有不为空和关键字条件，需要同时满足
-                if (query?.ExtractedResultsNotEmpty) {
-                  isHaveDataIsPush = isHaveDataIsPush && matchResult
+              // 关键字搜索
+              if (query?.keyWord) {
+                const responseHit = keywordCache.matches(record, query.keyWord)
+                const payloadsString = (record.Payloads || []).join('')
+                let extractedResultsString = ''
+                if (extractedMap.size > 0) {
+                  extractedResultsString = extractedMap.get(record['UUID']) || ''
                 } else {
-                  isHaveDataIsPush = matchResult
+                  extractedResultsString = (record.ExtractedResults || [])
+                    .map((item) => `${item.Key}: ${item.Value}`)
+                    .join('')
+                }
+                keyWordIsPush = responseHit || (payloadsString + extractedResultsString).includes(query.keyWord)
+              }
+              // 状态码搜索
+              if (query?.StatusCode && query?.StatusCode?.length > 0) {
+                statusCodeIsPush = statusCodes.includes(record.StatusCode)
+              }
+              // 响应大小搜索
+              if (query?.afterBodyLength) {
+                // 最小
+                bodyLengthMinIsPush = Number(record.BodyLength) >= query.afterBodyLength
+              }
+              if (query?.beforeBodyLength) {
+                // 最大
+                bodyLengthMaxIsPush = Number(record.BodyLength) <= query.beforeBodyLength
+              }
+              // 延迟搜索
+              if (query?.afterDurationMs) {
+                // 最小
+                durationMsMinIsPush = Number(record.DurationMs) >= query.afterDurationMs
+              }
+              if (query?.beforeDurationMs) {
+                // 最大
+                durationMsMaxIsPush = Number(record.DurationMs) <= query.beforeDurationMs
+              }
+              // 是否有提取数据
+              if (query?.ExtractedResults || query?.ExtractedResultsNotEmpty) {
+                let extractedResultsString = ''
+                if (extractedMap.size > 0) {
+                  extractedResultsString = extractedMap.get(record['UUID']) || ''
+                } else {
+                  extractedResultsString = (record.ExtractedResults || [])
+                    .map((item) => `${item.Key}: ${item.Value}`)
+                    .join('')
+                }
+
+                // 不为空判断
+                if (query?.ExtractedResultsNotEmpty) {
+                  isHaveDataIsPush = extractedMap.size
+                    ? extractedResultsString.trim().length > 0
+                    : (record.ExtractedResults || []).some((item) => item.Value && item.Value.trim().length > 0)
+                }
+
+                // 关键字匹配判断（如果有关键字）
+                if (query?.ExtractedResults && query.ExtractedResults.length > 0) {
+                  const keyword = query.ExtractedResults.trim().toLocaleLowerCase()
+                  const content = extractedResultsString.toLocaleLowerCase()
+                  const matchType = query?.ExtractedResultsMatchType || 'includes'
+
+                  const matchResult = matchType === 'includes' ? content.includes(keyword) : !content.includes(keyword)
+
+                  // 如果同时有不为空和关键字条件，需要同时满足
+                  if (query?.ExtractedResultsNotEmpty) {
+                    isHaveDataIsPush = isHaveDataIsPush && matchResult
+                  } else {
+                    isHaveDataIsPush = matchResult
+                  }
                 }
               }
+              if (
+                colorIsPush &&
+                keyWordIsPush &&
+                statusCodeIsPush &&
+                bodyLengthMinIsPush &&
+                bodyLengthMaxIsPush &&
+                durationMsMinIsPush &&
+                durationMsMaxIsPush &&
+                isHaveDataIsPush
+              ) {
+                searchList.push(record)
+              }
             }
-            if (
-              colorIsPush &&
-              keyWordIsPush &&
-              statusCodeIsPush &&
-              bodyLengthMinIsPush &&
-              bodyLengthMaxIsPush &&
-              durationMsMinIsPush &&
-              durationMsMaxIsPush &&
-              isHaveDataIsPush
-            ) {
-              searchList.push(record)
+            assignFuzzerTableRowKeys(searchList)
+            setListTable(searchList)
+            if (searchList.length > 0) {
+              scrollUpdate(searchList.length)
+            }
+          } else {
+            assignFuzzerTableRowKeys(newDataTable)
+            setListTable(newDataTable)
+            if (newDataTable.length > 0) {
+              scrollUpdate(newDataTable.length)
             }
           }
-          setListTable(searchList)
-          if (searchList.length > 0) {
-            scrollUpdate(searchList.length)
-          }
-        } else {
-          setListTable(newDataTable)
-          if (newDataTable.length > 0) {
-            scrollUpdate(newDataTable.length)
-          }
+          // ------------  搜索 结束  ------------
+        } catch (error) {
+          yakitFailed(t('YakitNotification.search_failed', { error: error + '' }))
         }
-        // ------------  搜索 结束  ------------
-      } catch (error) {
-        yakitFailed(t('YakitNotification.search_failed', { error: error + '' }))
-      }
+      })()
     })
 
     const onGetExportFuzzerEvent = useMemoizedFn((v: string) => {
-      try {
-        const obj: { pageId: string; type: ExportDataType } = JSON.parse(v)
-        if (pageId === obj.pageId) {
+      void (async () => {
+        try {
+          const obj: { pageId: string; type: ExportDataType } = JSON.parse(v)
+          if (pageId !== obj.pageId) return
+          const rows = await fillFuzzerRawList(listTable)
           // 处理Uint8Array经过JSON.parse(JSON.stringify())导致数据损失和变形
-          const newListTable = listTable.map((item) => ({
+          const newListTable = rows.map((item) => ({
             ...item,
             RequestRaw: Uint8ArrayToString(item.RequestRaw),
             ResponseRaw: Uint8ArrayToString(item.ResponseRaw),
           }))
           emiter.emit('onGetExportFuzzerCallBack', JSON.stringify({ listTable: newListTable, type: obj.type, pageId }))
+        } catch (error) {
+          yakitFailed(t('YakitNotification.exportFailed', { error: error + '' }))
         }
-      } catch (error) {}
+      })()
     })
 
     // 获取最新table值 用于筛选
@@ -992,16 +1062,36 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
     }, [currentSelectItem, currentSelectShowType])
 
     const requestRawValue = useMemo(
-      () => (currentSelectItem?.RequestRaw && Uint8ArrayToString(currentSelectItem.RequestRaw)) || '',
-      [currentSelectItem?.RequestRaw],
+      () => (requestBytes.byteLength ? Uint8ArrayToString(requestBytes) : ''),
+      [requestBytes],
     )
     const responseRawValue = useMemo(
-      () => (currentSelectItem?.ResponseRaw && Uint8ArrayToString(currentSelectItem.ResponseRaw)) || '',
-      [currentSelectItem?.ResponseRaw],
+      () => (responseBytes.byteLength ? Uint8ArrayToString(responseBytes) : ''),
+      [responseBytes],
     )
+    // 流式时库里通常只有响应头，而且是后读到的。头回到来之前先记住，页签藏起来清掉字节也不能把基座变空。
+    const streamingHeaderRef = useRef<FuzzerPreviewMemory>({ header: '' })
+    const previewChunks = useMemo(
+      () =>
+        (currentSelectItem?.RandomChunkedData || []).map((chunk) => ({
+          Direction: chunk.Direction,
+          IsFinal: chunk.IsFinal,
+          text: chunk.Data?.byteLength ? Uint8ArrayToString(chunk.Data) : '',
+        })),
+      [currentSelectItem?.RandomChunkedData],
+    )
+    const preview = fuzzerTablePreview({
+      uuid: currentSelectItem?.UUID,
+      chunks: previewChunks,
+      showingResponse: currentSelectShowType === 'response',
+      responseText: responseRawValue,
+      memory: streamingHeaderRef.current,
+      truncated: !!currentSelectItem?.ChunkedDataTruncated,
+    })
+    streamingHeaderRef.current = preview.memory
     const originReqOrResValue = useMemo(() => {
-      return currentSelectShowType === 'request' ? requestRawValue : responseRawValue
-    }, [currentSelectShowType, requestRawValue, responseRawValue])
+      return currentSelectShowType === 'request' ? requestRawValue : preview.responseText
+    }, [currentSelectShowType, requestRawValue, preview.responseText])
 
     const contextMenuPacket = useMemo(() => {
       return {
@@ -1010,10 +1100,10 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
     }, [currentSelectShowType, requestRawValue, responseRawValue])
 
     const copyUrl = useMemoizedFn(() => {
-      if (currentSelectItem?.RequestRaw) {
+      if (requestBytes.byteLength) {
         copyAsUrl(
           {
-            Request: Uint8ArrayToString(currentSelectItem?.RequestRaw),
+            Request: Uint8ArrayToString(requestBytes),
             IsHTTPS: !!currentSelectItem?.IsHTTPS,
           },
           'withQuery',
@@ -1021,10 +1111,10 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
       }
     })
     const copyUrlWithoutQuery = useMemoizedFn(() => {
-      if (currentSelectItem?.RequestRaw) {
+      if (requestBytes.byteLength) {
         copyAsUrl(
           {
-            Request: Uint8ArrayToString(currentSelectItem?.RequestRaw),
+            Request: Uint8ArrayToString(requestBytes),
             IsHTTPS: !!currentSelectItem?.IsHTTPS,
           },
           'withoutQuery',
@@ -1032,10 +1122,10 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
       }
     })
     const onClickOpenBrowserMenu = useMemoizedFn(() => {
-      if (currentSelectItem?.RequestRaw) {
+      if (requestBytes.byteLength) {
         ipcRenderer
           .invoke('ExtractUrl', {
-            Request: Uint8ArrayToString(currentSelectItem?.RequestRaw),
+            Request: Uint8ArrayToString(requestBytes),
             IsHTTPS: !!currentSelectItem?.IsHTTPS,
           })
           .then((data: { Url: string }) => {
@@ -1055,6 +1145,8 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
     const { handleEditorMount } = useChunkAutoScrollToBottom({
       chunkedData: currentSelectItem?.RandomChunkedData || [],
       id: currentSelectItem?.UUID,
+      // 还在收正文时，响应头一变或预览重新挂上，就把已经收到的正文再追加一遍。
+      resetKey: preview.resetKey,
     })
 
     return (
@@ -1099,7 +1191,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                   isRefresh={isRefresh || loading}
                   titleHeight={0.01}
                   renderTitle={<></>}
-                  renderKey="UUID"
+                  renderKey="RowKey"
                   data={listTable}
                   loading={loading}
                   enableDrag={true}
@@ -1168,9 +1260,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                 loading={codeLoading}
                 // noHeader={true}
                 originValue={codeKey === 'utf-8' ? originReqOrResValue : codeValue}
-                originalPackage={
-                  currentSelectShowType === 'request' ? currentSelectItem?.RequestRaw : currentSelectItem?.ResponseRaw
-                }
+                originalPackage={currentSelectShowType === 'request' ? requestBytes : responseBytes}
                 onAddOverlayWidget={(editor) => {
                   setEditor(editor)
                 }}
@@ -1243,11 +1333,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                 AfterBeautifyRenderBtn={
                   <CodingPopover
                     key="coding"
-                    originValue={
-                      (currentSelectShowType === 'request'
-                        ? currentSelectItem?.RequestRaw
-                        : currentSelectItem?.ResponseRaw) || new Uint8Array()
-                    }
+                    originValue={currentSelectShowType === 'request' ? requestBytes : responseBytes}
                     onSetCodeLoading={setCodeLoading}
                     codeKey={codeKey}
                     onSetCodeKey={(codeKey) => {
@@ -1277,19 +1363,12 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                 onClickOpenPacketNewWindowMenu={() => {
                   openPacketNewWindow({
                     request: {
-                      originValue: currentSelectItem?.RequestRaw
-                        ? Uint8ArrayToString(currentSelectItem?.RequestRaw)
-                        : new Uint8Array(),
-                      originalPackage: currentSelectItem?.RequestRaw,
+                      originValue: requestBytes.byteLength ? Uint8ArrayToString(requestBytes) : new Uint8Array(),
+                      originalPackage: requestBytes,
                     },
                     response: {
-                      originValue:
-                        codeKey === 'utf-8'
-                          ? currentSelectItem?.ResponseRaw
-                            ? Uint8ArrayToString(currentSelectItem?.ResponseRaw)
-                            : new Uint8Array()
-                          : codeValue,
-                      originalPackage: currentSelectItem?.ResponseRaw,
+                      originValue: codeKey === 'utf-8' ? Uint8ArrayToString(responseBytes) : codeValue,
+                      originalPackage: responseBytes,
                       url: currentSelectItem?.Url,
                       previewNetwork: props.getPreviewNetwork?.(),
                       previewResponseId: currentSelectItem?.UUID,

@@ -14,6 +14,7 @@ const rows: Risk[] = [
 
 const mocks = vi.hoisted(() => ({
   enterprise: true,
+  language: 'zh',
   batchSetRiskTags: vi.fn(),
   deleteRisk: vi.fn(),
   queryRisks: vi.fn(),
@@ -219,7 +220,7 @@ vi.mock('@/utils/envfile', async (importOriginal) => ({
   isEnterpriseEdition: () => mocks.enterprise,
 }))
 vi.mock('@/i18n/useI18nNamespaces', () => ({
-  useI18nNamespaces: () => ({ t: (key: string) => key, i18n: { language: 'zh' }, i18nRefresh: 0 }),
+  useI18nNamespaces: () => ({ t: (key: string) => key, i18n: { language: mocks.language }, i18nRefresh: 0 }),
 }))
 vi.mock('@/utils/eventBus/eventBus', () => ({
   default: {
@@ -356,6 +357,7 @@ const openStatefulRiskBatch = async (selection: 'all' | 'explicit', targetIds: n
 describe('YakitRiskTable 批量操作', () => {
   beforeEach(() => {
     mocks.enterprise = true
+    mocks.language = 'zh'
     mocks.queryRiskTypes.mockResolvedValue([])
     mocks.queryRiskTags.mockResolvedValue({ RiskTags: [] })
     mocks.intervalCallbacks.length = 0
@@ -494,6 +496,21 @@ describe('YakitRiskTable 批量操作', () => {
         total: 1,
       })
     })
+  })
+
+  it.each([
+    ['zh', 'English title', '中文标题', '中文标题'],
+    ['zh', 'English title', undefined, 'English title'],
+    ['zh', undefined, undefined, '-'],
+    ['en', 'English title', '中文标题', 'English title'],
+    ['en', undefined, '中文标题', '中文标题'],
+    ['en', undefined, undefined, '-'],
+  ])('标题列在 %s 语言下 Title=%s TitleVerbose=%s 展示 %s', async (language, title, titleVerbose, expected) => {
+    mocks.language = language
+    await renderTable()
+    const column = mocks.columns.find((item) => item.dataKey === 'TitleVerbose')
+    const cell = render(column.render('', { ...rows[0], Title: title, TitleVerbose: titleVerbose }))
+    expect(cell.container).toHaveTextContent(expected)
   })
 
   it('刷新风险列表时同步刷新类型和处置状态选项', async () => {
