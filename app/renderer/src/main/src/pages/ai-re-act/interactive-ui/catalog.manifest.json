@@ -8,11 +8,21 @@
       "schema": {
         "type": "object",
         "properties": {
-          "title": { "type": "string", "maxLength": 256 },
-          "unit": { "type": "string", "maxLength": 256, "description": "全部系列的共同单位，例如 个、ms、MB。" },
+          "title": {
+            "type": "string",
+            "maxLength": 256
+          },
+          "unit": {
+            "type": "string",
+            "maxLength": 256,
+            "description": "全部系列的共同单位，例如 个、ms、MB。"
+          },
           "orientation": {
             "type": "string",
-            "enum": ["horizontal", "vertical"],
+            "enum": [
+              "horizontal",
+              "vertical"
+            ],
             "default": "horizontal",
             "description": "horizontal=横向条形，适合排名和较长标签；vertical=纵向柱形，适合少量短标签。"
           },
@@ -21,10 +31,21 @@
             "items": {
               "type": "object",
               "properties": {
-                "id": { "type": "string", "minLength": 1, "maxLength": 128 },
-                "label": { "type": "string", "maxLength": 256, "minLength": 1 }
+                "id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "label": {
+                  "type": "string",
+                  "maxLength": 256,
+                  "minLength": 1
+                }
               },
-              "required": ["id", "label"],
+              "required": [
+                "id",
+                "label"
+              ],
               "additionalProperties": false
             },
             "minItems": 1,
@@ -35,24 +56,48 @@
             "items": {
               "type": "object",
               "properties": {
-                "id": { "type": "string", "minLength": 1, "maxLength": 128 },
-                "label": { "type": "string", "maxLength": 256, "minLength": 1 },
+                "id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "label": {
+                  "type": "string",
+                  "maxLength": 256,
+                  "minLength": 1
+                },
                 "values": {
                   "type": "array",
-                  "items": { "anyOf": [{ "type": "number" }, { "type": "null" }] },
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
                   "minItems": 1,
                   "maxItems": 30,
                   "description": "与 categories 等长；位置一一对应。数值必须有限，null 为缺失值。"
                 }
               },
-              "required": ["id", "label", "values"],
+              "required": [
+                "id",
+                "label",
+                "values"
+              ],
               "additionalProperties": false
             },
             "minItems": 1,
             "maxItems": 4
           }
         },
-        "required": ["categories", "series"],
+        "required": [
+          "categories",
+          "series"
+        ],
         "additionalProperties": false
       }
     },
@@ -62,10 +107,16 @@
       "schema": {
         "type": "object",
         "properties": {
-          "title": { "type": "string", "maxLength": 256 },
+          "title": {
+            "type": "string",
+            "maxLength": 256
+          },
           "xType": {
             "type": "string",
-            "enum": ["number", "time"],
+            "enum": [
+              "number",
+              "time"
+            ],
             "default": "number",
             "description": "number=连续数值轴；time=连续时间轴，x 为 Unix 毫秒时间戳，界面按客户端时区显示日期和时区。"
           },
@@ -84,8 +135,16 @@
             "items": {
               "type": "object",
               "properties": {
-                "id": { "type": "string", "minLength": 1, "maxLength": 128 },
-                "label": { "type": "string", "maxLength": 256, "minLength": 1 },
+                "id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "label": {
+                  "type": "string",
+                  "maxLength": 256,
+                  "minLength": 1
+                },
                 "points": {
                   "type": "array",
                   "items": {
@@ -96,25 +155,41 @@
                         "description": "有序横坐标。xType=time 时为整数 Unix 毫秒时间戳，必须在客户端有效日期范围内。"
                       },
                       "y": {
-                        "anyOf": [{ "type": "number" }, { "type": "null" }],
+                        "anyOf": [
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
                         "description": "有限数值，或表示缺失的 null。"
                       }
                     },
-                    "required": ["x", "y"],
+                    "required": [
+                      "x",
+                      "y"
+                    ],
                     "additionalProperties": false
                   },
                   "minItems": 1,
                   "maxItems": 200
                 }
               },
-              "required": ["id", "label", "points"],
+              "required": [
+                "id",
+                "label",
+                "points"
+              ],
               "additionalProperties": false
             },
             "minItems": 1,
             "maxItems": 4
           }
         },
-        "required": ["series"],
+        "required": [
+          "series"
+        ],
         "additionalProperties": false
       }
     },
@@ -124,23 +199,48 @@
       "schema": {
         "type": "object",
         "properties": {
-          "title": { "type": "string", "maxLength": 256 },
+          "title": {
+            "type": "string",
+            "maxLength": 256
+          },
           "columns": {
             "type": "array",
             "items": {
               "type": "object",
               "properties": {
-                "key": { "type": "string", "minLength": 1, "maxLength": 128 },
-                "label": { "type": "string", "maxLength": 256, "minLength": 1 },
+                "key": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "label": {
+                  "type": "string",
+                  "maxLength": 256,
+                  "minLength": 1
+                },
                 "type": {
                   "type": "string",
-                  "enum": ["string", "number", "boolean"],
+                  "enum": [
+                    "string",
+                    "number",
+                    "boolean"
+                  ],
                   "description": "string=文本；number=有限数值，按数值排序；boolean=布尔值。null 和缺失值统一作为无数据排在末尾。"
                 },
-                "sortable": { "type": "boolean", "default": true },
-                "filterable": { "type": "boolean", "default": true }
+                "sortable": {
+                  "type": "boolean",
+                  "default": true
+                },
+                "filterable": {
+                  "type": "boolean",
+                  "default": true
+                }
               },
-              "required": ["key", "label", "type"],
+              "required": [
+                "key",
+                "label",
+                "type"
+              ],
               "additionalProperties": false
             },
             "minItems": 1,
@@ -151,21 +251,37 @@
             "items": {
               "type": "object",
               "properties": {
-                "id": { "type": "string", "minLength": 1, "maxLength": 128 },
+                "id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
                 "values": {
                   "type": "object",
                   "maxProperties": 12,
                   "additionalProperties": {
                     "anyOf": [
-                      { "type": "string", "maxLength": 2000 },
-                      { "type": "number" },
-                      { "type": "boolean" },
-                      { "type": "null" }
+                      {
+                        "type": "string",
+                        "maxLength": 2000
+                      },
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "null"
+                      }
                     ]
                   }
                 }
               },
-              "required": ["id", "values"],
+              "required": [
+                "id",
+                "values"
+              ],
               "additionalProperties": false
             },
             "minItems": 0,
@@ -174,19 +290,31 @@
           "initialSort": {
             "type": "object",
             "properties": {
-              "key": { "type": "string", "minLength": 1, "maxLength": 128 },
+              "key": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
               "direction": {
                 "type": "string",
-                "enum": ["asc", "desc"],
+                "enum": [
+                  "asc",
+                  "desc"
+                ],
                 "default": "asc",
                 "description": "asc=升序；desc=降序；相等值保持原输入顺序。"
               }
             },
-            "required": ["key"],
+            "required": [
+              "key"
+            ],
             "additionalProperties": false
           }
         },
-        "required": ["columns", "rows"],
+        "required": [
+          "columns",
+          "rows"
+        ],
         "additionalProperties": false
       }
     },
@@ -196,11 +324,30 @@
       "schema": {
         "type": "object",
         "properties": {
-          "title": { "type": "string", "minLength": 1, "maxLength": 256 },
-          "description": { "type": "string", "minLength": 1, "maxLength": 8000 },
-          "severity": { "type": "string", "enum": ["info", "success", "warning", "error"], "default": "info" }
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 8000
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "info",
+              "success",
+              "warning",
+              "error"
+            ],
+            "default": "info"
+          }
         },
-        "required": ["title"],
+        "required": [
+          "title"
+        ],
         "additionalProperties": false
       }
     },
@@ -210,7 +357,11 @@
       "schema": {
         "type": "object",
         "properties": {
-          "title": { "type": "string", "minLength": 1, "maxLength": 256 },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
           "items": {
             "type": "array",
             "minItems": 1,
@@ -218,18 +369,47 @@
             "items": {
               "type": "object",
               "properties": {
-                "id": { "type": "string", "minLength": 1, "maxLength": 128 },
-                "label": { "type": "string", "minLength": 1, "maxLength": 256 },
-                "content": { "type": "string", "minLength": 1, "maxLength": 128 }
+                "id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "label": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 256
+                },
+                "content": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                }
               },
-              "required": ["id", "label", "content"],
+              "required": [
+                "id",
+                "label",
+                "content"
+              ],
               "additionalProperties": false
             }
           },
-          "defaultTab": { "type": "string", "minLength": 1, "maxLength": 128 },
-          "variant": { "type": "string", "enum": ["tabs", "segmented"], "default": "tabs" }
+          "defaultTab": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "variant": {
+            "type": "string",
+            "enum": [
+              "tabs",
+              "segmented"
+            ],
+            "default": "tabs"
+          }
         },
-        "required": ["items"],
+        "required": [
+          "items"
+        ],
         "additionalProperties": false
       },
       "children": true
@@ -240,11 +420,31 @@
       "schema": {
         "type": "object",
         "properties": {
-          "label": { "type": "string", "minLength": 1, "maxLength": 256 },
-          "content": { "type": "string", "minLength": 1, "maxLength": 1000 },
-          "placement": { "type": "string", "enum": ["top", "bottom", "left", "right"], "default": "top" }
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "content": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          },
+          "placement": {
+            "type": "string",
+            "enum": [
+              "top",
+              "bottom",
+              "left",
+              "right"
+            ],
+            "default": "top"
+          }
         },
-        "required": ["label", "content"],
+        "required": [
+          "label",
+          "content"
+        ],
         "additionalProperties": false
       }
     },
@@ -254,12 +454,36 @@
       "schema": {
         "type": "object",
         "properties": {
-          "label": { "type": "string", "minLength": 1, "maxLength": 256 },
-          "title": { "type": "string", "minLength": 1, "maxLength": 256 },
-          "content": { "type": "string", "minLength": 1, "maxLength": 8000 },
-          "placement": { "type": "string", "enum": ["top", "bottom", "left", "right"], "default": "top" }
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "content": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 8000
+          },
+          "placement": {
+            "type": "string",
+            "enum": [
+              "top",
+              "bottom",
+              "left",
+              "right"
+            ],
+            "default": "top"
+          }
         },
-        "required": ["label", "content"],
+        "required": [
+          "label",
+          "content"
+        ],
         "additionalProperties": false
       }
     },
@@ -268,7 +492,12 @@
       "description": "按顺序排列少量子节点，用于分组。children 是节点 ID，禁止循环。",
       "schema": {
         "type": "object",
-        "properties": { "title": { "type": "string", "maxLength": 256 } },
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 256
+          }
+        },
         "required": [],
         "additionalProperties": false
       },
@@ -279,8 +508,16 @@
       "description": "简短纯文本说明。不会执行或解析 HTML。",
       "schema": {
         "type": "object",
-        "properties": { "text": { "type": "string", "maxLength": 8000, "minLength": 1 } },
-        "required": ["text"],
+        "properties": {
+          "text": {
+            "type": "string",
+            "maxLength": 8000,
+            "minLength": 1
+          }
+        },
+        "required": [
+          "text"
+        ],
         "additionalProperties": false
       }
     },
@@ -290,16 +527,28 @@
       "schema": {
         "type": "object",
         "properties": {
-          "title": { "type": "string", "maxLength": 256 },
+          "title": {
+            "type": "string",
+            "maxLength": 256
+          },
           "columns": {
             "type": "array",
             "items": {
               "type": "object",
               "properties": {
-                "key": { "type": "string", "maxLength": 256 },
-                "label": { "type": "string", "maxLength": 256 }
+                "key": {
+                  "type": "string",
+                  "maxLength": 256
+                },
+                "label": {
+                  "type": "string",
+                  "maxLength": 256
+                }
               },
-              "required": ["key", "label"],
+              "required": [
+                "key",
+                "label"
+              ],
               "additionalProperties": false
             },
             "maxItems": 12,
@@ -310,12 +559,27 @@
             "items": {
               "type": "object",
               "maxProperties": 12,
-              "additionalProperties": { "anyOf": [{ "type": "string" }, { "type": "number" }, { "type": "boolean" }] }
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "boolean"
+                  }
+                ]
+              }
             },
             "maxItems": 100
           }
         },
-        "required": ["columns", "rows"],
+        "required": [
+          "columns",
+          "rows"
+        ],
         "additionalProperties": false
       }
     },
@@ -325,23 +589,45 @@
       "schema": {
         "type": "object",
         "properties": {
-          "title": { "type": "string", "maxLength": 256 },
+          "title": {
+            "type": "string",
+            "maxLength": 256
+          },
           "items": {
             "type": "array",
             "items": {
               "type": "object",
               "properties": {
-                "title": { "type": "string", "maxLength": 256 },
-                "description": { "type": "string", "maxLength": 8000 },
-                "status": { "type": "string", "enum": ["pending", "active", "done", "error"], "default": "pending" }
+                "title": {
+                  "type": "string",
+                  "maxLength": 256
+                },
+                "description": {
+                  "type": "string",
+                  "maxLength": 8000
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "pending",
+                    "active",
+                    "done",
+                    "error"
+                  ],
+                  "default": "pending"
+                }
               },
-              "required": ["title"],
+              "required": [
+                "title"
+              ],
               "additionalProperties": false
             },
             "maxItems": 30
           }
         },
-        "required": ["items"],
+        "required": [
+          "items"
+        ],
         "additionalProperties": false
       }
     },
@@ -351,24 +637,53 @@
       "schema": {
         "type": "object",
         "properties": {
-          "title": { "type": "string", "maxLength": 256 },
+          "title": {
+            "type": "string",
+            "maxLength": 256
+          },
           "items": {
             "type": "array",
             "items": {
               "type": "object",
               "properties": {
-                "label": { "type": "string", "maxLength": 256 },
-                "value": { "anyOf": [{ "type": "string" }, { "type": "number" }, { "type": "boolean" }] },
-                "unit": { "type": "string", "maxLength": 256 },
-                "description": { "type": "string", "maxLength": 256 }
+                "label": {
+                  "type": "string",
+                  "maxLength": 256
+                },
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    }
+                  ]
+                },
+                "unit": {
+                  "type": "string",
+                  "maxLength": 256
+                },
+                "description": {
+                  "type": "string",
+                  "maxLength": 256
+                }
               },
-              "required": ["label", "value"],
+              "required": [
+                "label",
+                "value"
+              ],
               "additionalProperties": false
             },
             "maxItems": 12
           }
         },
-        "required": ["items"],
+        "required": [
+          "items"
+        ],
         "additionalProperties": false
       }
     }
