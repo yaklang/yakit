@@ -713,8 +713,8 @@ export const YakMcpSettings: React.FC = () => {
                 {batchProgress
                   ? t('SettingsPage.yakMcp.batchProgress', batchProgress)
                   : loading
-                  ? t('SettingsPage.yakMcp.loadingTools')
-                  : t('SettingsPage.yakMcp.resultCount', { count: filteredTools.length, enabled: enabledCount })}
+                    ? t('SettingsPage.yakMcp.loadingTools')
+                    : t('SettingsPage.yakMcp.resultCount', { count: filteredTools.length, enabled: enabledCount })}
               </span>
               <div className={styles['tool-batch-actions']}>
                 <span className={styles['section-desc']}>{t('SettingsPage.yakMcp.batchScope')}</span>
