@@ -1,7 +1,7 @@
 const { ipcMain } = require('electron')
 const { assertTrustedAppSender } = require('../security')
 
-module.exports = (win, getClient) => {
+module.exports = (_win, getClient) => {
   const calls = new Map()
   const owners = new Set()
   const keyFor = (event, token) => {
@@ -14,15 +14,6 @@ module.exports = (win, getClient) => {
     const key = keyFor(event, token)
     calls.get(key)?.cancel()
     calls.delete(key)
-  })
-  const cleanup = () => {
-    for (const call of calls.values()) call.cancel()
-    calls.clear()
-  }
-  win.webContents.on('destroyed', cleanup)
-  win.webContents.on('render-process-gone', cleanup)
-  win.webContents.on('did-start-navigation', (_event, _url, _inPlace, mainFrame) => {
-    if (mainFrame) cleanup()
   })
   ipcMain.handle('FetchHTTPPreviewResource', (event, params, token) => {
     const key = keyFor(event, token)
@@ -43,8 +34,8 @@ module.exports = (win, getClient) => {
         owners.delete(owner)
       })
       owner.on('render-process-gone', cleanupOwner)
-      owner.on('did-start-navigation', (_event, _url, _inPlace, mainFrame) => {
-        if (mainFrame) cleanupOwner()
+      owner.on('did-start-navigation', (_event, _url, inPlace, mainFrame) => {
+        if (mainFrame && !inPlace) cleanupOwner()
       })
     }
     return new Promise((resolve, reject) => {

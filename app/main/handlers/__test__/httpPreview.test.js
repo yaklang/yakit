@@ -96,4 +96,24 @@ describe('HTTP preview IPC isolation', () => {
       expect(f.requests[0].cancel).toHaveBeenCalledOnce()
     },
   )
+  it.each([
+    ['main document navigation', 'main', 'did-start-navigation', false, true, [1, 0]],
+    ['main in-place navigation', 'main', 'did-start-navigation', true, true, [0, 0]],
+    ['second document navigation', 'second', 'did-start-navigation', false, true, [0, 1]],
+    ['second in-place navigation', 'second', 'did-start-navigation', true, true, [0, 0]],
+    ['main subframe navigation', 'main', 'did-start-navigation', false, false, [0, 0]],
+    ['main destruction', 'main', 'destroyed', false, true, [1, 0]],
+    ['main renderer crash', 'main', 'render-process-gone', false, true, [1, 0]],
+  ])('isolates cleanup on %s', async (_name, target, eventName, inPlace, mainFrame, expected) => {
+    const f = fixture()
+    const second = Object.assign(new EventEmitter(), { id: 2, mainFrame: {} })
+    const secondEvent = { sender: second, senderFrame: second.mainFrame }
+    const a = f.fetch(f.event, {}, 'same-token').catch((e) => e)
+    const b = f.fetch(secondEvent, {}, 'same-token').catch((e) => e)
+    const owner = target === 'main' ? f.contents : second
+    owner.emit(eventName, {}, 'next', inPlace, mainFrame)
+    expect(f.requests.map((call) => call.cancel.mock.calls.length)).toEqual(expected)
+    for (const call of f.requests) call.callback(null, {})
+    await Promise.all([a, b])
+  })
 })
