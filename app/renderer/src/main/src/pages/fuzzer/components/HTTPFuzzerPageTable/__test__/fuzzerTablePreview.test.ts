@@ -113,6 +113,32 @@ describe('fuzzer table quick preview', () => {
     })
     expect(fullBody.responseText).toBe(header + 'already complete')
 
+    // 流已结束才首次选中：memory 为空，库里已是完整 H+B，不能再拼 chunk 里的 B
+    const firstOpenDone = fuzzerTablePreview({
+      uuid: 'row-1',
+      chunks: [
+        { ...responseChunk(false), text: 'hello' },
+        { ...responseChunk(true), text: ' world' },
+      ],
+      showingResponse: true,
+      responseText: header + 'hello world',
+      memory: { header: '' },
+    })
+    expect(firstOpenDone.responseText).toBe(header + 'hello world')
+
+    // 流已结束才首次选中：库里只有头，仍要把 chunk 正文拼回去
+    const firstOpenHeaderOnly = fuzzerTablePreview({
+      uuid: 'row-1',
+      chunks: [
+        { ...responseChunk(false), text: 'hello' },
+        { ...responseChunk(true), text: ' world' },
+      ],
+      showingResponse: true,
+      responseText: header,
+      memory: { header: '' },
+    })
+    expect(firstOpenHeaderOnly.responseText).toBe(header + 'hello world')
+
     const nextRow = fuzzerTablePreview({
       uuid: 'row-2',
       chunks: [responseChunk()],

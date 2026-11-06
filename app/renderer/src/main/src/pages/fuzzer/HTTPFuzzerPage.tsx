@@ -3517,32 +3517,37 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                     <YakitButton
                       onClick={() => {
                         setLoading(true)
-                        void fillFuzzerRaw(httpResponse).then((full) => {
-                          const redirectRequestProps: RedirectRequestParams = {
-                            Request: Buffer.from(full.RequestRaw).toString('utf8'),
-                            Response: Buffer.from(full.ResponseRaw).toString('utf8'),
-                            IsHttps: advancedConfigValue.isHttps,
-                            IsGmTLS: advancedConfigValue.isGmTLS,
-                            PerRequestTimeoutSeconds: advancedConfigValue.timeout,
-                            Proxy: (advancedConfigValue.proxy || [])
-                              .filter((item) => !item.startsWith('route'))
-                              .join(','),
-                            Extractors: advancedConfigValue.extractors,
-                            Matchers: advancedConfigValue.matchers,
-                            Params: advancedConfigValue.params || [],
-                          }
-                          ipcRenderer
-                            .invoke('RedirectRequest', redirectRequestProps)
-                            .then((rsp: FuzzerResponse) => {
-                              setRedirectedResponse(rsp)
-                            })
-                            .catch((e) => {
-                              failed(`"ERROR in: ${e}"`)
-                            })
-                            .finally(() => {
-                              setTimeout(() => setLoading(false), 300)
-                            })
-                        })
+                        void fillFuzzerRaw(httpResponse)
+                          .then((full) => {
+                            const redirectRequestProps: RedirectRequestParams = {
+                              Request: Buffer.from(full.RequestRaw).toString('utf8'),
+                              Response: Buffer.from(full.ResponseRaw).toString('utf8'),
+                              IsHttps: advancedConfigValue.isHttps,
+                              IsGmTLS: advancedConfigValue.isGmTLS,
+                              PerRequestTimeoutSeconds: advancedConfigValue.timeout,
+                              Proxy: (advancedConfigValue.proxy || [])
+                                .filter((item) => !item.startsWith('route'))
+                                .join(','),
+                              Extractors: advancedConfigValue.extractors,
+                              Matchers: advancedConfigValue.matchers,
+                              Params: advancedConfigValue.params || [],
+                            }
+                            ipcRenderer
+                              .invoke('RedirectRequest', redirectRequestProps)
+                              .then((rsp: FuzzerResponse) => {
+                                setRedirectedResponse(rsp)
+                              })
+                              .catch((e) => {
+                                failed(`"ERROR in: ${e}"`)
+                              })
+                              .finally(() => {
+                                setTimeout(() => setLoading(false), 300)
+                              })
+                          })
+                          .catch((err) => {
+                            failed(t('YakitNotification.loadFailed', { error: err + '' }))
+                            setTimeout(() => setLoading(false), 300)
+                          })
                       }}
                       type="outline2"
                     >
@@ -3566,14 +3571,18 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                         type="text2"
                         icon={<SwitchHorizontalOutlined color="currentColor" />}
                         onClick={() => {
-                          void fillFuzzerRaw(httpResponse).then((full) => {
-                            showBrowserTransformPackets(
-                              full,
-                              browserTransformSelection?.profileId === httpResponse.BrowserTransformProfileId
-                                ? browserTransformSelection
-                                : undefined,
-                            )
-                          })
+                          void fillFuzzerRaw(httpResponse)
+                            .then((full) => {
+                              showBrowserTransformPackets(
+                                full,
+                                browserTransformSelection?.profileId === httpResponse.BrowserTransformProfileId
+                                  ? browserTransformSelection
+                                  : undefined,
+                              )
+                            })
+                            .catch((err) => {
+                              failed(t('YakitNotification.loadFailed', { error: err + '' }))
+                            })
                         }}
                       >
                         明文 / 线上
@@ -4185,9 +4194,16 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
     }
     let cancel = false
     setExtractorResponses(null)
-    void fillFuzzerRawList(successResponses()).then((rows) => {
-      if (!cancel) setExtractorResponses(rows)
-    })
+    void fillFuzzerRawList(successResponses())
+      .then((rows) => {
+        if (!cancel) setExtractorResponses(rows)
+      })
+      .catch((err) => {
+        if (cancel) return
+        failed(t('YakitNotification.loadFailed', { error: err + '' }))
+        setResponseExtractorVisible(false)
+        setExtractorResponses(null)
+      })
     return () => {
       cancel = true
     }
@@ -4392,7 +4408,11 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
         <YakitButton
           type="primary"
           onClick={() => {
-            void fillFuzzerRaw(rsp).then((full) => analyzeFuzzerResponse(full))
+            void fillFuzzerRaw(rsp)
+              .then((full) => analyzeFuzzerResponse(full))
+              .catch((err) => {
+                failed(t('YakitNotification.loadFailed', { error: err + '' }))
+              })
           }}
           size={size}
         >

@@ -44,11 +44,29 @@ interface PendingRaw {
 }
 const pending = new Map<string, PendingRaw>()
 const epochs = new Map<string, number>()
+/** 同一 scope+uuid 的原文版本。行被淘汰后新对象回流时继续累加，避免搜索缓存命中旧结果。 */
+const rawVersions = new Map<string, number>()
 /** 等着和这一批写入放进同一个事务里删掉的记录 id */
 const pendingDeletes = new Set<string>()
 const memory = new Map<string, FuzzerRawRecord>()
 /** 批量写库和按 scope 删除共用一条队列，避免「快照已删又 put 回去」。 */
 let writeChain: Promise<void> = Promise.resolve()
+
+const versionKey = (scope: string, uuid: string) => `${scope}\u0000${uuid}`
+
+const nextRawVersion = (scope: string, uuid: string, current?: number) => {
+  const key = versionKey(scope, uuid)
+  const next = Math.max(rawVersions.get(key) || 0, current || 0) + 1
+  rawVersions.set(key, next)
+  return next
+}
+
+const clearRawVersions = (scope: string) => {
+  const prefix = `${scope}\u0000`
+  for (const key of rawVersions.keys()) {
+    if (key.startsWith(prefix)) rawVersions.delete(key)
+  }
+}
 
 let backend: 'idb' | 'memory' | null = null
 let dbPromise: Promise<IDBDatabase> | null = null
@@ -403,6 +421,7 @@ export const fuzzerRawStore = {
   deleteScope(scope: string) {
     if (!scope) return Promise.resolve()
     dropPending(scope)
+    clearRawVersions(scope)
     epochs.set(scope, epochOf(scope) + 1)
     const seen = epochOf(scope)
     // 和批量写入走同一条队列：先写完（或丢掉）旧快照，再按 scope 清库
@@ -418,21 +437,23 @@ export function saveFuzzerRaw(scope: string, item: FuzzerResponse) {
   if (!scope || !item?.UUID) return
   item.RawScope = scope
   const response = item.ResponseRaw
-  if (response?.byteLength) item.RawVersion = (item.RawVersion || 0) + 1
+  if (response?.byteLength) item.RawVersion = nextRawVersion(scope, item.UUID, item.RawVersion)
   item.ResponseRaw = EMPTY_RAW
   if (!response?.byteLength) return
   void fuzzerRawStore.save(scope, item.UUID, response).catch(() => undefined)
 }
 
-/** 给这一行补上库里的响应原文。行上已经有原文的不动。 */
+/** 给这一行补上库里的响应原文。行上已经有原文的不动。读库失败向上抛，由调用方提示并中止。 */
 export async function fillFuzzerRaw<T extends FuzzerResponse>(row: T): Promise<T> {
   if (!row?.UUID || !row.RawScope || row.ResponseRaw?.byteLength) return row
-  const response = await fuzzerRawStore.get(row.RawScope, row.UUID)
+  // 不用 get()：它会吞掉读库错误并当成「没有原文」
+  const found = await fuzzerRawStore.getMany(row.RawScope, [row.UUID])
+  const response = found.get(row.UUID)
   if (!response?.byteLength) return row
   return { ...row, ResponseRaw: response }
 }
 
-/** 给多行补上库里的响应原文。行上已经有原文的不动。不同页签分开读，避免同 UUID 串数据。 */
+/** 给多行补上库里的响应原文。行上已经有原文的不动。不同页签分开读，避免同 UUID 串数据。读库失败向上抛。 */
 export async function fillFuzzerRawList<T extends FuzzerResponse>(rows: T[]) {
   const groups = new Map<string, string[]>()
   rows.forEach((row) => {
@@ -443,16 +464,12 @@ export async function fillFuzzerRawList<T extends FuzzerResponse>(rows: T[]) {
   })
   if (!groups.size) return rows
   const bodies = new Map<string, Uint8Array>()
-  try {
-    await Promise.all(
-      [...groups].map(async ([scope, uuids]) => {
-        const found = await fuzzerRawStore.getMany(scope, uuids)
-        found.forEach((bytes, uuid) => bodies.set(`${scope}\u0000${uuid}`, bytes))
-      }),
-    )
-  } catch {
-    return rows
-  }
+  await Promise.all(
+    [...groups].map(async ([scope, uuids]) => {
+      const found = await fuzzerRawStore.getMany(scope, uuids)
+      found.forEach((bytes, uuid) => bodies.set(`${scope}\u0000${uuid}`, bytes))
+    }),
+  )
   return rows.map((row) => {
     if (!row?.UUID || !row.RawScope || row.ResponseRaw?.byteLength) return row
     const response = bodies.get(`${row.RawScope}\u0000${row.UUID}`)

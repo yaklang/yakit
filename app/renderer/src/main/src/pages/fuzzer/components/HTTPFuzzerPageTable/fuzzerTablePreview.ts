@@ -7,7 +7,8 @@
  * 流结束后不再传 resetKey，避免正文被追加两次。
  */
 export interface FuzzerPreviewChunk {
-  Direction?: number
+  /** 与 RandomChunkedResponse.Direction 对齐：proto-loader enums:String 下可能是数字或枚举名。 */
+  Direction?: number | string
   IsFinal?: boolean
   /** 这一小段正文。流式过程中用不到，流结束后拼回预览。 */
   text?: string
@@ -23,7 +24,12 @@ export interface FuzzerPreviewMemory {
 const isResponseChunk = (chunk?: FuzzerPreviewChunk) => {
   if (!chunk) return false
   const direction = chunk.Direction ?? 0
-  return direction === 0 || direction === 2
+  return (
+    direction === 0 ||
+    direction === 2 ||
+    direction === 'CHUNKED_DATA_DIRECTION_UNSPECIFIED' ||
+    direction === 'CHUNKED_DATA_DIRECTION_RESPONSE'
+  )
 }
 
 export function fuzzerTablePreview(input: {
@@ -46,13 +52,21 @@ export function fuzzerTablePreview(input: {
     return { memory, responseText: memory.header, resetKey: memory.header }
   }
   // 流结束后正文仍在 chunk 里，库里多半还是响应头。拼回去，页签重新打开才能看到全文。
-  // 库里的内容如果已经不是当时的响应头，就直接用库里的，避免正文拼两次。
+  // 库里若已是完整原文（首次打开已完成的流、ResponseRaw 已含 H+B），直接用，避免再拼一次 B。
   if (input.showingResponse) {
     const body = responseChunks.map((chunk) => chunk.text || '').join('')
-    const header = memory.header || input.responseText
-    const storedIsHeader = !input.responseText || !memory.header || input.responseText === memory.header
-    if (body && header && storedIsHeader) {
-      return { memory, responseText: header + body, resetKey: undefined }
+    if (body) {
+      if (input.responseText && input.responseText.endsWith(body)) {
+        return { memory, responseText: input.responseText, resetKey: undefined }
+      }
+      // 库内容已不是记下的响应头（例如后来读到了完整包），直接用库里的
+      if (memory.header && input.responseText && input.responseText !== memory.header) {
+        return { memory, responseText: input.responseText, resetKey: undefined }
+      }
+      const header = memory.header || input.responseText
+      if (header) {
+        return { memory, responseText: header + body, resetKey: undefined }
+      }
     }
   }
   return { memory, responseText: input.responseText, resetKey: undefined }

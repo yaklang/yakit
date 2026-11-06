@@ -17,7 +17,7 @@ vi.mock('react-monaco-editor', () => ({
 
 // 只借方向判断，避免把整页 HTTPFuzzerPage 拉进这个用例。
 vi.mock('../../HTTPFuzzerPage', () => ({
-  isResponseChunkedData: (chunk?: { Direction?: number }) => {
+  isResponseChunkedData: (chunk?: { Direction?: number | string }) => {
     if (!chunk) return false
     const dir = chunk.Direction ?? 0
     return dir === 0 || dir === 2
@@ -25,7 +25,11 @@ vi.mock('../../HTTPFuzzerPage', () => ({
 }))
 
 import type { RandomChunkedResponse } from '../../HTTPFuzzerPage'
-import { fuzzerTablePreview, type FuzzerPreviewMemory } from '../../components/HTTPFuzzerPageTable/fuzzerTablePreview'
+import {
+  fuzzerTablePreview,
+  type FuzzerPreviewChunk,
+  type FuzzerPreviewMemory,
+} from '../../components/HTTPFuzzerPageTable/fuzzerTablePreview'
 import { useChunkAutoScrollToBottom } from '../useAutoScrollToBottom'
 
 const body = (text: string, index: number): RandomChunkedResponse => ({
@@ -37,6 +41,12 @@ const body = (text: string, index: number): RandomChunkedResponse => ({
   IsFinal: false,
   Direction: 2,
 })
+
+const toPreviewChunks = (list: RandomChunkedResponse[]): FuzzerPreviewChunk[] =>
+  list.map((chunk) => ({
+    Direction: chunk.Direction,
+    IsFinal: chunk.IsFinal,
+  }))
 
 const editorWith = (edits: string[]) => ({
   getModel: () => ({
@@ -127,10 +137,10 @@ describe('streamed response body', () => {
     const chunks = [body('hello', 1), body(' world', 2)]
     // 和组件一样：每次渲染都把返回的 memory 留到下一次。
     let memory: FuzzerPreviewMemory = { header: '' }
-    const showing = (responseText: string, nextChunks = chunks) => {
+    const showing = (responseText: string, nextChunks: RandomChunkedResponse[] = chunks) => {
       const seen = fuzzerTablePreview({
         uuid: 'row-1',
-        chunks: nextChunks,
+        chunks: toPreviewChunks(nextChunks),
         showingResponse: true,
         responseText,
         memory,

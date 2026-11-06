@@ -4,6 +4,7 @@ import { act, renderHook, waitFor } from '@testing-library/react'
 import {
   assignFuzzerTableRowKeys,
   createKeywordSearchCache,
+  fillFuzzerRaw,
   fillFuzzerRawList,
   fuzzerRawStore,
   fuzzerPageScope,
@@ -304,6 +305,36 @@ describe('createKeywordSearchCache', () => {
     await fuzzerRawStore.deleteScope(scope)
     expect(cache.prepare('x', [row])).toEqual([`${scope}\0same`])
   })
+
+  it('re-reads after the same uuid is evicted then flows back with a new body', async () => {
+    const cache = createKeywordSearchCache((b) => String.fromCharCode(...b))
+    const scope = fuzzerPageScope('reflow')
+    const first = {
+      UUID: 'same',
+      RequestRaw: bytes([]),
+      ResponseRaw: bytes([120]),
+    } as FuzzerResponse
+    saveFuzzerRaw(scope, first)
+    expect(first.RawVersion).toBe(1)
+    const readMany = vi.fn(async () => new Map([[`${scope}\0same`, bytes([120])]]))
+    await cache.fill('x', [first], readMany)
+    expect(cache.matches(first, 'x')).toBe(true)
+
+    // 表格淘汰：删库但不清 scope，版本计数应继续累加
+    await fuzzerRawStore.deleteUuid(scope, 'same')
+    const again = {
+      UUID: 'same',
+      RequestRaw: bytes([]),
+      ResponseRaw: bytes([121]),
+    } as FuzzerResponse
+    saveFuzzerRaw(scope, again)
+    expect(again.RawVersion).toBe(2)
+    expect(cache.prepare('x', [again])).toEqual([`${scope}\0same`])
+    const readAgain = vi.fn(async () => new Map([[`${scope}\0same`, bytes([121])]]))
+    await cache.fill('x', [again], readAgain)
+    expect(cache.matches(again, 'x')).toBe(false)
+    await fuzzerRawStore.deleteScope(scope)
+  })
 })
 
 describe('fuzzer table row key', () => {
@@ -436,6 +467,37 @@ describe('fuzzerRawStore', () => {
     expect(asArray(full.ResponseRaw)).toEqual([72, 105])
     expect(asArray(row.RequestRaw)).toEqual([1])
     expect(row.ResponseRaw).toHaveLength(0)
+    await fuzzerRawStore.deleteScope(scope)
+  })
+
+  it('propagates read failures so export/extract do not silently use empty bodies', async () => {
+    const scope = fuzzerPageScope('read-fail')
+    const row = {
+      UUID: 'rf-1',
+      RawScope: scope,
+      RequestRaw: bytes([1]),
+      ResponseRaw: bytes([]),
+      RawVersion: 1,
+    } as FuzzerResponse
+    const spy = vi.spyOn(fuzzerRawStore, 'getMany').mockRejectedValueOnce(new Error('idb down'))
+    await expect(fillFuzzerRawList([row])).rejects.toThrow('idb down')
+    expect(row.ResponseRaw).toHaveLength(0)
+    spy.mockRestore()
+    await fuzzerRawStore.deleteScope(scope)
+  })
+
+  it('propagates single-row read failures instead of returning an empty ResponseRaw', async () => {
+    const scope = fuzzerPageScope('read-fail-one')
+    const row = {
+      UUID: 'rf-2',
+      RawScope: scope,
+      RequestRaw: bytes([1]),
+      ResponseRaw: bytes([]),
+      RawVersion: 1,
+    } as FuzzerResponse
+    const spy = vi.spyOn(fuzzerRawStore, 'getMany').mockRejectedValueOnce(new Error('idb down'))
+    await expect(fillFuzzerRaw(row)).rejects.toThrow('idb down')
+    spy.mockRestore()
     await fuzzerRawStore.deleteScope(scope)
   })
 })

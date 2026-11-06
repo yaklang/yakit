@@ -125,7 +125,7 @@ export interface FuzzerResponseToHTTPFlowDetail extends HTTPPacketFuzzable {
 }
 
 export const FuzzerResponseToHTTPFlowDetail = (rsp: FuzzerResponseToHTTPFlowDetail) => {
-  const { t, i18n } = useI18nNamespaces(['history'])
+  const { t, i18n } = useI18nNamespaces(['history', 'yakitUi'])
   const [response, setResponse] = useState<FuzzerResponse>()
   const [index, setIndex] = useState<number>()
   const [id, setId] = useState(0)
@@ -134,11 +134,16 @@ export const FuzzerResponseToHTTPFlowDetail = (rsp: FuzzerResponseToHTTPFlowDeta
   const showFilledResponse = useMemoizedFn((row: FuzzerResponse | undefined, nextIndex?: number) => {
     if (!row) return
     const ticket = ++loadTicketRef.current
-    void fillFuzzerRaw(row).then((full) => {
-      if (ticket !== loadTicketRef.current) return
-      setResponse(full)
-      setIndex(nextIndex)
-    })
+    void fillFuzzerRaw(row)
+      .then((full) => {
+        if (ticket !== loadTicketRef.current) return
+        setResponse(full)
+        setIndex(nextIndex)
+      })
+      .catch((err) => {
+        if (ticket !== loadTicketRef.current) return
+        failed(t('YakitNotification.loadFailed', { error: err + '' }))
+      })
   })
 
   useEffect(() => {

@@ -585,22 +585,26 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                           <HollowLightningBoltIcon
                             onClick={(e) => {
                               e.stopPropagation()
-                              void fillFuzzerRaw(record).then((full) => {
-                                if (onDebug) {
-                                  onDebug({
-                                    httpResponse: Uint8ArrayToString(full.ResponseRaw),
-                                    httpRequest: full.RequestRaw?.byteLength
-                                      ? Uint8ArrayToString(full.RequestRaw)
-                                      : undefined,
-                                    isHttps: full?.IsHTTPS,
-                                  })
-                                } else {
-                                  emiter.emit(
-                                    'openMatcherAndExtraction',
-                                    JSON.stringify({ httpResponseCode: Uint8ArrayToString(full.ResponseRaw) }),
-                                  )
-                                }
-                              })
+                              void fillFuzzerRaw(record)
+                                .then((full) => {
+                                  if (onDebug) {
+                                    onDebug({
+                                      httpResponse: Uint8ArrayToString(full.ResponseRaw),
+                                      httpRequest: full.RequestRaw?.byteLength
+                                        ? Uint8ArrayToString(full.RequestRaw)
+                                        : undefined,
+                                      isHttps: full?.IsHTTPS,
+                                    })
+                                  } else {
+                                    emiter.emit(
+                                      'openMatcherAndExtraction',
+                                      JSON.stringify({ httpResponseCode: Uint8ArrayToString(full.ResponseRaw) }),
+                                    )
+                                  }
+                                })
+                                .catch((err) => {
+                                  yakitFailed(t('YakitNotification.loadFailed', { error: err + '' }))
+                                })
                             }}
                             style={{
                               color: !isCellRedSingleColor(record.cellClassName) ? '' : '#fff',
@@ -716,7 +720,11 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
       })
     })
     const onDetails = useMemoizedFn((record, index: number) => {
-      void fillFuzzerRaw(record).then((full) => analyzeFuzzerResponse(full, index, data))
+      void fillFuzzerRaw(record)
+        .then((full) => analyzeFuzzerResponse(full, index, data))
+        .catch((err) => {
+          yakitFailed(t('YakitNotification.loadFailed', { error: err + '' }))
+        })
     })
     const onTableChange = useMemoizedFn((page: number, limit: number, sorter: SortProps, filters: any, extra?: any) => {
       const l = bodyLengthRef?.current?.getValue() || {}
@@ -962,7 +970,9 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
             ResponseRaw: Uint8ArrayToString(item.ResponseRaw),
           }))
           emiter.emit('onGetExportFuzzerCallBack', JSON.stringify({ listTable: newListTable, type: obj.type, pageId }))
-        } catch (error) {}
+        } catch (error) {
+          yakitFailed(t('YakitNotification.exportFailed', { error: error + '' }))
+        }
       })()
     })
 
