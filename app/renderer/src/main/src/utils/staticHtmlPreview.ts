@@ -182,6 +182,7 @@ export const renderStaticHtml = (body: string, options: StaticHtmlOptions = {}):
       FORBID_TAGS: ['script', 'iframe', 'object', 'embed', 'link', 'meta', 'base'],
       SANITIZE_DOM: true,
     })
+    if (!(html instanceof window.HTMLElement)) throw new Error('Unexpected preview document')
     const head = html.querySelector('head')!
     const charset = html.ownerDocument.createElement('meta')
     charset.setAttribute('charset', 'utf-8')
