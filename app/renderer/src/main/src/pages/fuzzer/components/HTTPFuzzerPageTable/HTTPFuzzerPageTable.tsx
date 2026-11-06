@@ -1084,6 +1084,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
       showingResponse: currentSelectShowType === 'response',
       responseText: responseRawValue,
       memory: streamingHeaderRef.current,
+      truncated: !!currentSelectItem?.ChunkedDataTruncated,
     })
     streamingHeaderRef.current = preview.memory
     const originReqOrResValue = useMemo(() => {

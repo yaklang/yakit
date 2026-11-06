@@ -358,6 +358,8 @@ export interface FuzzerResponse {
   RawScope?: string
   /** 表格行键。有 RawScope 时带上 scope，避免并发总表里相同 UUID 叠成一行。 */
   RowKey?: string
+  /** 流式 chunk 超过上限后只留了尾段。预览结束时不能用尾段盖掉已经显示的前段。 */
+  ChunkedDataTruncated?: boolean
   Timestamp: number
   RequestRaw: Uint8Array
   // GuessResponseEncoding: string;
@@ -1909,7 +1911,12 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
             merged.push(c)
             existedKeys.add(key)
           })
-          existed.RandomChunkedData = merged.length > 2048 ? merged.slice(merged.length - 2048) : merged
+          if (merged.length > 2048) {
+            existed.RandomChunkedData = merged.slice(merged.length - 2048)
+            existed.ChunkedDataTruncated = true
+          } else {
+            existed.RandomChunkedData = merged
+          }
         }
 
         saveFuzzerRaw(rawScope, existed)
@@ -5351,20 +5358,23 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
     // 计算当前显示的值
     // - 流式阶段：强制用 header 作为稳定的 base（body 由 hook 增量追加）
     // - 非流式阶段：支持编码转换；codeValue 未准备好时兜底展示原始内容
-    const currentOriginValue = isStreamingResponse
-      ? responseHeaderString
+    // 超限后只剩尾段。已经追加过的前段留在编辑器里，基座继续用响应头。
+    const keepAppendedBody = !!fuzzerResponse?.ChunkedDataTruncated && !!streamingHeaderText && !currentResponseOpen
+    const showHeaderBase = isStreamingResponse || keepAppendedBody
+    const currentOriginValue = showHeaderBase
+      ? streamingHeaderText
       : codeKey === 'utf-8'
         ? responseRawString
         : codeValue || responseRawString
 
-    const currentOriginalPackage = isStreamingResponse ? responsePacket : assembledResponsePackage
+    const currentOriginalPackage = showHeaderBase ? responsePacket : assembledResponsePackage
 
     // 自动滚动到底部 hook（仅在流式加载时启用）
     const { handleEditorMount } = useChunkAutoScrollToBottom({
       chunkedData: fuzzerResponse.RandomChunkedData,
       id: fuzzerResponse?.UUID,
       onEditorMount: onSetOnlyOneResEditor,
-      resetKey: isStreamingResponse ? streamingHeaderText : undefined,
+      resetKey: showHeaderBase ? streamingHeaderText : undefined,
     })
 
     return (

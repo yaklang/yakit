@@ -68,6 +68,8 @@ export const useChunkAutoScrollToBottom = (
     addStreamIndexRef.current = responseChunks.length
     addStreamContentRef.current = []
   })
+  const resetKeyRef = useRef(resetKey)
+  resetKeyRef.current = resetKey
 
   // 滚动到底部
   const scrollToBottom = useMemoizedFn(() => {
@@ -116,9 +118,10 @@ export const useChunkAutoScrollToBottom = (
     setupScrollListener(editor)
     onEditorMount?.(editor)
     // 页签切走再回来，编辑器按响应头重建，已追加的正文没了。流式期间重新挂上时，把 chunk 再追加一遍。
-    if (resetKey !== undefined && addStreamIndexRef.current && responseChunks.length) {
+    if (resetKey !== undefined && seenChunkRef.current.size && responseChunks.length) {
+      seenChunkRef.current = new Set()
       addStreamIndexRef.current = responseChunks.length
-      addStreamContentRef.current = responseChunks.slice()
+      addStreamContentRef.current = takeNewChunks(responseChunks)
     }
   })
 
@@ -154,8 +157,21 @@ export const useChunkAutoScrollToBottom = (
 
   // 记录上次追加内容的结束位置
   const addStreamIndexRef = useRef<number>()
+  // 已经入队的 chunk。数组被截成尾段后长度不再变，只能靠 Index 认出新段。
+  const seenChunkRef = useRef<Set<string>>(new Set())
   // Monaco流式加载内容
   const addStreamContentRef = useRef<RandomChunkedResponse[]>([])
+  const chunkKey = (chunk: RandomChunkedResponse) => `${Number(chunk.Index)}-${chunk.Direction ?? 0}`
+  const takeNewChunks = useMemoizedFn((chunks: RandomChunkedResponse[]) => {
+    const fresh: RandomChunkedResponse[] = []
+    chunks.forEach((chunk) => {
+      const key = chunkKey(chunk)
+      if (seenChunkRef.current.has(key)) return
+      seenChunkRef.current.add(key)
+      fresh.push(chunk)
+    })
+    return fresh
+  })
   const timeRef = useRef<NodeJS.Timeout>()
   const appendText = useMemoizedFn(() => {
     const editor = editorRef.current
@@ -185,28 +201,18 @@ export const useChunkAutoScrollToBottom = (
     }
   })
 
-  // chunkedData 变化时，追加内容。流已经结束就只记住位置，不再入队。
+  // chunkedData 变化时，只追加还没写过的段。基座已经是全文时不再入队。
   useThrottleEffect(
     () => {
       if (!editorRef.current || responseChunks.length === 0) return
-      if (streamFinished) {
+      if (streamFinished && resetKey === undefined) {
         dropFinishedQueue()
         return
       }
-      // 初次加载时，记录位置并加载内容
-      if (!addStreamIndexRef.current) {
-        addStreamIndexRef.current = responseChunks.length
-        addStreamContentRef.current = responseChunks
-      }
-      // 后续加载时，追加内容
-      else {
-        if (responseChunks.length <= addStreamIndexRef.current) return
-        addStreamContentRef.current = [
-          ...addStreamContentRef.current,
-          ...responseChunks.slice(addStreamIndexRef.current),
-        ]
-        addStreamIndexRef.current = responseChunks.length
-      }
+      const fresh = takeNewChunks(responseChunks)
+      if (!fresh.length) return
+      addStreamIndexRef.current = responseChunks.length
+      addStreamContentRef.current = [...addStreamContentRef.current, ...fresh]
     },
     [responseChunks],
     {
@@ -216,21 +222,17 @@ export const useChunkAutoScrollToBottom = (
 
   useEffect(() => {
     timeRef.current = setInterval(() => {
-      // 完成态的正文已经在编辑器基座里，丢掉还没写出的 chunk
-      if (streamFinishedRef.current) {
+      // 基座已换成全文时，丢掉队列，避免再贴一遍。基座仍是响应头时，把新尾段写完。
+      if (streamFinishedRef.current && resetKeyRef.current === undefined) {
         addStreamContentRef.current = []
         return
       }
-      if (addStreamContentRef.current) {
-        appendText()
-      }
+      if (addStreamContentRef.current.length) appendText()
     }, 500)
     return () => {
-      // 流结束或换到一条已完成的响应时，基座已是全文，不再追加。
-      // 仍在流式时才把剩余内容写完。下标不能在这里清掉，否则同一批 chunk 会被当成第一次加载。
-      if (streamFinishedRef.current) {
+      if (streamFinishedRef.current && resetKeyRef.current === undefined) {
         addStreamContentRef.current = []
-      } else if (addStreamContentRef.current) {
+      } else if (addStreamContentRef.current.length) {
         appendText()
       }
       if (timeRef.current) {
@@ -241,12 +243,13 @@ export const useChunkAutoScrollToBottom = (
 
   // id 变化时，重新加载增量数据。已完成的响应不再整段追加。
   useUpdateEffect(() => {
-    if (streamFinished) {
+    seenChunkRef.current = new Set()
+    if (streamFinished && resetKey === undefined) {
       dropFinishedQueue()
       return
     }
     addStreamIndexRef.current = responseChunks.length
-    addStreamContentRef.current = responseChunks
+    addStreamContentRef.current = takeNewChunks(responseChunks)
     // 延迟执行，等待编辑器内容更新完成
     setTimeout(() => {
       scrollToBottom()
@@ -256,8 +259,9 @@ export const useChunkAutoScrollToBottom = (
   // 基座被换掉（例如响应头刚读回来）时，编辑器里已追加的正文没了，从头重放。
   useUpdateEffect(() => {
     if (resetKey === undefined) return
+    seenChunkRef.current = new Set()
     addStreamIndexRef.current = responseChunks.length
-    addStreamContentRef.current = responseChunks.slice()
+    addStreamContentRef.current = takeNewChunks(responseChunks)
     setTimeout(() => {
       scrollToBottom()
     }, 100)

@@ -129,7 +129,7 @@ describe('streamed response body', () => {
 
   it('page keeps the streaming header as the editor base', () => {
     const page = readFileSync('app/renderer/src/main/src/pages/fuzzer/HTTPFuzzerPage.tsx', 'utf8')
-    expect(page).toContain('resetKey: isStreamingResponse ? streamingHeaderText : undefined')
+    expect(page).toContain('resetKey: showHeaderBase ? streamingHeaderText : undefined')
   })
 
   it('quick preview replays the body when the header arrives and when the editor is mounted again', async () => {
@@ -250,5 +250,39 @@ describe('streamed response body', () => {
       await new Promise((resolve) => setTimeout(resolve, 700))
     })
     expect(edits.join('')).toBe('hello')
+  })
+
+  it('keeps the head already shown when the chunk list shrinks to its tail', async () => {
+    const edits: string[] = []
+    const head = body('HEAD', 1)
+    const mid = body('MID', 2)
+    const tail = { ...body('TAIL', 3), IsFinal: true }
+    const { result, rerender } = renderHook(
+      ({ chunkedData, resetKey }: { chunkedData: RandomChunkedResponse[]; resetKey?: string }) =>
+        useChunkAutoScrollToBottom({
+          chunkedData,
+          id: 'long-stream',
+          resetKey,
+        }),
+      {
+        initialProps: {
+          chunkedData: [] as RandomChunkedResponse[],
+          resetKey: 'HTTP/1.1 200' as string | undefined,
+        },
+      },
+    )
+    act(() => {
+      result.current.handleEditorMount(editorWith(edits) as never)
+    })
+    rerender({ chunkedData: [head, mid], resetKey: 'HTTP/1.1 200' })
+    await waitFor(() => expect(edits.join('')).toBe('HEADMID'), { timeout: 2500 })
+
+    // 超过上限后数组只剩尾段，基座仍是响应头。前段留在编辑器里，只补新的一段。
+    rerender({ chunkedData: [mid, tail], resetKey: 'HTTP/1.1 200' })
+    await waitFor(() => expect(edits.join('')).toContain('TAIL'), { timeout: 2500 })
+    const shown = edits.join('')
+    expect(shown.startsWith('HEAD')).toBe(true)
+    expect(shown.split('TAIL')).toHaveLength(2)
+    expect(shown.split('MID')).toHaveLength(2)
   })
 })

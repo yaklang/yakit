@@ -39,6 +39,8 @@ export function fuzzerTablePreview(input: {
   /** 当前读到的响应原文。流式时一般是响应头，还没读到时是空字符串。 */
   responseText: string
   memory: FuzzerPreviewMemory
+  /** chunk 已被截成尾段。正在看的预览不能用这段尾部当成全文。 */
+  truncated?: boolean
 }): { memory: FuzzerPreviewMemory; responseText: string; resetKey?: string } {
   const memory = input.memory.uuid === input.uuid ? input.memory : { uuid: input.uuid, header: '' }
   const responseChunks = (input.chunks || []).filter(isResponseChunk)
@@ -49,6 +51,10 @@ export function fuzzerTablePreview(input: {
     memory.header = input.responseText
   }
   if (streaming && input.showingResponse) {
+    return { memory, responseText: memory.header, resetKey: memory.header }
+  }
+  // 前段已经追加进编辑器，数组里只剩尾段。基座继续用响应头，避免整段替换把前段盖掉。
+  if (input.showingResponse && input.truncated && memory.header) {
     return { memory, responseText: memory.header, resetKey: memory.header }
   }
   // 流结束后正文仍在 chunk 里，库里多半还是响应头。拼回去，页签重新打开才能看到全文。

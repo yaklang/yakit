@@ -139,6 +139,17 @@ describe('fuzzer table quick preview', () => {
     })
     expect(firstOpenHeaderOnly.responseText).toBe(header + 'hello world')
 
+    const truncated = fuzzerTablePreview({
+      uuid: 'row-1',
+      chunks: [{ ...responseChunk(true), text: 'tail-only' }],
+      showingResponse: true,
+      responseText: header,
+      memory: { uuid: 'row-1', header },
+      truncated: true,
+    })
+    expect(truncated.responseText).toBe(header)
+    expect(truncated.resetKey).toBe(header)
+
     const nextRow = fuzzerTablePreview({
       uuid: 'row-2',
       chunks: [responseChunk()],
