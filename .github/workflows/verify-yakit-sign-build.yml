@@ -2,9 +2,40 @@ name: Verify Yakit Sign and Notarize Build
 
 on:
   workflow_dispatch:
+    inputs:
+      warm_release_cache:
+        description: Only warm release dependencies and runtimes (branch rehearsal)
+        type: boolean
+        default: false
+      prepare_run_id:
+        description: Branch rehearsal candidate run ID (empty keeps the existing macOS signing check)
+        type: string
+      engine_version:
+        description: Exact engine version for the branch rehearsal
+        type: string
+        default: 1.4.9-beta5
+
+permissions:
+  contents: write
+  actions: read
 
 jobs:
+  warm_release_cache:
+    if: inputs.warm_release_cache && github.ref_type == 'branch'
+    uses: ./.github/workflows/release-cache-warmup.yml
+
+  finalize_candidate:
+    if: ${{ !inputs.warm_release_cache && inputs.prepare_run_id != '' && github.ref_type == 'branch' }}
+    uses: ./.github/workflows/release-finalize.yml
+    with:
+      prepare_run_id: ${{ inputs.prepare_run_id }}
+      engine_version: ${{ inputs.engine_version }}
+      publish: false
+      verify_test_oss: true
+    secrets: inherit
+
   verify_sign_build:
+    if: ${{ !inputs.warm_release_cache && inputs.prepare_run_id == '' }}
     runs-on: macos-15
     env:
       # electron-builder 在 CI=true 时会改变部分行为，此处显式清空

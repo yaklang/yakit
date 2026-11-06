@@ -78,3 +78,9 @@ app/renderer/engine-link-startup/public/theme.css
 /dist/electron/
 /dist/.electron-*/
 /reports/electron-build/
+
+# Release pipeline sources and intermediate files
+!/scripts/release/
+!/scripts/release/**
+.release/
+.release-render.tgz

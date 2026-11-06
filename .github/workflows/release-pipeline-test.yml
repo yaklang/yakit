@@ -1,0 +1,48 @@
+name: Release Pipeline Test
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/release-*.yml'
+      - '.github/workflows/build-multi*-prod.yml'
+      - '.github/workflows/publish-oss-version.yml'
+      - '.github/actions/release-toolchain/**'
+      - 'app/renderer/src/main/vite.config.mts'
+      - 'scripts/release/**'
+      - 'e2e/fixtures/__test__/release-pipeline.test.mjs'
+      - 'e2e/fixtures/__test__/release-identity.test.mjs'
+      - 'e2e/fixtures/__test__/release-channels.test.mjs'
+      - 'e2e/fixtures/__test__/release-io.test.mjs'
+      - 'packageScript/**'
+      - 'scripts/build-electron.mjs'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-test-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  contracts:
+    timeout-minutes: 10
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: ./.github/actions/release-toolchain
+        with:
+          mode: build
+      - name: Verify release contracts and the Electron build
+        run: |
+          yarn typecheck:electron
+          yarn test:vitest --config scripts/release/vitest.config.mjs --run
+
+  native-installers:
+    uses: ./.github/workflows/release-prepare.yml
+    with:
+      editions: yakit,yakitEE
+      test_only: true
+      sign_test: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+    secrets: inherit
