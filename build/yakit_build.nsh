@@ -172,6 +172,10 @@ FunctionEnd
                         StrCpy $INSTALL_PATH_REG_KEY_NAME "MemfitAI_InstallPath"
                         StrCpy $EXE_NAME "Memfit AI"
                         StrCpy $ENV_VAR_NAME "MEMFITAI_HOME"  ; MemfitAI版本专用环境变量
+                    ${Else}
+                        StrCpy $INSTALL_PATH_REG_KEY_NAME "AI自动化渗透测试平台_InstallPath"
+                        StrCpy $EXE_NAME "AI自动化渗透测试平台"
+                        StrCpy $ENV_VAR_NAME "AUTOPENTESTTOOL_HOME"  ; AUTOPENTESTTOOL版本专用环境变量
                     ${EndIf}
                 ${EndIf}
             ${EndIf}
@@ -214,6 +218,10 @@ FunctionEnd
                         StrCpy $INSTALL_PATH_REG_KEY_NAME "MemfitAI_InstallPath"
                         StrCpy $EXE_NAME "Memfit AI"
                         StrCpy $ENV_VAR_NAME "MEMFITAI_HOME"
+                    ${Else}
+                        StrCpy $INSTALL_PATH_REG_KEY_NAME "AI自动化渗透测试平台_InstallPath"
+                        StrCpy $EXE_NAME "AI自动化渗透测试平台"
+                        StrCpy $ENV_VAR_NAME "AUTOPENTESTTOOL_HOME"  ; AUTOPENTESTTOOL版本专用环境变量
                     ${EndIf}
                 ${EndIf}
             ${EndIf}

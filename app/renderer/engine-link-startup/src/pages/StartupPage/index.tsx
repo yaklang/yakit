@@ -60,11 +60,11 @@ import yakitEELogo from '@/assets/yakitEELogo.png'
 import yakitEEDarkLogo from '@/assets/yakitEEDarkLogo.png'
 import yakitSELogo from '@/assets/yakitSELogo.png'
 import yakitSEDarkLogo from '@/assets/yakitSEDarkLogo.png'
+import memfitHasNameLogo from '@/assets/memfitHasName.png'
 import irifyRight from '@/assets/irify-right.png'
 import yakitRight from '@/assets/yakit-right.png'
 import RollingBlinds from '@/components/reactBits/rolling-blinds'
 import { SolidIrifyFontLogoIcon } from '@yakit-libs/yakit-ui-icons/oldicon/SolidIrifyFontLogoIcon'
-import { SolidMemfitFontLogoIcon } from '@yakit-libs/yakit-ui-icons/oldicon/SolidMemfitFontLogoIcon'
 import { SolidYakitFontLogoIcon } from '@yakit-libs/yakit-ui-icons/oldicon/SolidYakitFontLogoIcon'
 import { useTheme } from '@/hooks/useTheme'
 import { SoftwareBasics } from './components/SoftwareBasics'
@@ -1190,7 +1190,7 @@ export const StartupPage: React.FC = () => {
       if (isCommunityIRify()) {
         return { type: 'svg', component: SolidIrifyFontLogoIcon, width: 112, height: 41 }
       } else if (isCommunityMemfit()) {
-        return { type: 'svg', component: SolidMemfitFontLogoIcon, width: 112, height: 41 }
+        return { type: 'img', src: memfitHasNameLogo, width: 132 }
       } else {
         return { type: 'svg', component: SolidYakitFontLogoIcon, width: 112, height: 41 }
       }
@@ -1201,7 +1201,7 @@ export const StartupPage: React.FC = () => {
       if (isEnpriTraceIRify()) {
         return { type: 'svg', component: SolidIrifyFontLogoIcon, width: 112, height: 41 }
       } else if (isMemfit()) {
-        return { type: 'svg', component: SolidMemfitFontLogoIcon, width: 112, height: 41 }
+        return { type: 'img', src: memfitHasNameLogo, width: 132 }
       } else {
         return { type: 'img', src: theme === 'light' ? yakitEELogo : yakitEEDarkLogo, width: 137, height: 40 }
       }

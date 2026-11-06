@@ -7,8 +7,6 @@ import {
   SoftwareRemoteSvgIcon,
   SolidIrifyFontLogoIcon,
   SolidIrifyMiniLogoIcon,
-  SolidMemfitFontLogoIcon,
-  SolidMemfitMiniLogoIcon,
 } from '@yakit-libs/yakit-ui-icons/oldicon'
 import { Typography } from 'antd'
 import { useMemoizedFn } from 'ahooks'
@@ -23,6 +21,8 @@ import yakitEEProject from '@/assets/yakitFontEE.png'
 import yakitSEProject from '@/assets/yakitFontSE.png'
 import yakitEEMiniProject from '@/assets/yakitEE.png'
 import yakitSEMiniProject from '@/assets/yakitSE.png'
+import memfitHasNameProject from '@/assets/memfitHasName.jpg'
+import memfitMiniProject from '@/assets/memfit.jpg'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -41,7 +41,13 @@ const ProjectLogo = (showMini: boolean) => {
   } else if (isEnpriTraceAgent()) {
     return <img style={{ height: '100%' }} src={showMini ? yakitSEMiniProject : yakitSEProject} alt="暂无图片" />
   } else if (isMemfit() || isCommunityMemfit()) {
-    return showMini ? <SolidMemfitMiniLogoIcon className={styles['prject-logo-mini']} /> : <SolidMemfitFontLogoIcon />
+    return (
+      <img
+        style={{ height: showMini ? '100%' : undefined, width: showMini ? undefined : 101 }}
+        src={showMini ? memfitMiniProject : memfitHasNameProject}
+        alt="暂无图片"
+      />
+    )
   } else {
     return <YakitLogoSvgIcon />
   }
