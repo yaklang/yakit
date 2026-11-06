@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Tooltip } from 'antd'
-import { useDebounceFn, useMemoizedFn, useUpdateEffect } from 'ahooks'
+import { useMemoizedFn, useUpdateEffect } from 'ahooks'
 import classNames from 'classnames'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
@@ -14,17 +14,15 @@ import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtual
 import type { ColumnsTypeProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import { QuestionMarkCircleOutlined, RefreshOutlined, SearchOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { SystemInfo } from '@/constants/hardware'
-import { RemoteAIAgentGV } from '@/enums/aiAgent'
 import { useYakMcpStream } from '@/store/yakMcpStream'
 import {
   defaultMcpStartConfig,
   localMcpDefalutUrl,
-  parseMcpStartConfig,
   type YakMCPStartConfig,
 } from '@/components/layout/hooks/useMcp/useMcp'
-import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { AIMCPToolDetailPopover } from './AIMCPToolDetailPopover'
 import { useYakMcpToolMutation, yakMcpToolMutation } from './yakMcpToolMutation'
+import { useYakMcpStartConfigSave, yakMcpStartConfig } from './yakMcpStartConfig'
 import {
   type GetMCPToolListRequest,
   isMCPTierActive,
@@ -42,6 +40,8 @@ import { YakitRoute } from '@/enums/yakitRoute'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { SettingsSections } from '../../constants'
 import styles from './YakMcpSettings.module.scss'
+
+const MAX_TOOL_PAGES = 100
 
 const TRANSPORT_OPTIONS = [
   { value: 'sse', label: 'SSE' },
@@ -90,30 +90,36 @@ export const YakMcpSettings: React.FC = () => {
       .catch(() => setEnginePath(''))
   }, [])
 
-  // 缓存加载完成前阻止 effect 以默认 state 覆盖用户配置
   const configLoadedRef = useRef(false)
-  const configSaveAllowedRef = useRef(false)
+  const configRequestIdRef = useRef(0)
   const [configLoaded, setConfigLoaded] = useState(false)
+  const [configLoadFailed, setConfigLoadFailed] = useState(false)
+  const { saving: configSaving, saveFailed: configSaveFailed } = useYakMcpStartConfigSave()
+
+  const loadMcpStartConfig = useMemoizedFn(async () => {
+    const requestId = ++configRequestIdRef.current
+    setConfigLoadFailed(false)
+    try {
+      const config = await yakMcpStartConfig.load()
+      if (requestId !== configRequestIdRef.current) return
+      const merged = { ...defaultMcpStartConfig, ...config }
+      setEnableLegacyMcpTools(merged.enableLegacyMcpTools)
+      setEnableAIToolFramework(merged.enableAIToolFramework)
+      setEnableBridgeExternalMcp(merged.enableBridgeExternalMcp)
+      setAutoStartMcp(merged.autoStart)
+      tierVisibilityRef.current = merged
+      configLoadedRef.current = true
+      setConfigLoaded(true)
+    } catch {
+      if (requestId === configRequestIdRef.current) setConfigLoadFailed(true)
+    }
+  })
 
   useEffect(() => {
-    getRemoteValue(RemoteAIAgentGV.YakMCPStartConfig)
-      .then((raw) => {
-        const config = parseMcpStartConfig(raw)
-        const merged = config ? { ...defaultMcpStartConfig, ...config } : defaultMcpStartConfig
-        setEnableLegacyMcpTools(merged.enableLegacyMcpTools)
-        setEnableAIToolFramework(merged.enableAIToolFramework)
-        setEnableBridgeExternalMcp(merged.enableBridgeExternalMcp)
-        setAutoStartMcp(merged.autoStart)
-        tierVisibilityRef.current = merged
-        configLoadedRef.current = true
-        configSaveAllowedRef.current = true
-        setConfigLoaded(true)
-      })
-      .catch(() => {
-        // Allow explicit edits after a failed read, without saving defaults on passive store updates.
-        configLoadedRef.current = true
-        setConfigLoaded(true)
-      })
+    loadMcpStartConfig()
+    return () => {
+      configRequestIdRef.current++
+    }
   }, [])
 
   const sseJson = useMemo(
@@ -150,7 +156,6 @@ export const YakMcpSettings: React.FC = () => {
   const [enableAIToolFramework, setEnableAIToolFramework] = useState(true)
   const [enableBridgeExternalMcp, setEnableBridgeExternalMcp] = useState(false)
   const [autoStartMcp, setAutoStartMcp] = useState(false)
-  const pendingMcpStartConfigRef = useRef<YakMCPStartConfig | null>(null)
   const tierVisibilityRef = useRef<MCPTierVisibility>({
     enableLegacyMcpTools,
     enableAIToolFramework,
@@ -170,19 +175,6 @@ export const YakMcpSettings: React.FC = () => {
     () => !!mcpStreamInfo.mcpUrl?.trim() && (enableMcp || hasActiveToolTier),
     [mcpStreamInfo.mcpUrl, enableMcp, hasActiveToolTier],
   )
-
-  // 当主启用/自启动开关被禁用时，强制关闭自启动并同步缓存
-  useEffect(() => {
-    if (!canToggleMcp && autoStartMcp) {
-      setAutoStartMcp(false)
-      saveMcpStartConfig({ autoStart: false })
-    }
-  }, [canToggleMcp])
-
-  // 启动地址变更时同步到缓存（远程模式不缓存地址）
-  useUpdateEffect(() => {
-    saveMcpStartConfig()
-  }, [mcpStreamInfo.mcpUrl])
 
   const [isRefresh, setIsRefresh] = useState(false)
   const [keyword, setKeyword] = useState('')
@@ -338,8 +330,7 @@ export const YakMcpSettings: React.FC = () => {
       await yakMcpToolMutation.waitUntilIdle()
       if (requestId !== requestIdRef.current) return
       const catalog = new Map<string, MCPToolConfig>()
-      let received = 0
-      for (let page = 1; ; page++) {
+      for (let page = 1; page <= MAX_TOOL_PAGES; page++) {
         const params: GetMCPToolListRequest = {
           Keyword: '',
           Source: resolveMCPToolListSourceFilter(tierVisibilityRef.current).toString(),
@@ -350,12 +341,14 @@ export const YakMcpSettings: React.FC = () => {
         }
         const res = await grpcGetMCPToolList(params, true)
         if (requestId !== requestIdRef.current) return
+        const total = Number(res.Total)
+        if (!Number.isSafeInteger(total) || total < 0) throw new Error('Invalid MCP tool count')
         const pageTools = res.Tools || []
+        const previousSize = catalog.size
         pageTools.forEach((tool) => catalog.set(tool.ToolName, tool))
-        received += pageTools.length
-        if (received >= res.Total) break
-        // An incomplete catalog must never become an actionable batch scope.
-        if (!pageTools.length) throw new Error('Incomplete MCP tool catalog')
+        if (catalog.size >= total) break
+        // Incomplete or non-progressing catalogs must never become an actionable batch scope.
+        if (catalog.size === previousSize || page === MAX_TOOL_PAGES) throw new Error('Incomplete MCP tool catalog')
       }
       setTools([...catalog.values()])
       setIsRefresh((prev) => !prev)
@@ -395,10 +388,16 @@ export const YakMcpSettings: React.FC = () => {
     setLoadFailed(false)
   })
 
+  const disableAutoStartForInactiveTiers = (tiers: MCPTierVisibility): Partial<YakMCPStartConfig> => {
+    if (isMCPTierActive(tiers) || !autoStartMcp) return {}
+    setAutoStartMcp(false)
+    return { autoStart: false }
+  }
+
   const onLegacyTierChange = useMemoizedFn((checked: boolean) => {
     const tiers = { ...tierVisibilityRef.current, enableLegacyMcpTools: checked }
     setEnableLegacyMcpTools(checked)
-    saveMcpStartConfig({ enableLegacyMcpTools: checked })
+    saveMcpStartConfig({ enableLegacyMcpTools: checked, ...disableAutoStartForInactiveTiers(tiers) })
     resetAndFetchTools(tiers)
   })
 
@@ -412,7 +411,8 @@ export const YakMcpSettings: React.FC = () => {
     if (!checked) setEnableBridgeExternalMcp(false)
     saveMcpStartConfig({
       enableAIToolFramework: checked,
-      enableBridgeExternalMcp: checked ? tierVisibilityRef.current.enableBridgeExternalMcp : false,
+      ...(!checked ? { enableBridgeExternalMcp: false } : {}),
+      ...disableAutoStartForInactiveTiers(tiers),
     })
     resetAndFetchTools(tiers)
   })
@@ -483,32 +483,17 @@ export const YakMcpSettings: React.FC = () => {
     }
   })
 
-  const flushMcpStartConfig = useMemoizedFn(() => {
-    if (!pendingMcpStartConfigRef.current) return
-    setRemoteValue(RemoteAIAgentGV.YakMCPStartConfig, JSON.stringify(pendingMcpStartConfigRef.current))
-    pendingMcpStartConfigRef.current = null
+  const saveMcpStartConfig = useMemoizedFn((patch: Partial<YakMCPStartConfig>) => {
+    if (!configLoadedRef.current) return
+    yakMcpStartConfig.save(isRemoteEngine ? { ...patch, url: '' } : patch)
   })
 
-  const debouncedSaveMcpStartConfig = useDebounceFn(flushMcpStartConfig, { wait: 500 }).run
-
-  const saveMcpStartConfig = useMemoizedFn((override?: Partial<YakMCPStartConfig>) => {
-    if (!configLoadedRef.current) return
-    if (override) configSaveAllowedRef.current = true
-    if (!configSaveAllowedRef.current) return
-    pendingMcpStartConfigRef.current = {
-      autoStart: autoStartMcp,
-      url: isRemoteEngine ? '' : mcpStreamInfo.mcpUrl || localMcpDefalutUrl,
-      enableLegacyMcpTools,
-      enableAIToolFramework,
-      enableBridgeExternalMcp,
-      ...override,
-    }
-    debouncedSaveMcpStartConfig()
+  const retrySaveMcpStartConfig = useMemoizedFn(async () => {
+    if ((await yakMcpStartConfig.flush()) && !configLoadedRef.current) loadMcpStartConfig()
   })
 
   const onToggleEnable = useMemoizedFn((checked: boolean) => {
     if (!configLoaded || updatingTool || batchProgress) return
-    configSaveAllowedRef.current = true
     if (checked) {
       if (!hasActiveToolTier) return
       mcpStreamEvent.onStart({
@@ -520,12 +505,6 @@ export const YakMcpSettings: React.FC = () => {
       mcpStreamEvent.onCancel()
     }
   })
-
-  useEffect(() => {
-    if (enableMcp) {
-      saveMcpStartConfig()
-    }
-  }, [enableMcp])
 
   const onToggleAutoStart = useMemoizedFn((checked: boolean) => {
     setAutoStartMcp(checked)
@@ -556,6 +535,19 @@ export const YakMcpSettings: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {configLoadFailed && (
+        <YakitEmpty title={t('SettingsPage.yakMcp.configLoadFailed')}>
+          <YakitButton onClick={loadMcpStartConfig}>{t('SettingsPage.yakMcp.retryConfig')}</YakitButton>
+        </YakitEmpty>
+      )}
+      {configSaveFailed && (
+        <YakitEmpty title={t('SettingsPage.yakMcp.configSaveFailed')}>
+          <YakitButton disabled={configSaving} onClick={retrySaveMcpStartConfig}>
+            {t('SettingsPage.yakMcp.retrySaveConfig')}
+          </YakitButton>
+        </YakitEmpty>
+      )}
 
       {enableMcp ? (
         <div className={styles['transport']}>
@@ -609,8 +601,10 @@ export const YakMcpSettings: React.FC = () => {
                   value={mcpStreamInfo.mcpUrl}
                   disabled={!configLoaded}
                   onChange={(e) => {
-                    configSaveAllowedRef.current = true
-                    mcpStreamEvent.onSetMcpUrl(e.target.value)
+                    const url = e.target.value
+                    mcpStreamEvent.onSetMcpUrl(url)
+                    if (!url.trim()) setAutoStartMcp(false)
+                    saveMcpStartConfig({ url: url || localMcpDefalutUrl, ...(!url.trim() ? { autoStart: false } : {}) })
                   }}
                 />
               </div>

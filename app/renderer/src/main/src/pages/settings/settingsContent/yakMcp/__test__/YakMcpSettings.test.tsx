@@ -1,7 +1,8 @@
 import { ipcRendererMock } from '../../../../ai-re-act/hooks/__test__/setupElectron'
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import { YakMcpSettings } from '../YakMcpSettings'
+import { yakMcpStartConfig } from '../yakMcpStartConfig'
 import { grpcGetMCPToolList, grpcSetMCPToolEnabled } from '@/pages/ai-agent/aiMCP/utils'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import userEvent from '@testing-library/user-event'
@@ -108,9 +109,16 @@ describe('YakMcpSettings', () => {
     getToolListMock.mockReset().mockResolvedValue(listResponse([]))
     setToolEnabledMock.mockReset().mockResolvedValue({ Ok: true, Reason: '' })
     SystemInfo.mode = 'local'
-    getRemoteValueMock.mockResolvedValue('')
-    setRemoteValueMock.mockResolvedValue(undefined)
+    getRemoteValueMock.mockReset().mockResolvedValue('')
+    setRemoteValueMock.mockReset().mockResolvedValue(undefined)
     mcpStreamInfoRef.current = { mcpUrl: '127.0.0.1:11432', mcpCurrent: undefined, mcpServerUrl: '' }
+  })
+
+  afterEach(async () => {
+    // The shared debounce survives unmount; finish writes before the next test replaces its mocks.
+    await act(async () => {
+      expect(await yakMcpStartConfig.flush()).toBe(true)
+    })
   })
 
   it('渲染工具配置分区并请求工具列表', async () => {
@@ -143,7 +151,7 @@ describe('YakMcpSettings', () => {
     })
   })
 
-  it('切换自启动开关时把当前配置写入缓存', async () => {
+  it('首次启用自启动时保存默认能力层，保证下次启动满足自动启动条件', async () => {
     ipcRendererMock.invoke.mockResolvedValue('/opt/yak')
     getRemoteValueMock.mockResolvedValue('')
     render(<YakMcpSettings />)
@@ -159,10 +167,14 @@ describe('YakMcpSettings', () => {
         expect.stringContaining('"autoStart":true'),
       )
     })
-    expect(setRemoteValueMock).toHaveBeenCalledWith(
-      RemoteAIAgentGV.YakMCPStartConfig,
-      expect.stringContaining('"enableLegacyMcpTools"'),
-    )
+    // useMcpStream checks the stored tier flags directly before starting the engine.
+    expect(JSON.parse(setRemoteValueMock.mock.lastCall![1])).toEqual({
+      autoStart: true,
+      url: '',
+      enableLegacyMcpTools: true,
+      enableAIToolFramework: true,
+      enableBridgeExternalMcp: false,
+    })
   })
 
   it('切换 MCP 内置工具开关时把最新状态写入缓存', async () => {
@@ -189,8 +201,8 @@ describe('YakMcpSettings', () => {
     const { rerender } = render(<YakMcpSettings />)
 
     const input = await screen.findByDisplayValue('127.0.0.1:11432')
-    await userEvent.clear(input)
-    await userEvent.type(input, '127.0.0.1:9011')
+    await waitFor(() => expect(input).toBeEnabled())
+    fireEvent.change(input, { target: { value: '127.0.0.1:9011' } })
 
     // 模拟全局 store 同步更新后的 mcpUrl
     mcpStreamInfoRef.current = { ...mcpStreamInfoRef.current, mcpUrl: '127.0.0.1:9011' }
@@ -235,6 +247,7 @@ describe('YakMcpSettings', () => {
     })
     await new Promise((r) => setTimeout(r, 0))
 
+    fireEvent.change(screen.getByDisplayValue('127.0.0.1:11432'), { target: { value: '0.0.0.0:11432' } })
     mcpStreamInfoRef.current = { ...mcpStreamInfoRef.current, mcpUrl: '0.0.0.0:11432' }
     rerender(<YakMcpSettings />)
 
@@ -564,40 +577,6 @@ describe('YakMcpSettings', () => {
     expect(setToolEnabledMock).not.toHaveBeenCalled()
   })
 
-  it('配置读取失败不会自动覆盖缓存，后续用户修改仍可保存', async () => {
-    getRemoteValueMock.mockRejectedValueOnce(new Error('temporary config read failure'))
-    const { rerender } = render(<YakMcpSettings />)
-    await waitFor(() => expect(getToolListMock).toHaveBeenCalled())
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 600))
-    })
-    expect(setRemoteValueMock).not.toHaveBeenCalled()
-
-    const switches = screen.getAllByRole('switch')
-    await userEvent.click(switches[switches.length - 1])
-    await waitFor(() =>
-      expect(setRemoteValueMock).toHaveBeenCalledWith(
-        RemoteAIAgentGV.YakMCPStartConfig,
-        expect.stringContaining('"autoStart":true'),
-      ),
-    )
-    await userEvent.click(screen.getAllByRole('switch')[1])
-    await waitFor(() =>
-      expect(setRemoteValueMock).toHaveBeenCalledWith(
-        RemoteAIAgentGV.YakMCPStartConfig,
-        expect.stringContaining('"enableLegacyMcpTools":false'),
-      ),
-    )
-    mcpStreamInfoRef.current = { ...mcpStreamInfoRef.current, mcpUrl: '127.0.0.1:9011' }
-    rerender(<YakMcpSettings />)
-    await waitFor(() =>
-      expect(setRemoteValueMock).toHaveBeenCalledWith(
-        RemoteAIAgentGV.YakMCPStartConfig,
-        expect.stringContaining('"url":"127.0.0.1:9011"'),
-      ),
-    )
-  })
-
   it('按状态筛选批量操作部分失败后重置表格视口，保留失败工具供重试', async () => {
     getToolListMock.mockResolvedValue(listResponse([makeTool('success'), makeTool('failed'), makeTool('also_success')]))
     setToolEnabledMock.mockImplementation(async ({ ToolName }) => ({
@@ -660,8 +639,319 @@ describe('YakMcpSettings', () => {
     }
   })
 
-  it('配置读取失败后被动恢复地址或运行状态不会覆盖缓存', async () => {
-    getRemoteValueMock.mockRejectedValueOnce(new Error('temporary config read failure'))
+  it('配置读取失败时显示重试且禁止配置编辑、工具查询和批量写入', async () => {
+    getRemoteValueMock.mockRejectedValueOnce(new Error('config unavailable'))
+    const { rerender } = render(<YakMcpSettings />)
+    expect(await screen.findByText('SettingsPage.yakMcp.configLoadFailed')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'SettingsPage.yakMcp.retryConfig' })).toBeEnabled()
+    screen.getAllByRole('switch').forEach((control) => expect(control).toBeDisabled())
+    expect(screen.getByDisplayValue('127.0.0.1:11432')).toBeDisabled()
+    await userEvent.click(screen.getByRole('button', { name: 'SettingsPage.yakMcp.refreshTools' }))
+    await userEvent.click(screen.getByRole('button', { name: 'SettingsPage.yakMcp.disableResults' }))
+    mcpStreamInfoRef.current = { ...mcpStreamInfoRef.current, mcpUrl: '127.0.0.1:9011' }
+    rerender(<YakMcpSettings />)
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 600))
+    })
+    expect(getToolListMock).not.toHaveBeenCalled()
+    expect(setToolEnabledMock).not.toHaveBeenCalled()
+    expect(setRemoteValueMock).not.toHaveBeenCalled()
+    expect(onStartMock).not.toHaveBeenCalled()
+  })
+
+  it('显式重试配置读取后恢复真实能力层，不以默认值加载工具', async () => {
+    const cached = {
+      autoStart: true,
+      url: '127.0.0.1:9011',
+      enableLegacyMcpTools: false,
+      enableAIToolFramework: true,
+      enableBridgeExternalMcp: true,
+    }
+    getRemoteValueMock.mockRejectedValueOnce(new Error('config unavailable')).mockResolvedValue(JSON.stringify(cached))
+    render(<YakMcpSettings />)
+    await userEvent.click(await screen.findByRole('button', { name: 'SettingsPage.yakMcp.retryConfig' }))
+    await waitFor(() =>
+      expect(getToolListMock).toHaveBeenCalledWith(expect.objectContaining({ Source: 'aitool,bridge' }), true),
+    )
+    const switches = screen.getAllByRole('switch')
+    expect(switches[1]).not.toBeChecked()
+    expect(switches[2]).toBeChecked()
+    expect(switches[3]).toBeChecked()
+    expect(switches[4]).toBeChecked()
+    expect(screen.queryByText('SettingsPage.yakMcp.configLoadFailed')).not.toBeInTheDocument()
+    expect(setRemoteValueMock).not.toHaveBeenCalled()
+  })
+
+  it('保存前重读配置，只合并用户编辑字段并保留远端最新值', async () => {
+    const initial = {
+      autoStart: false,
+      url: '127.0.0.1:11432',
+      enableLegacyMcpTools: true,
+      enableAIToolFramework: true,
+      enableBridgeExternalMcp: false,
+    }
+    const latest = { ...initial, url: '127.0.0.1:9900', enableLegacyMcpTools: false, enableBridgeExternalMcp: true }
+    getRemoteValueMock.mockResolvedValueOnce(JSON.stringify(initial)).mockResolvedValue(JSON.stringify(latest))
+    render(<YakMcpSettings />)
+    await waitFor(() => expect(getToolListMock).toHaveBeenCalled())
+    await userEvent.click(screen.getAllByRole('switch')[4])
+    await waitFor(() => expect(setRemoteValueMock).toHaveBeenCalledTimes(1))
+    expect(JSON.parse(setRemoteValueMock.mock.calls[0][1])).toEqual({ ...latest, autoStart: true })
+    expect(getRemoteValueMock).toHaveBeenCalledTimes(2)
+  })
+
+  it('快速编辑多个字段合并为一次保存', async () => {
+    const stored = {
+      autoStart: false,
+      url: '127.0.0.1:9900',
+      enableLegacyMcpTools: true,
+      enableAIToolFramework: true,
+      enableBridgeExternalMcp: false,
+    }
+    getRemoteValueMock.mockResolvedValue(JSON.stringify(stored))
+    render(<YakMcpSettings />)
+    await waitFor(() => expect(getToolListMock).toHaveBeenCalled())
+    fireEvent.click(screen.getAllByRole('switch')[4])
+    fireEvent.click(screen.getAllByRole('switch')[1])
+    await waitFor(() => expect(setRemoteValueMock).toHaveBeenCalledTimes(1))
+    expect(JSON.parse(setRemoteValueMock.mock.calls[0][1])).toEqual({
+      ...stored,
+      autoStart: true,
+      enableLegacyMcpTools: false,
+    })
+  })
+
+  it('保存请求串行执行，期间的新编辑在前次完成后合并最新配置', async () => {
+    let stored = {
+      autoStart: false,
+      url: '127.0.0.1:9900',
+      enableLegacyMcpTools: true,
+      enableAIToolFramework: true,
+      enableBridgeExternalMcp: false,
+    }
+    let finishFirst!: () => void
+    getRemoteValueMock.mockImplementation(async () => JSON.stringify(stored))
+    setRemoteValueMock
+      .mockImplementationOnce(
+        (_key, value) =>
+          new Promise((resolve) => {
+            let completed = false
+            finishFirst = () => {
+              if (completed) return
+              completed = true
+              stored = JSON.parse(value)
+              resolve(undefined)
+            }
+          }),
+      )
+      .mockImplementation(async (_key, value) => {
+        stored = JSON.parse(value)
+      })
+    render(<YakMcpSettings />)
+    await waitFor(() => expect(getToolListMock).toHaveBeenCalled())
+    await userEvent.click(screen.getAllByRole('switch')[4])
+    await waitFor(() => expect(setRemoteValueMock).toHaveBeenCalledTimes(1))
+    try {
+      await userEvent.click(screen.getAllByRole('switch')[1])
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 600))
+      })
+      expect(setRemoteValueMock).toHaveBeenCalledTimes(1)
+      await act(async () => finishFirst())
+      await waitFor(() => expect(setRemoteValueMock).toHaveBeenCalledTimes(2))
+      expect(stored).toEqual({
+        autoStart: true,
+        url: '127.0.0.1:9900',
+        enableLegacyMcpTools: false,
+        enableAIToolFramework: true,
+        enableBridgeExternalMcp: false,
+      })
+    } finally {
+      await act(async () => finishFirst())
+    }
+  })
+
+  it.each(['read', 'write'] as const)('保存期间%s失败时保留编辑并提示重试，不写默认配置', async (failure) => {
+    const stored = {
+      autoStart: false,
+      url: '127.0.0.1:9900',
+      enableLegacyMcpTools: false,
+      enableAIToolFramework: true,
+      enableBridgeExternalMcp: true,
+    }
+    getRemoteValueMock.mockResolvedValue(JSON.stringify(stored))
+    render(<YakMcpSettings />)
+    await waitFor(() => expect(getToolListMock).toHaveBeenCalled())
+    if (failure === 'read') getRemoteValueMock.mockRejectedValueOnce(new Error('read failed'))
+    else setRemoteValueMock.mockRejectedValueOnce(new Error('write failed'))
+    await userEvent.click(screen.getAllByRole('switch')[4])
+    expect(await screen.findByText('SettingsPage.yakMcp.configSaveFailed')).toBeInTheDocument()
+    if (failure === 'read') expect(setRemoteValueMock).not.toHaveBeenCalled()
+    else expect(JSON.parse(setRemoteValueMock.mock.calls[0][1])).toEqual({ ...stored, autoStart: true })
+    const externallyUpdated = { ...stored, url: '127.0.0.1:9911' }
+    getRemoteValueMock.mockResolvedValue(JSON.stringify(externallyUpdated))
+    await userEvent.click(screen.getByRole('button', { name: 'SettingsPage.yakMcp.retrySaveConfig' }))
+    await waitFor(() => expect(setRemoteValueMock).toHaveBeenCalledTimes(failure === 'read' ? 1 : 2))
+    expect(JSON.parse(setRemoteValueMock.mock.lastCall![1])).toEqual({ ...externallyUpdated, autoStart: true })
+    await waitFor(() => expect(screen.queryByText('SettingsPage.yakMcp.configSaveFailed')).not.toBeInTheDocument())
+  })
+
+  it('工具目录超过100页仍未完整时停止分页并禁止批量操作', async () => {
+    getToolListMock.mockImplementation(async ({ Pagination }) => {
+      const page = Pagination.Page
+      return listResponse(page <= 100 ? [makeTool(`page_${page}`)] : [], 101, page)
+    })
+    render(<YakMcpSettings />)
+    expect(await screen.findByText('SettingsPage.yakMcp.loadFailed')).toBeInTheDocument()
+    expect(getToolListMock).toHaveBeenCalledTimes(100)
+    expect(screen.getByRole('button', { name: 'SettingsPage.yakMcp.disableResults' })).toBeDisabled()
+    expect(screen.queryByTestId('tool-page_1')).not.toBeInTheDocument()
+  })
+
+  it('工具目录恰好在第100页完整时正常显示并允许操作', async () => {
+    getToolListMock.mockImplementation(async ({ Pagination }) =>
+      listResponse([makeTool(`page_${Pagination.Page}`)], 100, Pagination.Page),
+    )
+    render(<YakMcpSettings />)
+    expect(await screen.findByTestId('tool-page_100')).toBeInTheDocument()
+    expect(getToolListMock).toHaveBeenCalledTimes(100)
+    expect(screen.getByRole('button', { name: 'SettingsPage.yakMcp.disableResults' })).toBeEnabled()
+    expect(screen.queryByText('SettingsPage.yakMcp.loadFailed')).not.toBeInTheDocument()
+  })
+
+  it.each(['{invalid', '[1,2]'])('非空损坏配置%s不作为空配置加载', async (raw) => {
+    getRemoteValueMock.mockResolvedValue(raw)
+    render(<YakMcpSettings />)
+    expect(await screen.findByText('SettingsPage.yakMcp.configLoadFailed')).toBeInTheDocument()
+    expect(getToolListMock).not.toHaveBeenCalled()
+    expect(setRemoteValueMock).not.toHaveBeenCalled()
+  })
+
+  it('保存前读到损坏配置时禁止覆盖并允许重试', async () => {
+    getRemoteValueMock.mockResolvedValueOnce('').mockResolvedValue('{invalid')
+    render(<YakMcpSettings />)
+    await waitFor(() => expect(getToolListMock).toHaveBeenCalled())
+    await userEvent.click(screen.getAllByRole('switch')[4])
+    expect(await screen.findByText('SettingsPage.yakMcp.configSaveFailed')).toBeInTheDocument()
+    expect(setRemoteValueMock).not.toHaveBeenCalled()
+    expect(screen.getByRole('button', { name: 'SettingsPage.yakMcp.retrySaveConfig' })).toBeEnabled()
+    getRemoteValueMock.mockResolvedValue('')
+    await userEvent.click(screen.getByRole('button', { name: 'SettingsPage.yakMcp.retrySaveConfig' }))
+    await waitFor(() => expect(setRemoteValueMock).toHaveBeenCalledTimes(1))
+  })
+
+  it('防抖期间离开再返回设置页仍保存编辑并恢复最新配置', async () => {
+    let stored = {
+      autoStart: false,
+      url: '127.0.0.1:9900',
+      enableLegacyMcpTools: false,
+      enableAIToolFramework: true,
+      enableBridgeExternalMcp: true,
+    }
+    getRemoteValueMock.mockImplementation(async () => JSON.stringify(stored))
+    setRemoteValueMock.mockImplementation(async (_key, value) => {
+      stored = JSON.parse(value)
+    })
+    const first = render(<YakMcpSettings />)
+    await waitFor(() => expect(getToolListMock).toHaveBeenCalled())
+    await userEvent.click(screen.getAllByRole('switch')[4])
+    expect(setRemoteValueMock).not.toHaveBeenCalled()
+    first.unmount()
+    render(<YakMcpSettings />)
+    await waitFor(() => expect(stored.autoStart).toBe(true))
+    await waitFor(() => expect(screen.getAllByRole('switch')[4]).toBeChecked())
+    expect(stored.enableLegacyMcpTools).toBe(false)
+    expect(stored.enableBridgeExternalMcp).toBe(true)
+    expect(stored.url).toBe('127.0.0.1:9900')
+  })
+
+  it('旧页面保存未完成时新页面等待，完成后编辑不会丢失旧值', async () => {
+    let stored = {
+      autoStart: false,
+      url: '127.0.0.1:9900',
+      enableLegacyMcpTools: true,
+      enableAIToolFramework: true,
+      enableBridgeExternalMcp: false,
+    }
+    let finishFirst!: () => void
+    getRemoteValueMock.mockImplementation(async () => JSON.stringify(stored))
+    setRemoteValueMock
+      .mockImplementationOnce(
+        (_key, value) =>
+          new Promise((resolve) => {
+            let completed = false
+            finishFirst = () => {
+              if (completed) return
+              completed = true
+              stored = JSON.parse(value)
+              resolve(undefined)
+            }
+          }),
+      )
+      .mockImplementation(async (_key, value) => {
+        stored = JSON.parse(value)
+      })
+    const first = render(<YakMcpSettings />)
+    await waitFor(() => expect(getToolListMock).toHaveBeenCalled())
+    await userEvent.click(screen.getAllByRole('switch')[4])
+    await waitFor(() => expect(setRemoteValueMock).toHaveBeenCalledTimes(1))
+    first.unmount()
+    render(<YakMcpSettings />)
+    try {
+      expect(screen.getAllByRole('switch')[1]).toBeDisabled()
+      await act(async () => finishFirst())
+      await waitFor(() => expect(screen.getAllByRole('switch')[4]).toBeChecked())
+      await userEvent.click(screen.getAllByRole('switch')[1])
+      await waitFor(() => expect(setRemoteValueMock).toHaveBeenCalledTimes(2))
+      expect(stored.autoStart).toBe(true)
+      expect(stored.enableLegacyMcpTools).toBe(false)
+      expect(stored.url).toBe('127.0.0.1:9900')
+    } finally {
+      await act(async () => finishFirst())
+    }
+  })
+
+  it('旧保存失败后重试采用同一字段的新编辑值', async () => {
+    const stored = {
+      autoStart: false,
+      url: '127.0.0.1:9900',
+      enableLegacyMcpTools: false,
+      enableAIToolFramework: true,
+      enableBridgeExternalMcp: true,
+    }
+    let rejectFirst!: (error: Error) => void
+    getRemoteValueMock.mockResolvedValue(JSON.stringify(stored))
+    setRemoteValueMock.mockImplementationOnce(
+      () =>
+        new Promise((_resolve, reject) => {
+          rejectFirst = reject
+        }),
+    )
+    render(<YakMcpSettings />)
+    await waitFor(() => expect(getToolListMock).toHaveBeenCalled())
+    await userEvent.click(screen.getAllByRole('switch')[4])
+    await waitFor(() => expect(setRemoteValueMock).toHaveBeenCalledTimes(1))
+    try {
+      await userEvent.click(screen.getAllByRole('switch')[4])
+      await act(async () => rejectFirst(new Error('write failed')))
+      expect(await screen.findByText('SettingsPage.yakMcp.configSaveFailed')).toBeInTheDocument()
+      await userEvent.click(screen.getByRole('button', { name: 'SettingsPage.yakMcp.retrySaveConfig' }))
+      await waitFor(() => expect(setRemoteValueMock).toHaveBeenCalledTimes(2))
+      expect(JSON.parse(setRemoteValueMock.mock.lastCall![1])).toEqual(stored)
+    } finally {
+      await act(async () => rejectFirst(new Error('cleanup')))
+    }
+  })
+
+  it('成功读取配置后被动地址和运行状态同步也不保存未编辑字段', async () => {
+    const cached = {
+      autoStart: false,
+      url: '127.0.0.1:9900',
+      enableLegacyMcpTools: false,
+      enableAIToolFramework: true,
+      enableBridgeExternalMcp: true,
+    }
+    getRemoteValueMock.mockResolvedValue(JSON.stringify(cached))
     const { rerender } = render(<YakMcpSettings />)
     await waitFor(() => expect(getToolListMock).toHaveBeenCalled())
     mcpStreamInfoRef.current = {
@@ -674,21 +964,5 @@ describe('YakMcpSettings', () => {
       await new Promise((resolve) => setTimeout(resolve, 600))
     })
     expect(setRemoteValueMock).not.toHaveBeenCalled()
-  })
-
-  it('配置读取失败后首次显式编辑地址也能保存', async () => {
-    getRemoteValueMock.mockRejectedValueOnce(new Error('temporary config read failure'))
-    const { rerender } = render(<YakMcpSettings />)
-    await waitFor(() => expect(getToolListMock).toHaveBeenCalled())
-    fireEvent.change(screen.getByDisplayValue('127.0.0.1:11432'), { target: { value: '127.0.0.1:9012' } })
-    expect(onSetMcpUrlMock).toHaveBeenCalledWith('127.0.0.1:9012')
-    mcpStreamInfoRef.current = { ...mcpStreamInfoRef.current, mcpUrl: '127.0.0.1:9012' }
-    rerender(<YakMcpSettings />)
-    await waitFor(() =>
-      expect(setRemoteValueMock).toHaveBeenCalledWith(
-        RemoteAIAgentGV.YakMCPStartConfig,
-        expect.stringContaining('"url":"127.0.0.1:9012"'),
-      ),
-    )
   })
 })
