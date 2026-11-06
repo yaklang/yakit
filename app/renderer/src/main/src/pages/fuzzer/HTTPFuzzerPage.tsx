@@ -5261,8 +5261,11 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
 
     // 仅当存在响应方向的 chunk（SSE 等响应增量）时才算流式响应；
     // 请求分块（Direction=REQUEST）不应触发流式响应展示路径。
-    const isStreamingResponse =
-      !!loading && (fuzzerResponse?.RandomChunkedData || []).filter(isResponseChunkedData).length > 0
+    // 整批任务还在跑时 loading 仍为 true。当前这条已经收到结束标记，就不再当流式：
+    // 编辑器改用拼好的全文，增量追加随之停止，末尾正文不会被清掉。
+    const responseChunks = (fuzzerResponse?.RandomChunkedData || []).filter(isResponseChunkedData)
+    const currentResponseOpen = responseChunks.length > 0 && !responseChunks[responseChunks.length - 1]?.IsFinal
+    const isStreamingResponse = !!loading && currentResponseOpen
 
     const assembledResponsePackage = useCreation(() => {
       const header = responsePacket

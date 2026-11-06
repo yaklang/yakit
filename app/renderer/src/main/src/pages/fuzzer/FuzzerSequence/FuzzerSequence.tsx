@@ -538,6 +538,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
   const successCountRef = useRef<Map<string, number>>(new Map())
   const failedCountRef = useRef<Map<string, number>>(new Map())
   const successBufferRef = useRef<Map<string, FuzzerResponse[]>>(new Map())
+  const failedBufferRef = useRef<Map<string, FuzzerResponse[]>>(new Map())
   const rawScopesRef = useRef<Set<string>>(new Set())
   // 延迟删除按 scope 记轮次。只重跑或重匹配一部分节点时，别的 scope 上还没执行的删除仍然要发生。
   const rawEvictGenerationRef = useRef(new Map<string, number>())
@@ -548,15 +549,20 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
       rawEvictGenerationRef.current.set(scope, (rawEvictGenerationRef.current.get(scope) || 0) + 1)
     })
   })
+  const responseStillListed = (scope: string, uuid: string) =>
+    [successBufferRef.current, failedBufferRef.current].some((rowsByIndex) =>
+      [...rowsByIndex.values()].some((rows) => rows.some((row) => row?.UUID === uuid && row?.RawScope === scope)),
+    )
   const scheduleOverflowDelete = useMemoizedFn((scope: string, uuid?: string) => {
     if (!scope || !uuid) return
     const generation = rawEvictGenerationRef.current.get(scope) || 0
     setTimeout(() => {
       if (generation !== (rawEvictGenerationRef.current.get(scope) || 0)) return
+      // 同一条 UUID 又写回表格时，不能把新正文删掉
+      if (responseStillListed(scope, uuid)) return
       void fuzzerRawStore.deleteUuid(scope, uuid)
     }, 2000)
   })
-  const failedBufferRef = useRef<Map<string, FuzzerResponse[]>>(new Map())
   const countRef = useRef<Map<string, number>>(new Map())
   const runtimeIdBufferRef = useRef<Map<string, string[]>>(new Map())
   const fuzzerTableMaxDataRef = useRef<Map<string, number>>(new Map())
@@ -660,9 +666,22 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             const { item, generation, scope } = releaseQueue.shift()!
             item.RequestRaw = null as unknown as Uint8Array
             item.ResponseRaw = null as unknown as Uint8Array
-            // 这个 scope 又开始新一轮时，不要删掉新写进去的同一条 UUID。
-            if (generation === (rawEvictGenerationRef.current.get(scope) || 0) && item.RawScope && item.UUID) {
-              void fuzzerRawStore.deleteUuid(item.RawScope, item.UUID)
+            // 这个 scope 又开始新一轮，或同一条 UUID 还在表里时，不要删掉新写进去的正文。
+            const uuid = item.UUID
+            const stillListed =
+              !!uuid &&
+              [successBufferRef.current, failedBufferRef.current].some((rowsByIndex) =>
+                [...rowsByIndex.values()].some((rows) =>
+                  rows.some((row) => row?.UUID === uuid && row?.RawScope === scope),
+                ),
+              )
+            if (
+              generation === (rawEvictGenerationRef.current.get(scope) || 0) &&
+              item.RawScope &&
+              uuid &&
+              !stillListed
+            ) {
+              void fuzzerRawStore.deleteUuid(item.RawScope, uuid)
             }
             batch--
           }

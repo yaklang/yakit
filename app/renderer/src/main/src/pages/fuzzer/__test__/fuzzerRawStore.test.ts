@@ -183,9 +183,11 @@ describe('createKeywordSearchCache', () => {
   it('does not remember a miss when reading the response fails', async () => {
     const cache = createKeywordSearchCache((b) => String.fromCharCode(...b))
     const rows = [row('a')]
-    await cache.fill('x', rows, async () => {
-      throw new Error('db')
-    })
+    await expect(
+      cache.fill('x', rows, async () => {
+        throw new Error('db')
+      }),
+    ).rejects.toThrow('db')
     expect(cache.prepare('x', rows)).toEqual(['a'])
   })
 
@@ -196,7 +198,7 @@ describe('createKeywordSearchCache', () => {
       if (uuids.includes('b')) throw new Error('db')
       return new Map(uuids.map((uuid) => [uuid, bytes([120])]))
     })
-    await cache.fill('x', rows, readMany, 1)
+    await expect(cache.fill('x', rows, readMany, 1)).rejects.toThrow('db')
     expect(cache.matches(rows[0], 'x')).toBe(true)
     expect(cache.prepare('x', rows)).toEqual(['b'])
   })
@@ -509,6 +511,12 @@ describe('fuzzerRawStore', () => {
     expect(row.ResponseRaw).toHaveLength(0)
     spy.mockRestore()
     await fuzzerRawStore.deleteScope(scope)
+  })
+
+  it('propagates a single get failure instead of returning an empty body', async () => {
+    const spy = vi.spyOn(fuzzerRawStore, 'getMany').mockRejectedValueOnce(new Error('idb down'))
+    await expect(fuzzerRawStore.get(fuzzerPageScope('read-get'), 'missing')).rejects.toThrow('idb down')
+    spy.mockRestore()
   })
 
   it('propagates single-row read failures instead of returning an empty ResponseRaw', async () => {

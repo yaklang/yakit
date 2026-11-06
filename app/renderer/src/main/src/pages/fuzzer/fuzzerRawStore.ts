@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { yakitFailed } from '@/utils/notification'
+import i18n from '@/i18n/i18n'
 import type { FuzzerResponse } from './HTTPFuzzerPage'
 
 /**
@@ -365,11 +367,8 @@ const dropPending = (scope: string) => {
 export const fuzzerRawStore = {
   async get(scope: string, uuid?: string): Promise<Uint8Array | undefined> {
     if (!scope || !uuid) return undefined
-    try {
-      return (await this.getMany(scope, [uuid])).get(uuid)
-    } catch {
-      return undefined
-    }
+    // 没有这条记录时返回 undefined。读库失败继续抛，调用方提示，不能当成空正文。
+    return (await this.getMany(scope, [uuid])).get(uuid)
   },
 
   async getMany(scope: string, uuids: string[]) {
@@ -547,9 +546,8 @@ export function createKeywordSearchCache(toText: (bytes: Uint8Array) => string) 
         // 否则旧正文会被记到新版本上，后面的搜索不再重读。
         for (let attempt = 0; chunk.length && attempt < 3; attempt++) {
           const seen = new Map(chunk.map((key) => [key, byKey.get(key)?.RawVersion || 0]))
-          const bodies = await readMany(chunk).catch(() => undefined)
-          // 这一批读失败不记结果，继续读后面的行；下次搜索会把没记下的再读一遍
-          if (!bodies) continue
+          // 读失败直接抛出。不把这行记成未命中，调用方提示后整次搜索停下。
+          const bodies = await readMany(chunk)
           // 读库期间关键字已经被后一次搜索换掉，这批结果属于旧关键字，直接丢弃
           if (keyWord !== nextKeyWord) return
           const again: string[] = []
@@ -598,9 +596,15 @@ export function useFuzzerResponseRaw(uuid?: string, version?: number, enabled = 
   useEffect(() => {
     if (!active || !uuid || !scope) return
     let cancel = false
-    fuzzerRawStore.get(scope, uuid).then((body) => {
-      if (!cancel) setPacket(body || EMPTY_RAW)
-    })
+    fuzzerRawStore
+      .get(scope, uuid)
+      .then((body) => {
+        if (!cancel) setPacket(body || EMPTY_RAW)
+      })
+      .catch((err) => {
+        if (cancel) return
+        yakitFailed(i18n.t('YakitNotification.loadFailed', { ns: 'yakitUi', error: `${err}` }))
+      })
     return () => {
       cancel = true
     }
