@@ -1087,6 +1087,11 @@
     "tabPending": "内容正在生成…",
     "tabUnavailable": "此视图暂时无法显示。",
     "views": "切换视图",
+    "componentRegion": "交互组件",
+    "stepPending": "未开始",
+    "stepActive": "进行中",
+    "stepDone": "完成",
+    "stepError": "失败",
     "invalidQuestion": "提问格式无效"
   }
 }

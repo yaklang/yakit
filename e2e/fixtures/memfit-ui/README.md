@@ -6,7 +6,7 @@
 yarn test:memfit-ui:all
 ```
 
-- `yarn test:memfit-ui`：现有 Vitest 用例，覆盖 Schema、流式前缀、问答队列、回执乱序、草稿、输入法、倒计时、失败重试与防重复提交，以及真实会话控制器的连接收尾与迟到回执（模拟 IPC）。
+- `yarn test:memfit-ui`：现有 Vitest 用例，覆盖 Schema、流式前缀、问答队列、回执乱序、草稿、输入法、倒计时、失败重试与防重复提交，以及真实会话控制器的连接收尾、迟到回执与重连后草稿恢复（模拟 IPC）。
 - `yarn test:memfit-ui:electron`：复用已有 WebdriverIO/Electron 依赖，构建独立测试页面，使用实际组件、校验器、Yakit 控件、主题和 SCSS。在真实 Chromium 中点击、输入、切页、开关浮层，检查发送内容及结束状态，保存截图。
 
 首次运行可能需要下载与 Electron 匹配的 ChromeDriver。Linux 无桌面时使用 `xvfb-run -a yarn test:memfit-ui:electron`。退出非零即验证失败。

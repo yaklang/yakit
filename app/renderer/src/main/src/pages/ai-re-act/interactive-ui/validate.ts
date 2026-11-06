@@ -176,11 +176,24 @@ export function readDocument(
   if (final && partial.complete) {
     if (!nodes.some((node) => node.id === raw.root))
       diagnostics.push({ nodeId: '', path: 'root', message: '根节点不存在' })
+    const byId = new Map(nodes.map((node) => [node.id, node]))
     for (const node of nodes)
       for (const id of node.children || []) {
-        if (!nodes.some((child) => child.id === id))
-          diagnostics.push({ nodeId: node.id, path: 'children', message: `引用不存在：${id}` })
+        if (!byId.has(id)) diagnostics.push({ nodeId: node.id, path: 'children', message: `引用不存在：${id}` })
       }
+    const visiting = new Set<string>()
+    const seen = new Set<string>()
+    const walk = (id: string) => {
+      if (seen.has(id) || visiting.has(id) || !byId.has(id)) return
+      visiting.add(id)
+      for (const child of byId.get(id)?.children || []) {
+        if (visiting.has(child)) diagnostics.push({ nodeId: id, path: 'children', message: `引用形成循环：${child}` })
+        else walk(child)
+      }
+      visiting.delete(id)
+      seen.add(id)
+    }
+    for (const node of nodes) walk(node.id)
   }
   return { document: makeDocument(nodes), diagnostics: final ? diagnostics : [], fallback, complete: partial.complete }
 }

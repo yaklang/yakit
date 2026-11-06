@@ -134,6 +134,27 @@ describe('catalog and incremental JSON', () => {
     ;(doc.nodes[0] as any).component = 'script'
     expect(readDocument(JSON.stringify(doc), true).document?.nodes).toHaveLength(0)
   })
+  it('reports child cycles without treating a shared descendant as a loop', () => {
+    const cyclic = document()
+    cyclic.nodes[1] = { id: 'form', component: 'Stack', props: { title: '内层' }, children: ['layout'] }
+    const cycle = readDocument(JSON.stringify(cyclic), true)
+    expect(cycle.document?.nodes).toHaveLength(2)
+    expect(cycle.diagnostics).toEqual([{ nodeId: 'form', path: 'children', message: '引用形成循环：layout' }])
+    expect(readDocument(JSON.stringify(cyclic), false).diagnostics).toEqual([])
+    const shared = document()
+    shared.nodes[0].children = ['note', 'hint']
+    shared.nodes.push(
+      { id: 'note', component: 'Stack', props: { title: '注' }, children: ['form'] },
+      { id: 'hint', component: 'Stack', props: { title: '提示' }, children: ['form'] },
+    )
+    expect(readDocument(JSON.stringify(shared), true).diagnostics).toEqual([])
+    const view = render(<ComponentCard item={item(cyclic)} />)
+    expect(screen.getByText('信息')).toBeInTheDocument()
+    expect(screen.getByText('内层')).toBeInTheDocument()
+    expect(send).toHaveBeenCalledTimes(1)
+    expect(JSON.parse(send.mock.calls[0][1].SyncJsonInput).diagnostics).toEqual(cycle.diagnostics)
+    expect(view.container.querySelector('details')).toBeNull()
+  })
   it('renders valid siblings and sends diagnostics only through the internal feedback channel', () => {
     const doc = document()
     doc.nodes[0].props.title = 123
@@ -283,6 +304,28 @@ describe('visualization validation and rendering', () => {
         expect(Number.isFinite(Number(point.getAttribute(key)))).toBe(true)
     }
     expect(view.container.querySelectorAll('rect[data-point]')).toHaveLength(3)
+  })
+  it('localizes step status labels and keeps model titles', () => {
+    render(
+      <ComponentCard
+        item={visualizationItem('Steps', {
+          title: '发布流程',
+          items: [
+            { title: '构建', status: 'done' },
+            { title: '扫描', status: 'active', description: '正在跑规则' },
+            { title: '等待发布' },
+            { title: '回滚', status: 'error' },
+          ],
+        })}
+      />,
+    )
+    expect(screen.getByRole('region', { name: '交互组件' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '发布流程' })).toBeInTheDocument()
+    expect(screen.getByText('构建').closest('li')).toHaveTextContent('完成')
+    expect(screen.getByText('扫描').closest('li')).toHaveTextContent('进行中')
+    expect(screen.getByText('正在跑规则')).toBeInTheDocument()
+    expect(screen.getByText('等待发布').closest('li')).toHaveTextContent('未开始')
+    expect(screen.getByText('回滚').closest('li')).toHaveTextContent('失败')
   })
 })
 

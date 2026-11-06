@@ -1087,6 +1087,11 @@
     "tabPending": "內容正在產生…",
     "tabUnavailable": "此檢視暫時無法顯示。",
     "views": "切換檢視",
+    "componentRegion": "互動元件",
+    "stepPending": "未開始",
+    "stepActive": "進行中",
+    "stepDone": "完成",
+    "stepError": "失敗",
     "invalidQuestion": "提問格式無效"
   }
 }

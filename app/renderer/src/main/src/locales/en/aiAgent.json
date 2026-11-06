@@ -1087,6 +1087,11 @@
     "tabPending": "Content is being generated…",
     "tabUnavailable": "This view is unavailable.",
     "views": "Switch view",
+    "componentRegion": "Interactive component",
+    "stepPending": "Not started",
+    "stepActive": "In progress",
+    "stepDone": "Done",
+    "stepError": "Failed",
     "invalidQuestion": "Invalid question format"
   }
 }

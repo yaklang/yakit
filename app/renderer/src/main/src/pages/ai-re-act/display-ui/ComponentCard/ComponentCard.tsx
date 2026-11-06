@@ -1,5 +1,6 @@
 import type React from 'react'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import type { AIChatQSDataTypeEnum } from '../../hooks/aiRender'
 import { type AIChatQSData } from '../../hooks/aiRender'
 import { globalSessionEngine } from '../../hooks/ChatMultiSessionController'
@@ -20,6 +21,29 @@ export interface NodeProps {
   state?: State[string]
   change: (next: State[string]) => void
   ready: boolean
+}
+
+function StepsView({ node }: NodeProps) {
+  const { t } = useI18nNamespaces(['aiAgent'])
+  const status = {
+    pending: t('InteractiveUI.stepPending'),
+    active: t('InteractiveUI.stepActive'),
+    done: t('InteractiveUI.stepDone'),
+    error: t('InteractiveUI.stepError'),
+  }
+  return (
+    <div>
+      {node.props.title && <h4>{node.props.title}</h4>}
+      <ol>
+        {node.props.items.map((step, index) => (
+          <li key={index}>
+            <strong>{step.title}</strong> · {status[step.status || 'pending']}
+            {step.description && <p>{step.description}</p>}
+          </li>
+        ))}
+      </ol>
+    </div>
+  )
 }
 
 // The catalog and this registry are the complete surface available to the model.
@@ -62,20 +86,7 @@ const registry: Record<string, React.FC<NodeProps>> = {
   Tabs: ViewTabs,
   Tooltip: InformationHint,
   Popover: InformationHint,
-  Steps: ({ node }) => (
-    <div>
-      {node.props.title && <h4>{node.props.title}</h4>}
-      <ol>
-        {node.props.items.map((step, index) => (
-          <li key={index}>
-            <strong>{step.title}</strong> ·{' '}
-            {{ pending: '未开始', active: '进行中', done: '完成', error: '失败' }[step.status || 'pending']}
-            {step.description && <p>{step.description}</p>}
-          </li>
-        ))}
-      </ol>
-    </div>
-  ),
+  Steps: StepsView,
   Metrics: ({ node }) => (
     <div>
       {node.props.title && <h4>{node.props.title}</h4>}
@@ -93,9 +104,11 @@ const registry: Record<string, React.FC<NodeProps>> = {
     </div>
   ),
 }
+
 export const registeredComponents = Object.keys(registry)
 
 export function ComponentCard({ item }: { item: ComponentItem }) {
+  const { t } = useI18nNamespaces(['aiAgent'])
   const result = useMemo(
     () => readDocument(item.data.source, item.data.final || !!item.data.streamEnded),
     [item.data.source, item.data.final, item.data.streamEnded],
@@ -166,7 +179,7 @@ export function ComponentCard({ item }: { item: ComponentItem }) {
   // Only a client capability mismatch may use the document's readable text fallback.
   if (!body && !result.incompatible) return null
   return (
-    <section className={styles.card} aria-label="交互组件">
+    <section className={styles.card} aria-label={t('InteractiveUI.componentRegion')}>
       {body || <p style={{ whiteSpace: 'pre-wrap' }}>{fallback}</p>}
     </section>
   )
