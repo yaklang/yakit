@@ -67,7 +67,7 @@ import { grpcGetAllMCPServers } from '../../aiMCP/utils'
 import type { GetAllMCPServersRequest, MCPServerTool } from '../../type/aiMCP'
 import { HorizontalScrollCardItemInfoMultiple } from '@/pages/plugins/operator/horizontalScrollCard/HorizontalScrollCard'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
-import { formatSessionSnapshotExecutionDuration } from '@/pages/ai-re-act/hooks/sessionSnapshotExecution'
+import { useSessionSnapshotExecutionDuration } from '@/pages/ai-re-act/hooks/useSessionSnapshotExecutionDuration'
 import { AITaskActionItem, AITaskExecutionList } from './aiTaskExecutionList/AITaskExecutionList'
 import { AITaskBoard } from './aiTaskBoard/AITaskBoard'
 import { AITaskGantt } from './aiTaskGantt/AITaskGantt'
@@ -287,18 +287,15 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
     planItemDetailsData?.execution?.tool_call_total,
     i18nRefresh,
   ])
-  const executionMinutes = useCreation(() => {
-    return formatSessionSnapshotExecutionDuration(planItemDetailsData?.execution, {
+  const sessionId = useCurrentSessionId()
+  const executionDuration = useSessionSnapshotExecutionDuration(
+    planItemDetailsData?.execution,
+    {
       empty: t('AITaskExecutionDetails.noData'),
       running: t('AITaskExecutionDetails.executing'),
-    })
-  }, [
-    planItemDetailsData?.execution?.execution_seconds,
-    planItemDetailsData?.execution?.execution_minutes,
-    planItemDetailsData?.execution?.started_at,
-    planItemDetailsData?.execution?.ended_at,
-    i18nRefresh,
-  ])
+    },
+    `${sessionId}:${selectedTaskId}:${planItemDetailsData?.execution?.started_at ?? ''}:${planItemDetailsData?.execution?.execution_seconds ?? ''}`,
+  )
   const httpFlowCount = useCreation(() => {
     if (!planItemDetailsData?.execution) return t('AITaskExecutionDetails.noData')
     return `${planItemDetailsData?.execution.http_flow_count ?? `0`}`
@@ -366,7 +363,7 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
           <div className={styles['summary-metric-list']}>
             <div className={styles['summary-metric-row']}>
               <span className={styles['summary-metric-label']}>{t('AITaskExecutionDetails.executionDuration')}</span>
-              <span className={styles['summary-metric-value']}>{executionMinutes}</span>
+              <span className={styles['summary-metric-value']}>{executionDuration}</span>
             </div>
             <div className={styles['summary-metric-row']}>
               <span className={styles['summary-metric-label']}>{t('AITaskExecutionDetails.httpFlowCount')}</span>

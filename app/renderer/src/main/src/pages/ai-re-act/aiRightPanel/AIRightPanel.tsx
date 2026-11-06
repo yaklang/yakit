@@ -8,11 +8,12 @@ import TimelineCard from '@/pages/ai-agent/chatTemplate/TimelineCard/TimelineCar
 import { useCreation, useInViewport, useMemoizedFn } from 'ahooks'
 import { useStore } from 'zustand'
 import { useCurrentStore } from '../hooks/useCurrentDataBySession'
+import useCurrentSessionId from '../hooks/useCurrentSessionId'
 import useCurrentTaskExecution from '../hooks/useCurrentTaskData/useCurrentTaskExecution'
 import { useWelcomePanelStats } from '@/pages/ai-agent/aiChatWelcome/hooks/useWelcomePanelStats'
 import classNames from 'classnames'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { formatSessionSnapshotExecutionDuration } from '../hooks/sessionSnapshotExecution'
+import { useSessionSnapshotExecutionDuration } from '../hooks/useSessionSnapshotExecutionDuration'
 import { AISourceEnum, AISkillLoadStateEnum } from '../hooks/grpcApi'
 import type { AIAgentGrpcApi } from '../hooks/grpcApi'
 import type { AISkillLoadState } from './AISkillLoadingPane/type'
@@ -234,17 +235,16 @@ const DataCards: React.FC<{ executionData?: AIAgentGrpcApi.SessionSnapshot['exec
       emiter.emit('onOpenUsageStatistics', '')
     })
 
-    const executionDuration = useCreation(() => {
-      return formatSessionSnapshotExecutionDuration(executionData, {
+    const sessionId = useCurrentSessionId()
+    const questionID = useStore(store, (state) => state.currentChatStatus.questionID)
+    const executionDuration = useSessionSnapshotExecutionDuration(
+      executionData,
+      {
         empty: PLACEHOLDER,
         running: t('AIRightPanel.running'),
-      })
-    }, [
-      executionData?.execution_seconds,
-      executionData?.execution_minutes,
-      executionData?.started_at,
-      executionData?.ended_at,
-    ])
+      },
+      `${sessionId}:${questionID}:${executionData?.started_at ?? ''}:${executionData?.execution_seconds ?? ''}`,
+    )
 
     return (
       <div className={styles['data-cards']}>

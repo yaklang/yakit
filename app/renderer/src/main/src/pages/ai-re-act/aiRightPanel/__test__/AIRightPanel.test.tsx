@@ -1200,8 +1200,7 @@ describe('AIRightPanel', () => {
     const result = await renderPanel(<AIRightPanel />)
     try {
       expect(screen.getByText('运行时间')).toBeInTheDocument()
-      // timeDiffWithMoment mock 返回差值 "6000s"；Step 与运行时间均展示时长
-      expect(screen.getAllByText('6000s').length).toBeGreaterThanOrEqual(1)
+      expect(screen.getAllByText('1h40m').length).toBeGreaterThanOrEqual(1)
       expect(screen.getByText('工具调用数')).toBeInTheDocument()
       expect(screen.getByTestId('main-model-tokens')).toBeInTheDocument()
       expect(screen.getByText('任务详情看板')).toBeInTheDocument()
@@ -1617,15 +1616,14 @@ describe('AIRightPanel', () => {
     })
     const result = await renderPanel(<AIRightPanel />)
     try {
-      // timeDiffWithMoment mock 返回差值 "6000s"；Step 与运行时间均展示时长
-      expect(screen.getAllByText('6000s').length).toBeGreaterThanOrEqual(1)
+      expect(screen.getAllByText('1h40m').length).toBeGreaterThanOrEqual(1)
       expect(screen.getByText('工具调用数').nextElementSibling).toHaveTextContent('4')
       expect(screen.getByTestId('main-model-tokens')).toBeInTheDocument()
 
       // 当前任务无执行数据时保留卡片，旧统计值替换为占位符。
       act(() => setMockQuestionID('task-without-data'))
       expectEmptyDataCards()
-      expect(screen.queryByText('6000s')).not.toBeInTheDocument()
+      expect(screen.queryByText('1h40m')).not.toBeInTheDocument()
     } finally {
       result.unmount()
       resetMockStore()
@@ -1645,7 +1643,7 @@ describe('AIRightPanel', () => {
     })
     const result = await renderPanel(<AIRightPanel />)
     try {
-      expect(screen.getByText('运行时间').nextElementSibling).toHaveTextContent('14400s')
+      expect(screen.getByText('运行时间').nextElementSibling).toHaveTextContent('4h')
       expect(screen.queryByText(`${13 * 86400}s`)).not.toBeInTheDocument()
     } finally {
       result.unmount()
@@ -1709,7 +1707,7 @@ describe('AIRightPanel', () => {
       }
       act(() => mockTaskStore.setState((state) => ({ taskDetailsUpdate: state.taskDetailsUpdate + 1 })))
       // 防抖等待 3s，超时放宽到 5s 预留余量，避免慢环境下 flaky
-      await waitFor(() => expect(screen.getAllByText('8000s').length).toBeGreaterThanOrEqual(1), {
+      await waitFor(() => expect(screen.getAllByText('2h13m').length).toBeGreaterThanOrEqual(1), {
         timeout: 5000,
       })
       expect(screen.getByText('工具调用数').nextElementSibling).toHaveTextContent('7')
