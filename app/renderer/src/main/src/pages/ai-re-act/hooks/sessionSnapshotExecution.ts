@@ -1,4 +1,5 @@
 const executionClocks = new Map<string, number>()
+const executionClockRefs = new Map<string, number>()
 
 /** processing 自增的起点。组件卸载后仍按墙钟计算，切回来不会从后端秒数重头加 */
 export const elapsedSessionSnapshotExecutionSeconds = (clockKey: string) => {
@@ -11,16 +12,38 @@ export const elapsedSessionSnapshotExecutionSeconds = (clockKey: string) => {
   return Math.max(0, Math.floor((Date.now() - startedAt) / 1000))
 }
 
-/** clockKey 被替换时丢掉旧锚点；卸载后重挂需要的当前条目不要调这个 */
-export const releaseSessionSnapshotExecutionClock = (clockKey: string) => {
+/** 展示同一任务的实例各记一次；最后一次普通释放才丢掉锚点 */
+export const retainSessionSnapshotExecutionClock = (clockKey: string) => {
   if (!clockKey) return
-  executionClocks.delete(clockKey)
+  executionClockRefs.set(clockKey, (executionClockRefs.get(clockKey) ?? 0) + 1)
+}
+
+/**
+ * 引用归零时丢掉锚点。
+ * keepAnchor 用于卸载：没有其他实例时仍留下锚点，重挂继续按墙钟累加。
+ * 没有 retain 过的 key 仍直接丢掉，兼容只调用释放的场景。
+ */
+export const releaseSessionSnapshotExecutionClock = (clockKey: string, options?: { keepAnchor?: boolean }) => {
+  if (!clockKey) return
+  const current = executionClockRefs.get(clockKey)
+  if (current === undefined) {
+    if (!options?.keepAnchor) executionClocks.delete(clockKey)
+    return
+  }
+  const next = current - 1
+  if (next > 0) {
+    executionClockRefs.set(clockKey, next)
+    return
+  }
+  executionClockRefs.delete(clockKey)
+  if (!options?.keepAnchor) executionClocks.delete(clockKey)
 }
 
 export const hasSessionSnapshotExecutionClock = (clockKey: string) => executionClocks.has(clockKey)
 
 export const clearSessionSnapshotExecutionClocks = () => {
   executionClocks.clear()
+  executionClockRefs.clear()
 }
 
 /** session / task 快照 execution 里和时长有关的字段 */

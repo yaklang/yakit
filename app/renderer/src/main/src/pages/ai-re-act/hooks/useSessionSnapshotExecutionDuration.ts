@@ -5,6 +5,7 @@ import {
   formatSessionSnapshotExecutionDuration,
   formatSnapshotExecutionClock,
   releaseSessionSnapshotExecutionClock,
+  retainSessionSnapshotExecutionClock,
   type SnapshotExecutionDurationSource,
 } from './sessionSnapshotExecution'
 
@@ -17,7 +18,7 @@ export const isSessionSnapshotClockActive = (session: {
   chatStatus?: string
 }) => !!session.execute && (session.chatStatus === AITaskStatus.inProgress || !!session.pendingReply)
 
-/** processing 且会话仍在执行时，在后端 execution_seconds 上按墙钟自增；clockKey 变了从后端秒数重新计 */
+/** processing 且会话仍在执行时，在后端 execution_seconds 上按墙钟自增；本实例换 key 或停止后只释放自己的引用 */
 export const useSessionSnapshotExecutionDuration = (
   execution: ExecutionClock | undefined,
   labels: { empty: string; running: string },
@@ -25,19 +26,25 @@ export const useSessionSnapshotExecutionDuration = (
   sessionActive = true,
 ): string => {
   const [, setTick] = useState(0)
-  const previousClockKeyRef = useRef(clockKey)
+  const heldKeyRef = useRef('')
   const base = execution?.execution_seconds
   const running =
     sessionActive && execution?.status === 'processing' && typeof base === 'number' && Number.isFinite(base)
   useEffect(() => {
-    const previousClockKey = previousClockKeyRef.current
-    if (previousClockKey === clockKey) return
-    releaseSessionSnapshotExecutionClock(previousClockKey)
-    previousClockKeyRef.current = clockKey
-  }, [clockKey])
+    return () => {
+      const held = heldKeyRef.current
+      if (!held) return
+      releaseSessionSnapshotExecutionClock(held, { keepAnchor: true })
+      heldKeyRef.current = ''
+    }
+  }, [])
   useEffect(() => {
-    if (running) return
-    releaseSessionSnapshotExecutionClock(clockKey)
+    const nextHeld = running && clockKey ? clockKey : ''
+    const previousHeld = heldKeyRef.current
+    if (previousHeld === nextHeld) return
+    if (previousHeld) releaseSessionSnapshotExecutionClock(previousHeld)
+    if (nextHeld) retainSessionSnapshotExecutionClock(nextHeld)
+    heldKeyRef.current = nextHeld
   }, [running, clockKey])
   useEffect(() => {
     if (!running) return

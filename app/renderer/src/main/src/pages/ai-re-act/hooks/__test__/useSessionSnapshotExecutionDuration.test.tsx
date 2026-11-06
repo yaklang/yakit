@@ -133,6 +133,51 @@ describe('useSessionSnapshotExecutionDuration', () => {
     expect(result.current).toBe('10s')
   })
 
+  it('两个实例共用 clockKey 时，一方换 key 或停止后另一方锚点仍在', () => {
+    vi.useFakeTimers()
+    const execution = { status: 'processing', execution_seconds: 10 }
+    const panel = renderHook(
+      ({ execution: current, clockKey }) => useSessionSnapshotExecutionDuration(current, labels, clockKey),
+      { initialProps: { execution, clockKey: 'shared' } },
+    )
+    const details = renderHook(
+      ({ execution: current, clockKey }) => useSessionSnapshotExecutionDuration(current, labels, clockKey),
+      { initialProps: { execution, clockKey: 'shared' } },
+    )
+
+    act(() => {
+      vi.advanceTimersByTime(3000)
+    })
+    expect(panel.result.current).toBe('13s')
+    expect(details.result.current).toBe('13s')
+
+    details.rerender({ execution: { status: 'processing', execution_seconds: 4 }, clockKey: 'other' })
+    expect(hasSessionSnapshotExecutionClock('shared')).toBe(true)
+    expect(panel.result.current).toBe('13s')
+    expect(details.result.current).toBe('4s')
+
+    act(() => {
+      vi.advanceTimersByTime(2000)
+    })
+    expect(panel.result.current).toBe('15s')
+    expect(details.result.current).toBe('6s')
+
+    details.rerender({ execution, clockKey: 'shared' })
+    expect(panel.result.current).toBe('15s')
+    expect(details.result.current).toBe('15s')
+
+    details.rerender({ execution: { status: 'completed', execution_seconds: 10 }, clockKey: 'shared' })
+    expect(hasSessionSnapshotExecutionClock('shared')).toBe(true)
+    expect(details.result.current).toBe('10s')
+    expect(panel.result.current).toBe('15s')
+
+    act(() => {
+      vi.advanceTimersByTime(2000)
+    })
+    expect(panel.result.current).toBe('17s')
+    expect(details.result.current).toBe('10s')
+  })
+
   it('同 clockKey 结束后再恢复 processing 时从后端秒数重新计', () => {
     vi.useFakeTimers()
     const { result, rerender } = renderHook(
