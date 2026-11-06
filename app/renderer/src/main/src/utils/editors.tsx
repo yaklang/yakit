@@ -1,3 +1,5 @@
+import { useManualPreviewNetwork } from './useManualPreviewNetwork'
+import type { PreviewNetwork } from './httpPreviewResources'
 import React, { type ReactElement, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import MonacoEditor, { monaco } from 'react-monaco-editor'
 import type * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api'
@@ -37,6 +39,7 @@ import type {
 import { HTTPPacketYakitEditor } from '@/components/yakitUI/YakitEditor/extraYakitEditor'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { formatPacketRender, prettifyPacketCode, prettifyPacketRender } from './prettifyPacket'
+import { capturedImageBaseURL } from './capturedImageReplay'
 import styles from './editors.module.scss'
 import classNames from 'classnames'
 import { YakitCheckableTag } from '@/components/yakitUI/YakitTag/YakitCheckableTag'
@@ -539,6 +542,8 @@ export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
   editorOperationRecord?: string
   /**@name 外部控制WebFuzzer数据 */
   webFuzzerValue?: string
+  getPreviewNetwork?: () => PreviewNetwork | undefined
+  previewResponseId?: string
   /**@name 打开WebFuzzer的回调 */
   webFuzzerCallBack?: () => void
   /**@name 是否显示美化/hex/渲染TYPE(默认显示) 这里的美化渲染hex只试用与只读的编辑器，可编辑编辑器的美化按钮请外部用按钮自行实现 */
@@ -636,6 +641,17 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
   const [typeOptions, setTypeOptions] = useState<TypeOptionsProps[]>([])
   const [showValue, setShowValue] = useState<string>(originValue)
   const [renderHtml, setRenderHTML] = useState<React.ReactNode>()
+  const previewController = useRef<AbortController | undefined>(undefined)
+  const previewBaseUrl = capturedImageBaseURL({
+    url: props.url,
+    request: props.webFuzzerValue,
+    https: props.defaultHttps,
+  })
+
+  const previewNetwork = useManualPreviewNetwork(
+    { body: originValue, packet: originalPackage, url: previewBaseUrl, id: props.previewResponseId },
+    props.getPreviewNetwork,
+  )
 
   // 对比loading
   const [compareLoading, setCompareLoading] = useState<boolean>(false)
@@ -952,19 +968,35 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
   ).run
   const renderCode = useDebounceFn(
     useMemoizedFn(async () => {
+      if (type !== 'render') return
       if (!isShowBeautifyRender || typeOptions.findIndex((i) => i.value === 'render') === -1) {
         setType(undefined)
         return
       }
-      const renderValue = await prettifyPacketRender(originalPackage || StringToUint8Array(originValue))
+      previewController.current?.abort()
+      const controller = new AbortController()
+      previewController.current = controller
+      const network = previewNetwork.consume()
+      const renderValue = await prettifyPacketRender(originalPackage || StringToUint8Array(originValue), {
+        url: previewBaseUrl,
+        network,
+        signal: controller.signal,
+      })
+      if (controller.signal.aborted) return
       setRenderHTML(
-        <iframe srcDoc={renderValue as string} style={{ width: '100%', height: '100%', border: 'none' }} sandbox="" />,
+        <iframe
+          srcDoc={renderValue as string}
+          style={{ width: '100%', height: '100%', border: 'none' }}
+          sandbox=""
+          referrerPolicy="no-referrer"
+        />,
       )
     }),
     { wait: 300 },
   ).run
 
   useEffect(() => {
+    previewController.current?.abort()
     if (originValue) {
       if (type === undefined) {
         setRenderHTML(undefined)
@@ -980,13 +1012,15 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
     } else {
       setShowValue('')
     }
-  }, [type, originValue])
+    return () => previewController.current?.abort()
+  }, [type, originValue, originalPackage, previewBaseUrl, props.previewResponseId])
 
   const handleEditorMount = useMemoizedFn((editor: YakitIMonacoEditor) => {
     setMonacoEditor(editor)
   })
 
   const onTypeOptionChange = useMemoizedFn((value: RenderTypeOptionVal, checked: boolean) => {
+    previewNetwork.onRenderClick(checked && value === 'render')
     setType(checked ? value : undefined)
   })
 

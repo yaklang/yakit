@@ -1,3 +1,4 @@
+import type { PreviewNetwork } from '../../../../utils/httpPreviewResources'
 import { DurationMsToColor, RangeInputNumberTable, StatusCodeToColor } from '@/components/HTTPFlowTable/HTTPFlowTable'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
 import type { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
@@ -70,6 +71,7 @@ export interface HTTPFuzzerPageTableDebugPayload {
 }
 
 interface HTTPFuzzerPageTableProps {
+  getPreviewNetwork?: () => PreviewNetwork | undefined
   ref?: any
   query?: HTTPFuzzerPageTableQuery
   data: FuzzerResponse[]
@@ -1213,6 +1215,8 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
               <NewHTTPPacketEditor
                 language={currentSelectItem?.DisableRenderStyles ? 'text' : undefined}
                 isShowBeautifyRender={!currentSelectItem?.IsTooLargeResponse}
+                getPreviewNetwork={currentSelectShowType === 'response' ? props.getPreviewNetwork : undefined}
+                previewResponseId={currentSelectItem.UUID}
                 title={
                   <div className={styles['second-node-title-wrapper']}>
                     <span className={styles['second-node-title-text']}>{t('HTTPFuzzerPageTable.quickPreview')}</span>
@@ -1249,6 +1253,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                   </div>
                 }
                 defaultHttps={currentSelectItem?.IsHTTPS}
+                url={currentSelectItem?.Url}
                 isResponse={currentSelectShowType === 'response'}
                 contextMenuPacket={contextMenuPacket}
                 readOnly={true}
@@ -1364,6 +1369,10 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                     response: {
                       originValue: codeKey === 'utf-8' ? Uint8ArrayToString(responseBytes) : codeValue,
                       originalPackage: responseBytes,
+                      url: currentSelectItem?.Url,
+                      previewNetwork: props.getPreviewNetwork?.(),
+                      previewResponseId: currentSelectItem?.UUID,
+                      defaultHttps: currentSelectItem?.IsHTTPS,
                     },
                   })
                 }}

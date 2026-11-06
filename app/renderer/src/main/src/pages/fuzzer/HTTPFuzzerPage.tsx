@@ -1,3 +1,4 @@
+import type { PreviewNetwork } from '../../utils/httpPreviewResources'
 import React, { type CSSProperties, useEffect, useLayoutEffect, useMemo, useRef, useState, createRef } from 'react'
 import { Form, Result, Space, Tooltip, Divider, Descriptions } from 'antd'
 import {
@@ -517,6 +518,9 @@ const BrowserTransformPacketComparison: React.FC<{
               <NewHTTPPacketEditor
                 originValue={Uint8ArrayToString(column.packet || new Uint8Array())}
                 originalPackage={column.packet || new Uint8Array()}
+                url={response.Url}
+                defaultHttps={response.IsHTTPS}
+                webFuzzerValue={Uint8ArrayToString(response.RequestRaw || new Uint8Array())}
                 readOnly
                 noMinimap
                 noHeader
@@ -1405,6 +1409,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
         .invoke('GetHistoryHTTPFuzzerTask', { Id: id })
         .then((data: { OriginRequest: HistoryHTTPFuzzerTask }) => {
           const { OriginRequest } = data
+          previewNetworkRef.current = OriginRequest
           if (OriginRequest.Request === '') {
             requestRef.current = Uint8ArrayToString(OriginRequest.RequestRaw, 'utf8')
           } else {
@@ -1513,6 +1518,9 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     if (!loading) startMcpExecutionRef.current()
   }, [loading])
 
+  const previewNetworkRef = useRef<PreviewNetwork>()
+  const getPreviewNetwork = useMemoizedFn(() => previewNetworkRef.current || getFuzzerRequestParams())
+
   const getFuzzerRequestParams = useMemoizedFn(() => {
     const { proxy = [] } = advancedConfigValue
     const { proxyEndpoints, ProxyRuleIds } = getProxyValue(proxy)
@@ -1554,6 +1562,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
 
     // FuzzerRequestProps（loadingRef 已占 busy 后再读，确保 FuzzerIndex 语义正确）
     const httpParams: FuzzerRequestProps = getFuzzerRequestParams()
+    previewNetworkRef.current = httpParams
     //如果有新增的代理配置 则存配置项
     checkProxyEndpoints(advancedConfigValue.proxy)
     setRemoteValue(FuzzerRemoteGV.WEB_FUZZ_PROXY, `${advancedConfigValue.proxy}`)
@@ -3713,6 +3722,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                           {onlyOneResponse ? (
                             <div style={{ height: '100%', overflow: 'hidden' }}>
                               <ResponseViewer
+                                getPreviewNetwork={getPreviewNetwork}
                                 pageId={props.id}
                                 inViewport={inViewport}
                                 keepSearchName="fuzzer-response"
@@ -3757,6 +3767,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                                   <>
                                     {showSuccess === 'true' && (
                                       <HTTPFuzzerPageTable
+                                        getPreviewNetwork={getPreviewNetwork}
                                         // onSendToWebFuzzer={onSendToWebFuzzer}
                                         success={true}
                                         data={successFuzzer}
@@ -3774,6 +3785,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     )}
                                     {showSuccess === 'false' && (
                                       <HTTPFuzzerPageTable
+                                        getPreviewNetwork={getPreviewNetwork}
                                         success={false}
                                         data={failedFuzzer}
                                         query={query}
@@ -5063,6 +5075,7 @@ const EditorOverlayWidget: React.FC<EditorOverlayWidgetProps> = React.memo((prop
 interface ResponseViewerProps {
   ref?: React.ForwardedRef<MatcherAndExtractionRefProps>
   fuzzerResponse: FuzzerResponse
+  getPreviewNetwork?: () => PreviewNetwork | undefined
   defaultResponseSearch: string
   system?: string
   showMatcherAndExtraction: boolean
@@ -5389,6 +5402,9 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
               language={fuzzerResponse?.DisableRenderStyles ? 'text' : undefined}
               isShowBeautifyRender={!fuzzerResponse?.IsTooLargeResponse}
               defaultHttps={isHttps}
+              url={fuzzerResponse.Url}
+              getPreviewNetwork={props.getPreviewNetwork}
+              previewResponseId={fuzzerResponse.UUID}
               defaultSearchKeyword={defaultResponseSearch}
               originValue={currentOriginValue}
               originalPackage={currentOriginalPackage}
@@ -5484,6 +5500,10 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                   response: {
                     originValue: codeKey === 'utf-8' ? responseRawString : codeValue,
                     originalPackage: assembledResponsePackage,
+                    url: fuzzerResponse.Url,
+                    previewNetwork: props.getPreviewNetwork?.(),
+                    previewResponseId: fuzzerResponse.UUID,
+                    defaultHttps: isHttps,
                   },
                 })
               }}

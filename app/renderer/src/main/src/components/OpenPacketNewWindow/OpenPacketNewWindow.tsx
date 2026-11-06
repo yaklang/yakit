@@ -37,6 +37,11 @@ const OpenPacketNewWindow: React.FC<OpenPacketNewWindowProps> = (props) => {
       <NewHTTPPacketEditor
         originValue={resOriginValue}
         originalPackage={data?.response?.originalPackage}
+        url={data?.response?.url || data?.request?.url}
+        defaultHttps={data?.response?.defaultHttps ?? data?.request?.defaultHttps}
+        webFuzzerValue={typeof reqOriginValue === 'string' ? reqOriginValue : undefined}
+        getPreviewNetwork={data?.response?.previewNetwork ? () => data.response?.previewNetwork : undefined}
+        previewResponseId={data?.response?.previewResponseId}
         isResponse={true}
         readOnly={true}
         noMinimap={true}

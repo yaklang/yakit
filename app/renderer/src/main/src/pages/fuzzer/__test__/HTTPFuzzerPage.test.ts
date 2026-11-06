@@ -152,6 +152,7 @@ const setup = () => {
     responseSizeWarnedRef: false,
     responseSearchDraftRef: '',
     requestRef: '',
+    previewNetworkRef: undefined,
     loadingRef: false,
     mcpExecutionSlotRef: createMcpWebFuzzerExecutionSlot(),
     startMcpExecutionRef: () => {},

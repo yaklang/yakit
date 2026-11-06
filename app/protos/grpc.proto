@@ -243,6 +243,7 @@ service Yak {
   rpc QueryHistoryHTTPFuzzerTask(Empty) returns (HistoryHTTPFuzzerTasks);
   rpc QueryHistoryHTTPFuzzerTaskEx(QueryHistoryHTTPFuzzerTaskExParams) returns (HistoryHTTPFuzzerTasksResponse);
   rpc DeleteHistoryHTTPFuzzerTask(DeleteHistoryHTTPFuzzerTaskRequest) returns (Empty);
+  rpc FetchHTTPPreviewResource(HTTPPreviewResourceRequest) returns (HTTPPreviewResourceResponse);
   rpc HTTPFuzzer(FuzzerRequest) returns (stream FuzzerResponse);
   rpc HTTPFuzzerSequence(FuzzerRequests) returns (stream FuzzerSequenceResponse);
   rpc HTTPFuzzerGroup(GroupHTTPFuzzerRequest) returns (stream GroupHTTPFuzzerResponse);
@@ -10519,4 +10520,17 @@ message BrowserExtensionTaskEvent {
   bytes Data = 5;
   int64 Timestamp = 6;
   uint64 Sequence = 7;
+}
+// A credential-free, bounded static GET. Network is read only for transport settings;
+// no fuzzing, hot patch, browser transform, task creation or persistence is performed.
+message HTTPPreviewResourceRequest {
+  string URL = 1;
+  string PageURL = 2;
+  string Kind = 3; // image, css, font
+  FuzzerRequest Network = 4;
+}
+message HTTPPreviewResourceResponse {
+  string URL = 1;
+  string MimeType = 2;
+  bytes Data = 3;
 }
