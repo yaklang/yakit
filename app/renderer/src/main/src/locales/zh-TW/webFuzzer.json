@@ -92,6 +92,7 @@
     "syncConfig": "同步配置",
     "allTraffic": "全部流量",
     "response_overflow": "響應數量超過{{maxData}}，為避免前端渲染壓力過大，這裡將丟棄部分資料包進行展示，請點選",
+    "responseSizeTooLarge": "當前響應內容累計超過{{mb}}M，建議丟棄部分數據包或將前端渲染數量調小後重新發送，否則可能會因為渲染壓力過大導致白屏",
     "view_all_suffix": "檢視所有資料",
     "advanced_filter_suggestion": "需要進行高階篩選，多條件組合查詢或其他複雜操作時，建議點選跳轉到",
     "performAction": "進行操作",

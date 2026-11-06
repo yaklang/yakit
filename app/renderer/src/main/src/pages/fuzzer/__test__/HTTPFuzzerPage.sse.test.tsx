@@ -167,4 +167,36 @@ describe('Web Fuzzer SSE response rendering', () => {
     expect(Buffer.from(packet, 'base64').toString()).toBe(header + firstEvent + lastEvent)
     expect(screen.getByTestId('response-editor').textContent).not.toContain('DO_NOT_ECHO_REQUEST')
   })
+
+  it('keeps the finished body while the rest of the batch is still running', async () => {
+    const response = decode(methods[0].method, {
+      Ok: true,
+      UUID: 'sse-while-batch',
+      RequestRaw: Uint8Array.from(Buffer.from('GET /stream HTTP/1.1\r\nHost: example.test\r\n\r\n')),
+      ResponseRaw: Uint8Array.from(Buffer.from(header)),
+      RandomChunkedData: [chunk(2, 'hello', 1, true)],
+    })
+    const props: ComponentProps<typeof ResponseViewer> = {
+      fuzzerResponse: response,
+      defaultResponseSearch: '',
+      loading: true,
+      showMatcherAndExtraction: false,
+      setShowMatcherAndExtraction: vi.fn(),
+      showExtra: false,
+      setShowExtra: vi.fn(),
+      matcherValue: { matchersList: [] },
+      extractorValue: { extractorList: [] },
+      defActiveKey: '',
+      defActiveType: 'matchers',
+      defActiveKeyAndOrder: { order: 0, defActiveKey: '' },
+      onSaveMatcherAndExtraction: vi.fn(),
+      webFuzzerValue: '',
+      request: Buffer.from(response.RequestRaw).toString(),
+      showResponseInfoSecondEditor: false,
+      setShowResponseInfoSecondEditor: vi.fn(),
+      onSetOnlyOneResEditor: vi.fn(),
+    }
+    render(<ResponseViewer {...props} />)
+    await waitFor(() => expect(screen.getByTestId('response-editor').textContent).toBe(header + 'hello'))
+  })
 })
