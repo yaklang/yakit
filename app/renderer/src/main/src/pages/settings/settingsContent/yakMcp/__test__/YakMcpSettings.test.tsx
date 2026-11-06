@@ -55,8 +55,8 @@ vi.mock('@/utils/notification', () => ({
 }))
 
 vi.mock('@/components/TableVirtualResize/TableVirtualResize', () => ({
-  TableVirtualResize: ({ data, columns }) => (
-    <div data-testid="mcp-table">
+  TableVirtualResize: ({ data, columns, isRefresh }) => (
+    <div data-testid="mcp-table" data-refresh={String(isRefresh)}>
       {data.map((tool) => (
         <div key={tool.ToolName} data-testid={`tool-${tool.ToolName}`}>
           {tool.ToolName}
@@ -494,5 +494,201 @@ describe('YakMcpSettings', () => {
     expect(getToolListMock).not.toHaveBeenCalled()
     expect(screen.getByRole('button', { name: 'SettingsPage.yakMcp.enableResults' })).toBeDisabled()
     expect(screen.getByRole('button', { name: 'SettingsPage.yakMcp.disableResults' })).toBeDisabled()
+  })
+
+  it('批量操作跨设置页重挂载保持锁定，并同步完成后的真实工具状态', async () => {
+    let backend = Array.from({ length: 7 }, (_, i) => makeTool(`remount_${i}`))
+    const pending: Array<() => void> = []
+    getToolListMock.mockImplementation(async () => listResponse(backend.map((tool) => ({ ...tool }))))
+    setToolEnabledMock.mockImplementation(
+      ({ ToolName, Enable }) =>
+        new Promise((resolve) => {
+          pending.push(() => {
+            backend = backend.map((tool) => (tool.ToolName === ToolName ? { ...tool, Enable } : tool))
+            resolve({ Ok: true, Reason: '' })
+          })
+        }),
+    )
+    const first = render(<YakMcpSettings />)
+    await screen.findByTestId('tool-remount_6')
+    await userEvent.click(screen.getByRole('button', { name: 'SettingsPage.yakMcp.disableResults' }))
+    expect(setToolEnabledMock).toHaveBeenCalledTimes(5)
+    first.unmount()
+    render(<YakMcpSettings />)
+    try {
+      await waitFor(() => expect(getRemoteValueMock).toHaveBeenCalledTimes(2))
+      expect(screen.getAllByRole('switch')[0]).toBeDisabled()
+      expect(screen.getAllByRole('switch')[1]).toBeDisabled()
+      expect(screen.getByRole('button', { name: 'SettingsPage.yakMcp.disableResults' })).toBeDisabled()
+      expect(screen.getByRole('textbox', { name: 'SettingsPage.yakMcp.searchPlaceholder' })).toBeDisabled()
+      await act(async () => pending.splice(0).forEach((resolve) => resolve()))
+      await waitFor(() => expect(setToolEnabledMock).toHaveBeenCalledTimes(7))
+      await act(async () => pending.splice(0).forEach((resolve) => resolve()))
+      await waitFor(() => expect(screen.getByRole('switch', { name: 'remount_6' })).not.toBeChecked())
+      expect(backend.every((tool) => !tool.Enable)).toBe(true)
+      expect(screen.getAllByRole('switch')[0]).toBeEnabled()
+      expect(setToolEnabledMock).toHaveBeenCalledTimes(7)
+    } finally {
+      await act(async () => pending.splice(0).forEach((resolve) => resolve()))
+      await act(async () => pending.splice(0).forEach((resolve) => resolve()))
+    }
+  })
+
+  it('配置恢复前禁止刷新，恢复全部能力层关闭后不允许隐藏工具批量修改', async () => {
+    let resolveConfig!: (value: string) => void
+    getRemoteValueMock.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveConfig = resolve
+        }),
+    )
+    getToolListMock.mockResolvedValue(listResponse([makeTool('hidden_tool')]))
+    render(<YakMcpSettings />)
+    const refresh = screen.getByRole('button', { name: 'SettingsPage.yakMcp.refreshTools' })
+    expect(refresh).toBeDisabled()
+    await userEvent.click(refresh)
+    expect(getToolListMock).not.toHaveBeenCalled()
+    await act(async () =>
+      resolveConfig(
+        JSON.stringify({
+          enableLegacyMcpTools: false,
+          enableAIToolFramework: false,
+          enableBridgeExternalMcp: false,
+          autoStart: false,
+        }),
+      ),
+    )
+    expect(await screen.findByText('ConfigSystemMcp.no_tool_tier_title')).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'SettingsPage.yakMcp.disableResults' }))
+    expect(getToolListMock).not.toHaveBeenCalled()
+    expect(setToolEnabledMock).not.toHaveBeenCalled()
+  })
+
+  it('配置读取失败不会自动覆盖缓存，后续用户修改仍可保存', async () => {
+    getRemoteValueMock.mockRejectedValueOnce(new Error('temporary config read failure'))
+    const { rerender } = render(<YakMcpSettings />)
+    await waitFor(() => expect(getToolListMock).toHaveBeenCalled())
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 600))
+    })
+    expect(setRemoteValueMock).not.toHaveBeenCalled()
+
+    const switches = screen.getAllByRole('switch')
+    await userEvent.click(switches[switches.length - 1])
+    await waitFor(() =>
+      expect(setRemoteValueMock).toHaveBeenCalledWith(
+        RemoteAIAgentGV.YakMCPStartConfig,
+        expect.stringContaining('"autoStart":true'),
+      ),
+    )
+    await userEvent.click(screen.getAllByRole('switch')[1])
+    await waitFor(() =>
+      expect(setRemoteValueMock).toHaveBeenCalledWith(
+        RemoteAIAgentGV.YakMCPStartConfig,
+        expect.stringContaining('"enableLegacyMcpTools":false'),
+      ),
+    )
+    mcpStreamInfoRef.current = { ...mcpStreamInfoRef.current, mcpUrl: '127.0.0.1:9011' }
+    rerender(<YakMcpSettings />)
+    await waitFor(() =>
+      expect(setRemoteValueMock).toHaveBeenCalledWith(
+        RemoteAIAgentGV.YakMCPStartConfig,
+        expect.stringContaining('"url":"127.0.0.1:9011"'),
+      ),
+    )
+  })
+
+  it('按状态筛选批量操作部分失败后重置表格视口，保留失败工具供重试', async () => {
+    getToolListMock.mockResolvedValue(listResponse([makeTool('success'), makeTool('failed'), makeTool('also_success')]))
+    setToolEnabledMock.mockImplementation(async ({ ToolName }) => ({
+      Ok: ToolName !== 'failed',
+      Reason: ToolName === 'failed' ? 'denied' : '',
+    }))
+    render(<YakMcpSettings />)
+    await screen.findByTestId('tool-success')
+    await selectFilter('SettingsPage.yakMcp.statusFilter', 'SettingsPage.yakMcp.enabledOnly')
+    const refreshBefore = screen.getByTestId('mcp-table').getAttribute('data-refresh')
+    await userEvent.click(screen.getByRole('button', { name: 'SettingsPage.yakMcp.disableResults' }))
+    await waitFor(() => expect(screen.queryByTestId('tool-success')).not.toBeInTheDocument())
+    expect(screen.getByTestId('tool-failed')).toBeInTheDocument()
+    // TableVirtualResize resets its scroll position only when its isRefresh prop changes.
+    expect(screen.getByTestId('mcp-table').getAttribute('data-refresh')).not.toBe(refreshBefore)
+    expect(screen.getByRole('button', { name: 'SettingsPage.yakMcp.disableResults' })).toBeEnabled()
+  })
+
+  it('单项开关使状态筛选结果缩小时也重置表格视口', async () => {
+    getToolListMock.mockResolvedValue(listResponse([makeTool('first'), makeTool('remaining')]))
+    render(<YakMcpSettings />)
+    await screen.findByTestId('tool-first')
+    await selectFilter('SettingsPage.yakMcp.statusFilter', 'SettingsPage.yakMcp.enabledOnly')
+    const refreshBefore = screen.getByTestId('mcp-table').getAttribute('data-refresh')
+    await userEvent.click(screen.getByRole('switch', { name: 'first' }))
+    await waitFor(() => expect(screen.queryByTestId('tool-first')).not.toBeInTheDocument())
+    expect(screen.getByTestId('tool-remaining')).toBeInTheDocument()
+    expect(screen.getByTestId('mcp-table').getAttribute('data-refresh')).not.toBe(refreshBefore)
+  })
+
+  it('仅输入空白字符不显示清空筛选入口', async () => {
+    getToolListMock.mockResolvedValue(listResponse([makeTool('capture')]))
+    render(<YakMcpSettings />)
+    await screen.findByTestId('tool-capture')
+    await searchTools('   ')
+    expect(screen.getByTestId('tool-capture')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'SettingsPage.yakMcp.clearFilters' })).not.toBeInTheDocument()
+  })
+
+  it('搜索匹配英文描述和服务名称，不依赖工具名称', async () => {
+    getToolListMock.mockResolvedValue(
+      listResponse([
+        makeTool('first', { Description: 'Inspect document content' }),
+        makeTool('second', { DescriptionI18n: { Zh: '网页快照', En: 'Browser snapshot' } }),
+        makeTool('third', { ServerName: 'RemoteBrowserService' }),
+        makeTool('unrelated'),
+      ]),
+    )
+    render(<YakMcpSettings />)
+    await screen.findByTestId('tool-unrelated')
+    for (const [query, expected] of [
+      ['DOCUMENT', 'first'],
+      ['SNAPSHOT', 'second'],
+      ['  remotebrowserservice  ', 'third'],
+    ]) {
+      await searchTools(query)
+      expect(screen.getByTestId(`tool-${expected}`)).toBeInTheDocument()
+      expect(screen.getAllByRole('switch').filter((item) => item.getAttribute('aria-label'))).toHaveLength(1)
+      expect(screen.queryByTestId('tool-unrelated')).not.toBeInTheDocument()
+    }
+  })
+
+  it('配置读取失败后被动恢复地址或运行状态不会覆盖缓存', async () => {
+    getRemoteValueMock.mockRejectedValueOnce(new Error('temporary config read failure'))
+    const { rerender } = render(<YakMcpSettings />)
+    await waitFor(() => expect(getToolListMock).toHaveBeenCalled())
+    mcpStreamInfoRef.current = {
+      mcpUrl: '127.0.0.1:9011',
+      mcpCurrent: { Status: 'running' },
+      mcpServerUrl: 'http://127.0.0.1:9011/sse',
+    }
+    rerender(<YakMcpSettings />)
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 600))
+    })
+    expect(setRemoteValueMock).not.toHaveBeenCalled()
+  })
+
+  it('配置读取失败后首次显式编辑地址也能保存', async () => {
+    getRemoteValueMock.mockRejectedValueOnce(new Error('temporary config read failure'))
+    const { rerender } = render(<YakMcpSettings />)
+    await waitFor(() => expect(getToolListMock).toHaveBeenCalled())
+    fireEvent.change(screen.getByDisplayValue('127.0.0.1:11432'), { target: { value: '127.0.0.1:9012' } })
+    expect(onSetMcpUrlMock).toHaveBeenCalledWith('127.0.0.1:9012')
+    mcpStreamInfoRef.current = { ...mcpStreamInfoRef.current, mcpUrl: '127.0.0.1:9012' }
+    rerender(<YakMcpSettings />)
+    await waitFor(() =>
+      expect(setRemoteValueMock).toHaveBeenCalledWith(
+        RemoteAIAgentGV.YakMCPStartConfig,
+        expect.stringContaining('"url":"127.0.0.1:9012"'),
+      ),
+    )
   })
 })
