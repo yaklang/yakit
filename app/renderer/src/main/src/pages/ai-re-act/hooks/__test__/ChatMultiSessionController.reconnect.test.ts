@@ -6,6 +6,7 @@ import { YakitRoute } from '@/enums/yakitRoute'
 import { ipcRendererMock, resetIpcMocks } from './setupElectron'
 import { makeGrpcJsonRes, makeGrpcRes } from './fixtures'
 import aiChatPersistStore from '../persist/aiChatPersistStore'
+import { clearAllUIDrafts } from '../persist/uiDraftStore'
 import { persistIndependentItem, drainSessionContentWrites } from '../persist/contentPersistHelper'
 import { sessionStatusStore, SessionDeleteStatus } from '../sessionStatus/sessionStatusStore'
 import { grpcQueryAIEvent } from '@/pages/ai-agent/grpc'
@@ -99,6 +100,7 @@ describe('session reconnect / IDB lifecycle', () => {
     vi.mocked(aiChatPersistStore.getSessionReferences).mockResolvedValue([])
     ctrl = new ChatMultiSessionController()
     sessions = new Set()
+    clearAllUIDrafts()
   })
   afterEach(async () => {
     for (const id of sessions) if (ctrl.isSessionReady(id)) await ctrl.handleSessionEnd(id).catch(() => {})
@@ -424,6 +426,26 @@ describe('session reconnect / IDB lifecycle', () => {
     await start('s')
     expect(aiChatPersistStore.deleteSessionPersist).toHaveBeenCalledTimes(2)
     expect(meta.lifecycle.current).toBe(false)
+  })
+
+  it('restores unsubmitted question drafts after reconnect clears history cache', async () => {
+    await start('s')
+    await ctrl.handleGrpcOutputEvent('s', historyEnd())
+    const item = {
+      id: 'ui-question:q1',
+      type: AIChatQSDataTypeEnum.UI_QUESTION,
+      chatType: 'reAct',
+      data: { sessionId: 's', request: { id: 'q1', state: 'pending' } },
+    } as any
+    const draft = { answers: {}, page: 0, touched: true, values: { title: '草稿' }, submissionId: 'retry-1' }
+    ctrl.persistUIState('s', item, draft)
+    await start('s')
+    expect(ctrl.ensureSession('s').rawData.contents.get(item.id)).toBeUndefined()
+    await ctrl.handleGrpcOutputEvent(
+      's',
+      makeGrpcJsonRes('ui_question', { id: 'q1', state: 'pending', questions: [] }, { ID: 1, IsSync: true }),
+    )
+    expect(ctrl.ensureSession('s').rawData.contents.get(item.id)?.uiState).toEqual(draft)
   })
 
   it('deletion invalidates a pending IDB read and waits before removing the cache', async () => {

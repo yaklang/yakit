@@ -4,6 +4,7 @@ import { handleComponentStream, handleComponentUI, UI_CONTENT_TYPE } from '../..
 import { AIChatQSDataTypeEnum } from '../../hooks/aiRender'
 import type { AIMessageHandlerParams } from '../../hooks/type'
 import { aiInteractiveUIHandlers } from '../../hooks/grpcStreamHandler/aiInteractiveUI'
+import { clearAllUIDrafts, setUIDraft } from '../../hooks/persist/uiDraftStore'
 import { aiOtherDataHandlers } from '../../hooks/grpcStreamHandler/aiOther'
 
 vi.mock('../../hooks/persist/contentPersistHelper', () => ({
@@ -50,6 +51,7 @@ beforeEach(() => {
   contents = new Map()
   resetState()
   dispatch.mockClear()
+  clearAllUIDrafts()
 })
 describe('UI event integration', () => {
   it.each([
@@ -100,6 +102,19 @@ describe('UI event integration', () => {
     expect(contents.get('ui-question:question').data.request.answers).toEqual(metadata.answers)
     expect(contents.get('ui-question:question').data.request.values).toEqual(metadata.values)
     expect(state.questionPanelTokens).toEqual([])
+  })
+  it('merges independent drafts when history replay has no uiState', async () => {
+    const draft = { submissionId: 'retry-1', values: { title: '草稿' }, answers: {}, page: 0, touched: true }
+    setUIDraft('session', 'ui-question:question', draft)
+    await aiInteractiveUIHandlers.ui_question(
+      info({
+        Type: 'ui_question',
+        IsSync: true,
+        ID: 1,
+        Content: bytes(JSON.stringify({ id: 'question', state: 'pending', questions: [] })),
+      }),
+    )
+    expect(contents.get('ui-question:question').uiState).toEqual(draft)
   })
   it.each([true, false])(
     'deduplicates a late answer and dequeue regardless of arrival order (%s)',

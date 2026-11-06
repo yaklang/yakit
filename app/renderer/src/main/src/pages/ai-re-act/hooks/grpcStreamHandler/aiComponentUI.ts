@@ -3,6 +3,7 @@ import { AIChatQSDataTypeEnum, type AIChatQSData } from '../aiRender'
 import { genBaseAIChatData } from '../utils'
 import { Uint8ArrayToString } from '@/utils/str'
 import { persistGetSessionContent, persistIndependentItem } from '../persist/contentPersistHelper'
+import { getUIDraft } from '../persist/uiDraftStore'
 import { parseJSONPrefix } from '../../interactive-ui/partialJson'
 
 export const UI_CONTENT_TYPE = 'application/vnd.memfit.ui+json'
@@ -36,7 +37,7 @@ async function upsert(
       revision,
       diagnostics,
     },
-    uiState: previous?.uiState,
+    uiState: previous?.uiState ?? getUIDraft(sessionId, token),
     stageSettled: final,
   }
   rawData.contents.set(token, item)

@@ -3,6 +3,7 @@ import { AIChatQSDataTypeEnum, type AIChatQSData } from '../aiRender'
 import { Uint8ArrayToString } from '@/utils/str'
 import { genBaseAIChatData } from '../utils'
 import { persistGetSessionContent, persistIndependentItem } from '../persist/contentPersistHelper'
+import { getUIDraft } from '../persist/uiDraftStore'
 import type { QuestionRequest, UISubmission } from '../../interactive-ui/types'
 import { syncQuestionPanel } from '../../interactive-ui/questionPanel'
 
@@ -63,7 +64,7 @@ const handleInteractiveUI: AIMessageHandler = async (info) => {
     id,
     chatType: 'reAct',
     uiEventId: res.ID,
-    uiState: previous?.uiState,
+    uiState: previous?.uiState ?? getUIDraft(sessionId, id),
     ...(isQuestion
       ? { type: AIChatQSDataTypeEnum.UI_QUESTION, data: { request, sessionId } }
       : { type: AIChatQSDataTypeEnum.QUESTION, data: payload.text as string, interactionMetadata: payload.metadata }),

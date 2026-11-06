@@ -53,6 +53,7 @@ import {
   persistToolResultIfTerminal,
   upsertSessionContent,
 } from './persist/contentPersistHelper'
+import { clearAllUIDrafts, clearUIDrafts, setUIDraft } from './persist/uiDraftStore'
 import type { DeleteSessionsAISourceType } from '@/pages/ai-agent/historyChat/utils'
 import { clearThoughtDurationCache } from '@/pages/ai-agent/components/thoughtDuration/ThoughtDuration'
 import i18n from '@/i18n/i18n'
@@ -255,6 +256,7 @@ export class ChatMultiSessionController {
   public persistUIState(sessionId: string, fallback: AIChatQSData, state: unknown) {
     const current = this.rawDataPool.get(sessionId)?.contents.get(fallback.id) || fallback
     current.uiState = state
+    setUIDraft(sessionId, fallback.id, state)
     const store = this.storePool.get(sessionId)
     if (store && current.type === AIChatQSDataTypeEnum.UI_QUESTION) {
       syncQuestionPanel(store, current)
@@ -983,6 +985,7 @@ export class ChatMultiSessionController {
 
   /** 清空三表缓存，等待事务提交。 */
   public persistDeleteAll() {
+    clearAllUIDrafts()
     return aiChatPersistStore.deleteAllPersist()
   }
 
@@ -2032,7 +2035,10 @@ export class ChatMultiSessionController {
       await meta.lifecycle.events
     }
     await Promise.all([this.drainRenderWrites(sessionId), drainSessionContentWrites(sessionId)])
-    if (deletePersist) await aiChatPersistStore.deleteSessionPersist(sessionId)
+    if (deletePersist) {
+      clearUIDrafts(sessionId)
+      await aiChatPersistStore.deleteSessionPersist(sessionId)
+    }
 
     this.sessionRestoreLoading.delete(sessionId)
     clearThoughtDurationCache(sessionId)
@@ -2249,6 +2255,7 @@ export class ChatMultiSessionController {
     }
 
     await Promise.all([this.drainRenderWrites(sessionId), drainSessionContentWrites(sessionId)])
+    clearUIDrafts(sessionId)
     await aiChatPersistStore.deleteSessionPersist(sessionId)
   }
 
