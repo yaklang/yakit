@@ -3,7 +3,7 @@ import type * as OutlineIcons from '@yakit-libs/yakit-ui-icons/outline'
 import { createContext, useContext, useEffect } from 'react'
 import { render, screen, fireEvent, waitFor, act, cleanup, within } from '@testing-library/react'
 import { YakitRoute } from '@/enums/yakitRoute'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useStore as useUserStore } from '@/store'
 import { grpcExportAILogs, grpcQueryHTTPFlows } from '@/pages/ai-agent/grpc'
 import { failed, yakitNotify } from '@/utils/notification'
@@ -253,6 +253,7 @@ vi.mock('i18next-resources-to-backend', () => {
 })
 
 import { compileReactModule } from '@/utils/__test__/helpers/compileReactModule'
+import { clearSessionSnapshotExecutionClocks } from '../../hooks/sessionSnapshotExecution'
 const { AIRightPanel } = await compileReactModule<typeof AIRightPanelModule>(import.meta.url, '../AIRightPanel.tsx')
 import { AIRightPanelPane } from '../AIRightPanelPane'
 import type { AIRightPanelProps } from '../type'
@@ -316,6 +317,11 @@ describe('AIRightPanel', () => {
     mockIsCommunityEdition.mockReturnValue(true)
     mockNetWorkApi.mockReset()
     mockNetWorkApi.mockResolvedValue(undefined)
+  })
+
+  afterEach(() => {
+    clearSessionSnapshotExecutionClocks()
+    vi.useRealTimers()
   })
 
   it.each([false, true])('异步任务数量变化时更新标签，零和未知数量隐藏（小屏：%s）', (small) => {
@@ -1627,6 +1633,69 @@ describe('AIRightPanel', () => {
     } finally {
       result.unmount()
       resetMockStore()
+    }
+  })
+
+  it('运行中快照转为 completed 后运行时间停在后端秒数', async () => {
+    vi.useFakeTimers({ toFake: ['Date', 'setInterval', 'clearInterval'] })
+    setMockQuestionID('task-clock-end')
+    mockAgentStore.setState({ activeChat: { Id: 1, SessionID: 'session-clock' } })
+    mockTaskStore.setState({ execute: true })
+    const taskDetails: MockTaskDetails = {
+      uuid: 'uuid-clock-1',
+      execution: { status: 'processing', execution_seconds: 10, started_at: 1000 },
+    }
+    mockTaskDetailsMap.set('task-clock-end', taskDetails)
+    const result = await renderPanel(<AIRightPanel />)
+    try {
+      expect(screen.getByText('运行时间').nextElementSibling).toHaveTextContent('10s')
+      act(() => {
+        vi.advanceTimersByTime(3000)
+      })
+      expect(screen.getByText('运行时间').nextElementSibling).toHaveTextContent('13s')
+
+      taskDetails.uuid = 'uuid-clock-2'
+      taskDetails.execution = { status: 'completed', execution_seconds: 10, started_at: 1000 }
+      act(() => mockTaskStore.setState((state) => ({ taskDetailsUpdate: state.taskDetailsUpdate + 1 })))
+      await waitFor(() => expect(screen.getByText('运行时间').nextElementSibling).toHaveTextContent('10s'), {
+        timeout: 5000,
+      })
+      act(() => {
+        vi.advanceTimersByTime(5000)
+      })
+      expect(screen.getByText('运行时间').nextElementSibling).toHaveTextContent('10s')
+    } finally {
+      result.unmount()
+      resetMockStore()
+      mockAgentStore.setState({ activeChat: undefined })
+    }
+  })
+
+  it('关闭会话后快照仍为 processing 时运行时间继续累加', async () => {
+    vi.useFakeTimers({ toFake: ['Date', 'setInterval', 'clearInterval'] })
+    setMockQuestionID('task-clock-close')
+    mockAgentStore.setState({ activeChat: { Id: 1, SessionID: 'session-clock-close' } })
+    mockTaskStore.setState({ execute: true })
+    mockTaskDetailsMap.set('task-clock-close', {
+      uuid: 'uuid-clock-close',
+      execution: { status: 'processing', execution_seconds: 10, started_at: 1000 },
+    })
+    const result = await renderPanel(<AIRightPanel />)
+    try {
+      act(() => {
+        vi.advanceTimersByTime(3000)
+      })
+      expect(screen.getByText('运行时间').nextElementSibling).toHaveTextContent('13s')
+
+      act(() => mockTaskStore.setState({ execute: false }))
+      act(() => {
+        vi.advanceTimersByTime(4000)
+      })
+      expect(screen.getByText('运行时间').nextElementSibling).toHaveTextContent('17s')
+    } finally {
+      result.unmount()
+      resetMockStore()
+      mockAgentStore.setState({ activeChat: undefined })
     }
   })
 
