@@ -3,6 +3,11 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@/pages/ai-agent/grpc', () => ({ grpcQueryAIForge: vi.fn() }))
+vi.mock('@/pages/ai-agent/aiChatWelcome/RecommendedSkills', () => ({
+  RecommendedSkills: ({ onChange }: any) => (
+    <button onClick={() => onChange([{ Name: 'audit', Type: 'skill' }])}>选择推荐技能</button>
+  ),
+}))
 vi.mock('@/pages/ai-agent/template/template', () => ({
   AIChatTextarea: React.forwardRef(({ defaultMentions, submitDisabled, onSubmit }: any, ref) => (
     <div>
@@ -59,10 +64,12 @@ describe('DigitalEmployeeChatWelcome', () => {
     })
     await waitFor(() => expect(screen.getByRole('button', { name: '发送消息' })).toBeEnabled())
     expect(screen.getByTestId('default-forge')).toHaveTextContent('默认威胁专家')
+    fireEvent.click(screen.getByRole('button', { name: '选择推荐技能' }))
     fireEvent.click(screen.getByRole('button', { name: '发送消息' }))
     expect(onSubmit).toHaveBeenCalledWith(
       expect.objectContaining({
         mentionList: [expect.objectContaining({ mentionName: '默认威胁专家', mentionType: 'forge', lock: true })],
+        enabledCapabilities: [{ Name: 'audit', Type: 'skill' }],
       }),
     )
   })

@@ -1,0 +1,167 @@
+.guide-empty {
+  border-radius: 12px;
+  background: var(--Colors-Use-Neutral-Bg-Hover);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  &-header {
+    padding: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  &-header-title {
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 24px;
+  }
+  &-header-subtitle {
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 16px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    a {
+      color: var(--Colors-Use-Neutral-Text-3-Secondary);
+      text-decoration: underline;
+      font-family: var(--Typeface-Font-PingFang-SC, 'PingFang SC');
+      font-size: 12px;
+      font-weight: 400;
+      line-height: 16px;
+    }
+  }
+  &-preview {
+    max-width: 100%;
+    object-fit: cover;
+  }
+
+  &-link {
+    color: var(--Colors-Use-Main-Primary);
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    align-self: center;
+    padding: 4px;
+    gap: 4px;
+    height: auto;
+
+    svg {
+      width: 16px;
+      height: 16px;
+      color: currentColor;
+    }
+  }
+
+  &-modal {
+    max-height: min(70vh, 640px);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 4px 0 8px;
+  }
+
+  &-step {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  &-step-title {
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 26px;
+  }
+
+  &-step-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &-step-subtitle {
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+
+    a {
+      color: var(--Colors-Use-Main-Primary);
+      text-decoration: underline;
+      font-size: 12px;
+      font-weight: 400;
+      line-height: 18px;
+      word-break: break-all;
+    }
+  }
+
+  &-step-images,
+  &-step-images-multi {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    img {
+      display: block;
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+      border: 1px solid var(--Colors-Use-Neutral-Border);
+      object-fit: cover;
+      background: var(--Colors-Use-Neutral-Bg);
+    }
+  }
+}
+.guide-empty-modal-wrap {
+  :global {
+    // YakitModal 无 subTitle 时仍会渲染 flex:1 的占位，挤开关闭按钮
+    [class*='subtitle-style'] {
+      display: none;
+    }
+    [class*='title-wrapper'] {
+      overflow: visible;
+    }
+  }
+}
+
+.guide-empty-modal-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 28px;
+}
+
+.guide-empty-modal-title {
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 28px;
+}
+
+.guide-empty-modal-platforms {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.guide-empty-platform-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}

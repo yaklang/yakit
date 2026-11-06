@@ -14,6 +14,10 @@ const handleConsumption: AIMessageHandler = (request) => {
   rawData.aiPerfData.consumption.output_consumption = data.output_consumption
   rawData.aiPerfData.consumption.cache_hit_token = data.cache_hit_token
   rawData.aiPerfData.consumption.tier_consumption = { ...data.tier_consumption }
+  rawData.aiPerfData.consumption.effective_single_model_mode = data.effective_single_model_mode
+  rawData.aiPerfData.consumption.tier_model_consumption = data.tier_model_consumption
+    ? { ...data.tier_model_consumption }
+    : undefined
 }
 
 const handlePressure: AIMessageHandler = (request) => {

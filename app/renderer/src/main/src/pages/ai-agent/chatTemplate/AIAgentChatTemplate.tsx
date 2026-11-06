@@ -1,3 +1,5 @@
+import { SubAgentList } from './historyTaskTree/SubAgentList'
+import { useCasualConcurrentTaskList } from './historyTaskTree/useHasTaskTree'
 import React, { memo, useEffect, useMemo, useState } from 'react'
 import { useControllableValue, useCreation, useMemoizedFn, useMount } from 'ahooks'
 import type { AIChatLeftSideProps, AIChatToolDrawerContentProps } from '../aiAgentType'
@@ -68,7 +70,8 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
     if (!currentQuestionID) return false
     return (rawData.taskDetailsMap.get(currentQuestionID)?.todoList?.items?.length ?? 0) > 0
   }, [currentQuestionID, chatTodoListUpdate])
-  const hasTaskList = hasCurrentPlanTaskTree || hasHistoryTaskTree || hasTodoList
+  const subAgents = useCasualConcurrentTaskList()
+  const hasTaskList = hasCurrentPlanTaskTree || hasHistoryTaskTree || hasTodoList || subAgents.length > 0
   useEffect(() => {
     if (hasTaskList) {
       setActiveTab(AIChatLeft.TaskTree)
@@ -97,7 +100,12 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
     switch (activeTab) {
       case AIChatLeft.TaskTree:
         // 当前自由对话的 todo 优先于旧的历史 Plan；正在执行的 Plan 树仍优先展示。
-        return hasTodoList && !hasCurrentPlanTaskTree ? <DigitalEmployeeTaskProgress /> : <HistoryTaskTree />
+        return (
+          <div style={{ overflow: 'auto', height: '100%' }}>
+            <SubAgentList />
+            {hasTodoList && !hasCurrentPlanTaskTree ? <DigitalEmployeeTaskProgress /> : <HistoryTaskTree />}
+          </div>
+        )
       case AIChatLeft.Timeline:
         return <TimelineCard />
       default:

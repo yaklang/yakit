@@ -715,6 +715,7 @@ service Yak {
   rpc ValidP12PassWord(ValidP12PassWordRequest) returns (ValidP12PassWordResponse);
 
   // YAKURL
+  rpc ExecuteBrowserExtensionTask(BrowserExtensionTaskRequest) returns (stream BrowserExtensionTaskEvent);
   rpc RequestYakURL(RequestYakURLParams) returns (RequestYakURLResponse);
 
   // 文件IO
@@ -924,6 +925,9 @@ service Yak {
   rpc UpdateAISessionTitle(UpdateAISessionTitleRequest) returns (DbOperateMessage);
   rpc UpdateAISessionIMMeta(UpdateAISessionIMMetaRequest) returns (DbOperateMessage);
   rpc DeleteAISession(DeleteAISessionRequest) returns (DbOperateMessage);
+  rpc GetAIReActRecommendedSkills(Empty) returns (GetAIReActRecommendedSkillsResponse);
+  rpc UpdateAIReActRecommendedSkill(UpdateAIReActRecommendedSkillRequest) returns (AIReActRecommendedSkill);
+  rpc ResetAIReActRecommendedSkill(ResetAIReActRecommendedSkillRequest) returns (AIReActRecommendedSkill);
   rpc GetRandomAIMaterials(GetRandomAIMaterialsRequest) returns (GetRandomAIMaterialsResponse);
   rpc ExportAILogs(ExportAILogsRequest) returns (ExportAILogsResponse);
 
@@ -2165,6 +2169,7 @@ message AIEnabledCapability {
 }
 
 message AIStartParams {
+  string BrowserExtensionDeviceId = 71;
   bool SingleModelMode = 50;
   // if set will try recovery
   string CoordinatorId = 17;
@@ -9811,4 +9816,50 @@ message DeleteMCPToolCallHistoryRequest {
   bool DeleteFiltered = 3;
   string Keyword = 4;
   string Status = 5;
+}
+
+message BrowserExtensionTaskRequest {
+  string TaskId = 1;
+  string DeviceId = 2;
+  string Schema = 3;
+  bytes Payload = 4;
+  int64 TimeoutMilliseconds = 5;
+}
+
+message BrowserExtensionTaskEvent {
+  string TaskId = 1;
+  string DeviceId = 2;
+  string Type = 3;
+  string Message = 4;
+  bytes Data = 5;
+  int64 Timestamp = 6;
+  uint64 Sequence = 7;
+}
+
+message AIReActRecommendedSkill {
+  // 内置 SKILL.md 中的技能名，同时也是 AIEnabledCapability.Name。
+  string Name = 1;
+  // AIEnabledCapability.Type，当前固定为 skill。
+  string Type = 2;
+  // 简体中文（中国大陆）展示名，来自 SKILL.md 的 metadata.display_name_zh-CN。
+  string DisplayNameZhCN = 3;
+  // 来自内置 SKILL.md frontmatter 的技能说明。
+  string Description = 4;
+  // 当前生效的 Markdown 正文，不包含 YAML frontmatter，可由用户编辑。
+  string Content = 5;
+  // 当前正文是否与随当前版本发布的内置默认正文不同。
+  bool IsModified = 6;
+}
+
+message GetAIReActRecommendedSkillsResponse {
+  repeated AIReActRecommendedSkill Data = 1;
+}
+
+message UpdateAIReActRecommendedSkillRequest {
+  string Name = 1;
+  string Content = 2;
+}
+
+message ResetAIReActRecommendedSkillRequest {
+  string Name = 1;
 }

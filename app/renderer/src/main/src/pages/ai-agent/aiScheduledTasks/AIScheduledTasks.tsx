@@ -7,7 +7,6 @@ import {
   grpcDeleteAIReActSchedule,
   grpcGetAIReActSchedule,
   grpcQueryAIReActSchedules,
-  grpcRunAIReActScheduleNow,
   grpcSetAIReActScheduleEnabled,
 } from './utils'
 import { genDefaultPagination } from '@/pages/invoker/schema'
@@ -42,10 +41,9 @@ import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { showYakitModal, YakitModalConfirm } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import ScheduledTasksForm from './scheduledTasksForm/ScheduledTasksForm'
 import AIScheduledTasksDetail from './aiScheduledTasksDetail/AIScheduledTasksDetail'
-import { waitForAISessionPush } from './waitForAISessionPush'
+import { runScheduleAndFindSession } from './runScheduleSession'
 import classNames from 'classnames'
 import emiter from '@/utils/eventBus/eventBus'
-import { grpcQueryAISession } from '../grpc'
 import useAIAgentDispatcher from '../useContext/useDispatcher'
 import moment from 'moment'
 /**
@@ -167,7 +165,7 @@ const formatScheduleRule = (item: AIReActSchedule, t: TFunction) => {
 const AIScheduledTasks: React.FC<AIScheduledTasksProps> = React.memo((props) => {
   const { visible } = props
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
-  const { setActiveChat } = useAIAgentDispatcher()
+  const { setActiveChat, openSessionTab } = useAIAgentDispatcher()
 
   const [queryType, setQueryType] = useState<ScheduleQueryType>('all')
   const [keyWord, setKeyWord] = useState<string>('')
@@ -300,34 +298,23 @@ const AIScheduledTasks: React.FC<AIScheduledTasksProps> = React.memo((props) => 
   })
   const onAdd = useMemoizedFn(() => openForm())
 
-  // 立即运行定时任务：成功后等待后端 ai_session 推送（最多 2s），
-  // 直接查询并激活会话；超时（旧引擎/通知丢失）则沿用最新本地会话兜底，不依赖历史浮层挂载。
-  const runScheduleNow = useMemoizedFn((item: AIReActSchedule) => {
-    return grpcRunAIReActScheduleNow({ UUID: item.UUID })
-      .then(() => waitForAISessionPush(2000))
-      .then(async (sessionId) => {
-        yakitNotify('success', t('AIScheduledTasks.runStarted'))
-        // 已打开的历史列表仍需刷新；会话激活由下方直接处理。
-        emiter.emit('sessionData', JSON.stringify({ type: 'refresh', sessionId }))
-        try {
-          const { Data } = await grpcQueryAISession(
-            {
-              Pagination: { Page: 1, Limit: 1, OrderBy: 'last_used_at', Order: 'desc' },
-              Filter: sessionId ? { SessionID: [sessionId] } : { Source: ['ai', ''] },
-            },
-            true,
-          )
-          const session = sessionId ? Data.find((item) => item.SessionID === sessionId) : Data[0]
-          if (session) {
-            setActiveChat(session)
-          } else {
-            yakitNotify('warning', t('AIScheduledTasks.openRunSessionFailed'))
-          }
-        } catch {
-          yakitNotify('warning', t('AIScheduledTasks.openRunSessionFailed'))
-        }
-      })
-      .catch(() => {})
+  const runningSchedules = useRef(new Set<string>())
+  const runScheduleNow = useMemoizedFn(async (item: AIReActSchedule) => {
+    if (runningSchedules.current.has(item.UUID)) return
+    runningSchedules.current.add(item.UUID)
+    try {
+      const session = await runScheduleAndFindSession(item)
+      yakitNotify('success', t('AIScheduledTasks.runStarted'))
+      emiter.emit('sessionData', JSON.stringify({ type: 'refresh', sessionId: session?.SessionID }))
+      if (session) {
+        if (openSessionTab) openSessionTab(session)
+        else setActiveChat(session)
+      } else yakitNotify('warning', t('AIScheduledTasks.openRunSessionFailed'))
+    } catch {
+      /* grpc wrapper reports the actual run failure */
+    } finally {
+      runningSchedules.current.delete(item.UUID)
+    }
   })
 
   const onDeleteAfter = useMemoizedFn(() => {

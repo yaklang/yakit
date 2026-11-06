@@ -37,6 +37,7 @@ interface CurrentModel {
 
 export interface AIEchartsDetailsProps {
   overallToken: [number | string, number | string, number | string]
+  modelConsumption?: AIAgentGrpcApi.Consumption['tier_model_consumption']
   tierConsumption?: AIAgentGrpcApi.Consumption['tier_consumption']
   pressure?: AIAgentChatData['aiPerfData']['pressure']
   firstCost?: AIAgentChatData['aiPerfData']['firstCost']
@@ -49,6 +50,7 @@ export interface AIEchartsDetailsProps {
 const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = ({
   overallToken,
   tierConsumption,
+  modelConsumption,
   pressure,
   firstCost,
   contextStats,
@@ -225,11 +227,13 @@ const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = ({
             <AITokens
               modelType={t('AiAgengt.intelligentModels')}
               aiModel={currentModel?.intelligentModels}
+              modelConsumption={modelConsumption === undefined ? undefined : modelConsumption.intelligent || []}
               token={[intelligentToken[0], intelligentToken[1], intelligentToken[2], intelligentToken[3]]}
             />
             <AITokens
               modelType={t('AiAgengt.lightweightModels')}
               aiModel={currentModel?.lightweightModels}
+              modelConsumption={modelConsumption === undefined ? undefined : modelConsumption.lightweight || []}
               token={[lightweightToken[0], lightweightToken[1], lightweightToken[2], lightweightToken[3]]}
             />
           </div>

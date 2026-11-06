@@ -18,6 +18,7 @@ import { history } from '@milkdown/kit/plugin/history'
 import { clipboard } from '@milkdown/kit/plugin/clipboard'
 import { placeholderConfig, placeholderPlugin } from '@/components/MilkdownEditor/Placeholder'
 import { AICustomMention, aiMentionFactory, AIMilkdownMention } from './aiMilkdownMention/AIMilkdownMention'
+import { AIMilkdownModeSlash, aiModeSlashFactory } from './aiMilkdownModeSlash/AIMilkdownModeSlash'
 import {
   aiMentionCommand,
   type AIMentionCommandParams,
@@ -162,6 +163,16 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
             })
           },
         ].flat()
+        const modeSlashPlugin = readonly
+          ? []
+          : [
+              aiModeSlashFactory,
+              (ctx: Ctx) => () => {
+                ctx.set(aiModeSlashFactory.key, {
+                  view: pluginViewFactory({ component: () => <AIMilkdownModeSlash /> }),
+                })
+              },
+            ].flat()
         const codeBlockPlugin = [
           ...aiCodeBlockCustomPlugin(),
           $view(aiCodeBlockCustomSchema.node, () =>
@@ -232,6 +243,7 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
             .use(listener)
             // mention 提及@
             .use(mentionPlugin)
+            .use(modeSlashPlugin)
             // http flow 流量标签
             .use(httpFlowPlugin)
             // ```codePlugin```

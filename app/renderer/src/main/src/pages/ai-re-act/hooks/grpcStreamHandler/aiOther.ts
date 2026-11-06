@@ -4,6 +4,7 @@ import { Uint8ArrayToString } from '@/utils/str'
 import { genBaseAIChatData, genExecTasks, handleTaskPlanEnd, trySettleTaskPlanEnd } from '../utils'
 import { type AIChatQSData, AIChatQSDataTypeEnum } from '../aiRender'
 import cloneDeep from 'lodash/cloneDeep'
+import emiter from '@/utils/eventBus/eventBus'
 import { DefaultCurrentExecTaskTree, DefaultPlanItemDetailsData, DefaultTaskPlanEndGate } from '../defaultConstant'
 import has from 'lodash/has'
 import {
@@ -63,6 +64,10 @@ const handleSessionTitle: AIMessageHandler = (request) => {
     return
   }
   rawData.sessionTitle = nameInfo.title
+  emiter.emit(
+    'sessionData',
+    JSON.stringify({ type: 'updateSession', sessionId: request.sessionId, updates: { Title: nameInfo.title } }),
+  )
   store.getState().updateStateCount('sessionTitleUpdate')
 }
 

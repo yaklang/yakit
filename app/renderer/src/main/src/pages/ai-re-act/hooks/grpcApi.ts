@@ -235,6 +235,7 @@ export enum AIInputEventHotPatchTypeEnum {
 
 /** AIInputEvent-SyncType 的可选值 */
 export enum AIInputEventSyncTypeEnum {
+  SYNC_TYPE_ADD_TODO = 'add_todo_sync',
   SYNC_TYPE_SESSION_SNAPSHOT_SYNC = 'session_snapshot_sync',
   /** 获取正在执行的任务树 */
   SYNC_TYPE_PLAN = 'plan',
@@ -463,16 +464,28 @@ export declare namespace AIAgentGrpcApi {
     }
   }
 
-  /** 上传/下载 Token 量 */
-  export interface Consumption {
+  export type AIModelTier = AIModelTypeEnumType | (string & {})
+
+  export interface AIConsumptionStats {
     cache_hit_token: number
     input_consumption: number
     output_consumption: number
+  }
+
+  export interface AIModelConsumptionStats extends AIConsumptionStats {
+    provider_type?: string
+    model_name?: string
+    thinking_level?: string
+  }
+
+  /** 上传/下载 Token 量 */
+  export interface Consumption extends AIConsumptionStats {
     consumption_uuid: string
-    tier_consumption: Record<
-      AIModelTypeEnumType,
-      { cache_hit_token: number; input_consumption: number; output_consumption: number }
-    >
+    tier_consumption: Partial<Record<AIModelTier, AIConsumptionStats>>
+    /** 后端最终生效的会话单模型模式；旧引擎可能不返回 */
+    effective_single_model_mode?: boolean
+    /** 按逻辑 Tier、实际模型和思考强度聚合的用量；旧引擎可能不返回 */
+    tier_model_consumption?: Partial<Record<AIModelTier, AIModelConsumptionStats[]>>
   }
 
   /** 上下文压力 */
@@ -727,6 +740,8 @@ export declare namespace AIAgentGrpcApi {
    * 计划树Card中固定的工具和技能数据
    */
   export interface PlanItemDetailsFixedItem {
+    skill_load_state?: string
+    token_count?: number
     name: string
     verbose_name: string
     description: string
@@ -746,6 +761,7 @@ export declare namespace AIAgentGrpcApi {
     category: 'tool' | 'yak_plugin' | 'mcp'
   }
   export interface PlanItemDetailsDynamicSkillsItem {
+    token_count?: number
     name: string
     description: string
     category: 'skill'

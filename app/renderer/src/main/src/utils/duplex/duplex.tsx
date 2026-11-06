@@ -138,6 +138,9 @@ export const startupDuplexConn = () => {
         case 'ai_session':
           emiter.emit('onServerPushAISession', JSON.stringify(obj))
           break
+        case 'browser_extension':
+          emiter.emit('onBrowserExtensionChanged', JSON.stringify(obj))
+          break
         // rps
         case 'rps':
           handleConcurrentLoadData('rps', obj)

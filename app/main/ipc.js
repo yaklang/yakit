@@ -303,6 +303,13 @@ module.exports = {
     require('./handlers/imControl')(win, getClient, () => global.defaultYakGRPCAddr)
 
     // start chrome manager
+    require('./handlers/ytrayControl').registerYTrayControlHandlers({ ipcMain, assertTrustedAppSender })
+    require('./handlers/managedBrowserProfiles').registerManagedBrowserProfileHandlers({
+      ipcMain,
+      assertTrustedAppSender,
+    })
+    require('./handlers/browserExtension')({ ipcMain, getClient })
+    require('./handlers/recommendedSkills')({ ipcMain, getClient })
     try {
       require('./handlers/chromelauncher')(win, getClient)
     } catch (e) {

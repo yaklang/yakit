@@ -1,0 +1,48 @@
+{
+  "reviewDate": "2026-11-06",
+  "baseCommit": "8cb79ea04",
+  "referenceCommit": "9fc639fbb677eaa538132b2afa749555b3b14791",
+  "tests": {
+    "files": 100,
+    "passed": 622,
+    "skipped": 1,
+    "failed": 0,
+    "exitCode": 0,
+    "manifest": "docs/validation/memfit-final-review-2026-11-06.test-files.json",
+    "skippedReason": "Windows managed profile symlink replacement case"
+  },
+  "typecheck": {
+    "exitCode": 0,
+    "project": "app/renderer/src/main/tsconfig.json"
+  },
+  "build": {
+    "exitCode": 0,
+    "artifactLocal": ".codex-run/parity-main-20261105-ready",
+    "fastRefresh": false,
+    "sourceMaps": false,
+    "peakRssGiB": 2.73,
+    "minimumFreeGiB": 2.37
+  },
+  "resources": {
+    "verified": 30,
+    "locales": 9,
+    "referenceGuideImages": 11
+  },
+  "userAcceptance": {
+    "display": true,
+    "browserTabPosition": true,
+    "otherFeatures": "pending real-environment testing"
+  },
+  "knownLimitations": [
+    {
+      "error": "unsupported schema: browser-extension",
+      "source": "current connected engine via BrowserExtensionRequest / RequestYakURL",
+      "action": "engine maintainer must verify protocol support or enablement; engine not changed"
+    },
+    {
+      "source": "scheduled run session association",
+      "detail": "No execution correlation ID; ambiguous matches are not opened"
+    }
+  ],
+  "preservedUntracked": ["outputs/", "2140", "2672", "2852", "3460"]
+}

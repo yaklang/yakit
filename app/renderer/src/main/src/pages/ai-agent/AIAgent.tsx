@@ -8,7 +8,6 @@ import useGetSetState from '../pluginHub/hooks/useGetSetState'
 import { AISession } from './type/aiChat'
 import { useDebounceFn, useInViewport, useMemoizedFn, useRequest, useSize, useUpdateEffect } from 'ahooks'
 import { AIAgentSettingDefault, SwitchAIAgentTabEventEnum, YakitAIAgentPageID } from './defaultConstant'
-import cloneDeep from 'lodash/cloneDeep'
 import { AIAgentChat } from './aiAgentChat/AIAgentChat'
 import { loadRemoteHistory } from './components/aiFileSystemList/store/useHistoryFolder'
 import { initCustomFolderStore } from './components/aiFileSystemList/store/useCustomFolder'
@@ -25,25 +24,37 @@ import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { DigitalEmployeeProfile, DigitalEmployeeSidebar } from '@/pages/digitalEmployee/DigitalEmployeeWorkspace'
 
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { mergeAIAgentChatSettingCache, stripAIAgentChatSettingForPersist } from './utils/aiAgentChatSettingCache'
+import {
+  mergeAIAgentChatSettingCache,
+  stripAIAgentChatSettingForPersist,
+  getSessionTabSetting,
+} from './utils/aiAgentChatSettingCache'
 import { grpcDeleteAISession } from './grpc'
 import { useChatIPC } from '../ai-re-act/hooks/useChatIPC'
 import { AISourceEnum } from '../ai-re-act/hooks/grpcApi'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { globalSessionEngine } from '../ai-re-act/hooks/ChatMultiSessionController'
+import { useSessionTab } from './sessionTabs/SessionTabsContext'
+export { AIAgentWorkbench as AIAgent } from './sessionTabs/AIAgentWorkbench'
 
 /** 清空用户缓存的固定值 */
 export const AIAgentCacheClearValue = '20260113'
 
 const { ipcRenderer } = window.require('electron')
 
-export const AIAgent: React.FC<AIAgentProps> = (props) => {
+export const AIAgentPane: React.FC<AIAgentProps & { initialSession?: AISession }> = (props) => {
+  const tab = useSessionTab()
   const { t } = useI18nNamespaces(['aiAgent'])
   // #region ai-agent页面全局缓存
   // ai-agent-chat 全局配置
-  const [setting, setSetting, getSetting] = useGetSetState<AIAgentSetting>(cloneDeep(AIAgentSettingDefault))
+  const [setting, setSetting, getSetting] = useGetSetState<AIAgentSetting>(
+    getSessionTabSetting(props.initialSession?.StartParams),
+  )
   // 当前展示对话
-  const [activeChat, setActiveChat] = useState<AISession>()
+  const [activeChat, setActiveChat] = useState<AISession | undefined>(props.initialSession)
+  useEffect(() => {
+    tab.onSessionChange?.(activeChat)
+  }, [activeChat])
 
   const [show, setShow] = useState<boolean>(false)
 
@@ -92,6 +103,7 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
 
   // 缓存全局配置数据
   useUpdateEffect(() => {
+    if (!tab.active) return
     const currentSetting = getSetting()
     const cache = stripAIAgentChatSettingForPersist(currentSetting)
     if (activeChat?.SessionID) {
@@ -105,7 +117,8 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
 
   const { onStart, onSend, onClose, onUpdatePageId, pendingChat, cancelPendingChat, detachPendingChat } = useChatIPC(
     YakitRoute.AI_Agent,
-    YakitRoute.AI_Agent,
+    props.pageId || YakitRoute.AI_Agent,
+    true,
   )
 
   const store: AIAgentContextStore = useMemo(() => {
@@ -126,6 +139,7 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
       onUpdatePageId,
       cancelPendingChat,
       detachPendingChat,
+      openSessionTab: tab.openSession,
     }
   }, [])
 
@@ -146,6 +160,7 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
             try {
               const cache = JSON.parse(res) as AIAgentSetting
               if (typeof cache !== 'object') return
+              if (props.initialSession?.StartParams) return
               setSetting({
                 ...mergeAIAgentChatSettingCache(cache),
                 SyncPerceptionTrigger: AIAgentSettingDefault.SyncPerceptionTrigger,
@@ -250,12 +265,13 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
 
   return (
     <AIAgentContext.Provider value={{ store, dispatcher }}>
-      <div id={YakitAIAgentPageID} className={styles['ai-agent']} ref={agentRef}>
+      <div id={`${YakitAIAgentPageID}-${props.pageId}`} className={styles['ai-agent']} ref={agentRef}>
         <div className={styles['ai-agent-wrapper']}>
           <DigitalEmployeeSidebar
             detailActive={!!store.activeChat?.SessionID}
             onOpenTools={() => setShow((value) => !value)}
             toolsOpen={show}
+            onSwitchEmployee={tab.newTab ? (employeeId) => tab.newTab?.({ employeeId }) : undefined}
           />
           <div
             className={classNames(styles['ai-side-list'], styles['ai-side-list-secondary'], {

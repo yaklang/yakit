@@ -1,5 +1,11 @@
 # Memfit 增量更新测试与验收矩阵
 
+**2026-11-06 最新状态：最后七项及核心六组补迁已实施，新版已加载，用户确认显示与浏览器位置正常。最终回归100文件/622条通过/1条跳过，类型检查通过。当前引擎返回 `unsupported schema: browser-extension`，浏览器正向集成不记作已验收。** [最新交接](HANDOFF-2026-11-06-FINAL-REVIEW.md)、[最终检查记录](changes/2026-11-06-final-review-and-github.md)。本段优先于下方历史启动、进度和待编译状态；当前客户端保持运行。
+
+**2026-11-05 最新修复状态：本次白屏已定位为独立静态构建的 React Refresh 转换 / 运行时不一致，修复产物已激活并启动；用户确认“正常，已看到数字员工或会话页面”。** [修复、证据与防复发](changes/2026-11-05-white-screen-refresh-fix.md)。本次恢复不代表此前所有白屏已统一查明，也不代表最后七项已人工验收。启动仍必须确认实际画面，不能只看进程 / 标题 / HTTP 200。
+
+**2026-11-05 当前状态：第三批 B2-C、B7-A/B/C、B9-A/B/C 已实施，累计 29/29。最终回归 85 个文件、558 条通过，1 条 Windows 符号链接用例跳过；独立类型检查通过。当前窗口未重启，本批采用独立编译目录。** [最新交接](HANDOFF-2026-11-05-BATCH3-NEXT-CHAT.md)、[第三批记录](changes/2026-11-05-batch3-input-tabs-browser.md)、[测试入口](MEMFIT_MANUAL_TEST_GUIDE.md#第三批七项2026-11-05)。本段优先于下方历史进度；真实引擎 / 扩展 / YTray / 视觉仍待验收。
+
 **2026-11-04 新窗口交接已整理：[当前完整快照](HANDOFF-2026-11-04-BATCH2-NEXT-CHAT.md)；[可复制提示词](NEXT_CHAT_PROMPT-2026-11-04.md)。客户端已按用户最新明确要求使用既有普通脚本启动，用户确认“启动了，我自己检查即可”，已停止窗口检查。当前22/29，剩余7项；68文件/479条回归及类型检查通过。启动确认不等于本批真实引擎或视觉验收通过。以下此前“自动启动被拒绝”是历史状态，以本段为准。**
 
 **2026-11-04 第二批七项：B4-A / B4-B / B4-C、B5-A / B5-B / B5-C、B6-D 已实施，当前 22 / 29，剩余 7 项。68 个文件 / 479 条回归、主渲染类型检查通过。静态编译通过（7 条非阻断警告），18080 / 19080 和资源就绪；客户端自动启动被自动审批拒绝，实际显示待人工确认。** [实施、验证与运行记录](changes/2026-11-04-batch2-sessions-skills-mcp.md)；[具体页面 / 按钮测试入口](MEMFIT_MANUAL_TEST_GUIDE.md#第二批七项2026-11-04从这里开始测试)。下一批为 B2-C、B7-A / B / C、B9-A / B / C。真实引擎技能 / MCP 及本批人工视觉待用户验收；保留品牌、数字员工 / Forge / 附件 / 历史 / 授权 / 文件权限，未动引擎、未升级依赖、未提交 / 推送，保留已有改动与 outputs/、2140 / 2672 / 2852 / 3460。本段优先于下方历史批次数字。
@@ -165,3 +171,18 @@ node --max-old-space-size=8192 app/renderer/src/main/node_modules/typescript/bin
 | 真实引擎 / 人工验收 | 待用户按测试指南集中确认，自动通过不等同于实机通过 |
 
 固定参考、差异及保留项见 [本批记录](changes/2026-11-04-batch2-sessions-skills-mcp.md)。
+
+
+## 第三批最终验证（2026-11-05）
+
+85 文件、558 条通过、1 条 Windows 符号链接用例跳过；独立 tsc 和单次 webpack 通过。当前运行窗口未更新，真实环境与视觉未验收。
+
+| 范围 | 主要回归 |
+| --- | --- |
+| B2-C | modeSlashQuery、Enter guard、真实 ProseMirror 文档中保留锁定 Forge 与前文、中文组合输入 Enter、热补丁拒绝、按卡片重开、弹层所有权隔离 |
+| B7-A/B | AIAgentWorkbench：草稿与挂载保留、历史去重、失效记录剔除、缓存读取 / 写入失败、删除筛选、后台导航隔离；原 Controller 页归属 / 取消 / 重连保护；上下文参数单位恢复 |
+| B7-C | runScheduleSession：推送先到、请求去重、续跑精确 ID、缺失推送、无关 / 多候选不选取、失败清理与重试 |
+| B9-A/B | browserExtensionClient / browserProtocolValidation / browserTransformContract，browserInstanceStore / BrowserInstancesPanel，browserHandoffHandler / AIBrowserHandoffCard；消息落盘剔除图像、慢预览与断开 / 乱序处理 |
+| B9-C / IPC | ytrayControl、managedBrowserProfiles、browserExtension IPC 信任 / token / renderer 隔离与关闭清理；proto 全量解析继续通过 |
+
+最新完整清单 `.codex-run/batch3-test-files.json`，报告 `.codex-run/memfit-batch3-20261105.json`。19 个静态入口资源和九份 locale 独立核对；没有使用 HTTP 200 代替显示验收。

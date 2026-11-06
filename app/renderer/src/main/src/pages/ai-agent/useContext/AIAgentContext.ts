@@ -23,6 +23,7 @@ export interface AIAgentContextDispatcher extends Omit<ReturnType<typeof useChat
   setSetting: Dispatch<SetStateAction<AIAgentSetting>>
   getSetting: () => AIAgentSetting
   setActiveChat: Dispatch<SetStateAction<AISession | undefined>>
+  openSessionTab?: (session: AISession) => void
 }
 
 export interface AIAgentContextValue {

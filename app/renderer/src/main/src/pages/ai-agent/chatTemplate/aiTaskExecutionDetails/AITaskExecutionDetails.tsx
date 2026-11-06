@@ -1,3 +1,4 @@
+import { TaskSkillList } from './TaskSkillList'
 import React, { useEffect, useRef, useState } from 'react'
 import classNames from 'classnames'
 import type {
@@ -201,8 +202,7 @@ const TaskExecutionDetailsContent: React.FC<AITaskExecutionDetailsProps> = (prop
   }, [planItemDetailsData?.todoList?.items, hiddenStatusKeys, statusOrder, i18nRefresh])
 
   const forgeFixedList = useCreation(() => {
-    const forgeFixed: AIAgentGrpcApi.PlanItemDetailsFixedItem[] =
-      planItemDetailsData?.skills.fixed.concat(planItemDetailsData?.forges.fixed || []) || []
+    const forgeFixed: AIAgentGrpcApi.PlanItemDetailsFixedItem[] = planItemDetailsData?.forges.fixed || []
     return forgeFixed
   }, [planItemDetailsData?.forges, planItemDetailsData?.skills])
   const forgeDynamicList = useCreation(() => {
@@ -213,8 +213,7 @@ const TaskExecutionDetailsContent: React.FC<AITaskExecutionDetailsProps> = (prop
         category: ele.category,
         skill_load_state: '',
       })) || []
-    const skills: ForgesAndSkillsDynamicItem[] = planItemDetailsData?.skills?.dynamic.map((ele) => ele) || []
-    const forgeDynamic: ForgesAndSkillsDynamicItem[] = skills.concat(forge) || []
+    const forgeDynamic: ForgesAndSkillsDynamicItem[] = forge
     return forgeDynamic
   }, [planItemDetailsData?.forges, planItemDetailsData?.skills])
 
@@ -427,14 +426,15 @@ const TaskExecutionDetailsContent: React.FC<AITaskExecutionDetailsProps> = (prop
             <AIBrowserProcesses list={planItemDetailsData?.backgroundProcesses || []} />
           </div>
         )}
-        {/* 技能、工具、插件三列 */}
+        <TaskSkillList skills={planItemDetailsData?.skills} taskId={taskId} />
+        {/* Forge、工具、插件 */}
         {showForge || showTool || showPlugin || showMCP ? (
           <div className={styles['section']}>
             {showForge && (
               <AITaskDetailsCardList
                 key={`${taskId}-forge`}
                 type="forge"
-                colTitle="技能"
+                colTitle={t('Parity.forge')}
                 taskId={taskId}
                 fixedList={forgeFixedList}
                 dynamicList={forgeDynamicList}

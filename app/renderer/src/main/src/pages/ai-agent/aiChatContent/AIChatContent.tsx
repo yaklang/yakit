@@ -1,4 +1,6 @@
+import { BrowserInstancesPanel } from '../browserInstances/BrowserInstancesPanel'
 import { SessionSkills } from '@/pages/ai-re-act/sessionSkills/SessionSkills'
+import { useSessionTab, isSessionTabEvent } from '../sessionTabs/SessionTabsContext'
 import React, { forwardRef, type ReactNode, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import type { AIAgentTabPayload, AIChatContentProps } from './type'
 import styles from './AIChatContent.module.scss'
@@ -39,6 +41,7 @@ import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
   forwardRef((props, ref) => {
     const { onChat } = props
+    const tab = useSessionTab()
     const { t, i18nRefresh } = useI18nNamespaces(['aiAgent', 'yakitUi', 'yakitRoute'])
 
     const store = useCurrentStore()
@@ -95,6 +98,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
     })
 
     const onSwitchAIAgentTab = useMemoizedFn((data) => {
+      if (!tab.active) return
       if (data === undefined) return setActiveKey(data)
       let payload: AIAgentTabPayload
       try {
@@ -104,6 +108,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
         return
       }
       const { key, value } = payload
+      if (!isSessionTabEvent(tab.active, tab.pageId, payload.pageId)) return
 
       if (key === AITabsEnum.HTTP && !httpTabShow && RelatedRuntimeIDs.length === 0) return
       if (key === AITabsEnum.Risk && !riskTabShow && RelatedRuntimeIDs.length === 0) return
@@ -133,6 +138,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
         AITabs[AITabsEnum.Task_Content],
         AITabs[AITabsEnum.File_System],
         AITabs[AITabsEnum.Skills],
+        AITabs[AITabsEnum.Browser],
       ]
 
       if (httpTabShow || !!RelatedRuntimeIDs.length) {
@@ -231,6 +237,15 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
         ),
       ]
       switch (activeKey) {
+        case AITabsEnum.Browser:
+          return (
+            <BrowserInstancesPanel
+              onMention={(mention) => {
+                setShowFreeChat(true)
+                aiReActChatRef.current.setMention(mention)
+              }}
+            />
+          )
         case AITabsEnum.Skills:
           return <SessionSkills key={activeChat?.SessionID || 'pending'} />
         case AITabsEnum.Task_Content:

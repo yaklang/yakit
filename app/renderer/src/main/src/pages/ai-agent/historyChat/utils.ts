@@ -5,6 +5,7 @@ import {
 import { grpcDeleteAISession } from '../grpc'
 import type { DeleteAISessionRequest } from '../type/aiChat'
 import { globalSessionEngine, type DeleteSessionsParams } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
+import emiter from '@/utils/eventBus/eventBus'
 export { DeleteSessionsAISourceEnum, type DeleteSessionsAISourceType } from './deleteSource'
 
 export interface HandAIHistoryChatRemoveParams {
@@ -31,6 +32,9 @@ export const handAIHistoryChatRemove = async (params: HandAIHistoryChatRemovePar
 
     await globalSessionEngine.deleteSessions(deleteSessionsParams)
     await grpcDeleteAISession(grpcDeleteAISessionParams, true)
+    emiter.emit('sessionData', JSON.stringify({ type: 'deletedSessions', request: grpcDeleteAISessionParams }))
     handleClearAIImage(handleClearAIImageParams)
-  } catch (_) {}
+  } catch (error) {
+    throw error
+  }
 }

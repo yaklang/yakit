@@ -157,3 +157,9 @@
     color: var(--Colors-Use-Neutral-Text-4-Help-text);
   }
 }
+.mode-tag {
+  max-width: 220px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

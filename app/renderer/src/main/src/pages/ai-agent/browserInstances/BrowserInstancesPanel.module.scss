@@ -1,0 +1,20 @@
+.panel {
+  height: 100%;
+  min-height: 0;
+  overflow: auto;
+  padding: 8px;
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+}
+.actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 8px 0;
+}
+.card {
+  border: 1px solid var(--Colors-Use-Neutral-Border);
+  border-radius: 6px;
+  padding: 12px;
+  margin: 8px 0;
+  overflow-wrap: anywhere;
+}

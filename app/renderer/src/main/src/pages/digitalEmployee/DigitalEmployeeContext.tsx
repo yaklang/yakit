@@ -87,13 +87,27 @@ const DigitalEmployeeContext = createContext<DigitalEmployeeContextValue>({
 export interface DigitalEmployeeProviderProps {
   enabled: boolean
   children: React.ReactNode
+  inheritSelection?: boolean
+  initialEmployeeId?: string
+  initialAgentId?: number
 }
 
-export const DigitalEmployeeProvider: React.FC<DigitalEmployeeProviderProps> = ({ enabled, children }) => {
+export const DigitalEmployeeProvider: React.FC<DigitalEmployeeProviderProps> = ({
+  enabled,
+  children,
+  inheritSelection,
+  initialEmployeeId,
+  initialAgentId,
+}) => {
+  const parent = useContext(DigitalEmployeeContext)
   const [agents, setAgents] = useState<AIForge[]>([])
-  const [selectedId, setSelectedId] = useState<string | undefined>(DEFAULT_EMPLOYEE_ID)
-  const [selectedAgentId, setSelectedAgentId] = useState<number>()
-  const [confirmed, setConfirmed] = useState(false)
+  const [selectedId, setSelectedId] = useState<string | undefined>(
+    initialEmployeeId || (inheritSelection ? parent.selectedEmployee?.id : DEFAULT_EMPLOYEE_ID),
+  )
+  const [selectedAgentId, setSelectedAgentId] = useState<number | undefined>(
+    initialAgentId || (inheritSelection ? parent.selectedAgent?.Id : undefined),
+  )
+  const [confirmed, setConfirmed] = useState(inheritSelection ? parent.confirmed : false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string>()
   const [selectionVersion, setSelectionVersion] = useState(0)

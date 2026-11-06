@@ -572,6 +572,18 @@ interface CodecRunResult {
 }
 
 interface YakitBridge {
+  managedBrowser: {
+    list: () => Promise<YakitManagedBrowserProfile[]>
+    listYTrayHistory: () => Promise<YTrayBrowserHistoryInstance[]>
+    claimYTrayApproval: (id: string, requestId: string) => Promise<{ approved: boolean; reason: string }>
+    restoreYTray: (id: string) => Promise<unknown>
+  }
+  browserExtension: {
+    requestYakURL: (params: YakitBrowserExtensionYakURLRequest) => Promise<unknown>
+    executeTask: (params: YakitBrowserExtensionTaskRequest, token: string) => Promise<unknown>
+    cancelTask: (token: string) => Promise<unknown>
+  }
+
   app: {
     generateStartEngine: () => Promise<unknown>
     generateChromePlugin: () => Promise<string>
@@ -894,4 +906,55 @@ interface YakitBridge {
 
 interface Window {
   yakitBridge: YakitBridge
+}
+
+type YakitManagedBrowserProfileStatus = 'running' | 'detached' | 'stopped'
+type YakitManagedBrowserProfileSlot = 'left' | 'right'
+
+interface YakitManagedBrowserProfile {
+  version: 1
+  id: string
+  slotHint: YakitManagedBrowserProfileSlot
+  name: string
+  status: YakitManagedBrowserProfileStatus
+  userDataDir: string
+  extensionPath: string
+  chromePath: string
+  startingUrl: string
+  createdAt: number
+  updatedAt: number
+  lastStartedAt?: number
+  installationId?: string
+  pid?: number
+}
+
+interface YTrayBrowserHistoryInstance {
+  id: string
+  name: string
+  runtime: string
+  status: 'stopped' | 'failed'
+  startUrl: string
+  pageTitle: string
+  pageUrl: string
+  badge: string
+  startedAt: number
+}
+
+interface YakitBrowserExtensionYakURLRequest {
+  Method: string
+  Url: {
+    Schema: string
+    Location: string
+    Path: string
+    Query: unknown[]
+  }
+  Body?: Uint8Array
+}
+
+interface YakitBrowserExtensionTaskRequest {
+  TaskId: string
+  DeviceId: string
+  Schema: string
+  Payload: Uint8Array
+  TimeoutMilliseconds: number
 }

@@ -1,5 +1,6 @@
+import { extractMentionFilterKeyword, getMentionQueryDeleteRange } from './mentionQuery'
 import type React from 'react'
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { type Ctx } from '@milkdown/kit/ctx'
 import { slashFactory, SlashProvider } from '@milkdown/kit/plugin/slash'
 import { useInstance } from '@milkdown/react'
@@ -16,6 +17,8 @@ import { removeAIOffsetCommand } from '../customPlugin'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import type { YakitTagColor } from '@/components/yakitUI/YakitTag/YakitTagType'
 import i18n from '@/i18n/i18n'
+import { releaseMilkdownPopup, tryClaimMilkdownPopup } from '../panelMutex'
+import { useSessionTab } from '@/pages/ai-agent/sessionTabs/SessionTabsContext'
 
 export const aiMentionFactory = slashFactory('ai-mention-commands')
 
@@ -27,7 +30,9 @@ export const mentionWidth = () => (i18n.language.startsWith('zh') ? 300 : 342)
 const mentionTarget = '@'
 
 export const AIMilkdownMention: React.FC<AIMilkdownMentionProps> = (props) => {
+  const sessionTab = useSessionTab()
   const { onMemfitExtra, filterMode } = props
+  const [filterKeyword, setFilterKeyword] = useState('')
   const ref = useRef<HTMLDivElement>(null)
   const slashProvider = useRef<SlashProvider>()
 
@@ -43,6 +48,7 @@ export const AIMilkdownMention: React.FC<AIMilkdownMentionProps> = (props) => {
   useKeyPress(
     'esc',
     (e) => {
+      if ((e.target as HTMLElement)?.closest?.('[role="dialog"]')) return
       e.stopPropagation()
       e.preventDefault()
       onHide()
@@ -72,15 +78,32 @@ export const AIMilkdownMention: React.FC<AIMilkdownMentionProps> = (props) => {
     return () => {
       // 单独的Effect中卸载，避免报错
       slashProvider.current?.destroy()
+      releaseMilkdownPopup('mention', view.dom)
     }
   }, [])
 
   useDebounceEffect(
     () => {
+      if (!sessionTab.active) {
+        slashProvider.current?.hide()
+        releaseMilkdownPopup('mention', view.dom)
+        return
+      }
       if (loading || !slashProvider.current) return
-      slashProvider.current?.update(view, prevState)
+      const content = slashProvider.current.getContent(view)
+      const keyword = extractMentionFilterKeyword(content)
+      if (keyword !== null) {
+        setFilterKeyword(keyword)
+        if (!tryClaimMilkdownPopup('mention', view.dom)) {
+          slashProvider.current.hide()
+          return
+        }
+      } else {
+        releaseMilkdownPopup('mention', view.dom)
+      }
+      slashProvider.current.update(view, prevState)
     },
-    [loading, view, prevState],
+    [loading, view, prevState, sessionTab.active],
     { wait: 200, leading: true },
   )
 
@@ -92,7 +115,12 @@ export const AIMilkdownMention: React.FC<AIMilkdownMentionProps> = (props) => {
     }
     switch (type) {
       case 'focusMode':
-        action(callCommand(removeAIOffsetCommand.key))
+        const selection = view.state.selection
+        const range = getMentionQueryDeleteRange(
+          selection.from,
+          selection.$from.parent.textBetween(0, selection.$from.parentOffset, undefined, '\uFFFC'),
+        )
+        if (range) view.dispatch(view.state.tr.deleteRange(range.from, range.to))
         onMemfitExtra?.(params)
         break
 
@@ -105,6 +133,7 @@ export const AIMilkdownMention: React.FC<AIMilkdownMentionProps> = (props) => {
   })
 
   const onHide = useMemoizedFn(() => {
+    releaseMilkdownPopup('mention', view.dom)
     if (slashProvider.current?.element?.dataset?.show === 'false') return
     view.focus()
     // 关闭窗口
@@ -117,11 +146,12 @@ export const AIMilkdownMention: React.FC<AIMilkdownMentionProps> = (props) => {
       data-show="false"
       className={styles['ai-mention']}
       style={{
-        width: mentionWidth(),
+        width: Math.max(mentionWidth(), 460),
+        maxWidth: '90vw',
       }}
       ref={ref}
     >
-      <AIChatMention onSelect={onSure} filterMode={filterMode} />
+      <AIChatMention onSelect={onSure} filterMode={filterMode} filterKeyword={filterKeyword} />
     </div>
   )
 }

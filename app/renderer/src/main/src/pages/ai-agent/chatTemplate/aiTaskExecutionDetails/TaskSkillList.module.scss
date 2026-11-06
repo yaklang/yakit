@@ -1,0 +1,33 @@
+.section {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.search {
+  width: 180px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--Colors-Use-Neutral-Border);
+  background: var(--Colors-Use-Basic-Background);
+  color: inherit;
+}
+.row {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+  overflow-wrap: anywhere;
+}
+.document {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--Colors-Use-Main-Primary);
+  cursor: pointer;
+  text-align: left;
+}

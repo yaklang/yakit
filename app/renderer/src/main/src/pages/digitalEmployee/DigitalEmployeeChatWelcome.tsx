@@ -1,4 +1,7 @@
-import React, { useMemo } from 'react'
+import { RecommendedSkills } from '@/pages/ai-agent/aiChatWelcome/RecommendedSkills'
+import { mergeAIEnabledCapabilities } from '@/pages/ai-agent/utils/enabledCapabilities'
+import type { AIEnabledCapability } from '@/pages/ai-re-act/hooks/grpcApi'
+import React, { useMemo, useState } from 'react'
 import { AIChatTextarea } from '@/pages/ai-agent/template/template'
 import type { AIChatTextareaRefProps, AIChatTextareaSubmit } from '@/pages/ai-agent/template/type'
 import { useDigitalEmployee } from './DigitalEmployeeContext'
@@ -17,6 +20,7 @@ export const DigitalEmployeeChatWelcome: React.FC<DigitalEmployeeChatWelcomeProp
   inputRef,
   onSubmit,
 }) => {
+  const [recommended, setRecommended] = useState<AIEnabledCapability[]>([])
   const { selectedEmployee, selectedAgent, selectionVersion, loading, error } = useDigitalEmployee()
   const defaultMentions = useMemo(() => {
     const mention = getDigitalEmployeeDefaultMention(selectedAgent)
@@ -43,12 +47,17 @@ export const DigitalEmployeeChatWelcome: React.FC<DigitalEmployeeChatWelcomeProp
       <div className={styles['employee-agent-wrapper']}>
         <DigitalEmployeeAgentSelector />
       </div>
+      <RecommendedSkills cacheKey={`AI-Senso.recommended-skills.v1.${selectedEmployee.id}`} onChange={setRecommended} />
       <div className={styles['employee-input-wrapper']}>
         <AIChatTextarea
           key={`digital-employee-input-${selectedEmployee.id}-${selectionVersion}-${selectedAgent?.Id ?? 'none'}`}
           ref={inputRef}
           onSubmit={(value) => {
-            if (selectedAgent) onSubmit(value)
+            if (selectedAgent)
+              onSubmit({
+                ...value,
+                enabledCapabilities: mergeAIEnabledCapabilities(value.enabledCapabilities, recommended),
+              })
           }}
           submitDisabled={!selectedAgent}
           defaultMentions={defaultMentions}

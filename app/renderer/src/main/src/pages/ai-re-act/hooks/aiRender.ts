@@ -337,7 +337,25 @@ export interface HttpFlowFuzzStatusCardData {
 // #endregion
 
 // #region chat 问答内容组件的类型集合(包括了类型推导)
+export interface BrowserHandoffCardData {
+  handoffId: string
+  callToolId?: string
+  deviceId: string
+  reason: 'qr_code' | 'mfa' | 'captcha' | 'device_confirmation' | 'other'
+  message?: string
+  state: 'waiting_for_user' | 'completed' | 'cancelled'
+  requestedAt?: number
+  resolvedAt?: number
+  tabId: number
+  frameId: number
+  documentId?: string
+  title?: string
+  url?: string
+  origin?: string
+}
+
 export enum AIChatQSDataTypeEnum {
+  BROWSER_HANDOFF = 'browser_handoff',
   /**用户的自由输入 */
   QUESTION = 'question',
   /**流 */
@@ -462,7 +480,10 @@ type ChatStreamGroup = AIChatQSDataBase<
   { NodeId: AIOutputEvent['NodeId']; NodeIdVerbose: AIOutputEvent['NodeIdVerbose']; lastToken: string }
 >
 
+export type ChatBrowserHandoff = AIChatQSDataBase<AIChatQSDataTypeEnum.BROWSER_HANDOFF, BrowserHandoffCardData>
+
 export type AIChatQSData =
+  | ChatBrowserHandoff
   | ChatQuestion
   | ChatStream
   | ChatThought

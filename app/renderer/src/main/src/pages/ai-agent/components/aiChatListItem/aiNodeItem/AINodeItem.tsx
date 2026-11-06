@@ -1,3 +1,4 @@
+import { AIBrowserHandoffCard } from '../../aiBrowserHandoffCard/AIBrowserHandoffCard'
 import React from 'react'
 import type { AINodeItemProps } from './type'
 import { AIChatQSDataTypeEnum } from '@/pages/ai-re-act/hooks/aiRender'
@@ -22,6 +23,8 @@ const AINodeItem: React.FC<AINodeItemProps> = React.memo((props) => {
   const { itemData, renderNum, groupIndex } = props
   const { t } = useI18nNamespaces(['aiAgent'])
   switch (itemData.type) {
+    case AIChatQSDataTypeEnum.BROWSER_HANDOFF:
+      return <AIBrowserHandoffCard item={itemData} renderNum={renderNum} />
     case AIChatQSDataTypeEnum.QUESTION:
       return <AITriageChatContentWrapper isAnswer={false} itemData={itemData} renderNum={renderNum} />
     case AIChatQSDataTypeEnum.RESULT:

@@ -7,7 +7,7 @@ export interface AIChatContentProps {
   ref?: React.ForwardedRef<AIChatContentRefProps>
   onChat: () => void
 }
-export type AIAgentTabPayload = TabHTTPPayload | TabFileSystemPayload
+export type AIAgentTabPayload = (TabHTTPPayload | TabFileSystemPayload) & { pageId?: string }
 interface TabHTTPPayload {
   key: AITabsEnum.HTTP | AITabsEnum.Risk
   value?: string

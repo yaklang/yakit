@@ -1,3 +1,4 @@
+import { AIBrowserHandoffCard } from '../../aiBrowserHandoffCard/AIBrowserHandoffCard'
 import { AIChatQSDataTypeEnum } from '@/pages/ai-re-act/hooks/aiRender'
 import { type FC, memo } from 'react'
 import { AIModelErrorPrompt } from '../../aiChatListItem/aiModelErrorPrompt/AIModelErrorPrompt'
@@ -20,6 +21,8 @@ import type { AIChildWindowNodeItemWrapperProps } from './type'
 const AIChildWindowNodeItemWrapper: FC<AIChildWindowNodeItemWrapperProps> = memo(
   ({ itemData, groupIndex, renderNum }) => {
     switch (itemData.type) {
+      case AIChatQSDataTypeEnum.BROWSER_HANDOFF:
+        return <AIBrowserHandoffCard item={itemData} renderNum={renderNum} />
       case AIChatQSDataTypeEnum.TOOL_RESULT:
         return <AIChildWindowToolInvokerCard itemData={itemData} renderNum={renderNum} />
 

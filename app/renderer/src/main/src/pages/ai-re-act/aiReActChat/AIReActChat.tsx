@@ -30,6 +30,7 @@ import { AIReActChatHeader } from './aiReActChatHeader/AIReActChatHeader'
 import { AIToDoListWrapper } from './aiToDoListWrapper/AIToDoListWrapper'
 import { AIReActTaskChatReview } from '@/pages/ai-agent/aiAgentChat/AIAgentChat'
 import { globalSessionEngine } from '../hooks/ChatMultiSessionController'
+import { useSessionTab } from '@/pages/ai-agent/sessionTabs/SessionTabsContext'
 import { useDigitalEmployee } from '@/pages/digitalEmployee/DigitalEmployeeContext'
 import {
   applyDigitalEmployeeSkillToInputEvent,
@@ -62,6 +63,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
     })
 
     const { activeChat, setting, pendingChat } = useAIAgentStore()
+    const sessionTab = useSessionTab()
     const { selectedAgent, selectionVersion } = useDigitalEmployee()
     const defaultEmployeeMentions = useCreation(() => {
       const mention = getDigitalEmployeeDefaultMention(selectedAgent)
@@ -108,22 +110,13 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
      * 2.当该组件从不可见变可见的时候，需要设置当前选中的 SessionID
      * */
     useEffect(() => {
-      if (activeChat?.SessionID) {
-        globalSessionEngine?.setActiveShowSession(activeChat?.SessionID)
-      }
+      if (!inViewPort || !sessionTab.active) return
+      const visibleSession = activeChat?.SessionID || ''
+      globalSessionEngine?.setActiveShowSession(visibleSession)
       return () => {
-        globalSessionEngine?.setActiveShowSession('')
+        if (globalSessionEngine?.isActiveShowSession(visibleSession)) globalSessionEngine.setActiveShowSession('')
       }
-    }, [activeChat?.SessionID])
-    useEffect(() => {
-      if (inViewPort) {
-        globalSessionEngine?.setActiveShowSession(activeChat?.SessionID ?? '')
-
-        return () => {
-          globalSessionEngine?.setActiveShowSession('')
-        }
-      }
-    }, [inViewPort])
+    }, [activeChat?.SessionID, inViewPort, sessionTab.active])
     //#endregion
     // #region 问题相关逻辑
     // 初始化 AI ReAct

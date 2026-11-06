@@ -54,6 +54,7 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import type { AIMilkdownInputRef } from '../components/aiMilkdownInput/type'
 import type { AICodeBlockCommandParams } from '../components/aiMilkdownInput/aiCodeBlock/aiCustomCodeBlockPlugin'
 import AIRunModeSelect from '../aiRunModeSelect/AIRunModeSelect'
+import { useSessionTab } from '../sessionTabs/SessionTabsContext'
 import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import { useStore } from 'zustand'
 
@@ -165,6 +166,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
       onFilesChange: (v) => onFilesChange(v),
     })
     const [inViewport = true] = useInViewport(dropRef)
+    const sessionTab = useSessionTab()
     const editorMilkdown = useRef<EditorMilkdownProps>()
 
     useImperativeHandle(ref, () => {
@@ -187,8 +189,10 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
     }, [inViewport])
 
     const onSetAIInputByType = useMemoizedFn((res) => {
+      if (!sessionTab.active) return
       try {
         const data: AIAgentTriggerEventInfo = JSON.parse(res)
+        if (data.params?.targetPageId && data.params.targetPageId !== sessionTab.pageId) return
         const { type } = data
         switch (type) {
           case 'mention': {
@@ -399,7 +403,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
         ref={dropRef}
       >
         {isHovering && <div className={styles['drag-hint']}>{t('AIChatTextarea.dropToAddToChat')}</div>}
-        <div className={classNames(styles['textarea-wrapper'])} onKeyDown={handleTextareaKeyDown}>
+        <div data-ai-input-card className={classNames(styles['textarea-wrapper'])} onKeyDown={handleTextareaKeyDown}>
           <AIMilkdownInput
             ref={aiMilkdownInputRef}
             defaultValue={defaultValue}

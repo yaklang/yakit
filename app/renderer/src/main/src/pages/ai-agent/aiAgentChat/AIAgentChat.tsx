@@ -42,15 +42,17 @@ import { useCurrentMeta, useCurrentRawData, useCurrentStore } from '@/pages/ai-r
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
 import { onReStart } from '../utils'
 import { useDigitalEmployee } from '@/pages/digitalEmployee/DigitalEmployeeContext'
+import { useSessionTab } from '../sessionTabs/SessionTabsContext'
 
 const AIChatWelcome = React.lazy(() => import('../aiChatWelcome/AIChatWelcome'))
 
 export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
+  const tab = useSessionTab()
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
 
   const { activeChat, pendingChat } = useAIAgentStore()
   const { setActiveChat, setSetting, onStart, onClose, cancelPendingChat, detachPendingChat } = useAIAgentDispatcher()
-  const { selectAgentByForgeName } = useDigitalEmployee()
+  const { selectAgentByForgeName, selectedEmployee, selectedAgent } = useDigitalEmployee()
 
   /** 当前对话唯一ID */
   const sessionId = useCurrentSessionId()
@@ -72,7 +74,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
 
   useEffect(() => {
     selectAgentByForgeName(activeChat?.StartParams?.ForgeName)
-  }, [activeChat?.StartParams?.ForgeName])
+  }, [activeChat?.StartParams?.ForgeName, selectAgentByForgeName])
 
   useEffect(() => {
     if (activeChat?.SessionID) {
@@ -85,7 +87,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
   const onSetReAct = useMemoizedFn(() => {
     setMode('re-act')
     setTimeout(() => {
-      emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.Task_Content }))
+      emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.Task_Content, pageId: tab.pageId }))
     }, 100)
   })
   const handleStart = useStartAIChat()
@@ -143,12 +145,17 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
   }, [inViewPort])
 
   const onEvents = useMemoizedFn((res) => {
+    if (!tab.active) return
     try {
       const data = JSON.parse(res) as AIAgentTriggerEventInfo
       if (!data.type) return
       switch (data.type as ReActChatEventEnum) {
         // 新开聊天对话窗
         case ReActChatEventEnum.NEW_CHAT:
+          if (tab.newTab) {
+            tab.newTab({ employeeId: selectedEmployee?.id, agentId: selectedAgent?.Id })
+            return
+          }
           cancelPendingChat()
           setSetting?.((old) => ({
             ...old,
@@ -408,6 +415,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
   const { clearAll } = useKnowledgeBase()
 
   const onClosePageRepository = useMemoizedFn(() => {
+    if (!tab.active) return
     if (api.tokens.length > 0) {
       setVisible(true)
       return
@@ -451,6 +459,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
   }, [])
 
   const konwledgeInputStringFn = useMemoizedFn((params: string) => {
+    if (!tab.active) return
     const currentRef = mode === 'welcome' ? aiChatWelcomeRef : aiReActChatRef
     try {
       const data: PageNodeItemProps['pageParamsInfo']['AIRepository'] = JSON.parse(params)
@@ -469,10 +478,10 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
   })
 
   useEffect(() => {
-    if (inViewPort) {
+    if (inViewPort && tab.active) {
       getAIModelListOption()
     }
-  }, [inViewPort])
+  }, [inViewPort, tab.active])
 
   const getAIModelListOption = useDebounceFn(
     () => {

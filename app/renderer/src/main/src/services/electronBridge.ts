@@ -45,3 +45,6 @@ export const yakitProject = getBridge().project
 export const yakitCodec = getBridge().codec
 export const yakitFileSystem = getBridge().fileSystem
 export const yakitAI = getBridge().ai
+
+export const yakitManagedBrowser = getBridge().managedBrowser
+export const yakitBrowserExtension = getBridge().browserExtension

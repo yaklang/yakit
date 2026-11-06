@@ -1,3 +1,4 @@
+import { getMentionQueryDeleteRange } from './mentionQuery'
 import { $command, $nodeSchema, $nodeAttr } from '@milkdown/utils'
 import type { Attrs } from '@milkdown/kit/prose/model'
 import { TextSelection } from '@milkdown/kit/prose/state'
@@ -105,7 +106,9 @@ export const aiMentionCommand = $command<AIMentionCommandParams, string>(
     if (!(selection instanceof TextSelection)) return false
     const { mentionType, mentionId, mentionName, lock } = params
     const { from } = selection
-    tr.deleteRange(from - 1, from)
+    const textBefore = selection.$from.parent.textBetween(0, selection.$from.parentOffset, undefined, '\uFFFC')
+    const range = selection.empty ? getMentionQueryDeleteRange(from, textBefore) : null
+    if (range) tr.deleteRange(range.from, range.to)
     const fragment = state.schema.text(`${mentionName}`)
     dispatch?.(
       tr

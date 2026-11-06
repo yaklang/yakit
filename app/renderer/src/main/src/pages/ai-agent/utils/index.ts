@@ -151,6 +151,18 @@ export const formatAIAgentSetting = (setting: AIAgentSetting): AIAgentSetting =>
 
 const getResourceInfoByMention = (mention: AIMentionCommandParams): AttachedResourceInfo | null => {
   switch (mention.mentionType) {
+    case 'browser': {
+      const reference = mention.mentionName.replace(/^@/, '').split(' · ', 1)[0]
+      return {
+        Type: AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_BROWSER,
+        Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_BROWSER_DEVICE_ID,
+        Value: JSON.stringify({
+          deviceId: mention.mentionId,
+          name: mention.mentionName,
+          reference: /^[A-Z]{1,2}$/.test(reference) ? reference : mention.mentionId,
+        }),
+      }
+    }
     case 'file':
     case 'folder':
       return {

@@ -132,7 +132,7 @@ const HistoryChatList: FC<{
 }) => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const { activeChat } = useAIAgentStore()
-  const { setActiveChat, setSetting } = useAIAgentDispatcher()
+  const { setActiveChat, setSetting, openSessionTab } = useAIAgentDispatcher()
   const listRef = useRef<HTMLDivElement | null>(null)
   const chatTotalRef = useRef(0)
   const editInfo = useRef<AISession>()
@@ -246,6 +246,10 @@ const HistoryChatList: FC<{
     })
   })
   const onSetChat = useMemoizedFn((info: AISession) => {
+    if (openSessionTab) {
+      openSessionTab(info)
+      return
+    }
     setSetting?.((old) => ({
       ...old,
       SyncPerceptionTrigger: info?.StartParams?.SyncPerceptionTrigger ?? false,

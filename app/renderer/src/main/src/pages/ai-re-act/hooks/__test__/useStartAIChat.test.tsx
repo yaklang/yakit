@@ -16,6 +16,7 @@ vi.mock('@/pages/ai-agent/useContext/useDispatcher', () => ({
       Source: 'ai',
       SingleModelMode: true,
       RuntimeContextSizeLimit: 307200,
+      EnabledCapabilities: [{ Name: 'global-skill', Type: 'skill' }],
     }),
   }),
 }))
@@ -59,6 +60,7 @@ describe('AI Senso request capture and publication', () => {
           TimelineSessionID: 'upload-session',
           SingleModelMode: true,
           RuntimeContextSizeLimit: 307200,
+          EnabledCapabilities: [{ Name: 'global-skill', Type: 'skill' }],
         },
         AttachedResourceInfo: expect.arrayContaining([{ Key: 'file', Type: 'path', Value: 'allowed/report.txt' }]),
       },
@@ -120,4 +122,26 @@ describe('AI Senso request capture and publication', () => {
     await act(async () => resolve({ params: transform.mock.calls[0][0].params }))
     expect(onStart).not.toHaveBeenCalled()
   })
+})
+
+it('merges selected and configured skills while preserving the employee Forge and attachments', () => {
+  render(<Harness />)
+  act(() =>
+    start({
+      qs: 'first',
+      enabledCapabilities: [
+        { Name: 'global-skill', Type: 'skill' },
+        { Name: 'audit', Type: 'skill' },
+      ],
+    } as HandleStartParams),
+  )
+  const params = onStart.mock.calls[0][0].params
+  expect(params.Params.ForgeName).toBe('senso-forge')
+  expect(params.Params.EnabledCapabilities).toEqual([
+    { Name: 'global-skill', Type: 'skill' },
+    { Name: 'audit', Type: 'skill' },
+  ])
+  expect(params.AttachedResourceInfo).toEqual(
+    expect.arrayContaining([expect.objectContaining({ Value: 'allowed/report.txt' })]),
+  )
 })

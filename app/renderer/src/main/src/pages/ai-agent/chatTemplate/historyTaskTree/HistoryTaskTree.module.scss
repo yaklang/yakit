@@ -91,3 +91,18 @@
     }
   }
 }
+
+.section {
+  padding: 8px 12px;
+}
+.section-title {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  cursor: pointer;
+  font-weight: 500;
+  padding: 6px 0;
+}
+.section-body {
+  padding-left: 12px;
+}

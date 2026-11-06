@@ -1,0 +1,45 @@
+.workspace {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.tabs {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 4px;
+  overflow-x: auto;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+  background: var(--Colors-Use-Basic-Background);
+}
+.tabs button {
+  border: 0;
+  border-radius: 4px;
+  padding: 6px 10px;
+  cursor: pointer;
+  background: transparent;
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  white-space: nowrap;
+}
+.tabs button[aria-selected='true'] {
+  background: var(--Colors-Use-Main-Bg);
+  color: var(--Colors-Use-Main-Primary);
+}
+.tab {
+  display: flex;
+  align-items: center;
+}
+.tab button[role='tab'] {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pane {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+.pane[hidden] {
+  display: none;
+}

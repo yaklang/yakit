@@ -28,6 +28,7 @@ describe('session startup runtime context boundary', () => {
     'sends $expected bytes for saved threshold $limit and preserves employee startup parameters',
     async ({ limit, expected }) => {
       const controller = new ChatMultiSessionController()
+      controller.setActiveShowSession('visible-other-tab')
       // Isolate disk preparation; exercise the real session registration and outbound startup path.
       vi.spyOn(
         controller as unknown as { prepareSessionPersistBeforeStart: (id: string) => Promise<void> },
@@ -48,6 +49,7 @@ describe('session startup runtime context boundary', () => {
       })
       expect(typeof streamToken).toBe('string')
       await vi.advanceTimersByTimeAsync(0)
+      expect(controller.isActiveShowSession('visible-other-tab')).toBe(true)
       expect(ipcRendererMock.invoke).toHaveBeenCalledWith('start-ai-re-act', streamToken, {
         IsStart: true,
         Params: {

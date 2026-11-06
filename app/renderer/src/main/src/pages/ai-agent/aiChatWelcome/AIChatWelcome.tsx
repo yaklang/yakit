@@ -1,3 +1,6 @@
+import { RecommendedSkills } from './RecommendedSkills'
+import { mergeAIEnabledCapabilities } from '../utils/enabledCapabilities'
+import type { AIEnabledCapability } from '@/pages/ai-re-act/hooks/grpcApi'
 import React, { forwardRef, useEffect, useId, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import {
   AIChatWelcomeProps,
@@ -137,8 +140,12 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
       const lineStartRect = lineStartRef.current.getBoundingClientRect()
       setLineStartDOMRect(lineStartRect) // 确定初始定位点位置
     })
+    const [recommended, setRecommended] = useState<AIEnabledCapability[]>([])
     const handleTriageSubmit = useMemoizedFn((value: AIChatTextareaSubmit) => {
-      onTriageSubmit(value)
+      onTriageSubmit({
+        ...value,
+        enabledCapabilities: mergeAIEnabledCapabilities(value.enabledCapabilities, recommended),
+      })
       onSetQuestion('')
     })
     const onMore = useMemoizedFn((item: string) => {
@@ -331,6 +338,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
                   refreshMode={'debounce'}
                   refreshRate={50}
                 />
+                <RecommendedSkills cacheKey="AI-Senso.recommended-skills.v1.general" onChange={setRecommended} />
                 <AIChatTextarea
                   ref={aiChatTextareaRef}
                   onSubmit={handleTriageSubmit}

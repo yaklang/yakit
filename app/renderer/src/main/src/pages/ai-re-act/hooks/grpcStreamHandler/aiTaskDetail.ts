@@ -40,6 +40,7 @@ const capabilityInventoryItemsToPlanItemDetails = (
           ...base,
           category: 'skill',
           skill_load_state: skillLoadState,
+          token_count: typeof item.data?.token_count === 'number' ? item.data.token_count : undefined,
         }
         if (isDynamic) payload.dynamic.skills.push(skill)
         else payload.fixed.skills.push(skill)

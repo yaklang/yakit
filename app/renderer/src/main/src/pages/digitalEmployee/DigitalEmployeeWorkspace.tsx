@@ -13,12 +13,14 @@ export interface DigitalEmployeeSidebarProps {
   detailActive?: boolean
   onOpenTools: () => void
   toolsOpen: boolean
+  onSwitchEmployee?: (id: string) => void
 }
 
 export const DigitalEmployeeSidebar: React.FC<DigitalEmployeeSidebarProps> = ({
   detailActive = false,
   onOpenTools,
   toolsOpen,
+  onSwitchEmployee,
 }) => {
   const { employees, selectedEmployee, switchEmployee } = useDigitalEmployee()
   const [collapsed, setCollapsed] = useState(detailActive)
@@ -29,6 +31,10 @@ export const DigitalEmployeeSidebar: React.FC<DigitalEmployeeSidebarProps> = ({
 
   const handleSwitch = (id: string) => {
     if (selectedEmployee?.id === id) return
+    if (onSwitchEmployee) {
+      onSwitchEmployee(id)
+      return
+    }
     if (!switchEmployee(id)) return
     emiter.emit(
       'onReActChatEvent',

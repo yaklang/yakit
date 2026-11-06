@@ -1,3 +1,4 @@
+import { mergeAIEnabledCapabilities } from '@/pages/ai-agent/utils/enabledCapabilities'
 import { useEffect, useRef } from 'react'
 import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
 import useSessionId from './useSessionId'
@@ -58,7 +59,7 @@ export function useStartAIChat({
         Sequence: 1,
         PreferSessionCachedConfig: true,
         Source: source,
-        EnabledCapabilities: enabledCapabilities,
+        EnabledCapabilities: mergeAIEnabledCapabilities(formattedSetting.EnabledCapabilities, enabledCapabilities),
       },
       employee?.ForgeName,
     )

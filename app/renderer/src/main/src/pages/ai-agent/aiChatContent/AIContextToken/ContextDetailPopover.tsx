@@ -61,6 +61,7 @@ const ContextDetailPopover: React.FC<ContextDetailPopoverProps> = ({ buttonProps
       <AIEchartsDetails
         overallToken={overallToken}
         tierConsumption={perfData?.consumption?.tier_consumption}
+        modelConsumption={perfData?.consumption?.tier_model_consumption}
         pressure={perfData?.pressure}
         firstCost={perfData?.firstCost}
         onClose={onClose}

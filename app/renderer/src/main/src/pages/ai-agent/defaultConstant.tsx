@@ -68,6 +68,8 @@ export const AiAgentTabList: YakitTabsProps[] = [
   { value: AIAgentTabListEnum.Scheduled, label: 'AIAgentTabs.scheduled', icon: <OutlineCalendarIcon /> },
 ]
 export enum AIMentionTabsEnum {
+  All = 'all',
+  Browser = 'browser',
   /** forge 智能体 */
   Forge_Name = 'forgeName',
   /** 工具 */
@@ -80,6 +82,8 @@ export enum AIMentionTabsEnum {
   FocusMode = 'focusMode',
 }
 export const AIMentionTabs: YakitSideTabProps['yakitTabs'] = [
+  { value: AIMentionTabsEnum.All, label: 'Parity.all' },
+  { value: AIMentionTabsEnum.Browser, label: 'BrowserInstances.title' },
   { value: AIMentionTabsEnum.Forge_Name, label: 'AIMentionTabs.skill' },
   { value: AIMentionTabsEnum.Tool, label: 'AIMentionTabs.tool' },
   { value: AIMentionTabsEnum.KnowledgeBase, label: 'AIMentionTabs.knowledgeBase' },
@@ -175,6 +179,7 @@ export enum SwitchAIAgentTabEventEnum {
   SET_TAB_SHOW = 'setTabShow',
 }
 export enum AITabsEnum {
+  Browser = 'browser-instances',
   Skills = 'session-skills',
   Task_Content = 'task-content',
   File_System = 'file-system',
@@ -184,6 +189,7 @@ export enum AITabsEnum {
 }
 /** @name AI 默认展示的tab集合 */
 export const AITabs = {
+  'browser-instances': { label: 'BrowserInstances.title', value: AITabsEnum.Browser },
   'session-skills': { label: 'AITabs.skills', value: AITabsEnum.Skills },
   'task-content': { label: 'AITabs.taskContent', value: AITabsEnum.Task_Content },
   'file-system': { label: 'AITabs.fileSystem', value: AITabsEnum.File_System },
@@ -291,6 +297,7 @@ export enum ReActChatEventEnum {
 }
 
 export const iconMap = {
+  browser: <OutlineDocumenttextIcon />,
   file: <OutlineDocumenttextIcon />,
   folder: <OutlineFolderopenIcon />,
   forge: <OutlineBotIcon />,
@@ -300,6 +307,7 @@ export const iconMap = {
 }
 
 export enum AttachedResourceTypeEnum {
+  CONTEXT_PROVIDER_TYPE_BROWSER = 'browser',
   CONTEXT_PROVIDER_TYPE_FILE = 'file',
   /** Yak Runner 可写脚本交付目标；与 Type=file 只读参考附加区分 */
   CONTEXT_PROVIDER_TYPE_CODE = 'code',
@@ -313,6 +321,7 @@ export enum AttachedResourceTypeEnum {
 }
 
 export enum AttachedResourceKeyEnum {
+  CONTEXT_PROVIDER_KEY_BROWSER_DEVICE_ID = 'device_id',
   CONTEXT_PROVIDER_KEY_FILE_PATH = 'file_path',
   CONTEXT_PROVIDER_KEY_FILE_CONTENT = 'file_content',
   CONTEXT_PROVIDER_KEY_NAME = 'name',

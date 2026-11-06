@@ -1113,7 +1113,6 @@ export class ChatMultiSessionController {
       this.registerSessionChannel(sessionId, { route, pageId, source })
       this.tokenBySessionId.set(sessionId, token)
       this.sessionRestoreLoading.add(sessionId)
-      this.setActiveShowSession(sessionId)
     }
     // 清理本次启动参数，避免修改调用方保留的重试入参。
     const startParams = cloneDeep(params)

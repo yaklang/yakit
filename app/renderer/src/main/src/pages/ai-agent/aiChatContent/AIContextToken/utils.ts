@@ -1,3 +1,4 @@
+import isEqual from 'lodash/isEqual'
 import type { AIAgentGrpcApi } from '@/pages/ai-re-act/hooks/grpcApi'
 import { AIModelTypeEnum, type AIModelTypeEnumType } from '../../defaultConstant'
 import type { AIEchartsDataKey, ContextPressureEchartsProps } from '../../chatTemplate/AIEcharts'
@@ -50,6 +51,11 @@ export const isConsumptionPerfChanged = (
   ) {
     return true
   }
+  if (
+    !isEqual(prev.tier_model_consumption, next.tier_model_consumption) ||
+    prev.effective_single_model_mode !== next.effective_single_model_mode
+  )
+    return true
   const prevTier = prev.tier_consumption
   const nextTier = next.tier_consumption
   return MODEL_TIERS.some(
@@ -69,6 +75,7 @@ export const isPerfDataChanged = (prev: PerfData, next: PerfData): boolean => {
     return true
   }
 
+  if (isConsumptionPerfChanged(prevConsumption ?? null, nextConsumption ?? null)) return true
   // 各模型层级的 consumption keys 数量
   const prevTier = prev.consumption?.tier_consumption
   const nextTier = next.consumption?.tier_consumption

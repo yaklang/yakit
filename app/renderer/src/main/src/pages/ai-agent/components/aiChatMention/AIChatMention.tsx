@@ -1,3 +1,4 @@
+import { AllMentionList } from './AllMentionList'
 import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import type {
   AIChatMentionListRefProps,
@@ -57,12 +58,15 @@ const alphanumericKeys = [
   ...Array.from({ length: 10 }, (_, i) => `numpad${i}`), //小键盘数字键
 ]
 export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) => {
-  const { onSelect, defaultActiveTab, filterMode } = props
+  const { onSelect, defaultActiveTab, filterMode, filterKeyword } = props
   const { t, i18nRefresh } = useI18nNamespaces(['aiAgent'])
   const [activeKey, setActiveKey, getActiveKey] = useGetSetState<AIMentionTabsEnum>(
-    defaultActiveTab || AIMentionTabsEnum.Forge_Name,
+    defaultActiveTab || AIMentionTabsEnum.All,
   )
   const [keyWord, setKeyWord] = useState<string>('')
+  useEffect(() => {
+    if (filterKeyword !== undefined) setKeyWord(filterKeyword)
+  }, [filterKeyword])
   const [focus, setFocus] = useState<boolean>(false)
 
   const forgeRef = useRef<AIChatMentionListRefProps>(defaultRef)
@@ -95,6 +99,7 @@ export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) =>
   useKeyPress(
     'leftarrow',
     (e) => {
+      if ((e.target as HTMLElement)?.closest?.('[role="dialog"]')) return
       e.stopPropagation()
       e.preventDefault()
       onLeftArrow()
@@ -108,6 +113,7 @@ export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) =>
   useKeyPress(
     'rightarrow',
     (e) => {
+      if ((e.target as HTMLElement)?.closest?.('[role="dialog"]')) return
       e.stopPropagation()
       e.preventDefault()
       onRightArrow()
@@ -121,6 +127,7 @@ export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) =>
   useKeyPress(
     focus ? () => false : alphanumericKeys, //A-Z 0-9
     (e) => {
+      if ((e.target as HTMLElement)?.closest?.('[role="dialog"]')) return
       e.stopPropagation()
       e.preventDefault()
       onFocusSearchInput()
@@ -195,6 +202,17 @@ export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) =>
   })
   const renderTabContent = useMemoizedFn((key: AIMentionTabsEnum) => {
     switch (key) {
+      case AIMentionTabsEnum.All:
+      case AIMentionTabsEnum.Browser:
+        return (
+          <AllMentionList
+            query={keyWord}
+            filterMode={filterMode}
+            onSelect={onSelect}
+            getContainer={getContainer}
+            browserOnly={key === AIMentionTabsEnum.Browser}
+          />
+        )
       case AIMentionTabsEnum.Forge_Name:
         return (
           <ForgeNameListOfMention
@@ -300,7 +318,7 @@ export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) =>
       tabIndex={0}
       ref={mentionRef}
       onClick={(e) => e.stopPropagation()}
-      style={{ width: mentionWidth() }}
+      style={{ width: Math.max(mentionWidth(), 460), maxWidth: '90vw' }}
     >
       <YakitSideTab
         key={i18nRefresh}

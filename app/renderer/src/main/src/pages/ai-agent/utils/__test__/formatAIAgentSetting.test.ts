@@ -7,12 +7,33 @@ vi.mock('@/pages/ai-re-act/hooks/ChatMultiSessionController', () => ({
 }))
 vi.mock('@/pages/yakRunner/utils', () => ({ isYaklangScriptDeliveryPath: vi.fn() }))
 
-import { formatAIAgentSetting, onReStart } from '..'
+import { formatAIAgentSetting, onReStart, getAIReActRequestParams } from '..'
 import type { AISession } from '../../type/aiChat'
 import { AIAgentSettingDefault } from '../../defaultConstant'
 import { applyForgeNameToStartParams } from '@/pages/digitalEmployee/resolver'
 
 describe('formatAIAgentSetting runtime context', () => {
+  it('serializes a browser reference with the exact device ID while preserving Forge and file resources', () => {
+    const result = getAIReActRequestParams({
+      qs: 'inspect',
+      mentionList: [
+        { mentionType: 'browser', mentionId: 'device-two', mentionName: 'B' },
+        { mentionType: 'forge', mentionId: 'employee', mentionName: 'employee-forge' },
+        { mentionType: 'file', mentionId: 'allowed', mentionName: 'allowed.txt' },
+      ],
+    })
+    expect(result.attachedResourceInfo).toEqual(
+      expect.arrayContaining([
+        {
+          Type: 'browser',
+          Key: 'device_id',
+          Value: JSON.stringify({ deviceId: 'device-two', name: 'B', reference: 'B' }),
+        },
+        { Type: 'aiforge', Key: 'name', Value: 'employee-forge' },
+        { Type: 'file', Key: 'file_path', Value: 'allowed.txt' },
+      ]),
+    )
+  })
   it('enables Plan for a new conversation and when startup settings omit the mode', () => {
     expect(AIAgentSettingDefault.EnablePlan).toBe(true)
     expect(formatAIAgentSetting(AIAgentSettingDefault).EnablePlan).toBe(true)

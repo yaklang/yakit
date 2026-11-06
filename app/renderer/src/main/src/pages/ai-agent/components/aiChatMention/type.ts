@@ -11,6 +11,7 @@ export interface AIChatMentionSelectItem {
   name: string
 }
 export interface AIChatMentionProps {
+  filterKeyword?: string
   defaultActiveTab?: AIMentionTabsEnum
   onSelect: (type: AIMentionTypeItem, value?: AIChatMentionSelectItem) => void
   filterMode?: `${AIMentionTabsEnum}`[]
