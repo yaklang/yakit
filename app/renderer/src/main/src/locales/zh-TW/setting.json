@@ -70,7 +70,27 @@
     },
     "yakMcp": {
       "openHistory": "打開調用歷史",
-      "enableColumn": "開啟"
+      "enableColumn": "開啟",
+      "allSources": "全部來源",
+      "statusFilter": "工具狀態",
+      "allStatuses": "全部狀態",
+      "enabledOnly": "已啟用",
+      "disabledOnly": "已關閉",
+      "searchPlaceholder": "搜尋工具名稱、描述或服務，如「截圖」",
+      "clearFilters": "清空篩選",
+      "resultCount": "共 {{count}} 個工具 · {{enabled}} 個已啟用",
+      "batchScope": "僅操作目前篩選結果",
+      "enableResults": "全部啟用",
+      "disableResults": "全部關閉",
+      "batchProgress": "正在更新 {{completed}} / {{total}}",
+      "batchResult": "更新完成：成功 {{success}} 個，失敗 {{failed}} 個",
+      "loadingTools": "正在載入完整工具列表…",
+      "loadFailed": "工具列表載入失敗，請重試",
+      "retry": "重試",
+      "noResults": "沒有符合的工具",
+      "noResultsHint": "試試其他關鍵字，或調整來源和狀態篩選",
+      "refreshTools": "重新整理",
+      "toolConfigHint": "僅顯示已開啟能力層的工具。支援中英文搜尋，開關修改在下次啟動 MCP 時生效。"
     },
     "rightClickPlugins": {
       "tabSingle": "History (單選)",

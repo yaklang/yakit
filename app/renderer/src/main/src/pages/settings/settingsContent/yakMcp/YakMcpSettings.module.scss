@@ -232,13 +232,6 @@
   white-space: nowrap;
 }
 
-.filter-icon {
-  svg {
-    width: 16px;
-    height: 16px;
-  }
-}
-
 .mcp-tool-detail-popover {
   display: flex;
   flex-direction: column;
@@ -309,4 +302,52 @@
   flex-direction: column;
   gap: 12px;
   min-width: 0;
+}
+
+.tool-filters {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+}
+
+.tool-search {
+  flex: 1 1 280px;
+  min-width: 0;
+
+  svg {
+    width: 16px;
+    height: 16px;
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  }
+}
+
+.tool-filter-select {
+  flex: 0 1 128px;
+  min-width: 120px;
+}
+
+.tool-batch-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  padding: 10px 12px;
+  border-radius: 4px;
+  background: var(--Colors-Use-Neutral-Bg);
+}
+
+.tool-count {
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  font-size: 12px;
+  line-height: 20px;
+}
+
+.tool-batch-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
 }

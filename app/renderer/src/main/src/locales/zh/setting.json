@@ -70,7 +70,27 @@
     },
     "yakMcp": {
       "openHistory": "打开调用历史",
-      "enableColumn": "开启"
+      "enableColumn": "开启",
+      "allSources": "全部来源",
+      "statusFilter": "工具状态",
+      "allStatuses": "全部状态",
+      "enabledOnly": "已启用",
+      "disabledOnly": "已关闭",
+      "searchPlaceholder": "搜索工具名称、描述或服务，如“截图”",
+      "clearFilters": "清空筛选",
+      "resultCount": "共 {{count}} 个工具 · {{enabled}} 个已启用",
+      "batchScope": "仅操作当前筛选结果",
+      "enableResults": "全部启用",
+      "disableResults": "全部关闭",
+      "batchProgress": "正在更新 {{completed}} / {{total}}",
+      "batchResult": "更新完成：成功 {{success}} 个，失败 {{failed}} 个",
+      "loadingTools": "正在加载完整工具列表…",
+      "loadFailed": "工具列表加载失败，请重试",
+      "retry": "重试",
+      "noResults": "没有匹配的工具",
+      "noResultsHint": "试试其他关键词，或调整来源和状态筛选",
+      "refreshTools": "刷新",
+      "toolConfigHint": "仅展示已开启能力层的工具。支持中英文搜索，开关修改在下次启动 MCP 时生效。"
     },
     "rightClickPlugins": {
       "tabSingle": "History (单选)",
