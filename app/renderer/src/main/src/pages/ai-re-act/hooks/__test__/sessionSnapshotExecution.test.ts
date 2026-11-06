@@ -4,7 +4,9 @@ import {
   elapsedSessionSnapshotExecutionSeconds,
   formatSessionSnapshotExecutionDuration,
   formatSnapshotExecutionClock,
+  hasSessionSnapshotExecutionClock,
   isUnsetSessionSnapshotExecution,
+  releaseSessionSnapshotExecutionClock,
 } from '../sessionSnapshotExecution'
 
 const labels = { empty: '无数据', running: '执行中' }
@@ -39,10 +41,11 @@ describe('formatSessionSnapshotExecutionDuration', () => {
     expect(formatSessionSnapshotExecutionDuration({ execution_minutes: 0, started_at: 0 }, labels)).toBe('无数据')
   })
 
-  it('默认空 execution 视为未就绪，有秒数或开始时间则视为有效', () => {
+  it('默认空 execution 视为未就绪，有秒数、正数分钟、开始时间或轮数则视为有效', () => {
     expect(isUnsetSessionSnapshotExecution(undefined)).toBe(true)
     expect(isUnsetSessionSnapshotExecution({ started_at: 0, execution_minutes: 0 })).toBe(true)
     expect(isUnsetSessionSnapshotExecution({ execution_seconds: 0, started_at: 1000 })).toBe(false)
+    expect(isUnsetSessionSnapshotExecution({ execution_minutes: 90 })).toBe(false)
     expect(isUnsetSessionSnapshotExecution({ execution_rounds: 3 })).toBe(false)
   })
 })
@@ -65,6 +68,23 @@ describe('elapsedSessionSnapshotExecutionSeconds', () => {
     expect(elapsedSessionSnapshotExecutionSeconds('k')).toBe(0)
     vi.advanceTimersByTime(3000)
     expect(elapsedSessionSnapshotExecutionSeconds('k')).toBe(3)
+    vi.useRealTimers()
+    clearSessionSnapshotExecutionClocks()
+  })
+
+  it('释放后同一 clockKey 重新计，不影响其他 key', () => {
+    vi.useFakeTimers()
+    clearSessionSnapshotExecutionClocks()
+    expect(elapsedSessionSnapshotExecutionSeconds('old')).toBe(0)
+    expect(elapsedSessionSnapshotExecutionSeconds('keep')).toBe(0)
+    vi.advanceTimersByTime(3000)
+    releaseSessionSnapshotExecutionClock('old')
+    expect(hasSessionSnapshotExecutionClock('old')).toBe(false)
+    expect(hasSessionSnapshotExecutionClock('keep')).toBe(true)
+    expect(elapsedSessionSnapshotExecutionSeconds('old')).toBe(0)
+    vi.advanceTimersByTime(2000)
+    expect(elapsedSessionSnapshotExecutionSeconds('old')).toBe(2)
+    expect(elapsedSessionSnapshotExecutionSeconds('keep')).toBe(5)
     vi.useRealTimers()
     clearSessionSnapshotExecutionClocks()
   })

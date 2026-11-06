@@ -11,6 +11,7 @@ import type { ExportAILogsModal as ExportAILogsModalComponent } from '@/pages/ai
 import { apiRiskFieldGroup } from '@/pages/risks/YakitRiskTable/utils'
 import emiter from '@/utils/eventBus/eventBus'
 import type * as AIRightPanelModule from '../AIRightPanel'
+import { AITaskStatus } from '../../hooks/grpcApi'
 import { useStore } from 'zustand'
 
 vi.mock('@/pages/ai-agent/chatTemplate/historyTaskTree/useRunningAsyncTaskCount', () => {
@@ -50,8 +51,9 @@ import { createStore } from 'zustand/vanilla'
 import type { StoreApi } from 'zustand/vanilla'
 
 interface MockTaskStoreState {
-  currentChatStatus: { questionID: string }
+  currentChatStatus: { questionID: string; status?: string }
   execute: boolean
+  pendingReply: boolean
   taskDetailsUpdate: number
 }
 // 详情条目带 uuid：父级收到更新通知后比较 uuid 判断详情是否被流数据刷新（参照 AITaskExecutionDetails）
@@ -65,6 +67,7 @@ const mockAgentStore = createStore<{ activeChat?: { Id: number; SessionID: strin
 const mockTaskStore: StoreApi<MockTaskStoreState> = createStore<MockTaskStoreState>(() => ({
   currentChatStatus: { questionID: '' },
   execute: false,
+  pendingReply: false,
   taskDetailsUpdate: 0,
 }))
 const setMockQuestionID = (questionID: string) => {
@@ -72,7 +75,12 @@ const setMockQuestionID = (questionID: string) => {
   casualTaskState.questionID = questionID
 }
 const resetMockStore = () => {
-  mockTaskStore.setState({ currentChatStatus: { questionID: '' }, execute: false, taskDetailsUpdate: 0 })
+  mockTaskStore.setState({
+    currentChatStatus: { questionID: '' },
+    execute: false,
+    pendingReply: false,
+    taskDetailsUpdate: 0,
+  })
   mockTaskDetailsMap.clear()
   casualTaskState.questionID = ''
 }
@@ -1640,7 +1648,10 @@ describe('AIRightPanel', () => {
     vi.useFakeTimers({ toFake: ['Date', 'setInterval', 'clearInterval'] })
     setMockQuestionID('task-clock-end')
     mockAgentStore.setState({ activeChat: { Id: 1, SessionID: 'session-clock' } })
-    mockTaskStore.setState({ execute: true })
+    mockTaskStore.setState((state) => ({
+      execute: true,
+      currentChatStatus: { ...state.currentChatStatus, status: AITaskStatus.inProgress },
+    }))
     const taskDetails: MockTaskDetails = {
       uuid: 'uuid-clock-1',
       execution: { status: 'processing', execution_seconds: 10, started_at: 1000 },
@@ -1671,11 +1682,14 @@ describe('AIRightPanel', () => {
     }
   })
 
-  it('关闭会话后快照仍为 processing 时运行时间继续累加', async () => {
+  it('关闭会话后快照仍为 processing 时运行时间停止累加', async () => {
     vi.useFakeTimers({ toFake: ['Date', 'setInterval', 'clearInterval'] })
     setMockQuestionID('task-clock-close')
     mockAgentStore.setState({ activeChat: { Id: 1, SessionID: 'session-clock-close' } })
-    mockTaskStore.setState({ execute: true })
+    mockTaskStore.setState((state) => ({
+      execute: true,
+      currentChatStatus: { ...state.currentChatStatus, status: AITaskStatus.inProgress },
+    }))
     mockTaskDetailsMap.set('task-clock-close', {
       uuid: 'uuid-clock-close',
       execution: { status: 'processing', execution_seconds: 10, started_at: 1000 },
@@ -1688,10 +1702,47 @@ describe('AIRightPanel', () => {
       expect(screen.getByText('运行时间').nextElementSibling).toHaveTextContent('13s')
 
       act(() => mockTaskStore.setState({ execute: false }))
+      expect(screen.getByText('运行时间').nextElementSibling).toHaveTextContent('10s')
       act(() => {
         vi.advanceTimersByTime(4000)
       })
-      expect(screen.getByText('运行时间').nextElementSibling).toHaveTextContent('17s')
+      expect(screen.getByText('运行时间').nextElementSibling).toHaveTextContent('10s')
+    } finally {
+      result.unmount()
+      resetMockStore()
+      mockAgentStore.setState({ activeChat: undefined })
+    }
+  })
+
+  it('问题结束后即使快照仍为 processing 运行时间停止累加', async () => {
+    vi.useFakeTimers({ toFake: ['Date', 'setInterval', 'clearInterval'] })
+    setMockQuestionID('task-clock-idle')
+    mockAgentStore.setState({ activeChat: { Id: 1, SessionID: 'session-clock-idle' } })
+    mockTaskStore.setState((state) => ({
+      execute: true,
+      currentChatStatus: { ...state.currentChatStatus, status: AITaskStatus.inProgress },
+    }))
+    mockTaskDetailsMap.set('task-clock-idle', {
+      uuid: 'uuid-clock-idle',
+      execution: { status: 'processing', execution_seconds: 10, started_at: 1000 },
+    })
+    const result = await renderPanel(<AIRightPanel />)
+    try {
+      act(() => {
+        vi.advanceTimersByTime(3000)
+      })
+      expect(screen.getByText('运行时间').nextElementSibling).toHaveTextContent('13s')
+
+      act(() =>
+        mockTaskStore.setState((state) => ({
+          currentChatStatus: { ...state.currentChatStatus, status: AITaskStatus.success },
+        })),
+      )
+      expect(screen.getByText('运行时间').nextElementSibling).toHaveTextContent('10s')
+      act(() => {
+        vi.advanceTimersByTime(4000)
+      })
+      expect(screen.getByText('运行时间').nextElementSibling).toHaveTextContent('10s')
     } finally {
       result.unmount()
       resetMockStore()

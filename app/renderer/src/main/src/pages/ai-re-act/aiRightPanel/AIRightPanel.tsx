@@ -13,7 +13,10 @@ import useCurrentTaskExecution from '../hooks/useCurrentTaskData/useCurrentTaskE
 import { useWelcomePanelStats } from '@/pages/ai-agent/aiChatWelcome/hooks/useWelcomePanelStats'
 import classNames from 'classnames'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { useSessionSnapshotExecutionDuration } from '../hooks/useSessionSnapshotExecutionDuration'
+import {
+  isSessionSnapshotClockActive,
+  useSessionSnapshotExecutionDuration,
+} from '../hooks/useSessionSnapshotExecutionDuration'
 import { AISourceEnum, AISkillLoadStateEnum } from '../hooks/grpcApi'
 import type { AIAgentGrpcApi } from '../hooks/grpcApi'
 import type { AISkillLoadState } from './AISkillLoadingPane/type'
@@ -152,6 +155,8 @@ const DataCards: React.FC<{ executionData?: AIAgentGrpcApi.SessionSnapshot['exec
     const isLogin = !!userInfo.isLogin
     const store = useCurrentStore()
     const execute = useStore(store, (state) => state.execute)
+    const pendingReply = useStore(store, (state) => state.pendingReply)
+    const chatStatus = useStore(store, (state) => state.currentChatStatus?.status)
     const [apiKeys, setApiKeys] = useState<API.ApiKeyDetail>()
     // 已展示过的额度：刷新为空/失败时保留，避免 CeUserTokenQuota 卸载闪烁
     const apiKeysRef = useRef<API.ApiKeyDetail>()
@@ -244,6 +249,7 @@ const DataCards: React.FC<{ executionData?: AIAgentGrpcApi.SessionSnapshot['exec
         running: t('AIRightPanel.running'),
       },
       `${sessionId}:${questionID}:${executionData?.started_at ?? ''}:${executionData?.execution_seconds ?? ''}`,
+      isSessionSnapshotClockActive({ execute, pendingReply, chatStatus }),
     )
 
     return (

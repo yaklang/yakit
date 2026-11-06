@@ -1,7 +1,11 @@
 import { act, renderHook } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { clearSessionSnapshotExecutionClocks } from '../sessionSnapshotExecution'
-import { useSessionSnapshotExecutionDuration } from '../useSessionSnapshotExecutionDuration'
+import { clearSessionSnapshotExecutionClocks, hasSessionSnapshotExecutionClock } from '../sessionSnapshotExecution'
+import {
+  isSessionSnapshotClockActive,
+  useSessionSnapshotExecutionDuration,
+} from '../useSessionSnapshotExecutionDuration'
+import { AITaskStatus } from '../grpcApi'
 
 const labels = { empty: '无数据', running: '执行中' }
 
@@ -26,6 +30,8 @@ describe('useSessionSnapshotExecutionDuration', () => {
     expect(result.current).toBe('13s')
 
     rerender({ execution: { status: 'processing', execution_seconds: 100 }, clockKey: 'task:100' })
+    expect(hasSessionSnapshotExecutionClock('task:10')).toBe(false)
+    expect(hasSessionSnapshotExecutionClock('task:100')).toBe(true)
     expect(result.current).toBe('1m40s')
 
     act(() => {
@@ -48,6 +54,7 @@ describe('useSessionSnapshotExecutionDuration', () => {
     expect(result.current).toBe('43s')
 
     unmount()
+    expect(hasSessionSnapshotExecutionClock('session:task:40')).toBe(true)
     act(() => {
       vi.advanceTimersByTime(2000)
     })
@@ -106,21 +113,27 @@ describe('useSessionSnapshotExecutionDuration', () => {
     expect(result.current).toBe('8s')
   })
 
-  it('快照保持 processing 时继续累加（关闭会话若不改 execution 即为此）', () => {
+  it('会话不再执行时即使快照仍为 processing 也停在后端秒数', () => {
     vi.useFakeTimers()
     const execution = { status: 'processing', execution_seconds: 10 }
-    const { result } = renderHook(() => useSessionSnapshotExecutionDuration(execution, labels, 'task:close'))
+    const { result, rerender } = renderHook(
+      ({ sessionActive }) => useSessionSnapshotExecutionDuration(execution, labels, 'task:close', sessionActive),
+      { initialProps: { sessionActive: true } },
+    )
     act(() => {
       vi.advanceTimersByTime(3000)
     })
     expect(result.current).toBe('13s')
+
+    rerender({ sessionActive: false })
+    expect(result.current).toBe('10s')
     act(() => {
       vi.advanceTimersByTime(4000)
     })
-    expect(result.current).toBe('17s')
+    expect(result.current).toBe('10s')
   })
 
-  it('同 clockKey 从 completed 再恢复 processing 时沿用旧锚点，停顿计入时长', () => {
+  it('同 clockKey 结束后再恢复 processing 时从后端秒数重新计', () => {
     vi.useFakeTimers()
     const { result, rerender } = renderHook(
       ({ execution, clockKey }) => useSessionSnapshotExecutionDuration(execution, labels, clockKey),
@@ -137,8 +150,20 @@ describe('useSessionSnapshotExecutionDuration', () => {
       vi.advanceTimersByTime(5000)
     })
     expect(result.current).toBe('10s')
+    expect(hasSessionSnapshotExecutionClock('task:10')).toBe(false)
 
     rerender({ execution: { status: 'processing', execution_seconds: 10 }, clockKey: 'task:10' })
-    expect(result.current).toBe('18s')
+    expect(result.current).toBe('10s')
+    act(() => {
+      vi.advanceTimersByTime(2000)
+    })
+    expect(result.current).toBe('12s')
+  })
+
+  it('isSessionSnapshotClockActive：关连接、问题结束都不加，提问等待或进行中才加', () => {
+    expect(isSessionSnapshotClockActive({ execute: true, chatStatus: AITaskStatus.inProgress })).toBe(true)
+    expect(isSessionSnapshotClockActive({ execute: true, pendingReply: true })).toBe(true)
+    expect(isSessionSnapshotClockActive({ execute: false, chatStatus: AITaskStatus.inProgress })).toBe(false)
+    expect(isSessionSnapshotClockActive({ execute: true, chatStatus: AITaskStatus.success })).toBe(false)
   })
 })

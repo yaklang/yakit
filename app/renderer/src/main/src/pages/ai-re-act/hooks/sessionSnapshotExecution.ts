@@ -11,6 +11,14 @@ export const elapsedSessionSnapshotExecutionSeconds = (clockKey: string) => {
   return Math.max(0, Math.floor((Date.now() - startedAt) / 1000))
 }
 
+/** clockKey 被替换时丢掉旧锚点；卸载后重挂需要的当前条目不要调这个 */
+export const releaseSessionSnapshotExecutionClock = (clockKey: string) => {
+  if (!clockKey) return
+  executionClocks.delete(clockKey)
+}
+
+export const hasSessionSnapshotExecutionClock = (clockKey: string) => executionClocks.has(clockKey)
+
 export const clearSessionSnapshotExecutionClocks = () => {
   executionClocks.clear()
 }
@@ -28,6 +36,12 @@ export interface SnapshotExecutionDurationSource {
 export const isUnsetSessionSnapshotExecution = (execution?: SnapshotExecutionDurationSource) => {
   if (!execution) return true
   if (typeof execution.execution_seconds === 'number' && Number.isFinite(execution.execution_seconds)) return false
+  if (
+    typeof execution.execution_minutes === 'number' &&
+    Number.isFinite(execution.execution_minutes) &&
+    execution.execution_minutes > 0
+  )
+    return false
   if ((execution.started_at || 0) > 0) return false
   if ((execution.execution_rounds || 0) > 0) return false
   return true
