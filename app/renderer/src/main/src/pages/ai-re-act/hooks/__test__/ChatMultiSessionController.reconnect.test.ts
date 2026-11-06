@@ -49,7 +49,7 @@ const historyEnd = (offset = 0) =>
   makeGrpcJsonRes('structured', { next_start_id: offset }, { NodeId: 'recovery_history' })
 
 const streamTokenFor = (sessionId: string) =>
-  ipcRendererMock.invoke.mock.calls.find(
+  ipcRendererMock.invoke.mock.calls.findLast(
     ([method, , params]) => method === 'start-ai-re-act' && params?.Params?.TimelineSessionID === sessionId,
   )?.[1]
 
@@ -428,24 +428,45 @@ describe('session reconnect / IDB lifecycle', () => {
     expect(meta.lifecycle.current).toBe(false)
   })
 
-  it('restores unsubmitted question drafts after reconnect clears history cache', async () => {
+  it('replays a pending form after reconnect even when drafts are gone', async () => {
     await start('s')
     await ctrl.handleGrpcOutputEvent('s', historyEnd())
+    const firstToken = streamTokenFor('s')
+    const form = {
+      title: '参数设置',
+      schema: {
+        type: 'object',
+        properties: { name: { type: 'string', title: '姓名', minLength: 1 } },
+        required: ['name'],
+      },
+    }
     const item = {
-      id: 'ui-question:q1',
+      id: 'ui-question:form',
       type: AIChatQSDataTypeEnum.UI_QUESTION,
       chatType: 'reAct',
-      data: { sessionId: 's', request: { id: 'q1', state: 'pending' } },
+      data: { sessionId: 's', request: { id: 'form', state: 'pending', form } },
     } as any
-    const draft = { answers: {}, page: 0, touched: true, values: { title: '草稿' }, submissionId: 'retry-1' }
-    ctrl.persistUIState('s', item, draft)
+    ctrl.ensureSession('s').rawData.contents.set(item.id, item)
+    ctrl.persistUIState('s', item, { answers: {}, page: 0, touched: true, values: { name: '草稿' } })
+    expect(ctrl.ensureSession('s').store.getState().questionPanelTokens).toContain(item.id)
+    ctrl.forceCloseSession({ sessionIds: ['s'] })
+    await ctrl.handleSessionEnd('s')
+    expect(ctrl.isSessionReady('s')).toBe(false)
+    clearAllUIDrafts()
     await start('s')
+    expect(streamTokenFor('s')).not.toBe(firstToken)
+    expect(aiChatPersistStore.deleteSessionPersist).toHaveBeenCalledTimes(2)
     expect(ctrl.ensureSession('s').rawData.contents.get(item.id)).toBeUndefined()
     await ctrl.handleGrpcOutputEvent(
       's',
-      makeGrpcJsonRes('ui_question', { id: 'q1', state: 'pending', questions: [] }, { ID: 1, IsSync: true }),
+      makeGrpcJsonRes('ui_question', { id: 'form', state: 'pending', form }, { ID: 1, IsSync: true }),
     )
-    expect(ctrl.ensureSession('s').rawData.contents.get(item.id)?.uiState).toEqual(draft)
+    const restored = ctrl.ensureSession('s').rawData.contents.get(item.id)
+    expect(restored?.type).toBe(AIChatQSDataTypeEnum.UI_QUESTION)
+    if (restored?.type !== AIChatQSDataTypeEnum.UI_QUESTION) return
+    expect(restored.data.request).toMatchObject({ state: 'pending', form: { title: '参数设置' } })
+    expect(restored.uiState).toBeUndefined()
+    expect(ctrl.ensureSession('s').store.getState().questionPanelTokens).toContain(item.id)
   })
 
   it('deletion invalidates a pending IDB read and waits before removing the cache', async () => {
