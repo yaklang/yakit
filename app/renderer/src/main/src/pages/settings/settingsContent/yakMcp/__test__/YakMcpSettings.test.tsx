@@ -965,4 +965,101 @@ describe('YakMcpSettings', () => {
     })
     expect(setRemoteValueMock).not.toHaveBeenCalled()
   })
+
+  it.each([
+    { name: '最后一个内置能力层', tierIndex: 1, legacy: true, ai: false, bridge: false },
+    { name: '最后一个 AI 能力层及其桥接能力', tierIndex: 2, legacy: false, ai: true, bridge: true },
+  ])('关闭$name时关闭自启动，重新启用能力层后不自动恢复自启动', async ({ tierIndex, legacy, ai, bridge }) => {
+    const initial = {
+      autoStart: true,
+      url: '127.0.0.1:9900',
+      enableLegacyMcpTools: legacy,
+      enableAIToolFramework: ai,
+      enableBridgeExternalMcp: bridge,
+    }
+    let stored = { ...initial }
+    getRemoteValueMock.mockImplementation(async () => JSON.stringify(stored))
+    setRemoteValueMock.mockImplementation(async (_key, value) => {
+      stored = JSON.parse(value)
+    })
+    render(<YakMcpSettings />)
+    await waitFor(() => expect(screen.getAllByRole('switch')[4]).toBeChecked())
+    await userEvent.click(screen.getAllByRole('switch')[tierIndex])
+
+    const disabled = screen.getAllByRole('switch')
+    expect(disabled[tierIndex]).not.toBeChecked()
+    expect(disabled[3]).not.toBeChecked()
+    expect(disabled[3]).toBeDisabled()
+    expect(disabled[4]).not.toBeChecked()
+    expect(disabled[4]).toBeDisabled()
+    expect(disabled[0]).toBeDisabled()
+    const expectedDisabled = {
+      ...initial,
+      autoStart: false,
+      enableLegacyMcpTools: false,
+      enableAIToolFramework: false,
+      enableBridgeExternalMcp: false,
+    }
+    await waitFor(() => expect(setRemoteValueMock).toHaveBeenCalledTimes(1))
+    expect(JSON.parse(setRemoteValueMock.mock.calls[0][1])).toEqual(expectedDisabled)
+    expect(stored).toEqual(expectedDisabled)
+
+    await userEvent.click(screen.getAllByRole('switch')[tierIndex])
+    const reenabled = screen.getAllByRole('switch')
+    expect(reenabled[tierIndex]).toBeChecked()
+    expect(reenabled[4]).not.toBeChecked()
+    expect(reenabled[4]).toBeEnabled()
+    expect(reenabled[0]).toBeEnabled()
+    const expectedReenabled = { ...initial, autoStart: false, enableBridgeExternalMcp: false }
+    await waitFor(() => expect(setRemoteValueMock).toHaveBeenCalledTimes(2))
+    expect(JSON.parse(setRemoteValueMock.mock.calls[1][1])).toEqual(expectedReenabled)
+    expect(stored).toEqual(expectedReenabled)
+  })
+
+  it.each([
+    { name: '空地址', input: '', savedUrl: '127.0.0.1:11432' },
+    { name: '仅空白的地址', input: '   ', savedUrl: '   ' },
+  ])('输入$name时关闭自启动，重新填写地址后不自动恢复自启动', async ({ input, savedUrl }) => {
+    const initial = {
+      autoStart: true,
+      url: '127.0.0.1:9900',
+      enableLegacyMcpTools: false,
+      enableAIToolFramework: true,
+      enableBridgeExternalMcp: true,
+    }
+    let stored = { ...initial }
+    mcpStreamInfoRef.current = { ...mcpStreamInfoRef.current, mcpUrl: initial.url }
+    getRemoteValueMock.mockImplementation(async () => JSON.stringify(stored))
+    setRemoteValueMock.mockImplementation(async (_key, value) => {
+      stored = JSON.parse(value)
+    })
+    const { rerender } = render(<YakMcpSettings />)
+    await waitFor(() => expect(screen.getAllByRole('switch')[4]).toBeChecked())
+    const address = screen.getByDisplayValue(initial.url)
+    fireEvent.change(address, { target: { value: input } })
+    expect(onSetMcpUrlMock).toHaveBeenCalledWith(input)
+    mcpStreamInfoRef.current = { ...mcpStreamInfoRef.current, mcpUrl: input }
+    rerender(<YakMcpSettings />)
+
+    expect(screen.getAllByRole('switch')[4]).not.toBeChecked()
+    expect(screen.getAllByRole('switch')[4]).toBeDisabled()
+    expect(screen.getAllByRole('switch')[0]).toBeDisabled()
+    await waitFor(() => expect(setRemoteValueMock).toHaveBeenCalledTimes(1))
+    const expectedCleared = { ...initial, autoStart: false, url: savedUrl }
+    expect(JSON.parse(setRemoteValueMock.mock.calls[0][1])).toEqual(expectedCleared)
+    expect(stored).toEqual(expectedCleared)
+
+    const restoredUrl = '127.0.0.1:9911'
+    fireEvent.change(address, { target: { value: restoredUrl } })
+    expect(onSetMcpUrlMock).toHaveBeenCalledWith(restoredUrl)
+    mcpStreamInfoRef.current = { ...mcpStreamInfoRef.current, mcpUrl: restoredUrl }
+    rerender(<YakMcpSettings />)
+    expect(screen.getAllByRole('switch')[4]).not.toBeChecked()
+    expect(screen.getAllByRole('switch')[4]).toBeEnabled()
+    expect(screen.getAllByRole('switch')[0]).toBeEnabled()
+    await waitFor(() => expect(setRemoteValueMock).toHaveBeenCalledTimes(2))
+    const expectedRestored = { ...initial, autoStart: false, url: restoredUrl }
+    expect(JSON.parse(setRemoteValueMock.mock.calls[1][1])).toEqual(expectedRestored)
+    expect(stored).toEqual(expectedRestored)
+  })
 })
