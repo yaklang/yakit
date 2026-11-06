@@ -6,6 +6,7 @@ import { YakitRoute } from '@/enums/yakitRoute'
 import { ipcRendererMock, resetIpcMocks } from './setupElectron'
 import { makeGrpcJsonRes, makeGrpcRes } from './fixtures'
 import aiChatPersistStore from '../persist/aiChatPersistStore'
+import { clearAllUIDrafts } from '../persist/uiDraftStore'
 import { persistIndependentItem, drainSessionContentWrites } from '../persist/contentPersistHelper'
 import { sessionStatusStore, SessionDeleteStatus } from '../sessionStatus/sessionStatusStore'
 import { grpcQueryAIEvent } from '@/pages/ai-agent/grpc'
@@ -48,7 +49,7 @@ const historyEnd = (offset = 0) =>
   makeGrpcJsonRes('structured', { next_start_id: offset }, { NodeId: 'recovery_history' })
 
 const streamTokenFor = (sessionId: string) =>
-  ipcRendererMock.invoke.mock.calls.find(
+  ipcRendererMock.invoke.mock.calls.findLast(
     ([method, , params]) => method === 'start-ai-re-act' && params?.Params?.TimelineSessionID === sessionId,
   )?.[1]
 
@@ -99,6 +100,7 @@ describe('session reconnect / IDB lifecycle', () => {
     vi.mocked(aiChatPersistStore.getSessionReferences).mockResolvedValue([])
     ctrl = new ChatMultiSessionController()
     sessions = new Set()
+    clearAllUIDrafts()
   })
   afterEach(async () => {
     for (const id of sessions) if (ctrl.isSessionReady(id)) await ctrl.handleSessionEnd(id).catch(() => {})
@@ -424,6 +426,47 @@ describe('session reconnect / IDB lifecycle', () => {
     await start('s')
     expect(aiChatPersistStore.deleteSessionPersist).toHaveBeenCalledTimes(2)
     expect(meta.lifecycle.current).toBe(false)
+  })
+
+  it('replays a pending form after reconnect even when drafts are gone', async () => {
+    await start('s')
+    await ctrl.handleGrpcOutputEvent('s', historyEnd())
+    const firstToken = streamTokenFor('s')
+    const form = {
+      title: '参数设置',
+      schema: {
+        type: 'object',
+        properties: { name: { type: 'string', title: '姓名', minLength: 1 } },
+        required: ['name'],
+      },
+    }
+    const item = {
+      id: 'ui-question:form',
+      type: AIChatQSDataTypeEnum.UI_QUESTION,
+      chatType: 'reAct',
+      data: { sessionId: 's', request: { id: 'form', state: 'pending', form } },
+    } as any
+    ctrl.ensureSession('s').rawData.contents.set(item.id, item)
+    ctrl.persistUIState('s', item, { answers: {}, page: 0, touched: true, values: { name: '草稿' } })
+    expect(ctrl.ensureSession('s').store.getState().questionPanelTokens).toContain(item.id)
+    ctrl.forceCloseSession({ sessionIds: ['s'] })
+    await ctrl.handleSessionEnd('s')
+    expect(ctrl.isSessionReady('s')).toBe(false)
+    clearAllUIDrafts()
+    await start('s')
+    expect(streamTokenFor('s')).not.toBe(firstToken)
+    expect(aiChatPersistStore.deleteSessionPersist).toHaveBeenCalledTimes(2)
+    expect(ctrl.ensureSession('s').rawData.contents.get(item.id)).toBeUndefined()
+    await ctrl.handleGrpcOutputEvent(
+      's',
+      makeGrpcJsonRes('ui_question', { id: 'form', state: 'pending', form }, { ID: 1, IsSync: true }),
+    )
+    const restored = ctrl.ensureSession('s').rawData.contents.get(item.id)
+    expect(restored?.type).toBe(AIChatQSDataTypeEnum.UI_QUESTION)
+    if (restored?.type !== AIChatQSDataTypeEnum.UI_QUESTION) return
+    expect(restored.data.request).toMatchObject({ state: 'pending', form: { title: '参数设置' } })
+    expect(restored.uiState).toBeUndefined()
+    expect(ctrl.ensureSession('s').store.getState().questionPanelTokens).toContain(item.id)
   })
 
   it('deletion invalidates a pending IDB read and waits before removing the cache', async () => {

@@ -1,0 +1,14 @@
+.card {
+  composes: card from '../../ui-shared/shell.module.scss';
+}
+.toolbar {
+  composes: toolbar from '../../ui-shared/shell.module.scss';
+  gap: 8px;
+}
+.questionSummary {
+  margin-top: 4px;
+  white-space: pre-wrap;
+}
+.secondary {
+  composes: secondary from '../../ui-shared/shell.module.scss';
+}

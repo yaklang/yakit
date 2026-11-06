@@ -1,0 +1,11 @@
+.card {
+  composes: card from '../../ui-shared/shell.module.scss';
+}
+.table {
+  composes: table from '../../ui-shared/shell.module.scss';
+}
+.grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}

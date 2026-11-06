@@ -1,4 +1,5 @@
 import type { AIMessageHandler, AIMessageHandlerParams } from '../type'
+import { handleComponentStream } from './aiComponentUI'
 import type { AIAgentGrpcApi } from '../grpcApi'
 import { Uint8ArrayToString } from '@/utils/str'
 import { genBaseAIChatData, generateTaskNodeDataID, isToolStderrStream, isToolStdoutStream } from '../utils'
@@ -99,6 +100,7 @@ const genStreamGroupData = (
 }
 
 const handleStreamStart: AIMessageHandler = async (requestInfo) => {
+  if (await handleComponentStream(requestInfo)) return
   const { sessionId, res, rawData, meta } = requestInfo
   if (res.Type !== 'stream_start') return
 
@@ -176,6 +178,7 @@ const handleStreamStart: AIMessageHandler = async (requestInfo) => {
 }
 
 const handleStream: AIMessageHandler = async (requestInfo) => {
+  if (await handleComponentStream(requestInfo)) return
   const { sessionId, res, chatType, store, rawData, meta } = requestInfo
   if (res.Type !== 'stream') return
   // 历史数据-(系统信息|推理信息)数据，不处理
@@ -320,6 +323,7 @@ const handleStream: AIMessageHandler = async (requestInfo) => {
 }
 
 const handleStreamFinished: AIMessageHandler = async (requestInfo) => {
+  if (await handleComponentStream(requestInfo)) return
   const { sessionId, res, store, rawData, meta } = requestInfo
   if (res.Type !== 'structured' || res.NodeId !== 'stream-finished') return
   // 历史数据-(系统信息|推理信息)数据，不处理

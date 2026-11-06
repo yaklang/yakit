@@ -1,0 +1,227 @@
+.card {
+  composes: card from '../../ui-shared/shell.module.scss';
+}
+.questionFloating {
+  padding: 8px 12px;
+  background: transparent;
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  font-size: 12px;
+  line-height: 20px;
+  overflow-wrap: anywhere;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  strong {
+    font-size: 14px;
+    font-weight: 500;
+  }
+}
+.toolbar,
+.actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.toolbar {
+  composes: toolbar from '../../ui-shared/shell.module.scss';
+  .prompt {
+    color: var(--Colors-Use-Neutral-Text-4-Help-text);
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 16px;
+  }
+}
+.toolbarStatus {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+  svg {
+    width: 16px;
+    height: 16px;
+    color: var(--Colors-Use-Neutral-Text-2-Primary);
+  }
+}
+.toolbarRight {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-inline-start: auto;
+}
+.questionQueue {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  color: var(--Colors-Use-Main-Primary);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+}
+.actions {
+  margin-top: 12px;
+}
+.questionFloating .actions {
+  margin: 12px -12px 0;
+  padding: 10px 12px;
+  background: var(--Colors-Use-Neutral-Bg);
+}
+.questionActionGroup {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.questionSecondaryActions {
+  margin-inline-start: auto;
+  :global(.yakit-button.yakit-button-text2:not([disabled])) {
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  }
+}
+.questionProgress {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 16px;
+  font-variant-numeric: tabular-nums;
+}
+.questionProgressTrack {
+  display: inline-block;
+  width: 48px;
+  height: 4px;
+  border-radius: 4px;
+  background: var(--Colors-Use-Main-Bg);
+  overflow: hidden;
+}
+.questionProgressFill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--Colors-Use-Main-Primary);
+}
+.questionSummary {
+  margin-top: 4px;
+  white-space: pre-wrap;
+}
+.secondary {
+  composes: secondary from '../../ui-shared/shell.module.scss';
+}
+.options {
+  display: grid;
+  gap: 8px;
+}
+.optionContent {
+  display: grid;
+  grid-template-columns: 12px minmax(0, 1fr);
+  gap: 4px 8px;
+  min-width: 0;
+  text-align: left;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  align-items: start;
+}
+.options .optionContent .shortcut {
+  flex: none;
+  min-width: 12px;
+  color: var(--Colors-Use-Neutral-Text-4-Help-text);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 20px;
+}
+.options .optionContent > span.secondary {
+  grid-column: 2;
+  color: var(--Colors-Use-Neutral-Text-4-Help-text);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 16px;
+}
+.options .option {
+  display: block;
+  width: 100%;
+  height: auto;
+  :global(.ant-checkbox) {
+    margin-top: 2px;
+  }
+}
+.options .radioOptions {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  :global(.ant-radio-button-wrapper) {
+    &:first-child,
+    &:last-child {
+      border-radius: 4px;
+    }
+    &::before {
+      display: none;
+    }
+  }
+}
+.options .option :global(.ant-checkbox-wrapper),
+.options .radioOptions :global(.ant-radio-button-wrapper) {
+  display: flex;
+  align-items: flex-start;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 36px;
+  height: auto;
+  padding: 8px 12px;
+  border: 1px solid var(--Colors-Use-Neutral-Border);
+  border-radius: 4px;
+  background: var(--Colors-Use-Basic-Background);
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 20px;
+  white-space: normal;
+  cursor: pointer;
+  > span:last-child {
+    flex: 1;
+    min-width: 0;
+  }
+  &:focus-within {
+    box-shadow: 0 0 0 2px var(--Colors-Use-Main-Focus);
+  }
+}
+.options .option :global(.ant-checkbox-wrapper:not(.ant-checkbox-wrapper-disabled):hover),
+.options .radioOptions :global(.ant-radio-button-wrapper:not(.ant-radio-button-wrapper-disabled):hover) {
+  border-color: var(--Colors-Use-Main-Border);
+  background: var(--Colors-Use-Neutral-Bg-Hover);
+}
+.options .option :global(.ant-checkbox-wrapper-checked:not(.ant-checkbox-wrapper-disabled)),
+.options .radioOptions :global(.ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled)) {
+  border-color: var(--Colors-Use-Main-Primary);
+  background: var(--Colors-Use-Main-Bg);
+  &:hover {
+    border-color: var(--Colors-Use-Main-Primary);
+    background: var(--Colors-Use-Main-Bg-Hover);
+  }
+}
+.options .option :global(.ant-checkbox-wrapper-disabled),
+.options .radioOptions :global(.ant-radio-button-wrapper-disabled) {
+  cursor: not-allowed;
+}
+.freeText {
+  margin-top: 12px;
+}
+.answers {
+  margin: 12px 0 0;
+  display: grid;
+  gap: 12px;
+  dt {
+    font-weight: 500;
+  }
+  dd {
+    margin: 4px 0 0;
+    color: var(--Colors-Use-Neutral-Text-2-Primary);
+    white-space: pre-wrap;
+  }
+}

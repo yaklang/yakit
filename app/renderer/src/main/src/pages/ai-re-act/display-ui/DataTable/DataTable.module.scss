@@ -1,0 +1,21 @@
+.visualization {
+  composes: visualization from '../../ui-shared/shell.module.scss';
+}
+.tableScroll {
+  overflow-x: auto;
+}
+.table {
+  composes: table from '../../ui-shared/shell.module.scss';
+}
+.columnFilter {
+  display: block;
+  min-width: 100px;
+  margin-top: 4px;
+}
+.actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}

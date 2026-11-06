@@ -1,3 +1,4 @@
+import { syncQuestionPanel } from '../interactive-ui/questionPanel'
 import { useMemoizedFn } from 'ahooks'
 import { useEffect, useRef, useState, type RefObject } from 'react'
 import { useStore } from 'zustand'
@@ -6,7 +7,7 @@ import { globalSessionEngine } from './ChatMultiSessionController'
 import { useCurrentStore, useCurrentRawData } from './useCurrentDataBySession'
 import useCurrentSessionId from './useCurrentSessionId'
 import { AITaskStatus } from './grpcApi'
-import { type ChatListRenderType } from './aiRender'
+import { AIChatQSDataTypeEnum, type ChatListRenderType } from './aiRender'
 import { applyHydratedStageSettled } from './persist/contentPersistHelper'
 import { collectEvictableContentTokens } from './contentEvict'
 
@@ -228,6 +229,7 @@ const useLoadOlder = (chatType: ChatListRenderType, listRootRef: RefObject<HTMLD
     for (const row of rows) {
       applyHydratedStageSettled(row.content)
       rawData.contents.set(row.token, row.content)
+      if (row.content.type === AIChatQSDataTypeEnum.UI_QUESTION) syncQuestionPanel(store, row.content)
       // 按 kind bump renderNum：item→items，group→groups，task→tasks
       if (state.items[row.token]) {
         store.getState().incrementNodeVersion(row.token, 'item')
@@ -273,6 +275,7 @@ const useLoadOlder = (chatType: ChatListRenderType, listRootRef: RefObject<HTMLD
     const keep = computeKeepTokens(startIndex, endIndex)
     const currentReviewDetail = store.getState().currentReviewDetail
     if (currentReviewDetail.token) keep.add(currentReviewDetail.token)
+    store.getState().questionPanelTokens.forEach((token) => keep.add(token))
     const toEvict = collectEvictableContentTokens(
       rawData.contents,
       keep,

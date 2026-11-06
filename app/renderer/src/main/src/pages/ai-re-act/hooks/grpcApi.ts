@@ -48,6 +48,7 @@ export enum AISourceEnum {
 export type AISource = `${AISourceEnum}`
 
 export interface AIStartParams {
+  ClientUI?: string
   CoordinatorId?: string
   Sequence?: number
 
@@ -256,6 +257,7 @@ export enum AIInputEventHotPatchTypeEnum {
 
 /** AIInputEvent-SyncType 的可选值 */
 export enum AIInputEventSyncTypeEnum {
+  SYNC_TYPE_UI_INTERACTION = 'ui_interaction',
   /** 获取正在执行的任务树 */
   SYNC_TYPE_PLAN = 'plan',
   SYNC_TYPE_CONSUMPTION = 'consumption',
@@ -332,6 +334,7 @@ export const isReadonlySyncQuery = (syncType?: `${AIInputEventSyncTypeEnum}`): b
   !!syncType && readonlySyncQueryTypes.has(syncType)
 
 export interface AIInputEvent {
+  UserInteraction?: string
   IsStart?: boolean
   Params?: AIStartParams // 提问问题相关
 
