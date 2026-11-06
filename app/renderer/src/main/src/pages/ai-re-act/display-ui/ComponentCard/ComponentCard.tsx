@@ -13,6 +13,9 @@ import { InformationAlert, InformationHint, ViewTabs } from '../InformationCompo
 
 type ComponentItem = Extract<AIChatQSData, { type: AIChatQSDataTypeEnum.UI_COMPONENT }>
 type State = Record<string, { value: Record<string, unknown>; view?: Record<string, any> }>
+// Node ids may be constructor or __proto__. A plain object lookup would return the inherited value.
+const ownNodeState = (state: State, key: string): State[string] | undefined =>
+  Object.hasOwn(state, key) ? state[key] : undefined
 export interface NodeProps {
   instanceId: string
   node: UINode
@@ -166,7 +169,7 @@ export function ComponentCard({ item }: { item: ComponentItem }) {
         instanceId={`${document?.id}:${node.id}`}
         node={node}
         childNodes={childNodes}
-        state={state[key]}
+        state={ownNodeState(state, key)}
         change={(value) => save(key, value)}
         ready={item.data.final}
       >

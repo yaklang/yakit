@@ -252,6 +252,41 @@ describe('visualization validation and rendering', () => {
       ).document?.nodes,
     ).toHaveLength(0)
   })
+  it('renders charts whose node id is an inherited object key', () => {
+    for (const id of ['constructor', '__proto__']) {
+      const view = render(
+        <ComponentCard
+          item={item({
+            ...document(),
+            root: id,
+            nodes: [
+              {
+                id,
+                component: 'LineChart',
+                props: {
+                  title: '延迟对比',
+                  series: [
+                    {
+                      id: 'delay',
+                      label: '延迟',
+                      points: [
+                        { x: 0, y: 40 },
+                        { x: 10, y: 80 },
+                      ],
+                    },
+                  ],
+                },
+              },
+            ],
+          })}
+        />,
+      )
+      expect(view.container.querySelectorAll('circle[data-point]')).toHaveLength(2)
+      fireEvent.click(screen.getByRole('button', { name: '延迟' }))
+      expect(view.container.querySelectorAll('circle[data-point]')).toHaveLength(0)
+      view.unmount()
+    }
+  })
   it('preserves legend choices through reparsing and remounting without sending messages', () => {
     const initial = visualizationItem('BarChart', bars())
     const view = render(<ComponentCard item={initial} />)

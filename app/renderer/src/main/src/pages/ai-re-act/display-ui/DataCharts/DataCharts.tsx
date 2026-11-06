@@ -28,9 +28,9 @@ const ticks = (min: number, max: number) =>
 export function DataChart({ node, state, change }: NodeProps) {
   const { t } = useI18nNamespaces(['aiAgent'])
   const [detail, setDetail] = useState('')
-  const order = useRef<string[]>([...((state?.value.seriesOrder as string[]) || [])])
+  const order = useRef<string[]>([...((state?.value?.seriesOrder as string[]) || [])])
   for (const series of node.props.series) if (!order.current.includes(series.id)) order.current.push(series.id)
-  const hidden = (state?.value.hiddenSeriesIds as string[]) || []
+  const hidden = (state?.value?.hiddenSeriesIds as string[]) || []
   const visible = node.props.series.filter((series) => !hidden.includes(series.id))
   const color = (id: string) => colors[order.current.indexOf(id) % colors.length]
   const bar = node.component === 'BarChart'
