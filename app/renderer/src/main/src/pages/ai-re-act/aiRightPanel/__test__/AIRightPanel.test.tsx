@@ -3,7 +3,7 @@ import type * as OutlineIcons from '@yakit-libs/yakit-ui-icons/outline'
 import { createContext, useContext, useEffect } from 'react'
 import { render, screen, fireEvent, waitFor, act, cleanup, within } from '@testing-library/react'
 import { YakitRoute } from '@/enums/yakitRoute'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useStore as useUserStore } from '@/store'
 import { grpcExportAILogs, grpcQueryHTTPFlows } from '@/pages/ai-agent/grpc'
 import { failed, yakitNotify } from '@/utils/notification'
@@ -11,6 +11,7 @@ import type { ExportAILogsModal as ExportAILogsModalComponent } from '@/pages/ai
 import { apiRiskFieldGroup } from '@/pages/risks/YakitRiskTable/utils'
 import emiter from '@/utils/eventBus/eventBus'
 import type * as AIRightPanelModule from '../AIRightPanel'
+import { AITaskStatus } from '../../hooks/grpcApi'
 import { useStore } from 'zustand'
 
 vi.mock('@/pages/ai-agent/chatTemplate/historyTaskTree/useRunningAsyncTaskCount', () => {
@@ -50,8 +51,9 @@ import { createStore } from 'zustand/vanilla'
 import type { StoreApi } from 'zustand/vanilla'
 
 interface MockTaskStoreState {
-  currentChatStatus: { questionID: string }
+  currentChatStatus: { questionID: string; status?: string }
   execute: boolean
+  pendingReply: boolean
   taskDetailsUpdate: number
 }
 // 详情条目带 uuid：父级收到更新通知后比较 uuid 判断详情是否被流数据刷新（参照 AITaskExecutionDetails）
@@ -65,6 +67,7 @@ const mockAgentStore = createStore<{ activeChat?: { Id: number; SessionID: strin
 const mockTaskStore: StoreApi<MockTaskStoreState> = createStore<MockTaskStoreState>(() => ({
   currentChatStatus: { questionID: '' },
   execute: false,
+  pendingReply: false,
   taskDetailsUpdate: 0,
 }))
 const setMockQuestionID = (questionID: string) => {
@@ -72,7 +75,12 @@ const setMockQuestionID = (questionID: string) => {
   casualTaskState.questionID = questionID
 }
 const resetMockStore = () => {
-  mockTaskStore.setState({ currentChatStatus: { questionID: '' }, execute: false, taskDetailsUpdate: 0 })
+  mockTaskStore.setState({
+    currentChatStatus: { questionID: '' },
+    execute: false,
+    pendingReply: false,
+    taskDetailsUpdate: 0,
+  })
   mockTaskDetailsMap.clear()
   casualTaskState.questionID = ''
 }
@@ -253,6 +261,7 @@ vi.mock('i18next-resources-to-backend', () => {
 })
 
 import { compileReactModule } from '@/utils/__test__/helpers/compileReactModule'
+import { clearSessionSnapshotExecutionClocks } from '../../hooks/sessionSnapshotExecution'
 const { AIRightPanel } = await compileReactModule<typeof AIRightPanelModule>(import.meta.url, '../AIRightPanel.tsx')
 import { AIRightPanelPane } from '../AIRightPanelPane'
 import type { AIRightPanelProps } from '../type'
@@ -316,6 +325,11 @@ describe('AIRightPanel', () => {
     mockIsCommunityEdition.mockReturnValue(true)
     mockNetWorkApi.mockReset()
     mockNetWorkApi.mockResolvedValue(undefined)
+  })
+
+  afterEach(() => {
+    clearSessionSnapshotExecutionClocks()
+    vi.useRealTimers()
   })
 
   it.each([false, true])('异步任务数量变化时更新标签，零和未知数量隐藏（小屏：%s）', (small) => {
@@ -1200,8 +1214,7 @@ describe('AIRightPanel', () => {
     const result = await renderPanel(<AIRightPanel />)
     try {
       expect(screen.getByText('运行时间')).toBeInTheDocument()
-      // timeDiffWithMoment mock 返回差值 "6000s"；Step 与运行时间均展示时长
-      expect(screen.getAllByText('6000s').length).toBeGreaterThanOrEqual(1)
+      expect(screen.getAllByText('1h40m').length).toBeGreaterThanOrEqual(1)
       expect(screen.getByText('工具调用数')).toBeInTheDocument()
       expect(screen.getByTestId('main-model-tokens')).toBeInTheDocument()
       expect(screen.getByText('任务详情看板')).toBeInTheDocument()
@@ -1617,15 +1630,141 @@ describe('AIRightPanel', () => {
     })
     const result = await renderPanel(<AIRightPanel />)
     try {
-      // timeDiffWithMoment mock 返回差值 "6000s"；Step 与运行时间均展示时长
-      expect(screen.getAllByText('6000s').length).toBeGreaterThanOrEqual(1)
+      expect(screen.getAllByText('1h40m').length).toBeGreaterThanOrEqual(1)
       expect(screen.getByText('工具调用数').nextElementSibling).toHaveTextContent('4')
       expect(screen.getByTestId('main-model-tokens')).toBeInTheDocument()
 
       // 当前任务无执行数据时保留卡片，旧统计值替换为占位符。
       act(() => setMockQuestionID('task-without-data'))
       expectEmptyDataCards()
-      expect(screen.queryByText('6000s')).not.toBeInTheDocument()
+      expect(screen.queryByText('1h40m')).not.toBeInTheDocument()
+    } finally {
+      result.unmount()
+      resetMockStore()
+    }
+  })
+
+  it('运行中快照转为 completed 后运行时间停在后端秒数', async () => {
+    vi.useFakeTimers({ toFake: ['Date', 'setInterval', 'clearInterval'] })
+    setMockQuestionID('task-clock-end')
+    mockAgentStore.setState({ activeChat: { Id: 1, SessionID: 'session-clock' } })
+    mockTaskStore.setState((state) => ({
+      execute: true,
+      currentChatStatus: { ...state.currentChatStatus, status: AITaskStatus.inProgress },
+    }))
+    const taskDetails: MockTaskDetails = {
+      uuid: 'uuid-clock-1',
+      execution: { status: 'processing', execution_seconds: 10, started_at: 1000 },
+    }
+    mockTaskDetailsMap.set('task-clock-end', taskDetails)
+    const result = await renderPanel(<AIRightPanel />)
+    try {
+      expect(screen.getByText('运行时间').nextElementSibling).toHaveTextContent('10s')
+      act(() => {
+        vi.advanceTimersByTime(3000)
+      })
+      expect(screen.getByText('运行时间').nextElementSibling).toHaveTextContent('13s')
+
+      taskDetails.uuid = 'uuid-clock-2'
+      taskDetails.execution = { status: 'completed', execution_seconds: 10, started_at: 1000 }
+      act(() => mockTaskStore.setState((state) => ({ taskDetailsUpdate: state.taskDetailsUpdate + 1 })))
+      await waitFor(() => expect(screen.getByText('运行时间').nextElementSibling).toHaveTextContent('10s'), {
+        timeout: 5000,
+      })
+      act(() => {
+        vi.advanceTimersByTime(5000)
+      })
+      expect(screen.getByText('运行时间').nextElementSibling).toHaveTextContent('10s')
+    } finally {
+      result.unmount()
+      resetMockStore()
+      mockAgentStore.setState({ activeChat: undefined })
+    }
+  })
+
+  it('关闭会话后快照仍为 processing 时运行时间停止累加', async () => {
+    vi.useFakeTimers({ toFake: ['Date', 'setInterval', 'clearInterval'] })
+    setMockQuestionID('task-clock-close')
+    mockAgentStore.setState({ activeChat: { Id: 1, SessionID: 'session-clock-close' } })
+    mockTaskStore.setState((state) => ({
+      execute: true,
+      currentChatStatus: { ...state.currentChatStatus, status: AITaskStatus.inProgress },
+    }))
+    mockTaskDetailsMap.set('task-clock-close', {
+      uuid: 'uuid-clock-close',
+      execution: { status: 'processing', execution_seconds: 10, started_at: 1000 },
+    })
+    const result = await renderPanel(<AIRightPanel />)
+    try {
+      act(() => {
+        vi.advanceTimersByTime(3000)
+      })
+      expect(screen.getByText('运行时间').nextElementSibling).toHaveTextContent('13s')
+
+      act(() => mockTaskStore.setState({ execute: false }))
+      expect(screen.getByText('运行时间').nextElementSibling).toHaveTextContent('10s')
+      act(() => {
+        vi.advanceTimersByTime(4000)
+      })
+      expect(screen.getByText('运行时间').nextElementSibling).toHaveTextContent('10s')
+    } finally {
+      result.unmount()
+      resetMockStore()
+      mockAgentStore.setState({ activeChat: undefined })
+    }
+  })
+
+  it('问题结束后即使快照仍为 processing 运行时间停止累加', async () => {
+    vi.useFakeTimers({ toFake: ['Date', 'setInterval', 'clearInterval'] })
+    setMockQuestionID('task-clock-idle')
+    mockAgentStore.setState({ activeChat: { Id: 1, SessionID: 'session-clock-idle' } })
+    mockTaskStore.setState((state) => ({
+      execute: true,
+      currentChatStatus: { ...state.currentChatStatus, status: AITaskStatus.inProgress },
+    }))
+    mockTaskDetailsMap.set('task-clock-idle', {
+      uuid: 'uuid-clock-idle',
+      execution: { status: 'processing', execution_seconds: 10, started_at: 1000 },
+    })
+    const result = await renderPanel(<AIRightPanel />)
+    try {
+      act(() => {
+        vi.advanceTimersByTime(3000)
+      })
+      expect(screen.getByText('运行时间').nextElementSibling).toHaveTextContent('13s')
+
+      act(() =>
+        mockTaskStore.setState((state) => ({
+          currentChatStatus: { ...state.currentChatStatus, status: AITaskStatus.success },
+        })),
+      )
+      expect(screen.getByText('运行时间').nextElementSibling).toHaveTextContent('10s')
+      act(() => {
+        vi.advanceTimersByTime(4000)
+      })
+      expect(screen.getByText('运行时间').nextElementSibling).toHaveTextContent('10s')
+    } finally {
+      result.unmount()
+      resetMockStore()
+      mockAgentStore.setState({ activeChat: undefined })
+    }
+  })
+
+  it('运行时间优先使用 execution_seconds，不采用墙钟跨度', async () => {
+    setMockQuestionID('task-seconds')
+    mockTaskDetailsMap.set('task-seconds', {
+      uuid: 'uuid-seconds',
+      execution: {
+        execution_seconds: 4 * 3600,
+        execution_minutes: 240,
+        started_at: 1000,
+        ended_at: 1000 + 13 * 86400,
+      },
+    })
+    const result = await renderPanel(<AIRightPanel />)
+    try {
+      expect(screen.getByText('运行时间').nextElementSibling).toHaveTextContent('4h')
+      expect(screen.queryByText(`${13 * 86400}s`)).not.toBeInTheDocument()
     } finally {
       result.unmount()
       resetMockStore()
@@ -1688,7 +1827,7 @@ describe('AIRightPanel', () => {
       }
       act(() => mockTaskStore.setState((state) => ({ taskDetailsUpdate: state.taskDetailsUpdate + 1 })))
       // 防抖等待 3s，超时放宽到 5s 预留余量，避免慢环境下 flaky
-      await waitFor(() => expect(screen.getAllByText('8000s').length).toBeGreaterThanOrEqual(1), {
+      await waitFor(() => expect(screen.getAllByText('2h13m').length).toBeGreaterThanOrEqual(1), {
         timeout: 5000,
       })
       expect(screen.getByText('工具调用数').nextElementSibling).toHaveTextContent('7')

@@ -199,6 +199,20 @@ describe('aiOther task plan gate', () => {
       sendRequest,
     })
     req.store.getState().updateState({ currentPlan: { root_task_name: 'old-plan', task_tree: [] } })
+    req.store.getState().updateCurrentChatStatus({
+      questionID: 'q-prev',
+      coordinatorId: '',
+      status: AITaskStatus.inProgress,
+    })
+    const prevDetail = cloneDeep(DefaultPlanItemDetailsData)
+    prevDetail.execution = {
+      ...prevDetail.execution,
+      execution_seconds: 12,
+      started_at: 1000,
+      execution_rounds: 4,
+      status: 'completed',
+    }
+    req.rawData.taskDetailsMap.set('q-prev', prevDetail)
 
     aiOtherDataHandlers.react_task_dequeue(req)
 
@@ -213,7 +227,10 @@ describe('aiOther task plan gate', () => {
     expect(req.store.getState().currentPlan).toEqual(DefaultCurrentExecTaskTree)
     expect(req.store.getState().chatTodoListUpdate).toBe(1)
     expect(req.store.getState().taskDetailsUpdate).toBe(1)
-    expect(req.rawData.taskDetailsMap.has('q-normal')).toBe(true)
+    expect(req.rawData.taskDetailsMap.get('q-normal')?.execution).toMatchObject({
+      execution_seconds: 12,
+      execution_rounds: 4,
+    })
     expect(req.rawData.contents.get('q-normal')?.type).toBe(AIChatQSDataTypeEnum.QUESTION)
     expect(sendRequest).toHaveBeenCalledWith({
       IsSyncMessage: true,

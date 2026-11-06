@@ -8,11 +8,15 @@ import TimelineCard from '@/pages/ai-agent/chatTemplate/TimelineCard/TimelineCar
 import { useCreation, useInViewport, useMemoizedFn } from 'ahooks'
 import { useStore } from 'zustand'
 import { useCurrentStore } from '../hooks/useCurrentDataBySession'
+import useCurrentSessionId from '../hooks/useCurrentSessionId'
 import useCurrentTaskExecution from '../hooks/useCurrentTaskData/useCurrentTaskExecution'
 import { useWelcomePanelStats } from '@/pages/ai-agent/aiChatWelcome/hooks/useWelcomePanelStats'
 import classNames from 'classnames'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { timeDiffWithMoment } from '@/utils/timeUtil'
+import {
+  isSessionSnapshotClockActive,
+  useSessionSnapshotExecutionDuration,
+} from '../hooks/useSessionSnapshotExecutionDuration'
 import { AISourceEnum, AISkillLoadStateEnum } from '../hooks/grpcApi'
 import type { AIAgentGrpcApi } from '../hooks/grpcApi'
 import type { AISkillLoadState } from './AISkillLoadingPane/type'
@@ -151,6 +155,8 @@ const DataCards: React.FC<{ executionData?: AIAgentGrpcApi.SessionSnapshot['exec
     const isLogin = !!userInfo.isLogin
     const store = useCurrentStore()
     const execute = useStore(store, (state) => state.execute)
+    const pendingReply = useStore(store, (state) => state.pendingReply)
+    const chatStatus = useStore(store, (state) => state.currentChatStatus?.status)
     const [apiKeys, setApiKeys] = useState<API.ApiKeyDetail>()
     // 已展示过的额度：刷新为空/失败时保留，避免 CeUserTokenQuota 卸载闪烁
     const apiKeysRef = useRef<API.ApiKeyDetail>()
@@ -234,13 +240,17 @@ const DataCards: React.FC<{ executionData?: AIAgentGrpcApi.SessionSnapshot['exec
       emiter.emit('onOpenUsageStatistics', '')
     })
 
-    const executionDuration = useCreation(() => {
-      const startedAt = executionData?.started_at || 0
-      const endedAt = executionData?.ended_at || 0
-      if (!startedAt) return PLACEHOLDER
-      if (startedAt && !endedAt) return t('AIRightPanel.running')
-      return timeDiffWithMoment(startedAt, endedAt)
-    }, [executionData?.started_at, executionData?.ended_at])
+    const sessionId = useCurrentSessionId()
+    const questionID = useStore(store, (state) => state.currentChatStatus.questionID)
+    const executionDuration = useSessionSnapshotExecutionDuration(
+      executionData,
+      {
+        empty: PLACEHOLDER,
+        running: t('AIRightPanel.running'),
+      },
+      `${sessionId}:${questionID}:${executionData?.started_at ?? ''}:${executionData?.execution_seconds ?? ''}`,
+      isSessionSnapshotClockActive({ execute, pendingReply, chatStatus }),
+    )
 
     return (
       <div className={styles['data-cards']}>

@@ -902,6 +902,9 @@ export declare namespace AIAgentGrpcApi {
       tool_call_success: number
       tool_call_failed: number
       tool_call_total: number
+      /** 区间合并后的有效执行秒数。展示优先用它；旧快照可能缺这个字段 */
+      execution_seconds?: number
+      /** 由 execution_seconds / 60 派生，只适合分钟级模糊展示 */
       execution_minutes: number
       http_flow_count: number
       risk_count: number

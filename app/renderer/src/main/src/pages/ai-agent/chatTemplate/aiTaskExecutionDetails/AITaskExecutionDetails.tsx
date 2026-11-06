@@ -36,6 +36,7 @@ import { AISkippedNodeIcon } from '@yakit-libs/yakit-ui-icons/oldicon/AISkippedN
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { useCreation, useMemoizedFn, useSelections } from 'ahooks'
+import { useStore } from 'zustand'
 import type { PlanItemDetailsData, TodoListCardData } from '@/pages/ai-re-act/hooks/aiRender'
 import cloneDeep from 'lodash/cloneDeep'
 import isEqual from 'lodash/isEqual'
@@ -67,13 +68,17 @@ import { grpcGetAllMCPServers } from '../../aiMCP/utils'
 import type { GetAllMCPServersRequest, MCPServerTool } from '../../type/aiMCP'
 import { HorizontalScrollCardItemInfoMultiple } from '@/pages/plugins/operator/horizontalScrollCard/HorizontalScrollCard'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
-import { timeDiffWithMoment } from '@/utils/timeUtil'
+import {
+  isSessionSnapshotClockActive,
+  useSessionSnapshotExecutionDuration,
+} from '@/pages/ai-re-act/hooks/useSessionSnapshotExecutionDuration'
 import { AITaskActionItem, AITaskExecutionList } from './aiTaskExecutionList/AITaskExecutionList'
 import { AITaskBoard } from './aiTaskBoard/AITaskBoard'
 import { AITaskGantt } from './aiTaskGantt/AITaskGantt'
 import { AITaskStatisticsStatus } from './aiTaskStatisticsStatus/AITaskStatisticsStatus'
 import { AIToDoListDetail } from '@/pages/ai-re-act/aiReActChat/aiToDoList/AIToDoListDetail'
 import useCurrentTaskData from '@/pages/ai-re-act/hooks/useCurrentTaskData/useCurrentTaskData'
+import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
 import useAIAgentDispatcher from '../../useContext/useDispatcher'
 import { randomString } from '@/utils/randomUtil'
@@ -287,19 +292,20 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
     planItemDetailsData?.execution?.tool_call_total,
     i18nRefresh,
   ])
-  const executionMinutes = useCreation(() => {
-    const startedAt = planItemDetailsData?.execution?.started_at || 0
-    const endedAt = planItemDetailsData?.execution?.ended_at || 0
-    if (!startedAt) return t('AITaskExecutionDetails.noData')
-    if (startedAt && !endedAt) return t('AITaskExecutionDetails.executing')
-
-    return timeDiffWithMoment(startedAt, endedAt)
-  }, [
-    planItemDetailsData?.execution?.status,
-    planItemDetailsData?.execution?.started_at,
-    planItemDetailsData?.execution?.ended_at,
-    i18nRefresh,
-  ])
+  const sessionId = useCurrentSessionId()
+  const store = useCurrentStore()
+  const execute = useStore(store, (state) => state.execute)
+  const pendingReply = useStore(store, (state) => state.pendingReply)
+  const chatStatus = useStore(store, (state) => state.currentChatStatus?.status)
+  const executionDuration = useSessionSnapshotExecutionDuration(
+    planItemDetailsData?.execution,
+    {
+      empty: t('AITaskExecutionDetails.noData'),
+      running: t('AITaskExecutionDetails.executing'),
+    },
+    `${sessionId}:${selectedTaskId}:${planItemDetailsData?.execution?.started_at ?? ''}:${planItemDetailsData?.execution?.execution_seconds ?? ''}`,
+    isSessionSnapshotClockActive({ execute, pendingReply, chatStatus }),
+  )
   const httpFlowCount = useCreation(() => {
     if (!planItemDetailsData?.execution) return t('AITaskExecutionDetails.noData')
     return `${planItemDetailsData?.execution.http_flow_count ?? `0`}`
@@ -367,7 +373,7 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
           <div className={styles['summary-metric-list']}>
             <div className={styles['summary-metric-row']}>
               <span className={styles['summary-metric-label']}>{t('AITaskExecutionDetails.executionDuration')}</span>
-              <span className={styles['summary-metric-value']}>{executionMinutes}</span>
+              <span className={styles['summary-metric-value']}>{executionDuration}</span>
             </div>
             <div className={styles['summary-metric-row']}>
               <span className={styles['summary-metric-label']}>{t('AITaskExecutionDetails.httpFlowCount')}</span>
