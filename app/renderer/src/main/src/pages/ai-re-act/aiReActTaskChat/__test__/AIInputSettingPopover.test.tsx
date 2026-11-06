@@ -705,6 +705,38 @@ describe('AIInputSettingPopover', () => {
     expect(mocks.onSend).not.toHaveBeenCalled()
   })
 
+  it('追问热更新被拒绝时恢复开关且不保存会话参数', () => {
+    mocks.setting.DisallowRequireForUserPrompt = false
+    mocks.activeChat = { SessionID: 'session-id', StartParams: { DisallowRequireForUserPrompt: false } }
+    mocks.setSetting.mockImplementation((update) => {
+      mocks.setting = update(mocks.setting)
+    })
+    sessionStore.setState({ execute: true })
+    mocks.onSend.mockReturnValue(false)
+    render(<AIInputSettingPopover visible />)
+    const control = screen.getByRole('switch', { name: 'AIReActTaskChatContent.allowUserPrompt' })
+    expect(control).toBeChecked()
+    fireEvent.click(control)
+    expect(mocks.onSend).toHaveBeenCalledTimes(1)
+    expect(mocks.setSetting).not.toHaveBeenCalled()
+    expect(emiter.emit).not.toHaveBeenCalled()
+    expect(mocks.setting.DisallowRequireForUserPrompt).toBe(false)
+    expect(control).toBeChecked()
+    fireEvent.click(control)
+    expect(mocks.onSend).toHaveBeenCalledTimes(2)
+    expect(mocks.onSend).toHaveBeenLastCalledWith({
+      token: 'session-id',
+      type: 'casual',
+      params: {
+        IsConfigHotpatch: true,
+        HotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_AllowRequireForUserInteract,
+        Params: { DisallowRequireForUserPrompt: true },
+      },
+    })
+    expect(mocks.setSetting).not.toHaveBeenCalled()
+    expect(control).toBeChecked()
+  })
+
   it('已连接会话启用与禁用都发送热更新，并同步恢复时使用的启动参数', () => {
     mocks.setting.DisallowRequireForUserPrompt = true
     mocks.activeChat = { SessionID: 'session-id', StartParams: { ReviewPolicy: 'manual' } }

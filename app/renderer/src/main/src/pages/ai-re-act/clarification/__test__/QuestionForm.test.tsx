@@ -4,7 +4,7 @@ import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import { QuestionCard } from '../QuestionCard/QuestionCard'
 import { QuestionSummary } from '../QuestionSummary/QuestionSummary'
 import { readQuestionForm } from '../formValidation'
-import { stringListIssue } from '../QuestionFormFields/QuestionFormFields'
+import { stringListIssue, sanitizeFormValues } from '../QuestionFormFields/QuestionFormFields'
 import { matchesSchema } from '../../interactive-ui/validate'
 import { AIChatQSDataTypeEnum } from '../../hooks/aiRender'
 const send = vi.hoisted(() => vi.fn().mockResolvedValue(undefined))
@@ -151,6 +151,32 @@ describe('forms use the clarification channel', () => {
       mode: 2,
       focus: ['数据流'],
     })
+  })
+  it('omits empty optional numbers and rejects boolean values outside enum', async () => {
+    const data = item()
+    const form = data.data.request.form!
+    Object.assign(form.schema.properties!, {
+      retries: { type: 'integer', title: '重试次数', minimum: 0, maximum: 5 },
+      confirm: { type: 'boolean', title: '确认', enum: [true] },
+    })
+    expect(sanitizeFormValues(form, { name: '小明', retries: null, confirm: false })).toEqual({ name: '小明' })
+    expect(matchesSchema(form.schema, { name: '小明' })).toBe(true)
+    expect(matchesSchema(form.schema, { name: '小明', retries: null })).toBe(false)
+    expect(matchesSchema(form.schema, { name: '小明', confirm: false })).toBe(false)
+    form.schema.required = ['name', 'confirm']
+    expect(sanitizeFormValues(form, { name: '小明', confirm: false })).toEqual({ name: '小明', confirm: false })
+    render(<QuestionCard item={data} />)
+    fireEvent.change(screen.getByLabelText(/姓名/), { target: { value: '小明' } })
+    fireEvent.change(screen.getByRole('spinbutton'), { target: { value: '' } })
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: '提交' }))
+    })
+    expect(answers()).toHaveLength(0)
+    fireEvent.click(screen.getByRole('switch', { name: '确认' }))
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: '提交' }))
+    })
+    expect(JSON.parse(answers()[0][1].UserInteraction).values).toEqual({ name: '小明', confirm: true })
   })
   const sectionsForm = () => {
     const data = item()

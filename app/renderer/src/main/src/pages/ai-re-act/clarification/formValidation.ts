@@ -35,3 +35,16 @@ export function readQuestionForm(value: QuestionForm): QuestionForm | undefined 
   }
   return form
 }
+
+export function formFieldErrors(schema: RJSFSchema, values: unknown) {
+  try {
+    const result = validator.rawValidation(schema, values)
+    if (result.validationError) return [{ name: [], errors: [String(result.validationError)] }]
+    return (result.errors || []).map((error) => {
+      const path = String(error.instancePath || (error as { property?: string }).property || '').replace(/^[./]/, '')
+      return { name: path.split(/[./[]/).filter(Boolean), errors: [error.message || String(error)] }
+    })
+  } catch (error) {
+    return [{ name: [], errors: [String(error)] }]
+  }
+}

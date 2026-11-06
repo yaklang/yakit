@@ -16,6 +16,8 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { PlusOutlined, TrashOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import type { QuestionForm } from '../../interactive-ui/types'
+import { matchesSchema } from '../../interactive-ui/validate'
+import { formFieldErrors } from '../formValidation'
 import styles from './QuestionFormFields.module.scss'
 
 function fieldId(instanceId: string, key: string) {
@@ -98,7 +100,30 @@ function initialValues(form: QuestionForm, values?: Record<string, unknown>) {
     else if (form.initial && Object.hasOwn(form.initial, key)) next[key] = form.initial[key]
     else if (schema.default !== undefined) next[key] = schema.default
     else if (schema.type === 'array') next[key] = []
-    else if (schema.type === 'boolean') next[key] = false
+    else if (schema.type === 'boolean' && matchesSchema(schema, false)) next[key] = false
+  }
+  return next
+}
+
+function emptyNumber(schema: RJSFSchema, value: unknown) {
+  if (schema.type !== 'number' && schema.type !== 'integer') return false
+  return value === '' || value === null || value === undefined || (typeof value === 'number' && Number.isNaN(value))
+}
+
+export function sanitizeFormValues(form: QuestionForm, raw: Record<string, unknown>) {
+  const properties = (form.schema.properties || {}) as Record<string, RJSFSchema>
+  const required = new Set((form.schema.required || []) as string[])
+  const next: Record<string, unknown> = {}
+  for (const [key, schema] of Object.entries(properties)) {
+    let value = raw[key]
+    if (isStringList(schema)) value = filledStrings(value)
+    if (emptyNumber(schema, value)) {
+      if (required.has(key)) next[key] = value
+      continue
+    }
+    if (value === undefined) continue
+    if (!required.has(key) && !matchesSchema(schema, value)) continue
+    next[key] = value
   }
   return next
 }
@@ -307,15 +332,9 @@ function FieldItem({
   }
   if (schema.type === 'boolean') {
     return (
-      <label className={styles.switchRow} htmlFor={id}>
-        <span className={styles.switchCopy}>
-          <span className={styles.switchTitle}>{title}</span>
-          {schema.description ? <span className={styles.switchDesc}>{schema.description}</span> : null}
-        </span>
-        <Form.Item name={fieldKey} valuePropName="checked" noStyle>
-          <FieldControl id={id} schema={schema} title={title} disabled={disabled} />
-        </Form.Item>
-      </label>
+      <Form.Item name={fieldKey} valuePropName="checked" colon={false} required={false} rules={rules}>
+        <BooleanRow id={id} title={title} description={schema.description} disabled={disabled} />
+      </Form.Item>
     )
   }
   return (
@@ -341,6 +360,30 @@ function FieldItem({
   )
 }
 
+function BooleanRow({
+  id,
+  title,
+  description,
+  disabled,
+  ...rest
+}: {
+  id: string
+  title: string
+  description?: string
+  disabled: boolean
+  [key: string]: unknown
+}) {
+  return (
+    <label className={styles.switchRow} htmlFor={id}>
+      <span className={styles.switchCopy}>
+        <span className={styles.switchTitle}>{title}</span>
+        {description ? <span className={styles.switchDesc}>{description}</span> : null}
+      </span>
+      <YakitSwitch id={id} disabled={disabled} aria-label={title} {...(rest as object)} />
+    </label>
+  )
+}
+
 export function QuestionFormFields({
   form,
   values,
@@ -356,6 +399,7 @@ export function QuestionFormFields({
   onChange: (values: Record<string, unknown>) => void
   onSubmit: (values: Record<string, unknown>) => void
 }) {
+  const [antdForm] = Form.useForm()
   const rows = useMemo(() => groupFields(form), [form])
   const requiredKeys = (form.schema.required || []) as string[]
   const properties = (form.schema.properties || {}) as Record<string, RJSFSchema>
@@ -367,6 +411,7 @@ export function QuestionFormFields({
       </div>
       <ConfigProvider locale={antdLocales[i18n.language] || zhCN}>
         <Form
+          form={antdForm}
           layout="vertical"
           colon={false}
           disabled={disabled}
@@ -376,9 +421,11 @@ export function QuestionFormFields({
           }}
           onFinish={(all) => {
             if (disabled) return
-            const next = { ...all }
-            for (const [key, schema] of Object.entries(properties)) {
-              if (isStringList(schema)) next[key] = filledStrings(next[key])
+            const next = sanitizeFormValues(form, all)
+            const errors = formFieldErrors(form.schema, next)
+            if (errors.length) {
+              antdForm.setFields(errors)
+              return
             }
             onSubmit(next)
           }}

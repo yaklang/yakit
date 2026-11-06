@@ -201,8 +201,10 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
   const onValuesChange = useMemoizedFn((changedValues: AIInputSettingFormProps) => {
     if (has(changedValues, 'AllowUserPrompt')) {
       const disallow = !changedValues.AllowUserPrompt
-      if (store.getState().execute && sessionId) {
-        onSend({
+      if (
+        store.getState().execute &&
+        sessionId &&
+        !onSend({
           token: sessionId,
           type: 'casual',
           params: {
@@ -211,19 +213,22 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
             Params: { DisallowRequireForUserPrompt: disallow },
           },
         })
-      }
-      setSetting?.((v) => ({ ...v, DisallowRequireForUserPrompt: disallow }))
-      if (activeChat?.SessionID) {
-        emiter.emit(
-          'sessionData',
-          JSON.stringify({
-            type: 'updateSession',
-            sessionId: activeChat.SessionID,
-            updates: {
-              StartParams: { ...(activeChat.StartParams || {}), DisallowRequireForUserPrompt: disallow },
-            },
-          }),
-        )
+      ) {
+        form.setFieldValue('AllowUserPrompt', allowUserPrompt)
+      } else {
+        setSetting?.((v) => ({ ...v, DisallowRequireForUserPrompt: disallow }))
+        if (activeChat?.SessionID) {
+          emiter.emit(
+            'sessionData',
+            JSON.stringify({
+              type: 'updateSession',
+              sessionId: activeChat.SessionID,
+              updates: {
+                StartParams: { ...(activeChat.StartParams || {}), DisallowRequireForUserPrompt: disallow },
+              },
+            }),
+          )
+        }
       }
     }
     const runtimeContextSizeLimit = changedValues.RuntimeContextSizeLimit
