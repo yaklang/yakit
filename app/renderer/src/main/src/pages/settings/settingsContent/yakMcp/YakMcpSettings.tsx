@@ -1,37 +1,30 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Tooltip } from 'antd'
-import { useDebounceFn, useMemoizedFn, useUpdateEffect } from 'ahooks'
+import { useMemoizedFn, useUpdateEffect } from 'ahooks'
 import classNames from 'classnames'
-import { cloneDeep } from 'lodash'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
+import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import { YakitSegmented } from '@/components/yakitUI/YakitSegmented/YakitSegmented'
 import { CopyComponents, YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
-import type { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
-import {
-  FilterOutlined,
-  QuestionMarkCircleOutlined,
-  RefreshOutlined,
-  SearchOutlined,
-} from '@yakit-libs/yakit-ui-icons/outline'
+import type { ColumnsTypeProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
+import { QuestionMarkCircleOutlined, RefreshOutlined, SearchOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { SystemInfo } from '@/constants/hardware'
-import { RemoteAIAgentGV } from '@/enums/aiAgent'
 import { useYakMcpStream } from '@/store/yakMcpStream'
 import {
   defaultMcpStartConfig,
   localMcpDefalutUrl,
-  parseMcpStartConfig,
   type YakMCPStartConfig,
 } from '@/components/layout/hooks/useMcp/useMcp'
-import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { AIMCPToolDetailPopover } from './AIMCPToolDetailPopover'
+import { useYakMcpToolMutation, yakMcpToolMutation } from './yakMcpToolMutation'
+import { useYakMcpStartConfigSave, yakMcpStartConfig } from './yakMcpStartConfig'
 import {
   type GetMCPToolListRequest,
-  type GetMCPToolListResponse,
   isMCPTierActive,
   type MCPTierVisibility,
   type MCPToolConfig,
@@ -47,6 +40,8 @@ import { YakitRoute } from '@/enums/yakitRoute'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { SettingsSections } from '../../constants'
 import styles from './YakMcpSettings.module.scss'
+
+const MAX_TOOL_PAGES = 100
 
 const TRANSPORT_OPTIONS = [
   { value: 'sse', label: 'SSE' },
@@ -95,19 +90,36 @@ export const YakMcpSettings: React.FC = () => {
       .catch(() => setEnginePath(''))
   }, [])
 
-  // 缓存加载完成前阻止 effect 以默认 state 覆盖用户配置
   const configLoadedRef = useRef(false)
+  const configRequestIdRef = useRef(0)
+  const [configLoaded, setConfigLoaded] = useState(false)
+  const [configLoadFailed, setConfigLoadFailed] = useState(false)
+  const { saving: configSaving, saveFailed: configSaveFailed } = useYakMcpStartConfigSave()
 
-  useEffect(() => {
-    getRemoteValue(RemoteAIAgentGV.YakMCPStartConfig).then((raw) => {
-      const config = parseMcpStartConfig(raw)
-      const merged = config ? { ...defaultMcpStartConfig, ...config } : defaultMcpStartConfig
+  const loadMcpStartConfig = useMemoizedFn(async () => {
+    const requestId = ++configRequestIdRef.current
+    setConfigLoadFailed(false)
+    try {
+      const config = await yakMcpStartConfig.load()
+      if (requestId !== configRequestIdRef.current) return
+      const merged = { ...defaultMcpStartConfig, ...config }
       setEnableLegacyMcpTools(merged.enableLegacyMcpTools)
       setEnableAIToolFramework(merged.enableAIToolFramework)
       setEnableBridgeExternalMcp(merged.enableBridgeExternalMcp)
       setAutoStartMcp(merged.autoStart)
+      tierVisibilityRef.current = merged
       configLoadedRef.current = true
-    })
+      setConfigLoaded(true)
+    } catch {
+      if (requestId === configRequestIdRef.current) setConfigLoadFailed(true)
+    }
+  })
+
+  useEffect(() => {
+    loadMcpStartConfig()
+    return () => {
+      configRequestIdRef.current++
+    }
   }, [])
 
   const sseJson = useMemo(
@@ -144,7 +156,6 @@ export const YakMcpSettings: React.FC = () => {
   const [enableAIToolFramework, setEnableAIToolFramework] = useState(true)
   const [enableBridgeExternalMcp, setEnableBridgeExternalMcp] = useState(false)
   const [autoStartMcp, setAutoStartMcp] = useState(false)
-  const pendingMcpStartConfigRef = useRef<YakMCPStartConfig | null>(null)
   const tierVisibilityRef = useRef<MCPTierVisibility>({
     enableLegacyMcpTools,
     enableAIToolFramework,
@@ -165,40 +176,56 @@ export const YakMcpSettings: React.FC = () => {
     [mcpStreamInfo.mcpUrl, enableMcp, hasActiveToolTier],
   )
 
-  // 当主启用/自启动开关被禁用时，强制关闭自启动并同步缓存
-  useEffect(() => {
-    if (!canToggleMcp && autoStartMcp) {
-      setAutoStartMcp(false)
-      saveMcpStartConfig({ autoStart: false })
-    }
-  }, [canToggleMcp])
-
-  // 启动地址变更时同步到缓存（远程模式不缓存地址）
-  useUpdateEffect(() => {
-    saveMcpStartConfig()
-  }, [mcpStreamInfo.mcpUrl])
-
   const [isRefresh, setIsRefresh] = useState(false)
-  const [forceSyncLoading, setForceSyncLoading] = useState(false)
-  const isInitRequestRef = useRef(true)
-  const [query, setQuery] = useState<GetMCPToolListRequest>({
-    Keyword: '',
-    Source: ['builtin', 'aitool'],
-    ServerName: '',
-    OnlyEnabled: false,
-    Pagination: {
-      ...genDefaultPagination(20),
-      OrderBy: 'created_at',
-    },
-  })
+  const [keyword, setKeyword] = useState('')
+  const [sourceFilter, setSourceFilter] = useState<MCPToolSource | ''>('')
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [tools, setTools] = useState<MCPToolConfig[]>([])
   const [loading, setLoading] = useState(false)
-  const [response, setResponse] = useState<GetMCPToolListResponse>({
-    Tools: [],
-    Pagination: {
-      ...genDefaultPagination(20),
-      OrderBy: 'created_at',
-    },
-    Total: 0,
+  const [loadFailed, setLoadFailed] = useState(false)
+  const [forceSyncLoading, setForceSyncLoading] = useState(false)
+  const forceSyncNextRef = useRef(false)
+  const requestIdRef = useRef(0)
+  const { updatingTool, batchProgress, result: mutationResult } = useYakMcpToolMutation()
+  const busy = !configLoaded || loading || forceSyncLoading || !!updatingTool || !!batchProgress
+
+  useUpdateEffect(() => {
+    if (!mutationResult?.toolNames.size) return
+    setTools((prev) =>
+      prev.map((tool) =>
+        mutationResult.toolNames.has(tool.ToolName) ? { ...tool, Enable: mutationResult.enable } : tool,
+      ),
+    )
+    setIsRefresh((prev) => !prev)
+  }, [mutationResult])
+
+  // Search the full catalog, including the bilingual descriptions returned as live metadata.
+  // Filtering only an API page would miss Chinese keywords and limit batch actions to loaded rows.
+  const filteredTools = useMemo(() => {
+    const search = keyword.trim().toLowerCase()
+    return tools.filter((tool) => {
+      if (sourceFilter && tool.Source !== sourceFilter) return false
+      if (statusFilter === 'enabled' && !tool.Enable) return false
+      if (statusFilter === 'disabled' && tool.Enable) return false
+      return (
+        !search ||
+        [tool.ToolName, tool.Description, tool.DescriptionI18n?.Zh, tool.DescriptionI18n?.En, tool.ServerName].some(
+          (text) => text?.toLowerCase().includes(search),
+        )
+      )
+    })
+  }, [tools, keyword, sourceFilter, statusFilter])
+  const enabledCount = filteredTools.filter((tool) => tool.Enable).length
+  const hasFilters = !!keyword.trim() || !!sourceFilter || statusFilter !== 'all'
+
+  useUpdateEffect(() => {
+    setIsRefresh((prev) => !prev)
+  }, [keyword, sourceFilter, statusFilter])
+
+  const clearFilters = useMemoizedFn(() => {
+    setKeyword('')
+    setSourceFilter('')
+    setStatusFilter('all')
   })
 
   const getSourceLabel = useMemoizedFn((source: MCPToolSource) => {
@@ -218,17 +245,17 @@ export const YakMcpSettings: React.FC = () => {
     resolveMCPToolDescriptionLabel(record, getLabelByParams),
   )
 
+  const sourceFilterOptions = useMemo(
+    () => [
+      { value: '', label: t('SettingsPage.yakMcp.allSources') },
+      ...(enableLegacyMcpTools ? [{ value: 'builtin', label: getSourceLabel('builtin') }] : []),
+      ...(enableAIToolFramework ? [{ value: 'aitool', label: getSourceLabel('aitool') }] : []),
+      ...(enableBridgeExternalMcp ? [{ value: 'bridge', label: getSourceLabel('bridge') }] : []),
+    ],
+    [enableLegacyMcpTools, enableAIToolFramework, enableBridgeExternalMcp, i18nRefresh],
+  )
+
   const columns: ColumnsTypeProps[] = useMemo(() => {
-    const sourceFilterOptions: { value: MCPToolSource; label: string }[] = []
-    if (enableLegacyMcpTools) {
-      sourceFilterOptions.push({ value: 'builtin', label: t('ConfigSystemMcp.source_legacy') })
-    }
-    if (enableAIToolFramework) {
-      sourceFilterOptions.push({ value: 'aitool', label: t('ConfigSystemMcp.source_aitool') })
-    }
-    if (enableBridgeExternalMcp) {
-      sourceFilterOptions.push({ value: 'bridge', label: t('ConfigSystemMcp.source_bridge') })
-    }
     return [
       {
         title: t('ConfigSystemMcp.tool_source'),
@@ -239,13 +266,6 @@ export const YakMcpSettings: React.FC = () => {
             {getSourceLabel(text)}
           </YakitTag>
         ),
-        filterProps: {
-          filterKey: 'Source',
-          filtersType: 'select',
-          filterMultiple: true,
-          filters: sourceFilterOptions,
-          filterIcon: <FilterOutlined className={styles['filter-icon']} color="currentColor" />,
-        },
       },
       {
         title: t('ConfigSystemMcp.tool_name'),
@@ -254,7 +274,9 @@ export const YakMcpSettings: React.FC = () => {
         ellipsis: true,
         render: (text, record) => (
           <div className={styles['tool-name']}>
-            <span>{text}</span>
+            <Tooltip title={text}>
+              <span>{text}</span>
+            </Tooltip>
             <YakitPopover
               placement="right"
               content={<AIMCPToolDetailPopover item={record} />}
@@ -264,11 +286,6 @@ export const YakMcpSettings: React.FC = () => {
             </YakitPopover>
           </div>
         ),
-        filterProps: {
-          filterKey: 'Keyword',
-          filtersType: 'input',
-          filterIcon: <SearchOutlined className={styles['filter-icon']} color="currentColor" />,
-        },
       },
       {
         title: t('ConfigSystemMcp.tool_description'),
@@ -288,78 +305,99 @@ export const YakMcpSettings: React.FC = () => {
         title: t('SettingsPage.yakMcp.enableColumn'),
         dataKey: 'Enable',
         width: 80,
-        render: (text, record) => <YakitSwitch checked={text} onChange={(v) => handleToggle(v, record)} />,
+        fixed: 'right',
+        render: (text, record) => (
+          <YakitSwitch
+            checked={text}
+            disabled={busy || loadFailed}
+            loading={updatingTool === record.ToolName}
+            aria-label={record.ToolName}
+            onChange={(v) => handleToggle(v, record)}
+          />
+        ),
       },
     ]
-  }, [enableLegacyMcpTools, enableAIToolFramework, enableBridgeExternalMcp, resolveToolDescription, i18nRefresh])
+  }, [busy, loadFailed, updatingTool, resolveToolDescription, i18nRefresh])
 
-  const queyChangeUpdateData = useDebounceFn(
-    () => {
-      if (!isInitRequestRef.current) getToolList(1)
-    },
-    { wait: 300 },
-  ).run
-
-  useEffect(() => {
-    if (!enableMcp) getToolList(1)
-  }, [enableMcp])
-
-  useUpdateEffect(() => {
-    queyChangeUpdateData()
-  }, [query])
-
-  const getToolList = useMemoizedFn(async (page: number) => {
-    if (!hasActiveToolTier) {
-      setResponse({
-        Tools: [],
-        Pagination: { ...genDefaultPagination(20), OrderBy: 'created_at' },
-        Total: 0,
-      })
-      return
-    }
-    const params: GetMCPToolListRequest = {
-      ...cloneDeep(query),
-      Pagination: { ...query.Pagination, Page: page },
-    }
-    params.Source = params.Source + ''
-    const isInit = page === 1
-    isInitRequestRef.current = false
-    if (isInit) {
-      if (query.ForceSync) setForceSyncLoading(true)
-      else setLoading(true)
-    }
+  const getToolList = useMemoizedFn(async (forceSync = false) => {
+    if (!configLoadedRef.current || !isMCPTierActive(tierVisibilityRef.current)) return
+    const requestId = ++requestIdRef.current
+    setLoading(true)
+    setForceSyncLoading(forceSync)
+    setLoadFailed(false)
     try {
-      const res = await grpcGetMCPToolList(params)
-      const tools = res.Tools || []
-      setResponse((prev) => ({
-        Tools: isInit ? tools : prev.Tools.concat(tools),
-        Pagination: res.Pagination,
-        Total: res.Total,
-      }))
-      if (isInit) setIsRefresh((prev) => !prev)
+      // A reopened panel must read the final catalog, not a partially applied batch.
+      await yakMcpToolMutation.waitUntilIdle()
+      if (requestId !== requestIdRef.current) return
+      const catalog = new Map<string, MCPToolConfig>()
+      for (let page = 1; page <= MAX_TOOL_PAGES; page++) {
+        const params: GetMCPToolListRequest = {
+          Keyword: '',
+          Source: resolveMCPToolListSourceFilter(tierVisibilityRef.current).toString(),
+          ServerName: '',
+          OnlyEnabled: false,
+          Pagination: { ...genDefaultPagination(200), Page: page, OrderBy: 'id', Order: 'asc' },
+          ForceSync: forceSync && page === 1,
+        }
+        const res = await grpcGetMCPToolList(params, true)
+        if (requestId !== requestIdRef.current) return
+        const total = Number(res.Total)
+        if (!Number.isSafeInteger(total) || total < 0) throw new Error('Invalid MCP tool count')
+        const pageTools = res.Tools || []
+        const previousSize = catalog.size
+        pageTools.forEach((tool) => catalog.set(tool.ToolName, tool))
+        if (catalog.size >= total) break
+        // Incomplete or non-progressing catalogs must never become an actionable batch scope.
+        if (catalog.size === previousSize || page === MAX_TOOL_PAGES) throw new Error('Incomplete MCP tool catalog')
+      }
+      setTools([...catalog.values()])
+      setIsRefresh((prev) => !prev)
+    } catch {
+      if (requestId === requestIdRef.current) {
+        setTools([])
+        setLoadFailed(true)
+        yakitNotify('error', t('SettingsPage.yakMcp.loadFailed'))
+      }
     } finally {
-      if (isInit) {
-        if (query.ForceSync) setForceSyncLoading(false)
-        else setLoading(false)
+      if (requestId === requestIdRef.current) {
+        setLoading(false)
+        setForceSyncLoading(false)
       }
     }
   })
 
+  useEffect(() => {
+    if (configLoaded && !enableMcp && hasActiveToolTier) {
+      const forceSync = forceSyncNextRef.current
+      forceSyncNextRef.current = false
+      getToolList(forceSync)
+    }
+    return () => {
+      requestIdRef.current++
+    }
+  }, [configLoaded, enableMcp, enableLegacyMcpTools, enableAIToolFramework, enableBridgeExternalMcp])
+
   const resetAndFetchTools = useMemoizedFn((tiers: MCPTierVisibility, forceSync = false) => {
+    requestIdRef.current++
     tierVisibilityRef.current = tiers
-    setResponse({
-      Tools: [],
-      Pagination: { ...query.Pagination, Page: 1 },
-      Total: 0,
-    })
-    if (!isMCPTierActive(tiers)) return
-    setQuery((prev) => ({ ...prev, Source: resolveMCPToolListSourceFilter(tiers), ForceSync: forceSync }))
+    forceSyncNextRef.current = forceSync
+    setSourceFilter('')
+    setTools([])
+    setLoading(false)
+    setForceSyncLoading(false)
+    setLoadFailed(false)
   })
+
+  const disableAutoStartForInactiveTiers = (tiers: MCPTierVisibility): Partial<YakMCPStartConfig> => {
+    if (isMCPTierActive(tiers) || !autoStartMcp) return {}
+    setAutoStartMcp(false)
+    return { autoStart: false }
+  }
 
   const onLegacyTierChange = useMemoizedFn((checked: boolean) => {
     const tiers = { ...tierVisibilityRef.current, enableLegacyMcpTools: checked }
     setEnableLegacyMcpTools(checked)
-    saveMcpStartConfig({ enableLegacyMcpTools: checked })
+    saveMcpStartConfig({ enableLegacyMcpTools: checked, ...disableAutoStartForInactiveTiers(tiers) })
     resetAndFetchTools(tiers)
   })
 
@@ -373,7 +411,8 @@ export const YakMcpSettings: React.FC = () => {
     if (!checked) setEnableBridgeExternalMcp(false)
     saveMcpStartConfig({
       enableAIToolFramework: checked,
-      enableBridgeExternalMcp: checked ? tierVisibilityRef.current.enableBridgeExternalMcp : false,
+      ...(!checked ? { enableBridgeExternalMcp: false } : {}),
+      ...disableAutoStartForInactiveTiers(tiers),
     })
     resetAndFetchTools(tiers)
   })
@@ -385,56 +424,76 @@ export const YakMcpSettings: React.FC = () => {
     resetAndFetchTools(tiers, checked)
   })
 
-  const onTableChange = useMemoizedFn((page: number, limit: number, sort: SortProps, filter: GetMCPToolListRequest) => {
-    setQuery((prev) => ({ ...prev, ...filter }))
-  })
-
-  const handleToggle = useMemoizedFn((checked: boolean, record: MCPToolConfig) => {
-    grpcSetMCPToolEnabled({ ToolName: record.ToolName, Enable: checked }, true)
-      .then(() => {
-        setResponse((prev) => ({
-          ...prev,
-          Tools: prev.Tools.map((tool) => (tool.ToolName === record.ToolName ? { ...tool, Enable: checked } : tool)),
-        }))
-        yakitNotify(
-          'success',
-          t(checked ? 'ConfigSystemMcp.enable_tool_success' : 'ConfigSystemMcp.disable_tool_success', {
-            name: record.ToolName,
-          }),
-        )
-      })
-      .catch(() => {
-        yakitNotify(
-          'error',
-          t(checked ? 'ConfigSystemMcp.enable_tool_failed' : 'ConfigSystemMcp.disable_tool_failed', {
-            name: record.ToolName,
-          }),
-        )
-      })
-  })
-
-  const flushMcpStartConfig = useMemoizedFn(() => {
-    if (!pendingMcpStartConfigRef.current) return
-    setRemoteValue(RemoteAIAgentGV.YakMCPStartConfig, JSON.stringify(pendingMcpStartConfigRef.current))
-    pendingMcpStartConfigRef.current = null
-  })
-
-  const debouncedSaveMcpStartConfig = useDebounceFn(flushMcpStartConfig, { wait: 500 }).run
-
-  const saveMcpStartConfig = useMemoizedFn((override?: Partial<YakMCPStartConfig>) => {
-    if (!configLoadedRef.current) return
-    pendingMcpStartConfigRef.current = {
-      autoStart: autoStartMcp,
-      url: isRemoteEngine ? '' : mcpStreamInfo.mcpUrl || localMcpDefalutUrl,
-      enableLegacyMcpTools,
-      enableAIToolFramework,
-      enableBridgeExternalMcp,
-      ...override,
+  const handleToggle = useMemoizedFn(async (checked: boolean, record: MCPToolConfig) => {
+    if (busy || loadFailed || !hasActiveToolTier || !yakMcpToolMutation.start(record.ToolName)) return
+    let succeeded = false
+    try {
+      const result = await grpcSetMCPToolEnabled({ ToolName: record.ToolName, Enable: checked }, true)
+      if (!result.Ok) throw new Error(result.Reason)
+      succeeded = true
+      yakitNotify(
+        'success',
+        t(checked ? 'ConfigSystemMcp.enable_tool_success' : 'ConfigSystemMcp.disable_tool_success', {
+          name: record.ToolName,
+        }),
+      )
+    } catch {
+      yakitNotify(
+        'error',
+        t(checked ? 'ConfigSystemMcp.enable_tool_failed' : 'ConfigSystemMcp.disable_tool_failed', {
+          name: record.ToolName,
+        }),
+      )
+    } finally {
+      yakMcpToolMutation.finish(succeeded ? { toolNames: new Set([record.ToolName]), enable: checked } : null)
     }
-    debouncedSaveMcpStartConfig()
+  })
+
+  const handleBatchToggle = useMemoizedFn(async (enable: boolean) => {
+    if (busy || loadFailed || !hasActiveToolTier) return
+    const targets = filteredTools.filter((tool) => tool.Enable !== enable)
+    if (!targets.length || !yakMcpToolMutation.start('', targets.length)) return
+    const succeeded = new Set<string>()
+    // Bound IPC concurrency so a large tool group does not flood the engine.
+    try {
+      for (let offset = 0; offset < targets.length; offset += 5) {
+        const group = targets.slice(offset, offset + 5)
+        const results = await Promise.allSettled(
+          group.map(async (tool) => {
+            const result = await grpcSetMCPToolEnabled({ ToolName: tool.ToolName, Enable: enable }, true)
+            if (!result.Ok) throw new Error(result.Reason)
+            return tool.ToolName
+          }),
+        )
+        results.forEach((result) => {
+          if (result.status === 'fulfilled') succeeded.add(result.value)
+        })
+        yakMcpToolMutation.progress(Math.min(offset + group.length, targets.length), targets.length)
+      }
+      const failed = targets.length - succeeded.size
+      yakitNotify(
+        failed ? 'error' : 'success',
+        t('SettingsPage.yakMcp.batchResult', {
+          success: succeeded.size,
+          failed,
+        }),
+      )
+    } finally {
+      yakMcpToolMutation.finish({ toolNames: succeeded, enable })
+    }
+  })
+
+  const saveMcpStartConfig = useMemoizedFn((patch: Partial<YakMCPStartConfig>) => {
+    if (!configLoadedRef.current) return
+    yakMcpStartConfig.save(isRemoteEngine ? { ...patch, url: '' } : patch)
+  })
+
+  const retrySaveMcpStartConfig = useMemoizedFn(async () => {
+    if ((await yakMcpStartConfig.flush()) && !configLoadedRef.current) loadMcpStartConfig()
   })
 
   const onToggleEnable = useMemoizedFn((checked: boolean) => {
+    if (!configLoaded || updatingTool || batchProgress) return
     if (checked) {
       if (!hasActiveToolTier) return
       mcpStreamEvent.onStart({
@@ -446,12 +505,6 @@ export const YakMcpSettings: React.FC = () => {
       mcpStreamEvent.onCancel()
     }
   })
-
-  useEffect(() => {
-    if (enableMcp) {
-      saveMcpStartConfig()
-    }
-  }, [enableMcp])
 
   const onToggleAutoStart = useMemoizedFn((checked: boolean) => {
     setAutoStartMcp(checked)
@@ -473,10 +526,28 @@ export const YakMcpSettings: React.FC = () => {
           <div className={styles['divider']} />
           <div className={styles['page-status']}>
             <span>{enableMcp ? t('YakitButton.enabled') : t('YakitButton.notEnabled')}</span>
-            <YakitSwitch size="large" checked={enableMcp} disabled={!canToggleMcp} onChange={onToggleEnable} />
+            <YakitSwitch
+              size="large"
+              checked={enableMcp}
+              disabled={!configLoaded || !canToggleMcp || !!updatingTool || !!batchProgress}
+              onChange={onToggleEnable}
+            />
           </div>
         </div>
       </div>
+
+      {configLoadFailed && (
+        <YakitEmpty title={t('SettingsPage.yakMcp.configLoadFailed')}>
+          <YakitButton onClick={loadMcpStartConfig}>{t('SettingsPage.yakMcp.retryConfig')}</YakitButton>
+        </YakitEmpty>
+      )}
+      {configSaveFailed && (
+        <YakitEmpty title={t('SettingsPage.yakMcp.configSaveFailed')}>
+          <YakitButton disabled={configSaving} onClick={retrySaveMcpStartConfig}>
+            {t('SettingsPage.yakMcp.retrySaveConfig')}
+          </YakitButton>
+        </YakitEmpty>
+      )}
 
       {enableMcp ? (
         <div className={styles['transport']}>
@@ -528,7 +599,13 @@ export const YakMcpSettings: React.FC = () => {
                 <YakitInput
                   addonBefore="http://"
                   value={mcpStreamInfo.mcpUrl}
-                  onChange={(e) => mcpStreamEvent.onSetMcpUrl(e.target.value)}
+                  disabled={!configLoaded}
+                  onChange={(e) => {
+                    const url = e.target.value
+                    mcpStreamEvent.onSetMcpUrl(url)
+                    if (!url.trim()) setAutoStartMcp(false)
+                    saveMcpStartConfig({ url: url || localMcpDefalutUrl, ...(!url.trim() ? { autoStart: false } : {}) })
+                  }}
                 />
               </div>
             </div>
@@ -538,7 +615,11 @@ export const YakMcpSettings: React.FC = () => {
                 <div className={styles['setting-row-desc']}>{t('ConfigSystemMcp.enable_legacy_mcp_tools_desc')}</div>
               </div>
               <div className={styles['setting-row-control']}>
-                <YakitSwitch checked={enableLegacyMcpTools} onChange={onLegacyTierChange} />
+                <YakitSwitch
+                  checked={enableLegacyMcpTools}
+                  disabled={!configLoaded || !!updatingTool || !!batchProgress}
+                  onChange={onLegacyTierChange}
+                />
               </div>
             </div>
             <div className={styles['setting-row']}>
@@ -547,7 +628,11 @@ export const YakMcpSettings: React.FC = () => {
                 <div className={styles['setting-row-desc']}>{t('ConfigSystemMcp.enable_ai_tool_framework_desc')}</div>
               </div>
               <div className={styles['setting-row-control']}>
-                <YakitSwitch checked={enableAIToolFramework} onChange={onAIToolFrameworkChange} />
+                <YakitSwitch
+                  checked={enableAIToolFramework}
+                  disabled={!configLoaded || !!updatingTool || !!batchProgress}
+                  onChange={onAIToolFrameworkChange}
+                />
               </div>
             </div>
             <div className={styles['setting-row']}>
@@ -558,7 +643,7 @@ export const YakMcpSettings: React.FC = () => {
               <div className={styles['setting-row-control']}>
                 <YakitSwitch
                   checked={enableBridgeExternalMcp}
-                  disabled={!enableAIToolFramework}
+                  disabled={!configLoaded || !enableAIToolFramework || !!updatingTool || !!batchProgress}
                   onChange={onBridgeTierChange}
                 />
               </div>
@@ -569,7 +654,11 @@ export const YakMcpSettings: React.FC = () => {
                 <div className={styles['setting-row-desc']}>{t('ConfigSystemMcp.auto_start_desc')}</div>
               </div>
               <div className={styles['setting-row-control']}>
-                <YakitSwitch checked={autoStartMcp} disabled={!canToggleMcp} onChange={onToggleAutoStart} />
+                <YakitSwitch
+                  checked={autoStartMcp}
+                  disabled={!configLoaded || !canToggleMcp}
+                  onChange={onToggleAutoStart}
+                />
               </div>
             </div>
           </div>
@@ -578,23 +667,90 @@ export const YakMcpSettings: React.FC = () => {
             <div className={styles['section-head']}>
               <div className={styles['section-head-text']}>
                 <div className={styles['section-title']}>{t('ConfigSystemMcp.tool_config_title')}</div>
-                <div className={styles['section-desc']}>{t('ConfigSystemMcp.tool_config_desc')}</div>
+                <div className={styles['section-desc']}>{t('SettingsPage.yakMcp.toolConfigHint')}</div>
               </div>
               <div className={styles['section-actions']}>
                 <YakitButton
                   type="text"
                   loading={forceSyncLoading}
-                  disabled={!enableBridgeExternalMcp}
-                  onClick={() => setQuery((prev) => ({ ...prev, ForceSync: true }))}
+                  disabled={!enableBridgeExternalMcp || busy}
+                  onClick={() => getToolList(true)}
                 >
                   {t('ConfigSystemMcp.force_sync')}
                 </YakitButton>
                 <YakitButton
                   type="text2"
                   icon={<RefreshOutlined color="currentColor" />}
-                  loading={loading}
-                  onClick={() => setQuery((prev) => ({ ...prev, ForceSync: false }))}
-                />
+                  loading={loading && !forceSyncLoading}
+                  disabled={!hasActiveToolTier || busy}
+                  aria-label={t('SettingsPage.yakMcp.refreshTools')}
+                  onClick={() => getToolList()}
+                >
+                  {t('SettingsPage.yakMcp.refreshTools')}
+                </YakitButton>
+              </div>
+            </div>
+            <div className={styles['tool-filters']}>
+              <YakitInput
+                wrapperClassName={styles['tool-search']}
+                prefix={<SearchOutlined color="currentColor" />}
+                allowClear
+                value={keyword}
+                disabled={!configLoaded || !hasActiveToolTier || !!batchProgress || !!updatingTool}
+                placeholder={t('SettingsPage.yakMcp.searchPlaceholder')}
+                aria-label={t('SettingsPage.yakMcp.searchPlaceholder')}
+                onChange={(e) => setKeyword(e.target.value)}
+              />
+              <YakitSelect
+                wrapperClassName={styles['tool-filter-select']}
+                value={sourceFilter}
+                options={sourceFilterOptions}
+                disabled={!configLoaded || !hasActiveToolTier || !!batchProgress || !!updatingTool}
+                aria-label={t('ConfigSystemMcp.tool_source')}
+                onChange={setSourceFilter}
+              />
+              <YakitSelect
+                wrapperClassName={styles['tool-filter-select']}
+                value={statusFilter}
+                disabled={!configLoaded || !hasActiveToolTier || !!batchProgress || !!updatingTool}
+                aria-label={t('SettingsPage.yakMcp.statusFilter')}
+                options={[
+                  { value: 'all', label: t('SettingsPage.yakMcp.allStatuses') },
+                  { value: 'enabled', label: t('SettingsPage.yakMcp.enabledOnly') },
+                  { value: 'disabled', label: t('SettingsPage.yakMcp.disabledOnly') },
+                ]}
+                onChange={setStatusFilter}
+              />
+              {hasFilters && (
+                <YakitButton type="text" disabled={!!batchProgress || !!updatingTool} onClick={clearFilters}>
+                  {t('SettingsPage.yakMcp.clearFilters')}
+                </YakitButton>
+              )}
+            </div>
+            <div className={styles['tool-batch-bar']}>
+              <span className={styles['tool-count']} role="status" aria-live="polite">
+                {batchProgress
+                  ? t('SettingsPage.yakMcp.batchProgress', batchProgress)
+                  : loading
+                    ? t('SettingsPage.yakMcp.loadingTools')
+                    : t('SettingsPage.yakMcp.resultCount', { count: filteredTools.length, enabled: enabledCount })}
+              </span>
+              <div className={styles['tool-batch-actions']}>
+                <span className={styles['section-desc']}>{t('SettingsPage.yakMcp.batchScope')}</span>
+                <YakitButton
+                  type="outline2"
+                  disabled={!hasActiveToolTier || busy || loadFailed || filteredTools.length === enabledCount}
+                  onClick={() => handleBatchToggle(true)}
+                >
+                  {t('SettingsPage.yakMcp.enableResults')}
+                </YakitButton>
+                <YakitButton
+                  type="outline2"
+                  disabled={!hasActiveToolTier || busy || loadFailed || enabledCount === 0}
+                  onClick={() => handleBatchToggle(false)}
+                >
+                  {t('SettingsPage.yakMcp.disableResults')}
+                </YakitButton>
               </div>
             </div>
             <div className={styles['list-panel']}>
@@ -604,26 +760,39 @@ export const YakMcpSettings: React.FC = () => {
                     title={t('ConfigSystemMcp.no_tool_tier_title')}
                     description={t('ConfigSystemMcp.no_tool_tier_desc')}
                   />
+                ) : loadFailed ? (
+                  <YakitEmpty title={t('SettingsPage.yakMcp.loadFailed')}>
+                    <YakitButton onClick={() => getToolList()}>{t('SettingsPage.yakMcp.retry')}</YakitButton>
+                  </YakitEmpty>
+                ) : !loading && !filteredTools.length ? (
+                  <YakitEmpty
+                    title={t('SettingsPage.yakMcp.noResults')}
+                    description={t('SettingsPage.yakMcp.noResultsHint')}
+                  >
+                    {hasFilters && (
+                      <YakitButton type="text" onClick={clearFilters}>
+                        {t('SettingsPage.yakMcp.clearFilters')}
+                      </YakitButton>
+                    )}
+                  </YakitEmpty>
                 ) : (
                   <TableVirtualResize<MCPToolConfig>
                     loading={loading || forceSyncLoading}
-                    query={query}
                     isRefresh={isRefresh}
                     titleHeight={0}
                     size="middle"
                     isShowTitle={false}
-                    data={response.Tools}
+                    data={filteredTools}
                     enableDrag={false}
                     renderKey="ToolName"
                     columns={columns}
                     useUpAndDown
                     pagination={{
-                      total: response.Total,
-                      limit: response.Pagination.Limit,
-                      page: response.Pagination.Page,
-                      onChange: (page) => getToolList(page),
+                      total: filteredTools.length,
+                      limit: filteredTools.length || 20,
+                      page: 1,
+                      onChange: () => {},
                     }}
-                    onChange={onTableChange}
                   />
                 )}
               </div>
