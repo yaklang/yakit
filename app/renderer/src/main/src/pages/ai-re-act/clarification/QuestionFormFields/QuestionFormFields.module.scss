@@ -4,19 +4,19 @@
   gap: 4px;
   :global(.ant-form-item) {
     margin-bottom: 0;
-    flex-direction: column;
-    align-items: stretch;
   }
   :global(.ant-form-item-row) {
     display: flex;
     flex-direction: column;
+    flex-wrap: nowrap;
     align-items: stretch;
   }
   :global(.ant-form-item-label),
   :global(.ant-form-item-control) {
     width: 100%;
-    max-width: none;
+    max-width: 100%;
     flex: none;
+    padding-inline: 0;
   }
   :global(.ant-form-item-label) {
     padding: 0 0 4px;
@@ -32,7 +32,7 @@
     display: none !important;
   }
   :global(.ant-form-item-explain) {
-    min-height: 22px;
+    min-height: 0;
     font-size: 12px;
     line-height: 20px;
     color: var(--Colors-Use-Neutral-Text-3-Secondary);
@@ -71,11 +71,52 @@
 .formBlock,
 .formCell {
   min-width: 0;
+  width: 100%;
+}
+.control {
+  width: 100%;
 }
 .checkboxes {
   display: flex;
   flex-wrap: wrap;
   gap: 8px 16px;
+}
+.stringList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+.stringListRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 32px;
+  gap: 8px;
+  align-items: center;
+  min-width: 0;
+}
+.stringListAdd {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
+  height: 28px;
+  padding: 0;
+  border: 1px dashed var(--Colors-Use-Main-Border);
+  border-radius: 4px;
+  background: var(--Colors-Use-Main-Bg);
+  color: var(--Colors-Use-Main-Primary);
+  font-size: 12px;
+  line-height: 16px;
+  cursor: pointer;
+  &:hover:not(:disabled) {
+    border-color: var(--Colors-Use-Main-Hover);
+    background: var(--Colors-Use-Main-Bg-Hover);
+  }
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
 }
 .switchRow {
   display: flex;

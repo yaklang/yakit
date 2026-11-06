@@ -4,6 +4,7 @@ import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import { QuestionCard } from '../QuestionCard/QuestionCard'
 import { QuestionSummary } from '../QuestionSummary/QuestionSummary'
 import { readQuestionForm } from '../formValidation'
+import { stringListIssue } from '../QuestionFormFields/QuestionFormFields'
 import { matchesSchema } from '../../interactive-ui/validate'
 import { AIChatQSDataTypeEnum } from '../../hooks/aiRender'
 const send = vi.hoisted(() => vi.fn().mockResolvedValue(undefined))
@@ -150,6 +151,79 @@ describe('forms use the clarification channel', () => {
       mode: 2,
       focus: ['数据流'],
     })
+  })
+  const sectionsForm = () => {
+    const data = item()
+    data.data.request.form = {
+      title: '报告章节',
+      schema: {
+        type: 'object',
+        properties: {
+          sections: {
+            type: 'array',
+            title: '章节',
+            minItems: 1,
+            maxItems: 3,
+            uniqueItems: true,
+            items: { type: 'string' },
+          },
+        },
+        required: ['sections'],
+        additionalProperties: false,
+      },
+      initial: { sections: ['概览'] },
+    }
+    return data
+  }
+  it('edits a string array that has no enum', async () => {
+    render(<QuestionCard item={sectionsForm()} />)
+    fireEvent.change(screen.getByDisplayValue('概览'), { target: { value: '结论' } })
+    fireEvent.click(screen.getByRole('button', { name: '添加' }))
+    fireEvent.change(screen.getAllByRole('textbox')[1], { target: { value: '建议' } })
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: '提交' }))
+    })
+    expect(JSON.parse(answers()[0][1].UserInteraction).values).toEqual({ sections: ['结论', '建议'] })
+  })
+  it('drops blank string-list rows and rejects empty or duplicate items', async () => {
+    expect(stringListIssue([''], 1, true)).toBe('emptyItem')
+    expect(stringListIssue(['', ''], 1, true)).toBe('emptyItem')
+    expect(stringListIssue(['结论', ''], 1, true)).toBeUndefined()
+    expect(stringListIssue(['结论', '结论'], 1, true)).toBe('duplicateItem')
+    render(<QuestionCard item={sectionsForm()} />)
+    expect(screen.getByRole('button', { name: '删除' })).toBeDisabled()
+    fireEvent.change(screen.getByDisplayValue('概览'), { target: { value: '' } })
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: '提交' }))
+    })
+    expect(answers()).toHaveLength(0)
+    expect(document.querySelector('.ant-form-item-has-error')).toBeTruthy()
+    fireEvent.change(screen.getAllByRole('textbox')[0], { target: { value: '结论' } })
+    fireEvent.click(screen.getByRole('button', { name: '添加' }))
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: '提交' }))
+    })
+    expect(JSON.parse(answers()[0][1].UserInteraction).values).toEqual({ sections: ['结论'] })
+    send.mockClear()
+    cleanup()
+    render(<QuestionCard item={sectionsForm()} />)
+    fireEvent.click(screen.getByRole('button', { name: '添加' }))
+    fireEvent.change(screen.getAllByRole('textbox')[1], { target: { value: '概览' } })
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: '提交' }))
+    })
+    expect(answers()).toHaveLength(0)
+    expect(document.querySelector('.ant-form-item-has-error')).toBeTruthy()
+  })
+  it('hides add at maxItems for a string list', () => {
+    render(<QuestionCard item={sectionsForm()} />)
+    fireEvent.click(screen.getByRole('button', { name: '添加' }))
+    fireEvent.click(screen.getByRole('button', { name: '添加' }))
+    expect(screen.getAllByRole('textbox')).toHaveLength(3)
+    expect(screen.queryByRole('button', { name: '添加' })).toBeNull()
+    expect(screen.getAllByRole('button', { name: '删除' }).every((button) => !button.hasAttribute('disabled'))).toBe(
+      true,
+    )
   })
   it('IME does not submit, Escape keeps drafts and a real interaction cancels the deadline', async () => {
     const data = item()

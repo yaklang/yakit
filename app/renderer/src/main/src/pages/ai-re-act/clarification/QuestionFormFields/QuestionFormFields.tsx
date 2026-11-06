@@ -12,6 +12,9 @@ import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInp
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import { PlusOutlined, TrashOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import type { QuestionForm } from '../../interactive-ui/types'
 import styles from './QuestionFormFields.module.scss'
 
@@ -25,6 +28,20 @@ function jsonEnumValues(values: unknown[] | undefined): JsonEnum[] {
   return (values || []).filter(
     (value): value is JsonEnum => typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean',
   )
+}
+
+function isStringList(schema: RJSFSchema) {
+  return schema.type === 'array' && jsonEnumValues((schema.items as RJSFSchema | undefined)?.enum).length === 0
+}
+
+export function filledStrings(value: unknown) {
+  return Array.isArray(value) ? value.map((entry) => String(entry).trim()).filter(Boolean) : []
+}
+
+export function stringListIssue(value: unknown, min: number, unique: boolean) {
+  const filled = filledStrings(value)
+  if (filled.length < min) return 'emptyItem'
+  if (unique && new Set(filled).size !== filled.length) return 'duplicateItem'
 }
 
 function orderedKeys(form: QuestionForm) {
@@ -57,19 +74,20 @@ const antdLocales: Record<string, Locale> = {
 
 function fieldRules(schema: RJSFSchema, required: boolean): Rule[] {
   const rules: Rule[] = []
-  if (required && schema.type === 'array') {
+  const stringList = isStringList(schema)
+  if (required && schema.type === 'array' && !stringList) {
     rules.push({ type: 'array', min: schema.minItems || 1 })
-  } else if (required && schema.type !== 'boolean') {
+  } else if (required && schema.type !== 'boolean' && schema.type !== 'array') {
     rules.push({ required: true })
   }
   if (schema.minLength !== undefined) rules.push({ type: 'string', min: schema.minLength })
   if (schema.maxLength !== undefined) rules.push({ type: 'string', max: schema.maxLength })
   if (schema.minimum !== undefined) rules.push({ type: 'number', min: schema.minimum })
   if (schema.maximum !== undefined) rules.push({ type: 'number', max: schema.maximum })
-  if (schema.minItems !== undefined && !(required && schema.type === 'array')) {
+  if (!stringList && schema.minItems !== undefined && !(required && schema.type === 'array')) {
     rules.push({ type: 'array', min: schema.minItems })
   }
-  if (schema.maxItems !== undefined) rules.push({ type: 'array', max: schema.maxItems })
+  if (!stringList && schema.maxItems !== undefined) rules.push({ type: 'array', max: schema.maxItems })
   return rules
 }
 
@@ -83,6 +101,69 @@ function initialValues(form: QuestionForm, values?: Record<string, unknown>) {
     else if (schema.type === 'boolean') next[key] = false
   }
   return next
+}
+
+function StringList({
+  id,
+  label,
+  disabled,
+  maxItems,
+  minItems,
+  value,
+  onChange,
+}: {
+  id: string
+  label: string
+  disabled?: boolean
+  maxItems?: number
+  minItems?: number
+  value?: unknown[]
+  onChange?: (value: string[]) => void
+}) {
+  const { t } = useI18nNamespaces(['aiAgent'])
+  const items = Array.isArray(value) && value.length ? value.map(String) : ['']
+  const cap = maxItems ?? 30
+  const floor = minItems || 0
+  const update = (next: string[]) => onChange?.(next.length ? next : [''])
+  return (
+    <div id={id} role="group" aria-label={label} className={styles.stringList}>
+      {items.map((item, index) => (
+        <div key={index} className={styles.stringListRow}>
+          <YakitInput
+            value={item}
+            disabled={disabled}
+            wrapperClassName={styles.control}
+            onChange={(event) => {
+              const next = [...items]
+              next[index] = event.target.value
+              update(next)
+            }}
+          />
+          <YakitButton
+            type="text"
+            colors="danger"
+            icon={<TrashOutlined color="currentColor" />}
+            aria-label={t('InteractiveUI.removeItem')}
+            disabled={disabled || items.length <= Math.max(floor, 1)}
+            onClick={() => update(items.filter((_, current) => current !== index))}
+          />
+        </div>
+      ))}
+      {items.length < cap ? (
+        <div className={styles.stringListRow}>
+          <button
+            type="button"
+            className={styles.stringListAdd}
+            disabled={disabled}
+            onClick={() => update([...items, ''])}
+          >
+            <PlusOutlined color="currentColor" />
+            {t('InteractiveUI.addItem')}
+          </button>
+        </div>
+      ) : null}
+    </div>
+  )
 }
 
 function EnumCheckboxes({
@@ -137,7 +218,19 @@ function FieldControl({
   }
   if (schema.type === 'array') {
     const options = jsonEnumValues((schema.items as RJSFSchema | undefined)?.enum)
-    return <EnumCheckboxes id={id} label={title} options={options} disabled={disabled} {...(rest as object)} />
+    if (options.length) {
+      return <EnumCheckboxes id={id} label={title} options={options} disabled={disabled} {...(rest as object)} />
+    }
+    return (
+      <StringList
+        id={id}
+        label={title}
+        disabled={disabled}
+        maxItems={schema.maxItems}
+        minItems={schema.minItems}
+        {...(rest as object)}
+      />
+    )
   }
   if (schema.enum) {
     const options = jsonEnumValues(schema.enum).filter(
@@ -147,6 +240,7 @@ function FieldControl({
       <YakitSelect<string | number>
         id={id}
         disabled={disabled}
+        wrapperStyle={{ width: '100%' }}
         style={{ width: '100%' }}
         options={options.map((option) => ({ label: String(option), value: option }))}
         {...(rest as object)}
@@ -166,7 +260,7 @@ function FieldControl({
       />
     )
   }
-  return <YakitInput id={id} disabled={disabled} {...(rest as object)} />
+  return <YakitInput id={id} disabled={disabled} wrapperClassName={styles.control} {...(rest as object)} />
 }
 
 function FieldItem({
@@ -182,9 +276,35 @@ function FieldItem({
   instanceId: string
   disabled: boolean
 }) {
+  const { t } = useI18nNamespaces(['aiAgent'])
   const id = fieldId(instanceId, fieldKey)
   const title = schema.title || fieldKey
   const rules = fieldRules(schema, required)
+  if (isStringList(schema)) {
+    const min = schema.minItems ?? (required ? 1 : 0)
+    rules.push({
+      validator: async (_, value: unknown) => {
+        if (stringListIssue(value, min, false) === 'emptyItem') return Promise.reject()
+      },
+      message: t('InteractiveUI.emptyItem'),
+    })
+    if (schema.uniqueItems !== false) {
+      rules.push({
+        validator: async (_, value: unknown) => {
+          if (stringListIssue(value, 0, true) === 'duplicateItem') return Promise.reject()
+        },
+        message: t('InteractiveUI.duplicateItem'),
+      })
+    }
+  } else if (schema.type === 'array' && schema.uniqueItems !== false) {
+    rules.push({
+      validator: async (_, value: unknown) => {
+        const items = Array.isArray(value) ? value.map(String) : []
+        if (new Set(items).size !== items.length) return Promise.reject()
+      },
+      message: t('InteractiveUI.duplicateItem'),
+    })
+  }
   if (schema.type === 'boolean') {
     return (
       <label className={styles.switchRow} htmlFor={id}>
@@ -204,15 +324,13 @@ function FieldItem({
       layout="vertical"
       htmlFor={id}
       required={false}
+      colon={false}
       label={
         <>
           {title}
           {required ? <span className={styles.requiredMark}> *</span> : null}
         </>
       }
-      colon
-      labelCol={{ span: 24 }}
-      wrapperCol={{ span: 24 }}
       rules={rules}
       validateFirst
       messageVariables={{ label: title }}
@@ -250,13 +368,19 @@ export function QuestionFormFields({
       <ConfigProvider locale={antdLocales[i18n.language] || zhCN}>
         <Form
           layout="vertical"
+          colon={false}
           disabled={disabled}
           initialValues={initialValues(form, values)}
           onValuesChange={(_, all) => {
             if (!disabled) onChange(all)
           }}
           onFinish={(all) => {
-            if (!disabled) onSubmit(all)
+            if (disabled) return
+            const next = { ...all }
+            for (const [key, schema] of Object.entries(properties)) {
+              if (isStringList(schema)) next[key] = filledStrings(next[key])
+            }
+            onSubmit(next)
           }}
         >
           <div className={styles.formFields}>
