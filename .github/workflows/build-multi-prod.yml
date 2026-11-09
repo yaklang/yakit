@@ -13,7 +13,7 @@ on:
         type: string
   push:
     tags:
-      - 'v*-*'
+      - 'v*'
       - '!v*-render'
       - '!v*-irify'
       - '!v*-link-render'

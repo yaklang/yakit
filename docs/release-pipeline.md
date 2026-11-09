@@ -4,9 +4,34 @@
 
 常规操作按当天发版设计：周五前端就绪后推送 tag，几小时内后端发布完成，再手动运行一次收尾。下述恢复机制用于网络故障或任务失败，不增加正常发版的按钮、输入项或等待阶段。
 
+## 生成版本提交和 tag
+
+在干净的工作区执行原有命令，传入软件版本号（不带 `v` 或产品后缀）。命令从最新 `origin/master` 创建原有的 `update/*pack-*` 分支，**只更新根目录 `package.json`**，提交后生成对应 tag。主渲染端和 Link 的 `package.json` 继续保留独立版本。
+
+```bash
+# 按本次要发布的产品选择执行；版本号替换为尚未发布的新版本
+# Yakit（同时准备 CE / EE）
+yarn release-yakit 1.4.9-1113
+git push origin refs/tags/v1.4.9-1113
+
+# Memfit
+yarn release-memfit 1.1.1-1113
+git push origin refs/tags/v1.1.1-1113-memfit
+
+# IRify（同时准备 CE / EE）
+yarn release-irify 1.4.9-1113
+git push origin refs/tags/v1.4.9-1113-irify
+```
+
+命令只在本地创建分支、提交和 tag，不自动推送或发布。推送正式 tag 后，现有产品工作流自动调用 Prepare Release，构建两个渲染端和主进程；后端引擎发布后再手动 Finalize，无需另推 `-render` / `-link-render` tag。Yakit 同时支持 `v1.4.9` 这类无日期后缀的软件 tag。
+
+只运行 `git tag` 不会更新任何 `package.json`。Prepare / Finalize 会按候选版本临时设置根目录版本用于构建，不会回写源码。若要让 `master` 的根目录版本也更新，还需推送生成的版本分支并通过 PR 合并，例如 `git push -u origin update/pack-1.4.9-1113`。各产品共享一个根清单；同周发布不同版本时，以各自 tag 中的根目录版本为准，`master` 只能保存最后合入的版本。
+
+已存在的 tag、非法版本和未提交改动会在创建版本分支前报错。即使根目录已经是目标版本，也会创建独立版本提交，避免 tag 直接落在带有跳过 CI 指令的旧提交上。不要移动或覆盖已经发布的 tag。
+
 ## 操作步骤
 
-1. 按原有方式推送正式 tag。`build-multi-prod.yml` 准备 Yakit CE/EE，IRify、Memfit 的原有 tag 入口分别准备对应发行版。
+1. 先运行上方原有发版命令，生成根目录版本提交和正式 tag，再推送 tag。`build-multi-prod.yml` 准备 Yakit CE/EE，IRify、Memfit 的原有 tag 入口分别准备对应发行版。
 2. 等待 Prepare 工作流成功。Summary 会给出 **Prepare run ID**。也可在 Actions 手动运行 **Prepare Release**，选择发行版和软件版本，提前验证分支。
 3. 后端引擎发布完成后，打开 Actions → **Finalize Release**，填写 Prepare run ID 和完整引擎版本，例如 `1.4.9-beta5`。
 4. 首次验证保持 `publish` 未勾选：生成并签名全部安装包，将结果放入候选草稿，不触碰正式 Release、OSS 安装包目录或升级入口。确认后再运行一次，勾选 `publish` 完成正式发版。

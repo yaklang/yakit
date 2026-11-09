@@ -10,6 +10,7 @@ export default defineConfig({
     environment: 'node',
     include: [
       'e2e/fixtures/__test__/release-pipeline.test.mjs',
+      'e2e/fixtures/__test__/release-command.test.mjs',
       'e2e/fixtures/__test__/release-identity.test.mjs',
       'e2e/fixtures/__test__/release-channels.test.mjs',
       'e2e/fixtures/__test__/release-io.test.mjs',

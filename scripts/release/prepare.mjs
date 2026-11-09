@@ -1,10 +1,11 @@
 import { appendFile, mkdir, readdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { assertReady, createPlan, readJson, releaseVersion, writeJson } from './model.mjs'
+import { assertReady, assertVersion, createPlan, readJson, releaseVersion, writeJson } from './model.mjs'
 import { run } from './io.mjs'
 
 export async function setVersion(version) {
+  assertVersion(version, 'software version')
   const manifest = await readJson('package.json')
   manifest.version = version
   await writeJson('package.json', manifest)
