@@ -29,7 +29,14 @@ import type { ReactNode } from 'react'
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-const { startIdleVisibleInterval, grpcFetchYakInstallResult, headerState, watchdogCallbacks } = vi.hoisted(() => ({
+const {
+  startIdleVisibleInterval,
+  grpcFetchYakInstallResult,
+  headerState,
+  watchdogCallbacks,
+  enterpriseUsageStatistics,
+  layoutStore,
+} = vi.hoisted(() => ({
   headerState: {
     system: 'Darwin',
     portable: true,
@@ -44,6 +51,11 @@ const { startIdleVisibleInterval, grpcFetchYakInstallResult, headerState, watchd
   },
   startIdleVisibleInterval: vi.fn(() => vi.fn()),
   grpcFetchYakInstallResult: vi.fn().mockResolvedValue(true),
+  enterpriseUsageStatistics: vi.fn(),
+  layoutStore: {
+    userInfo: { isLogin: false, token: undefined as string | undefined },
+    eeSystemConfig: [] as Array<{ configName: string; isOpen: boolean }>,
+  },
 }))
 
 vi.mock('@/utils/scheduleIdleTask', () => ({ startIdleVisibleInterval }))
@@ -109,12 +121,16 @@ vi.mock('@/utils/notification', () => ({
 }))
 
 vi.mock('@/store', () => ({
-  useStore: () => ({ userInfo: { isLogin: false } }),
+  useStore: () => ({ userInfo: layoutStore.userInfo }),
   useYakitDynamicStatus: () => ({
     dynamicStatus: { isDynamicStatus: false },
     setDynamicStatus: vi.fn(),
   }),
-  useEeSystemConfig: () => ({ eeSystemConfig: [] }),
+  useEeSystemConfig: () => ({ eeSystemConfig: layoutStore.eeSystemConfig }),
+}))
+
+vi.mock('../useEnterpriseUsageStatistics', () => ({
+  useEnterpriseUsageStatistics: enterpriseUsageStatistics,
 }))
 
 vi.mock('@/store/temporaryProject', () => ({
@@ -354,6 +370,9 @@ describe('UILayout 引擎连接后的安装探测轮询', () => {
   beforeEach(() => {
     startIdleVisibleInterval.mockClear()
     grpcFetchYakInstallResult.mockClear()
+    enterpriseUsageStatistics.mockClear()
+    layoutStore.userInfo = { isLogin: false, token: undefined }
+    layoutStore.eeSystemConfig = []
   })
 
   afterEach(() => {
@@ -367,6 +386,15 @@ describe('UILayout 引擎连接后的安装探测轮询', () => {
       await Promise.resolve()
     })
     expect(startIdleVisibleInterval).toHaveBeenCalled()
+  })
+
+  it('将企业采集配置和登录凭证接入使用统计 hook', () => {
+    layoutStore.userInfo = { isLogin: true, token: 'enterprise-token' }
+    layoutStore.eeSystemConfig = [{ configName: 'collectData', isOpen: true }]
+
+    render(<UILayout />)
+
+    expect(enterpriseUsageStatistics).toHaveBeenCalledWith(true, true, 'enterprise-token')
   })
 })
 

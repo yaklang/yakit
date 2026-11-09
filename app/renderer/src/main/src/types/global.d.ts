@@ -776,6 +776,15 @@ declare global {
     TimeoutMilliseconds: number
   }
 
+  interface UsageActivitySnapshot {
+    /** 至少有一个已登记业务窗口处于可见、未最小化且聚焦状态。 */
+    foreground: boolean
+    /** 最近一次可信用户输入的主进程时间戳；尚未观察到输入时为 0。 */
+    lastActivityAt: number
+    /** 快照变化时单调递增，用于忽略乱序通知。 */
+    revision: number
+  }
+
   interface YakitBridge {
     app: {
       generateStartEngine: () => Promise<unknown>
@@ -798,6 +807,8 @@ declare global {
       onMinimizeWindow: (callback: () => void) => BridgeCleanup
       sync: (message: AppSyncMessage) => Promise<unknown>
       onSync: (callback: (message: AppSyncMessage) => void) => BridgeCleanup
+      getUsageActivity: () => Promise<UsageActivitySnapshot>
+      onUsageActivity: (callback: (snapshot: UsageActivitySnapshot) => void) => BridgeCleanup
       getYakitHomeConfig: () => Promise<YakitHomeConfig>
       setYakitHomeConfig: (key: string, value: any) => Promise<{ success: boolean }>
       getDirSize: (dirPath: string) => Promise<number>

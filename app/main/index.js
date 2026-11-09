@@ -8,6 +8,7 @@ const {
   protocol,
   Menu,
   crashReporter,
+  powerMonitor,
 } = require('electron')
 const isDev = require('electron-is-dev')
 const path = require('path')
@@ -43,6 +44,7 @@ const {
 } = require('./logFile')
 const { createRendererDiagnostics, settleWithin } = require('./rendererDiagnostics')
 const { createRendererRecovery, sendToWindow } = require('./rendererRecovery')
+const { UsageActivityManager } = require('./usageActivity')
 
 const BLOCKED_CHROMIUM_DEBUG_SWITCHES = ['remote-debugging-port', 'remote-debugging-address', 'remote-debugging-pipe']
 const BLOCKED_NODE_DEBUG_ARG_PREFIXES = ['--inspect', '--inspect-brk', '--inspect-port']
@@ -169,6 +171,7 @@ async function exitAfterRendererFailure() {
 let win = null
 let engineLinkWin = null
 let mainParked = false
+let usageActivity = null
 
 process.on('uncaughtException', (error) => {
   try {
@@ -327,6 +330,7 @@ function createWindow() {
     show: false,
     skipTaskbar: true,
   })
+  usageActivity?.registerWindow(win)
 
   rendererRecovery.attach(win, 'mainWin')
 
@@ -777,6 +781,10 @@ if (!shouldAbortStartupForDebugFlags) {
       app.on('browser-window-blur', () => globalShortcut.unregister('CommandOrControl+Alt+R'))
     }
 
+    usageActivity = new UsageActivityManager({ ipcMain, powerMonitor })
+    require('./handlers/auxWindowManager/index').configureUsageActivity(usageActivity)
+    require('./handlers/openNewChildWindow/index').configureUsageActivity(usageActivity)
+
     createEngineLinkWindow()
     createWindow()
 
@@ -803,6 +811,11 @@ app.on('before-quit', (event) => {
     event.preventDefault()
     void exitAfterRendererFailure()
   }
+})
+
+app.on('will-quit', () => {
+  usageActivity?.dispose()
+  usageActivity = null
 })
 
 /**

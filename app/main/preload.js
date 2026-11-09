@@ -52,6 +52,23 @@ process.on('loaded', function () {
     return { ipcRenderer }
   }
 
+  // 仅上报“发生过真实输入”，不采集按键、坐标或页面内容。pointermove 节流以避免 IPC 洪泛。
+  let lastPointerMoveAt = 0
+  const reportUsageActivity = (event) => {
+    if (!event.isTrusted) return
+    if (event.type === 'pointermove') {
+      const now = Date.now()
+      if (now - lastPointerMoveAt < 1000) return
+      lastPointerMoveAt = now
+    }
+    send('usage-activity:input')
+  }
+  if (typeof document !== 'undefined') {
+    ;['pointerdown', 'keydown', 'wheel', 'pointermove'].forEach((eventName) => {
+      document.addEventListener(eventName, reportUsageActivity, { capture: true, passive: true })
+    })
+  }
+
   window.yakitBridge = {
     app: {
       generateStartEngine: () => invoke('generate-start-engine'),
@@ -74,6 +91,8 @@ process.on('loaded', function () {
       onMinimizeWindow: (callback) => subscribe('minimize-windows-renderer', callback),
       sync: (message) => invoke('aux-window:app-sync', message),
       onSync: (callback) => subscribe('aux-window:app-sync', callback),
+      getUsageActivity: () => invoke('usage-activity:get'),
+      onUsageActivity: (callback) => subscribe('usage-activity:updated', callback),
       getYakitHomeConfig: () => invoke('get-yakit-home-config'),
       setYakitHomeConfig: (key, value) => invoke('set-yakit-home-config', key, value),
       getDirSize: (dirPath) => invoke('get-dir-size', dirPath),

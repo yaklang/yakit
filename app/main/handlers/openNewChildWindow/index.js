@@ -3,7 +3,13 @@ const { ipcMain, BrowserWindow } = require('electron')
 const isDev = require('electron-is-dev')
 const crypto = require('crypto')
 
+/** @type {import('../../usageActivity').UsageActivityManager | null} */
+let usageActivity = null
+
 module.exports = {
+  configureUsageActivity: (manager) => {
+    usageActivity = manager
+  },
   register: (win, getClient) => {
     // 保存当前详情窗口及最新业务数据，供主窗口的控制、推送和子窗口的数据请求使用。
     let childWindow = null
@@ -107,6 +113,8 @@ module.exports = {
         },
         show: false,
       })
+      // 该窗口承载完整业务页面，用户在此操作也应计入应用活跃状态。
+      usageActivity?.registerWindow(childWindow)
 
       if (process.platform === 'darwin') childWindow.setWindowButtonVisibility(false)
 

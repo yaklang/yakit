@@ -50,6 +50,7 @@ const loadIndex = (platform, opts = {}) => {
     protocol: { registerFileProtocol: vi.fn() },
     Menu: { buildFromTemplate: vi.fn(() => ({})), setApplicationMenu: vi.fn() },
     crashReporter: {},
+    powerMonitor: { on: vi.fn(), removeListener: vi.fn() },
   }
   const requireStub = (id) => {
     if (id === 'electron') return electron
@@ -97,7 +98,9 @@ const loadIndex = (platform, opts = {}) => {
         },
       }
     if (id === './rendererRecovery') return { createRendererRecovery: vi.fn(() => recoveryStub), sendToWindow: vi.fn() }
+    if (id === './usageActivity') return { UsageActivityManager: vi.fn() }
     if (id === './handlers/auxWindowManager/index') return { configureBroadcast: vi.fn() }
+    if (id === './handlers/openNewChildWindow/index') return { configureUsageActivity: vi.fn() }
     throw new Error(`Unexpected module: ${id}`)
   }
   const sandbox = {
