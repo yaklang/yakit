@@ -24,7 +24,7 @@ const EnterpriseJudgeLogin: React.FC<EnterpriseJudgeLoginProps> = (props) => {
   const { setJudgeLicense, setJudgeLogin } = props
   // License
   // const [licenseVerified, setLicenseVerified] = useState<boolean>(false)
-  const [activateLicense, setActivateLicense] = useState<boolean>(!requireEnterpriseLicense || !!SystemInfo.isDev)
+  const [activateLicense, setActivateLicense] = useState<boolean>(false)
   const [loading, setLoading] = useState<boolean>(requireEnterpriseLicense)
   const [licensePageLoading, setLicensePageLoading] = useState<boolean>(false)
   useEffect(() => {
@@ -77,11 +77,12 @@ const EnterpriseJudgeLogin: React.FC<EnterpriseJudgeLoginProps> = (props) => {
         CompanyVersion: isEnpriTraceAgent() ? 'EnpriTraceAgent' : 'EnpriTrace',
       })
       .then((e) => {
-        setActivateLicense(true)
+        setJudgeLicense(false)
+        // setActivateLicense(true)
         setRemoteValue('LICENSE_ACTIVATION', JSON.stringify(LicenseActivation))
-        if (isCache) {
-          judgeLogin()
-        }
+        // if (isCache) {
+        //   judgeLogin()
+        // }
       })
       .catch((e) => {
         info(t('EnterpriseJudgeLogin.reActivateNotice'))
