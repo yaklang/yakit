@@ -46,6 +46,9 @@ import { isCommunityYakit, isMemfit } from '@/utils/envfile'
 import { useSoftMode, YakitModeEnum } from '@/store/softMode'
 import { toMITMHacker } from '@/pages/hacker/httpHacker'
 import { ManagementTab } from '@/components/managementTab'
+import { useMenuHeight } from '@/store/menuHeight'
+import { MenuCollapseIcon } from '@/components/layout/MenuCollapseIcon'
+import { Tooltip } from 'antd'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -68,6 +71,9 @@ interface PublicMenuProps {
 const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
   const { onMenuSelect, setRouteToLabel } = props
   const { t } = useI18nNamespaces(['layout', 'yakitRoute', 'yakitUi'])
+  const isMenuVisible = useMenuHeight((state) => state.isMenuVisible)
+  const isMenuVisibilityLoading = useMenuHeight((state) => state.isMenuVisibilityLoading)
+  const toggleMenuVisibility = useMenuHeight((state) => state.toggleMenuVisibility)
   // 登录用户状态信息
   const { userInfo } = useStore()
   // 菜单模式
@@ -522,34 +528,50 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
                   </div>
                 </div>
                 <div className={styles['switch-op-wrapper']}>
-                  <div className={styles['border-wrapper']}></div>
-                  <div
-                    className={classNames(styles['tab-bar'], {
-                      [styles['active-tab-bar']]: activeTool === 'codec',
-                    })}
-                    onClick={() => {
-                      if (activeTool === 'codec') return
-                      setActiveTool('codec')
-                    }}
-                  >
-                    {t('YakitRoute.Codec')}
-                  </div>
-                  <div
-                    className={classNames(styles['tab-bar'], {
-                      [styles['active-tab-bar']]: activeTool === 'dnslog',
-                    })}
-                    onClick={() => {
-                      if (activeTool === 'dnslog') return
-                      setActiveTool('dnslog')
-                    }}
-                  >
-                    {t('YakitRoute.DNSLog')}
+                  <div className={styles['tab-switch-group']}>
+                    <div className={styles['border-wrapper']}></div>
+                    <div
+                      className={classNames(styles['tab-bar'], {
+                        [styles['active-tab-bar']]: activeTool === 'codec',
+                      })}
+                      onClick={() => {
+                        if (activeTool === 'codec') return
+                        setActiveTool('codec')
+                      }}
+                    >
+                      {t('YakitRoute.Codec')}
+                    </div>
+                    <div
+                      className={classNames(styles['tab-bar'], {
+                        [styles['active-tab-bar']]: activeTool === 'dnslog',
+                      })}
+                      onClick={() => {
+                        if (activeTool === 'dnslog') return
+                        setActiveTool('dnslog')
+                      }}
+                    >
+                      {t('YakitRoute.DNSLog')}
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </>
         </div>
+        <Tooltip title={t('UILayout.hideMenu')}>
+          <div
+            className={styles['menu-toggle-bar']}
+            aria-label={t('UILayout.hideMenu')}
+            aria-busy={isMenuVisibilityLoading}
+            aria-disabled={isMenuVisibilityLoading}
+            onClick={() => {
+              if (isMenuVisibilityLoading || !isMenuVisible) return
+              toggleMenuVisibility()
+            }}
+          >
+            <MenuCollapseIcon size={16} />
+          </div>
+        </Tooltip>
       </div>
     </div>
   )

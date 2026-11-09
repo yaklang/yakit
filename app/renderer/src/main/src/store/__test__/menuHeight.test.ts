@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { CodeGV } from '@/yakitGV'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { yakitFailed } from '@/utils/notification'
-import { useMenuHeight } from '../menuHeight'
+import { MENU_VISIBLE_LARGE_SCREEN_MIN_HEIGHT, MENU_VISIBLE_LARGE_SCREEN_MIN_WIDTH, useMenuHeight } from '../menuHeight'
 
 vi.mock('@/utils/kv', () => ({ getRemoteValue: vi.fn(), setRemoteValue: vi.fn() }))
 vi.mock('@/utils/notification', () => ({ yakitFailed: vi.fn() }))
@@ -10,6 +10,8 @@ vi.mock('@/utils/notification', () => ({ yakitFailed: vi.fn() }))
 describe('菜单布局状态', () => {
   beforeEach(() => {
     vi.useFakeTimers()
+    vi.stubGlobal('innerWidth', MENU_VISIBLE_LARGE_SCREEN_MIN_WIDTH + 140)
+    vi.stubGlobal('innerHeight', MENU_VISIBLE_LARGE_SCREEN_MIN_HEIGHT + 200)
     useMenuHeight.getState().toggleMenuVisibility.cancel()
     vi.resetAllMocks()
     vi.mocked(getRemoteValue).mockResolvedValue('')
@@ -23,6 +25,7 @@ describe('菜单布局状态', () => {
 
   afterEach(() => {
     useMenuHeight.getState().toggleMenuVisibility.cancel()
+    vi.unstubAllGlobals()
     vi.useRealTimers()
   })
 
@@ -71,8 +74,6 @@ describe('菜单布局状态', () => {
   it.each([
     ['false', false],
     ['true', true],
-    ['', true],
-    ['invalid', true],
   ] as const)('从缓存 %s 恢复菜单显隐为 %s', async (cached, expected) => {
     vi.mocked(getRemoteValue).mockResolvedValue(cached)
     useMenuHeight.getState().updateMenuBodyHeight({ firstTabMenuBodyHeight: 400 })
@@ -82,6 +83,32 @@ describe('菜单布局状态', () => {
     expect(getRemoteValue).toHaveBeenCalledExactlyOnceWith(CodeGV.MenuVisible)
     expect(useMenuHeight.getState().isMenuVisible).toBe(expected)
     expect(useMenuHeight.getState().menuBodyHeight.firstTabMenuBodyHeight).toBe(400)
+    expect(setRemoteValue).not.toHaveBeenCalled()
+  })
+
+  it('未初始化时即使小屏也保持展开', () => {
+    vi.stubGlobal('innerWidth', 900)
+    vi.stubGlobal('innerHeight', 600)
+    expect(useMenuHeight.getState().isMenuVisible).toBe(true)
+    expect(getRemoteValue).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    ['', MENU_VISIBLE_LARGE_SCREEN_MIN_WIDTH + 1, MENU_VISIBLE_LARGE_SCREEN_MIN_HEIGHT + 1, true],
+    ['', MENU_VISIBLE_LARGE_SCREEN_MIN_WIDTH, MENU_VISIBLE_LARGE_SCREEN_MIN_HEIGHT + 1, false],
+    ['', MENU_VISIBLE_LARGE_SCREEN_MIN_WIDTH + 1, MENU_VISIBLE_LARGE_SCREEN_MIN_HEIGHT, false],
+    ['', 900, MENU_VISIBLE_LARGE_SCREEN_MIN_HEIGHT + 1, false],
+    ['', MENU_VISIBLE_LARGE_SCREEN_MIN_WIDTH + 1, 600, false],
+    ['invalid', MENU_VISIBLE_LARGE_SCREEN_MIN_WIDTH + 1, MENU_VISIBLE_LARGE_SCREEN_MIN_HEIGHT + 1, true],
+    ['invalid', 900, 600, false],
+  ] as const)('无明确缓存 %s 时按屏幕 %s×%s 默认为 %s', async (cached, width, height, expected) => {
+    vi.stubGlobal('innerWidth', width)
+    vi.stubGlobal('innerHeight', height)
+    vi.mocked(getRemoteValue).mockResolvedValue(cached)
+
+    await useMenuHeight.getState().initMenuVisibility()
+
+    expect(useMenuHeight.getState().isMenuVisible).toBe(expected)
     expect(setRemoteValue).not.toHaveBeenCalled()
   })
 

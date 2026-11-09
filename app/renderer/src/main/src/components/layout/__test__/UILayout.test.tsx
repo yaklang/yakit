@@ -252,7 +252,15 @@ vi.mock('../YakitGlobalHost', () => ({ YakitGlobalHost: () => null }))
 vi.mock('@yakit-libs/yakit-ui-icons/solid', async (importOriginal) => ({
   ...((await importOriginal()) as Record<string, unknown>),
   HomeSolid: () => <svg aria-label="home" />,
-  ParkAboveSolid: () => <svg aria-label="park-above" />,
+}))
+vi.mock('../MenuCollapseIcon', () => ({
+  MenuCollapseIcon: () => <svg aria-label="park-above" />,
+  MenuExpandIcon: () => <svg aria-label="park-above" />,
+}))
+vi.mock('../menuVisibilityGuide/MenuVisibilityGuide', () => ({
+  MENU_VISIBILITY_GUIDE_HEADER_TARGET: 'menu-visibility-guide-header',
+  MENU_VISIBILITY_GUIDE_TAB_ADD_TARGET: 'menu-visibility-guide-tab-add',
+  MenuVisibilityGuide: () => null,
 }))
 vi.mock('../GlobalState', () => ({ GlobalState: () => null }))
 vi.mock('../AllKillEngineConfirm', () => ({ AllKillEngineConfirm: () => null }))
@@ -313,13 +321,19 @@ vi.mock('../uiLayout.module.scss', () => ({
   },
 }))
 
-import { useMenuHeight } from '@/store/menuHeight'
+import {
+  MENU_VISIBLE_LARGE_SCREEN_MIN_HEIGHT,
+  MENU_VISIBLE_LARGE_SCREEN_MIN_WIDTH,
+  useMenuHeight,
+} from '@/store/menuHeight'
 import { CodeGV } from '@/yakitGV'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import UILayout from '../UILayout'
 import styles from '../uiLayout.module.scss'
 
 beforeEach(() => {
+  vi.stubGlobal('innerWidth', MENU_VISIBLE_LARGE_SCREEN_MIN_WIDTH + 140)
+  vi.stubGlobal('innerHeight', MENU_VISIBLE_LARGE_SCREEN_MIN_HEIGHT + 200)
   useMenuHeight.getState().toggleMenuVisibility.cancel()
   headerState.projectManage = false
   headerState.engineMode = 'remote'
@@ -333,6 +347,7 @@ afterEach(() => {
   cleanup()
   useMenuHeight.getState().toggleMenuVisibility.cancel()
   useMenuHeight.setState({ isMenuVisible: true })
+  vi.unstubAllGlobals()
 })
 
 describe('UILayout 引擎连接后的安装探测轮询', () => {
@@ -397,7 +412,7 @@ describe('UILayout 标题栏导航图标', () => {
     await waitFor(() => expect(screen.getByRole('tooltip')).toHaveTextContent('UILayout.hideMenu'))
     fireEvent.mouseLeave(button)
     expect(button.tagName).toBe('DIV')
-    expect(button.firstElementChild).toBe(screen.getByLabelText('park-above'))
+    expect(button).toContainElement(screen.getByLabelText('park-above'))
     expect(button).not.toHaveAttribute('role')
     expect(button).toHaveAttribute('aria-pressed', 'true')
     expect(button).toHaveClass(styles['park-above-icon-active'])
