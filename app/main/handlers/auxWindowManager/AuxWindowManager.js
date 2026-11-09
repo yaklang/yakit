@@ -23,8 +23,9 @@ class AuxWindowManager {
   /**
    * @param {import('electron').BrowserWindow} mainWindow
    */
-  constructor(mainWindow) {
+  constructor(mainWindow, usageActivity = null) {
     this.mainWindow = mainWindow
+    this.usageActivity = usageActivity
     /** @type {Map<string, { win: import('electron').BrowserWindow, meta: Record<string, any>, pendingPayload: any }>} */
     this.windows = new Map()
     /** @type {{ onOpened?: Function, onClosed?: Function } | null} */
@@ -150,6 +151,8 @@ class AuxWindowManager {
       },
       show: false,
     })
+    // AuxWindowManager 创建的均为产品业务窗口；启动页、DevTools 等窗口不在此登记。
+    this.usageActivity?.registerWindow(auxWin)
 
     if (process.platform === 'darwin' && titleBar === 'hidden') {
       auxWin.setWindowButtonVisibility(false)

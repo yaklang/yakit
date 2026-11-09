@@ -12,17 +12,17 @@ import * as matchers from '@testing-library/jest-dom/matchers'
 expect.extend(matchers)
 
 const asyncNoop = async () => undefined
-const makeNs = () =>
-  new Proxy(
-    {},
-    {
-      get: () => asyncNoop,
-    },
-  )
+const makeNs = (overrides: Record<string, unknown> = {}) =>
+  new Proxy(overrides, {
+    get: (target, property) => Reflect.get(target, property) ?? asyncNoop,
+  })
 
 if (typeof window !== 'undefined' && !window.yakitBridge) {
   window.yakitBridge = {
-    app: makeNs(),
+    app: makeNs({
+      getUsageActivity: async () => ({ foreground: true, lastActivityAt: 0, revision: 0 }),
+      onUsageActivity: () => () => {},
+    }),
     theme: makeNs(),
     system: makeNs(),
     network: makeNs(),

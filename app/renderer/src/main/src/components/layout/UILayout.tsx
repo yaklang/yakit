@@ -1,6 +1,6 @@
 import type React from 'react'
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
-import { useCreation, useDebounceEffect, useMemoizedFn, useUpdateEffect } from 'ahooks'
+import { useCreation, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import { useContextMenuBoot } from './useContextMenuBoot'
 import { MacUIOp } from './MacUIOp'
 import { FuncDomain, UIOpNotice } from './FuncDomain'
@@ -90,7 +90,7 @@ import { Tooltip } from 'antd'
 import { openABSFileLocated, openConsoleNewWindow } from '@/utils/openWebsite'
 import { clearTerminalMap, getMapAllTerminalKey } from '@/pages/yakRunner/BottomEditorDetails/TerminalBox/TerminalMap'
 import { grpcFetchLatestYakVersion, grpcFetchYakInstallResult } from '@/apiUtils/grpc'
-import { visitorsStatisticsFun } from '@/utils/visitorsStatistics'
+import { useEnterpriseUsageStatistics } from './useEnterpriseUsageStatistics'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 import { handleFetchArchitecture, handleFetchIsDev, SystemInfo } from '@/constants/hardware'
 import {
@@ -258,39 +258,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
   // 获取企业版配置信息
   const { eeSystemConfig } = useEeSystemConfig()
-  const isLoginFirstRef = useRef<boolean>(true) // 只是登录的那一下需要传login参数的标志
-  useDebounceEffect(
-    () => {
-      let collectData = false
-      eeSystemConfig.forEach((item) => {
-        if (item.configName === 'collectData') {
-          collectData = item.isOpen
-        }
-      })
-      let timer
-      if (collectData && userInfo.isLogin) {
-        const token = userInfo.token
-        if (isLoginFirstRef.current) {
-          visitorsStatisticsFun(token, 'login')
-          isLoginFirstRef.current = false
-        } else {
-          visitorsStatisticsFun(token)
-        }
-        timer = setInterval(() => {
-          visitorsStatisticsFun(token)
-        }, 60000)
-      } else {
-        isLoginFirstRef.current = true
-        timer && clearInterval(timer)
-      }
-      return () => {
-        isLoginFirstRef.current = true
-        timer && clearInterval(timer)
-      }
-    },
-    [eeSystemConfig, userInfo],
-    { wait: 300 },
-  )
+  const collectUsageData = eeSystemConfig.some((item) => item.configName === 'collectData' && item.isOpen)
+  useEnterpriseUsageStatistics(collectUsageData, userInfo.isLogin, userInfo.token)
 
   // #region 企业版登录成功后根据配置信息看是否需要自动上传项目
   const projectListRef = useRef<ProjectDescription[]>([])

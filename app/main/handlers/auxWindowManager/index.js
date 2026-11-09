@@ -8,6 +8,8 @@ const openAIConcurrentStream = require('./openAIConcurrentStream')
 let auxWindowManager = null
 /** @type {{ engineLinkWin?: import('electron').BrowserWindow, safeSend?: Function } | null} */
 let broadcastContext = null
+/** @type {import('../../usageActivity').UsageActivityManager | null} */
+let usageActivity = null
 
 const AUX_IPC_HANDLES = [
   'aux-window:create',
@@ -30,10 +32,13 @@ module.exports = {
   configureBroadcast: (ctx) => {
     broadcastContext = ctx
   },
+  configureUsageActivity: (manager) => {
+    usageActivity = manager
+  },
   register: (win) => {
     removeAuxHandlers()
 
-    const manager = new AuxWindowManager(win)
+    const manager = new AuxWindowManager(win, usageActivity)
     auxWindowManager = manager
 
     const terminalHandlers = [openConsoleNewWin.register(manager, win), openAiChatLog.register(manager, win)]
