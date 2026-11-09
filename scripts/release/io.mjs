@@ -5,7 +5,7 @@ import path from 'node:path'
 import { pipeline } from 'node:stream/promises'
 import { createGzip } from 'node:zlib'
 
-export function run(command, args, { capture = false, ...options } = {}) {
+export function run(command, args, { capture = false, label = command, ...options } = {}) {
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, {
       stdio: capture ? ['ignore', 'pipe', 'pipe'] : 'inherit',
@@ -16,10 +16,13 @@ export function run(command, args, { capture = false, ...options } = {}) {
     let stderr = ''
     child.stdout?.on('data', (chunk) => (stdout += chunk))
     child.stderr?.on('data', (chunk) => (stderr += chunk))
-    child.once('error', reject)
+    child.once('error', (error) => {
+      error.message = `${label}: ${error.message}`
+      reject(error)
+    })
     child.once('close', (code, signal) => {
       if (code === 0) resolve(stdout.trim())
-      else reject(Object.assign(new Error(`${command} failed (${signal || code}): ${stderr}`), { code, stdout }))
+      else reject(Object.assign(new Error(`${label} failed (${signal || code}): ${stderr}`), { code, stdout }))
     })
   })
 }

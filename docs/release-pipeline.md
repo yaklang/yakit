@@ -25,6 +25,8 @@ git push origin refs/tags/v1.4.9-1113-irify
 
 命令只在本地创建分支、提交和 tag，不自动推送或发布。推送正式 tag 后，现有产品工作流自动调用 Prepare Release，构建两个渲染端和主进程；后端引擎发布后再手动 Finalize，无需另推 `-render` / `-link-render` tag。Yakit 同时支持 `v1.4.9` 这类无日期后缀的软件 tag。
 
+Yakit 的 tag 入口按 `v[0-9]*.[0-9]*.[0-9]*` 粗过滤，排除 `-render`、`-link-render`、`-irify` 和 `-memfit` 后缀；`v-test` 等明显非版本 tag 不触发。任何匹配的 tag 都会进入准备流程，包括 `v2.10.30`：仅凭版本号无法区分软件与渲染端，请勿用无后缀的软件 tag 命名渲染端版本。glob 不等于完整版本校验，Prepare 的 plan 步骤仍会严格校验版本和发行版身份，校验失败会在创建候选 Draft 和启动构建矩阵前退出。手动选择分支运行属于预演，可创建内部候选 Draft，但不能正式发布。
+
 只运行 `git tag` 不会更新任何 `package.json`。Prepare / Finalize 会按候选版本临时设置根目录版本用于构建，不会回写源码。若要让 `master` 的根目录版本也更新，还需推送生成的版本分支并通过 PR 合并，例如 `git push -u origin update/pack-1.4.9-1113`。各产品共享一个根清单；同周发布不同版本时，以各自 tag 中的根目录版本为准，`master` 只能保存最后合入的版本。
 
 已存在的 tag、非法版本和未提交改动会在创建版本分支前报错。即使根目录已经是目标版本，也会创建独立版本提交，避免 tag 直接落在带有跳过 CI 指令的旧提交上。不要移动或覆盖已经发布的 tag。

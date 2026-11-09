@@ -43,6 +43,19 @@ jobs:
           yarn typecheck:electron
           yarn test:vitest --config scripts/release/vitest.config.mjs --run
 
+  windows-release-commands:
+    timeout-minutes: 10
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: ./.github/actions/release-toolchain
+        with:
+          mode: build
+      - name: Verify release commands on Windows
+        run: yarn test:vitest --config scripts/release/vitest.config.mjs --run e2e/fixtures/__test__/release-command.test.mjs e2e/fixtures/__test__/release-io.test.mjs
+
   native-installers:
     uses: ./.github/workflows/release-prepare.yml
     with:

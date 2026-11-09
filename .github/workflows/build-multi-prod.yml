@@ -13,7 +13,8 @@ on:
         type: string
   push:
     tags:
-      - 'v*'
+      # Include bare software versions; plan validation still enforces the exact release identity.
+      - 'v[0-9]*.[0-9]*.[0-9]*'
       - '!v*-render'
       - '!v*-irify'
       - '!v*-link-render'

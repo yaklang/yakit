@@ -4,7 +4,7 @@ import { mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import { spawn } from 'node:child_process'
-import { download } from '../../../scripts/release/io.mjs'
+import { download, run } from '../../../scripts/release/io.mjs'
 
 vi.mock('node:child_process', () => ({ spawn: vi.fn() }))
 
@@ -79,5 +79,36 @@ describe('engine download curl status handling', () => {
       'https://example.invalid/engine',
     ])
     expect(options.stdio).toEqual(['ignore', 'pipe', 'pipe'])
+  })
+})
+
+describe('command failure diagnostics', () => {
+  it('includes an explicit safe label and preserves exit metadata', async () => {
+    curlExit(128, 'partial output')
+    await expect(run('git', ['fetch', 'origin'], { capture: true, label: 'git fetch' })).rejects.toMatchObject({
+      message: 'git fetch failed (128): ',
+      code: 128,
+      stdout: 'partial output',
+    })
+    expect(spawn.mock.calls[0][2]).not.toHaveProperty('label')
+  })
+
+  it('labels spawn errors while preserving their error code', async () => {
+    vi.mocked(spawn).mockImplementation(() => {
+      const child = new EventEmitter()
+      queueMicrotask(() => child.emit('error', Object.assign(new Error('spawn git ENOENT'), { code: 'ENOENT' })))
+      return child
+    })
+    await expect(run('git', ['fetch', 'origin'], { label: 'git fetch' })).rejects.toMatchObject({
+      message: 'git fetch: spawn git ENOENT',
+      code: 'ENOENT',
+    })
+  })
+
+  it('does not include potentially sensitive arguments in default diagnostics', async () => {
+    curlExit(22, '403')
+    const error = await run('curl', ['-H', 'Authorization: secret'], { capture: true }).catch((error) => error)
+    expect(error.message).toBe('curl failed (22): ')
+    expect(error.message).not.toContain('secret')
   })
 })

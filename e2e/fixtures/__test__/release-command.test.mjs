@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { execFileSync, spawnSync } from 'node:child_process'
 import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import os from 'node:os'
@@ -19,13 +19,23 @@ const manifests = [
   'app/renderer/src/main/package.json',
   'app/renderer/engine-link-startup/package.json',
 ]
+let gitEnv
+beforeEach(async () => {
+  const directory = await mkdtemp(path.join(os.tmpdir(), 'yakit-git-config-'))
+  temporary.push(directory)
+  const config = path.join(directory, 'empty.gitconfig')
+  await writeFile(config, '')
+  // Use a real file on every OS: Node's Windows os.devNull is not accepted by Git.
+  gitEnv = { ...process.env, HUSKY: '0', GIT_CONFIG_NOSYSTEM: '1', GIT_CONFIG_GLOBAL: config }
+})
+
 const git = (cwd, ...args) =>
-  execFileSync('git', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim()
+  execFileSync('git', args, { cwd, env: gitEnv, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim()
 const execute = (cwd, script, args = []) =>
   spawnSync(process.execPath, [path.join(root, script), ...args], {
     cwd,
     encoding: 'utf8',
-    env: { ...process.env, HUSKY: '0', GIT_CONFIG_NOSYSTEM: '1', GIT_CONFIG_GLOBAL: os.devNull },
+    env: gitEnv,
   })
 
 async function fixture() {
@@ -107,6 +117,39 @@ describe('legacy release commands feed the two-stage pipeline', () => {
       expect(plan.tag).toBe(tag)
     },
   )
+
+  it('identifies the failing Git command without dumping the process error object', async () => {
+    const { repo } = await fixture()
+    git(repo, 'remote', 'remove', 'origin')
+    const head = git(repo, 'rev-parse', 'HEAD')
+    const result = execute(repo, 'scripts/prod-pack.js', ['1.4.9-1113'])
+    expect(result.status).toBe(1)
+    expect(result.stderr).toContain('Preparing yakit release failed: git fetch failed (128)')
+    expect(result.stderr).not.toMatch(/signal: null|output: \[|pid: \d/)
+    expect(git(repo, 'rev-parse', 'HEAD')).toBe(head)
+    expect(git(repo, 'branch', '--show-current')).toBe('master')
+    expect(git(repo, 'status', '--porcelain')).toBe('')
+    expect(git(repo, 'tag', '--list')).toBe('')
+  })
+
+  it.each([
+    ['v-test', false],
+    ['v-next', false],
+    ['v1.4.9', true],
+    ['v1.4.9-1113', true],
+    ['v2.10.30', true],
+    ['v2.10.30-render', false],
+    ['v2.10.30-link-render', false],
+    ['v1.4.9-irify', false],
+    ['v1.1.1-memfit', false],
+  ])('filters Yakit tag %s with expected trigger %s', async (tag, expected) => {
+    const workflow = parse(await readFile(path.join(root, '.github/workflows/build-multi-prod.yml'), 'utf8'))
+    const patterns = workflow.on.push.tags
+    expect(
+      patterns.filter((value) => !value.startsWith('!')).some((value) => matches(value)(tag)) &&
+        !patterns.filter((value) => value.startsWith('!')).some((value) => matches(value.slice(1))(tag)),
+    ).toBe(expected)
+  })
 
   it('creates a fresh version commit when the root version already matches', async () => {
     const { repo } = await fixture()

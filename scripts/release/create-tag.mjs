@@ -2,6 +2,9 @@ import { assertReleaseIdentity, assertVersion } from './model.mjs'
 import { run } from './io.mjs'
 import { setVersion } from './prepare.mjs'
 
+// Only label the subcommand; arbitrary command arguments may contain credentials.
+const git = (args, options) => run('git', args, { ...options, label: `git ${args[0]}` })
+
 export async function main(product) {
   try {
     const [version, ...extra] = process.argv.slice(2)
@@ -25,26 +28,26 @@ export async function main(product) {
     assertReleaseIdentity(tag, [product], version)
     if (/-(irify|memfit)$/.test(version)) throw new Error('The release command adds the product suffix')
 
-    const root = await run('git', ['rev-parse', '--show-toplevel'], { capture: true })
+    const root = await git(['rev-parse', '--show-toplevel'], { capture: true })
     process.chdir(root)
-    if (await run('git', ['status', '--porcelain'], { capture: true })) {
+    if (await git(['status', '--porcelain'], { capture: true })) {
       throw new Error('Commit or stash local changes before preparing a release')
     }
-    await run('git', ['fetch', 'origin'])
-    if (await run('git', ['tag', '--list', tag], { capture: true })) {
+    await git(['fetch', 'origin'])
+    if (await git(['tag', '--list', tag], { capture: true })) {
       throw new Error(`Release tag already exists: ${tag}`)
     }
     // Also reject tags not fetched automatically (for example on another product branch).
-    if (await run('git', ['ls-remote', '--tags', 'origin', `refs/tags/${tag}`], { capture: true })) {
+    if (await git(['ls-remote', '--tags', 'origin', `refs/tags/${tag}`], { capture: true })) {
       throw new Error(`Release tag already exists on origin: ${tag}`)
     }
     const branch = `update/${product === 'yakit' ? '' : `${product}-`}pack-${version}`
-    await run('git', ['checkout', '-b', branch, 'origin/master'])
+    await git(['checkout', '-b', branch, 'origin/master'])
     await setVersion(version)
-    await run('git', ['add', '--', 'package.json'])
+    await git(['add', '--', 'package.json'])
     // A separate version commit also avoids inheriting CI-skip text from the source commit.
-    await run('git', ['commit', '--allow-empty', '-m', `${product} Version To v${version}`])
-    await run('git', ['tag', tag])
+    await git(['commit', '--allow-empty', '-m', `${product} Version To v${version}`])
+    await git(['tag', tag])
     console.log(`\nCreated ${branch} and ${tag}. Push to start Prepare Release:\ngit push origin refs/tags/${tag}`)
     console.log(`To retain the version change on master, push ${branch} and merge it through a PR.`)
     console.log('After Prepare succeeds and the engine is released, run Finalize Release with the Prepare run ID.')
