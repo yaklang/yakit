@@ -144,6 +144,42 @@ describe('legacy release commands feed the two-stage pipeline', () => {
     expect(git(repo, 'status', '--porcelain')).toBe('')
   })
 
+  it('rejects a remote-only release tag that fetch does not automatically retrieve', async () => {
+    const { repo, remote } = await fixture()
+    const tag = 'v1.1.1-1106-memfit'
+    const head = git(repo, 'rev-parse', 'HEAD')
+    const manifest = await readFile(path.join(repo, 'package.json'), 'utf8')
+    // This release commit exists only on origin, outside the fetched master history.
+    const remoteCommit = git(
+      remote,
+      '-c',
+      'user.name=Release Test',
+      '-c',
+      'user.email=release@example.invalid',
+      'commit-tree',
+      `${head}^{tree}`,
+      '-p',
+      head,
+      '-m',
+      'Other product release',
+    )
+    git(remote, 'tag', tag, remoteCommit)
+    git(repo, 'fetch', 'origin')
+    expect(git(repo, 'tag', '--list', tag)).toBe('')
+    expect(git(repo, 'ls-remote', '--tags', 'origin', `refs/tags/${tag}`)).toBe(`${remoteCommit}\trefs/tags/${tag}`)
+
+    const result = execute(repo, 'scripts/release-memfit.js', ['1.1.1-1106'])
+    expect(result.status).toBe(1)
+    expect(result.stderr).toContain(`Release tag already exists on origin: ${tag}`)
+    expect(git(repo, 'branch', '--show-current')).toBe('master')
+    expect(git(repo, 'branch', '--list', 'update/memfit-pack-1.1.1-1106')).toBe('')
+    expect(git(repo, 'rev-parse', 'HEAD')).toBe(head)
+    expect(await readFile(path.join(repo, 'package.json'), 'utf8')).toBe(manifest)
+    expect(git(repo, 'tag', '--list', tag)).toBe('')
+    expect(git(remote, 'rev-parse', `refs/tags/${tag}`)).toBe(remoteCommit)
+    expect(git(repo, 'status', '--porcelain')).toBe('')
+  })
+
   it.each([
     'v1.4.9-1106',
     '1.4.9;touch injected',
