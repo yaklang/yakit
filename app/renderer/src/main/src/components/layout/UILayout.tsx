@@ -55,7 +55,9 @@ import { useTemporaryProjectStore } from '@/store/temporaryProject'
 import { useMenuHeight } from '@/store/menuHeight'
 import emiter from '@/utils/eventBus/eventBus'
 import type { RemoteLinkInfo } from './RemoteEngine/RemoteEngineType'
-import { CheckCircleSolid, HomeSolid, ParkAboveSolid, StopSolid } from '@yakit-libs/yakit-ui-icons/solid'
+import { CheckCircleSolid, HomeSolid, StopSolid } from '@yakit-libs/yakit-ui-icons/solid'
+import { MenuCollapseIcon, MenuExpandIcon } from './MenuCollapseIcon'
+import { MENU_VISIBILITY_GUIDE_HEADER_TARGET, MenuVisibilityGuide } from './menuVisibilityGuide/MenuVisibilityGuide'
 import { setNowProjectDescription } from '@/pages/globalVariable'
 import { handleAIConfig, apiGetGlobalNetworkConfig, apiSetGlobalNetworkConfig } from '@/pages/spaceEngine/utils'
 import type { GlobalNetworkConfig } from '../configNetwork/ConfigNetworkPage'
@@ -1734,10 +1736,11 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
       </div>
       {isCommunityEdition() && !showProjectManage && (
         <div className={styles['park-above-wrapper']}>
+          {!isMenuVisibilityLoading && <MenuVisibilityGuide />}
           <YakitSpin spinning={isMenuVisibilityLoading} size="small" wrapperClassName={styles['park-above-spin']}>
             <Tooltip title={t(isMenuVisible ? 'UILayout.hideMenu' : 'UILayout.showMenu')} placement="bottom">
               <div
-                className={classNames(styles['park-above-icon'], {
+                className={classNames(styles['park-above-icon'], MENU_VISIBILITY_GUIDE_HEADER_TARGET, {
                   [styles['park-above-icon-active']]: isMenuVisible,
                 })}
                 aria-label={t('UILayout.toggleMenu')}
@@ -1749,7 +1752,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                   toggleMenuVisibility()
                 }}
               >
-                <ParkAboveSolid size={20} />
+                <span className={styles['park-above-icon-text']}>{t('UILayout.menu')}</span>
+                {isMenuVisible ? <MenuCollapseIcon size={20} /> : <MenuExpandIcon size={20} />}
               </div>
             </Tooltip>
           </YakitSpin>

@@ -24,4 +24,7 @@ export enum LocalGVS {
 
   /** @name Memfit 更新说明已点「知道了」的版本号 */
   WhatsNewAckVersion = 'whats-new-ack-version',
+
+  /** @name 菜单显隐入口迁移引导是否已看过 */
+  MenuVisibilityGuideSeen = 'menu-visibility-guide-seen',
 }

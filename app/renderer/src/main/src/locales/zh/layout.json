@@ -219,9 +219,15 @@
     "tabPage": "个标签页"
   },
   "UILayout": {
+    "menu": "菜单",
     "hideMenu": "隐藏菜单",
     "showMenu": "显示菜单",
     "toggleMenu": "显示或隐藏菜单",
+    "menuGuideStep1Title": "菜单栏展开收起，移动到这里啦！",
+    "menuGuideStep1Desc": "单击按钮即可控制菜单栏的展开与收起，赶紧试试吧。",
+    "menuGuideStep2Title": "这里也可以调用菜单页面",
+    "menuGuideStep2Desc": "当菜单栏收起时，这里可以快捷调用菜单。",
+    "menuGuideStart": "开始体验",
     "entering": "即将进入...",
     "projectSyncFailed": "{{name}} 项目数据同步失败, 请手动上传",
     "exiting": "即将退出...",

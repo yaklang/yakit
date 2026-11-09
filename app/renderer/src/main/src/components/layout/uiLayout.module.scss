@@ -122,16 +122,17 @@
         }
 
         .park-above-spin {
-          width: 28px;
+          width: 67px;
           height: 28px;
         }
 
         .park-above-icon {
-          width: 28px;
+          width: 67px;
           height: 28px;
           display: flex;
           align-items: center;
           justify-content: center;
+          gap: 4px;
           border-radius: 4px;
           padding: 0;
           border: 0;
@@ -144,10 +145,16 @@
           &:not([aria-disabled='true']):hover {
             background: var(--Colors-Use-Neutral-Bg-Hover);
           }
+          &-text {
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+            font-size: 14px;
+            font-weight: 500;
+            line-height: 20px;
+          }
         }
-        .park-above-icon-active {
-          color: var(--Colors-Use-Main-Primary);
-        }
+        // .park-above-icon-active {
+        //   color: var(--Colors-Use-Main-Primary);
+        // }
 
         .yakit-mode-icon {
           box-sizing: border-box;

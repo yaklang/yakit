@@ -59,6 +59,16 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 4px;
+    .menu-toggle-bar {
+      align-self: flex-end;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--Colors-Use-Neutral-Text-3-Secondary);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
 
     .second-menu-body {
       height: 100%;
@@ -104,13 +114,20 @@
             gap: 4px;
             position: relative;
 
-            .border-wrapper {
-              position: absolute;
-              top: 0;
-              left: 0;
-              width: 1px;
-              height: 100%;
-              background-color: var(--Colors-Use-Neutral-Border);
+            .tab-switch-group {
+              display: flex;
+              flex-direction: column;
+              gap: 4px;
+              position: relative;
+
+              .border-wrapper {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 1px;
+                height: 100%;
+                background-color: var(--Colors-Use-Neutral-Border);
+              }
             }
             .tab-bar {
               display: flex;

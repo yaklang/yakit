@@ -165,6 +165,7 @@ import { defaultSimpleDetectPageInfo } from '@/defaultConstants/SimpleDetectCons
 import { YakitRoute } from '@/enums/yakitRoute'
 import { defaultAddYakitScriptPageInfo } from '@/defaultConstants/AddYakitScript'
 import { useMenuHeight } from '@/store/menuHeight'
+import { MENU_VISIBILITY_GUIDE_TAB_ADD_TARGET } from '@/components/layout/menuVisibilityGuide/MenuVisibilityGuide'
 import type { HybridScanInputTarget } from '@/models/HybridScan'
 import { defaultWebsocketFuzzerPageInfo } from '@/defaultConstants/WebsocketFuzzer'
 import { defaultCodecPageInfo } from '@/defaultConstants/Codec'
@@ -4406,7 +4407,7 @@ const TabList: React.FC<TabListProps> = React.memo((props) => {
           classNames={{ root: styles['tab-route-popover'] }}
           content={<FirstTabRouteMenu softMode={softMode} onSelect={() => setRouteMenuOpen(false)} />}
         >
-          <div className={styles['tab-menu-first-add']}>
+          <div className={classNames(styles['tab-menu-first-add'], MENU_VISIBILITY_GUIDE_TAB_ADD_TARGET)}>
             <YakitButton
               type="text2"
               size="small"

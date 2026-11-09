@@ -219,9 +219,15 @@
     "tabPage": "個標籤頁"
   },
   "UILayout": {
+    "menu": "選單",
     "hideMenu": "隱藏選單",
     "showMenu": "顯示選單",
     "toggleMenu": "顯示或隱藏選單",
+    "menuGuideStep1Title": "選單列展開收起，已移到這裡！",
+    "menuGuideStep1Desc": "單擊按鈕即可控制選單列的展開與收起，趕緊試試看。",
+    "menuGuideStep2Title": "這裡也可以呼叫選單頁面",
+    "menuGuideStep2Desc": "當選單列收起時，這裡可以快捷呼叫選單。",
+    "menuGuideStart": "開始體驗",
     "entering": "即將進入...",
     "projectSyncFailed": "{{name}} 專案資料同步失敗, 請手動上傳",
     "exiting": "即將退出...",

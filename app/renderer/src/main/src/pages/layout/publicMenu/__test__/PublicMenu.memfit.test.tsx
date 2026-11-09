@@ -3,6 +3,7 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import PublicMenu from '../PublicMenu'
 import styles from '../PublicMenu.module.scss'
+import { useMenuHeight } from '@/store/menuHeight'
 
 // 根 Vitest 会将样式文件解析为空 stub，显式提供断言所需的类名以兼容两套配置。
 vi.mock('../PublicMenu.module.scss', () => ({
@@ -13,6 +14,7 @@ vi.mock('../PublicMenu.module.scss', () => ({
     'hide-tool-body': 'hide-tool-body',
     'tool-nohidden-container': 'tool-nohidden-container',
     'tool-hidden-container': 'tool-hidden-container',
+    'menu-toggle-bar': 'menu-toggle-bar',
   },
 }))
 
@@ -39,7 +41,10 @@ vi.mock('@/store/softMode', () => ({
 vi.mock('@/i18n/useI18nNamespaces', () => ({
   useI18nNamespaces: () => ({ t: (key: string) => key, i18nRefresh: 0 }),
 }))
-vi.mock('@/utils/kv', () => ({ getRemoteValue: vi.fn().mockResolvedValue('{}'), setRemoteValue: vi.fn() }))
+vi.mock('@/utils/kv', () => ({
+  getRemoteValue: vi.fn().mockResolvedValue('{}'),
+  setRemoteValue: vi.fn().mockResolvedValue(undefined),
+}))
 vi.mock('@/utils/notification', () => ({ yakitNotify: vi.fn() }))
 vi.mock('@/utils/tool', () => ({ JSONParseLog: JSON.parse }))
 vi.mock('@/pages/pluginHub/utils/grpc', () => ({ grpcFetchLocalPluginDetail: vi.fn() }))
@@ -73,15 +78,18 @@ describe('PublicMenu 工具区域', () => {
     edition.memfit = true
     vi.useFakeTimers()
     ipcRendererMock.invoke.mockResolvedValue({ Data: [] })
+    useMenuHeight.getState().toggleMenuVisibility.cancel()
+    useMenuHeight.setState({ isMenuVisible: true, isMenuVisibilityLoading: false })
   })
   afterEach(() => {
     cleanup()
+    useMenuHeight.getState().toggleMenuVisibility.cancel()
     vi.clearAllTimers()
     vi.useRealTimers()
     vi.clearAllMocks()
   })
 
-  it.each([true, false])('公共菜单固定展开且没有展开收起控件（Memfit: %s）', async (memfit) => {
+  it.each([true, false])('公共菜单展示二级菜单和收起控件（Memfit: %s）', async (memfit) => {
     edition.memfit = memfit
     await renderMenu()
     const root = screen.getByText('AI').closest('.' + styles['public-menu-wrapper'])!
@@ -91,7 +99,8 @@ describe('PublicMenu 工具区域', () => {
     }
     const secondMenu = root.querySelector('.' + styles['second-menu-wrapper'])!
     expect(secondMenu).toHaveAttribute('class', styles['second-menu-wrapper'])
-    expect(secondMenu.children).toHaveLength(1)
+    expect(secondMenu.children).toHaveLength(2)
+    expect(screen.getByLabelText('UILayout.hideMenu')).toBeInTheDocument()
     fireEvent.click(screen.getByText('数据库'))
     expectTool('codec')
   })
@@ -113,6 +122,20 @@ describe('PublicMenu 工具区域', () => {
       expectTool('dnslog')
       expect(screen.queryByTestId('plugin-content')).not.toBeInTheDocument()
     }
+  })
+
+  it('DNSLog 下方收起按钮只会隐藏菜单', async () => {
+    await renderMenu()
+    const collapse = screen.getByLabelText('UILayout.hideMenu')
+    expect(collapse).toHaveClass(styles['menu-toggle-bar'])
+    fireEvent.click(collapse)
+    expect(useMenuHeight.getState().isMenuVisible).toBe(false)
+    expect(screen.queryByText('YakitButton.expand')).not.toBeInTheDocument()
+    fireEvent.click(collapse)
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(500)
+    })
+    expect(useMenuHeight.getState().isMenuVisible).toBe(false)
   })
 
   it('非 Memfit 插件菜单保留常用插件面板并隐藏工具区域', async () => {

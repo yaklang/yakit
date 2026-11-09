@@ -1,0 +1,16 @@
+.stepBody {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.stepImage {
+  display: block;
+  width: 100%;
+  min-width: 360px;
+  border-radius: 4px;
+  object-fit: cover;
+}
