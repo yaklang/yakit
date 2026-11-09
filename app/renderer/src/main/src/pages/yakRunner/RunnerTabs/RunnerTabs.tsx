@@ -31,7 +31,6 @@ import {
 } from '@yakit-libs/yakit-ui-icons/outline'
 
 import {
-  SolidYakCattleNoBackColorIcon,
   YakRunnerNewFileIcon,
   YakRunnerOpenFileIcon,
   YakRunnerOpenFolderIcon,

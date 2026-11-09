@@ -7,8 +7,6 @@ import {
   SoftwareRemoteSvgIcon,
   SolidIrifyFontLogoIcon,
   SolidIrifyMiniLogoIcon,
-  SolidMemfitFontLogoIcon,
-  SolidMemfitMiniLogoIcon,
 } from '@yakit-libs/yakit-ui-icons/oldicon'
 import { Typography } from 'antd'
 import { useMemoizedFn } from 'ahooks'
@@ -19,9 +17,7 @@ import classNames from 'classnames'
 import styles from './SoftwareSettings.module.scss'
 import { isCommunityMemfit, isEnpriTrace, isEnpriTraceAgent, isIRify, isMemfit } from '@/utils/envfile'
 import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import yakitEEProject from '@/assets/yakitFontEE.png'
 import yakitSEProject from '@/assets/yakitFontSE.png'
-import yakitEEMiniProject from '@/assets/yakitEE.png'
 import yakitSEMiniProject from '@/assets/yakitSE.png'
 
 const { ipcRenderer } = window.require('electron')
@@ -37,11 +33,13 @@ const ProjectLogo = (showMini: boolean) => {
   if (isIRify()) {
     return showMini ? <SolidIrifyMiniLogoIcon className={styles['prject-logo-mini']} /> : <SolidIrifyFontLogoIcon />
   } else if (isEnpriTrace()) {
-    return <img style={{ height: '100%' }} src={showMini ? yakitEEMiniProject : yakitEEProject} alt="暂无图片" />
+    // return <img style={{ height: '100%' }} src={showMini ? yakitEEMiniProject : yakitEEProject} alt="暂无图片" />
+    return null
   } else if (isEnpriTraceAgent()) {
     return <img style={{ height: '100%' }} src={showMini ? yakitSEMiniProject : yakitSEProject} alt="暂无图片" />
   } else if (isMemfit() || isCommunityMemfit()) {
-    return showMini ? <SolidMemfitMiniLogoIcon className={styles['prject-logo-mini']} /> : <SolidMemfitFontLogoIcon />
+    // return showMini ? <SolidMemfitMiniLogoIcon className={styles['prject-logo-mini']} /> : <SolidMemfitFontLogoIcon />
+    return null
   } else {
     return <YakitLogoSvgIcon />
   }
@@ -117,7 +115,7 @@ export const SoftwareSettings: React.FC<SoftwareSettingsProp> = memo((props) => 
             [styles['left-mini-body']]: showMini,
           })}
         >
-          {/* <div className={styles['navbar-logo']}>{ProjectLogo(showMini)}</div> */}
+          <div className={styles['navbar-logo']}>{ProjectLogo(showMini)}</div>
 
           <div className={styles['navbar-list-wrapper']}>
             <div className={styles['list-body']}>
