@@ -986,6 +986,17 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
       }
     }, [])
 
+    // 列表被渲染上限裁掉当前选中行时，关掉右侧详情，避免原文释放后空白
+    useUpdateEffect(() => {
+      if (!currentSelectItem?.UUID) return
+      // 并发总表允许不同 RawScope 复用同一 UUID，须与表格行键一致按 scope+UUID 判定，
+      // 否则选中行的原文按 scope 删除后，另一 scope 的同 UUID 行会留住已空白的详情
+      const scope = currentSelectItem.RawScope || ''
+      if (data.some((row) => row.UUID === currentSelectItem.UUID && (row.RawScope || '') === scope)) return
+      setCurrentSelectItem(undefined)
+      setFirstFull(true)
+    }, [data])
+
     const onRowClick = useMemoizedFn((val) => {
       if (val) {
         setCurrentSelectItem(val)
