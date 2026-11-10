@@ -15,7 +15,7 @@ import { YakitInput } from '../yakitUI/YakitInput/YakitInput'
 import { CacheDropDownGV } from '@/yakitGV'
 import emiter from '@/utils/eventBus/eventBus'
 import type { YakitAutoCompleteRefProps } from '../yakitUI/YakitAutoComplete/YakitAutoCompleteType'
-import { getRemoteHttpSettingGV } from '@/utils/envfile'
+import { getRemoteHttpSettingGV, globalUserLogin } from '@/utils/envfile'
 import { useUploadInfoByEnpriTrace } from '../layout/utils'
 import { JSONParseLog } from '@/utils/tool'
 import { yakitApp, yakitAuth, yakitCodec, yakitProfile, yakitUILayout } from '@/services/electronBridge'
@@ -323,6 +323,10 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
 
   // 登录成功
   const onLoginSuccess = useMemoizedFn((user) => {
+    if (user?.isLogin && user.token) {
+      setStoreUserInfo(user)
+      globalUserLogin(user.token).catch((error) => failed(String(error)))
+    }
     success('企业登录成功')
     onClose && onClose()
     onSuccee && onSuccee()
