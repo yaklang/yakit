@@ -3,6 +3,9 @@ import { describe, expect, it, vi } from 'vitest'
 import '../../../ai-re-act/hooks/__test__/setupElectron'
 // 导入链会经过 aiGlobalLoading → lottie-web，模块加载期探测 canvas，jsdom 不支持
 vi.mock('lottie-web', () => ({ default: vi.fn() }))
+vi.mock('@/pages/yakRunner/utils', () => ({ isYaklangScriptDeliveryPath: vi.fn() }))
+vi.mock('../../historyChat/utils', async () => await import('../../historyChat/deleteSource'))
+vi.mock('@/pages/ai-re-act/hooks/ChatMultiSessionController', () => ({ globalSessionEngine: {} }))
 import { formatAIAgentSetting } from '..'
 import { AIAgentSettingDefault } from '../../defaultConstant'
 
@@ -85,8 +88,9 @@ describe('formatAIAgentSetting', () => {
       RuntimeContextSizeLimit: 300,
     })
     expect(result).not.toHaveProperty('TimelineContentSizeLimit')
-    // 设置里单位是KB，下发时换算成字节
-    expect(result.RuntimeContextSizeLimit).toBe(300 * 1024)
+    // 内存配置保持 KB，仅发送后端时转换。
+    expect(result.RuntimeContextSizeLimit).toBe(300)
+    expect(result.AICallTokenLimit).toBe(AIAgentSettingDefault.AICallTokenLimit)
   })
 
   it('运行时上下文留空时不覆盖服务端默认阈值', () => {

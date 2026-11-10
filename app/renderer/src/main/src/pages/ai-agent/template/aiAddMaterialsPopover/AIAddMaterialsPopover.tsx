@@ -1,0 +1,191 @@
+import { useState } from 'react'
+import type { FC } from 'react'
+import { useMemoizedFn, useUpdateEffect } from 'ahooks'
+import classNames from 'classnames'
+import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { handleOpenFileSystemDialog } from '@/utils/fileSystemDialog'
+import { yakitNotify } from '@/utils/notification'
+import type { AIMentionCommandParams } from '../../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
+import { MAX_ATTACHMENTS_PER_BATCH } from '../type'
+import MaterialAttachmentList from './materialAttachmentList/MaterialAttachmentList'
+import MaterialBrowserList from './materialBrowserList/MaterialBrowserList'
+import MaterialCategoryPicker from './materialCategoryPicker/MaterialCategoryPicker'
+import MaterialFocusModeList from './materialFocusModeList/MaterialFocusModeList'
+import MaterialMenu from './materialMenu/MaterialMenu'
+import { getAddedBrowsers, getMaterialMenuItems, getMaterialSummaryGroups } from './materialPanelData'
+import MaterialSummary from './materialSummary/MaterialSummary'
+import type { AIAddMaterialsPopoverProps, MaterialPanel, SelectedFocusMode } from './type'
+import styles from './AIAddMaterialsPopover.module.scss'
+
+const AIAddMaterialsPopover: FC<AIAddMaterialsPopoverProps> = ({
+  children,
+  onAdd,
+  onRemove,
+  mentions,
+  flowCount,
+  focusMode,
+  onFocusModeChange,
+  filterMode,
+}) => {
+  const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
+  const [open, setOpen] = useState(false)
+  const [picker, setPicker] = useState<{ category: MaterialPanel; fromMenu: boolean }>()
+  const [selectedFocusLabel, setSelectedFocusLabel] = useState<SelectedFocusMode>()
+  // 缓存技能、工具和知识库的简介，供资料摘要和「已添加」列表使用。
+  const [descriptions, setDescriptions] = useState<Record<string, string>>({})
+  const attachments = mentions.filter((item) => item.mentionType === 'file' && item.mentionSource === 'attachment')
+  const browsers = getAddedBrowsers(mentions)
+
+  useUpdateEffect(() => {
+    setSelectedFocusLabel((current) => (current?.id === focusMode ? current : undefined))
+  }, [focusMode])
+
+  const close = useMemoizedFn(() => {
+    setOpen(false)
+    setPicker(undefined)
+  })
+
+  const openCategory = (category: MaterialPanel) => {
+    setPicker({ category, fromMenu: false })
+    setOpen(true)
+  }
+
+  const addMaterial = useMemoizedFn((material: AIMentionCommandParams, description?: string) => {
+    if (description) {
+      setDescriptions((current) => ({ ...current, [`${material.mentionType}:${material.mentionId}`]: description }))
+    }
+    onAdd(material)
+  })
+
+  const addAttachments = useMemoizedFn(async () => {
+    try {
+      const { filePaths } = await handleOpenFileSystemDialog({
+        title: t('AIAddMaterialsPopover.attachment'),
+        properties: ['openFile', 'multiSelections'],
+      })
+      if (filePaths.length > MAX_ATTACHMENTS_PER_BATCH) {
+        yakitNotify(
+          'warning',
+          t('AIAddMaterialsPopover.attachmentLimitExceeded', {
+            count: filePaths.length,
+            max: MAX_ATTACHMENTS_PER_BATCH,
+          }),
+        )
+        return
+      }
+      for (const path of filePaths) {
+        onAdd({ mentionType: 'file', mentionId: path, mentionName: path, mentionSource: 'attachment' })
+      }
+    } catch (error) {
+      yakitNotify('error', t('AIAddMaterialsPopover.attachmentFailed', { error: String(error) }))
+    }
+  })
+
+  const menu = getMaterialMenuItems({
+    t,
+    mentions,
+    flowCount,
+    attachmentCount: attachments.length,
+    browserCount: browsers.length,
+    currentFocusMode: selectedFocusLabel?.id === focusMode ? selectedFocusLabel?.label : focusMode,
+    addAttachments,
+    close,
+  })
+  const items = Object.values(menu)
+  const summaryGroups = getMaterialSummaryGroups({
+    items,
+    t,
+    mentions,
+    descriptions,
+    filterMode,
+    attachmentCount: attachments.length,
+    onRemove,
+    openCategory,
+  })
+
+  const renderPanel = () => {
+    if (!picker) {
+      return (
+        <MaterialMenu
+          items={items}
+          filterMode={filterMode}
+          onOpenCategory={(category) => setPicker({ category, fromMenu: true })}
+        />
+      )
+    }
+
+    const { category, fromMenu } = picker
+    const { label: title, description, icon } = menu[category]
+    const header = { title, description, icon, onBack: fromMenu ? () => setPicker(undefined) : undefined }
+    switch (category) {
+      case 'forge':
+      case 'tool':
+      case 'knowledgeBase':
+        return (
+          <MaterialCategoryPicker
+            {...header}
+            key={category}
+            category={category}
+            mentions={mentions}
+            descriptions={descriptions}
+            onAdd={addMaterial}
+            onRemove={onRemove}
+          />
+        )
+      case 'focusMode':
+        return (
+          <MaterialFocusModeList
+            {...header}
+            selectedId={focusMode}
+            onChange={(next) => {
+              setSelectedFocusLabel(next)
+              onFocusModeChange(next?.id)
+              if (next) close()
+            }}
+          />
+        )
+      case 'attachments':
+        return <MaterialAttachmentList attachments={attachments} onAdd={addAttachments} onRemove={onRemove} />
+      case 'browser':
+        return <MaterialBrowserList browsers={browsers} onRemove={onRemove} />
+    }
+  }
+
+  return (
+    <YakitPopover
+      trigger="click"
+      placement="topLeft"
+      arrow={false}
+      open={open}
+      onOpenChange={(next) => {
+        if (!next) close()
+      }}
+      destroyOnHidden
+      classNames={{ root: styles.popover, body: styles.body }}
+      getPopupContainer={(anchor) => anchor.parentElement ?? document.body}
+      content={
+        <section
+          aria-label={t('AIChatTextarea.addMaterials')}
+          role="dialog"
+          className={classNames(styles.content, {
+            [styles['picker-content']]: picker && picker.category !== 'attachments' && picker.category !== 'browser',
+          })}
+          onClick={(event) => event.stopPropagation()}
+          onKeyDown={(event) => event.stopPropagation()}
+        >
+          {renderPanel()}
+        </section>
+      }
+    >
+      {children(
+        open,
+        () => (open ? close() : setOpen(true)),
+        summaryGroups.length ? <MaterialSummary groups={summaryGroups} onOpen={close} /> : null,
+        open && (!picker || picker.fromMenu),
+      )}
+    </YakitPopover>
+  )
+}
+
+export default AIAddMaterialsPopover

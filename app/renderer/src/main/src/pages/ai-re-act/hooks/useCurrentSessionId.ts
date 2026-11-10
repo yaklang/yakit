@@ -3,10 +3,11 @@ import AIAgentContext from '@/pages/ai-agent/useContext/AIAgentContext'
 
 /**
  * @description 获取当前会话的 SessionID
- * @returns {string} 当前会话的 SessionID，如果没有则返回空字符串
+ * @returns {string} 正式会话或欢迎页预分配的 SessionID
  */
 function useCurrentSessionId() {
-  const sessionId = useContext(AIAgentContext)?.store?.activeChat?.SessionID || ''
+  const store = useContext(AIAgentContext).store
+  const sessionId = store.activeChat?.SessionID || ''
   return sessionId
 }
 

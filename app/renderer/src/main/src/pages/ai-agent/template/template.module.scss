@@ -74,9 +74,6 @@ textarea.qs-input-textarea {
       @extend %self-adaptive;
       flex-shrink: 0;
     }
-    .model-self-adaptive {
-      @extend %self-adaptive;
-    }
     .focus-mode-self-adaptive {
       @extend %self-adaptive;
     }
@@ -122,6 +119,55 @@ textarea.qs-input-textarea {
     backdrop-filter: blur(2px);
   }
 }
+
+.materials-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+.materials-row .material-add:global(.ant-btn.ant-btn-icon-only) {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--Colors-Use-Neutral-Bg-Hover);
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  &:global(.ant-btn-default.yakit):not(:disabled) {
+    &:focus {
+      background: var(--Colors-Use-Neutral-Bg-Hover);
+    }
+
+    &:hover,
+    &:active,
+    &[data-menu-open='true'] {
+      background: var(--Colors-Use-Main-Bg);
+      box-shadow: 0 0 0 2px var(--Colors-Use-Main-Focus);
+
+      svg {
+        color: var(--Colors-Use-Main-Primary);
+      }
+    }
+  }
+}
+
+.materials-row .material-add-label {
+  height: 16px;
+  padding: 0 6px 0 0;
+  color: var(--Colors-Use-Neutral-Text-4-Help-text);
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+}
+
 .textarea-wrapper {
   display: flex;
   flex-direction: column;
@@ -143,17 +189,18 @@ textarea.qs-input-textarea {
   }
   .footer {
     display: flex;
+    flex-wrap: wrap;
     gap: 4px;
     justify-content: space-between;
     align-items: center;
     overflow: hidden;
-    height: 28px;
+    min-height: 28px;
 
     .footer-left {
       display: flex;
       align-items: center;
       gap: 4px;
-      overflow: hidden;
+      flex-shrink: 0;
       line-height: 16px;
     }
     .footer-right {
@@ -161,8 +208,19 @@ textarea.qs-input-textarea {
       align-items: center;
       justify-content: flex-end;
       gap: 4px;
-      overflow: hidden;
+      min-width: 0;
+
+      &:has(.model-self-adaptive) {
+        flex: 1 1 112px;
+      }
+
+      .model-self-adaptive {
+        display: flex;
+        min-width: 0;
+      }
+
       .round-btn {
+        flex-shrink: 0;
         width: 24px;
         svg {
           width: 14px;

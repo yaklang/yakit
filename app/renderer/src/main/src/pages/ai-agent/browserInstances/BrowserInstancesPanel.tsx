@@ -226,8 +226,15 @@ const BrowserCardPreview: React.FC<{
   )
 }
 
-const BrowserInstanceCard: React.FC<{ instance: AIBrowserInstance }> = ({ instance }) => {
+export interface BrowserInstanceCardProps {
+  instance: AIBrowserInstance
+  actions?: React.ReactNode
+  variant?: 'material'
+}
+
+export const BrowserInstanceCard: React.FC<BrowserInstanceCardProps> = ({ instance, actions, variant }) => {
   const { t } = useI18nNamespaces(['aiAgent'])
+  const isMaterial = variant === 'material'
   const [focusing, setFocusing] = useState(false)
   const thumbnailKey = thumbnailCacheKey(instance)
   const thumbnailRequestId = useRef(0)
@@ -336,7 +343,10 @@ const BrowserInstanceCard: React.FC<{ instance: AIBrowserInstance }> = ({ instan
   )
 
   return (
-    <div className={styles['browser-card']} data-identity={instance.identity || undefined}>
+    <div
+      className={classNames(styles['browser-card'], { [styles['material-card']]: isMaterial })}
+      data-identity={instance.identity || undefined}
+    >
       <BrowserPreviewPopover instance={instance} thumbnail={thumbnail} refreshThumbnail={refreshThumbnail}>
         <span className={styles['preview-shell']}>
           <BrowserCardPreview instance={instance} thumbnail={thumbnail} />
@@ -353,25 +363,35 @@ const BrowserInstanceCard: React.FC<{ instance: AIBrowserInstance }> = ({ instan
             {instance.tab?.title || instance.name}
           </span>
           <div className={styles['card-actions']}>
-            <YakitButton
-              type="text2"
-              icon={<PaperAirplaneOutlined color="currentColor" />}
-              aria-label={t('BrowserInstances.reference')}
-              onClick={() => insertBrowserInstanceMention(instance)}
-            />
-            <YakitButton
-              type="text2"
-              icon={<PositionOutlined color="currentColor" />}
-              disabled={!canFocus}
-              loading={focusing}
-              aria-label={t('BrowserInstances.focus')}
-              onClick={focusBrowser}
-            />
-            {moreMenu}
+            {actions !== undefined ? (
+              actions
+            ) : (
+              <>
+                <YakitButton
+                  type="text2"
+                  icon={<PaperAirplaneOutlined color="currentColor" />}
+                  aria-label={t('BrowserInstances.reference')}
+                  onClick={() => insertBrowserInstanceMention(instance)}
+                />
+                <YakitButton
+                  type="text2"
+                  icon={<PositionOutlined color="currentColor" />}
+                  disabled={!canFocus}
+                  loading={focusing}
+                  aria-label={t('BrowserInstances.focus')}
+                  onClick={focusBrowser}
+                />
+                {moreMenu}
+              </>
+            )}
           </div>
         </div>
         <div className={styles['instance-url-row']} title={instance.tab?.url || instance.origin}>
-          <BrowserFavicon src={instance.tab?.favIconUrl} />
+          {isMaterial && !instance.tab?.favIconUrl && instance.client ? (
+            <BrowserClientIcon client={instance.client} size={16} />
+          ) : (
+            <BrowserFavicon src={instance.tab?.favIconUrl} />
+          )}
           <span className={styles['instance-url']}>
             {instance.tab?.url || (instance.online ? t('BrowserInstances.noAuthorizedPage') : instance.origin)}
           </span>

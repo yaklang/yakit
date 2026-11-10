@@ -1,10 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
-
-// utils.ts 顶部经由 @/components/MilkdownEditor/utils/utils 间接引用了
-// window.require('electron')，与本次纯函数测试无关，桩掉以切断副作用导入链。
-vi.mock('@/components/MilkdownEditor/utils/utils', () => ({
-  imgTypes: ['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp'],
-}))
+import { describe, expect, it } from 'vitest'
 
 import { unescapeUnderscoreInPath } from '../utils'
 

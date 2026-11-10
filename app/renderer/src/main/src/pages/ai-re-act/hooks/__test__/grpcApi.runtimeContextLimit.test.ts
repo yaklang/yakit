@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { withServerRuntimeContextLimit } from '../grpcApi'
+import { withServerRuntimeContextLimit, toServerAIStartParams, fromServerAIStartParams } from '../grpcApi'
 
 describe('withServerRuntimeContextLimit', () => {
   it.each([307200, Number.MAX_SAFE_INTEGER, '307200', String(Number.MAX_SAFE_INTEGER)])(
@@ -68,5 +68,20 @@ describe('withServerRuntimeContextLimit', () => {
   it('仅有旧字段时不迁移旧阈值，交给服务端默认值', () => {
     expect(withServerRuntimeContextLimit({ TimelineContentSizeLimit: 61440 })).toEqual({ RuntimeContextSizeLimit: 0 })
     expect(withServerRuntimeContextLimit({})).toEqual({ RuntimeContextSizeLimit: 0 })
+  })
+})
+
+describe('AI start parameter units', () => {
+  it.each([0, 40, 0.5, undefined])('round trips KB %s without mutating inputs', (limit) => {
+    const input = Object.freeze({ RuntimeContextSizeLimit: limit, AICallTokenLimit: limit })
+    const wire = toServerAIStartParams(input)
+    expect(wire.RuntimeContextSizeLimit).toBe(limit === undefined ? undefined : limit * 1024)
+    expect(wire.AICallTokenLimit).toBe(limit === undefined ? undefined : limit * 1024)
+    expect(fromServerAIStartParams(wire)).toEqual(input)
+    expect(input.RuntimeContextSizeLimit).toBe(limit)
+  })
+  it('preserves omitted fields', () => {
+    expect(toServerAIStartParams({ EnablePlan: true })).toEqual({ EnablePlan: true })
+    expect(fromServerAIStartParams({ EnablePlan: true })).toEqual({ EnablePlan: true })
   })
 })

@@ -15,6 +15,9 @@ import { AISourceEnum } from '../grpcApi'
 import type { AIAgentGrpcApi } from '../grpcApi'
 import type { AIChatIPCStartParams } from '../type'
 import { AttachedResourceKeyEnum, AttachedResourceTypeEnum } from '@/pages/ai-agent/defaultConstant'
+import { AIAgentSettingDefault } from '@/pages/ai-agent/defaultConstant'
+import cloneDeep from 'lodash/cloneDeep'
+import { DefaultDraftMaterials } from '../defaultConstant'
 
 vi.mock('@/utils/notification', () => ({ yakitNotify: vi.fn() }))
 vi.mock('@/pages/ai-agent/grpc', () => ({ grpcQueryAIEvent: vi.fn().mockResolvedValue({ Events: [] }) }))
@@ -70,6 +73,159 @@ describe('frontend allocated session identity', () => {
     for (const token of pendings.keys()) controller.cancelPendingConnection(token)
     await vi.advanceTimersByTimeAsync(5000)
     vi.useRealTimers()
+  })
+
+  it('欢迎页配置保存在 request，首问保存在 meta，写入和领取不通知渲染订阅', () => {
+    const first = controller.ensureSession('first-welcome')
+    const second = controller.ensureSession('second-welcome')
+    const onRender = vi.fn()
+    const onState = vi.fn()
+    first.store.renderStore.subscribe(onRender)
+    first.store.subscribe(onState)
+    expect(first.request).toEqual(AIAgentSettingDefault)
+    expect(first.meta.pendingWelcomeInput).toBeUndefined()
+
+    const setting = { ...cloneDeep(AIAgentSettingDefault), EnablePlan: true }
+    controller.updateSessionConfig('first-welcome', setting)
+    first.meta.pendingWelcomeInput = { qs: 'first question' }
+    Object.assign(second.request, cloneDeep(AIAgentSettingDefault))
+    second.meta.pendingWelcomeInput = { qs: 'second question' }
+
+    expect(controller.ensureSession('first-welcome').meta).toBe(first.meta)
+    expect(first.meta.pendingWelcomeInput).toEqual({ qs: 'first question' })
+    first.meta.pendingWelcomeInput = undefined
+
+    expect(first.request).toEqual(setting)
+    expect(first.request.Strategy).not.toBe(setting.Strategy)
+    expect(second.meta.pendingWelcomeInput).toEqual({ qs: 'second question' })
+    expect(second.request.EnablePlan).toBe(AIAgentSettingDefault.EnablePlan)
+    expect(first.store.getState()).not.toHaveProperty('welcomeSetting')
+    expect(first.store.renderStore.getState()).not.toHaveProperty('pendingWelcomeInput')
+    expect(onState).not.toHaveBeenCalled()
+    expect(onRender).not.toHaveBeenCalled()
+  })
+
+  it('stores KB and converts only outgoing start and hotpatch copies', async () => {
+    const config = { RuntimeContextSizeLimit: 300, AICallTokenLimit: 40 }
+    const input: AIChatIPCStartParams = {
+      kind: 'new',
+      sessionId: 'unit-session',
+      route: YakitRoute.AI_Agent,
+      pageId: 'page',
+      params: { Params: { ...config, Source: 'ai', UserQuery: '' } },
+    }
+    const token = controller.handleStartSession(input, {
+      onPendingChange: (pending) => pendings.set(pending.streamToken, pending),
+    }) as string
+    await tick()
+    const data = pendings.get(token)!.data
+    expect(data.request).toMatchObject(config)
+    expect(ipcRendererMock.invoke).toHaveBeenCalledWith(
+      'start-ai-re-act',
+      token,
+      expect.objectContaining({
+        Params: expect.objectContaining({ RuntimeContextSizeLimit: 307200, AICallTokenLimit: 40960 }),
+      }),
+    )
+    expect(input.params.Params).toMatchObject(config)
+    await emit(token, 'pong', 'unit-session')
+    const patch = {
+      IsConfigHotpatch: true,
+      HotpatchType: 'RuntimeContextSizeLimit' as const,
+      Params: { RuntimeContextSizeLimit: 600 },
+    }
+    expect(controller.handleSendMessage({ token: 'unit-session', type: 'casual', params: patch })).toBe(true)
+    expect(ipcRendererMock.invoke).toHaveBeenCalledWith(
+      'send-ai-re-act',
+      token,
+      expect.objectContaining({ Params: { RuntimeContextSizeLimit: 614400 } }),
+    )
+    expect(patch.Params.RuntimeContextSizeLimit).toBe(600)
+    expect(data.request).toMatchObject(config)
+    await controller.handleSessionEnd('unit-session')
+  })
+
+  it('retrying a failed start converts the original KB input only once', async () => {
+    const input: AIChatIPCStartParams = {
+      kind: 'new',
+      sessionId: 'retry-units',
+      route: YakitRoute.AI_Agent,
+      pageId: 'page',
+      params: { Params: { Source: 'ai', RuntimeContextSizeLimit: 300, AICallTokenLimit: 40 } },
+    }
+    const callbacks = { onPendingChange: (pending: PendingAIChat) => pendings.set(pending.streamToken, pending) }
+    const first = controller.handleStartSession(input, callbacks) as string
+    await tick()
+    const onError = ipcRendererMock.on.mock.calls.find(([name]) => name === first + '-error')![1]
+    onError({}, new Error('retry'))
+    controller.cancelPendingConnection(first, { keepDraft: true })
+    const second = controller.handleStartSession(input, callbacks) as string
+    await tick()
+    const sent = ipcRendererMock.invoke.mock.calls.filter(([name]) => name === 'start-ai-re-act')
+    expect(sent).toHaveLength(2)
+    for (const [, , event] of sent) {
+      expect(event.Params.RuntimeContextSizeLimit).toBe(307200)
+      expect(event.Params.AICallTokenLimit).toBe(40960)
+    }
+    expect(pendings.get(second)!.data.request.RuntimeContextSizeLimit).toBe(300)
+    expect(input.params.Params?.AICallTokenLimit).toBe(40)
+  })
+
+  it('isolates welcome session materials and publishes updates through the render store', () => {
+    const first = controller.ensureSession('first-welcome')
+    const second = controller.ensureSession('second-welcome')
+    expect(controller.ensureSession('first-welcome').store).toBe(first.store)
+    expect(controller.sessionStores.getState().size).toBe(2)
+    for (const category of Object.keys(DefaultDraftMaterials) as (keyof typeof DefaultDraftMaterials)[]) {
+      expect(first.rawData.draftMaterials[category]).not.toBe(second.rawData.draftMaterials[category])
+      expect(first.rawData.draftMaterials[category]).not.toBe(DefaultDraftMaterials[category])
+    }
+    const onRender = vi.fn()
+    first.store.renderStore.subscribe(onRender)
+    const attachments = [{ path: '/tmp/context.txt', isFolder: false, size: 42 }]
+    controller.updateDraftMaterials('first-welcome', 'attachments', attachments)
+    expect(first.rawData.draftMaterials.attachments).toEqual(attachments)
+    expect(first.store.renderStore.getState().draftMaterialsUpdate).toBe(1)
+    expect(onRender).toHaveBeenCalledOnce()
+    expect(second.rawData.draftMaterials.attachments).toEqual([])
+    expect(DefaultDraftMaterials.attachments).toEqual([])
+  })
+
+  it('retains welcome materials through pending, retry and formal binding', async () => {
+    const session = controller.ensureSession('client-session')
+    const attachments = [{ path: '/tmp/context.txt', isFolder: false, size: 42 }]
+    controller.updateDraftMaterials('client-session', 'attachments', attachments)
+    const token = await start()
+    expect(pendings.get(token)!.data.store).toBe(session.store)
+    expect(controller.ensureSession('client-session').rawData).toBe(session.rawData)
+
+    const onError = ipcRendererMock.on.mock.calls.find(([name]) => name === `${token}-error`)![1]
+    onError({}, new Error('connection failed'))
+    controller.cancelPendingConnection(token, { keepDraft: true })
+    session.meta.pendingWelcomeInput = { qs: 'stale question' }
+    const retry = await start()
+    const retryMeta = controller.ensureSession('client-session').meta
+    expect(retryMeta).not.toBe(session.meta)
+    expect(retryMeta.pendingWelcomeInput).toBeUndefined()
+    expect(retry).not.toBe(token)
+    expect(pendings.get(retry)!.data.store).toBe(session.store)
+    expect(session.rawData.draftMaterials.attachments).toEqual(attachments)
+    expect(session.store.renderStore.getState().draftMaterialsUpdate).toBe(0)
+    expect(session.rawData.contents.size).toBe(1)
+    await emit(retry, 'pong', 'client-session')
+    expect(controller.sessionStores.getState().get('client-session')).toBe(session.store)
+    expect(controller.ensureSession('client-session').store).toBe(session.store)
+    expect(controller.ensureSession('client-session').rawData.draftMaterials.attachments).toEqual(attachments)
+  })
+
+  it('discards unconnected session data on explicit pending cancellation', async () => {
+    const session = controller.ensureSession('client-session')
+    controller.updateDraftMaterials('client-session', 'attachments', [{ path: '/tmp/context.txt', isFolder: false }])
+    const token = await start()
+    controller.cancelPendingConnection(token)
+    const replacement = controller.ensureSession('client-session')
+    expect(replacement.store).not.toBe(session.store)
+    expect(replacement.rawData.draftMaterials.attachments).toEqual([])
   })
 
   it('shows the first question before handshake, binds the same store and persists only with the client ID', async () => {
@@ -691,26 +847,34 @@ describe('frontend allocated session identity', () => {
     },
   )
 
-  it.each(['before-start', 'before-pong'] as const)(
-    'refuses an occupied client ID (%s) without replacing its store',
-    async (timing) => {
-      const token = timing === 'before-pong' ? await start() : undefined
-      const existing = controller.ensureSession('client-session')
-      if (token) {
-        await emit(token, 'pong', 'client-session')
-        expect(pendings.get(token)).toMatchObject({
-          status: 'failed',
-          error: tAgent('ChatSessionNotify.sessionIdOccupied'),
-        })
-      } else {
-        expect(await start()).toBe(false)
-        expect(ipcRendererMock.invoke).not.toHaveBeenCalledWith('start-ai-re-act', expect.anything(), expect.anything())
-      }
-      expect(controller.ensureSession('client-session').store).toBe(existing.store)
-      expect(success).not.toHaveBeenCalled()
-      expect(aiChatPersistStore.setSessionContent).not.toHaveBeenCalled()
-    },
-  )
+  it('refuses an already connected client ID without replacing its store', async () => {
+    const token = await start()
+    await emit(token, 'pong', 'client-session')
+    const existing = controller.ensureSession('client-session')
+    const started = ipcRendererMock.invoke.mock.calls.filter(([method]) => method === 'start-ai-re-act').length
+    success.mockClear()
+    vi.mocked(aiChatPersistStore.setSessionContent).mockClear()
+    expect(await start()).toBe(false)
+    expect(ipcRendererMock.invoke.mock.calls.filter(([method]) => method === 'start-ai-re-act')).toHaveLength(started)
+    expect(controller.ensureSession('client-session').store).toBe(existing.store)
+    expect(success).not.toHaveBeenCalled()
+    expect(aiChatPersistStore.setSessionContent).not.toHaveBeenCalled()
+  })
+
+  it('does not treat an existing history resume as a fresh welcome session', async () => {
+    const existing = controller.ensureSession('client-session')
+    const resumed = controller.handleStartSession({
+      kind: 'resume',
+      sessionId: 'client-session',
+      route: YakitRoute.AI_Agent,
+      pageId: 'history-page',
+      params: { Params: { Source: 'ai' } },
+    })
+    expect(resumed).toEqual(expect.any(String))
+    expect(await start()).toBe(false)
+    expect(controller.ensureSession('client-session').store).toBe(existing.store)
+    controller.forceCloseSession({ sessionIds: ['client-session'] })
+  })
 
   it('unloading one page leaves another unbound submission running', async () => {
     const first = await start('first', 'page-one', 'first-session')

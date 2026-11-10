@@ -3,7 +3,7 @@ import i18n from '@/i18n/i18n'
 import type { RequestYakURLResponse } from '../yakURLTree/data'
 import type { FileNodeMapProps, FileNodeProps, FileTreeListProps } from './FileTree/FileTreeType'
 import { FileDefault, FileSuffix, FolderDefault } from './FileTree/icon'
-import { StringToUint8Array, Uint8ArrayToString } from '@/utils/str'
+import { getFileSuffixFromName, StringToUint8Array, Uint8ArrayToString } from '@/utils/str'
 import {
   ConvertYakStaticAnalyzeErrorToMarker,
   type IMonacoEditorMarker,
@@ -1138,15 +1138,7 @@ export const loadFolderDetail = (path) => {
   })
 }
 
-/**
- * @name 从文件名截取后缀（最后一个 `.` 之后，不含点）
- * @example getFileSuffixFromName('x.x.txt') => 'txt'
- */
-export const getFileSuffixFromName = (fileName: string): string => {
-  const dotIndex = fileName.lastIndexOf('.')
-  if (dotIndex <= 0 || dotIndex >= fileName.length - 1) return ''
-  return fileName.slice(dotIndex + 1)
-}
+export { getFileSuffixFromName }
 
 /**
  * @name 从路径截取文件名后缀（仅看 basename，避免路径中的 `.` 干扰）

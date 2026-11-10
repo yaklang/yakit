@@ -9,8 +9,18 @@ import type {
 } from './aiRender'
 import { AITaskStatus } from './grpcApi'
 import type { AIOutputI18n, AIAgentGrpcApi } from './grpcApi'
-import type { AIAgentChatMetaData } from '@/pages/ai-agent/type/aiChat'
+import type { AIAgentChatMetaData, AIDraftMaterials } from '@/pages/ai-agent/type/aiChat'
 import i18n from '@/i18n/i18n'
+
+export const DefaultDraftMaterials: AIDraftMaterials = {
+  attachments: [],
+  skills: [],
+  knowledgeBases: [],
+  tools: [],
+  files: [],
+  browsers: [],
+  scenarios: [],
+}
 
 /** 工具执行结果-默认值 */
 export const DefaultAIToolResult: AIToolResult = {

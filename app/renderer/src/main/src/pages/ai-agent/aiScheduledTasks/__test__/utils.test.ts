@@ -90,6 +90,27 @@ describe('AI 定时任务 grpc 封装：IPC 通道与参数透传', () => {
     expect(ipcRendererMock.invoke).toHaveBeenCalledWith('QueryAIReActSchedules', queryReq())
   })
 
+  it.each([
+    ['CreateAIReActSchedule', grpcCreateAIReActSchedule],
+    ['UpdateAIReActSchedule', grpcUpdateAIReActSchedule],
+  ] as const)('%s 仅发送时转为字节，响应恢复 KB 且不修改入参', async (channel, invoke) => {
+    const schedule = scheduleFixture()
+    schedule.Payload.StartParams = { RuntimeContextSizeLimit: 300, AICallTokenLimit: 40 }
+    const serverSchedule = {
+      ...schedule,
+      Payload: {
+        ...schedule.Payload,
+        StartParams: { RuntimeContextSizeLimit: 307200, AICallTokenLimit: 40960 },
+      },
+    }
+    ipcRendererMock.invoke.mockResolvedValue(serverSchedule)
+    await expect(invoke({ Schedule: schedule })).resolves.toEqual(schedule)
+    await expect(invoke({ Schedule: schedule })).resolves.toEqual(schedule)
+    expect(ipcRendererMock.invoke).toHaveBeenLastCalledWith(channel, { Schedule: serverSchedule })
+    expect(schedule.Payload.StartParams).toEqual({ RuntimeContextSizeLimit: 300, AICallTokenLimit: 40 })
+    expect(serverSchedule.Payload.StartParams).toEqual({ RuntimeContextSizeLimit: 307200, AICallTokenLimit: 40960 })
+  })
+
   it('grpcRunAIReActScheduleNow 走 RunAIReActScheduleNow 通道', async () => {
     await grpcRunAIReActScheduleNow({ UUID: 'u4' })
     expect(ipcRendererMock.invoke).toHaveBeenCalledWith('RunAIReActScheduleNow', { UUID: 'u4' })
@@ -115,7 +136,7 @@ describe('AI 定时任务 grpc 封装：IPC 通道与参数透传', () => {
       ...schedule,
       Payload: {
         ...schedule.Payload,
-        StartParams: { ...schedule.Payload.StartParams, RuntimeContextSizeLimit: 307200 },
+        StartParams: { ...schedule.Payload.StartParams, RuntimeContextSizeLimit: 300 },
       },
     })
     expect(response.Payload.StartParams.RuntimeContextSizeLimit).toBe('307200')
@@ -145,7 +166,7 @@ describe('AI 定时任务 grpc 封装：IPC 通道与参数透传', () => {
         ...item,
         Payload: {
           ...item.Payload,
-          StartParams: { ...item.Payload.StartParams, RuntimeContextSizeLimit: [307200, 0, 0, 4096][index] },
+          StartParams: { ...item.Payload.StartParams, RuntimeContextSizeLimit: [300, 0, 0, 4][index] },
         },
       })),
     })

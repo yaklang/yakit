@@ -232,7 +232,36 @@
     "basicCheck": "工具基础检测"
   },
   "AIChatTextarea": {
-    "dropToAddToChat": "松开以添加到对话"
+    "dropToAddToChat": "松开以添加到对话",
+    "addMaterials": "添加资料",
+    "otherMaterials": "其他资料"
+  },
+  "AIAddMaterialsPopover": {
+    "currentScenario": "当前选择",
+    "addedSkills": "已添加技能",
+    "addedKnowledgeBases": "已添加知识库",
+    "addedOtherMaterials": "其他已添加资料",
+    "goToAdd": "去添加",
+    "searchMaterials": "搜索可添加到会话的资料…",
+    "contextHint": "添加的资料会作为当前会话的上下文优先使用",
+    "attachment": "添加附件",
+    "attachments": "附件",
+    "addedAttachments": "我添加的附件",
+    "attachmentHint": "从本地上传，单次最多 {{max}} 个",
+    "attachmentLimitExceeded": "已选择 {{count}} 个附件，单次最多添加 {{max}} 个",
+    "attachmentFailed": "打开文件选择器失败：{{error}}",
+    "risk": "漏洞与风险",
+    "riskHint": "查看已记录的漏洞和风险",
+    "flow": "流量",
+    "flowHint": "查看已捕获的 HTTP 流量",
+    "skillHint": "为当前会话添加技能",
+    "knowledgeHint": "引用知识库内容",
+    "toolHint": "AI 会优先调用已添加的工具来完成任务",
+    "fileSystemHint": "从文件系统添加，浏览并搜索你的文件",
+    "browserHint": "在 AI 中操作浏览器",
+    "addedBrowsers": "已添加的浏览器",
+    "sceneHint": "使用场景框架限定 AI 的思考范围",
+    "current": "当前:"
   },
   "AIToolDecision": {
     "decision": "决策"

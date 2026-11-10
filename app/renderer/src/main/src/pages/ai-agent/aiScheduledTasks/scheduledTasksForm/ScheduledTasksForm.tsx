@@ -1,17 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { Form } from 'antd'
-import moment, { type Moment } from 'moment'
+import moment from 'moment'
+import type { Moment } from 'moment'
 import { useDebounceFn, useMemoizedFn } from 'ahooks'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInputNumber'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import {
-  withServerRuntimeContextLimit,
-  type AIReActSchedule,
-  type AIStartParams,
-} from '../../../ai-re-act/hooks/grpcApi'
+import type { AIReActSchedule, AIStartParams } from '../../../ai-re-act/hooks/grpcApi'
 import { grpcCreateAIReActSchedule, grpcPreviewAIReActScheduleTimes, grpcUpdateAIReActSchedule } from '../utils'
 import styles from './ScheduledTasksForm.module.scss'
 import { YakitAlert } from '@/components/yakitUI/YakitAlert/YakitAlert'
@@ -233,13 +230,13 @@ const ScheduledTasksForm: React.FC<ScheduledTasksFormProps> = React.memo((props)
         OriginalRequest: editing?.OriginalRequest || values.Prompt.trim(),
         Payload: {
           Prompt: values.Prompt.trim(),
-          StartParams: withServerRuntimeContextLimit({
+          StartParams: {
             ...baseParams,
             ReviewPolicy: 'yolo',
             DisallowRequireForUserPrompt: true,
             AllowPlanUserInteract: false,
             UserQuery: '',
-          }),
+          },
           AttachedResourceInfos: editing?.Payload.AttachedResourceInfos || [],
           FocusModeLoop: editing?.Payload.FocusModeLoop || '',
         },

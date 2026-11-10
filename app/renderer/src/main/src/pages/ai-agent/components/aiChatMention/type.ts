@@ -10,6 +10,7 @@ export type iconMapType = keyof typeof iconMap
 export interface AIChatMentionSelectItem {
   id: string
   name: string
+  forgeName?: string
 }
 export interface AIChatMentionProps {
   defaultActiveTab?: AIMentionTabsEnum

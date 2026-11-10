@@ -1,5 +1,7 @@
-import { FileListTileMenu, type FileTreeSystemListWrapperProps, type HistoryItem, PathIncludeResult } from '../type'
-import { type FC, useEffect, useState } from 'react'
+import { FileListTileMenu, PathIncludeResult } from '../type'
+import type { FileTreeSystemListWrapperProps, HistoryItem } from '../type'
+import { useEffect, useState } from 'react'
+import type { FC } from 'react'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import classNames from 'classnames'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -55,6 +57,8 @@ const FileTreeSystemListWrapper: FC<FileTreeSystemListWrapperProps> = ({
   showTitleActions = true,
   onTitleSearch,
   onRootSearch,
+  addedFilePaths,
+  onRemoveAddedFile,
   selected,
   setSelected,
   onTreeDragStart,
@@ -110,6 +114,8 @@ const FileTreeSystemListWrapper: FC<FileTreeSystemListWrapperProps> = ({
         onTreeDragStart={onTreeDragStart}
         onTreeDragEnd={onTreeDragEnd}
         onRootSearch={isOpen ? onRootSearch : undefined}
+        addedFilePaths={addedFilePaths}
+        onRemoveAddedFile={onRemoveAddedFile}
       />
     ))
   }

@@ -1,7 +1,11 @@
 import type { APIFunc } from '@/apiUtils/type'
 import { yakitNotify } from '@/utils/notification'
 import i18n from '@/i18n/i18n'
-import { withServerRuntimeContextLimit } from '../../ai-re-act/hooks/grpcApi'
+import {
+  fromServerAIStartParams,
+  toServerAIStartParams,
+  withServerRuntimeContextLimit,
+} from '../../ai-re-act/hooks/grpcApi'
 import type {
   AIReActSchedule,
   CreateAIReActScheduleRequest,
@@ -18,14 +22,26 @@ import type {
 const { ipcRenderer } = window.require('electron')
 const t = i18n.getFixedT(null, 'aiAgent')
 
-/** 在 IPC 返回处转换 int64 字符串，业务层统一使用数字阈值。 */
+/** 在 IPC 返回处规范化阈值并转为前端 KB。 */
 const normalizeSchedule = (schedule: AIReActSchedule): AIReActSchedule => {
   if (!schedule.Payload?.StartParams) return schedule
   return {
     ...schedule,
     Payload: {
       ...schedule.Payload,
-      StartParams: withServerRuntimeContextLimit(schedule.Payload.StartParams),
+      StartParams: fromServerAIStartParams(withServerRuntimeContextLimit(schedule.Payload.StartParams)),
+    },
+  }
+}
+
+/** 发送副本使用后端字节单位，保留表单中的 KB 配置。 */
+const toServerSchedule = (schedule: AIReActSchedule): AIReActSchedule => {
+  if (!schedule.Payload?.StartParams) return schedule
+  return {
+    ...schedule,
+    Payload: {
+      ...schedule.Payload,
+      StartParams: withServerRuntimeContextLimit(toServerAIStartParams(schedule.Payload.StartParams)),
     },
   }
 }
@@ -37,7 +53,7 @@ export const grpcCreateAIReActSchedule: APIFunc<CreateAIReActScheduleRequest, AI
 ) => {
   return new Promise((resolve, reject) => {
     ipcRenderer
-      .invoke('CreateAIReActSchedule', params)
+      .invoke('CreateAIReActSchedule', { ...params, Schedule: toServerSchedule(params.Schedule) })
       .then(normalizeSchedule)
       .then(resolve)
       .catch((err) => {
@@ -54,7 +70,7 @@ export const grpcUpdateAIReActSchedule: APIFunc<UpdateAIReActScheduleRequest, AI
 ) => {
   return new Promise((resolve, reject) => {
     ipcRenderer
-      .invoke('UpdateAIReActSchedule', params)
+      .invoke('UpdateAIReActSchedule', { ...params, Schedule: toServerSchedule(params.Schedule) })
       .then(normalizeSchedule)
       .then(resolve)
       .catch((err) => {

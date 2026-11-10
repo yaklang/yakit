@@ -19,20 +19,24 @@ export function useOpenAIAgentPage({
   getPageCache,
   setCurrentTabKey,
   openAIAgentExtraTab,
+  openAIAgentWelcomePage,
 }: {
   getPageCache: () => PageCache[]
   setCurrentTabKey: (key: string) => void
   openAIAgentExtraTab: (pageParams?: ComponentParams) => void
+  openAIAgentWelcomePage: (pageParams?: ComponentParams) => void
 }) {
   return useMemoizedFn((pageParams?: ComponentParams) => {
     const sessionId = pageParams?.aiAgentPageInfo?.session?.SessionID || ''
-    if (sessionId) {
-      const ownerPageId = globalSessionEngine.getSessionPageId(sessionId, YakitRoute.AI_Agent)
-      const existing = findAIAgentTabBySessionId(getPageCache(), sessionId, ownerPageId)
-      if (existing) {
-        setCurrentTabKey(existing.routeKey)
-        return
-      }
+    if (!sessionId) {
+      openAIAgentWelcomePage(pageParams)
+      return
+    }
+    const ownerPageId = globalSessionEngine.getSessionPageId(sessionId, YakitRoute.AI_Agent)
+    const existing = findAIAgentTabBySessionId(getPageCache(), sessionId, ownerPageId)
+    if (existing) {
+      setCurrentTabKey(existing.routeKey)
+      return
     }
     openAIAgentExtraTab(pageParams)
   })

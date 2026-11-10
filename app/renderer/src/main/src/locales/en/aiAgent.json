@@ -232,7 +232,36 @@
     "basicCheck": "Tool Basic Check"
   },
   "AIChatTextarea": {
-    "dropToAddToChat": "Release to add to chat"
+    "dropToAddToChat": "Release to add to chat",
+    "addMaterials": "Add materials",
+    "otherMaterials": "Other materials"
+  },
+  "AIAddMaterialsPopover": {
+    "currentScenario": "Current selection",
+    "addedSkills": "Added skills",
+    "addedKnowledgeBases": "Added knowledge bases",
+    "addedOtherMaterials": "Other added materials",
+    "goToAdd": "Add more",
+    "searchMaterials": "Search for sources to chat with…",
+    "contextHint": "All added materials are used as context for the current conversation.",
+    "attachment": "Add attachments",
+    "attachments": "Attachments",
+    "addedAttachments": "My attachments",
+    "attachmentHint": "Upload up to {{max}} files at a time",
+    "attachmentLimitExceeded": "You selected {{count}} attachments. You can add up to {{max}} at a time.",
+    "attachmentFailed": "Unable to open the file picker: {{error}}",
+    "risk": "Vulnerabilities and risks",
+    "riskHint": "Browse recorded vulnerabilities and risks",
+    "flow": "Traffic",
+    "flowHint": "Browse captured HTTP traffic",
+    "skillHint": "Add a skill to this conversation",
+    "knowledgeHint": "Reference a knowledge base",
+    "toolHint": "AI prioritizes added tools when completing tasks",
+    "fileSystemHint": "Browse and search your files",
+    "browserHint": "Operate a browser with AI",
+    "addedBrowsers": "Added browsers",
+    "sceneHint": "Use a framework to guide AI in complex scenarios",
+    "current": "Current:"
   },
   "AIToolDecision": {
     "decision": "Decision"

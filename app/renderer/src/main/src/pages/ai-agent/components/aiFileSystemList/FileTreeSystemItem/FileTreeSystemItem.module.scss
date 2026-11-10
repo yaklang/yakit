@@ -66,6 +66,14 @@
     margin-right: 8px;
     opacity: 0;
     pointer-events: none;
+
+    &:has(+ .added-file-action) {
+      margin-right: 6px;
+
+      &:global(.yakit.ant-btn) {
+        padding-inline: 0;
+      }
+    }
   }
 
   &:hover .root-search-btn,
@@ -79,4 +87,41 @@
 :global(.ant-tree-treenode:hover) .root-search-btn {
   opacity: 1;
   pointer-events: auto;
+}
+
+.added-file-action {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-shrink: 0;
+  padding-right: 8px;
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+
+  .added-file-check {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  svg {
+    color: inherit;
+  }
+
+  .added-file-cancel {
+    display: none;
+
+    &:global(.yakit.ant-btn) {
+      padding-inline: 0;
+    }
+  }
+}
+
+:global(.ant-tree-treenode:hover),
+.file-tree-system-item:hover {
+  .added-file-check {
+    display: none;
+  }
+  .added-file-cancel {
+    display: inline-flex;
+    align-items: center;
+  }
 }

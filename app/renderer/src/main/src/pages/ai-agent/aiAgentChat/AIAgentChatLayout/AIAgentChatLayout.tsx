@@ -200,6 +200,7 @@ export const AIAgentChatLayout: React.FC<AIAgentChatLayoutProps> = memo((props) 
               {mode === 'welcome' ? (
                 <React.Suspense fallback={<div>loading...</div>}>
                   <AIChatWelcome
+                    key={activeChat?.SessionID}
                     onTriageSubmit={(data) => {
                       clearHttpFlowSelection()
                       onTriageSubmit(data)

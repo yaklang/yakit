@@ -19,9 +19,9 @@ import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { YakitModalConfirm } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import type { AIForge } from '../type/forge'
 import type { AITool } from '../type/aiTool'
-import { AIAgentSettingDefault, ReActChatEventEnum } from '../defaultConstant'
+import { AIAgentSettingDefault, createWelcomeChat, ReActChatEventEnum } from '../defaultConstant'
 import { grpcGetAIToolById } from '../aiToolList/utils'
-import { isEqual } from 'lodash'
+import isEqual from 'lodash/isEqual'
 import useMultipleHoldGRPCStream from '@/pages/KnowledgeBase/hooks/useMultipleHoldGRPCStream'
 import { useKnowledgeBase } from '@/pages/KnowledgeBase/hooks/useKnowledgeBase'
 import { YakitRoute } from '@/enums/yakitRoute'
@@ -42,18 +42,21 @@ import { createActiveChatSessionId, onReStart } from '../utils'
 import { AIAgentChatLayout } from './AIAgentChatLayout/AIAgentChatLayout'
 import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
 import { getMainOperatorPageBodyContainer } from '@/utils/getMainOperatorPageBodyContainer'
-import { isEventForPage, takePendingOpenForge } from '../historyChat/HistoryChat'
+import { isEventForPage, openAIAgentChatTab, takePendingOpenForge } from '../historyChat/HistoryChat'
 import { sessionStatusStore, SessionDeleteStatus } from '@/pages/ai-re-act/hooks/sessionStatus/sessionStatusStore'
+import { syncAIAgentPageInfo } from '../utils/syncAIAgentPageInfo'
+import { isChatSession } from '../utils/isChatSession'
 
 export const AIAgentChat: React.FC<AIAgentChatProps> = memo(() => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
 
-  const { activeChat, pageId, pendingChat } = useAIAgentStore()
-  const { setActiveChat, setSetting, onStart, onClose, cancelPendingChat } = useAIAgentDispatcher()
+  const { activeChat, pageId, pendingChat, openChatInNewTab } = useAIAgentStore()
+  const { setActiveChat, setSetting, getSetting, onStart, onClose, cancelPendingChat } = useAIAgentDispatcher()
 
   /** 当前对话唯一ID */
   const sessionId = useCurrentSessionId()
   const store = useCurrentStore()
+  const meta = useCurrentMeta()
   const execute = useStore(store, (state) => state.execute)
 
   const aiReActChatRef = useRef<AIChatContentRefProps>(null)
@@ -71,15 +74,15 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo(() => {
   })
 
   useEffect(() => {
-    const sid = activeChat?.SessionID
-    if (!sid) {
-      setMode('welcome')
+    if (!isChatSession(activeChat)) {
+      setMode(activeChat?.SessionID && meta.pendingWelcomeInput ? 're-act' : 'welcome')
       return
     }
+    const sid = activeChat.SessionID
     const isDeleted = (m: Map<string, SessionDeleteStatus>) => m.get(sid) === SessionDeleteStatus.Deleted
     // 恢复标签可能在首次挂载前已被删除，不能只监听后续状态变化。
     if (isDeleted(sessionStatusStore.getState().deleteStatuses)) {
-      setActiveChat?.(undefined)
+      setActiveChat?.(createWelcomeChat())
       setMode('welcome')
       return
     }
@@ -94,7 +97,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo(() => {
     // 打开期间会话在别处被删除：回欢迎页
     const unsubscribe = sessionStatusStore.subscribe((state, prev) => {
       if (isDeleted(state.deleteStatuses) && !isDeleted(prev.deleteStatuses)) {
-        setActiveChat?.(undefined)
+        setActiveChat?.(createWelcomeChat())
         setMode('welcome')
       }
     })
@@ -102,22 +105,73 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo(() => {
       valid = false
       unsubscribe()
     }
-  }, [activeChat?.SessionID])
+  }, [activeChat?.SessionID, activeChat?.isDraftSession])
 
   const onSetReAct = useMemoizedFn(() => {
     setMode('re-act')
   })
   /** 提交直接启动，不等待聊天组件挂载。 */
   const handleStart = useMemoizedFn(
-    (input: AIChatSubmitParams, kind: 'new' | 'resume' = sessionId ? 'resume' : 'new') => {
+    (
+      input: AIChatSubmitParams,
+      kind: 'new' | 'resume' = isChatSession(activeChat) ? 'resume' : 'new',
+      startInCurrentTab = false,
+    ) => {
       if (!globalSessionEngine.canStartExecutingSession(kind === 'resume' ? sessionId : undefined, true)) return false
       const { sessionId: inputSessionId, ...value } = input
-      const target = { kind, sessionId: kind === 'resume' ? sessionId : inputSessionId || createActiveChatSessionId() }
+      const target = { kind, sessionId }
+      if (kind === 'new' && (!activeChat?.isDraftSession || !sessionId)) {
+        target.sessionId = inputSessionId || createActiveChatSessionId()
+      }
+      if (kind === 'new' && openChatInNewTab && !startInCurrentTab) {
+        const targetSession = globalSessionEngine.ensureSession(target.sessionId)
+        globalSessionEngine.updateSessionConfig(target.sessionId, getSetting())
+        targetSession.meta.pendingWelcomeInput = cloneDeep(input)
+        openAIAgentChatTab({ ...activeChat!, SessionID: target.sessionId, isDraftSession: true })
+        resetWelcome(true)
+        return true
+      }
       setMode('re-act')
       startChat({ ...value, target })
       return true
     },
   )
+
+  useEffect(() => {
+    if (!openChatInNewTab || !meta.pendingWelcomeInput) return
+    // 延后领取，StrictMode 的首轮 effect 清理不会丢失首问。
+    const timer = window.setTimeout(() => {
+      const input = meta.pendingWelcomeInput
+      if (!input) return
+      if (handleStart(input, 'new', true)) meta.pendingWelcomeInput = undefined
+    }, 0)
+    return () => window.clearTimeout(timer)
+  }, [sessionId])
+
+  const resetWelcome = useMemoizedFn((clearInputParams = false) => {
+    if (clearInputParams) {
+      syncAIAgentPageInfo({
+        pageId,
+        aiAgentPageInfo: { defualtAIMentionCommandParams: undefined, forgeExec: undefined },
+        emitSessionData: false,
+      })
+    }
+    setSetting?.((old) => ({
+      ...old,
+      SyncPerceptionTrigger: AIAgentSettingDefault.SyncPerceptionTrigger,
+      EnablePlan: AIAgentSettingDefault.EnablePlan,
+      SingleModelMode: AIAgentSettingDefault.SingleModelMode,
+      DisableMemoryTriage: AIAgentSettingDefault.DisableMemoryTriage,
+      Strategy: {
+        EnableMultiAgent: AIAgentSettingDefault.Strategy?.EnableMultiAgent,
+        EnableGoalMode: AIAgentSettingDefault.Strategy?.EnableGoalMode,
+        GoalMinIterations: AIAgentSettingDefault.Strategy?.GoalMinIterations,
+        MaxSubAgents: AIAgentSettingDefault.Strategy?.MaxSubAgents,
+      },
+    }))
+    setActiveChat?.(createWelcomeChat())
+    setMode('welcome')
+  })
 
   const onStop = useMemoizedFn(() => {
     if (pendingChat) {
@@ -167,13 +221,12 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo(() => {
   const replaceToolNoPromptCache = useRef(false)
 
   useEffect(() => {
-    if (!inViewPort) return
     // ai-re-act 页面左侧侧边栏向 chatUI 发送的事件
     emiter.on('onReActChatEvent', onEvents)
     return () => {
       emiter.off('onReActChatEvent', onEvents)
     }
-  }, [inViewPort])
+  }, [])
 
   const onEvents = useMemoizedFn((res) => {
     try {
@@ -183,21 +236,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo(() => {
       switch (data.type as ReActChatEventEnum) {
         // 新开聊天对话窗
         case ReActChatEventEnum.NEW_CHAT:
-          setSetting?.((old) => ({
-            ...old,
-            SyncPerceptionTrigger: false,
-            EnablePlan: false,
-            SingleModelMode: false,
-            DisableMemoryTriage: AIAgentSettingDefault.DisableMemoryTriage,
-            Strategy: {
-              EnableMultiAgent: false,
-              EnableGoalMode: false,
-              GoalMinIterations: AIAgentSettingDefault.Strategy?.GoalMinIterations,
-              MaxSubAgents: AIAgentSettingDefault.Strategy?.MaxSubAgents,
-            },
-          }))
-          setActiveChat?.(undefined)
-          setMode('welcome')
+          resetWelcome()
           break
         // 替换当前使用的 forge 模板
         case ReActChatEventEnum.OPEN_FORGE_FORM:

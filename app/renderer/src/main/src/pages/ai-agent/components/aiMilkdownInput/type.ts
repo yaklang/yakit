@@ -7,7 +7,6 @@ export interface AIMilkdownInputProps extends AIMilkdownInputBaseProps {}
 
 export interface AIMilkdownInputRef {
   setMention: (v: AIMentionCommandParams) => void
-  setImage: () => void
   setCodeRef: (v: AICodeBlockCommandParams) => void
   getSessionId: () => string
 }

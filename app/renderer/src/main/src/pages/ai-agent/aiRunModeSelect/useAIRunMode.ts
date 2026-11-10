@@ -6,17 +6,16 @@ import type { AIExecutionStrategy, AIInputEvent } from '@/pages/ai-re-act/hooks/
 import emiter from '@/utils/eventBus/eventBus'
 import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import { useStore } from 'zustand'
-import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
 import { ModeOptionList } from './aiRunModeConstants'
 import type { ModeOptionKey } from './aiRunModeConstants'
 import { clearGoalStrategy } from '../defaultConstant'
+import { isChatSession } from '../utils/isChatSession'
 
 /** Plan / Multi-Agent / Goal 开关与子配置（按钮下拉与 / 弹层共用） */
 export const useAIRunMode = () => {
   const { setting, activeChat } = useAIAgentStore()
   const { setSetting, onSend } = useAIAgentDispatcher()
   const store = useCurrentStore()
-  const sessionId = useCurrentSessionId()
   const execute = useStore(store, (state) => state.execute)
 
   const enablePlan = useCreation(() => !!setting?.EnablePlan, [setting?.EnablePlan])
@@ -43,7 +42,7 @@ export const useAIRunMode = () => {
   const onSetPlan = useDebounceFn(
     useMemoizedFn((checked: boolean) => {
       // pending 的 execute 也为 true；绑定正式会话后才允许发送热补丁。
-      if (execute && sessionId) {
+      if (execute && isChatSession(activeChat)) {
         const info: AIInputEvent = {
           IsConfigHotpatch: true,
           HotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_EnablePlan,
@@ -51,13 +50,13 @@ export const useAIRunMode = () => {
             EnablePlan: checked,
           },
         }
-        onSend({ token: sessionId, type: '', params: info })
+        onSend({ token: activeChat.SessionID, type: '', params: info })
       }
       setSetting?.((v) => ({
         ...v,
         EnablePlan: checked,
       }))
-      if (activeChat?.SessionID) {
+      if (isChatSession(activeChat)) {
         emiter.emit(
           'sessionData',
           JSON.stringify({
@@ -78,7 +77,7 @@ export const useAIRunMode = () => {
   const onSetStrategy = useDebounceFn(
     useMemoizedFn((next: AIExecutionStrategy) => {
       const merged: AIExecutionStrategy = { ...(setting?.Strategy || {}), ...next }
-      if (execute && sessionId) {
+      if (execute && isChatSession(activeChat)) {
         const info: AIInputEvent = {
           IsConfigHotpatch: true,
           HotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_Strategy,
@@ -86,13 +85,13 @@ export const useAIRunMode = () => {
             Strategy: merged,
           },
         }
-        onSend({ token: sessionId, type: '', params: info })
+        onSend({ token: activeChat.SessionID, type: '', params: info })
       }
       setSetting?.((v) => ({
         ...v,
         Strategy: { ...v.Strategy, ...next },
       }))
-      if (activeChat?.SessionID) {
+      if (isChatSession(activeChat)) {
         emiter.emit(
           'sessionData',
           JSON.stringify({

@@ -28,7 +28,12 @@ vi.mock('../FileTreeSearchView/FileTreeSearchView', () => ({
 }))
 vi.mock('@/utils/eventBus/eventBus', () => ({ default: { emit } }))
 vi.mock('@/utils/notification', () => ({ yakitNotify: vi.fn() }))
-vi.mock('@/pages/ai-re-act/hooks/useCurrentDataBySession', () => ({ useCurrentStore: () => ({}) }))
+vi.mock('@/pages/ai-re-act/hooks/useCurrentDataBySession', () => ({
+  useCurrentRawData: () => ({
+    draftMaterials: { files: session.id === 'session-1' ? [{ path: 'opened-file.txt' }] : [] },
+  }),
+  useCurrentStore: () => ({}),
+}))
 vi.mock('@/pages/ai-re-act/hooks/useCurrentSessionId', () => ({ default: () => session.id }))
 vi.mock('zustand', async (importOriginal) => ({
   ...(await importOriginal<typeof ZustandModule>()),
@@ -49,9 +54,18 @@ vi.mock('../../FileTreeDrop/FileTreeDrop', () => ({
   ),
 }))
 vi.mock('../../../components/aiFileSystemList/FileTreeSystemList/FileTreeSystemList', () => ({
-  default: ({ path, setSelected, onTreeDragStart, onTreeDragEnd, onRootSearch }: FileTreeSystemListProps) => {
+  default: ({
+    path,
+    setSelected,
+    onTreeDragStart,
+    onTreeDragEnd,
+    onRootSearch,
+    addedFilePaths,
+    onRemoveAddedFile,
+  }: FileTreeSystemListProps) => {
     return (
       <div>
+        {addedFilePaths?.includes(path) && <button onClick={() => onRemoveAddedFile?.(path)}>cancel-{path}</button>}
         <button
           draggable
           onDragStart={onTreeDragStart}
@@ -101,6 +115,17 @@ afterEach(() => {
 })
 
 describe('文件系统侧栏', () => {
+  it('仅回显当前会话资料，取消事件带会话和路径，切换后清空回显', async () => {
+    const { rerender } = render(<FileTreeList setSelected={vi.fn()} />)
+    fireEvent.click(await screen.findByRole('button', { name: 'cancel-opened-file.txt' }))
+    expect(emit).toHaveBeenCalledWith(
+      'removeAIFileMaterial',
+      JSON.stringify({ sessionId: 'session-1', path: 'opened-file.txt' }),
+    )
+    session.id = 'session-2'
+    rerender(<FileTreeList setSelected={vi.fn()} />)
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'cancel-opened-file.txt' })).toBeNull())
+  })
   it('仅 AI Artifacts 统计独立文件，排除目录，移除文件后归零', async () => {
     aiPaths.push({ path: 'report.txt', isFolder: false })
     const result = render(<FileTreeList setSelected={vi.fn()} />)

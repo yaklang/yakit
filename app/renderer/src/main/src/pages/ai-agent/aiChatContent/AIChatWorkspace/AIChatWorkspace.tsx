@@ -19,10 +19,11 @@ import styles from './AIChatWorkspace.module.scss'
 import { AIChatWorkspaceTabs, type AIChatWorkspaceTab } from './AIChatWorkspaceTabs/AIChatWorkspaceTabs'
 import { AIChatWorkspaceTabContent, type HttpFlowSelectionProps } from './AIChatWorkspaceTabs/AIChatWorkspaceTabContent'
 import { previewOpenFilesStore } from '../../aiChatWelcome/FileTreeList/store/usePreviewOpenFiles'
+import { isChatSession } from '../../utils/isChatSession'
 
 interface AIChatWorkspaceProps extends HttpFlowSelectionProps {
   inViewPort?: boolean
-  /** 欢迎页且没有激活会话时，流量和漏洞页签展示全量数据 */
+  /** 欢迎页尚未进入对话时，流量和漏洞页签展示全量数据 */
   welcome?: boolean
   filePreviewData?: FileNodeProps
   setFilePreviewData: (data?: FileNodeProps) => void
@@ -311,7 +312,7 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
     setActiveTabKey('')
   })
 
-  const showAll = welcome && !activeChat?.SessionID
+  const showAll = welcome && !isChatSession(activeChat)
   const runtimeId = activeTab?.runtimeId
   const runTimeIds = useMemo(
     () => [...new Set(runtimeId ? [runtimeId] : httpRunTimeIDs.concat(relatedRuntimeIDs))],

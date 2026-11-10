@@ -1,0 +1,89 @@
+.add {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  flex-shrink: 0;
+
+  &:hover {
+    background-color: var(--Colors-Use-Neutral-Bg-Hover);
+  }
+}
+
+.file-icon {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+
+  svg {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+img.file-icon {
+  box-sizing: border-box;
+  object-fit: contain;
+  border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
+  border-radius: 4px;
+}
+
+.info {
+  flex: 1;
+  min-width: 0;
+}
+
+.filename {
+  display: flex;
+  white-space: nowrap;
+}
+
+.basename {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.size {
+  height: 16px;
+  color: var(--Colors-Use-Neutral-Text-4-Help-text);
+}
+
+.remove {
+  flex-shrink: 0;
+}
+
+.item .remove:global(.yakit.ant-btn.ant-btn-icon-only) {
+  svg {
+    color: var(--Colors-Use-Neutral-Text-4-Help-text);
+  }
+
+  &:hover:not(:disabled) {
+    border-color: transparent;
+    background: var(--Colors-Use-Error-Bg);
+
+    svg {
+      color: var(--Colors-Use-Error-Primary);
+    }
+  }
+}
+
+.empty {
+  padding: 16px 8px;
+  text-align: center;
+  color: var(--Colors-Use-Neutral-Text-4-Help-text);
+}

@@ -48,7 +48,7 @@ it('does not open another connection for an executing session or an empty select
 it.each([
   { name: '旧会话缺少上下文上限', runtimeContextSizeLimit: undefined },
   { name: '服务端默认值标记', runtimeContextSizeLimit: 0 },
-  { name: '已保存的字节上限', runtimeContextSizeLimit: 600 * 1024 },
+  { name: '已保存的前端单位上限', runtimeContextSizeLimit: 600 },
 ])('恢复$name时请求优先读取会话缓存，并保留原始启动参数', ({ runtimeContextSizeLimit }) => {
   const onStart = vi.fn()
   const startParams = {

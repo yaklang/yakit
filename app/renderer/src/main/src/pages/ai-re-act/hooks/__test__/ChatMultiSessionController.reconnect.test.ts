@@ -107,6 +107,17 @@ describe('session reconnect / IDB lifecycle', () => {
     vi.useRealTimers()
   })
 
+  it('重连替换 meta 时清除未领取首问', async () => {
+    const { meta } = ctrl.ensureSession('existing-session')
+    meta.pendingWelcomeInput = { qs: 'stale question' }
+
+    await start('existing-session')
+
+    const current = ctrl.ensureSession('existing-session').meta
+    expect(current).not.toBe(meta)
+    expect(current.pendingWelcomeInput).toBeUndefined()
+  })
+
   // TODO: 预查询方法及字段暂时注释，消费方案确定后同步恢复以下测试。
   // it.each([false, true])('publishes history after both queries finish (sub Agent first=%s)', async (subAgentFirst) => {
   //   const history = deferred<any>()

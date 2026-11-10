@@ -236,7 +236,7 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
     const runtimeContextSizeLimit = changedValues.RuntimeContextSizeLimit
     if (runtimeContextSizeLimit && runtimeContextSizeLimit >= 60 && Number.isInteger(runtimeContextSizeLimit)) {
       onHotConfigChange(AIInputEventHotPatchTypeEnum.HotPatchType_RuntimeContextSizeLimit, {
-        RuntimeContextSizeLimit: runtimeContextSizeLimit * 1024,
+        RuntimeContextSizeLimit: runtimeContextSizeLimit,
       })
       setSetting?.((v) => ({
         ...v,
