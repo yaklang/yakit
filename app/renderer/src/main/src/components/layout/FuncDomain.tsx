@@ -157,6 +157,7 @@ import { useUserMenu } from './userMenu/useUserMenu'
 import { UserMenuModals } from './userMenu/UserMenuModals'
 import { YakitTag } from '../yakitUI/YakitTag/YakitTag'
 import type { EngineConsoleOpenType } from '../baseConsole/engineConsoleOpenType'
+import { ScreenshotButton } from './ScreenshotButton'
 
 // re-export 保持外部导入路径兼容
 export { randomAvatarColor }
@@ -360,6 +361,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
       <PerformanceSamplingController />
       <div className={classNames(styles['func-domain-body'], { [styles['func-domain-reverse-body']]: isReverse })}>
         {showDevTool() && <UIDevTool onDevToolRefresh={onDevToolRefresh} />}
+        {!showProjectManage && <ScreenshotButton />}
         {!showProjectManage && <NotepadMenu />}
         {!showProjectManage && !isIRify() && <UIOpRisk isEngineLink={isEngineLink} />}
         <div className={styles['state-setting-wrapper']}>

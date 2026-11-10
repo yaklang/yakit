@@ -12,7 +12,7 @@ function formatLocalCaptureTime(date) {
 }
 
 // Executed in an isolated renderer world. The canvas stays detached from the UI.
-async function watermarkScreenshot(png, capturedAt, logicalWidth) {
+async function watermarkScreenshot(png, capturedAt, logicalWidth, position) {
   const bytes = Uint8Array.from(atob(png), (char) => char.charCodeAt(0))
   const bitmap = await createImageBitmap(new Blob([bytes], { type: 'image/png' }))
   const canvas = document.createElement('canvas')
@@ -32,12 +32,13 @@ async function watermarkScreenshot(png, capturedAt, logicalWidth) {
   context.font = `600 ${fontSize}px monospace`
   const boxWidth = context.measureText(capturedAt).width + 2 * padding
   const boxHeight = fontSize * 1.5 + 2 * padding
-  const top = canvas.height - margin - boxHeight
+  const left = position.endsWith('right') ? canvas.width - margin - boxWidth : margin
+  const top = position.startsWith('top') ? margin : canvas.height - margin - boxHeight
   context.fillStyle = 'rgba(0, 0, 0, 0.82)'
-  context.fillRect(margin, top, boxWidth, boxHeight)
+  context.fillRect(left, top, boxWidth, boxHeight)
   context.fillStyle = '#ffffff'
   context.textBaseline = 'middle'
-  context.fillText(capturedAt, margin + padding, top + boxHeight / 2)
+  context.fillText(capturedAt, left + padding, top + boxHeight / 2)
   return {
     data: canvas.toDataURL('image/png').slice('data:image/png;base64,'.length),
     capturedAt,
@@ -46,7 +47,11 @@ async function watermarkScreenshot(png, capturedAt, logicalWidth) {
   }
 }
 
-async function captureYakitScreenshot(win, signal) {
+async function captureYakitScreenshot(
+  win,
+  signal,
+  { watermarkEnabled = true, watermarkPosition = 'bottom-left' } = {},
+) {
   if (!win || win.isDestroyed() || win.webContents.isDestroyed()) {
     throw new Error('Yakit main window is unavailable')
   }
@@ -95,8 +100,17 @@ async function captureYakitScreenshot(win, signal) {
     const screenshot = await contents.capturePage()
     if (task.error) throw task.error
     if (screenshot.isEmpty() || logicalWidth <= 0) throw new Error('Yakit page capture is empty')
-    const png = screenshot.toPNG().toString('base64')
-    const code = `(${watermarkScreenshot.toString()})(${JSON.stringify(png)}, ${JSON.stringify(capturedAt)}, ${logicalWidth})`
+    const png = screenshot.toPNG()
+    if (!watermarkEnabled) {
+      // IHDR dimensions retain physical pixels on high-DPI displays.
+      return {
+        data: png.toString('base64'),
+        capturedAt,
+        width: png.readUInt32BE(16),
+        height: png.readUInt32BE(20),
+      }
+    }
+    const code = `(${watermarkScreenshot.toString()})(${JSON.stringify(png.toString('base64'))}, ${JSON.stringify(capturedAt)}, ${logicalWidth}, ${JSON.stringify(watermarkPosition)})`
     const result = await contents.executeJavaScriptInIsolatedWorld(999, [{ code }])
     if (task.error) throw task.error
     return result

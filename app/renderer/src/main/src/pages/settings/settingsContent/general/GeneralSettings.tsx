@@ -18,6 +18,7 @@ import { yakitApp, yakitAuth, yakitCodec, yakitProfile, yakitShell, yakitUILayou
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { SettingsSections } from '../../constants'
 import styles from './GeneralSettings.module.scss'
+import { ScreenshotSettings } from './ScreenshotSettings'
 
 interface PluginSourceProfile {
   BaseUrl: string
@@ -262,6 +263,8 @@ export const GeneralSettings: React.FC = () => {
           {workspacePath}
         </div>
       </div>
+
+      <ScreenshotSettings />
 
       <div className={styles['general-section']} data-settings-section={SettingsSections.general.pluginSource}>
         <div className={styles['section-title']}>{t('SettingsPage.general.pluginSource')}</div>
