@@ -19,9 +19,15 @@ vi.mock('@/utils/notification', () => ({
 }))
 
 import { yakitFailed } from '@/utils/notification'
-import { autoEnableGlobalHotPatch, GLOBAL_HOT_PATCH_AUTO_START, useGlobalHotPatch } from '../globalHotPatch'
+import {
+  autoEnableGlobalHotPatch,
+  DEFAULT_GLOBAL_TEMPLATES,
+  GLOBAL_HOT_PATCH_AUTO_START,
+  useGlobalHotPatch,
+} from '../globalHotPatch'
 
 const savedConfig = { Enabled: false, Version: '3', Items: [] }
+const defaultAutoStartTemplate = '[全局] HTTP流量测试项打标'
 
 describe('autoEnableGlobalHotPatch', () => {
   beforeEach(() => {
@@ -30,36 +36,54 @@ describe('autoEnableGlobalHotPatch', () => {
     useGlobalHotPatch.setState({ globalHotPatchConfig: null })
   })
 
-  it('没有保存模板名时不查询也不启用', async () => {
-    ipcRendererMock.invoke.mockResolvedValueOnce('   ')
-
-    await autoEnableGlobalHotPatch()
-
-    expect(ipcRendererMock.invoke).toHaveBeenCalledTimes(1)
-    expect(ipcRendererMock.invoke).toHaveBeenCalledWith('GetKey', { Key: GLOBAL_HOT_PATCH_AUTO_START })
-  })
-
-  it('模板已不存在时不启用', async () => {
+  it('每次启动都保存并启用 HTTP 流量测试项模板', async () => {
     ipcRendererMock.invoke.mockImplementation(async (channel: string) => {
-      if (channel === 'GetKey') return '  missing  '
-      if (channel === 'QueryHotPatchTemplate') return { Data: [{ Name: 'other' }] }
+      if (channel === 'QueryHotPatchTemplate') return { Data: [{ Name: defaultAutoStartTemplate }] }
+      if (channel === 'GetGlobalHotPatchConfig') return savedConfig
+      if (channel === 'SetGlobalHotPatchConfig') return { ...savedConfig, Enabled: true }
       return undefined
     })
 
     await autoEnableGlobalHotPatch()
 
-    expect(ipcRendererMock.invoke).toHaveBeenCalledWith('QueryHotPatchTemplate', {
-      Type: 'global',
-      Name: ['missing'],
+    expect(ipcRendererMock.invoke).toHaveBeenCalledWith('SetKey', {
+      Key: GLOBAL_HOT_PATCH_AUTO_START,
+      Value: defaultAutoStartTemplate,
     })
-    expect(ipcRendererMock.invoke).toHaveBeenCalledWith('SetKey', { Key: GLOBAL_HOT_PATCH_AUTO_START, Value: '' })
+    expect(ipcRendererMock.invoke).toHaveBeenCalledWith('SetGlobalHotPatchConfig', {
+      Config: {
+        Enabled: true,
+        Version: '3',
+        Items: [{ Name: defaultAutoStartTemplate, Type: 'global', Enabled: true }],
+      },
+      ExpectedVersion: '3',
+    })
+    expect(ipcRendererMock.invoke).not.toHaveBeenCalledWith('GetKey', {
+      Key: GLOBAL_HOT_PATCH_AUTO_START,
+    })
+  })
+
+  it('模板不存在时从默认模板创建', async () => {
+    ipcRendererMock.invoke.mockImplementation(async (channel: string) => {
+      if (channel === 'QueryHotPatchTemplate') return { Data: [] }
+      if (channel === 'GetGlobalHotPatchConfig') return null
+      return undefined
+    })
+
+    await autoEnableGlobalHotPatch()
+
+    expect(ipcRendererMock.invoke).toHaveBeenCalledWith('CreateHotPatchTemplate', {
+      Type: 'global',
+      Content: DEFAULT_GLOBAL_TEMPLATES.find((item) => item.name === defaultAutoStartTemplate)?.content,
+      Name: defaultAutoStartTemplate,
+      Tags: [],
+    })
     expect(ipcRendererMock.invoke).not.toHaveBeenCalledWith('SetGlobalHotPatchConfig', expect.anything())
   })
 
   it('全局配置还没加载成功时不启用', async () => {
     ipcRendererMock.invoke.mockImplementation(async (channel: string) => {
-      if (channel === 'GetKey') return 'kept'
-      if (channel === 'QueryHotPatchTemplate') return { Data: [{ Name: 'kept' }] }
+      if (channel === 'QueryHotPatchTemplate') return { Data: [{ Name: defaultAutoStartTemplate }] }
       if (channel === 'GetGlobalHotPatchConfig') return null
       return undefined
     })
@@ -72,8 +96,7 @@ describe('autoEnableGlobalHotPatch', () => {
 
   it('模板仍在且配置可读时，用保存的名字启用全局热加载', async () => {
     ipcRendererMock.invoke.mockImplementation(async (channel: string) => {
-      if (channel === 'GetKey') return 'kept'
-      if (channel === 'QueryHotPatchTemplate') return { Data: [{ Name: 'kept' }] }
+      if (channel === 'QueryHotPatchTemplate') return { Data: [{ Name: defaultAutoStartTemplate }] }
       if (channel === 'GetGlobalHotPatchConfig') return savedConfig
       if (channel === 'SetGlobalHotPatchConfig') return { ...savedConfig, Enabled: true }
       return undefined
@@ -85,9 +108,13 @@ describe('autoEnableGlobalHotPatch', () => {
       Config: {
         Enabled: true,
         Version: '3',
-        Items: [{ Name: 'kept', Type: 'global', Enabled: true }],
+        Items: [{ Name: defaultAutoStartTemplate, Type: 'global', Enabled: true }],
       },
       ExpectedVersion: '3',
+    })
+    expect(ipcRendererMock.invoke).toHaveBeenCalledWith('SetKey', {
+      Key: GLOBAL_HOT_PATCH_AUTO_START,
+      Value: defaultAutoStartTemplate,
     })
     expect(yakitFailed).not.toHaveBeenCalled()
   })
