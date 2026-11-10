@@ -77,6 +77,29 @@ describe('Yakit screenshot capture', () => {
 
           const rawBitmap = decodedRaw.toBitmap()
           const watermarkedBitmap = decodedWatermarked.toBitmap()
+          const plainCapture = await captureScreenshot(win, undefined, { watermarkEnabled: false })
+          const plainPng = Buffer.from(plainCapture.data, 'base64')
+          const plainMatchesNative = electron.nativeImage
+            .createFromBuffer(plainPng)
+            .toBitmap()
+            .equals(rawScreenshot.toBitmap())
+          const positionedCaptures = []
+          for (const position of ['top-left', 'top-right', 'bottom-left', 'bottom-right']) {
+            const positioned = await captureScreenshot(win, undefined, { watermarkPosition: position })
+            const bitmap = electron.nativeImage.createFromBuffer(Buffer.from(positioned.data, 'base64')).toBitmap()
+            const bounds = { minX: positioned.width, minY: positioned.height, maxX: -1, maxY: -1 }
+            for (let offset = 0; offset < bitmap.length; offset += 4) {
+              if (bitmap.subarray(offset, offset + 4).equals(rawBitmap.subarray(offset, offset + 4))) continue
+              const pixel = offset / 4
+              const x = pixel % positioned.width
+              const y = Math.floor(pixel / positioned.width)
+              bounds.minX = Math.min(bounds.minX, x)
+              bounds.maxX = Math.max(bounds.maxX, x)
+              bounds.minY = Math.min(bounds.minY, y)
+              bounds.maxY = Math.max(bounds.maxY, y)
+            }
+            positionedCaptures.push({ position, ...bounds })
+          }
           const physicalWidth = watermarkedPng.readUInt32BE(16)
           const physicalHeight = watermarkedPng.readUInt32BE(20)
           const rawPhysicalWidth = rawPng.readUInt32BE(16)
@@ -160,6 +183,10 @@ describe('Yakit screenshot capture', () => {
           return {
             beforeCapture,
             afterCapture,
+            plainMatchesNative,
+            plainWidth: plainCapture.width,
+            plainHeight: plainCapture.height,
+            positionedCaptures,
             capturedAt: result.capturedAt,
             resultWidth: result.width,
             resultHeight: result.height,
@@ -224,6 +251,25 @@ describe('Yakit screenshot capture', () => {
     expect(capture.bottomLeftChangedPixels).toBeGreaterThan(100)
     expect(capture.topChangedPixels).toBe(0)
     expect(capture.watermarkTextPixels).toBeGreaterThan(100)
+  })
+
+  it('preserves native pixels and physical dimensions when watermarking is disabled', () => {
+    expect(capture.plainMatchesNative).toBe(true)
+    expect(capture.plainWidth).toBe(capture.physicalWidth)
+    expect(capture.plainHeight).toBe(capture.physicalHeight)
+  })
+
+  it('anchors all four watermark positions to the correct edges', () => {
+    const scale = capture.physicalWidth / capture.logicalWidth
+    const margin = Math.min(12 * scale, capture.physicalWidth / 20, capture.physicalHeight / 20)
+    for (const bounds of capture.positionedCaptures) {
+      expect(bounds.maxX).toBeGreaterThan(bounds.minX)
+      expect(bounds.maxY).toBeGreaterThan(bounds.minY)
+      const horizontalGap = bounds.position.endsWith('right') ? capture.physicalWidth - bounds.maxX - 1 : bounds.minX
+      const verticalGap = bounds.position.startsWith('top') ? bounds.minY : capture.physicalHeight - bounds.maxY - 1
+      expect(Math.abs(horizontalGap - margin)).toBeLessThanOrEqual(1)
+      expect(Math.abs(verticalGap - margin)).toBeLessThanOrEqual(1)
+    }
   })
 
   it('subscribes and delivers a real PNG through the correlated stream response', () => {

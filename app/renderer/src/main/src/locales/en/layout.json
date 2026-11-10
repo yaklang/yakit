@@ -730,5 +730,11 @@
     "noProcess": "No running engine process was detected",
     "killProcessFailed": "Failed to close engine process (pid: {{pid}}, port: {{port}}): {{error}}",
     "closing": "Closing processes, please wait..."
+  },
+  "Screenshot": {
+    "capture": "Take screenshot",
+    "saved": "Screenshot saved",
+    "failed": "Screenshot failed: {{error}}",
+    "openDirectory": "Open screenshot folder"
   }
 }
