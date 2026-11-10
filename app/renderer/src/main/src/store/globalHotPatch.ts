@@ -961,16 +961,25 @@ export const GLOBAL_HOT_PATCH_AUTO_START = 'global-hot-patch-auto-start'
 
 export const autoEnableGlobalHotPatch = async () => {
   try {
-    const name = ((await ipcRenderer.invoke('GetKey', { Key: GLOBAL_HOT_PATCH_AUTO_START })) || '').trim()
-    if (!name) return
+    // 企业版 默认 [全局] HTTP流量测试项打标' 打开自启动 不可上master
+    const name = '[全局] HTTP流量测试项打标'
+    await ipcRenderer.invoke('SetKey', { Key: GLOBAL_HOT_PATCH_AUTO_START, Value: name })
+
     const res: { Data?: Array<{ Name?: string }> } = await ipcRenderer.invoke('QueryHotPatchTemplate', {
       Type: 'global',
       Name: [name],
     })
     if (!res?.Data?.some((item) => item.Name === name)) {
-      await ipcRenderer.invoke('SetKey', { Key: GLOBAL_HOT_PATCH_AUTO_START, Value: '' })
-      return
+      const template = DEFAULT_GLOBAL_TEMPLATES.find((item) => item.name === name)
+      if (!template) throw new Error(`Missing default template: ${name}`)
+      await ipcRenderer.invoke('CreateHotPatchTemplate', {
+        Type: 'global',
+        Content: template.content,
+        Name: template.name,
+        Tags: [],
+      })
     }
+
     await useGlobalHotPatch.getState().loadGlobalHotPatchConfig()
     if (!useGlobalHotPatch.getState().globalHotPatchConfig) return
     await useGlobalHotPatch.getState().enableGlobalHotPatch(name)
