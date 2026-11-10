@@ -125,7 +125,21 @@ const ensureHotPatchDefaultTemplates = async (
 ) => {
   const seededNames: HotPatchTemplateItem[] = []
   for (const tpl of defaults) {
-    if (resData.some(({ Name }) => Name === tpl.name)) continue
+    const existing = resData.find(({ Name }) => Name === tpl.name)
+    if (existing) {
+      // 内置模板内容升级后，同步覆盖引擎中的过期副本，避免页面一直展示旧内容
+      if ((existing.Content || '') !== tpl.content) {
+        try {
+          await ipcRenderer.invoke('UpdateHotPatchTemplate', {
+            Condition: { Type: type, Name: [tpl.name] },
+            Data: { Type: type, Content: tpl.content, Name: tpl.name },
+          })
+        } catch (error) {
+          yakitFailed(error + '')
+        }
+      }
+      continue
+    }
     const newTemplate: HotPatchTemplateItem = {
       Type: type,
       Content: tpl.content,
