@@ -651,3 +651,80 @@ describe('HotPatchManagement 全局模板本地化', () => {
     })
   })
 })
+
+describe('HotPatchManagement 内置模板内容过期同步', () => {
+  const storedTemplateName = '[全局] HTTP流量测试项打标'
+  const engineContent = 'engine-old-code'
+  const builtinContent = 'builtin-new-code'
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mocks.globalTemplates.splice(0)
+    mocks.globalTemplates.push({
+      name: storedTemplateName,
+      nameUi: 'GlobalHotPatch.http_flow_test_tags',
+      content: builtinContent,
+    })
+  })
+
+  afterEach(() => {
+    cleanup()
+    mocks.globalTemplates.splice(0)
+  })
+
+  const mockEngineWith = (items: Array<{ Name: string; Content: string }>) => {
+    ipcRendererMock.invoke.mockImplementation(async (channel: string, params?: { Type?: string; Name?: string[] }) => {
+      if (channel === 'QueryHotPatchTemplate') {
+        if (params?.Name?.length) {
+          const name = params.Name[0]
+          const found = items.find((item) => item.Name === name)
+          return { Data: found ? [{ ...found, Type: params.Type, Tags: [] }] : [] }
+        }
+        return { Data: params?.Type === 'global' ? items.map((item) => ({ ...item, Type: 'global', Tags: [] })) : [] }
+      }
+      return undefined
+    })
+  }
+
+  it('引擎存有同名旧内容时更新为内置内容', async () => {
+    mockEngineWith([{ Name: storedTemplateName, Content: engineContent }])
+
+    render(<HotPatchManagement />)
+
+    await waitFor(() =>
+      expect(ipcRendererMock.invoke).toHaveBeenCalledWith('UpdateHotPatchTemplate', {
+        Condition: { Type: 'global', Name: [storedTemplateName] },
+        Data: { Type: 'global', Content: builtinContent, Name: storedTemplateName },
+      }),
+    )
+    // 已存在时不再误走 Create 分支
+    expect(ipcRendererMock.invoke).not.toHaveBeenCalledWith('CreateHotPatchTemplate', expect.anything())
+  })
+
+  it('引擎内容与内置一致时不更新', async () => {
+    mockEngineWith([{ Name: storedTemplateName, Content: builtinContent }])
+
+    render(<HotPatchManagement />)
+
+    await waitFor(() => expect(screen.getByTitle('GlobalHotPatch.http_flow_test_tags')).toBeInTheDocument())
+    expect(ipcRendererMock.invoke).not.toHaveBeenCalledWith('UpdateHotPatchTemplate', expect.anything())
+    expect(ipcRendererMock.invoke).not.toHaveBeenCalledWith('CreateHotPatchTemplate', expect.anything())
+  })
+
+  it('仅缺失时走 Create，非内置名模板不触发更新', async () => {
+    mockEngineWith([{ Name: 'user-custom-tpl', Content: 'user-code' }])
+
+    render(<HotPatchManagement />)
+
+    await waitFor(() =>
+      expect(ipcRendererMock.invoke).toHaveBeenCalledWith('CreateHotPatchTemplate', {
+        Type: 'global',
+        Content: builtinContent,
+        Name: storedTemplateName,
+        Tags: [],
+      }),
+    )
+    const updateCalls = ipcRendererMock.invoke.mock.calls.filter(([channel]) => channel === 'UpdateHotPatchTemplate')
+    expect(updateCalls).toHaveLength(0)
+  })
+})

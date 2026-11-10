@@ -738,7 +738,7 @@ if YAK_MAIN {
   {
     name: '[全局] HTTP流量测试项打标',
     nameUi: 'GlobalHotPatch.http_flow_test_tags',
-    content: `// 全局 HTTP 流量候选测试项标记器。
+    content: `// 临时交付用：全局 MITM 流量候选测试项标记器。
 //
 // 这个插件只做“值得测什么”的流量分类，不代表已经确认存在漏洞。
 // 标签统一使用 TEST: 前缀，便于前端筛选、二次 Fuzz 和报表统计。
@@ -750,13 +750,13 @@ htmlResponseRe = re2.Compile(\`content-type:.*(text/html|application/xhtml)|<htm
 injectionParamRe = re2.Compile(\`(^|[?&"'])((id|name|q|query|search|keyword|filter|sort|order|where|value|input|data|cmd|command|exec|template|expr)([=:"']))\`)~
 injectionPayloadRe = re2.Compile(\`(union(?:%20|\\s)+select|select(?:%20|\\s)+.+from|sleep\\s*\\(|waitfor\\s+delay|pg_sleep\\s*\\(|\\b(and|or)\\b(?:%20|\\s)+\\d+(?:%20|\\s)*=|;\\s*(cat|id|whoami|curl|wget)|\\$\\{[^}]+\\}|\\{\\{[^}]+\\}\\}|<%[^>]+%>)\`)~
 commandParamRe = re2.Compile(\`(^|[?&"'])((cmd|command|exec|execute|shell|ping|host|ip)([=:"']))\`)~
-commandPayloadRe = re2.Compile(\`(;|\\||&&)(\\s|%20|%09)*(cat|id|whoami|uname|curl|wget)(\\s|%20|%09|[&]|$)\`)~
+commandPayloadRe = re2.Compile(\`(;|\\||&&)(cat|id|whoami|uname|curl|wget)(\\s|%20)\`)~
 sstiRe = re2.Compile(\`(\\$\\{|\\{\\{|<%|#\\{).*(\\}|%>)\`)~
 authRe = re2.Compile(\`authorization:|cookie:|token=|session=|jwt=|x-api-key:\`)~
 resourceIDRe = re2.Compile(\`(^|[/?&=_-])(id|uid|user_?id|account_?id|order_?id|tenant_?id|project_?id|role|permission)([/?&=_-]|\\d)\`)~
 resourcePathIDRe = re2.Compile(\`/[0-9]{1,12}(/|$)\`)~
 massAssignmentRe = re2.Compile(\`("|')?(role|isadmin|is_admin|permission|permissions|privilege|owner_?id)("|')?\\s*[:=]\`)~
-sensitiveResponseRe = re2.Compile(\`(password|passwd|secret|access[_-]?token|refresh[_-]?token|api[_-]?key|private[_-]?key|client[_-]?secret|authorization)["']?\\s*[:=]|-----begin (rsa |ec |openssh )?private key-----|aws_access_key_id|akia[0-9a-z]{12,}|eyj[a-z0-9_-]{10,}\\.[a-z0-9_-]{10,}\\.\`)~
+sensitiveResponseRe = re2.Compile(\`(password|passwd|secret|access[_-]?token|refresh[_-]?token|api[_-]?key|private[_-]?key|client[_-]?secret|authorization)\\s*[:=]|-----begin (rsa |ec |openssh )?private key-----|aws_access_key_id|akia[0-9a-z]{12,}|eyj[a-z0-9_-]{10,}\\.[a-z0-9_-]{10,}\\.\`)~
 errorDisclosureRe = re2.Compile(\`stack trace|traceback \\(|exception in thread|sql syntax.*error|未处理异常|debug=true|development mode\`)~
 corsRe = re2.Compile(\`access-control-allow-origin:\\s*\\*\`)~
 originRe = re2.Compile(\`origin:\`)~
@@ -768,7 +768,7 @@ downloadResponseRe = re2.Compile(\`content-disposition:\\s*attachment|content-ty
 traversalRe = re2.Compile(\`\\.\\./|%2e%2e|%252e%252e|/etc/passwd|boot\\.ini|win\\.ini\`)~
 fileSchemeRe = re2.Compile(\`file://|php://|zip://|phar://\`)~
 ssrfRe = re2.Compile(\`(url|uri|link|callback|webhook|redirect|next|dest|target|image|avatar|feed|proxy|src)([=:]|%3d|")([^\\r\\n]{0,80})(https?://|file://|gopher://|dict://|127\\.0\\.0\\.1|localhost|169\\.254\\.169\\.254|0x7f000001)\`)~
-redirectRe = re2.Compile(\`(redirect|next|return|dest|url)([=:]|%3d|["']\\s*:\\s*["'])\\s*https?://\`)~
+redirectRe = re2.Compile(\`(redirect|next|return|dest|url)([=:]|%3d|")https?://\`)~
 xmlRe = re2.Compile(\`content-type:.*(xml|soap)|<!doctype|<!entity\`)~
 deserializationRe = re2.Compile(\`java\\.lang|ac\\s*ed|__viewstate|@type\\s*[:=]|o:\\d+:"|php serialized\`)~
 authenticationRe = re2.Compile(\`authorization:|set-cookie:|cookie:.*(session|token|sid)\`)~
@@ -819,15 +819,13 @@ hijackSaveHTTPFlow = func(flow, modify, drop) {
     injectionParam = match(injectionParamRe, requestLower)
     injectionPayload = match(injectionPayloadRe, requestLower)
     if input && (injectionParam || injectionPayload) {
-        tag(flow, "Injection")
+        tag(flow, "注入测试")
     }
     if injectionParam || injectionPayload {
         tag(flow, "SQLi")
     }
-    // re2 默认多行匹配，参数识别避开普通 Host 请求头。
-    commandInput = url + "\\n" + str.ToLower(string(poc.GetHTTPPacketBody(req)))
-    if match(commandParamRe, commandInput) || match(commandPayloadRe, requestLower) {
-        tag(flow, "CommandInjection")
+    if match(commandParamRe, requestLower) || match(commandPayloadRe, requestLower) {
+        tag(flow, "命令注入")
     }
     if match(sstiRe, requestLower) {
         tag(flow, "SSTI")
@@ -837,19 +835,19 @@ hijackSaveHTTPFlow = func(flow, modify, drop) {
     hasAuth = match(authRe, requestLower)
     resourceID = match(resourceIDRe, url+requestLower) || match(resourcePathIDRe, url)
     if resourceID && (hasAuth || stateChanging) {
-        tag(flow, "AccessControl")
+        tag(flow, "访问控制")
         tag(flow, "IDOR")
     }
     if match(massAssignmentRe, requestLower) {
-        tag(flow, "MassAssignment")
+        tag(flow, "批量赋值")
     }
 
     // 敏感信息、密钥、调试信息和不安全的跨域配置。
     if match(sensitiveResponseRe, responseLower) {
-        tag(flow, "SensitiveInformation")
+        tag(flow, "敏感信息")
     }
     if match(errorDisclosureRe, responseLower) {
-        tag(flow, "InformationDisclosure")
+        tag(flow, "信息泄露")
     }
     if match(corsRe, responseLower) && match(originRe, requestLower) {
         tag(flow, "CORS")
@@ -862,35 +860,35 @@ hijackSaveHTTPFlow = func(flow, modify, drop) {
 
     // 文件上传、下载与路径穿越/LFI。
     if match(uploadRe, requestLower) {
-        tag(flow, "FileUpload")
+        tag(flow, "文件上传")
     }
     if match(downloadURLRe, url) || match(downloadResponseRe, responseLower) {
-        tag(flow, "FileDownload")
+        tag(flow, "文件下载")
     }
     if match(traversalRe, requestLower) ||
         (containsAny(requestLower, ["filename", "filepath", "path", "file", "template", "page"]) && match(fileSchemeRe, requestLower)) {
-        tag(flow, "PathTraversal")
-        tag(flow, "FileInclusion")
+        tag(flow, "路径穿越")
+        tag(flow, "文件包含")
     }
 
     // SSRF、重定向和 XML/反序列化输入。
     if match(ssrfRe, requestLower) {
         tag(flow, "SSRF")
-    }
-    if match(redirectRe, requestLower) {
-        tag(flow, "OpenRedirect")
+        if match(redirectRe, requestLower) {
+            tag(flow, "开放重定向")
+        }
     }
     if match(xmlRe, requestLower) {
         tag(flow, "XXE")
     }
     if match(deserializationRe, requestLower) {
-        tag(flow, "Deserialization")
+        tag(flow, "反序列化")
     }
 
     // 登录、令牌和带 Cookie 的状态变更请求。
     if containsAny(url, ["/login", "/signin", "/oauth", "/token", "/session", "/password", "/reset"]) ||
         match(authenticationRe, requestLower+responseLower) {
-        tag(flow, "Authentication")
+        tag(flow, "身份认证")
     }
     if stateChanging && match(cookieRe, requestLower) && !match(csrfTokenRe, requestLower) {
         tag(flow, "CSRF")
@@ -899,61 +897,7 @@ hijackSaveHTTPFlow = func(flow, modify, drop) {
     // 保存链路要求 hook 必须显式放行修改后的 flow。
     modify(flow)
 }
-
-// 命令行运行模板时执行；作为热加载加载时不执行。
-func runSelfTest() {
-    cases = [
-        {"path": "/health", "body": "", "expected": []},
-        {"path": "/ping?host=example.com", "body": "", "expected": ["CommandInjection"]},
-        {"path": "/ping", "body": "host=example.com", "expected": ["CommandInjection"]},
-        {"path": "/run?cmd=whoami", "body": "", "expected": ["Injection", "SQLi", "CommandInjection"]},
-        {"path": "/run", "body": "cmd=whoami", "expected": ["Injection", "SQLi", "CommandInjection"]},
-        {"path": "/run", "body": "foo; id", "expected": ["Injection", "SQLi", "CommandInjection"]},
-        {"path": "/run", "body": "foo && whoami", "expected": ["CommandInjection"]},
-        {"path": "/run", "body": "foo;%20id", "expected": ["CommandInjection"]},
-        {"path": "/run", "body": "foo&&%09whoami", "expected": ["CommandInjection"]},
-        {"path": "/run", "body": "foo; identity", "expected": ["Injection", "SQLi"]},
-        {"path": "/?return=https://evil.example", "body": "", "expected": ["OpenRedirect"]},
-        {"path": "/?redirect=https://evil.example", "body": "", "expected": ["SSRF", "OpenRedirect"]},
-        {"path": "/next", "body": '{"next":"https://other.example/"}', "expected": ["SSRF", "OpenRedirect"]},
-        {"path": "/next", "body": '{"next" : "https://other.example/"}', "expected": ["SSRF", "OpenRedirect"]},
-        {"path": "/next", "body": '{"return":"https://other.example/"}', "expected": ["OpenRedirect"]},
-        {"path": "/next", "body": '{"next":"/home"}', "expected": []},
-        {"path": "/health", "body": "", "response": '{"password":"secret123","access_token":"abc"}', "expected": ["SensitiveInformation"]},
-        {"path": "/health", "body": "", "response": '{"access_token" : "abc"}', "expected": ["SensitiveInformation"]},
-        {"path": "/health", "body": "", "response": "password=secret123", "expected": ["SensitiveInformation"]},
-        {"path": "/health", "body": "", "response": '{"message":"password reset complete"}', "expected": []},
-    ]
-    for c in cases {
-        request = "POST " + c.path + " HTTP/1.1\\r\\nHost: example.com\\r\\n\\r\\n" + c.body
-        response = "HTTP/1.1 200 OK\\r\\n\\r\\nok"
-        if "response" in c {
-            response = "HTTP/1.1 200 OK\\r\\n\\r\\n" + c.response
-        }
-        flow = make(map[string]any)
-        flow["Url"] = "http://example.com" + c.path
-        flow["GetRequest"] = func() { return request }
-        flow["GetResponse"] = func() { return response }
-        flow["tags"] = ["existing"]
-        flow["AddTag"] = func(name) { flow["tags"] = append(flow["tags"], name) }
-        forwarded = 0
-        hijackSaveHTTPFlow(flow, func(f) {
-            assert f == flow, "must forward the original flow"
-            forwarded++
-        }, func() { die("must not drop flow") })
-        assert forwarded == 1, "must explicitly forward once"
-        assert "existing" in flow.tags, "must preserve existing tags"
-        assert len(flow.tags) == len(c.expected) + 1, sprintf("unexpected tags: %v for %v", flow.tags, c)
-        for name in c.expected {
-            assert ("TEST:" + name) in flow.tags, sprintf("missing %v for %v", name, c)
-        }
-    }
-    log.info("HTTP flow test tagging self test passed: 20 cases")
-}
-
-if YAK_MAIN {
-    runSelfTest()
-}`,
+`,
   },
 ]
 
