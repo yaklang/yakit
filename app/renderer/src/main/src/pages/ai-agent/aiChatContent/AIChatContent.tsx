@@ -81,7 +81,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
       <div className={styles['ai-chat-content-wrapper']}>
         <YakitSpin spinning={isSessionDeleting || sourceDeleting}>
           <AIGlobalLoading
-            loopAnimationMode="sequential"
+            loopAnimationMode="random"
             loading={initLoading}
             actions={
               showBackToHome && (

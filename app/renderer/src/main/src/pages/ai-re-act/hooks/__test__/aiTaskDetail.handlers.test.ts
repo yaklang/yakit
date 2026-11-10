@@ -622,6 +622,55 @@ describe('aiTaskDetail handlers', () => {
     expect(req.store.getState().sessionTaskListRevision).toBe(1)
   })
 
+  it('session_snapshot 无 TaskId 时仍写入会话累计 execution，不写 taskDetailsMap', () => {
+    const snapshot = {
+      revision: 3,
+      execution: {
+        http_flow_count: 18,
+        risk_level_count: { high: 2, total: 2 },
+      },
+    }
+    const req = makeHandlerRequest({
+      res: makeGrpcJsonRes('structured', snapshot, {
+        NodeId: 'session_snapshot',
+        IsJson: true,
+        IsSystem: true,
+      }),
+    })
+
+    aiTaskDetailDataHandlers.session_snapshot(req)
+
+    expect(req.rawData.taskDetailsMap.size).toBe(0)
+    expect(req.store.getState().sessionExecution?.http_flow_count).toBe(18)
+    expect(req.store.getState().sessionExecution?.risk_level_count).toEqual(snapshot.execution.risk_level_count)
+    expect(req.store.getState().sessionExecutionRevision).toBe(3)
+  })
+
+  it('session_snapshot 无 TaskId 时旧 revision 不回退会话累计 execution', () => {
+    const newerReq = makeHandlerRequest({
+      res: makeGrpcJsonRes(
+        'structured',
+        { revision: 8, execution: { http_flow_count: 30 } },
+        { NodeId: 'session_snapshot', IsJson: true, IsSystem: true },
+      ),
+    })
+    aiTaskDetailDataHandlers.session_snapshot(newerReq)
+
+    const staleReq = makeHandlerRequest({
+      rawData: newerReq.rawData,
+      store: newerReq.store,
+      res: makeGrpcJsonRes(
+        'structured',
+        { revision: 2, execution: { http_flow_count: 1 } },
+        { NodeId: 'session_snapshot', IsJson: true, IsSystem: true },
+      ),
+    })
+    aiTaskDetailDataHandlers.session_snapshot(staleReq)
+
+    expect(newerReq.store.getState().sessionExecution?.http_flow_count).toBe(30)
+    expect(newerReq.store.getState().sessionExecutionRevision).toBe(8)
+  })
+
   it('session_snapshot 旧 revision 的 tasks 不回退已更新的 sessionTaskList', () => {
     const newerTasks = [
       {

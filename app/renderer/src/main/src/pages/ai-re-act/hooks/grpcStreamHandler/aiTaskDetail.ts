@@ -332,6 +332,16 @@ const handleSessionSnapshot: AIMessageHandler = (requestInfo) => {
     }
   }
 
+  // 无 TaskId 时仍保留会话累计 execution，供历史闲置会话右侧面板读取
+  const snapshotRevision = typeof snapshot.revision === 'number' ? snapshot.revision : 0
+  const cachedSessionExecutionRev = store.getState().sessionExecutionRevision ?? 0
+  if (snapshot.execution && !(snapshotRevision > 0 && snapshotRevision <= cachedSessionExecutionRev)) {
+    store.getState().updateState({
+      sessionExecution: snapshot.execution,
+      ...(snapshotRevision > 0 ? { sessionExecutionRevision: snapshotRevision } : {}),
+    })
+  }
+
   if (!res.TaskId) return
 
   const oldData = rawData.taskDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
