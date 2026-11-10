@@ -1022,6 +1022,105 @@ describe('MainOperatorContent onUpdateSorting', () => {
   })
 })
 
+describe('MainOperatorContent 固定 AI 欢迎页', () => {
+  const setupWelcome = (hasFixed = true, initializing = false) => {
+    const fixed = {
+      route: 'ai',
+      routeKey: 'ai',
+      verbose: '旧会话',
+      pageParams: { aiAgentPageInfo: { session: { SessionID: 'old' } } },
+    }
+    const other = { route: 'ai', routeKey: 'ai-chat', verbose: '进行中的会话' }
+    let pages: { route: string; routeKey: string; verbose: string; pageParams?: unknown }[] = hasFixed
+      ? [fixed, other]
+      : [other]
+    const node = {
+      pageId: 'ai',
+      pageName: '旧会话',
+      pageParamsInfo: { aiAgentPageInfo: { session: { SessionID: 'old' } } },
+    }
+    const store = {
+      queryPagesDataById: vi.fn(() => node),
+      updatePagesDataCacheById: vi.fn(),
+    }
+    const bindings = {
+      initializing,
+      useMemoizedFn: (fn: unknown) => fn,
+      YakitRoute: { AI_Agent: 'ai' },
+      YakitRouteToPageInfo: { ai: { label: 'AI Agent' } },
+      ReActChatEventEnum: { NEW_CHAT: 'new-chat' },
+      usePageInfo: { getState: () => store },
+      getPageCache: () => pages,
+      setPageCache: vi.fn((update) => {
+        pages = update(pages)
+      }),
+      setCurrentTabKey: vi.fn(),
+      openMenuPage: vi.fn(),
+      emiter: { emit: vi.fn() },
+    }
+    const open = execute(`return ${declaration('openAIAgentWelcomePage')!.initializer!.getText(source)}`, bindings)
+    return { open, bindings, store, getPages: () => pages, other }
+  }
+
+  it('新建复用固定标签，先清空缓存再通知欢迎页重置', () => {
+    const { open, bindings, store, getPages, other } = setupWelcome()
+    open()
+    expect(store.updatePagesDataCacheById).toHaveBeenCalledExactlyOnceWith('ai', {
+      pageId: 'ai',
+      pageName: 'AI Agent',
+      pageParamsInfo: { aiAgentPageInfo: undefined },
+    })
+    expect(getPages()).toEqual([
+      {
+        route: 'ai',
+        routeKey: 'ai',
+        verbose: 'AI Agent',
+        pageParams: { id: 'ai', groupId: '0' },
+      },
+      other,
+    ])
+    expect(bindings.setCurrentTabKey).toHaveBeenCalledExactlyOnceWith('ai')
+    expect(bindings.emiter.emit).toHaveBeenCalledExactlyOnceWith(
+      'onReActChatEvent',
+      JSON.stringify({ type: 'new-chat', pageId: 'ai' }),
+    )
+    expect(store.updatePagesDataCacheById.mock.invocationCallOrder[0]).toBeLessThan(
+      bindings.emiter.emit.mock.invocationCallOrder[0],
+    )
+    expect(bindings.openMenuPage).not.toHaveBeenCalled()
+  })
+
+  it('固定标签未挂载时也更新缓存，保留这次传入的资料', () => {
+    const { open, store, getPages } = setupWelcome()
+    const params = { aiAgentPageInfo: { defualtAIMentionCommandParams: [{ mentionId: 'skill' }] } }
+    open(params)
+    expect(store.updatePagesDataCacheById.mock.calls[0][1].pageParamsInfo).toEqual({
+      aiAgentPageInfo: params.aiAgentPageInfo,
+    })
+    expect(getPages()[0].pageParams).toEqual({ ...params, id: 'ai', groupId: '0' })
+  })
+
+  it('不存在固定标签时创建菜单固定页，而非额外会话页', () => {
+    const { open, bindings } = setupWelcome(false)
+    open()
+    expect(bindings.openMenuPage).toHaveBeenCalledExactlyOnceWith({ route: 'ai' }, { pageParams: undefined })
+    expect(bindings.setPageCache).not.toHaveBeenCalled()
+    expect(bindings.emiter.emit).toHaveBeenCalledExactlyOnceWith(
+      'onReActChatEvent',
+      JSON.stringify({ type: 'new-chat', pageId: 'ai' }),
+    )
+  })
+
+  it('缓存初始化期间不创建或重置页面', () => {
+    const { open, bindings, store } = setupWelcome(true, true)
+    open()
+    expect(store.updatePagesDataCacheById).not.toHaveBeenCalled()
+    expect(bindings.setPageCache).not.toHaveBeenCalled()
+    expect(bindings.setCurrentTabKey).not.toHaveBeenCalled()
+    expect(bindings.emiter.emit).not.toHaveBeenCalled()
+  })
+})
+
 const setup = ({ mode = 'classic', savedKey = '', memfit = true, enterprise = false } = {}) => {
   const ai = deferred()
   const wf = deferred()

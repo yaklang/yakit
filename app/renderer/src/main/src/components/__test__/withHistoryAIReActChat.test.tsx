@@ -103,9 +103,7 @@ function RuntimeContextConsumer({ session }: { session: AISession }) {
       <button
         onClick={() => {
           setActiveChat((current) =>
-            current
-              ? { ...current, StartParams: { ...current.StartParams, RuntimeContextSizeLimit: 600 * 1024 } }
-              : current,
+            current ? { ...current, StartParams: { ...current.StartParams, RuntimeContextSizeLimit: 600 } } : current,
           )
           setActiveChat((current) =>
             current ? { ...current, StartParams: { ...current.StartParams, SyncPerceptionTrigger: false } } : current,
@@ -134,7 +132,7 @@ function verifyProvider(Provider: typeof HistoryAIReActChatProvider) {
 }
 
 describe('HistoryAIReActChatProvider', () => {
-  it.each([120 * 1024, 0, undefined])('全局默认值变化时保留会话原始字节阈值 %s', (limit) => {
+  it.each([120, 0, undefined])('全局默认值变化时保留会话原始字节阈值 %s', (limit) => {
     const session = {
       SessionID: 'history',
       StartParams: { EnablePlan: true, ...(limit === undefined ? {} : { RuntimeContextSizeLimit: limit }) },
@@ -171,7 +169,7 @@ describe('HistoryAIReActChatProvider', () => {
   it('函数式更新会话阈值后同步字节值，连续更新保留其他参数且不修改全局默认值', () => {
     const session = {
       SessionID: 'history',
-      StartParams: { RuntimeContextSizeLimit: 120 * 1024, SyncPerceptionTrigger: true, EnablePlan: true },
+      StartParams: { RuntimeContextSizeLimit: 120, SyncPerceptionTrigger: true, EnablePlan: true },
     } as AISession
     render(
       <HistoryAIReActChatProvider
@@ -192,16 +190,16 @@ describe('HistoryAIReActChatProvider', () => {
     expect(screen.getByTestId('runtime-limit')).toHaveTextContent(/^600$/)
     expect(screen.getByTestId('global-limit')).toHaveTextContent(/^900$/)
     expect(JSON.parse(screen.getByTestId('session-params').textContent!)).toEqual({
-      RuntimeContextSizeLimit: 614400,
+      RuntimeContextSizeLimit: 600,
       SyncPerceptionTrigger: false,
       EnablePlan: true,
     })
     expect(globalSessionEngine.updateSessionConfig).toHaveBeenCalledExactlyOnceWith(
       'history',
-      expect.objectContaining({ RuntimeContextSizeLimit: 614400 }),
+      expect.objectContaining({ RuntimeContextSizeLimit: 600 }),
     )
     expect(session.StartParams).toEqual({
-      RuntimeContextSizeLimit: 122880,
+      RuntimeContextSizeLimit: 120,
       SyncPerceptionTrigger: true,
       EnablePlan: true,
     })

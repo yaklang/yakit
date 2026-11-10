@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react'
 import { isMemfit } from '@/utils/envfile'
+import { v4 as uuidv4 } from 'uuid'
+import type { AISession } from './type/aiChat'
 import type { AIAgentSetting } from './aiAgentType'
 import {
   AIOutlined,
@@ -50,6 +52,20 @@ import type { ExportAIForgeRequest } from './forgeName/type'
 
 /** AI-Agent 页面的唯一 id */
 export const YakitAIAgentPageID = 'yakit-ai-agent'
+
+/** 欢迎页默认会话，首次发送沿用这个 ID。 */
+export const createWelcomeChat = (): AISession => ({
+  Id: '',
+  SessionID: uuidv4(),
+  Title: '',
+  question: '',
+  CreatedAt: 0,
+  UpdatedAt: 0,
+  LastUsedAt: 0,
+  TitleInitialized: false,
+  Source: 'ai',
+  isDraftSession: true,
+})
 
 export enum AIAgentTabListEnum {
   Session = 'session',

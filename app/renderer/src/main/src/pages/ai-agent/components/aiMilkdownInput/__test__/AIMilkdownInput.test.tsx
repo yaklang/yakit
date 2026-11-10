@@ -14,7 +14,9 @@ const mocks = vi.hoisted(() => ({
 }))
 vi.mock('@/pages/ai-agent/useContext/useStore', () => ({
   default: function useAgentStoreMock() {
-    return { activeChat: { SessionID: useContext(SessionContext) } }
+    return {
+      activeChat: { SessionID: useContext(SessionContext) },
+    }
   },
 }))
 vi.mock('@/pages/ai-agent/utils', () => ({ createActiveChatSessionId: () => `draft-${++mocks.draftSequence}` }))
@@ -68,7 +70,20 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-it('reuses the image draft within a conversation, then resets it when switching sessions or returning to welcome', async () => {
+it('欢迎页输入框挂载后就返回预分配的会话 ID', () => {
+  const ref = createRef<AIMilkdownInputRef>()
+  const element = (id: string) => (
+    <SessionContext.Provider value={id}>
+      <AIMilkdownInputBase chatDataStoreKey="aiChatDataStore" ref={ref} />
+    </SessionContext.Provider>
+  )
+  const view = render(element('welcome-one'))
+  expect(ref.current?.getSessionId()).toBe('welcome-one')
+  view.rerender(element('welcome-two'))
+  expect(ref.current?.getSessionId()).toBe('welcome-two')
+})
+
+it('reuses the image fallback ID and immediately follows active session changes', async () => {
   mocks.draftSequence = 0
   vi.stubGlobal(
     'URL',
@@ -90,10 +105,18 @@ it('reuses the image draft within a conversation, then resets it when switching 
     return ref.current!.getSessionId()
   }
   expect(await upload()).toBe('draft-1')
+  expect(schema.nodes.image.createAndFill).toHaveBeenCalledWith({
+    src: 'blob:test-image',
+    alt: 'image.png',
+    title: 'ai-attachment',
+  })
   expect(await upload()).toBe('draft-1')
   result.rerender(element('history'))
-  expect(ref.current!.getSessionId()).toBe('')
+  expect(ref.current!.getSessionId()).toBe('history')
   expect(await upload()).toBe('history')
+  result.rerender(element('welcome-next'))
+  expect(ref.current!.getSessionId()).toBe('welcome-next')
+  expect(await upload()).toBe('welcome-next')
   result.rerender(element())
   expect(ref.current!.getSessionId()).toBe('')
   expect(await upload()).toBe('draft-2')

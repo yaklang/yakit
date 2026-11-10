@@ -49,16 +49,18 @@ function tab(routeKey: string, pageParams?: ComponentParams): PageCache {
 function setup(initialPages: PageCache[] = []) {
   const navigate = vi.fn()
   const openTab = vi.fn<(params?: ComponentParams) => void>()
+  const openWelcome = vi.fn<(params?: ComponentParams) => void>()
   const hook = renderHook(() => {
     const [, setPageCache, getPageCache] = useGetState(initialPages)
     const open = useOpenAIAgentPage({
       getPageCache,
       setCurrentTabKey: navigate,
       openAIAgentExtraTab: openTab,
+      openAIAgentWelcomePage: openWelcome,
     })
     return { open, setPageCache }
   })
-  return { ...hook, navigate, openTab }
+  return { ...hook, navigate, openTab, openWelcome }
 }
 
 describe('AI Agent 页面按已知身份打开', () => {
@@ -106,17 +108,39 @@ describe('AI Agent 页面按已知身份打开', () => {
   })
 
   it('连续打开历史和欢迎页均同步完成，不留下延迟导航', async () => {
-    const { result, navigate, openTab } = setup([tab('history-tab', history('existing'))])
+    const { result, navigate, openTab, openWelcome } = setup([tab('history-tab', history('existing'))])
     act(() => {
       result.current.open(history('existing'))
       result.current.open(history('new-history'))
       result.current.open()
     })
     expect(navigate).toHaveBeenCalledExactlyOnceWith('history-tab')
-    expect(openTab.mock.calls).toEqual([[history('new-history')], [undefined]])
+    expect(openTab.mock.calls).toEqual([[history('new-history')]])
+    expect(openWelcome).toHaveBeenCalledExactlyOnceWith(undefined)
     await act(async () => {})
     expect(navigate).toHaveBeenCalledTimes(1)
-    expect(openTab).toHaveBeenCalledTimes(2)
+    expect(openTab).toHaveBeenCalledTimes(1)
+  })
+
+  it('每次新建都重置固定欢迎页，并保留本次传入的上下文', () => {
+    const { result, navigate, openTab, openWelcome } = setup([tab(YakitRoute.AI_Agent)])
+    const params: ComponentParams = { aiAgentPageInfo: { defualtAIMentionCommandParams: [] } }
+    act(() => {
+      result.current.open()
+      result.current.open(params)
+    })
+    expect(openWelcome.mock.calls).toEqual([[undefined], [params]])
+    expect(openTab).not.toHaveBeenCalled()
+    expect(navigate).not.toHaveBeenCalled()
+  })
+
+  it('欢迎页已分配 ID 的首问打开独立标签', () => {
+    const params = history('welcome-session')
+    params.aiAgentPageInfo!.session!.isDraftSession = true
+    const { result, openTab, openWelcome } = setup([tab(YakitRoute.AI_Agent)])
+    act(() => result.current.open(params))
+    expect(openTab).toHaveBeenCalledExactlyOnceWith(params)
+    expect(openWelcome).not.toHaveBeenCalled()
   })
 
   it('不会复用其他路由下同 ID 的页签', () => {

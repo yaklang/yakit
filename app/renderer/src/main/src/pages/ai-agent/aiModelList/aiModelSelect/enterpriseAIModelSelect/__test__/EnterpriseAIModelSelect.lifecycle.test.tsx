@@ -22,6 +22,7 @@ vi.mock('@/pages/ai-re-act/hooks/useCurrentDataBySession', () => ({ useCurrentSt
 vi.mock('../../../utils', () => ({
   isForcedSetAIModal: () => Promise.resolve(null),
   grpcListAiModel: mocks.names,
+  grpcProbeReasoningEffort: () => new Promise(() => {}),
   getModelName: (name?: string) => name ?? '',
   isMemfitStart: () => false,
   isFreeEnd: () => false,

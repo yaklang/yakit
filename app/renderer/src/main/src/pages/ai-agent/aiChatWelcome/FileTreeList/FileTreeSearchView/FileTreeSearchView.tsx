@@ -20,10 +20,11 @@ import { TextDropdownTrigger } from '@/pages/ai-agent/components/TextDropdownTri
 import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import { useCustomFolder } from '../../../components/aiFileSystemList/store/useCustomFolder'
 import emiter from '@/utils/eventBus/eventBus'
+import { getPathBaseName } from '@/utils/str'
 import { AITabsEnum } from '../../../defaultConstant'
 import useAIAgentStore from '../../../useContext/useStore'
 import { usePreviewOpenFiles } from '../store/usePreviewOpenFiles'
-import { getPathBaseName, resolveSearchPaths } from './utils'
+import { resolveSearchPaths } from './utils'
 import {
   FILE_TREE_SEARCH_SCOPE_OPTIONS,
   FileTreeSearchScope,

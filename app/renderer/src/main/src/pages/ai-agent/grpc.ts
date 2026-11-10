@@ -23,12 +23,14 @@ import type {
 } from './type/forge'
 import type { YakQueryHTTPFlowResponse } from '@/components/HTTPFlowTable/HTTPFlowTable'
 import type { YakQueryHTTPFlowRequest } from '@/utils/yakQueryHTTPFlow'
-import { type AIChatQSData, AIChatQSDataTypeEnum } from '../ai-re-act/hooks/aiRender'
+import { AIChatQSDataTypeEnum } from '../ai-re-act/hooks/aiRender'
+import type { AIChatQSData } from '../ai-re-act/hooks/aiRender'
 import { genBaseAIChatData, isToolExecStream } from '../ai-re-act/hooks/utils'
 import { Uint8ArrayToString } from '@/utils/str'
 import { convertNodeIdToVerbose } from '../ai-re-act/hooks/defaultConstant'
 import { JSONParseLog } from '@/utils/tool'
 import type { DeleteAISessionRequest, QueryAISessionRequest, QueryAISessionResponse } from './type/aiChat'
+import { fromServerAIStartParams } from '../ai-re-act/hooks/grpcApi'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -335,6 +337,13 @@ export const grpcQueryAISession: APIFunc<QueryAISessionRequest, QueryAISessionRe
   return new Promise((resolve, reject) => {
     ipcRenderer
       .invoke('QueryAISession', param)
+      .then((response: QueryAISessionResponse) => ({
+        ...response,
+        Data: response.Data.map((session) => ({
+          ...session,
+          StartParams: session.StartParams ? fromServerAIStartParams(session.StartParams) : session.StartParams,
+        })),
+      }))
       .then(resolve)
       .catch((e) => {
         if (!hiddenError) yakitNotify('error', '查询 AISession 失败:' + e)

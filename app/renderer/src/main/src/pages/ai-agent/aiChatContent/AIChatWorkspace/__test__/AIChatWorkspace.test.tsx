@@ -133,7 +133,7 @@ const store = createStore(() => ({
 const initialState = store.getState()
 const rawData = { httpRunTimeIDs: [] as string[], riskRunTimeIDs: [] as string[], contents: new Map() }
 const agentStore = createStore<{
-  activeChat?: { SessionID: string; Title: string; RelatedRuntimeIDs: string[] }
+  activeChat?: { SessionID: string; Title: string; RelatedRuntimeIDs: string[]; isDraftSession?: boolean }
   pageId?: string
 }>(() => ({ pageId: 'test-page' }))
 
@@ -372,6 +372,36 @@ describe('AIChatWorkspace 菜单切换', () => {
       expect(screen.queryByText('暂无数据')).not.toBeInTheDocument()
     },
   )
+
+  it.each([
+    { tab: AITabsEnum.HTTP, testId: 'http-flows' },
+    { tab: AITabsEnum.Risk, testId: 'risks' },
+  ])('欢迎页预生成会话 ID 时 $tab 展示全量，进入同一会话后按关联运行 ID 展示', ({ tab, testId }) => {
+    const session = { SessionID: 'welcome-session', Title: '', RelatedRuntimeIDs: [], isDraftSession: true }
+    agentStore.setState({ activeChat: session })
+    const setFilePreviewData = vi.fn()
+    const { rerender } = render(<AIChatWorkspace welcome setFilePreviewData={setFilePreviewData} />)
+    act(() => emiter.emit('switchAIActTab', JSON.stringify({ key: tab })))
+    expect(screen.getByTestId(testId)).toBeEmptyDOMElement()
+    if (tab === AITabsEnum.HTTP) {
+      expect(screen.getByTestId(testId)).toHaveAttribute('data-page-type', 'History')
+      expect(flowCallbacks[flowCallbacks.length - 1].sourceType).toBe('')
+    }
+    expect(screen.queryByText('暂无数据')).not.toBeInTheDocument()
+
+    act(() => agentStore.setState({ activeChat: { ...session, isDraftSession: false } }))
+    expect(screen.queryByTestId(testId)).not.toBeInTheDocument()
+    expect(screen.getByText('暂无数据')).toBeInTheDocument()
+
+    act(() =>
+      agentStore.setState({ activeChat: { ...session, isDraftSession: false, RelatedRuntimeIDs: ['runtime-1'] } }),
+    )
+    rerender(<AIChatWorkspace welcome={false} setFilePreviewData={setFilePreviewData} />)
+    expect(screen.getByTestId(testId)).toHaveTextContent(/^runtime-1$/)
+    if (tab === AITabsEnum.HTTP) {
+      expect(screen.getByTestId(testId)).toHaveAttribute('data-page-type', 'Plugin')
+    }
+  })
 
   it('未激活会话时，只有欢迎页允许展示全部流量', () => {
     agentStore.setState({ activeChat: undefined })

@@ -3,6 +3,31 @@ import type { AIAgentGrpcApi, AIInputEvent, AIStartParams, AISource } from '@/pa
 import type { PlanItemDetailsData, AIChatQSData } from '@/pages/ai-re-act/hooks/aiRender'
 import type { AISkillListItem } from '@/pages/ai-re-act/aiRightPanel/AISkillLoadingPane/aiSkillList/type'
 import type { PaginationSchema } from '@/pages/invoker/schema'
+import type { AIForge, AIFocus } from './forge'
+import type { AITool } from './aiTool'
+import type { KnowledgeBaseItem } from '@/pages/KnowledgeBase/hooks/useKnowledgeBase'
+import type { AIBrowserInstance } from '../browserInstances/browserInstanceStore'
+import type { FileNodeProps } from '@/pages/yakRunner/FileTree/FileTreeType'
+import type { AIChatSubmitParams } from '../aiAgentChat/type'
+
+export interface AIFileMaterialData {
+  path: string
+  isFolder: boolean
+  name?: string
+  size?: number
+  stats?: Record<string, unknown>
+}
+
+/** 当前会话输入框中尚未发送的资料。 */
+export interface AIDraftMaterials {
+  attachments: AIFileMaterialData[]
+  skills: AIForge[]
+  knowledgeBases: KnowledgeBaseItem[]
+  tools: AITool[]
+  files: (FileNodeProps | AIFileMaterialData)[]
+  browsers: AIBrowserInstance[]
+  scenarios: AIFocus[]
+}
 
 /** 上下文字节统计 */
 export interface AIContextStatsDetail {
@@ -30,6 +55,11 @@ export interface AIContextSectionsDetail {
 
 /** UI-chat 信息 */
 export interface AISession {
+  /**
+   * true：已预分配 ID，尚未绑定为正式会话。
+   * false / undefined：正式会话，包括历史会话。
+   */
+  isDraftSession?: boolean
   /** 本次展示的稳定 key，临时会话正式化时不重建列表。 */
   viewKey?: string
   /** 唯一标识 */
@@ -53,10 +83,11 @@ export interface AISession {
   /** 会话来源 */
   Source: AISource
   /** AI 启动参数 */
+  /** 会话配置在前端统一使用 KB，后端响应在 API 边界转换。 */
   StartParams?: AIStartParams
   /** source=im 时的结构化 IM 元数据（平台/会话类型/可读标题等）；其它来源为空 */
   IMSourceMeta?: IMSourceMeta
-  /** 前端逻辑使用-欢迎页对话不触发切换会话的流建立逻辑 */
+  /** 标记刚创建并绑定成功的会话，用于跳过本页重复初始化查询。 */
   isCreate?: boolean
 }
 
@@ -131,6 +162,8 @@ export interface QueryAISessionRequest {
   }
 }
 export interface AIAgentChatData {
+  /** 当前输入草稿的资料，供侧栏等界面同步展示。 */
+  draftMaterials: AIDraftMaterials
   /** http_fuzz_request_change事件通知数据 */
   httpFuzzRequest?: AIAgentGrpcApi.HttpFuzzRequestChange
   /** http_flow_fuzz_status事件通知数据 */
@@ -190,6 +223,8 @@ export interface AIAgentChatData {
   contents: Map<string, AIChatQSData>
 }
 export interface AIAgentChatMetaData {
+  /** 等待新标签领取的首问，领取后清空以避免重复发送。 */
+  pendingWelcomeInput?: AIChatSubmitParams
   /** 当前连接的身份、写入权限和异步收尾状态。 */
   lifecycle: SessionLifecycle
   // TODO: 历史预查询消费方案待定，字段与 loadSessionHistoryBeforeStart 一并启用。

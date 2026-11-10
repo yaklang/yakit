@@ -102,7 +102,9 @@ export const AICustomFile: React.FC<AICustomFileProps> = React.memo((props) => {
       contentEditable={false}
     >
       {isUpdate && <Progress type="circle" percent={progress} className={styles['progress']} width={30} />}
-      <img src={showSrc ? `atom://${showSrc}` : ''} alt={attrs.alt || '暂无图片'} />
+      {showSrc && (
+        <img src={showSrc.startsWith('blob:') ? showSrc : `atom://${showSrc}`} alt={attrs.alt || '暂无图片'} />
+      )}
     </div>
   )
 })

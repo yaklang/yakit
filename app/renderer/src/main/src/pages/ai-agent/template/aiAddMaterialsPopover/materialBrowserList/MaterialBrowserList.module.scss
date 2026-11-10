@@ -1,0 +1,32 @@
+.list {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 4px 8px;
+
+  .remove:global(.yakit.ant-btn.ant-btn-icon-only) {
+    flex-shrink: 0;
+    border: 0;
+
+    svg {
+      color: var(--Colors-Use-Neutral-Text-4-Help-text);
+    }
+
+    &:not(:disabled):hover {
+      background: var(--Colors-Use-Error-Bg);
+
+      svg {
+        color: var(--Colors-Use-Error-Primary);
+      }
+    }
+  }
+}
+
+.empty {
+  padding: 16px;
+  color: var(--Colors-Use-Neutral-Text-4-Help-text);
+  text-align: center;
+}

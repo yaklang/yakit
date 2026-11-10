@@ -7,7 +7,10 @@ const mocks = vi.hoisted(() => ({
   createDraft: vi.fn(),
 }))
 vi.mock('@/pages/ai-agent/useContext/useStore', () => ({
-  default: () => ({ activeChat: mocks.activeChat, setting: { TimelineSessionID: 'stale-setting' } }),
+  default: () => ({
+    activeChat: mocks.activeChat,
+    setting: { TimelineSessionID: 'stale-setting' },
+  }),
 }))
 vi.mock('@/pages/ai-agent/utils', () => ({ createActiveChatSessionId: mocks.createDraft }))
 
@@ -17,7 +20,15 @@ beforeEach(() => {
 })
 afterEach(cleanup)
 
-it('uses a draft ID on the welcome page and ignores a stale settings session ID', () => {
+it('欢迎页使用预分配 ID，上传图片时继续复用', () => {
+  mocks.activeChat = { SessionID: 'welcome-session' }
+  const { result } = renderHook(() => useSessionId())
+  expect(result.current.getSession()).toBe('welcome-session')
+  expect(result.current.getSession('old-image-draft')).toBe('welcome-session')
+  expect(mocks.createDraft).not.toHaveBeenCalled()
+})
+
+it('uses a fallback ID without an active session and ignores a stale settings session ID', () => {
   const { result } = renderHook(() => useSessionId())
   expect(result.current.getSession('existing-draft')).toBe('existing-draft')
   expect(mocks.createDraft).not.toHaveBeenCalled()
@@ -25,7 +36,7 @@ it('uses a draft ID on the welcome page and ignores a stale settings session ID'
   expect(mocks.createDraft).toHaveBeenCalledTimes(1)
 })
 
-it('uses the selected session for images and stops using it after returning to welcome', () => {
+it('uses the selected session for images and falls back when the embedded page has no active session', () => {
   mocks.activeChat = { SessionID: 'history' }
   const { result, rerender } = renderHook(() => useSessionId())
   const getSession = result.current.getSession

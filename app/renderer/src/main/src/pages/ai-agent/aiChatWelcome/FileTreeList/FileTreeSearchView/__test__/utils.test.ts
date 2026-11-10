@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { getPathBaseName } from '@/utils/str'
 import { FileTreeSearchScope } from '../constants'
 
 const { mockMergePathArray } = vi.hoisted(() => ({
@@ -9,7 +10,7 @@ vi.mock('../../../../components/aiFileSystemList/utils', () => ({
   mergePathArray: (...args: unknown[]) => mockMergePathArray(...args),
 }))
 
-import { extractAiSessionRoot, getPathBaseName, resolveAiArtifactSearchRoots, resolveSearchPaths } from '../utils'
+import { extractAiSessionRoot, resolveAiArtifactSearchRoots, resolveSearchPaths } from '../utils'
 
 beforeEach(() => {
   mockMergePathArray.mockReset()

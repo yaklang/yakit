@@ -15,11 +15,14 @@ const mocks = vi.hoisted(() => ({
   save: vi.fn((_config: AIGlobalConfig) => Promise.resolve()),
   names: vi.fn((_params: { Config: string }) => Promise.resolve({ ModelName: ['model-edited'] })),
   configure: vi.fn(),
+  probe: vi.fn(),
   inViewport: true,
+  translateEffort: false,
 }))
 vi.mock('../../../utils', () => ({
   isForcedSetAIModal: mocks.load,
   grpcListAiModel: mocks.names,
+  grpcProbeReasoningEffort: mocks.probe,
   getModelName: (name?: string) => name ?? '',
   isMemfitStart: () => false,
   isFreeEnd: () => false,
@@ -44,7 +47,17 @@ vi.mock('@/pages/ai-re-act/hooks/useAIGlobalConfig', () => ({
     ]
   },
 }))
-vi.mock('@/i18n/useI18nNamespaces', () => ({ useI18nNamespaces: () => ({ t: (key: string) => key }) }))
+vi.mock('@/i18n/useI18nNamespaces', async () => {
+  const { createInstance } = await import('i18next')
+  const { default: configNetwork } = await import('@/locales/zh/configNetwork.json')
+  const i18n = createInstance()
+  await i18n.init({ lng: 'zh', fallbackLng: false, resources: { zh: { configNetwork } } })
+  return {
+    useI18nNamespaces: (namespaces: string[]) => ({
+      t: mocks.translateEffort ? i18n.getFixedT('zh', namespaces) : (key: string) => key,
+    }),
+  }
+})
 vi.mock('ahooks', async (importOriginal) => ({
   // ahooks 导出庞大且此处整体 spread，模块类型无法用 import type 描述，显式豁免。
   // eslint-disable-next-line @typescript-eslint/consistent-type-imports
@@ -56,13 +69,16 @@ vi.mock('@/pages/ai-re-act/aiReviewRuleSelect/AIReviewRuleSelect', () => ({
     open,
     setOpen,
     dropdownRender,
+    children,
   }: {
     open: boolean
     setOpen: (open: boolean) => void
     dropdownRender: (menu: React.ReactNode) => React.ReactNode
+    children: React.ReactNode
   }) => (
     <>
       <button onClick={() => setOpen(!open)}>{open ? '关闭选择' : '打开选择'}</button>
+      {mocks.translateEffort && <div data-testid="selected-model">{children}</div>}
       {open && (
         <div role="region" aria-label="模型列表">
           {dropdownRender(null)}
@@ -71,7 +87,9 @@ vi.mock('@/pages/ai-re-act/aiReviewRuleSelect/AIReviewRuleSelect', () => ({
     </>
   ),
 }))
-vi.mock('@/components/yakitUI/YakitSelect/YakitSelect', () => ({ YakitSelect: { Option: () => null } }))
+vi.mock('@/components/yakitUI/YakitSelect/YakitSelect', () => ({
+  YakitSelect: { Option: ({ label }: { label: React.ReactNode }) => (mocks.translateEffort ? label : null) },
+}))
 
 const applyModels = (res: GetAIModelAvailableTotalResponse) => {
   useAIGlobalConfigStore.getState().setAIGlobalConfig(res.onlineModels)
@@ -83,7 +101,9 @@ beforeEach(() => {
   mocks.load.mockReset().mockResolvedValue(null)
   mocks.save.mockReset().mockResolvedValue(undefined)
   mocks.names.mockReset().mockResolvedValue({ ModelName: ['model-edited'] })
+  mocks.probe.mockReset().mockImplementation(() => new Promise(() => {}))
   mocks.inViewport = true
+  mocks.translateEffort = false
   // jsdom 没有原生 ResizeObserver；尺寸变化在对应交互用例中主动触发。
   vi.stubGlobal(
     'ResizeObserver',
@@ -125,11 +145,113 @@ const openModels = async () => {
   return screen.getByRole('region', { name: '模型列表' })
 }
 
-/** 下拉按钮顺序：配置、刷新、两条模型编辑、新增模型。CI 根目录 vitest 会 stub CSS modules，不能靠 className。 */
+/** CI 根目录 vitest 会 stub CSS modules，不能靠 className。 */
 const getDropdownButtons = (dropdown: HTMLElement) => within(dropdown).getAllByRole('button')
 const getEditButtons = (dropdown: HTMLElement) => within(dropdown).getAllByRole('button', { name: 'YakitButton.edit' })
 
 describe('EnterpriseAIModelSelect', () => {
+  it('选中模型的思考强度使用真实翻译文案，而非翻译键', async () => {
+    mocks.translateEffort = true
+    mocks.refresh.mockImplementation(() => {
+      useAIGlobalConfigStore.getState().setAIGlobalConfig({
+        ...defaultAIGlobalConfig,
+        IntelligentModels: [
+          {
+            ModelName: 'qwen3.8-flash',
+            ProviderId: 'provider',
+            ExtraParams: [],
+            Provider: { Type: 'test-provider', ReasoningEffort: 'medium' },
+          },
+        ],
+      })
+      return Promise.resolve()
+    })
+    render(<EnterpriseAIModelSelect />)
+    const label = await screen.findByTestId('selected-model')
+    await waitFor(() => expect(label).toHaveTextContent('qwen3.8-flash'))
+    expect(label).toHaveTextContent('中')
+    expect(label).not.toHaveTextContent('ConfigNetworkPage.effortMedium')
+  })
+
+  it('探测不支持时显示错误详情，重新打开重试成功后清除错误并更新选项', async () => {
+    mocks.probe
+      .mockResolvedValueOnce({
+        MaxSupported: false,
+        MaxErrorMessage: JSON.stringify({ error: { message: '最高档位需要升级客户端' } }),
+        XhighSupported: false,
+      })
+      .mockResolvedValue({ MaxSupported: true, XhighSupported: true })
+    const dropdown = await openModels()
+    fireEvent.mouseEnter(await within(dropdown).findByText('Error'))
+    expect((await screen.findByText('最高档位需要升级客户端')).parentElement).toHaveTextContent(
+      'ConfigNetworkPage.effortMax',
+    )
+    expect(screen.getByText('AIReasoningEffort.probeUnsupported').parentElement).toHaveTextContent(
+      'ConfigNetworkPage.effortXhigh',
+    )
+    const trigger = within(dropdown).getByRole('button', { name: 'AIReasoningEffort.selectQuality' })
+    await waitFor(() => expect(trigger).toHaveAttribute('aria-disabled', 'false'))
+    fireEvent.click(trigger)
+    expect(screen.queryByRole('menuitemradio', { name: 'ConfigNetworkPage.effortMax' })).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: '关闭选择' }))
+    fireEvent.click(screen.getByRole('button', { name: '打开选择' }))
+    await waitFor(() => expect(mocks.probe).toHaveBeenCalledTimes(2))
+    fireEvent.click(screen.getByRole('button', { name: 'AIReasoningEffort.selectQuality' }))
+    expect(await screen.findByRole('menuitemradio', { name: 'ConfigNetworkPage.effortMax' })).toBeInTheDocument()
+    expect(screen.queryByText('Error')).not.toBeInTheDocument()
+  })
+
+  it('思考选择随模型切换，关闭后保存；同一模型重新打开不重复探测', async () => {
+    mocks.probe.mockResolvedValue({ MaxSupported: true, XhighSupported: true })
+    const dropdown = await openModels()
+    const trigger = within(dropdown).getByRole('button', { name: 'AIReasoningEffort.selectQuality' })
+    expect(trigger).toHaveAttribute('aria-disabled', 'true')
+    await waitFor(() => expect(trigger).toHaveAttribute('aria-disabled', 'false'))
+    await waitFor(() => expect(mocks.probe).toHaveBeenCalledTimes(1))
+    fireEvent.click(trigger)
+    fireEvent.click(await screen.findByRole('menuitemradio', { name: 'ConfigNetworkPage.effortHigh' }))
+    fireEvent.click(screen.getByRole('button', { name: '关闭选择' }))
+    await waitFor(() =>
+      expect(mocks.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          IntelligentModels: expect.arrayContaining([
+            expect.objectContaining({
+              ModelName: 'model-a',
+              Provider: expect.objectContaining({ ReasoningEffort: 'high' }),
+            }),
+          ]),
+        }),
+      ),
+    )
+    fireEvent.click(screen.getByRole('button', { name: '打开选择' }))
+    expect(mocks.probe).toHaveBeenCalledTimes(1)
+    fireEvent.click(screen.getByText('model-b'))
+    await waitFor(() => expect(mocks.probe).toHaveBeenCalledTimes(2))
+    expect(mocks.probe.mock.lastCall?.[0].Model).toBe('model-b')
+  })
+
+  it('切换模型后忽略先前模型迟到的探测结果', async () => {
+    mocks.probe.mockResolvedValue({ MaxSupported: true, XhighSupported: true })
+    let resolveFirst!: (value: object) => void
+    mocks.probe.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveFirst = resolve
+        }),
+    )
+    const dropdown = await openModels()
+    await waitFor(() => expect(mocks.probe).toHaveBeenCalledTimes(1))
+    fireEvent.click(within(dropdown).getByText('model-b'))
+    await waitFor(() => expect(mocks.probe).toHaveBeenCalledTimes(2))
+    await act(async () => resolveFirst({ MaxSupported: false, XhighSupported: false }))
+    fireEvent.click(screen.getByRole('button', { name: '关闭选择' }))
+    await waitFor(() => expect(mocks.save).toHaveBeenCalled())
+    expect(mocks.save.mock.lastCall?.[0].IntelligentModels[0]).toMatchObject({
+      ModelName: 'model-b',
+      ProbedExtendedEfforts: ['xhigh', 'max'],
+    })
+  })
+
   it.each([false, true])('并发刷新全部结束后才清除 loading（新请求先结束：%s）', async (latestFirst) => {
     vi.useFakeTimers()
     const completions: Array<() => void> = []
@@ -139,7 +261,7 @@ describe('EnterpriseAIModelSelect', () => {
     await act(async () => vi.advanceTimersByTimeAsync(250))
     act(() => emiter.emit('onRefreshAvailableAIModelList'))
     expect(mocks.load).toHaveBeenCalledTimes(2)
-    const refresh = getDropdownButtons(screen.getByRole('region', { name: '模型列表' }))[1]
+    const refresh = getDropdownButtons(screen.getByRole('region', { name: '模型列表' }))[2]
     expect(refresh).toHaveClass('ant-btn-loading')
 
     await act(async () => completions[latestFirst ? 1 : 0]())
@@ -403,10 +525,11 @@ describe('EnterpriseAIModelSelect', () => {
     const dropdown = await openModels()
     expect(within(dropdown).getByText('model-a')).toBeInTheDocument()
     const buttons = getDropdownButtons(dropdown)
-    expect(buttons).toHaveLength(5)
+    expect(buttons).toHaveLength(6)
     const configButton = within(dropdown).getByRole('button', { name: 'AIModelSelect.manageModels' })
     expect(configButton).toBeVisible()
-    const refreshButton = buttons[1]
+    const refreshButton = buttons[2]
+    expect(buttons[1]).toHaveAttribute('aria-label', 'AIModelList.addModel')
     fireEvent.click(configButton)
     expect(emit).toHaveBeenCalledWith(
       'openPage',
@@ -416,6 +539,8 @@ describe('EnterpriseAIModelSelect', () => {
     await waitFor(() => expect(refreshButton).not.toHaveClass('ant-btn-loading'))
     fireEvent.click(refreshButton)
     await waitFor(() => expect(mocks.load).toHaveBeenCalledTimes(2))
+    await waitFor(() => expect(mocks.probe).toHaveBeenCalledTimes(2))
+    expect(mocks.probe.mock.lastCall?.[0].Model).toBe('model-a')
   })
 
   it('选择模型后关闭下拉，将选择结果保存为首选模型', async () => {

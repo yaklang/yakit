@@ -191,7 +191,36 @@
     "basicCheck": "工具基礎檢測"
   },
   "AIChatTextarea": {
-    "dropToAddToChat": "鬆開以新增到對話"
+    "dropToAddToChat": "鬆開以新增到對話",
+    "addMaterials": "新增資料",
+    "otherMaterials": "其他資料"
+  },
+  "AIAddMaterialsPopover": {
+    "currentScenario": "目前選擇",
+    "addedSkills": "已新增技能",
+    "addedKnowledgeBases": "已新增知識庫",
+    "addedOtherMaterials": "其他已新增資料",
+    "goToAdd": "去新增",
+    "searchMaterials": "搜尋可新增至對話的資料…",
+    "contextHint": "新增的資料會優先用作目前對話的上下文",
+    "attachment": "新增附件",
+    "attachments": "附件",
+    "addedAttachments": "我新增的附件",
+    "attachmentHint": "從本機上傳，單次最多 {{max}} 個",
+    "attachmentLimitExceeded": "已選擇 {{count}} 個附件，單次最多新增 {{max}} 個",
+    "attachmentFailed": "無法開啟檔案選擇器：{{error}}",
+    "risk": "漏洞與風險",
+    "riskHint": "查看已記錄的漏洞與風險",
+    "flow": "流量",
+    "flowHint": "查看已擷取的 HTTP 流量",
+    "skillHint": "為目前對話新增技能",
+    "knowledgeHint": "引用知識庫內容",
+    "toolHint": "AI 會優先呼叫已新增的工具來完成任務",
+    "fileSystemHint": "從檔案系統新增，瀏覽與搜尋你的檔案",
+    "browserHint": "在 AI 中操作瀏覽器",
+    "addedBrowsers": "已新增的瀏覽器",
+    "sceneHint": "使用情境框架限定 AI 的思考範圍",
+    "current": "目前:"
   },
   "AIToolDecision": {
     "decision": "決策"

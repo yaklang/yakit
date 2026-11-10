@@ -1,5 +1,6 @@
 import { useDrop, useMemoizedFn } from 'ahooks'
-import { type DragEvent, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
+import type { DragEvent } from 'react'
 import { handleOnFiles } from '../utils'
 import type { FileToChatQuestionList } from '../../template/type'
 
@@ -36,10 +37,12 @@ const useAIChatDrop = ({ onFilesChange }: UseAIChatDropProps) => {
 
   const dropRef = useRef<HTMLDivElement | null>(null)
 
-  const addToChatStore = useMemoizedFn((items: FileToChatQuestionList[]) => {
-    if (items.length === 0) return
-    onFilesChange?.(items)
-  })
+  const addToChatStore = useMemoizedFn(
+    (items: FileToChatQuestionList[], mentionSource?: FileToChatQuestionList['mentionSource']) => {
+      if (items.length === 0) return
+      onFilesChange?.(items.map((item) => ({ ...item, mentionSource })))
+    },
+  )
 
   useDrop(dropRef, {
     onDragEnter: (e) => {
@@ -83,7 +86,7 @@ const useAIChatDrop = ({ onFilesChange }: UseAIChatDropProps) => {
       if (files.length === 0) return
 
       const items = await handleOnFiles(files)
-      addToChatStore(items)
+      addToChatStore(items, 'attachment')
     },
   })
 

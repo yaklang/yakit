@@ -173,6 +173,7 @@ export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) =>
     onSelect('forge', {
       id: `${forgeItem.Id}`,
       name: forgeItem.ForgeVerboseName || forgeItem.ForgeName,
+      forgeName: forgeItem.ForgeName,
     })
   })
   const onSelectTool = useMemoizedFn((toolItem: AITool) => {

@@ -237,6 +237,23 @@ export const withServerRuntimeContextLimit = <
   }
 }
 
+/** 内存使用 KB，仅在传输边界转换；保留缺省字段及服务端默认值 0。 */
+export const toServerAIStartParams = <T extends AIStartParams>(params: T): T => ({
+  ...params,
+  ...(params.RuntimeContextSizeLimit !== undefined
+    ? { RuntimeContextSizeLimit: params.RuntimeContextSizeLimit * 1024 }
+    : {}),
+  ...(params.AICallTokenLimit !== undefined ? { AICallTokenLimit: params.AICallTokenLimit * 1024 } : {}),
+})
+
+export const fromServerAIStartParams = <T extends AIStartParams>(params: T): T => ({
+  ...params,
+  ...(params.RuntimeContextSizeLimit !== undefined
+    ? { RuntimeContextSizeLimit: params.RuntimeContextSizeLimit / 1024 }
+    : {}),
+  ...(params.AICallTokenLimit !== undefined ? { AICallTokenLimit: params.AICallTokenLimit / 1024 } : {}),
+})
+
 /** AIInputEvent-HotpatchType 的可选值 */
 export enum AIInputEventHotPatchTypeEnum {
   HotPatchType_AllowRequireForUserInteract = 'AllowRequireForUserInteract',

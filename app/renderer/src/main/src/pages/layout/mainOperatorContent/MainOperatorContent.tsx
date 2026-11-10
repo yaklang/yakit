@@ -141,6 +141,7 @@ import {
 import { safeParseFuzzerCache, sanitizeFuzzerCachePageParams } from '@/store/parseFuzzerCache'
 import { adoptOrphanCacheTabs } from './adoptOrphanCacheTabs'
 import { useOpenAIAgentPage } from './useOpenAIAgentPage'
+import { ReActChatEventEnum } from '@/pages/ai-agent/defaultConstant'
 import { mergeAIAgentPageTabs } from './mergeAIAgentPageTabs'
 import { RemoteAIAgentGV } from '@/enums/aiAgent'
 import cloneDeep from 'lodash/cloneDeep'
@@ -2647,10 +2648,41 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     setCurrentTabKey(tabId)
   })
 
+  const openAIAgentWelcomePage = useMemoizedFn((pageParams?: ComponentParams) => {
+    if (initializing) return
+    const route = YakitRoute.AI_Agent
+    const menuName = YakitRouteToPageInfo[route].label
+    const fixed = getPageCache().find((page) => page.route === route && page.routeKey === route)
+    if (fixed) {
+      const store = usePageInfo.getState()
+      const node = store.queryPagesDataById(route, route)
+      if (node) {
+        store.updatePagesDataCacheById(route, {
+          ...node,
+          pageName: menuName,
+          pageParamsInfo: { aiAgentPageInfo: pageParams?.aiAgentPageInfo },
+        })
+      }
+      setPageCache((pages) =>
+        pages.map((page) =>
+          page.route === route && page.routeKey === route
+            ? { ...page, verbose: menuName, pageParams: { ...pageParams, id: route, groupId: '0' } }
+            : page,
+        ),
+      )
+      setCurrentTabKey(route)
+    } else {
+      openMenuPage({ route }, { pageParams })
+    }
+    // 已挂载的固定页立即重置；未挂载时从已清空的页面缓存初始化。
+    emiter.emit('onReActChatEvent', JSON.stringify({ type: ReActChatEventEnum.NEW_CHAT, pageId: route }))
+  })
+
   const openAIAgentPage = useOpenAIAgentPage({
     getPageCache,
     setCurrentTabKey,
     openAIAgentExtraTab,
+    openAIAgentWelcomePage,
   })
 
   /** @name 打开页面 */

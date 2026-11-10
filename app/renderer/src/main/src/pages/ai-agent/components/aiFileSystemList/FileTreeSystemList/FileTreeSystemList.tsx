@@ -4,7 +4,7 @@ import FileTreeSystemItem from '../FileTreeSystemItem/FileTreeSystemIem'
 import { forwardRef, memo, useCallback, useImperativeHandle, useMemo, useRef, useState, useTransition } from 'react'
 import type { FileNodeProps } from '@/pages/yakRunner/FileTree/FileTreeType'
 import useFileTree from '@/pages/ai-re-act/hooks/useFileTree'
-import { cloneDeep } from 'lodash'
+import cloneDeep from 'lodash/cloneDeep'
 import classNames from 'classnames'
 import styles from './FileTreeSystemList.module.scss'
 import type { FileTreeSystemListProps, FileTreeSystemListRef } from '../type'
@@ -39,6 +39,8 @@ const FileTreeSystemList = forwardRef<FileTreeSystemListRef, FileTreeSystemListP
     onTreeDragStart,
     onTreeDragEnd,
     onRootSearch,
+    addedFilePaths,
+    onRemoveAddedFile,
     isShowRightMenu,
     treeMenuData,
     handleTreeDropdown,
@@ -186,6 +188,8 @@ const FileTreeSystemList = forwardRef<FileTreeSystemListRef, FileTreeSystemListP
         selected={selected}
         setSelected={setSelected}
         onRootSearch={onRootSearch}
+        addedFilePaths={addedFilePaths}
+        onRemoveAddedFile={onRemoveAddedFile}
       />
     )
   })

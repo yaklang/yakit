@@ -12,6 +12,17 @@ import type { AIModelSelectProps } from '../aiModelList/aiModelSelect/AIModelSel
 
 export interface QSInputTextareaProps extends Omit<TextAreaProps, 'bordered' | 'autoSize'> {}
 
+export interface AIChatDraftMaterials {
+  /** 正文引用的 HTTP 流量条数 */
+  flowCount: number
+  /** 从编辑器提取的正文提及和图片附件 */
+  mentions: AIMentionCommandParams[]
+  /** 通过资料面板添加、未插入正文的资料 */
+  selectedMaterials: AIMentionCommandParams[]
+  /** 在资料栏隐藏的正文提及键，对应的编辑器节点仍保留 */
+  hiddenInlineKeys: string[]
+}
+
 export interface AIChatTextareaSubmit {
   /**传给后端的内容 */
   qs: string
@@ -82,7 +93,10 @@ export interface AIChatTextareaProps {
   onHttpFlowRemove?: (id: string, isSummary: boolean) => void
 }
 
+export const MAX_ATTACHMENTS_PER_BATCH = 10
+
 export interface FileToChatQuestionList {
   path: string
   isFolder: boolean
+  mentionSource?: 'attachment'
 }

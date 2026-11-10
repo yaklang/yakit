@@ -225,7 +225,7 @@ describe('AIInputSettingPopover', () => {
     mocks.setting.SingleModelMode = true
     mocks.activeChat = {
       SessionID: 'session-id',
-      StartParams: { RuntimeContextSizeLimit: 600 * 1024, SyncPerceptionTrigger: true, EnablePlan: true },
+      StartParams: { RuntimeContextSizeLimit: 600, SyncPerceptionTrigger: true, EnablePlan: true },
     }
     sessionStore.setState({ execute: true })
     render(<AIInputSettingPopover visible />)
@@ -234,7 +234,7 @@ describe('AIInputSettingPopover', () => {
 
     expect(mocks.onSend).toHaveBeenCalledTimes(2)
     for (const [HotpatchType, Params] of [
-      ['RuntimeContextSizeLimit', { RuntimeContextSizeLimit: 300 * 1024 }],
+      ['RuntimeContextSizeLimit', { RuntimeContextSizeLimit: 300 }],
       ['SyncPerceptionTrigger', { SyncPerceptionTrigger: false }],
     ]) {
       expect(mocks.onSend).toHaveBeenCalledWith({
@@ -244,7 +244,7 @@ describe('AIInputSettingPopover', () => {
       })
     }
     expect(mocks.activeChat?.StartParams).toEqual({
-      RuntimeContextSizeLimit: 300 * 1024,
+      RuntimeContextSizeLimit: 300,
       SyncPerceptionTrigger: false,
       EnablePlan: true,
     })
@@ -282,7 +282,7 @@ describe('AIInputSettingPopover', () => {
     mocks.setting.RuntimeContextSizeLimit = 900
     mocks.activeChat = {
       SessionID: 'session-id',
-      StartParams: { RuntimeContextSizeLimit: 120 * 1024, EnablePlan: true },
+      StartParams: { RuntimeContextSizeLimit: 120, EnablePlan: true },
     }
     mocks.setSetting.mockImplementation((update) => {
       mocks.setting = update(mocks.setting)
@@ -293,12 +293,12 @@ describe('AIInputSettingPopover', () => {
     expect(input).toHaveValue('120')
     fireEvent.change(input, { target: { value: '600' } })
     fireEvent.blur(input)
-    expect(mocks.activeChat?.StartParams).toEqual({ RuntimeContextSizeLimit: 614400, EnablePlan: true })
+    expect(mocks.activeChat?.StartParams).toEqual({ RuntimeContextSizeLimit: 600, EnablePlan: true })
     expect(mocks.setting.RuntimeContextSizeLimit).toBe(600)
     expect(mocks.onSend).toHaveBeenCalledWith(
       expect.objectContaining({
         token: 'session-id',
-        params: expect.objectContaining({ Params: { RuntimeContextSizeLimit: 614400 } }),
+        params: expect.objectContaining({ Params: { RuntimeContextSizeLimit: 600 } }),
       }),
     )
     fireEvent.click(screen.getByText('关闭设置'))
@@ -457,7 +457,7 @@ describe('AIInputSettingPopover', () => {
 
     expect(input).toHaveValue(String(expected))
     expect(mocks.setSetting.mock.calls[0][0](mocks.setting)).toMatchObject({ RuntimeContextSizeLimit: expected })
-    expect(mocks.onSend.mock.calls[0][0].params.Params).toEqual({ RuntimeContextSizeLimit: expected * 1024 })
+    expect(mocks.onSend.mock.calls[0][0].params.Params).toEqual({ RuntimeContextSizeLimit: expected })
   })
 
   it.each([undefined, 0, -1])('新会话配置为 %s 时显示默认 300KB，查看和失焦不改写配置', (limit) => {
@@ -523,7 +523,7 @@ describe('AIInputSettingPopover', () => {
       params: {
         IsConfigHotpatch: true,
         HotpatchType: 'RuntimeContextSizeLimit',
-        Params: { RuntimeContextSizeLimit: expected * 1024 },
+        Params: { RuntimeContextSizeLimit: expected },
       },
     })
     expect(emiter.emit).toHaveBeenCalledExactlyOnceWith(
@@ -532,7 +532,7 @@ describe('AIInputSettingPopover', () => {
         type: 'updateSession',
         sessionId: 'existing-session',
         updates: {
-          StartParams: { RuntimeContextSizeLimit: expected * 1024 },
+          StartParams: { RuntimeContextSizeLimit: expected },
         },
       }),
     )
@@ -540,7 +540,7 @@ describe('AIInputSettingPopover', () => {
   })
 
   it('运行中切换同步意图识别，会话更新只携带本次变更字段', () => {
-    mocks.activeChat = { SessionID: 'existing-session', StartParams: { RuntimeContextSizeLimit: 300 * 1024 } }
+    mocks.activeChat = { SessionID: 'existing-session', StartParams: { RuntimeContextSizeLimit: 300 } }
     sessionStore = createStore(() => ({ execute: true }))
     render(<AIInputSettingPopover visible />)
 
@@ -571,7 +571,7 @@ describe('AIInputSettingPopover', () => {
       mocks.setting.RuntimeContextSizeLimit = 300
       mocks.activeChat = {
         SessionID: 'session-id',
-        StartParams: { RuntimeContextSizeLimit: 300 * 1024, SyncPerceptionTrigger: false },
+        StartParams: { RuntimeContextSizeLimit: 300, SyncPerceptionTrigger: false },
       }
       sessionStore = createStore(() => ({ execute: true }))
       mocks.setSetting.mockImplementation((updater: (setting: typeof mocks.setting) => typeof mocks.setting) => {
@@ -591,7 +591,7 @@ describe('AIInputSettingPopover', () => {
           params: {
             IsConfigHotpatch: true,
             HotpatchType: 'RuntimeContextSizeLimit',
-            Params: { RuntimeContextSizeLimit: 600 * 1024 },
+            Params: { RuntimeContextSizeLimit: 600 },
           },
         },
         perception: {
@@ -683,7 +683,7 @@ describe('AIInputSettingPopover', () => {
           params: {
             IsConfigHotpatch: true,
             HotpatchType: 'RuntimeContextSizeLimit',
-            Params: { RuntimeContextSizeLimit: 900 * 1024 },
+            Params: { RuntimeContextSizeLimit: 900 },
           },
         },
       ],
@@ -710,7 +710,7 @@ describe('AIInputSettingPopover', () => {
       mocks.setting.RuntimeContextSizeLimit = 300
       mocks.activeChat = {
         SessionID: 'session-id',
-        StartParams: { RuntimeContextSizeLimit: 120 * 1024, SyncPerceptionTrigger: false },
+        StartParams: { RuntimeContextSizeLimit: 120, SyncPerceptionTrigger: false },
       }
       mocks.setSetting.mockImplementation((update) => {
         mocks.setting = update(mocks.setting)
@@ -728,7 +728,7 @@ describe('AIInputSettingPopover', () => {
       expect(mocks.setActiveChat).not.toHaveBeenCalled()
       expect(emiter.emit).not.toHaveBeenCalled()
       expect(mocks.activeChat.StartParams).toEqual({
-        RuntimeContextSizeLimit: 120 * 1024,
+        RuntimeContextSizeLimit: 120,
         SyncPerceptionTrigger: false,
       })
       expect(mocks.setting.RuntimeContextSizeLimit).toBe(600)
@@ -743,13 +743,13 @@ describe('AIInputSettingPopover', () => {
       mocks.onSend.mockReturnValue(true)
       rerender(<AIInputSettingPopover visible />)
       fireEvent.change(input, { target: { value: '600' } })
-      expect(mocks.activeChat?.StartParams?.RuntimeContextSizeLimit).toBe(600 * 1024)
+      expect(mocks.activeChat?.StartParams?.RuntimeContextSizeLimit).toBe(600)
       expect(emiter.emit).toHaveBeenCalledExactlyOnceWith(
         'sessionData',
         JSON.stringify({
           type: 'updateSession',
           sessionId: 'session-id',
-          updates: { StartParams: { RuntimeContextSizeLimit: 600 * 1024 } },
+          updates: { StartParams: { RuntimeContextSizeLimit: 600 } },
         }),
       )
     },
@@ -774,7 +774,7 @@ describe('AIInputSettingPopover', () => {
     ['60.9', 61],
   ] as const)('输入小数 %s 时不保存，失焦校正为整数后才热更新', (value, expected) => {
     mocks.setting.RuntimeContextSizeLimit = 300
-    mocks.activeChat = { SessionID: 'session-id', StartParams: { RuntimeContextSizeLimit: 300 * 1024 } }
+    mocks.activeChat = { SessionID: 'session-id', StartParams: { RuntimeContextSizeLimit: 300 } }
     sessionStore = createStore(() => ({ execute: true }))
     render(<AIInputSettingPopover visible />)
     const input = screen.getByLabelText('AIChatSetting.runtimeContextSize')
@@ -788,7 +788,7 @@ describe('AIInputSettingPopover', () => {
     expect(mocks.onSend).not.toHaveBeenCalled()
     expect(mocks.setActiveChat).not.toHaveBeenCalled()
     expect(emiter.emit).not.toHaveBeenCalled()
-    expect(mocks.activeChat?.StartParams?.RuntimeContextSizeLimit).toBe(300 * 1024)
+    expect(mocks.activeChat?.StartParams?.RuntimeContextSizeLimit).toBe(300)
 
     fireEvent.blur(input)
 
@@ -799,12 +799,12 @@ describe('AIInputSettingPopover', () => {
       params: {
         IsConfigHotpatch: true,
         HotpatchType: 'RuntimeContextSizeLimit',
-        Params: { RuntimeContextSizeLimit: expected * 1024 },
+        Params: { RuntimeContextSizeLimit: expected },
       },
     })
     expect(mocks.setSetting).toHaveBeenCalledTimes(1)
     expect(mocks.setSetting.mock.calls[0][0](mocks.setting).RuntimeContextSizeLimit).toBe(expected)
-    expect(mocks.activeChat?.StartParams?.RuntimeContextSizeLimit).toBe(expected * 1024)
+    expect(mocks.activeChat?.StartParams?.RuntimeContextSizeLimit).toBe(expected)
   })
 
   it('运行中小于 60 的正数在校正后才热更新，关闭时不重复发送', () => {
@@ -817,7 +817,7 @@ describe('AIInputSettingPopover', () => {
     fireEvent.click(screen.getByText('关闭设置'))
 
     expect(mocks.onSend).toHaveBeenCalledTimes(1)
-    expect(mocks.onSend.mock.calls[0][0].params.Params).toEqual({ RuntimeContextSizeLimit: 60 * 1024 })
+    expect(mocks.onSend.mock.calls[0][0].params.Params).toEqual({ RuntimeContextSizeLimit: 60 })
   })
 
   it('聊天齿轮显示已禁用的追问设置，开启后发送 false 而不是反转语义', () => {

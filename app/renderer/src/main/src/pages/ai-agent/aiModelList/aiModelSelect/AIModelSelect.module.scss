@@ -52,10 +52,13 @@ div.model-select-popup:global(.ant-select-dropdown) {
   overflow: hidden;
 
   .select-option-text {
+    min-width: 0;
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
-    word-break: break-all;
+  }
+  > :first-child {
+    flex-shrink: 0;
   }
   .select-option-effort {
     flex-shrink: 0;

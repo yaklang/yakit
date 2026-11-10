@@ -1,13 +1,7 @@
 import type { AIAgentSetting } from '../aiAgentType'
 import isNil from 'lodash/isNil'
 import { AIAgentSettingDefault, AttachedResourceKeyEnum, AttachedResourceTypeEnum } from '../defaultConstant'
-import {
-  withServerRuntimeContextLimit,
-  type AIAgentGrpcApi,
-  type AIInputEvent,
-  type AIStartParams,
-  type AttachedResourceInfo,
-} from '../../ai-re-act/hooks/grpcApi'
+import type { AIAgentGrpcApi, AIInputEvent, AIStartParams, AttachedResourceInfo } from '../../ai-re-act/hooks/grpcApi'
 import type { AITaskInfoProps } from '../../ai-re-act/hooks/aiRender'
 import type { AIChatSubmitParams } from '../aiAgentChat/type'
 import omit from 'lodash/omit'
@@ -16,7 +10,8 @@ import { isIRify } from '@/utils/envfile'
 import type { UseChatIPCStartParams } from '../useContext/AIAgentContext'
 import type { AISession } from '../type/aiChat'
 import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
-import { DeleteSessionsAISourceEnum, type DeleteSessionsAISourceType } from '../historyChat/utils'
+import { DeleteSessionsAISourceEnum } from '../historyChat/utils'
+import type { DeleteSessionsAISourceType } from '../historyChat/utils'
 import { isYaklangScriptDeliveryPath } from '@/pages/yakRunner/utils'
 import { getResourceInfoByMention } from './mentionResources'
 import { parseHttpFlowIds } from '../components/aiMilkdownInput/aiMilkdownHttpFlow/httpFlowIds'
@@ -79,7 +74,7 @@ export const formatNumberUnits = (num: number) => {
   }
 }
 
-/** @name 将全局配置信息转换为可以请求的数据结构 */
+/** 整理会话配置，容量保持前端 KB 单位。 */
 export const formatAIAgentSetting = (setting: AIAgentSetting): AIAgentSetting => {
   /**
    * AIService/AIModelName/TimelineItemLimit/TimelineContentSizeLimit 已经废弃，下发前剥离。
@@ -136,11 +131,8 @@ export const formatAIAgentSetting = (setting: AIAgentSetting): AIAgentSetting =>
     if (!isNil(setting?.ReActMaxIteration)) {
       data.ReActMaxIteration = setting.ReActMaxIteration || AIAgentSettingDefault.ReActMaxIteration
     }
-    // RuntimeContextSizeLimit 单位是KB，但传到后端需要转换为字节；<=0 表示用服务端默认阈值
-    data.RuntimeContextSizeLimit = (setting.RuntimeContextSizeLimit ?? 0) * 1024
-
-    // AICallTokenLimit 单位是KB，但传到后端需要转换为字节
-    data.AICallTokenLimit = ((setting.AICallTokenLimit ?? AIAgentSettingDefault.AICallTokenLimit) as number) * 1024
+    data.RuntimeContextSizeLimit = setting.RuntimeContextSizeLimit ?? 0
+    data.AICallTokenLimit = setting.AICallTokenLimit ?? AIAgentSettingDefault.AICallTokenLimit
     if (!isNil(setting?.UserInteractLimit)) {
       data.UserInteractLimit = setting.UserInteractLimit || AIAgentSettingDefault.UserInteractLimit
     }
@@ -152,7 +144,7 @@ export const formatAIAgentSetting = (setting: AIAgentSetting): AIAgentSetting =>
     data.DisableMemoryTriage = setting.DisableMemoryTriage ?? AIAgentSettingDefault.DisableMemoryTriage
     data.SingleModelMode = setting.SingleModelMode ?? AIAgentSettingDefault.SingleModelMode
   } catch (error) {}
-  return withServerRuntimeContextLimit({ ...data })
+  return data
 }
 
 /** @name 将前端的结构转化为符合定义的结构 */

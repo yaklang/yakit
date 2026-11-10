@@ -26,3 +26,16 @@ export function removeRepeatedElement<T = string>(arr: T[]) {
     return arr.indexOf(element) === index
   })
 }
+
+/** 从路径取文件名，兼容 Windows 和 Unix 的分隔符。 */
+export const getPathBaseName = (path: string) => path.split(/[\\/]/).pop() || path
+
+/**
+ * @name 从文件名截取后缀（最后一个 `.` 之后，不含点）
+ * @example getFileSuffixFromName('x.x.txt') => 'txt'
+ */
+export const getFileSuffixFromName = (fileName: string): string => {
+  const dotIndex = fileName.lastIndexOf('.')
+  if (dotIndex <= 0 || dotIndex >= fileName.length - 1) return ''
+  return fileName.slice(dotIndex + 1)
+}

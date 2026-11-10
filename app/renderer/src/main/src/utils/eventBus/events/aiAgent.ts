@@ -28,6 +28,8 @@ export type AIAgentEventProps = {
    * @name params {mention=>AIMentionCommandParams}传递的值
    */
   setAIInputByType?: string
+  /** 取消当前会话的文件系统资料，参数为 sessionId/path。 */
+  removeAIFileMaterial: string
 
   /** 文件系统默认展开路径 */
   fileSystemDefaultExpand: string

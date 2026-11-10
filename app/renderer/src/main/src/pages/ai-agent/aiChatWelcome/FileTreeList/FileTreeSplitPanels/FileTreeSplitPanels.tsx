@@ -4,14 +4,15 @@ import { useCustomFolder } from '../../../components/aiFileSystemList/store/useC
 import FileTreeSystemListWrapper from '../../../components/aiFileSystemList/FileTreeSystemListWrapper/FileTreeSystemListWrapper'
 import FileTreeDrop from '../../FileTreeDrop/FileTreeDrop'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { useMemoizedFn } from 'ahooks'
+import { useCreation, useMemoizedFn } from 'ahooks'
 import emiter from '@/utils/eventBus/eventBus'
 import { AITabsEnum } from '../../../defaultConstant'
-import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import { useCurrentRawData, useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
 import { useStore } from 'zustand'
 import { SplitView } from '@/pages/yakRunner/SplitView/SplitView'
-import { FileTreeSearchScope, type FileTreeSearchScopeValue } from '../FileTreeSearchView/constants'
+import { FileTreeSearchScope } from '../FileTreeSearchView/constants'
+import type { FileTreeSearchScopeValue } from '../FileTreeSearchView/constants'
 import styles from './FileTreeSplitPanels.module.scss'
 
 interface FileTreeSplitPanelsProps {
@@ -25,6 +26,15 @@ const FileTreeSplitPanels: React.FC<FileTreeSplitPanelsProps> = memo(({ selected
   const store = useCurrentStore()
   const sessionId = useCurrentSessionId()
   const grpcFolders = useStore(store, (state) => state.grpcFolders)
+  const rawData = useCurrentRawData()
+  const draftMaterialsUpdate = useStore(store, (state) => state.draftMaterialsUpdate)
+  const addedFilePaths = useCreation(
+    () => rawData.draftMaterials.files.map((file) => file.path),
+    [sessionId, draftMaterialsUpdate],
+  )
+  const onRemoveAddedFile = useMemoizedFn((path: string) => {
+    emiter.emit('removeAIFileMaterial', JSON.stringify({ sessionId, path }))
+  })
   const customFolder = useCustomFolder()
   const hasAiFolder = grpcFolders.length > 0
 
@@ -45,6 +55,8 @@ const FileTreeSplitPanels: React.FC<FileTreeSplitPanelsProps> = memo(({ selected
         {({ setDragSource }) => (
           <FileTreeSystemListWrapper
             variant="sidebar"
+            addedFilePaths={addedFilePaths}
+            onRemoveAddedFile={onRemoveAddedFile}
             isOpen
             title={t('FileTreeSystem.myOpenedFiles')}
             selected={selected}
@@ -58,7 +70,17 @@ const FileTreeSplitPanels: React.FC<FileTreeSplitPanelsProps> = memo(({ selected
         )}
       </FileTreeDrop>
     ),
-    [t, selected, customFolder, onSelect, onOpenSearch, onSearchUserFolder, onSearchUserRoot],
+    [
+      t,
+      selected,
+      customFolder,
+      onSelect,
+      onOpenSearch,
+      onSearchUserFolder,
+      onSearchUserRoot,
+      addedFilePaths,
+      onRemoveAddedFile,
+    ],
   )
 
   // AI 文件夹为空时不展示 AI Artifacts 分区
@@ -80,6 +102,8 @@ const FileTreeSplitPanels: React.FC<FileTreeSplitPanelsProps> = memo(({ selected
             <FileTreeSystemListWrapper
               key={sessionId}
               variant="sidebar"
+              addedFilePaths={addedFilePaths}
+              onRemoveAddedFile={onRemoveAddedFile}
               path={grpcFolders}
               selected={selected}
               setSelected={onSelect}

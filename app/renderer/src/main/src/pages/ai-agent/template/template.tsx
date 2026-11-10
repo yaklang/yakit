@@ -3,6 +3,7 @@ import { forwardRef, memo, useEffect, useImperativeHandle, useRef, useState } fr
 import type { ReactNode, Ref, RefAttributes } from 'react'
 import { AIInputFooterRightEnum, AIInputInnerFeatureEnum } from './type'
 import type {
+  AIChatDraftMaterials,
   AIChatTextareaProps,
   AIChatTextareaSubmit,
   FileToChatQuestionList,
@@ -12,27 +13,37 @@ import type {
 } from './type'
 import { Input } from 'antd'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { AdjustmentsOutlined, ArrowUpOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { AdjustmentsOutlined, ArrowUpOutlined, PlusSmOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { useCreation, useInViewport, useMemoizedFn } from 'ahooks'
 import type { TextAreaRef } from 'antd/lib/input/TextArea'
 import classNames from 'classnames'
 import styles from './template.module.scss'
 import { AIMilkdownInput } from '../components/aiMilkdownInput/AIMilkdownInput'
 import type { EditorMilkdownProps } from '@/components/MilkdownEditor/MilkdownEditorType'
-import { callCommand, getMarkdown } from '@milkdown/kit/utils'
+import { getMarkdown } from '@milkdown/kit/utils'
 import useAIChatDrop from '../aiChatWelcome/hooks/useAIChatDrop'
-import { aiMentionCommand } from '../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
+import {
+  aiMentionCustomId,
+  aiMentionCustomSchema,
+} from '../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
 import type { AIMentionCommandParams } from '../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
 import emiter from '@/utils/eventBus/eventBus'
 import type { AIAgentTriggerEventInfo } from '../aiAgentType'
-import { extractDataWithMilkdown, setEditorValue, unescapeUnderscoreInPath } from '../components/aiMilkdownInput/utils'
-import { editorViewCtx, serializerCtx } from '@milkdown/kit/core'
+import {
+  extractDataWithMilkdown,
+  insertAIMention,
+  setEditorValue,
+  unescapeUnderscoreInPath,
+} from '../components/aiMilkdownInput/utils'
+import { EditorStatus, editorViewCtx, serializerCtx } from '@milkdown/kit/core'
+import type { Node as ProseMirrorNode } from '@milkdown/kit/prose/model'
 import { convertKeyEventToKeyCombination } from '@/utils/globalShortcutKey/utils'
 import { YakitKeyBoard } from '@/utils/globalShortcutKey/keyboard'
 import { AIModelSelect } from '../aiModelList/aiModelSelect/AIModelSelect'
 import AIReviewRuleSelect from '@/pages/ai-re-act/aiReviewRuleSelect/AIReviewRuleSelect'
 import isString from 'lodash/isString'
-import type { OpenFileDropdownItem } from '../aiChatWelcome/OpenFileDropdown/OpenFileDropdown'
+import isEqual from 'lodash/isEqual'
+import AIAddMaterialsPopover from './aiAddMaterialsPopover/AIAddMaterialsPopover'
 import { AIInputSettingPopover } from '@/pages/ai-re-act/aiReActTaskChat/AIReActTaskChat'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { yakitNotify } from '@/utils/notification'
@@ -41,8 +52,16 @@ import type { AICodeBlockCommandParams } from '../components/aiMilkdownInput/aiC
 import AIRunModeSelect from '../aiRunModeSelect/AIRunModeSelect'
 import { aiHttpFlowCustomSchema } from '../components/aiMilkdownInput/aiMilkdownHttpFlow/aiHttpFlowPlugin'
 import type { AIHttpFlowCommandParams } from '../components/aiMilkdownInput/aiMilkdownHttpFlow/aiHttpFlowPlugin'
+import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
+import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
 
 const HTTP_FLOW_SUMMARY_THRESHOLD = 3
+
+const isSameMaterial = (first: AIMentionCommandParams, second: AIMentionCommandParams) =>
+  first.mentionType === second.mentionType && first.mentionId === second.mentionId
+
+const getMaterialKey = ({ mentionType, mentionSource, mentionId }: AIMentionCommandParams) =>
+  `${mentionType}:${mentionSource ?? ''}:${mentionId}`
 
 /** @name AI-Agent专用Textarea组件,行高为20px */
 export const QSInputTextarea: React.FC<QSInputTextareaProps & RefAttributes<TextAreaRef>> = memo(
@@ -83,6 +102,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
     } = props
     const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
 
+    const sessionId = useCurrentSessionId()
     const [inputSettingVisible, setInputSettingVisible] = useState<boolean>(false)
 
     const footerLeftTypes: FooterLeftTypesComponentProps[] = useCreation(() => {
@@ -138,6 +158,13 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
 
     const [disabled, setDisabled] = useState<boolean>(!defaultValue?.trim())
     const [selectedHttpFlowIds, setSelectedHttpFlowIds] = useState<string[]>([])
+    const [draftMaterials, setDraftMaterials] = useState<AIChatDraftMaterials>({
+      flowCount: 0,
+      mentions: [],
+      selectedMaterials: [],
+      hiddenInlineKeys: [],
+    })
+    const { selectedMaterials } = draftMaterials
     const httpFlowReference: AIHttpFlowCommandParams = {
       flowIds: [...selectedHttpFlowIds],
       displayText:
@@ -166,8 +193,10 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
     useEffect(() => {
       if (inViewport) {
         emiter.on('setAIInputByType', onSetAIInputByType)
+        emiter.on('removeAIFileMaterial', onRemoveFileMaterial)
         return () => {
           emiter.off('setAIInputByType', onSetAIInputByType)
+          emiter.off('removeAIFileMaterial', onRemoveFileMaterial)
         }
       }
     }, [inViewport])
@@ -203,23 +232,37 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
         return
       }
       let qs = getMarkdownValue()
-      if (!qs.trim() && !selectedHttpFlowIds.length) return
-      if (selectedHttpFlowIds.length) {
-        // 为了回显勾选的流量数据，需要在发送消息前将流量数据拼接到用户输入的文本中
+      const additionalMaterials = selectedMaterials.filter(
+        (material) => !mentions.some((mention) => isSameMaterial(mention, material)),
+      )
+      if (!qs.trim() && !selectedHttpFlowIds.length && !additionalMaterials.length) return
+      if (selectedHttpFlowIds.length || additionalMaterials.length) {
+        // 独立选择的资料只在提交时序列化，供历史消息回显。
         const referenceMarkdown = editorMilkdown.current.action((ctx) => {
           const { schema } = ctx.get(editorViewCtx).state
-          const reference = aiHttpFlowCustomSchema
-            .type(ctx)
-            .create(httpFlowReference, schema.text(httpFlowReference.displayText))
-          const doc = schema.topNodeType.create(null, schema.nodes.paragraph.create(null, reference))
+          const paragraphs: ProseMirrorNode[] = []
+          if (selectedHttpFlowIds.length) {
+            const reference = aiHttpFlowCustomSchema
+              .type(ctx)
+              .create(httpFlowReference, schema.text(httpFlowReference.displayText))
+            paragraphs.push(schema.nodes.paragraph.create(null, reference))
+          }
+          if (additionalMaterials.length) {
+            const mentionType = aiMentionCustomSchema.type(ctx)
+            const references = additionalMaterials.map((item) =>
+              mentionType.create(item, schema.text(item.mentionName)),
+            )
+            paragraphs.push(schema.nodes.paragraph.create(null, references))
+          }
+          const doc = schema.topNodeType.create(null, paragraphs)
           return ctx.get(serializerCtx)(doc).trim()
         })
         qs = [referenceMarkdown, qs].filter(Boolean).join('\n\n')
-        httpFlowList.push(httpFlowReference)
       }
+      if (selectedHttpFlowIds.length) httpFlowList.push(httpFlowReference)
       const value: AIChatTextareaSubmit = {
         qs,
-        mentionList: mentions,
+        mentionList: [...additionalMaterials, ...mentions],
         imageList,
         httpFlowList,
         codeBlockList,
@@ -243,11 +286,55 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
 
     // 编辑器未就绪时的 mention 先排队，就绪后补插（挂载即注入场景）
     const pendingMentionsRef = useRef<AIMentionCommandParams[]>([])
+    const updateDraftMaterials = (editor: EditorMilkdownProps) => {
+      const { mentions, draftMentions: materials, httpFlowList } = extractDataWithMilkdown(editor)
+      if (sessionId) {
+        const { draftMaterials: sessionDraftMaterials } = globalSessionEngine.ensureSession(sessionId).rawData
+        const files = [
+          ...new Map(
+            mentions
+              .filter((item) => ['file', 'folder'].includes(item.mentionType) && item.mentionSource !== 'attachment')
+              .map((item) => [
+                item.mentionId,
+                sessionDraftMaterials.files.find((file) => file.path === item.mentionId) || {
+                  path: item.mentionId,
+                  name: item.mentionName,
+                  isFolder: item.mentionType === 'folder',
+                },
+              ]),
+          ).values(),
+        ]
+        if (!isEqual(sessionDraftMaterials.files, files)) {
+          globalSessionEngine.updateDraftMaterials(sessionId, 'files', files)
+        }
+      }
+      const flowCount = httpFlowList.reduce((count, item) => count + item.flowIds.length, 0)
+      setDraftMaterials((current) => {
+        if (isEqual(current.mentions, materials)) {
+          return current.flowCount === flowCount ? current : { ...current, flowCount }
+        }
+
+        const inlineKeys = materials.map(getMaterialKey)
+        const previousKeys = current.mentions.map(getMaterialKey)
+        return {
+          flowCount,
+          mentions: materials,
+          selectedMaterials: current.selectedMaterials.filter(
+            (material) => !inlineKeys.includes(getMaterialKey(material)),
+          ),
+          hiddenInlineKeys: current.hiddenInlineKeys.filter((key) => {
+            const occurrences = inlineKeys.filter((item) => item === key).length
+            return occurrences > 0 && occurrences <= previousKeys.filter((item) => item === key).length
+          }),
+        }
+      })
+    }
     const onUpdateEditor = useMemoizedFn((editor: EditorMilkdownProps) => {
       editorMilkdown.current = editor
       const pending = pendingMentionsRef.current
       pendingMentionsRef.current = []
-      pending.forEach((item) => editor.action(callCommand<AIMentionCommandParams>(aiMentionCommand.key, item)))
+      pending.forEach((item) => insertAIMention(editor, item))
+      updateDraftMaterials(editor)
     })
 
     const onFilesChange = useMemoizedFn((files: FileToChatQuestionList[]) => {
@@ -256,6 +343,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
           mentionId: item.path,
           mentionType: item.isFolder ? 'folder' : 'file',
           mentionName: item.path,
+          mentionSource: item.mentionSource,
         })
       }
     })
@@ -270,18 +358,90 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
             pendingMentionsRef.current.push(params)
             break
           }
-          editorMilkdown.current.action(callCommand<AIMentionCommandParams>(aiMentionCommand.key, params))
+          insertAIMention(editorMilkdown.current, params)
+          updateDraftMaterials(editorMilkdown.current)
           break
       }
     })
+    const onAddMaterial = useMemoizedFn((material: AIMentionCommandParams) => {
+      const key = getMaterialKey(material)
+      if (draftMaterials.hiddenInlineKeys.includes(key)) {
+        setDraftMaterials((current) => ({
+          ...current,
+          hiddenInlineKeys: current.hiddenInlineKeys.filter((hiddenKey) => hiddenKey !== key),
+        }))
+        return
+      }
+
+      if (
+        material.mentionType === 'forge' ||
+        material.mentionType === 'knowledgeBase' ||
+        material.mentionType === 'tool'
+      ) {
+        setDraftMaterials((current) => ({
+          ...current,
+          selectedMaterials: [...current.mentions, ...current.selectedMaterials].some((item) =>
+            isSameMaterial(item, material),
+          )
+            ? current.selectedMaterials
+            : [...current.selectedMaterials, material],
+        }))
+      } else {
+        onSetMention(material)
+      }
+    })
+    const onRemoveFileMaterial = useMemoizedFn((value: string) => {
+      const data: { sessionId: string; path: string } = JSON.parse(value)
+      if (!sessionId || data.sessionId !== sessionId) return
+      const editor = editorMilkdown.current
+      if (!editor) return
+      editor.action((ctx) => {
+        const view = ctx.get(editorViewCtx)
+        const { doc, tr } = view.state
+        doc.descendants((node, position) => {
+          if (
+            node.type.name === aiMentionCustomId &&
+            ['file', 'folder'].includes(node.attrs.mentionType) &&
+            node.attrs.mentionSource !== 'attachment' &&
+            node.attrs.mentionId === data.path &&
+            !node.attrs.lock
+          ) {
+            tr.delete(tr.mapping.map(position), tr.mapping.map(position + node.nodeSize))
+            return false
+          }
+        })
+        view.dispatch(tr)
+      })
+      updateDraftMaterials(editor)
+    })
+    const onRemoveMaterial = (material: AIMentionCommandParams) => {
+      const key = getMaterialKey(material)
+      const matchesMaterial = (mention: AIMentionCommandParams) => getMaterialKey(mention) === key
+      setDraftMaterials((current) => {
+        // 列表删除仅隐藏资料栏中的正文提及，保留编辑器节点。
+        const shouldHideInline = !current.hiddenInlineKeys.includes(key) && current.mentions.some(matchesMaterial)
+        return {
+          ...current,
+          selectedMaterials: current.selectedMaterials.filter((mention) => !matchesMaterial(mention)),
+          hiddenInlineKeys: shouldHideInline ? [...current.hiddenInlineKeys, key] : current.hiddenInlineKeys,
+        }
+      })
+    }
     const onSetHttpFlow = useMemoizedFn((ids: string[]) => {
       setSelectedHttpFlowIds([...new Set(ids.filter(Boolean))])
     })
     /**设置编辑器值 */
     const onSetValue = useMemoizedFn((value: string) => {
+      setDraftMaterials((current) =>
+        current.selectedMaterials.length || current.hiddenInlineKeys.length
+          ? { ...current, selectedMaterials: [], hiddenInlineKeys: [] }
+          : current,
+      )
       if (!value) setSelectedHttpFlowIds([])
-      if (!editorMilkdown.current) return
-      setEditorValue(editorMilkdown.current, value)
+      const editor = editorMilkdown.current
+      if (!editor) return
+      setEditorValue(editor, value)
+      if (editor.status === EditorStatus.Created) updateDraftMaterials(editor)
     })
     const getMarkdownValue = useMemoizedFn(() => {
       const value = editorMilkdown.current?.action(getMarkdown()) || ''
@@ -292,6 +452,8 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
 
     const onUpdateContent = useMemoizedFn((value: string) => {
       setDisabled(!value.trim())
+      const editor = editorMilkdown.current
+      if (editor?.status === EditorStatus.Created) updateDraftMaterials(editor)
     })
     // #endregion
     const handleTextareaKeyDown = useMemoizedFn((e) => {
@@ -304,8 +466,8 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
     })
     const [focusMode, setFocusMode] = useState<string>()
 
-    const onMemfitExtra = useMemoizedFn((value: AIMentionCommandParams) => {
-      setFocusMode(value.mentionName)
+    const onMemfitExtra = useMemoizedFn(({ mentionName }: AIMentionCommandParams) => {
+      setFocusMode(mentionName)
     })
 
     const renderFooterLeftTypes = useMemoizedFn((types: FooterLeftTypesComponentProps[]) => {
@@ -365,17 +527,10 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
       })
       return node
     })
-    const onSetFileMention = useMemoizedFn((data: OpenFileDropdownItem) => {
-      onSetMention({
-        mentionId: data.path,
-        mentionType: data.isFolder ? 'folder' : 'file',
-        mentionName: data.path,
-      })
-    })
 
-    const onSelectImage = useMemoizedFn(() => {
-      aiMilkdownInputRef.current?.setImage()
-    })
+    const visibleInlineMaterials = draftMaterials.mentions.filter(
+      (mention) => !draftMaterials.hiddenInlineKeys.includes(getMaterialKey(mention)),
+    )
 
     return (
       <div
@@ -391,56 +546,91 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
         ref={dropRef}
       >
         {isHovering && <div className={styles['drag-hint']}>{t('AIChatTextarea.dropToAddToChat')}</div>}
-        <div className={classNames(styles['textarea-wrapper'])} onKeyDown={handleTextareaKeyDown}>
-          <AIMilkdownInput
-            ref={aiMilkdownInputRef}
-            classNameWrapper={milkdownClassName}
-            defaultValue={defaultValue}
-            onUpdateEditor={onUpdateEditor}
-            onUpdateContent={onUpdateContent}
-            onMemfitExtra={onMemfitExtra}
-            filterMode={filterMentionType}
-            chatDataStoreKey={chatDataStoreKey}
-          />
-          <div className={styles['footer']}>
-            {inputFooterLeft ?? (
-              <div className={styles['footer-left']}>
-                {renderFooterLeftTypes(footerLeftTypes)}
-                <AIRunModeSelect />
-                {/* <AIReasoningEffortSelect />
-
-                <OpenFileDropdown cb={onSetFileMention} onSelectImage={onSelectImage}>
-                  <UploadFileButton title={t('YakitButton.openFolder')} className={styles['btn-base']} />
-                </OpenFileDropdown> */}
-                <AIInputSettingPopover visible={inputSettingVisible} setVisible={setInputSettingVisible}>
-                  <YakitButton
-                    type="text2"
-                    icon={<AdjustmentsOutlined color="currentColor" />}
-                    onClick={(e) => e.stopPropagation()}
-                    className={styles['btn-base']}
-                    isActive={inputSettingVisible}
-                  />
-                </AIInputSettingPopover>
+        <AIAddMaterialsPopover
+          onAdd={onAddMaterial}
+          onRemove={onRemoveMaterial}
+          mentions={[...selectedMaterials, ...visibleInlineMaterials]}
+          flowCount={draftMaterials.flowCount + selectedHttpFlowIds.length}
+          focusMode={focusMode}
+          onFocusModeChange={setFocusMode}
+          filterMode={filterMentionType}
+        >
+          {(materialsOpen, toggleMaterials, summary, materialsMenuOpen) => (
+            <div className={classNames(styles['textarea-wrapper'])} onKeyDown={handleTextareaKeyDown}>
+              <div className={styles['materials-row']}>
+                <YakitButton
+                  type="text2"
+                  className={styles['material-add']}
+                  data-menu-open={materialsMenuOpen || undefined}
+                  aria-label={t('AIChatTextarea.addMaterials')}
+                  aria-expanded={materialsOpen}
+                  aria-haspopup="dialog"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    toggleMaterials()
+                  }}
+                  onKeyDown={(e) => e.stopPropagation()}
+                  icon={<PlusSmOutlined />}
+                />
+                {summary ?? (
+                  <div
+                    className={styles['material-add-label']}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      toggleMaterials()
+                    }}
+                  >
+                    {t('AIChatTextarea.addMaterials')}
+                  </div>
+                )}
               </div>
-            )}
-
-            <div className={styles['footer-right']}>
-              {inputFooterRight}
-              {renderFooterRightTypes(footerRightTypes)}
-              <YakitButton
-                className={styles['round-btn']}
-                radius="50%"
-                loading={loading}
-                disabled={disabled && !selectedHttpFlowIds.length}
-                icon={<ArrowUpOutlined color="currentColor" />}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  handleSubmit()
-                }}
+              <AIMilkdownInput
+                ref={aiMilkdownInputRef}
+                classNameWrapper={milkdownClassName}
+                defaultValue={defaultValue}
+                onUpdateEditor={onUpdateEditor}
+                onUpdateContent={onUpdateContent}
+                onMemfitExtra={onMemfitExtra}
+                filterMode={filterMentionType}
+                chatDataStoreKey={chatDataStoreKey}
               />
+              <div className={styles['footer']}>
+                {inputFooterLeft ?? (
+                  <div className={styles['footer-left']}>
+                    {renderFooterLeftTypes(footerLeftTypes)}
+                    <AIRunModeSelect />
+                    <AIInputSettingPopover visible={inputSettingVisible} setVisible={setInputSettingVisible}>
+                      <YakitButton
+                        type="text2"
+                        icon={<AdjustmentsOutlined color="currentColor" />}
+                        onClick={(e) => e.stopPropagation()}
+                        className={styles['btn-base']}
+                        isActive={inputSettingVisible}
+                      />
+                    </AIInputSettingPopover>
+                  </div>
+                )}
+
+                <div className={styles['footer-right']}>
+                  {inputFooterRight}
+                  {renderFooterRightTypes(footerRightTypes)}
+                  <YakitButton
+                    className={styles['round-btn']}
+                    aria-label={t('YakitButton.send')}
+                    radius="50%"
+                    loading={loading}
+                    disabled={disabled && !selectedHttpFlowIds.length && !selectedMaterials.length}
+                    icon={<ArrowUpOutlined color="currentColor" />}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleSubmit()
+                    }}
+                  />
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+          )}
+        </AIAddMaterialsPopover>
         {children}
       </div>
     )

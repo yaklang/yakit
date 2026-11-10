@@ -30,6 +30,8 @@ export const aiMentionCustomSchema = $nodeSchema(aiMentionCustomId, (ctx) => ({
           mentionId: dom.getAttribute('data-mention-id'),
           mentionType: dom.getAttribute('data-mention-type'),
           mentionName: dom.getAttribute('data-mention-name'),
+          mentionSource: dom.getAttribute('data-mention-source') === 'attachment' ? 'attachment' : undefined,
+          forgeName: dom.getAttribute('data-forge-name') ?? undefined,
           lock: dom.getAttribute('data-lock') === 'true', // 新增 lock
         }
       },
@@ -45,6 +47,8 @@ export const aiMentionCustomSchema = $nodeSchema(aiMentionCustomId, (ctx) => ({
         'data-mention-id': node.attrs.mentionId,
         'data-mention-type': node.attrs.mentionType,
         'data-mention-name': node.attrs.mentionName,
+        'data-mention-source': node.attrs.mentionSource,
+        'data-forge-name': node.attrs.forgeName,
         'data-lock': node.attrs.lock ? 'true' : 'false', // 新增 lock
       },
       0,
@@ -78,6 +82,8 @@ export const aiMentionCustomSchema = $nodeSchema(aiMentionCustomId, (ctx) => ({
             mentionId: node.attrs.mentionId,
             mentionType: node.attrs.mentionType,
             mentionName: node.attrs.mentionName,
+            ...(node.attrs.mentionSource && { mentionSource: node.attrs.mentionSource }),
+            ...(node.attrs.forgeName && { forgeName: node.attrs.forgeName }),
           },
         })
         .next(node.content)
@@ -88,6 +94,8 @@ export const aiMentionCustomSchema = $nodeSchema(aiMentionCustomId, (ctx) => ({
     mentionId: { default: '0' },
     mentionType: { default: '' },
     mentionName: { default: '' },
+    mentionSource: { default: undefined },
+    forgeName: { default: undefined },
     lock: { default: false }, // 默认不可锁
   },
 }))
@@ -96,6 +104,8 @@ export interface AIMentionCommandParams {
   mentionId: string
   mentionType: iconMapType
   mentionName: string
+  mentionSource?: 'attachment'
+  forgeName?: string
   lock?: boolean // 新增 lock 属性
 }
 export const aiMentionCommand = $command<AIMentionCommandParams, string>(
@@ -104,7 +114,7 @@ export const aiMentionCommand = $command<AIMentionCommandParams, string>(
     if (!params) return false
     const { selection, tr } = state
     if (!(selection instanceof TextSelection)) return false
-    const { mentionType, mentionId, mentionName, lock } = params
+    const { mentionType, mentionId, mentionName, mentionSource, forgeName, lock } = params
     const { from } = selection
     // 删除光标前整段 @query（含 @）。块边界必须带换行，否则换段后再选会留下 @
     const textBefore = mentionTextBeforeCursor(state.doc, from)
@@ -119,7 +129,7 @@ export const aiMentionCommand = $command<AIMentionCommandParams, string>(
         .replaceSelectionWith(
           aiMentionCustomSchema
             .type(ctx)
-            .create({ mentionId, mentionType, mentionName, lock: lock ?? false }, fragment),
+            .create({ mentionId, mentionType, mentionName, mentionSource, forgeName, lock: lock ?? false }, fragment),
         )
         .scrollIntoView(),
     )

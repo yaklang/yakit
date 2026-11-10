@@ -1,9 +1,9 @@
 .skill-details {
-  width: 600px;
+  width: var(--skill-preview-width, 600px);
 }
 
 .editor-container {
   padding: 4px;
-  height: 360px;
+  height: var(--skill-preview-height, 360px);
   overflow: hidden;
 }

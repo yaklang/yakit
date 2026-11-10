@@ -1,14 +1,39 @@
 import type { EditorMilkdownProps } from '@/components/MilkdownEditor/MilkdownEditorType'
+import { imgTypes } from '@/components/MilkdownEditor/utils/utils'
 import { editorViewCtx, parserCtx } from '@milkdown/kit/core'
-import { type AIMentionCommandParams, aiMentionCustomId } from './aiMilkdownMention/aiMentionPlugin'
+import { insertImageCommand } from '@milkdown/kit/preset/commonmark'
+import type { Node } from '@milkdown/kit/prose/model'
+import { callCommand } from '@milkdown/kit/utils'
+import { aiMentionCommand, aiMentionCustomId } from './aiMilkdownMention/aiMentionPlugin'
+import type { AIMentionCommandParams } from './aiMilkdownMention/aiMentionPlugin'
 import { type AIHttpFlowCommandParams, aiHttpFlowCustomId } from './aiMilkdownHttpFlow/aiHttpFlowPlugin'
 import { type AICodeBlockCommandParams, aiCodeBlockCustomId } from './aiCodeBlock/aiCustomCodeBlockPlugin'
-import { imgTypes } from '@/components/MilkdownEditor/utils/utils'
 import type { AIChatQSData } from '@/pages/ai-re-act/hooks/aiRender'
+
+// 用 Markdown 支持的 title 保留附件来源，重新载入草稿后仍可在附件列表管理。
+export const IMAGE_ATTACHMENT_TITLE = 'ai-attachment'
+
+export const isImageAttachmentNode = (node: Node) =>
+  node.type.name === 'image' && node.attrs.title === IMAGE_ATTACHMENT_TITLE
+
+export const insertAIMention = (editor: EditorMilkdownProps, params: AIMentionCommandParams) => {
+  const path = params.mentionId
+  if (
+    params.mentionType === 'file' &&
+    params.mentionSource === 'attachment' &&
+    !params.lock &&
+    imgTypes.some((suffix) => path.toLowerCase().endsWith(suffix))
+  ) {
+    editor.action(callCommand(insertImageCommand.key, { src: path, alt: path, title: IMAGE_ATTACHMENT_TITLE }))
+    return
+  }
+  editor.action(callCommand(aiMentionCommand.key, params))
+}
 
 /**md编辑器中匹配出提及相关数据/纯文本 */
 export const extractDataWithMilkdown = (editor: EditorMilkdownProps) => {
   const mentions: AIMentionCommandParams[] = []
+  const draftMentions: AIMentionCommandParams[] = []
   const httpFlowList: AIHttpFlowCommandParams[] = []
   const codeBlockList: AICodeBlockCommandParams[] = []
   const imageList: string[] = []
@@ -22,9 +47,9 @@ export const extractDataWithMilkdown = (editor: EditorMilkdownProps) => {
       // 遍历文档树
       doc.descendants((node) => {
         if (node?.type?.name === aiMentionCustomId) {
-          mentions.push({
-            ...(node.attrs as AIMentionCommandParams),
-          })
+          const mention = { ...(node.attrs as AIMentionCommandParams) }
+          mentions.push(mention)
+          draftMentions.push(mention)
         }
         if (node?.type?.name === aiHttpFlowCustomId) {
           httpFlowList.push({
@@ -60,12 +85,20 @@ export const extractDataWithMilkdown = (editor: EditorMilkdownProps) => {
           const src = node.attrs.src
           if (src) {
             imageList.push(src)
+            if (isImageAttachmentNode(node)) {
+              draftMentions.push({
+                mentionType: 'file',
+                mentionId: src,
+                mentionName: src.startsWith('blob:') ? node.attrs.alt || src : src,
+                mentionSource: 'attachment',
+              })
+            }
           }
         }
       })
       plainText = doc.textBetween(0, doc?.content?.size, '\n\n')
     })
-  return { mentions, plainText, imageList, httpFlowList, codeBlockList }
+  return { mentions, draftMentions, plainText, imageList, httpFlowList, codeBlockList }
 }
 
 type Mention = {
@@ -136,10 +169,6 @@ export const aiInputWithParamsTemplate = (data: AIInputWithParamsTemplate) => {
 ${JSON.stringify(data.param || {}, null, 2)}
 \`\`\`
   `
-}
-
-export const getAIImageSuffix = () => {
-  return imgTypes.map((ext) => ext.slice(1))
 }
 
 /**
