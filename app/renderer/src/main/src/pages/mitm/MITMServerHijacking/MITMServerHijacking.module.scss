@@ -693,20 +693,46 @@
   }
 }
 
-.proxy_configuration_top {
-  text-align: center;
-  height: 33px;
-  line-height: 33px;
-  cursor: pointer;
-  border-radius: 4px;
-
-  &:hover {
-    background-color: var(--Colors-Use-Neutral-Bg-Hover);
-  }
+.proxy-configuration-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 360px;
+  padding: 4px 2px;
 }
 
-.proxy_configuration_bottom {
+.proxy-configuration-error {
+  margin-top: -6px;
+  color: var(--Colors-Use-Error-Primary);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.proxy-configuration-extra {
   display: flex;
   align-items: center;
-  justify-content: space-around;
+  justify-content: flex-end;
+  min-height: 20px;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.proxy-configuration-row-split {
+  padding-top: 10px;
+  border-top: 1px solid var(--Colors-Use-Neutral-Border);
+}
+
+.proxy-configuration-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 28px;
+}
+
+.proxy-configuration-label {
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  font-size: 12px;
+  line-height: 16px;
+  white-space: nowrap;
 }

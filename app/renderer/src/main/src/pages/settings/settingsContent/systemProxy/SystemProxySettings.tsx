@@ -25,8 +25,9 @@ export const SystemProxySettings: React.FC = () => {
     setLoading(true)
     apiGetSystemProxy()
       .then((req: { CurrentProxy: string; Enable: boolean }) => {
-        setCurrent(req)
-        setProxy(req.CurrentProxy ? req.CurrentProxy : `${defHost}:${defPort}`)
+        const nextProxy = req.CurrentProxy || proxy
+        setCurrent({ Enable: req.Enable, CurrentProxy: nextProxy })
+        setProxy(nextProxy)
       })
       .catch(() => {})
       .finally(() => setTimeout(() => setLoading(false), 300))
@@ -40,11 +41,11 @@ export const SystemProxySettings: React.FC = () => {
     }
   }, [])
 
-  const onSetSystemProxy = useMemoizedFn(() => {
+  const onSetSystemProxy = useMemoizedFn((Enable: boolean) => {
     yakitHost
       .setSystemProxy({
         HttpProxy: proxy,
-        Enable: !current.Enable,
+        Enable,
       })
       .then(() => {
         info(t('ConfigSystemProxy.setSystemProxySuccess'))
@@ -62,7 +63,7 @@ export const SystemProxySettings: React.FC = () => {
           <div className={styles['page-title']}>{t('SettingsPage.item.system-proxy')}</div>
           <div className={styles['page-status']}>
             <span>{current.Enable ? t('YakitButton.enabled') : t('YakitButton.notEnabled')}</span>
-            <YakitSwitch size="large" checked={current.Enable} onChange={onSetSystemProxy} />
+            <YakitSwitch size="large" checked={current.Enable} onChange={() => onSetSystemProxy(!current.Enable)} />
           </div>
         </div>
         <div className={styles['section']} data-settings-section={SettingsSections['system-proxy'].systemProxy}>
@@ -72,6 +73,10 @@ export const SystemProxySettings: React.FC = () => {
             addonBefore={proxy.includes('://') ? undefined : 'http(s)://'}
             value={proxy}
             onChange={(e) => setProxy(e.target.value)}
+            onBlur={() => {
+              if (proxy === current.CurrentProxy) return
+              onSetSystemProxy(current.Enable)
+            }}
             placeholder={`${defHost}:${defPort}`}
           />
         </div>
