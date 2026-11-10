@@ -8,6 +8,10 @@ const mocks = vi.hoisted(() => ({
   getRemoteValue: vi.fn(),
   onBaseUrlStatus: vi.fn(() => vi.fn()),
   setOnlineProfile: vi.fn().mockResolvedValue(undefined),
+  setStoreUserInfo: vi.fn(),
+  globalUserLogin: vi.fn().mockResolvedValue(undefined),
+  startUpload: vi.fn().mockResolvedValue([]),
+  ccbSignInCallback: vi.fn(),
 }))
 
 vi.hoisted(() => {
@@ -33,15 +37,16 @@ vi.mock('@/utils/kv', () => ({
 vi.mock('@/utils/envfile', () => ({
   getRemoteConfigBaseUrlGV: () => 'private-domain-history',
   getRemoteHttpSettingGV: () => 'private-domain-setting',
+  globalUserLogin: mocks.globalUserLogin,
 }))
 vi.mock('@/store', () => ({
-  useStore: () => ({ userInfo: {}, setStoreUserInfo: vi.fn() }),
+  useStore: () => ({ userInfo: {}, setStoreUserInfo: mocks.setStoreUserInfo }),
 }))
 vi.mock('@/utils/login', () => ({ loginOut: vi.fn() }))
 vi.mock('@/utils/notification', () => ({ failed: vi.fn(), success: vi.fn() }))
 vi.mock('@/utils/eventBus/eventBus', () => ({ default: { emit: vi.fn() } }))
 vi.mock('@/components/layout/utils', () => ({
-  useUploadInfoByEnpriTrace: () => [{ startUpload: vi.fn().mockResolvedValue([]) }],
+  useUploadInfoByEnpriTrace: () => [{ startUpload: mocks.startUpload }],
 }))
 vi.mock('@/pages/ai-re-act/hooks/useAIGlobalConfig', () => ({
   default: () => [undefined, { getAIGlobalConfigAfterLogin: vi.fn() }],
@@ -51,6 +56,10 @@ vi.mock('@/services/electronBridge', () => ({
     companySignIn: vi.fn(),
     editBaseUrl: vi.fn().mockResolvedValue(undefined),
     onBaseUrlStatus: mocks.onBaseUrlStatus,
+    onSignCCBInData: vi.fn((callback) => {
+      mocks.ccbSignInCallback.mockImplementation(callback)
+      return vi.fn()
+    }),
     requestPasswordReset: vi.fn(),
   },
   yakitCodec: { run: vi.fn() },
@@ -60,7 +69,10 @@ vi.mock('@/services/electronBridge', () => ({
 vi.mock('@/i18n/useI18nNamespaces', () => ({
   useI18nNamespaces: () => ({ t: (key: string) => key }),
 }))
-vi.mock('@yakit-libs/yakit-ui-icons/outline', () => ({ InformationCircleOutlined: () => null }))
+vi.mock('@yakit-libs/yakit-ui-icons/outline', () => ({
+  InformationCircleOutlined: () => null,
+  SwitchHorizontalOutlined: () => null,
+}))
 vi.mock('../../yakitUI/YakitButton/YakitButton', () => ({
   YakitButton: ({ children, htmlType }: React.PropsWithChildren<{ htmlType?: 'button' | 'submit' }>) => (
     <button type={htmlType || 'button'}>{children}</button>
@@ -98,10 +110,8 @@ vi.mock('../../yakitUI/YakitAutoComplete/YakitAutoComplete', async () => {
         return (
           <input
             readOnly
-            data-testid={
-              props.cacheHistoryDataKey === 'private-domain-history' ? 'private-domain-input' : 'proxy-input'
-            }
-            data-cache-default={String(props.isCacheDefaultValue)}
+            data-testid={props.initValue ? 'private-domain-input' : 'proxy-input'}
+            data-cache-default={String(props.isCacheDefaultValue ?? false)}
             value={props.value ?? fallbackValue}
             onChange={props.onChange}
           />
@@ -117,6 +127,7 @@ const renderEnterpriseLogin = async (setting?: Record<string, unknown>) => {
     render(<ConfigPrivateDomain enterpriseLogin />)
     await Promise.resolve()
   })
+  fireEvent.click(screen.getByRole('button', { name: 'ConfigPrivateDomain.switchLoginMethod' }))
   return screen.getByTestId('private-domain-input')
 }
 
@@ -137,6 +148,8 @@ describe('ConfigPrivateDomain 企业私有域回填', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mocks.onBaseUrlStatus.mockReturnValue(vi.fn())
+    mocks.startUpload.mockResolvedValue([])
+    mocks.globalUserLogin.mockResolvedValue(undefined)
   })
 
   afterEach(cleanup)
@@ -168,5 +181,17 @@ describe('ConfigPrivateDomain 企业私有域回填', () => {
     await waitFor(() => expect(input).toHaveValue('https://enterprise.example.com'))
     expect(input).toHaveAttribute('data-cache-default', 'false')
     expect(input).not.toHaveValue('https://history.example.com')
+  })
+
+  it('CCB 登录成功后保存用户信息和 Token', async () => {
+    await renderEnterpriseLogin()
+    const user = { isLogin: true, platform: 'ccb', token: 'ccb-token', companyName: 'CCB User' }
+
+    await act(async () => {
+      mocks.ccbSignInCallback({ ok: true, user })
+    })
+
+    expect(mocks.setStoreUserInfo).toHaveBeenCalledWith(user)
+    expect(mocks.globalUserLogin).toHaveBeenCalledWith('ccb-token')
   })
 })

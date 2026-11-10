@@ -357,7 +357,7 @@ module.exports = {
       USER_INFO.companyHeadImg = user.companyHeadImg
       sendToAllWindows('fetch-signin-token', user)
       if (USER_INFO.platform === 'ccb') {
-        win.webContents.send('fetch-signin-ccb-data', { ok: true, info: '登录成功' })
+        win.webContents.send('fetch-signin-ccb-data', { ok: true, info: '登录成功', user })
       } else {
         win.webContents.send('fetch-signin-data', { ok: true, info: '登录成功' })
       }
@@ -371,7 +371,7 @@ module.exports = {
       assertTrustedAppSender(event, 'company-refresh-in')
       sendToAllWindows('fetch-signin-token', USER_INFO)
       if (USER_INFO.platform === 'ccb') {
-        win.webContents.send('fetch-signin-ccb-data', { ok: true, info: '登录成功' })
+        win.webContents.send('fetch-signin-ccb-data', { ok: true, info: '登录成功', user: { ...USER_INFO } })
       } else {
         win.webContents.send('fetch-signin-data', { ok: true, info: '登录成功' })
       }
