@@ -159,6 +159,7 @@ module.exports = (win, getClient) => {
   let currentHost
   let currentDownstreamProxy
   let currentDownstreamProxyRuleId
+  let pipelineSessionId
   let sendMessage
   let sendMessageAndWait
   let destroyMessage
@@ -309,6 +310,20 @@ module.exports = (win, getClient) => {
     }
   })
 
+  ipcMain.handle('mitmV2-get-diagnostics', (event, params) => {
+    if (!win || event.sender !== win.webContents) throw new Error('Invalid MITM diagnostics sender')
+    if (!stream || !pipelineSessionId || params?.SessionId !== pipelineSessionId) return { Ended: true }
+    return new Promise((resolve, reject) => {
+      getClient().GetMITMDiagnostics(params, { deadline: Date.now() + 2000 }, (error, data) => {
+        if (params.SessionId !== pipelineSessionId) resolve({ Ended: true })
+        else if (error?.code === 12) resolve({ Unsupported: true })
+        else if (error?.code === 5) resolve(params.View === 'detail' ? { Missing: true } : { Ended: true })
+        else if (error) reject(error)
+        else resolve(data)
+      })
+    })
+  })
+
   // 开始调用 MITM，设置 stream
   let isFirstData = true
   ipcMain.handle('mitmV2-start-call', (e, params) => {
@@ -321,9 +336,11 @@ module.exports = (win, getClient) => {
     }
 
     isFirstData = true
-    stream = getClient().MITMV2()
+    const activeStream = getClient().MITMV2()
+    stream = activeStream
     // 设置服务器发回的消息的回调函数
-    stream.on('data', (data) => {
+    activeStream.on('data', (data) => {
+      if (stream !== activeStream) return
       // 处理第一个消息
       // 第一个消息应该更新状态，第一个消息应该是同步 Filter 的信息。。。
       if (win && isFirstData) {
@@ -345,6 +362,7 @@ module.exports = (win, getClient) => {
       // frame per second by the engine. Forward them directly without adding
       // another polling loop in the renderer.
       if (win && data['PipelineStats']) {
+        pipelineSessionId = data['PipelineStats'].SessionId
         win.webContents.send('client-mitmV2-pipeline-stats', data['PipelineStats'])
       }
 
@@ -380,8 +398,10 @@ module.exports = (win, getClient) => {
         win.webContents.send('client-mitmV2-hijacked', { ...data })
       }
     })
-    stream.on('error', (err) => {
+    activeStream.on('error', (err) => {
+      if (stream !== activeStream) return
       stream = null
+      pipelineSessionId = undefined
       destroyMessage()
       currentDownstreamProxyRuleId = ''
       currentDownstreamProxy = ''
@@ -397,11 +417,10 @@ module.exports = (win, getClient) => {
         }
       }
     })
-    stream.on('end', () => {
-      if (stream) {
-        stream.cancel()
-      }
+    activeStream.on('end', () => {
+      if (stream !== activeStream) return
       stream = null
+      pipelineSessionId = undefined
       destroyMessage()
       currentDownstreamProxyRuleId = ''
       currentDownstreamProxy = ''
@@ -428,10 +447,10 @@ module.exports = (win, getClient) => {
     }
   })
   ipcMain.handle('mitmV2-stop-call', () => {
-    if (stream) {
-      stream.cancel()
-      stream = null
-    }
+    const stoppedStream = stream
+    stream = null
+    pipelineSessionId = undefined
+    if (stoppedStream) destroyMessage?.()
     currentDownstreamProxyRuleId = ''
     currentDownstreamProxy = ''
     if (win) win.webContents.send('client-mitmV2-pipeline-stats', null)

@@ -302,7 +302,7 @@ export const getMITMTableDOMSnapshot = async () => {
     if (!root) throw new Error('MITM flow table is not mounted')
     const byModuleClass = (name) =>
       [...root.querySelectorAll('[class]')].find((element) =>
-        [...element.classList].some((className) => className === name || className.includes(`_${name}__`)),
+        [...element.classList].some((className) => className === name || className.includes(`_${name}_`)),
       )
     const box = (element) => {
       if (!element) return undefined
@@ -355,7 +355,7 @@ export const setMITMTableConsumerPosition = async (position) => {
     if (!root) throw new Error('MITM flow table is not mounted')
     const byModuleClass = (name) =>
       [...root.querySelectorAll('[class]')].find((element) =>
-        [...element.classList].some((className) => className === name || className.includes(`_${name}__`)),
+        [...element.classList].some((className) => className === name || className.includes(`_${name}_`)),
       )
     const container = byModuleClass('virtual-table-list-container')
     const firstColumn = root.querySelector('[class*="virtual-table-row-content"]')
@@ -400,7 +400,7 @@ export const exerciseMITMTableVirtualScroll = async () => {
     if (!root) throw new Error('MITM flow table is not mounted')
     const byModuleClass = (name) =>
       [...root.querySelectorAll('[class]')].find((element) =>
-        [...element.classList].some((className) => className === name || className.includes(`_${name}__`)),
+        [...element.classList].some((className) => className === name || className.includes(`_${name}_`)),
       )
     const container = byModuleClass('virtual-table-list-container')
     if (!container) throw new Error('MITM virtual table DOM is incomplete')

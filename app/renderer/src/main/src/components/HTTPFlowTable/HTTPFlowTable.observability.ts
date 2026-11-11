@@ -141,6 +141,7 @@ interface LiveCycleSample {
 
 interface FlowSample {
   id: number
+  committedAtUnixMs: number
   requestToReactCommitMs?: number
   responseToReactCommitMs?: number
   flowBuildToReactCommitMs?: number
@@ -1137,6 +1138,7 @@ export class MITMFlowObservability {
         this.flowSamples,
         {
           id,
+          committedAtUnixMs,
           requestToReactCommitMs: positiveDuration(committedAtUnixMs, requestAt),
           responseToReactCommitMs: positiveDuration(committedAtUnixMs, responseAt),
           flowBuildToReactCommitMs: positiveDuration(committedAtUnixMs, flowBuiltAt),
@@ -1302,17 +1304,29 @@ export class MITMFlowObservability {
     }
   }
 
-  pipelineStatusSnapshot() {
-    const pipeline = this.pipelineSnapshot()
+  pipelineStatusSnapshot(sinceUnixMs = 0, includeLegacyTiming = true) {
+    const samples = sinceUnixMs
+      ? this.flowSamples.filter((sample) => sample.committedAtUnixMs >= sinceUnixMs)
+      : this.flowSamples
     return {
       version: 1,
-      generatedAtUnixMs: pipeline.generatedAtUnixMs,
-      state: pipeline.state,
+      generatedAtUnixMs: this.nowUnixMs(),
+      state: {
+        latestBackendPersistedId: this.latestBackendPersistedId,
+        latestVisibleId: this.latestVisibleId,
+        approximateIdBacklog: Math.max(0, this.latestBackendPersistedId - this.latestVisibleId),
+        streamVisibleIdBacklog: Math.max(0, this.httpFlowLiveStreamHighWaterId - this.latestVisibleId),
+        pendingQueries: this.pendingQueries.size,
+      },
       flow: {
-        persistQueueWaitP95: metricP95(this.flowSamples.map((sample) => sample.persistQueueWaitMs)),
-        persistWriteP95: metricP95(this.flowSamples.map((sample) => sample.persistWriteMs)),
-        persistToReactCommitP95: metricP95(this.flowSamples.map((sample) => sample.persistToReactCommitMs)),
-        responseToReactCommitP95: metricP95(this.flowSamples.map((sample) => sample.responseToReactCommitMs)),
+        persistQueueWaitP95: includeLegacyTiming
+          ? metricP95(samples.map((sample) => sample.persistQueueWaitMs))
+          : undefined,
+        persistWriteP95: includeLegacyTiming ? metricP95(samples.map((sample) => sample.persistWriteMs)) : undefined,
+        persistToReactCommitP95: metricP95(samples.map((sample) => sample.persistToReactCommitMs)),
+        responseToReactCommitP95: includeLegacyTiming
+          ? metricP95(samples.map((sample) => sample.responseToReactCommitMs))
+          : undefined,
       },
     }
   }
