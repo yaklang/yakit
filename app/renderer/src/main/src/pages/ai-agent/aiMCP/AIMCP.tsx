@@ -22,7 +22,6 @@ import { getMCPServersById, grpcDeleteMCPServer, grpcGetAllMCPServers, grpcUpdat
 import { YakitRoundCornerTag } from '@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
-  CogOutlined,
   DesktopComputerOutlined,
   GlobeAltOutlined,
   PencilOutlined,
@@ -32,6 +31,7 @@ import {
   SearchOutlined,
   TrashOutlined,
   ReplyOutlined,
+  MCPOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
@@ -423,7 +423,7 @@ const AIMCPList: React.FC<AIMCPListProps> = React.memo((props) => {
               onClick={openYakMcpSettings}
               aria-label={t('SettingsPage.item.yak-mcp')}
               iconPosition="end"
-              icon={<CogOutlined color="currentColor" size={16} />}
+              icon={<MCPOutlined color="currentColor" size={16} />}
             />
           </Tooltip>
           <Tooltip title={t('AIMCP.addMcpServer')}>
