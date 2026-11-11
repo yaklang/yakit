@@ -524,6 +524,9 @@ export const HTTPFuzzerHotPatchSidebar: React.FC<HTTPFuzzerHotPatchSidebarProp> 
   const [sharedHotReloadCode, setSharedHotReloadCodeState] = useState<boolean>(false)
   const tempNameRef = useRef<string>('')
   const tokenRef = useRef<string>('')
+  const appliedTemplateNameRef = useRef<string | null>(null)
+  const hotPatchTempLocalRef = useRef(hotPatchTempLocal)
+  hotPatchTempLocalRef.current = hotPatchTempLocal
   const resizeBodyRef = useRef<HTMLDivElement>(null)
   const resizeBodySize = useSize(resizeBodyRef)
 
@@ -567,33 +570,43 @@ export const HTTPFuzzerHotPatchSidebar: React.FC<HTTPFuzzerHotPatchSidebarProp> 
   }, [visible, props.inViewport, props.pageId])
 
   useEffect(() => {
-    tempNameRef.current = selectedTemplateNameProp || ''
-    setSelectedTemplateName(selectedTemplateNameProp || '')
-    if (!visible || !selectedTemplateNameProp) {
+    const nextName = selectedTemplateNameProp || ''
+    tempNameRef.current = nextName
+    setSelectedTemplateName(nextName)
+    // 只在模板名变化时回填原文。侧栏显隐和模板列表刷新不能重跑，否则会盖掉编辑器里的修改。
+    if (appliedTemplateNameRef.current === nextName) return
+    if (!nextName) {
+      appliedTemplateNameRef.current = ''
       return
     }
 
-    const matchedTemplate = hotPatchTempLocal.find((item) => item.name === selectedTemplateNameProp)
+    const matchedTemplate = hotPatchTempLocalRef.current.find((item) => item.name === nextName)
     if (matchedTemplate?.isDefault) {
+      appliedTemplateNameRef.current = nextName
       setCode(matchedTemplate.temp)
       onChangeCode?.(matchedTemplate.temp)
       return
     }
 
+    let cancelled = false
     ipcRenderer
       .invoke('QueryHotPatchTemplate', {
         Type: 'fuzzer',
-        Name: [selectedTemplateNameProp],
+        Name: [nextName],
       })
       .then((res: QueryHotPatchTemplateResponse) => {
+        if (cancelled) return
         const nextCode = res.Data?.[0]?.Content
-        if (nextCode) {
-          setCode(nextCode)
-          onChangeCode?.(nextCode)
-        }
+        if (!nextCode) return
+        appliedTemplateNameRef.current = nextName
+        setCode(nextCode)
+        onChangeCode?.(nextCode)
       })
       .catch(() => {})
-  }, [visible, selectedTemplateNameProp, hotPatchTempLocal, setCode, onChangeCode])
+    return () => {
+      cancelled = true
+    }
+  }, [selectedTemplateNameProp, setCode, onChangeCode])
 
   useEffect(() => {
     if (!visible) {
