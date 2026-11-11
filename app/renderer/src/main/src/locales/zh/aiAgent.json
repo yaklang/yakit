@@ -237,6 +237,7 @@
     "otherMaterials": "其他资料"
   },
   "AIAddMaterialsPopover": {
+    "scenarioCapabilities": "能力",
     "currentScenario": "当前选择",
     "addedSkills": "已添加技能",
     "addedKnowledgeBases": "已添加知识库",
@@ -934,6 +935,7 @@
   "AIMilkdownInput": {
     "placeholder": "向我提问，@使用技能、工具、文件和知识库，/选择模式",
     "selectedHttpFlowSummary": "勾选了 {{count}} 条流量",
+    "selectedRiskSummary": "勾选了 {{count}} 条漏洞风险",
     "imagesNotSaved": "图片尚未保存完成，请稍后重试；若保存失败，请移除失败图片后重新上传"
   },
   "AIMilkdownModeSlash": {
@@ -1057,6 +1059,9 @@
     "networkDebugDesc": "模型 HTTP 请求、响应和耗时仅写入 aispace 文件，不存入流量数据库。会话导出日志附带网络记录；包含凭据和业务数据，排查后关闭。"
   },
   "AIChatWorkspace": {
+    "allItems": "全部",
+    "sessionItems": "当前会话产生",
+    "selectedItems": "已选中",
     "close": "关闭",
     "closeOthers": "关闭其他",
     "closeRight": "关闭右侧标签页",

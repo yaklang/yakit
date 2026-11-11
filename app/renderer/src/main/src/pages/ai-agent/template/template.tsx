@@ -6,6 +6,7 @@ import type {
   AIChatDraftMaterials,
   AIChatTextareaProps,
   AIChatTextareaSubmit,
+  AIResourceIds,
   FileToChatQuestionList,
   FooterLeftTypesComponentProps,
   FooterRightTypesComponentProps,
@@ -50,18 +51,26 @@ import { yakitNotify } from '@/utils/notification'
 import type { AIMilkdownInputRef } from '../components/aiMilkdownInput/type'
 import type { AICodeBlockCommandParams } from '../components/aiMilkdownInput/aiCodeBlock/aiCustomCodeBlockPlugin'
 import AIRunModeSelect from '../aiRunModeSelect/AIRunModeSelect'
-import { aiHttpFlowCustomSchema } from '../components/aiMilkdownInput/aiMilkdownHttpFlow/aiHttpFlowPlugin'
-import type { AIHttpFlowCommandParams } from '../components/aiMilkdownInput/aiMilkdownHttpFlow/aiHttpFlowPlugin'
+import { aiResourceReferenceCustomSchema } from '../components/aiMilkdownInput/aiMilkdownResourceReference/aiResourceReferencePlugin'
+import type { AIResourceReferenceParams } from '../components/aiMilkdownInput/aiMilkdownResourceReference/aiResourceReferencePlugin'
+import { parseResourceReferenceIds } from '../components/aiMilkdownInput/aiMilkdownResourceReference/resourceReferenceIds'
+import { AI_RESOURCE_REFERENCE_SUMMARY_THRESHOLD } from '../components/aiMilkdownInput/constants'
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
 import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
-
-const HTTP_FLOW_SUMMARY_THRESHOLD = 3
 
 const isSameMaterial = (first: AIMentionCommandParams, second: AIMentionCommandParams) =>
   first.mentionType === second.mentionType && first.mentionId === second.mentionId
 
 const getMaterialKey = ({ mentionType, mentionSource, mentionId }: AIMentionCommandParams) =>
   `${mentionType}:${mentionSource ?? ''}:${mentionId}`
+
+const resourceTypes = ['http', 'risk'] as const
+
+const getResourceIds = (references: AIResourceReferenceParams[]): AIResourceIds => {
+  const ids: AIResourceIds = { http: [], risk: [] }
+  for (const reference of references) ids[reference.type].push(...reference.ids)
+  return { http: parseResourceReferenceIds(ids.http), risk: parseResourceReferenceIds(ids.risk) }
+}
 
 /** @name AI-Agent专用Textarea组件,行高为20px */
 export const QSInputTextarea: React.FC<QSInputTextareaProps & RefAttributes<TextAreaRef>> = memo(
@@ -99,6 +108,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
       isOpen,
       filterMentionType,
       chatDataStoreKey,
+      showScenarioCapabilities,
     } = props
     const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
 
@@ -157,21 +167,17 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
     }, [props.footerRightTypes, isOpen])
 
     const [disabled, setDisabled] = useState<boolean>(!defaultValue?.trim())
-    const [selectedHttpFlowIds, setSelectedHttpFlowIds] = useState<string[]>([])
     const [draftMaterials, setDraftMaterials] = useState<AIChatDraftMaterials>({
-      flowCount: 0,
+      resourceIds: { http: [], risk: [] },
       mentions: [],
       selectedMaterials: [],
       hiddenInlineKeys: [],
     })
+
     const { selectedMaterials } = draftMaterials
-    const httpFlowReference: AIHttpFlowCommandParams = {
-      flowIds: [...selectedHttpFlowIds],
-      displayText:
-        selectedHttpFlowIds.length < HTTP_FLOW_SUMMARY_THRESHOLD
-          ? selectedHttpFlowIds.map((id) => `#${id}`).join(', ')
-          : t('AIMilkdownInput.selectedHttpFlowSummary', { count: selectedHttpFlowIds.length }),
-      isSummary: selectedHttpFlowIds.length >= HTTP_FLOW_SUMMARY_THRESHOLD,
+    const selectedResourceIds: AIResourceIds = {
+      http: props.selectedHttpFlowIds ?? [],
+      risk: props.selectedRiskIds ?? [],
     }
 
     const { isHovering, dropRef } = useAIChatDrop({
@@ -184,7 +190,6 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
       return {
         setMention: (v) => onSetMention(v),
         setValue: (v) => onSetValue(v),
-        setHttpFlow: (ids) => onSetHttpFlow(ids),
         getValue: () => getMarkdownValue(),
         editorMilkdown: editorMilkdown.current,
       }
@@ -223,35 +228,50 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
     })
 
     const aiMilkdownInputRef = useRef<AIMilkdownInputRef>(null)
+    const enabledCapabilitiesRef = useRef<AIChatTextareaSubmit['enabledCapabilities']>()
+    const onEnabledCapabilitiesChange = useMemoizedFn(
+      (items: NonNullable<AIChatTextareaSubmit['enabledCapabilities']>) => {
+        enabledCapabilitiesRef.current = items
+      },
+    )
     const handleSubmit = useMemoizedFn(() => {
       if (!editorMilkdown.current) return
-      const { mentions, imageList, httpFlowList, codeBlockList } = extractDataWithMilkdown(editorMilkdown.current)
+      const { mentions, imageList, resourceReferences, codeBlockList } = extractDataWithMilkdown(editorMilkdown.current)
       // 保存完成事件写回图片路径前，不能将 blob 地址交给会话绑定和图片采纳流程。
       if (imageList.some((src) => src.startsWith('blob:'))) {
         yakitNotify('warning', t('AIMilkdownInput.imagesNotSaved'))
         return
       }
       let qs = getMarkdownValue()
-      const additionalMaterials = selectedMaterials.filter(
+      const additionalMentions = selectedMaterials.filter(
         (material) => !mentions.some((mention) => isSameMaterial(mention, material)),
       )
-      if (!qs.trim() && !selectedHttpFlowIds.length && !additionalMaterials.length) return
-      if (selectedHttpFlowIds.length || additionalMaterials.length) {
+      const inlineResourceIds = getResourceIds(resourceReferences)
+      const additionalReferences = resourceTypes.flatMap((type): AIResourceReferenceParams[] => {
+        const inlineIds = new Set(inlineResourceIds[type])
+        const ids = parseResourceReferenceIds(selectedResourceIds[type]).filter((id) => !inlineIds.has(id))
+        if (!ids.length) return []
+        const isSummary = ids.length >= AI_RESOURCE_REFERENCE_SUMMARY_THRESHOLD
+        const displayText = isSummary
+          ? t(type === 'http' ? 'AIMilkdownInput.selectedHttpFlowSummary' : 'AIMilkdownInput.selectedRiskSummary', {
+              count: ids.length,
+            })
+          : ids.map((id) => '#' + id).join(', ')
+        return [{ type, ids, displayText, isSummary }]
+      })
+      if (!qs.trim() && !additionalReferences.length && !additionalMentions.length) return
+      if (additionalReferences.length || additionalMentions.length) {
         // 独立选择的资料只在提交时序列化，供历史消息回显。
         const referenceMarkdown = editorMilkdown.current.action((ctx) => {
           const { schema } = ctx.get(editorViewCtx).state
           const paragraphs: ProseMirrorNode[] = []
-          if (selectedHttpFlowIds.length) {
-            const reference = aiHttpFlowCustomSchema
-              .type(ctx)
-              .create(httpFlowReference, schema.text(httpFlowReference.displayText))
-            paragraphs.push(schema.nodes.paragraph.create(null, reference))
+          for (const reference of additionalReferences) {
+            const node = aiResourceReferenceCustomSchema.type(ctx).create(reference, schema.text(reference.displayText))
+            paragraphs.push(schema.nodes.paragraph.create(null, node))
           }
-          if (additionalMaterials.length) {
+          if (additionalMentions.length) {
             const mentionType = aiMentionCustomSchema.type(ctx)
-            const references = additionalMaterials.map((item) =>
-              mentionType.create(item, schema.text(item.mentionName)),
-            )
+            const references = additionalMentions.map((item) => mentionType.create(item, schema.text(item.mentionName)))
             paragraphs.push(schema.nodes.paragraph.create(null, references))
           }
           const doc = schema.topNodeType.create(null, paragraphs)
@@ -259,12 +279,12 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
         })
         qs = [referenceMarkdown, qs].filter(Boolean).join('\n\n')
       }
-      if (selectedHttpFlowIds.length) httpFlowList.push(httpFlowReference)
       const value: AIChatTextareaSubmit = {
+        ...(showScenarioCapabilities ? { enabledCapabilities: enabledCapabilitiesRef.current ?? [] } : {}),
         qs,
-        mentionList: [...additionalMaterials, ...mentions],
+        mentionList: [...additionalMentions, ...mentions],
         imageList,
-        httpFlowList,
+        resourceReferences: [...resourceReferences, ...additionalReferences],
         codeBlockList,
         showQS: qs,
         focusMode,
@@ -287,7 +307,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
     // 编辑器未就绪时的 mention 先排队，就绪后补插（挂载即注入场景）
     const pendingMentionsRef = useRef<AIMentionCommandParams[]>([])
     const updateDraftMaterials = (editor: EditorMilkdownProps) => {
-      const { mentions, draftMentions: materials, httpFlowList } = extractDataWithMilkdown(editor)
+      const { mentions, draftMentions: materials, resourceReferences } = extractDataWithMilkdown(editor)
       if (sessionId) {
         const { draftMaterials: sessionDraftMaterials } = globalSessionEngine.ensureSession(sessionId).rawData
         const files = [
@@ -308,16 +328,16 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
           globalSessionEngine.updateDraftMaterials(sessionId, 'files', files)
         }
       }
-      const flowCount = httpFlowList.reduce((count, item) => count + item.flowIds.length, 0)
+      const resourceIds = getResourceIds(resourceReferences)
       setDraftMaterials((current) => {
         if (isEqual(current.mentions, materials)) {
-          return current.flowCount === flowCount ? current : { ...current, flowCount }
+          return isEqual(current.resourceIds, resourceIds) ? current : { ...current, resourceIds }
         }
 
         const inlineKeys = materials.map(getMaterialKey)
         const previousKeys = current.mentions.map(getMaterialKey)
         return {
-          flowCount,
+          resourceIds,
           mentions: materials,
           selectedMaterials: current.selectedMaterials.filter(
             (material) => !inlineKeys.includes(getMaterialKey(material)),
@@ -427,9 +447,6 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
         }
       })
     }
-    const onSetHttpFlow = useMemoizedFn((ids: string[]) => {
-      setSelectedHttpFlowIds([...new Set(ids.filter(Boolean))])
-    })
     /**设置编辑器值 */
     const onSetValue = useMemoizedFn((value: string) => {
       setDraftMaterials((current) =>
@@ -437,7 +454,6 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
           ? { ...current, selectedMaterials: [], hiddenInlineKeys: [] }
           : current,
       )
-      if (!value) setSelectedHttpFlowIds([])
       const editor = editorMilkdown.current
       if (!editor) return
       setEditorValue(editor, value)
@@ -547,10 +563,13 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
       >
         {isHovering && <div className={styles['drag-hint']}>{t('AIChatTextarea.dropToAddToChat')}</div>}
         <AIAddMaterialsPopover
+          showScenarioCapabilities={showScenarioCapabilities}
+          onEnabledCapabilitiesChange={onEnabledCapabilitiesChange}
           onAdd={onAddMaterial}
           onRemove={onRemoveMaterial}
           mentions={[...selectedMaterials, ...visibleInlineMaterials]}
-          flowCount={draftMaterials.flowCount + selectedHttpFlowIds.length}
+          resourceIds={draftMaterials.resourceIds}
+          selectedResourceIds={selectedResourceIds}
           focusMode={focusMode}
           onFocusModeChange={setFocusMode}
           filterMode={filterMentionType}
@@ -612,14 +631,18 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                 )}
 
                 <div className={styles['footer-right']}>
-                  {inputFooterRight}
                   {renderFooterRightTypes(footerRightTypes)}
+                  {inputFooterRight}
                   <YakitButton
                     className={styles['round-btn']}
                     aria-label={t('YakitButton.send')}
                     radius="50%"
                     loading={loading}
-                    disabled={disabled && !selectedHttpFlowIds.length && !selectedMaterials.length}
+                    disabled={
+                      disabled &&
+                      !resourceTypes.some((type) => selectedResourceIds[type].length) &&
+                      !selectedMaterials.length
+                    }
                     icon={<ArrowUpOutlined color="currentColor" />}
                     onClick={(e) => {
                       e.stopPropagation()

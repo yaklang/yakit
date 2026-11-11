@@ -14,7 +14,7 @@ import { DeleteSessionsAISourceEnum } from '../historyChat/utils'
 import type { DeleteSessionsAISourceType } from '../historyChat/utils'
 import { isYaklangScriptDeliveryPath } from '@/pages/yakRunner/utils'
 import { getResourceInfoByMention } from './mentionResources'
-import { parseHttpFlowIds } from '../components/aiMilkdownInput/aiMilkdownHttpFlow/httpFlowIds'
+import { parseResourceReferenceIds } from '../components/aiMilkdownInput/aiMilkdownResourceReference/resourceReferenceIds'
 
 export const getPlanTaskLevel = (task: Pick<AITaskInfoProps, 'level'>) => task.level
 
@@ -149,10 +149,22 @@ export const formatAIAgentSetting = (setting: AIAgentSetting): AIAgentSetting =>
 
 /** @name 将前端的结构转化为符合定义的结构 */
 export const getAIReActRequestParams = (value: AIChatSubmitParams) => {
-  const { mentionList = [], imageList = [], httpFlowList = [], codeBlockList = [] } = value
+  const {
+    mentionList = [],
+    imageList = [],
+    resourceReferences = [],
+    httpFlowList = [],
+    riskList = [],
+    codeBlockList = [],
+  } = value
 
   let attachedResourceInfo: AIInputEvent['AttachedResourceInfo'] = []
+  const riskIds = riskList.flatMap((reference) => reference.riskIds)
   for (const item of mentionList) {
+    if (item.mentionType === 'risk') {
+      riskIds.push(item.mentionId)
+      continue
+    }
     const addItem = getResourceInfoByMention(item)
     if (addItem) {
       attachedResourceInfo = [...attachedResourceInfo, addItem] // 不需要去重，按显示顺序给后端
@@ -173,8 +185,12 @@ export const getAIReActRequestParams = (value: AIChatSubmitParams) => {
   const httpFlowIdSet = new Set<string>()
   for (const item of httpFlowList) {
     // 兼容旧 History 资源中的字符串 flowIds 和单条 flowId。
-    const ids = parseHttpFlowIds(item.flowIds || (item as { flowId?: string }).flowId || '')
+    const ids = parseResourceReferenceIds(item.flowIds || item.flowId || '')
     ids.forEach((id) => httpFlowIdSet.add(id))
+  }
+  for (const { type, ids } of resourceReferences) {
+    if (type === 'risk') riskIds.push(...ids)
+    else parseResourceReferenceIds(ids).forEach((id) => httpFlowIdSet.add(id))
   }
   attachedResourceInfo = [
     ...attachedResourceInfo,
@@ -184,6 +200,16 @@ export const getAIReActRequestParams = (value: AIChatSubmitParams) => {
       Value: [...httpFlowIdSet],
     },
   ]
+
+  const validRiskIds = new Set(riskIds.map((id) => String(id).trim()).filter((id) => /^[1-9]\d*$/.test(id)))
+  if (validRiskIds.size) {
+    attachedResourceInfo.push({
+      Type: AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_RISK,
+      Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_RISK_IDS,
+      // 直接拼接校验过的数字文本，避免 int64 ID 转成 JS number 后丢失精度。
+      Value: `[${[...validRiskIds].join(',')}]`,
+    })
+  }
 
   for (const item of codeBlockList) {
     const content = {

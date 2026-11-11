@@ -1,11 +1,11 @@
-.http-flow-custom {
+.resource-reference-custom {
   cursor: pointer;
   user-select: none;
   overflow: hidden;
   max-width: 220px;
   margin-right: 4px;
 
-  &:not(.http-flow-custom-readonly):hover {
+  &:not(.resource-reference-custom-readonly):hover {
     background-color: var(--Colors-Use-Neutral-Border);
     color: var(--Colors-Use-Neutral-Text-3-Secondary);
 
@@ -13,7 +13,7 @@
       color: var(--Colors-Use-Neutral-Text-3-Secondary);
     }
 
-    .http-flow-icon-wrapper {
+    .resource-reference-icon-wrapper {
       color: var(--Colors-Use-Neutral-Text-3-Secondary);
     }
   }
@@ -23,15 +23,15 @@
   }
 }
 
-.http-flow-custom-selected {
+.resource-reference-custom-selected {
   outline: 1px solid var(--Colors-Use-Main-Primary);
 }
 
-.http-flow-custom-readonly {
+.resource-reference-custom-readonly {
   cursor: default;
 }
 
-.http-flow-icon-wrapper {
+.resource-reference-icon-wrapper {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -43,13 +43,13 @@
   }
 }
 
-.http-flow-text {
+.resource-reference-text {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.http-flow-ids {
+.resource-reference-ids {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;

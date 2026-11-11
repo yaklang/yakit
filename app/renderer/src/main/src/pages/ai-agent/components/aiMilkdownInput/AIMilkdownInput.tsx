@@ -37,8 +37,11 @@ import { MAX_ATTACHMENTS_PER_BATCH } from '../../template/type'
 
 import { AICustomCode } from './aiCustomCode/AICustomCode'
 import { showByRightContext } from '@/components/yakitUI/YakitMenu/showByRightContext'
-import { AICustomHttpFlow } from './aiMilkdownHttpFlow/AICustomHttpFlow'
-import { aiHttpFlowCustomPlugin, aiHttpFlowCustomSchema } from './aiMilkdownHttpFlow/aiHttpFlowPlugin'
+import { AICustomResourceReference } from './aiMilkdownResourceReference/AICustomResourceReference'
+import {
+  aiResourceReferenceCustomPlugin,
+  aiResourceReferenceCustomSchema,
+} from './aiMilkdownResourceReference/aiResourceReferencePlugin'
 import { AICustomCodeRef } from './aiCodeBlock/AICodeBlock'
 import {
   aiCodeBlockCommand,
@@ -183,13 +186,9 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
             }),
           ),
         ].flat()
-        const httpFlowPlugin = [
-          ...aiHttpFlowCustomPlugin(),
-          $view(aiHttpFlowCustomSchema.node, () =>
-            nodeViewFactory({
-              component: AICustomHttpFlow,
-            }),
-          ),
+        const resourceReferencePlugins = [
+          ...aiResourceReferenceCustomPlugin(),
+          $view(aiResourceReferenceCustomSchema.node, () => nodeViewFactory({ component: AICustomResourceReference })),
         ].flat()
         const codePlugin = [
           $view(codeBlockSchema.node, () => {
@@ -230,7 +229,7 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
               })
             })
             .use(remarkDirective)
-            /** customShiftEnterPlugin 方法的注册顺序要先于commonmark，不然会失效，导致Shift-Enter尾部换行塌陷 */
+            /* customShiftEnterPlugin 方法的注册顺序要先于commonmark，不然会失效，导致Shift-Enter尾部换行塌陷 */
             .use(customShiftEnterPlugin)
             .use(commonmark)
             .use(gfm)
@@ -247,8 +246,8 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
             .use(mentionPlugin)
             // 模式选择 /
             .use(modeSlashPlugin)
-            // http flow 流量标签
-            .use(httpFlowPlugin)
+            // HTTP 流量与漏洞风险引用
+            .use(resourceReferencePlugins)
             // ```codePlugin```
             .use(codePlugin)
             // code block 代码块

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  buildAISelectedHTTPFlowQuery,
   buildHTTPFlowDeleteAllQuery,
   buildHTTPFlowProjectKey,
   buildHTTPFlowColorTags,
@@ -33,6 +34,31 @@ import {
   shouldRefreshOnDeleteUpdate,
 } from '@/components/HTTPFlowTable/HTTPFlowTable.utils'
 import { HTTP_FLOW_FAVORITE_TAG, type HTTPFlow } from '@/components/HTTPFlowTable/HTTPFlowTable.constants'
+import { updateSelectedResourceIds } from '@/components/useResourceSelection'
+
+describe('AI HTTP flow selection', () => {
+  it('queries selected IDs across runtime scopes while retaining the table filters', () => {
+    expect(
+      buildAISelectedHTTPFlowQuery(
+        { RuntimeId: 'one', RuntimeIDs: ['two'], SourceType: 'mitm', IncludeId: [3, 8], Keyword: 'text' },
+        ['3', '7', '3'],
+      ),
+    ).toEqual({ IncludeId: [3], Keyword: 'text' })
+  })
+
+  it('does not produce an unrestricted query for an empty selection or intersection', () => {
+    expect(buildAISelectedHTTPFlowQuery({ RuntimeId: 'one' }, [])).toBeUndefined()
+    expect(buildAISelectedHTTPFlowQuery({ IncludeId: [3] }, ['7'])).toBeUndefined()
+  })
+
+  it('updates loaded rows while retaining selections from other result sets', () => {
+    const selected = ['1', '2']
+    const added = updateSelectedResourceIds(selected, ['2', '3'], true)
+    expect(added).toEqual(['1', '2', '3'])
+    expect(updateSelectedResourceIds(added, ['2', '3'], false)).toEqual(['1'])
+    expect(updateSelectedResourceIds(selected, ['3'], false)).toBe(selected)
+  })
+})
 
 describe('resolveHTTPFlowTableBatchSelection', () => {
   const makeFlow = (id: number): HTTPFlow => ({ Id: id }) as HTTPFlow

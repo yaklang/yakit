@@ -642,6 +642,20 @@ export function resolveMitmViewAttachNotice(id: unknown): { viewAttachId: number
   return { viewAttachId, clearSearch: viewAttachId > 0 }
 }
 
+/**
+ * 构建「只看已选」的流量查询，移除运行任务和来源限制，保留其他筛选条件
+ * @param query - 当前表格查询条件，有 ID 筛选时与已选 ID 取交集
+ * @param selectedIds - 已选流量的 ID 字符串数组
+ * @returns 带有 IncludeId 的查询条件，没有匹配的 ID 时返回 undefined
+ */
+export const buildAISelectedHTTPFlowQuery = (query: YakQueryHTTPFlowRequest, selectedIds: string[]) => {
+  const { RuntimeId, RuntimeIDs, SourceType, IncludeId, ...filters } = query
+  const ids = parseIncludeIds(selectedIds.join(','))
+  const filterIds = IncludeId?.length ? new Set(IncludeId) : undefined
+  const included = filterIds ? ids.filter((id) => filterIds.has(id)) : ids
+  return included.length ? { ...filters, IncludeId: included } : undefined
+}
+
 export function getFullRange(id: number, count = 10, minId = 1, maxId = null) {
   const range: number[] = []
   const start = Math.max(minId, id - count)

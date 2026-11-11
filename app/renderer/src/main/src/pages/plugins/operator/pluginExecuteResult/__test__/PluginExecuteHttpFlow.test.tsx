@@ -8,9 +8,8 @@ import type * as PluginExecuteResultModule from '../PluginExecuteResult'
 
 const tableSelectApi = vi.hoisted(() => ({ reset: vi.fn(), deselectId: vi.fn() }))
 
-const { PluginExecuteResult, PluginExecuteHttpFlow, PluginExecuteLog } = await compileReactModule<
-  typeof PluginExecuteResultModule
->(import.meta.url, '../PluginExecuteResult.tsx')
+const { PluginExecuteResult, PluginExecuteHttpFlow, PluginExecuteLog, VulnerabilitiesRisksTable } =
+  await compileReactModule<typeof PluginExecuteResultModule>(import.meta.url, '../PluginExecuteResult.tsx')
 
 vi.hoisted(() => {
   Object.defineProperty(window, 'require', {
@@ -30,16 +29,22 @@ vi.mock('@/components/HTTPHistory', () => ({
     params,
     onSetSelectedHttpFlowIds,
     onRegisterTableSelectApi,
+    aiFlowSelection,
+    httpHistoryTableTitleStyle,
   }: HTTPFlowTableProp & { runtimeId?: string }) => (
     <div
       data-testid="http-table"
       data-page-type={pageType}
       data-runtime-id={runtimeId}
       data-source-type={params?.SourceType}
+      style={httpHistoryTableTitleStyle}
     >
       <button onClick={() => onSetSelectedHttpFlowIds?.(['1', '2'])}>勾选流量</button>
       <button onClick={() => onSetSelectedHttpFlowIds?.([])}>取消勾选</button>
       <button onClick={() => onRegisterTableSelectApi?.(tableSelectApi)}>注册选择接口</button>
+      {aiFlowSelection?.selectedOnly && (
+        <button onClick={() => aiFlowSelection.onChange([])}>{aiFlowSelection.ids.join(',')}</button>
+      )}
     </div>
   ),
 }))
@@ -89,7 +94,9 @@ vi.mock('@/utils/notification', () => ({ yakitFailed: vi.fn() }))
 vi.mock('@/pages/fuzzer/components/HTTPFuzzerPageTable/HTTPFuzzerPageTable', () => ({
   sorterFunction: (list: unknown[]) => list,
 }))
-vi.mock('@/pages/risks/YakitRiskTable/YakitRiskTable', () => ({ YakitRiskTable: () => null }))
+vi.mock('@/pages/risks/YakitRiskTable/YakitRiskTable', () => ({
+  YakitRiskTable: ({ renderTitle }: { renderTitle: ReactNode }) => <>{renderTitle}</>,
+}))
 vi.mock('@/pages/risks/YakitRiskTable/constants', () => ({ defQueryRisksRequest: {} }))
 vi.mock('@/pages/risks/YakitRiskTable/utils', () => ({
   apiQueryRisksTotalByRuntimeId: vi.fn(async () => ({ Total: 0 })),
@@ -113,6 +120,21 @@ vi.mock('@/utils/tool', () => ({ JSONParseLog: vi.fn() }))
 vi.mock('@/utils/clipboard', () => ({ setClipboardText: vi.fn() }))
 
 describe('PluginExecuteHttpFlow 查询范围', () => {
+  it('在没有执行流量的会话中继续透传已选流量', () => {
+    const onChange = vi.fn()
+    render(
+      <PluginExecuteHttpFlow
+        pageType="Plugin"
+        runtimeId=""
+        aiFlowSelection={{ ids: ['7', '8'], selectedOnly: true, onChange, renderCount: () => null }}
+      />,
+    )
+
+    expect(screen.getByTestId('http-table')).toHaveStyle({ paddingLeft: '0px' })
+    fireEvent.click(screen.getByRole('button', { name: '7,8' }))
+    expect(onChange).toHaveBeenCalledExactlyOnceWith([])
+  })
+
   it.each(['History', 'Plugin'] as const)('%s 模式透传勾选变化与表格选择接口', (pageType) => {
     const onSetSelectedHttpFlowIds = vi.fn()
     const onRegisterTableSelectApi = vi.fn<NonNullable<HTTPFlowTableProp['onRegisterTableSelectApi']>>()
@@ -165,6 +187,23 @@ describe('PluginExecuteHttpFlow 查询范围', () => {
     expect(table).toHaveAttribute('data-page-type', 'Plugin')
     expect(table).toHaveAttribute('data-runtime-id', 'runtime-1')
     expect(table).toHaveAttribute('data-source-type', sourceType)
+    expect(table).toHaveStyle({ paddingLeft: '8px' })
+  })
+})
+
+describe('漏洞风险表头', () => {
+  it('AI 模式使用选择控件，普通模式保留标题', () => {
+    const { rerender } = render(<VulnerabilitiesRisksTable />)
+    expect(screen.getByText('YakitRoute.vulnerabilityAndrisk')).toBeInTheDocument()
+
+    rerender(
+      <VulnerabilitiesRisksTable
+        aiRiskSelection={{ ids: [], selectedOnly: false, onChange: vi.fn(), renderCount: () => <span>选择控件</span> }}
+      />,
+    )
+
+    expect(screen.getByText('选择控件')).toBeInTheDocument()
+    expect(screen.queryByText('YakitRoute.vulnerabilityAndrisk')).not.toBeInTheDocument()
   })
 })
 

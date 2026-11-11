@@ -237,6 +237,7 @@
     "otherMaterials": "Other materials"
   },
   "AIAddMaterialsPopover": {
+    "scenarioCapabilities": "Capabilities",
     "currentScenario": "Current selection",
     "addedSkills": "Added skills",
     "addedKnowledgeBases": "Added knowledge bases",
@@ -934,6 +935,7 @@
   "AIMilkdownInput": {
     "placeholder": "Ask me anything, @ for skills/tools/files/knowledge, / for mode",
     "selectedHttpFlowSummary": "Selected {{count}} HTTP flows",
+    "selectedRiskSummary": "Selected {{count}} risks",
     "imagesNotSaved": "Images have not finished saving. Please try again shortly. If saving failed, remove the failed images and upload them again."
   },
   "AIMilkdownModeSlash": {
@@ -1057,6 +1059,9 @@
     "networkDebugDesc": "Writes model HTTP requests, responses and timing to aispace files only, never the traffic database. Session exports include captures. Contains credentials and business data; disable after diagnosis."
   },
   "AIChatWorkspace": {
+    "allItems": "All",
+    "sessionItems": "Current session",
+    "selectedItems": "Selected",
     "close": "Close",
     "closeOthers": "Close Others",
     "closeRight": "Close Tabs to the Right",

@@ -103,16 +103,21 @@
   }
 }
 
-.removable {
+.clickable,
+.row:has(> .remove-action) {
   border-radius: 8px;
 
+  &:hover {
+    background: var(--Colors-Use-Neutral-Bg-Hover);
+  }
+}
+
+.removable {
   .name {
     flex-shrink: 1;
   }
 
   &:hover {
-    background: var(--Colors-Use-Neutral-Bg-Hover);
-
     .check {
       display: none;
     }
@@ -129,12 +134,7 @@
 }
 
 .clickable {
-  border-radius: 8px;
   cursor: pointer;
-
-  &:hover {
-    background: var(--Colors-Use-Neutral-Bg-Hover);
-  }
 }
 
 .remove-action:global(.ant-btn) {

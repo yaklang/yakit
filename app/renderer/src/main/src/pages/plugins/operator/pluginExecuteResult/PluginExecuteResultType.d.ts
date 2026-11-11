@@ -1,3 +1,4 @@
+import type { AIRiskSelection } from '@/pages/risks/YakitRiskTable/YakitRiskTableType'
 import type { HTTPHistorySourcePageType } from '@/components/HTTPHistory'
 import type { HTTPFlowTableProp } from '@/components/HTTPFlowTable/HTTPFlowTable.constants'
 import {
@@ -20,6 +21,7 @@ export interface PluginExecuteResultProps {
 }
 
 export interface VulnerabilitiesRisksTableProps {
+  aiRiskSelection?: AIRiskSelection
   runtimeId?: string
   runTimeIDs?: string[]
   filterTagDom?: ReactNode
@@ -46,7 +48,7 @@ export interface PluginExecuteResultTabContentProps {
 
 export interface PluginExecuteWebsiteTreeProps extends Pick<
   HTTPFlowTableProp,
-  'onSetSelectedHttpFlowIds' | 'onRegisterTableSelectApi'
+  'onSetSelectedHttpFlowIds' | 'onRegisterTableSelectApi' | 'aiFlowSelection'
 > {
   runtimeId: string
   website?: boolean

@@ -47,7 +47,6 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
       handleStart: () => {},
       setMention: () => {},
       setValue: () => {},
-      setHttpFlow: () => {},
       getValue: () => {},
     })
 
@@ -56,7 +55,6 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
         handleStart: (value) => aiReActChatRef.current?.handleStart(value),
         setMention: (value) => aiReActChatRef.current?.setMention(value),
         setValue: (value) => aiReActChatRef.current?.setValue(value),
-        setHttpFlow: (ids) => aiReActChatRef.current?.setHttpFlow(ids),
         getValue: () => aiReActChatRef.current?.getValue(),
       }
     }, [])
@@ -105,6 +103,8 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
                 rightPanelLayoutRef={props.rightPanelLayoutRef}
                 ref={aiReActChatRef}
                 externalParameters={{
+                  selectedHttpFlowIds: props.selectedHttpFlowIds,
+                  selectedRiskIds: props.selectedRiskIds,
                   onHttpFlowRemove: props.onHttpFlowRemove,
                   onAfterSubmit: props.onAfterSubmit,
                 }}

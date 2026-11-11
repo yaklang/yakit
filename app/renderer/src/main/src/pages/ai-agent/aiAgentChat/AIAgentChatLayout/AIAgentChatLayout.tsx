@@ -26,6 +26,7 @@ import { useMultiFuncPaneStore } from '../useMultiFuncPaneStore'
 import type { AIAgentChatMode, AIChatSubmitParams } from '../type'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { AIRightPanel } from '@/pages/ai-re-act/aiRightPanel/AIRightPanel'
+import { useRiskSelection } from './useRiskSelection'
 import styles from './AIAgentChatLayout.module.scss'
 
 const AIChatWelcome = React.lazy(() => import('../../aiChatWelcome/AIChatWelcome'))
@@ -87,18 +88,17 @@ export const AIAgentChatLayout: React.FC<AIAgentChatLayoutProps> = memo((props) 
   const [panelFrame, setPanelFrame] = useState<React.CSSProperties>()
   const panelVisible = welcome || showFreeChat
   const { activeChat } = useAIAgentStore()
-  const {
-    selectionScope,
-    onRegisterTableSelectApi,
-    onSetSelectedHttpFlowIds,
-    clearHttpFlowSelection,
-    onHttpFlowRemove,
-  } = useHttpFlowSelection(inViewPort, activeChat?.SessionID, {
-    syncSelectedHttpFlowIds: (ids) => {
-      const input = welcome ? aiChatWelcomeRef : aiReActChatRef
-      input.current?.setHttpFlow(ids)
-    },
-  })
+  const { selectionScope, selectedHttpFlowIds, onSetSelectedHttpFlowIds, clearHttpFlowSelection, onHttpFlowRemove } =
+    useHttpFlowSelection(inViewPort, activeChat?.SessionID)
+  const { selectedRiskIds, onRiskSelectionChange, clearRiskSelection } = useRiskSelection(
+    inViewPort,
+    activeChat?.SessionID,
+  )
+
+  const clearDraftSelection = () => {
+    clearHttpFlowSelection()
+    clearRiskSelection()
+  }
 
   useEffect(() => {
     if (welcome) setShowFreeChat(true)
@@ -190,8 +190,12 @@ export const AIAgentChatLayout: React.FC<AIAgentChatLayoutProps> = memo((props) 
                 setFilePreviewData={setFilePreviewData}
                 onTabsChange={onTabsChange}
                 selectionScope={selectionScope}
+                selectedHttpFlowIds={selectedHttpFlowIds}
                 onSetSelectedHttpFlowIds={onSetSelectedHttpFlowIds}
-                onRegisterTableSelectApi={onRegisterTableSelectApi}
+                riskSelection={{
+                  ids: selectedRiskIds,
+                  onChange: onRiskSelectionChange,
+                }}
               />
             </div>
           }
@@ -202,10 +206,12 @@ export const AIAgentChatLayout: React.FC<AIAgentChatLayoutProps> = memo((props) 
                   <AIChatWelcome
                     key={activeChat?.SessionID}
                     onTriageSubmit={(data) => {
-                      clearHttpFlowSelection()
+                      clearDraftSelection()
                       onTriageSubmit(data)
                     }}
                     onHttpFlowRemove={onHttpFlowRemove}
+                    selectedHttpFlowIds={selectedHttpFlowIds}
+                    selectedRiskIds={selectedRiskIds}
                     onSetReAct={onSetReAct}
                     ref={aiChatWelcomeRef}
                   />
@@ -218,7 +224,9 @@ export const AIAgentChatLayout: React.FC<AIAgentChatLayoutProps> = memo((props) 
                   setShowFreeChat={setShowFreeChat}
                   rightPanelLayoutRef={setChatLayoutElement}
                   onHttpFlowRemove={onHttpFlowRemove}
-                  onAfterSubmit={clearHttpFlowSelection}
+                  selectedHttpFlowIds={selectedHttpFlowIds}
+                  selectedRiskIds={selectedRiskIds}
+                  onAfterSubmit={clearDraftSelection}
                 />
               )}
               <div

@@ -8,6 +8,7 @@ import {
   ArrowCircleRightOutlined,
   ChromeOutlined,
   ChevronDownOutlined,
+  DotsVerticalOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 import { CheckCircleSolid, StarSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import type { YakQueryHTTPFlowRequest } from '@/utils/yakQueryHTTPFlow'
@@ -18,6 +19,8 @@ import {
   shouldUseParamsIconText3,
 } from '@/components/TableVirtualResize/utils'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
+import { AIResourceSelectionButton } from '@/components/AIResourceSelectionButton/AIResourceSelectionButton'
+import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
 import { formatTimestamp } from '@/utils/timeUtil'
 import { formatHTTPFlowPathSuffix } from './HTTPFlowPathSuffix'
 import { contentType, HTTP_FLOW_FAVORITE_TAG } from './HTTPFlowTable.constants'
@@ -49,6 +52,8 @@ export const getHTTPFlowDefaultColumnsOrder = () => {
 }
 
 export interface HTTPFlowTableColumnActionHandlers {
+  onToggleAiFlowSelection?: (id: HTTPFlow['Id']) => void
+  isAiFlowSelected?: (id: HTTPFlow['Id']) => boolean
   onToggleFavorite: (e: React.MouseEvent, rowData: HTTPFlow, favorite: boolean) => void
   onOpenInBrowser: (e: React.MouseEvent, rowData: HTTPFlow) => void
   onExpand: (e: React.MouseEvent, rowData: HTTPFlow) => void
@@ -533,13 +538,70 @@ export const buildHTTPFlowTableColumnArr = (ctx: BuildHTTPFlowTableColumnsContex
     {
       title: t('YakitTable.action'),
       dataKey: 'action',
-      width: 104,
+      width: actionHandlers.onToggleAiFlowSelection ? 118 : 104,
       fixed: 'right',
       render: (_, rowData) => {
         if (!rowData.Hash) return <></>
         const colorType = getSingleColorType(rowData.cellClassName)
         const singleColorRow = isCellRedSingleColor(rowData.cellClassName)
         const favorite = isHTTPFlowFavorite(rowData)
+        if (actionHandlers.onToggleAiFlowSelection) {
+          const selected = actionHandlers.isAiFlowSelected?.(rowData.Id)
+          return (
+            <div className={style['ai-flow-actions']} onClick={(event) => event.stopPropagation()}>
+              <AIResourceSelectionButton
+                t={t}
+                selected={selected}
+                className={style['ai-flow-toggle']}
+                onClick={() => actionHandlers.onToggleAiFlowSelection?.(rowData.Id)}
+              />
+              <div className={style['ai-flow-divider']} />
+              <YakitDropdownMenu
+                dropdown={{ trigger: ['click'], placement: 'bottomRight' }}
+                menu={{
+                  data: [
+                    {
+                      key: 'favorite',
+                      label: t(
+                        favorite
+                          ? 'HTTPFlowTable.RowContextMenu.cancelFavorite'
+                          : 'HTTPFlowTable.RowContextMenu.favorite',
+                      ),
+                      itemIcon: favorite ? <StarSolid /> : <StarOutlined />,
+                    },
+                    {
+                      key: 'browser',
+                      label: t('HTTPFlowTable.RowContextMenu.viewInBrowser'),
+                      itemIcon: <ChromeOutlined />,
+                    },
+                    { key: 'expand', label: t('YakitButton.expand'), itemIcon: <ArrowCircleRightOutlined /> },
+                  ],
+                  onClick: ({ key, domEvent }) => {
+                    domEvent.stopPropagation()
+                    const event = domEvent as React.MouseEvent
+                    if (key === 'favorite') actionHandlers.onToggleFavorite(event, rowData, !favorite)
+                    if (key === 'browser') actionHandlers.onOpenInBrowser(event, rowData)
+                    if (key === 'expand') actionHandlers.onExpand(event, rowData)
+                  },
+                }}
+              >
+                <DotsVerticalOutlined
+                  size={16}
+                  color="currentColor"
+                  className={style['ai-flow-more']}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={t('YakitButton.more')}
+                  onKeyDown={(event) => {
+                    if (event.key !== 'Enter' && event.key !== ' ') return
+                    event.preventDefault()
+                    event.currentTarget.click()
+                  }}
+                />
+              </YakitDropdownMenu>
+            </div>
+          )
+        }
         return (
           <div
             className={classNames(style['action-btn-group'], {

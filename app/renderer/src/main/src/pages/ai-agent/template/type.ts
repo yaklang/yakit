@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import type { TextAreaProps } from 'antd/lib/input'
 import type { AIMentionCommandParams } from '../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
-import type { AIHttpFlowCommandParams } from '../components/aiMilkdownInput/aiMilkdownHttpFlow/aiHttpFlowPlugin'
+import type { AIResourceReferenceParams } from '../components/aiMilkdownInput/aiMilkdownResourceReference/aiResourceReferencePlugin'
 import type { AICodeBlockCommandParams } from '../components/aiMilkdownInput/aiCodeBlock/aiCustomCodeBlockPlugin'
 import type { EditorMilkdownProps } from '@/components/MilkdownEditor/MilkdownEditorType'
 import type { AIChatMentionProps } from '../components/aiChatMention/type'
@@ -12,9 +12,11 @@ import type { AIModelSelectProps } from '../aiModelList/aiModelSelect/AIModelSel
 
 export interface QSInputTextareaProps extends Omit<TextAreaProps, 'bordered' | 'autoSize'> {}
 
+export type AIResourceIds = Record<AIResourceReferenceParams['type'], string[]>
+
 export interface AIChatDraftMaterials {
-  /** 正文引用的 HTTP 流量条数 */
-  flowCount: number
+  /** 正文引用的资源 ID，按资源类型分组 */
+  resourceIds: AIResourceIds
   /** 从编辑器提取的正文提及和图片附件 */
   mentions: AIMentionCommandParams[]
   /** 通过资料面板添加、未插入正文的资料 */
@@ -31,8 +33,11 @@ export interface AIChatTextareaSubmit {
   mentionList?: AIMentionCommandParams[]
   /**图片 */
   imageList?: string[]
-  /** History、AI 欢迎页和会话页勾选的流量及正文中的流量引用 */
-  httpFlowList?: AIHttpFlowCommandParams[]
+  /** 表格勾选和正文中的资源引用 */
+  resourceReferences?: AIResourceReferenceParams[]
+  /** 兼容旧版提交数据 */
+  httpFlowList?: { flowIds?: string | string[]; flowId?: string; displayText?: string; isSummary?: boolean }[]
+  riskList?: { riskIds: string[]; displayText?: string; isSummary?: boolean }[]
   /** 编辑器选中的代码块 */
   codeBlockList?: AICodeBlockCommandParams[]
   focusMode?: string
@@ -44,7 +49,6 @@ export interface AIChatTextareaSubmit {
 export interface AIChatTextareaRefProps {
   setMention: (v: AIMentionCommandParams) => void
   setValue: (v: string) => void
-  setHttpFlow: (ids: string[]) => void
   getValue: () => void
   editorMilkdown?: EditorMilkdownProps
 }
@@ -90,6 +94,10 @@ export interface AIChatTextareaProps {
   footerRightTypes?: (AIInputFooterRight | FooterRightTypesComponentProps)[]
   /** 图片路径前缀 */
   chatDataStoreKey: string
+  /** 欢迎页在首次连接前展示的场景能力 */
+  showScenarioCapabilities?: boolean
+  selectedHttpFlowIds?: string[]
+  selectedRiskIds?: string[]
   onHttpFlowRemove?: (id: string, isSummary: boolean) => void
 }
 

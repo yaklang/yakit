@@ -1,4 +1,4 @@
-import React, { createRef, useEffect, useImperativeHandle, useLayoutEffect, useRef } from 'react'
+import React, { createRef, useEffect, useImperativeHandle, useRef } from 'react'
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { Editor, defaultValueCtx, editorViewCtx, parserCtx, rootCtx } from '@milkdown/kit/core'
@@ -9,9 +9,10 @@ import { $remark, callCommand, getMarkdown } from '@milkdown/kit/utils'
 import directive from 'remark-directive'
 import type { AIMilkdownInputProps, AIMilkdownInputRef } from '../../components/aiMilkdownInput/type'
 import {
-  aiHttpFlowCommand,
-  aiHttpFlowCustomPlugin,
-} from '../../components/aiMilkdownInput/aiMilkdownHttpFlow/aiHttpFlowPlugin'
+  aiResourceReferenceCommand,
+  aiResourceReferenceCustomId,
+  aiResourceReferenceCustomPlugin,
+} from '../../components/aiMilkdownInput/aiMilkdownResourceReference/aiResourceReferencePlugin'
 import { extractDataWithMilkdown, parseMentions } from '../../components/aiMilkdownInput/utils'
 import {
   aiMentionCommand,
@@ -19,6 +20,7 @@ import {
   aiMentionCustomPlugin,
 } from '../../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
 import type { AIChatTextareaRefProps, AIChatTextareaSubmit } from '../type'
+import { AIInputFooterRightEnum } from '../type'
 import type * as TemplateModule from '../template'
 import type * as ForgeItemModule from '../aiAddMaterialsPopover/materialCategoryPicker/forgeItem/ForgeItem'
 import { compileReactModule } from '@/utils/__test__/helpers/compileReactModule'
@@ -27,7 +29,13 @@ import { yakitNotify } from '@/utils/notification'
 import { handleOpenFileSystemDialog } from '@/utils/fileSystemDialog'
 import emiter from '@/utils/eventBus/eventBus'
 import { AIAgentTabListEnum, AITabsEnum, SwitchAIAgentTabEventEnum } from '../../defaultConstant'
-import { grpcQueryAIFocus, grpcQueryAIForge } from '../../grpc'
+import {
+  grpcGetAIReActRecommendedSkills,
+  grpcQueryAIFocus,
+  grpcQueryAIForge,
+  grpcResetAIReActRecommendedSkill,
+  grpcUpdateAIReActRecommendedSkill,
+} from '../../grpc'
 import { grpcGetAIToolList } from '../../aiToolList/utils'
 import { useKnowledgeBase } from '@/pages/KnowledgeBase/hooks/useKnowledgeBase'
 import type { KnowledgeBaseItem } from '@/pages/KnowledgeBase/hooks/useKnowledgeBase'
@@ -105,7 +113,9 @@ vi.mock('@/i18n/useI18nNamespaces', () => ({
   useI18nNamespaces: () => ({
     i18n,
     t: (key: string, params?: { count: number; max?: number }) => {
+      if (key === 'AIAddMaterialsPopover.scenarioCapabilities') return '能力'
       if (key === 'AIMilkdownInput.selectedHttpFlowSummary') return `勾选了 ${params?.count} 条流量`
+      if (key === 'AIMilkdownInput.selectedRiskSummary') return `勾选了 ${params?.count} 条漏洞风险`
       if (key === 'AIAddMaterialsPopover.attachmentLimitExceeded')
         return `选中 ${params?.count} 个，最多 ${params?.max} 个`
       return key
@@ -153,8 +163,47 @@ vi.mock('../../aiRunModeSelect/useAIRunMode', () => ({
   }),
 }))
 vi.mock('@/utils/fileSystemDialog', () => ({ handleOpenFileSystemDialog: vi.fn() }))
+vi.mock('@yakit-libs/yakit-ui-icons/outline', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@yakit-libs/yakit-ui-icons/outline')>()),
+  FlowOutlined: () => <svg data-testid="flow-icon" />,
+  ShieldExclamationOutlined: () => <svg data-testid="shield-icon" />,
+  Wrench1Outlined: () => <svg data-testid="wrench-icon" />,
+}))
+vi.mock('@yakit-libs/yakit-ui-icons/oldicon/ColorsPreViewMDIcon', () => ({
+  ColorsPreViewMDIcon: () => <svg data-testid="markdown-icon" />,
+}))
 vi.mock('@/components/MilkdownEditor/CustomFile/utils', () => ({ getLocalFileLinkInfo: vi.fn() }))
-vi.mock('../../grpc', () => ({ grpcQueryAIFocus: vi.fn(), grpcQueryAIForge: vi.fn() }))
+vi.mock('../../grpc', () => ({
+  grpcGetAIReActRecommendedSkills: vi.fn().mockResolvedValue({ Data: [] }),
+  grpcQueryAIFocus: vi.fn(),
+  grpcQueryAIForge: vi.fn(),
+  grpcResetAIReActRecommendedSkill: vi.fn(),
+  grpcUpdateAIReActRecommendedSkill: vi.fn(),
+}))
+vi.mock('@/components/yakitUI/YakitEditor/YakitEditor', () => ({
+  YakitEditor: ({ value, setValue }: { value: string; setValue: (value: string) => void }) => (
+    <textarea aria-label="能力正文" value={value} onChange={(event) => setValue(event.target.value)} />
+  ),
+}))
+vi.mock('@/components/yakitUI/YakitModal/YakitModal', () => ({
+  YakitModal: ({
+    open,
+    title,
+    children,
+    onOk,
+    footerExtra,
+  }: React.PropsWithChildren<{ open: boolean; title: string; onOk: () => void; footerExtra: React.ReactNode }>) =>
+    open && (
+      <section role="dialog" aria-label={title}>
+        {children}
+        {footerExtra}
+        <button onClick={onOk}>保存</button>
+      </section>
+    ),
+}))
+vi.mock('@/utils/getMainOperatorPageBodyContainer', () => ({
+  getMainOperatorPageBodyContainerOrBody: () => document.body,
+}))
 vi.mock('@/pages/ai-re-act/aiRightPanel/AISkillLoadingPane/aiSkillList/AISkillDetails/AISkillDetails', () => ({
   default: ({ name, source }: { name: string; source: string }) => (
     <div data-testid="skill-preview" data-source={source}>
@@ -186,7 +235,7 @@ vi.mock('../../components/aiMilkdownInput/AIMilkdownInput', () => ({
         .use(commonmark)
         .use(listener)
         .use($remark('test-http-flow-directive', () => directive))
-        .use(aiHttpFlowCustomPlugin())
+        .use(aiResourceReferenceCustomPlugin())
         .use(aiMentionCustomPlugin())
       editors.push(editor)
       void editor.create().then(() => {
@@ -245,27 +294,13 @@ afterEach(async () => {
   }
 })
 
-async function setup(defaultValue = '') {
-  const ref = createRef<AIChatTextareaRefProps>()
+async function setup(defaultValue = '', showScenarioCapabilities = false) {
+  const ref = createRef<AIChatTextareaRefProps & { setHttpFlow: (ids: string[]) => void }>()
   const onSubmit = vi.fn<(value: AIChatTextareaSubmit) => void>()
   const onHttpFlowRemove = vi.fn()
   function SelectionHarness() {
     const inputRef = useRef<AIChatTextareaRefProps>(null)
-    const selectedIds = useRef<string[]>([])
-    const selection = useHttpFlowSelection(true, 'test', {
-      syncSelectedHttpFlowIds: (ids) => {
-        selectedIds.current = ids
-        inputRef.current?.setHttpFlow(ids)
-      },
-    })
-    useLayoutEffect(() => {
-      selection.onRegisterTableSelectApi({
-        reset: () => {
-          selectedIds.current = []
-        },
-        deselectId: (id) => selection.onSetSelectedHttpFlowIds(selectedIds.current.filter((value) => value !== id)),
-      })
-    }, [selection])
+    const selection = useHttpFlowSelection(true, 'test')
     useImperativeHandle(ref, () => ({
       setHttpFlow: selection.onSetSelectedHttpFlowIds,
       setValue: (value) => inputRef.current?.setValue(value),
@@ -276,6 +311,8 @@ async function setup(defaultValue = '') {
       <AIChatTextarea
         ref={inputRef}
         defaultValue={defaultValue}
+        showScenarioCapabilities={showScenarioCapabilities}
+        selectedHttpFlowIds={selection.selectedHttpFlowIds}
         onSubmit={onSubmit}
         onHttpFlowRemove={(id, isSummary) => {
           onHttpFlowRemove(id, isSummary)
@@ -296,7 +333,131 @@ async function setup(defaultValue = '') {
   return { ...view, ref, onSubmit, onHttpFlowRemove, send }
 }
 
+const codeReview = {
+  Name: 'code-review',
+  Type: 'skill',
+  DisplayNameZhCN: '代码审计',
+  Description: '',
+  Content: '现有正文',
+  IsModified: true,
+}
+
 describe('输入框资料栏', () => {
+  it('右侧依次显示模型选择、停止和发送按钮', () => {
+    render(
+      <AIChatTextarea
+        chatDataStoreKey="test"
+        footerRightTypes={[
+          { type: AIInputFooterRightEnum.AIModelSelect, component: <button type="button">模型选择</button> },
+        ]}
+        inputFooterRight={<button type="button">停止</button>}
+      />,
+    )
+
+    const model = screen.getByRole('button', { name: '模型选择' })
+    const stop = screen.getByRole('button', { name: '停止' })
+    const send = screen.getByRole('button', { name: 'YakitButton.send' })
+    expect(model.compareDocumentPosition(stop) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(stop.compareDocumentPosition(send) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('普通会话不查询场景能力', async () => {
+    await setup()
+    expect(grpcGetAIReActRecommendedSkills).not.toHaveBeenCalled()
+    expect(screen.queryByRole('button', { name: /^能力 \d+$/ })).toBeNull()
+  })
+
+  it('场景能力面板未打开时，默认选中的能力也随首问提交', async () => {
+    vi.mocked(grpcGetAIReActRecommendedSkills).mockResolvedValueOnce({ Data: [codeReview] })
+    const { send, onSubmit } = await setup('正文', true)
+    const badge = await screen.findByRole('button', { name: '能力 1' })
+    expect(badge).toHaveAttribute('aria-expanded', 'false')
+
+    fireEvent.click(send)
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ enabledCapabilities: [{ Name: codeReview.Name, Type: codeReview.Type }] }),
+    )
+  })
+
+  it('场景能力按接口返回的名称显示对应图标', async () => {
+    vi.mocked(grpcGetAIReActRecommendedSkills).mockResolvedValueOnce({
+      Data: [
+        codeReview,
+        { ...codeReview, Name: 'security-engineering', DisplayNameZhCN: '安全领域' },
+        { ...codeReview, Name: 'pentest-task-design', DisplayNameZhCN: '渗透测试' },
+        { ...codeReview, Name: 'risk-review', DisplayNameZhCN: '风险审查' },
+      ],
+    })
+    await setup('', true)
+    fireEvent.click(await screen.findByRole('button', { name: '能力 1' }))
+    const dialog = await screen.findByRole('dialog', { name: '能力' })
+    const rows = within(dialog).getAllByRole('listitem')
+    expect(within(rows[0]).getByTestId('markdown-icon')).toBeInTheDocument()
+    expect(within(rows[1]).getByTestId('shield-icon')).toBeInTheDocument()
+    expect(within(rows[2]).getByTestId('flow-icon')).toBeInTheDocument()
+    expect(within(rows[3]).getByTestId('wrench-icon')).toBeInTheDocument()
+  })
+
+  it('场景能力显示在技能前，默认勾选首项并随首问提交当前选择', async () => {
+    const pentest = { ...codeReview, Name: 'pentest-task-design', DisplayNameZhCN: '渗透测试' }
+    vi.mocked(grpcGetAIReActRecommendedSkills).mockResolvedValueOnce({ Data: [codeReview, pentest] })
+    const { ref, send, onSubmit } = await setup('', true)
+    const capability = await screen.findByRole('button', { name: '能力 1' })
+    expect(send).toBeDisabled()
+    act(() => ref.current?.setMention({ mentionType: 'forge', mentionId: '1', mentionName: '普通技能' }))
+    const skill = await screen.findByRole('button', { name: 'AIMentionTabs.skill 1' })
+    expect(capability.compareDocumentPosition(skill) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+
+    fireEvent.click(capability)
+    const dialog = await screen.findByRole('dialog', { name: '能力' })
+    expect(within(dialog).queryByText('AIAddMaterialsPopover.goToAdd')).toBeNull()
+    const first = within(dialog).getByRole('button', { name: 'YakitButton.cancel 代码审计', pressed: true })
+    const second = within(dialog).getByRole('button', { name: 'YakitButton.add 渗透测试', pressed: false })
+    const edit = within(dialog).getByRole('button', { name: 'YakitButton.edit 代码审计' })
+    expect(first.compareDocumentPosition(edit) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    fireEvent.click(first)
+    fireEvent.click(second)
+    act(() => ref.current?.setValue('正文'))
+    await waitFor(() => expect(send).toBeEnabled())
+    fireEvent.click(send)
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ enabledCapabilities: [{ Name: 'pentest-task-design', Type: 'skill' }] }),
+    )
+  })
+
+  it('场景能力可恢复默认和保存，刷新列表时保留当前勾选', async () => {
+    const resetSkill = { ...codeReview, Content: '默认正文' }
+    const savedSkill = { ...codeReview, Content: '修改正文' }
+    vi.mocked(grpcGetAIReActRecommendedSkills)
+      .mockResolvedValueOnce({ Data: [codeReview] })
+      .mockResolvedValueOnce({ Data: [resetSkill] })
+      .mockResolvedValueOnce({ Data: [savedSkill] })
+    vi.mocked(grpcResetAIReActRecommendedSkill).mockResolvedValueOnce(resetSkill)
+    vi.mocked(grpcUpdateAIReActRecommendedSkill).mockResolvedValueOnce(savedSkill)
+    const { send, onSubmit } = await setup('正文', true)
+    fireEvent.click(await screen.findByRole('button', { name: '能力 1' }))
+    const list = await screen.findByRole('dialog', { name: '能力' })
+    fireEvent.click(within(list).getByRole('button', { name: 'YakitButton.cancel 代码审计' }))
+    fireEvent.click(within(list).getByRole('button', { name: 'YakitButton.edit 代码审计' }))
+    const dialog = screen.getByRole('dialog', { name: '代码审计' })
+    expect(screen.getByRole('button', { name: '能力 0' })).toHaveAttribute('aria-expanded', 'false')
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: '能力' })).toBeNull())
+    const editor = within(dialog).getByRole('textbox', { name: '能力正文' })
+    expect(editor).toHaveValue('现有正文')
+
+    fireEvent.click(within(dialog).getByRole('button', { name: '恢复默认' }))
+    await waitFor(() => expect(editor).toHaveValue('默认正文'))
+    expect(grpcResetAIReActRecommendedSkill).toHaveBeenCalledWith({ Name: 'code-review' })
+    fireEvent.change(editor, { target: { value: '修改正文' } })
+    fireEvent.click(within(dialog).getByRole('button', { name: '保存' }))
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: '代码审计' })).toBeNull())
+    expect(grpcUpdateAIReActRecommendedSkill).toHaveBeenCalledWith({ Name: 'code-review', Content: '修改正文' })
+    expect(grpcGetAIReActRecommendedSkills).toHaveBeenCalledTimes(3)
+    expect(screen.getByRole('button', { name: '能力 0' })).toBeInTheDocument()
+    fireEvent.click(send)
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ enabledCapabilities: [] }))
+  })
+
   it.each([
     ['AIAddMaterialsPopover.flow', 'switchAIActTab', { key: AITabsEnum.HTTP }],
     ['AIAddMaterialsPopover.risk', 'switchAIActTab', { key: AITabsEnum.Risk }],
@@ -1090,6 +1251,7 @@ describe('输入框资料栏', () => {
     fireEvent.click(within(summary).getByText('AIMentionTabs.browser'))
     const panel = await screen.findByRole('dialog', { name: 'AIChatTextarea.addMaterials' })
     expect(within(panel).getByText('AIAddMaterialsPopover.addedBrowsers (1)')).toBeInTheDocument()
+    expect(within(panel).queryByRole('textbox', { name: 'YakitInput.search' })).toBeNull()
     expect(screen.getByRole('button', { name: 'AIChatTextarea.addMaterials' })).not.toHaveAttribute('data-menu-open')
     expect(within(panel).getByText(browserName)).toBeInTheDocument()
     expect(within(panel).queryByText('浏览器 B')).toBeNull()
@@ -1158,7 +1320,7 @@ describe('输入框资料栏', () => {
 
     act(() => {
       ref.current?.setValue(
-        ':mention[风险 A]{mentionType="risk" mentionId="risk-1" mentionName="风险 A"} :httpFlow[#7]{flowId="7" displayText="#7"} ![截图](screenshot.png)',
+        ':risk[#21]{ids="21" displayText="#21"} :httpFlow[#7]{flowId="7" displayText="#7"} ![截图](screenshot.png)',
       )
       ref.current?.setMention({ mentionType: 'forge', mentionId: 'skill-1', mentionName: '技能 A' })
       ref.current?.setMention({ mentionType: 'knowledgeBase', mentionId: 'kb-1', mentionName: '知识库 A' })
@@ -1190,7 +1352,10 @@ describe('输入框资料栏', () => {
       'AIMentionTabs.browser1',
     ])
 
-    act(() => ref.current?.setValue(''))
+    act(() => {
+      ref.current?.setValue('')
+      ref.current?.setHttpFlow([])
+    })
     await waitFor(() => {
       expect(screen.queryByText('AIMentionTabs.skill')).toBeNull()
       expect(screen.queryByText('AIMentionTabs.knowledgeBase')).toBeNull()
@@ -1258,6 +1423,116 @@ describe('图片保存期间的提交保护', () => {
 })
 
 describe('流量勾选引用逻辑', () => {
+  it.each([
+    { type: 'risk', ids: ['21', '22'], displayText: '#21, #22', isSummary: false },
+    { type: 'risk', ids: ['21', '22', '23'], displayText: '勾选了 3 条漏洞风险', isSummary: true },
+  ])('风险勾选以一个引用发送和回显（摘要：$isSummary）', async (reference) => {
+    const onSubmit = vi.fn()
+    const emit = vi.spyOn(emiter, 'emit')
+    const view = render(<AIChatTextarea chatDataStoreKey="test" selectedRiskIds={reference.ids} onSubmit={onSubmit} />)
+    await waitFor(() => expect(screen.getByTestId('editor').querySelector('.ProseMirror')).not.toBeNull())
+    await act(async () => {})
+    const materialsName = `AIChatTextarea.otherMaterials ${reference.ids.length}`
+    fireEvent.click(screen.getByRole('button', { name: materialsName }))
+    fireEvent.click(screen.getByText('AIAddMaterialsPopover.risk'))
+    expect(emit).toHaveBeenCalledWith(
+      'switchAIActTab',
+      JSON.stringify({ key: AITabsEnum.Risk, showSelectedRisks: true }),
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'YakitButton.send' }))
+    const payload: AIChatTextareaSubmit = onSubmit.mock.calls[0][0]
+    expect(payload.resourceReferences).toEqual([reference])
+    expect(payload.mentionList).toEqual([])
+    expect(payload.qs).toContain(':risk[')
+    expect(payload.qs).toContain(`ids="${reference.ids.join(',')}"`)
+    expect(payload.showQS).toBe(payload.qs)
+    editors[0].action((ctx) => {
+      const doc = ctx.get(parserCtx)(payload.qs)!
+      const node = doc.firstChild!.firstChild!
+      expect(doc.firstChild!.childCount).toBe(1)
+      expect(node.type.name).toBe(aiResourceReferenceCustomId)
+      expect(node.attrs).toMatchObject(reference)
+      const container = document.createElement('div')
+      container.append(DOMSerializer.fromSchema(doc.type.schema).serializeNode(node))
+      const restored = DOMParser.fromSchema(doc.type.schema).parse(container)
+      expect(restored.firstChild!.firstChild!.attrs).toMatchObject(reference)
+    })
+    view.rerender(<AIChatTextarea chatDataStoreKey="test" selectedRiskIds={[]} onSubmit={onSubmit} />)
+    expect(screen.queryByRole('button', { name: materialsName })).toBeNull()
+  })
+
+  it.each([
+    { type: 'http', directive: 'httpFlow', selectionProp: 'selectedHttpFlowIds' },
+    { type: 'risk', directive: 'risk', selectionProp: 'selectedRiskIds' },
+  ] as const)('$type 正文和表格按 ID 去重，取消表格勾选后保留正文引用', async ({ type, directive, selectionProp }) => {
+    const onSubmit = vi.fn<(value: AIChatTextareaSubmit) => void>()
+    const renderInput = (ids: string[]) => (
+      <AIChatTextarea
+        chatDataStoreKey="test"
+        defaultValue={`:${directive}[#7]{ids="7" displayText="#7" isSummary="false"}`}
+        {...{ [selectionProp]: ids }}
+        onSubmit={onSubmit}
+      />
+    )
+    const view = render(renderInput(['7', '8', '8']))
+    await act(async () => {})
+    await screen.findByRole('button', { name: 'AIChatTextarea.otherMaterials 2' })
+    const send = screen.getByRole('button', { name: 'YakitButton.send' })
+    fireEvent.click(send)
+    expect(onSubmit.mock.calls[0][0].resourceReferences).toMatchObject([
+      { type, ids: ['7'] },
+      { type, ids: ['8'] },
+    ])
+
+    view.rerender(renderInput([]))
+    expect(screen.getByRole('button', { name: 'AIChatTextarea.otherMaterials 1' })).toBeInTheDocument()
+    fireEvent.click(send)
+    expect(onSubmit.mock.calls[1][0].resourceReferences).toMatchObject([{ type, ids: ['7'] }])
+  })
+
+  it('编辑已发送的风险引用时保留风险 ID 并继续发送', async () => {
+    const { onSubmit, ref, send } = await setup()
+    act(() => ref.current?.setValue(':risk[#21, #22]{ids="21,22" displayText="#21, #22" isSummary="false"}'))
+
+    const reference = { type: 'risk', ids: ['21', '22'], displayText: '#21, #22', isSummary: false }
+    expect(extractDataWithMilkdown(editors[0]).resourceReferences).toEqual([reference])
+    await waitFor(() => expect(send).not.toBeDisabled())
+    fireEvent.click(send)
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ resourceReferences: [reference] }))
+  })
+
+  it('受控流量选择随属性更新并在发送时使用当前 ID', async () => {
+    const onSubmit = vi.fn()
+    const view = render(<AIChatTextarea chatDataStoreKey="" selectedHttpFlowIds={['21', '22']} onSubmit={onSubmit} />)
+    await waitFor(() => expect(screen.getByTestId('editor').querySelector('.ProseMirror')).not.toBeNull())
+    await act(async () => {})
+    expect(screen.getByRole('button', { name: 'AIChatTextarea.otherMaterials 2' })).toBeInTheDocument()
+    view.rerender(<AIChatTextarea chatDataStoreKey="" selectedHttpFlowIds={['22']} onSubmit={onSubmit} />)
+    expect(screen.getByRole('button', { name: 'AIChatTextarea.otherMaterials 1' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'YakitButton.send' }))
+    expect(onSubmit.mock.calls[0][0].resourceReferences).toEqual([
+      expect.objectContaining({ type: 'http', ids: ['22'] }),
+    ])
+    view.rerender(<AIChatTextarea chatDataStoreKey="" selectedHttpFlowIds={[]} onSubmit={onSubmit} />)
+    expect(screen.queryByRole('button', { name: 'AIChatTextarea.otherMaterials 1' })).toBeNull()
+  })
+
+  it('同步流量数量并从其他资料打开已选流量', async () => {
+    const emit = vi.spyOn(emiter, 'emit')
+    const { ref } = await setup('正文')
+    act(() => ref.current?.setHttpFlow(['11', '12']))
+    fireEvent.click(screen.getByRole('button', { name: 'AIChatTextarea.otherMaterials 2' }))
+    fireEvent.click(screen.getByText('AIAddMaterialsPopover.flow'))
+    expect(emit).toHaveBeenCalledWith(
+      'switchAIActTab',
+      JSON.stringify({ key: AITabsEnum.HTTP, showSelectedHttpFlows: true }),
+    )
+    act(() => ref.current?.setHttpFlow(['12']))
+    expect(screen.getByRole('button', { name: 'AIChatTextarea.otherMaterials 1' })).toBeInTheDocument()
+    act(() => ref.current?.setHttpFlow([]))
+    expect(screen.queryByRole('button', { name: 'AIChatTextarea.otherMaterials 1' })).toBeNull()
+  })
+
   it.each([1, 2, 3, 5, 6, 10])('%i 条流量不再显示标签，但保留提交数据、正文和撤销记录', async (count) => {
     const { ref, container, onSubmit, send } = await setup('保留这段正文')
     const editor = editors[0]
@@ -1273,9 +1548,10 @@ describe('流量勾选引用逻辑', () => {
     expect(ref.current?.getValue()).toBe('保留这段正文')
 
     fireEvent.click(send)
-    expect(onSubmit.mock.calls[0][0].httpFlowList).toEqual([
+    expect(onSubmit.mock.calls[0][0].resourceReferences).toEqual([
       {
-        flowIds: ids,
+        type: 'http',
+        ids,
         displayText: count < 3 ? ids.map((id) => '#' + id).join(', ') : `勾选了 ${count} 条流量`,
         isSummary: count >= 3,
       },
@@ -1286,15 +1562,15 @@ describe('流量勾选引用逻辑', () => {
     const { ref, onSubmit, send } = await setup('正文')
     act(() => ref.current?.setHttpFlow(['1', '2', '2', '']))
     fireEvent.click(send)
-    expect(onSubmit.mock.calls[0][0].httpFlowList).toEqual([expect.objectContaining({ flowIds: ['1', '2'] })])
+    expect(onSubmit.mock.calls[0][0].resourceReferences).toEqual([expect.objectContaining({ ids: ['1', '2'] })])
 
     act(() => ref.current?.setHttpFlow(['3']))
     fireEvent.click(send)
-    expect(onSubmit.mock.calls[1][0].httpFlowList).toEqual([expect.objectContaining({ flowIds: ['3'] })])
+    expect(onSubmit.mock.calls[1][0].resourceReferences).toEqual([expect.objectContaining({ ids: ['3'] })])
 
     act(() => ref.current?.setHttpFlow([]))
     fireEvent.click(send)
-    expect(onSubmit.mock.calls[2][0]).toEqual(expect.objectContaining({ qs: '正文', httpFlowList: [] }))
+    expect(onSubmit.mock.calls[2][0]).toEqual(expect.objectContaining({ qs: '正文', resourceReferences: [] }))
     expect(ref.current?.getValue()).toBe('正文')
   })
 
@@ -1304,22 +1580,26 @@ describe('流量勾选引用逻辑', () => {
     expect(send).not.toBeDisabled()
     fireEvent.click(send)
     const payload = onSubmit.mock.calls[0][0]
-    expect(payload.httpFlowList).toEqual([{ flowIds: ['11', '12'], displayText: '#11, #12', isSummary: false }])
+    expect(payload.resourceReferences).toEqual([
+      { type: 'http', ids: ['11', '12'], displayText: '#11, #12', isSummary: false },
+    ])
     expect(payload.sessionId).toBe('draft-session')
     expect(payload.qs).toContain(':httpFlow[')
-    expect(payload.qs).toContain('flowIds="11,12"')
+    expect(payload.qs).toContain('ids="11,12"')
     expect(payload.qs).not.toMatch(/\bflowId(?:=|\s|})/)
     expect(payload.showQS).toBe(payload.qs)
     expect(ref.current?.getValue()).toBe(text)
     const parsed = editors[0].action((ctx) => ctx.get(parserCtx)(payload.qs))
     const flowIds: string[][] = []
     parsed?.descendants((node) => {
-      if (node.type.name === 'ai-http-flow-custom') flowIds.push(node.attrs.flowIds)
+      if (node.type.name === aiResourceReferenceCustomId) flowIds.push(node.attrs.ids)
     })
     expect(flowIds).toEqual([['11', '12']])
     act(() => ref.current?.setValue(''))
+    expect(send).not.toBeDisabled()
+    act(() => ref.current?.setHttpFlow([]))
     await waitFor(() => expect(send).toBeDisabled())
-    expect(payload.httpFlowList?.[0].flowIds).toEqual(['11', '12'])
+    expect(payload.resourceReferences?.[0].ids).toEqual(['11', '12'])
   })
 
   it('完全为空不可提交；只取消引用恢复空状态；纯正文保持原提交协议', async () => {
@@ -1334,21 +1614,30 @@ describe('流量勾选引用逻辑', () => {
     act(() => ref.current?.setValue('只有正文'))
     await waitFor(() => expect(send).not.toBeDisabled())
     fireEvent.click(send)
-    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ qs: '只有正文', httpFlowList: [] }))
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ qs: '只有正文', resourceReferences: [] }))
   })
 
-  it.each(['', ' flowIds=""'])('旧消息 flowId 转为 flowIds 后与外置引用共同提交（%s）', async (idsAttr) => {
+  it.each([
+    ['flowId', 'flowId="7"', ['7'], false],
+    ['空 flowIds', 'flowId="7" flowIds=""', ['7'], false],
+    ['flowIds', 'flowId="7" flowIds="8,9,8"', ['8', '9'], true],
+  ])('旧消息 %s 转为 ids 后与外置引用共同提交', async (_, legacyAttrs, ids, isSummary) => {
     const { ref, onSubmit, send } = await setup()
-    act(() => ref.current?.setValue(`:httpFlow[#7]{flowId="7"${idsAttr} displayText="#7" isSummary="false"}`))
-    act(() => ref.current?.setHttpFlow(['8']))
+    const displayText = isSummary ? '已选择 2 条流量' : '#7'
+    act(() =>
+      ref.current?.setValue(
+        `:httpFlow[${displayText}]{${legacyAttrs} displayText="${displayText}" isSummary="${isSummary}"}`,
+      ),
+    )
+    act(() => ref.current?.setHttpFlow(['10']))
     fireEvent.click(send)
-    expect(onSubmit.mock.calls[0][0].httpFlowList).toEqual([
-      expect.objectContaining({ flowIds: ['7'], isSummary: false }),
-      expect.objectContaining({ flowIds: ['8'] }),
+    expect(onSubmit.mock.calls[0][0].resourceReferences).toEqual([
+      expect.objectContaining({ type: 'http', ids, displayText, isSummary }),
+      expect.objectContaining({ type: 'http', ids: ['10'] }),
     ])
-    expect(extractDataWithMilkdown(editors[0]).httpFlowList).toHaveLength(1)
-    expect(onSubmit.mock.calls[0][0].qs).not.toMatch(/\bflowId(?:=|\s|})/)
-    expect(onSubmit.mock.calls[0][0].httpFlowList?.[0]).not.toHaveProperty('flowId')
+    expect(extractDataWithMilkdown(editors[0]).resourceReferences).toHaveLength(1)
+    expect(onSubmit.mock.calls[0][0].qs).toContain(`:httpFlow[${displayText}]{ids="${ids.join(',')}"`)
+    expect(onSubmit.mock.calls[0][0].qs).not.toMatch(/\bflowIds?(?:=|\s|})/)
   })
 
   it.each([
@@ -1363,10 +1652,10 @@ describe('流量勾选引用逻辑', () => {
       container.innerHTML = `<div data-type="ai-http-flow-custom" data-flow-id="7" data-flow-ids="${flowIds}" data-display-text="#7">#7</div>`
       const doc = DOMParser.fromSchema(schema).parse(container)
       const node = doc.firstChild!.firstChild!
-      expect(node.attrs.flowIds).toEqual(expected.split(','))
+      expect(node.attrs).toMatchObject({ type: 'http', ids: expected.split(',') })
       expect(node.attrs).not.toHaveProperty('flowId')
       const dom = DOMSerializer.fromSchema(schema).serializeNode(node) as HTMLElement
-      expect(dom.getAttribute('data-flow-ids')).toBe(expected)
+      expect(dom.getAttribute('data-ids')).toBe(expected)
       expect(dom.hasAttribute('data-flow-id')).toBe(false)
     })
   })
@@ -1375,65 +1664,74 @@ describe('流量勾选引用逻辑', () => {
     await setup()
     act(() => {
       editors[0].action(
-        callCommand(aiHttpFlowCommand.key, {
-          flowIds: ['31', '32'],
+        callCommand(aiResourceReferenceCommand.key, {
+          type: 'http',
+          ids: ['31', '32'],
           displayText: '#31, #32',
           isSummary: false,
         }),
       )
     })
-    expect(extractDataWithMilkdown(editors[0]).httpFlowList[0].flowIds).toEqual(['31', '32'])
+    expect(extractDataWithMilkdown(editors[0]).resourceReferences[0].ids).toEqual(['31', '32'])
     const markdown = editors[0].action(getMarkdown())
-    expect(markdown).toContain('flowIds="31,32"')
+    expect(markdown).toContain('ids="31,32"')
     const parsed = editors[0].action((ctx) => ctx.get(parserCtx)(markdown))
-    expect(parsed?.firstChild?.firstChild?.attrs.flowIds).toEqual(['31', '32'])
+    expect(parsed?.firstChild?.firstChild?.attrs.ids).toEqual(['31', '32'])
     expect(parsed?.firstChild?.firstChild?.attrs.isSummary).toBe(false)
   })
 
-  it('引用状态按输入组件实例隔离，清空正文同步清空当前实例的流量选择', async () => {
-    const first = createRef<AIChatTextareaRefProps>()
-    const second = createRef<AIChatTextareaRefProps>()
+  it('各输入框独立使用父级传入的流量选择', async () => {
     const onSubmit = vi.fn()
-    render(
+    const renderInputs = (firstIds: string[], secondIds: string[]) => (
       <>
         <section data-testid="first">
-          <AIChatTextarea ref={first} chatDataStoreKey="first" inputFooterLeft={<span />} footer={<span />} />
+          <AIChatTextarea
+            selectedHttpFlowIds={firstIds}
+            chatDataStoreKey="first"
+            inputFooterLeft={<span />}
+            footer={<span />}
+          />
         </section>
         <section data-testid="second">
           <AIChatTextarea
-            ref={second}
+            selectedHttpFlowIds={secondIds}
             chatDataStoreKey="second"
             inputFooterLeft={<span />}
             footer={<span />}
             onSubmit={onSubmit}
           />
         </section>
-      </>,
+      </>
     )
+    const { rerender } = render(renderInputs(['1'], []))
     await waitFor(() => expect(document.querySelectorAll('.ProseMirror')).toHaveLength(2))
     await act(async () => {})
     const firstSend = within(screen.getByTestId('first')).getByRole('button', { name: 'YakitButton.send' })
     const secondSend = within(screen.getByTestId('second')).getByRole('button', { name: 'YakitButton.send' })
 
-    act(() => first.current?.setHttpFlow(['1']))
     expect(firstSend).not.toBeDisabled()
     expect(secondSend).toBeDisabled()
-    act(() => second.current?.setHttpFlow(['2']))
-    act(() => first.current?.setValue(''))
+    rerender(renderInputs([], ['2']))
     expect(firstSend).toBeDisabled()
     expect(secondSend).not.toBeDisabled()
     fireEvent.click(secondSend)
-    expect(onSubmit.mock.calls[0][0].httpFlowList).toEqual([expect.objectContaining({ flowIds: ['2'] })])
+    expect(onSubmit.mock.calls[0][0].resourceReferences).toEqual([expect.objectContaining({ ids: ['2'] })])
   })
 
   it('编辑器未就绪也可以清空流量选择', () => {
     deferEditor.value = true
-    const ref = createRef<AIChatTextareaRefProps>()
-    render(<AIChatTextarea ref={ref} chatDataStoreKey="deferred" inputFooterLeft={<span />} footer={<span />} />)
+    const renderInput = (ids: string[]) => (
+      <AIChatTextarea
+        selectedHttpFlowIds={ids}
+        chatDataStoreKey="deferred"
+        inputFooterLeft={<span />}
+        footer={<span />}
+      />
+    )
+    const { rerender } = render(renderInput(['1']))
     const send = screen.getByRole('button', { name: 'YakitButton.send' })
-    act(() => ref.current?.setHttpFlow(['1']))
     expect(send).not.toBeDisabled()
-    act(() => ref.current?.setValue(''))
+    rerender(renderInput([]))
     expect(send).toBeDisabled()
   })
 })

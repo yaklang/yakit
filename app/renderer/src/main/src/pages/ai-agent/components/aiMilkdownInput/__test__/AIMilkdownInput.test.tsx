@@ -63,7 +63,7 @@ vi.mock('../aiMilkdownMention/AIMilkdownMention', () => ({
 }))
 vi.mock('../aiCustomFile/AICustomFile', () => ({ AICustomFile: () => null }))
 vi.mock('../aiCustomCode/AICustomCode', () => ({ AICustomCode: () => null }))
-vi.mock('../aiMilkdownHttpFlow/AICustomHttpFlow', () => ({ AICustomHttpFlow: () => null }))
+vi.mock('../aiMilkdownResourceReference/AICustomResourceReference', () => ({ AICustomResourceReference: () => null }))
 vi.mock('../aiCodeBlock/AICodeBlock', () => ({ AICustomCodeRef: () => null }))
 
 afterEach(() => {

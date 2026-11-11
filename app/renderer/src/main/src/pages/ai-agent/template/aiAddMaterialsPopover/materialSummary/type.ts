@@ -10,6 +10,8 @@ export interface MaterialSummaryRow {
   hideCount?: boolean
   onOpen?: () => void
   onRemove?: () => void
+  selection?: { checked: boolean; onChange: () => void }
+  onEdit?: () => void
 }
 
 export interface MaterialSummaryGroup {
@@ -20,6 +22,11 @@ export interface MaterialSummaryGroup {
   icon?: ReactNode
   rows: MaterialSummaryRow[]
   onAdd?: () => void
+}
+
+export interface MaterialSummaryPanelProps {
+  group: MaterialSummaryGroup
+  onClose: () => void
 }
 
 export interface MaterialSummaryProps {

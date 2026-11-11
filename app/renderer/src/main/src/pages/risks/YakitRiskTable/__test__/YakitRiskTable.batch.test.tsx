@@ -160,8 +160,15 @@ vi.mock('@/components/yakitUI/YakitResizeBox/YakitResizeBox', () => ({
   YakitResizeBox: ({ firstNode }: { firstNode: React.ReactNode }) => <>{firstNode}</>,
 }))
 vi.mock('@/components/yakitUI/YakitButton/YakitButton', () => ({
-  YakitButton: ({ children, onClick, disabled, icon }: React.PropsWithChildren<any>) => (
-    <button type="button" disabled={disabled} onClick={onClick}>
+  YakitButton: ({
+    children,
+    onClick,
+    disabled,
+    icon,
+    'aria-label': label,
+    'aria-pressed': pressed,
+  }: React.PropsWithChildren<any>) => (
+    <button type="button" disabled={disabled} onClick={onClick} aria-label={label} aria-pressed={pressed}>
       {icon}
       {children}
     </button>
@@ -891,5 +898,72 @@ describe('YakitRiskTable 批量操作', () => {
     mocks.queryRisks.mockRejectedValueOnce(new Error('export failed'))
     const exportProps = mocks.showModal.mock.calls[0][0].content.props
     await expect(exportProps.getData()).rejects.toThrow('export failed')
+  })
+})
+
+describe('AI risk selection', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mocks.queryRiskTypes.mockResolvedValue([])
+    mocks.queryRiskTags.mockResolvedValue({ RiskTags: [] })
+    mocks.queryRisks.mockResolvedValue({ Data: rows, Total: 2, Pagination: query.Pagination })
+  })
+  afterEach(cleanup)
+  it('restores controlled selection and exposes add/cancel in the fixed action column', async () => {
+    const onChange = vi.fn()
+    render(
+      <YakitRiskTable
+        query={query}
+        setQuery={vi.fn()}
+        setRiskLoading={vi.fn()}
+        aiRiskSelection={{ ids: ['11'], selectedOnly: false, onChange, renderCount: () => null }}
+      />,
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'load-table' }))
+    await waitFor(() => expect(screen.getByTestId('loaded-count')).toHaveTextContent('2'))
+    expect(mocks.rowSelection.selectedRowKeys).toEqual([11])
+    expect(mocks.columns.find((column) => column.dataKey === 'CreatedAt').fixed).toBeUndefined()
+    const action = mocks.columns.find((column) => column.dataKey === 'action')
+    expect(action.fixed).toBe('right')
+    const view = render(action.render(null, rows[0], 0))
+    const cancel = screen.getByRole('button', { name: 'YakitButton.cancel' })
+    expect(cancel).toHaveAttribute('aria-pressed', 'true')
+    expect(cancel).toHaveTextContent('YakitButton.added')
+    fireEvent.click(cancel)
+    expect(onChange).toHaveBeenLastCalledWith([rows[0]], false)
+    view.unmount()
+    fireEvent.click(screen.getByRole('button', { name: 'select-second' }))
+    expect(onChange).toHaveBeenLastCalledWith([rows[1]], true)
+  })
+  it.each([true, false])(
+    'empty selected or empty session scope makes no list request (selected=%s)',
+    async (selectedOnly) => {
+      render(
+        <YakitRiskTable
+          query={query}
+          setQuery={vi.fn()}
+          setRiskLoading={vi.fn()}
+          aiRiskSelection={{ ids: [], selectedOnly, emptyBase: true, onChange: vi.fn(), renderCount: () => null }}
+        />,
+      )
+      fireEvent.click(screen.getByRole('button', { name: 'load-table' }))
+      await act(async () => {})
+      expect(mocks.queryRisks).not.toHaveBeenCalled()
+      expect(screen.getByTestId('loaded-count')).toHaveTextContent('0')
+    },
+  )
+  it('selected query uses IDs across runtime scopes', async () => {
+    render(
+      <YakitRiskTable
+        query={{ ...query, RuntimeId: 'runtime', RuntimeIds: ['runtime'] }}
+        setQuery={vi.fn()}
+        setRiskLoading={vi.fn()}
+        aiRiskSelection={{ ids: ['11'], selectedOnly: true, onChange: vi.fn(), renderCount: () => null }}
+      />,
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'load-table' }))
+    await waitFor(() => expect(mocks.queryRisks).toHaveBeenCalled())
+    expect(mocks.queryRisks.mock.calls[0][0]).toMatchObject({ Ids: [11], RuntimeId: undefined, RuntimeIds: undefined })
+    await waitFor(() => expect(screen.getByTestId('loaded-count')).toHaveTextContent('1'))
   })
 })

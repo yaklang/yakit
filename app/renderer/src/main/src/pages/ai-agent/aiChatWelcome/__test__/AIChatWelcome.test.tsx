@@ -8,7 +8,6 @@ import welcomeStyles from '../AIChatWelcome.module.scss'
 import { compileReactModule } from '@/utils/__test__/helpers/compileReactModule'
 
 const createInputHandle = (value: string) => ({
-  setHttpFlow: vi.fn(),
   setValue: vi.fn(),
   setMention: vi.fn(),
   getValue: vi.fn(() => value),
@@ -48,30 +47,27 @@ vi.mock('../../template/template', () => ({
     useImperativeHandle(ref, () => inputHandles[revision], [revision])
     return (
       <div>
+        <div data-testid="scenario-capabilities" data-enabled={props.showScenarioCapabilities} />
         <button onClick={() => setRevision(1)}>更换输入框 ref</button>
         <button onClick={() => props.onHttpFlowRemove?.('101', false)}>删除单条流量</button>
         <button onClick={() => props.onHttpFlowRemove?.('101,102', true)}>删除聚合流量</button>
-        <button onClick={() => props.onSubmit?.({ qs: 'hello', sessionId: 'stale-image-draft' })}>发送首问</button>
+        <button
+          onClick={() =>
+            props.onSubmit?.({
+              qs: 'hello',
+              sessionId: 'stale-image-draft',
+            })
+          }
+        >
+          发送首问
+        </button>
       </div>
     )
   }),
 }))
-vi.mock('ahooks', async () => ({ ...(await vi.importActual('ahooks')), useInViewport: () => [false] }))
 vi.mock('@/i18n/useI18nNamespaces', () => ({
   useI18nNamespaces: () => ({ t: (key: string) => key, i18n: { language: 'zh' } }),
 }))
-vi.mock('../../grpc', () => ({
-  grpcGetAIReActRecommendedSkills: vi.fn().mockResolvedValue({ Data: [] }),
-  grpcUpdateAIReActRecommendedSkill: vi.fn(),
-  grpcResetAIReActRecommendedSkill: vi.fn(),
-}))
-vi.mock('@/components/yakitUI/YakitButton/YakitButton', () => ({ YakitButton: () => null }))
-vi.mock('@/components/yakitUI/YakitEditor/YakitEditor', () => ({ YakitEditor: () => null }))
-vi.mock('@/components/yakitUI/YakitModal/YakitModal', () => ({ YakitModal: () => null }))
-vi.mock('@/utils/getMainOperatorPageBodyContainer', () => ({
-  getMainOperatorPageBodyContainerOrBody: () => document.body,
-}))
-vi.mock('@/utils/notification', () => ({ yakitNotify: vi.fn() }))
 vi.mock('../AIChatWelcomeSideSetting', () => ({ SideSettingButton: () => null }))
 vi.mock('../AIWelcomeAsciiRipple', () => ({
   AIWelcomeAsciiRipple: () => <div data-testid="welcome-ascii-ripple" aria-hidden="true" />,
@@ -140,6 +136,11 @@ afterEach(() => {
 const WELCOME_TITLE = 'Memfit AI Agent'
 
 describe('AIChatWelcome 输入框转发', () => {
+  it('在欢迎页开启场景能力入口', () => {
+    render(<AIChatWelcome onTriageSubmit={vi.fn()} onSetReAct={vi.fn()} />)
+    expect(screen.getByTestId('scenario-capabilities')).toHaveAttribute('data-enabled', 'true')
+  })
+
   it('首次发送原样转发输入框提供的会话 ID', () => {
     const onTriageSubmit = vi.fn()
     render(<AIChatWelcome onTriageSubmit={onTriageSubmit} onSetReAct={vi.fn()} />)
@@ -158,21 +159,17 @@ describe('AIChatWelcome 输入框转发', () => {
       mentionType: 'tool',
     }
 
-    welcomeHandle.setHttpFlow(['101'])
     welcomeHandle.setValue('first question')
     welcomeHandle.setMention(mention)
     expect(welcomeHandle.getValue()).toBe('first draft')
-    expect(inputHandles[0].setHttpFlow).toHaveBeenCalledWith(['101'])
     expect(inputHandles[0].setValue).toHaveBeenCalledWith('first question')
     expect(inputHandles[0].setMention).toHaveBeenCalledWith(mention)
 
     fireEvent.click(screen.getByRole('button', { name: '更换输入框 ref' }))
     expect(ref.current).toBe(welcomeHandle)
-    welcomeHandle.setHttpFlow(['102', '103'])
     welcomeHandle.setValue('second question')
     welcomeHandle.setMention({ ...mention, mentionId: 'skill-2' })
     expect(welcomeHandle.getValue()).toBe('second draft')
-    expect(inputHandles[1].setHttpFlow).toHaveBeenCalledWith(['102', '103'])
     expect(inputHandles[1].setValue).toHaveBeenCalledWith('second question')
     expect(inputHandles[1].setMention).toHaveBeenCalledWith({ ...mention, mentionId: 'skill-2' })
     for (const method of Object.values(inputHandles[0])) expect(method).toHaveBeenCalledOnce()

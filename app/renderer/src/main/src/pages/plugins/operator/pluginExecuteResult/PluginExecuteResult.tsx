@@ -362,6 +362,7 @@ export const PluginExecuteHttpFlow: React.FC<PluginExecuteWebsiteTreeProps> = Re
     pageType,
     onSetSelectedHttpFlowIds,
     onRegisterTableSelectApi,
+    aiFlowSelection,
   } = props
   const { t } = useI18nNamespaces(['plugin'])
 
@@ -433,9 +434,10 @@ export const PluginExecuteHttpFlow: React.FC<PluginExecuteWebsiteTreeProps> = Re
             params={httpFlowParams}
             onSetSelectedHttpFlowIds={onSetSelectedHttpFlowIds}
             onRegisterTableSelectApi={onRegisterTableSelectApi}
+            aiFlowSelection={aiFlowSelection}
             httpHistoryTableTitleStyle={{
               paddingTop: 12,
-              paddingLeft: 8,
+              paddingLeft: aiFlowSelection ? 0 : 8,
               paddingRight: 8,
             }}
             showSourceType={false}
@@ -562,7 +564,7 @@ export const PluginExecuteLog: React.FC<PluginExecuteLogProps> = React.memo((pro
 
 /**漏洞与风险tab表 */
 export const VulnerabilitiesRisksTable: React.FC<VulnerabilitiesRisksTableProps> = React.memo((props) => {
-  const { runtimeId, runTimeIDs, filterTagDom } = props
+  const { runtimeId, runTimeIDs, filterTagDom, aiRiskSelection } = props
   const { t, i18n } = useI18nNamespaces(['plugin', 'yakitUi', 'yakitRoute'])
   const [riskLoading, setRiskLoading] = useState<boolean>(false)
   const [allTotal, setAllTotal] = useControllableValue<number>(props, {
@@ -594,15 +596,26 @@ export const VulnerabilitiesRisksTable: React.FC<VulnerabilitiesRisksTableProps>
     <div className={styles['risks-table']}>
       <YakitSpin spinning={riskLoading}>
         <YakitRiskTable
+          aiRiskSelection={aiRiskSelection}
           query={query}
           setQuery={setQuery}
           advancedQuery={true}
           setRiskLoading={setRiskLoading}
           renderTitle={
-            <div className={styles['table-renderTitle']}>
+            <div
+              className={classNames(styles['table-renderTitle'], {
+                [styles['table-renderTitle-ai']]: !!aiRiskSelection,
+              })}
+            >
               <div className={styles['table-renderTitle-left']}>
-                <span>{t('YakitRoute.vulnerabilityAndrisk')}</span>
-                <TableTotalAndSelectNumber total={allTotal} />
+                {aiRiskSelection ? (
+                  aiRiskSelection.renderCount(allTotal)
+                ) : (
+                  <>
+                    <span>{t('YakitRoute.vulnerabilityAndrisk')}</span>
+                    <TableTotalAndSelectNumber total={allTotal} />
+                  </>
+                )}
                 {filterTagDom}
               </div>
               <YakitButton type="outline2" size="small" onClick={onJumpRisk}>
@@ -614,10 +627,10 @@ export const VulnerabilitiesRisksTable: React.FC<VulnerabilitiesRisksTableProps>
           tableVirtualResizeProps={{
             containerClassName: styles['table-container'],
             titleHeight: 44,
-            rowSelection: undefined,
+            ...(aiRiskSelection ? {} : { rowSelection: undefined }),
           }}
           yakitRiskDetailsBorder={false}
-          excludeColumnsKey={['action']}
+          excludeColumnsKey={aiRiskSelection ? [] : ['action']}
           allTotal={allTotal}
           setAllTotal={setAllTotal}
         />
