@@ -59,6 +59,73 @@ const waitForPlot = (name) =>
   )
 const capture = (name) => browser.saveScreenshot(path.join(process.env.YAKIT_E2E_ARTIFACTS_DIR, `${name}.png`))
 
+const checkTraceTabLayout = async () => {
+  const compactWidth = 551
+  await resizeMain(compactWidth, 850)
+  await browser.waitUntil(() => browser.execute((width) => Math.abs(innerWidth - width) <= 1, compactWidth))
+  const layout = await browser.execute(async () => {
+    const tabs = document.querySelector('[aria-label="按请求状态查看"]')
+    const toolbar = tabs.parentElement.parentElement
+    const scope = toolbar.lastElementChild
+    const bounds = () =>
+      [toolbar, tabs, scope, ...tabs.querySelectorAll('label')].map((element) => {
+        const { x, y, width, height } = element.getBoundingClientRect()
+        return [x, y, width, height].map(Math.round)
+      })
+    const originalRequire = window.require
+    const paint = () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+    let releaseQuery
+    const pending = new Promise((resolve) => {
+      releaseQuery = resolve
+    })
+    let queryFinished
+    window.require = (module) => {
+      const original = originalRequire(module)
+      if (module !== 'electron') return original
+      return {
+        ...original,
+        ipcRenderer: {
+          ...original.ipcRenderer,
+          invoke(channel, ...args) {
+            if (channel === 'mitmV2-get-diagnostics' && args[0]?.View === 'slow') {
+              const query = pending.then(() => original.ipcRenderer.invoke(channel, ...args))
+              queryFinished = query.then(
+                () => undefined,
+                () => undefined,
+              )
+              return query
+            }
+            return original.ipcRenderer.invoke(channel, ...args)
+          },
+        },
+      }
+    }
+    try {
+      const before = bounds()
+      const slow = [...tabs.querySelectorAll('label')].find((label) => label.textContent.trim() === '近期慢请求')
+      slow.click()
+      await paint()
+      const whileLoading = bounds()
+      const loading = document.querySelector('[aria-label="本会话请求"]').textContent.includes('正在读取轨迹')
+      releaseQuery()
+      await queryFinished
+      await paint()
+      return {
+        before,
+        whileLoading,
+        settled: bounds(),
+        loading,
+      }
+    } finally {
+      releaseQuery()
+      window.require = originalRequire
+    }
+  })
+  expect(layout.loading).toBe(true)
+  expect(layout.whileLoading).toEqual(layout.before)
+  expect(layout.settled).toEqual(layout.before)
+}
+
 const excludeHostFromCapture = (host) =>
   browser.execute((hostname) => {
     const { ipcRenderer } = window.require('electron')
@@ -193,7 +260,13 @@ describe('MITM diagnostics with a real Yak engine', () => {
           },
           (res) => {
             res.resume()
-            res.on('end', () => resolve(res.statusCode))
+            res.on('end', () => {
+              if (host !== browserHost && res.statusCode !== 200) {
+                reject(new Error(`MITM returned ${res.statusCode} for ${route} ${res.headers.warning ?? ''}`))
+                return
+              }
+              resolve(res.statusCode)
+            })
             res.on('error', reject)
           },
         )
@@ -300,6 +373,7 @@ describe('MITM diagnostics with a real Yak engine', () => {
         }),
       )
       await capture('mitm-diagnostics-narrow')
+      await checkTraceTabLayout()
       await resizeMain(1180, 1000)
 
       const ordinary = send('127.0.0.1', 'mitm-diagnostics')

@@ -43,7 +43,6 @@
 .line,
 .footer,
 .filterContext,
-.traceToolbar,
 .peakSummary {
   display: flex;
   align-items: center;
@@ -310,24 +309,39 @@
   border-top: 1px solid var(--Colors-Use-Neutral-Border);
 }
 
-.traceToolbar,
-.filterContext,
-.scopeControls {
-  flex-wrap: wrap;
+.traceToolbar {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  align-items: start;
+  gap: 8px;
   flex-shrink: 0;
+}
+
+.traceSegments {
+  max-inline-size: 100%;
+  inline-size: max-content;
+  overflow-x: auto;
 }
 
 .scopeControls {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
+  justify-content: flex-end;
+  min-height: 24px;
   gap: 8px;
 }
 
-.traceToolbar :global(.ant-segmented-group) {
-  flex-wrap: wrap;
+.traceCount {
+  min-inline-size: 7em;
+  text-align: end;
+  white-space: nowrap;
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
 }
 
 .filterContext {
+  flex-wrap: wrap;
+  flex-shrink: 0;
   padding: 3px 8px;
   border-radius: 4px;
   background: var(--Colors-Use-Neutral-Bg-Hover);
@@ -512,6 +526,20 @@
   padding: 16px 8px;
   text-align: center;
   color: var(--Colors-Use-Neutral-Text-3-Secondary);
+}
+
+@container (max-width: 660px) {
+  .traceToolbar {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .scopeControls {
+    justify-content: flex-start;
+  }
+
+  .traceCount {
+    text-align: start;
+  }
 }
 
 @container (max-width: 600px) {

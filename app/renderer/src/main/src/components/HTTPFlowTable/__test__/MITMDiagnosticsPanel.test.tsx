@@ -1,4 +1,4 @@
-import React from 'react'
+import type React from 'react'
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { MITMDiagnosticsQuery, MITMTraceRow } from '../MITMDiagnostics.types'

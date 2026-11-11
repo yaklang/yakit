@@ -164,6 +164,7 @@ export const MITMDiagnosticsTrace = React.memo(function MITMDiagnosticsTrace({
       <div className={styles.traceToolbar}>
         <YakitSegmented
           size="small"
+          wrapClassName={styles.traceSegments}
           aria-label="按请求状态查看"
           value={filter}
           options={range ? rangeFilters : filters}
@@ -189,6 +190,7 @@ export const MITMDiagnosticsTrace = React.memo(function MITMDiagnosticsTrace({
             traceScope && (
               <YakitSegmented
                 size="small"
+                wrapClassName={styles.traceSegments}
                 aria-label="按流量来源查看"
                 value={traceScope}
                 options={[
@@ -200,7 +202,7 @@ export const MITMDiagnosticsTrace = React.memo(function MITMDiagnosticsTrace({
               />
             )
           )}
-          {list?.result && !unavailable && <span className={styles.note}>共 {total} 条</span>}
+          <span className={styles.traceCount}>{list?.result && !unavailable && `共 ${total} 条`}</span>
         </div>
       </div>
       {stage && (
