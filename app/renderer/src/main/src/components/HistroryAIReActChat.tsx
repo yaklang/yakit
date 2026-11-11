@@ -236,7 +236,7 @@ const HistroryAIReActChat: FC<HistoryAIReActChatProps> = memo((props) => {
 
   return (
     <div ref={refRef} className={classNames(styles['ai-wrapper'], className)}>
-      <AIGlobalLoading loopAnimationMode="sequential" loading={initLoading}>
+      <AIGlobalLoading loopAnimationMode="random" loading={initLoading}>
         {resultRender}
       </AIGlobalLoading>
     </div>

@@ -55,6 +55,7 @@ interface MockTaskStoreState {
   execute: boolean
   pendingReply: boolean
   taskDetailsUpdate: number
+  sessionExecution?: Record<string, unknown>
 }
 // 详情条目带 uuid：父级收到更新通知后比较 uuid 判断详情是否被流数据刷新（参照 AITaskExecutionDetails）
 interface MockTaskDetails {
@@ -69,6 +70,7 @@ const mockTaskStore: StoreApi<MockTaskStoreState> = createStore<MockTaskStoreSta
   execute: false,
   pendingReply: false,
   taskDetailsUpdate: 0,
+  sessionExecution: undefined,
 }))
 const setMockQuestionID = (questionID: string) => {
   mockTaskStore.setState((state) => ({ currentChatStatus: { ...state.currentChatStatus, questionID } }))
@@ -80,6 +82,7 @@ const resetMockStore = () => {
     execute: false,
     pendingReply: false,
     taskDetailsUpdate: 0,
+    sessionExecution: undefined,
   })
   mockTaskDetailsMap.clear()
   casualTaskState.questionID = ''
@@ -1352,6 +1355,50 @@ describe('AIRightPanel', () => {
       expect(screen.getByText('1')).toBeInTheDocument()
       expect(screen.getByText('3')).toBeInTheDocument()
       expect(screen.getByText('8')).toBeInTheDocument()
+    } finally {
+      result.unmount()
+      resetMockStore()
+    }
+  })
+
+  it('无当前任务时用会话累计快照展示流量和漏洞', async () => {
+    mockTaskStore.setState({
+      sessionExecution: {
+        http_flow_count: 15,
+        risk_level_count: { critical: 1, high: 2, warning: 0, low: 0, info: 0, other: 0, total: 3 },
+      },
+    })
+    const result = await renderPanel(<AIRightPanel />)
+    try {
+      expect(screen.getByLabelText('流量')).toHaveTextContent('15')
+      expect(screen.getByLabelText('漏洞')).toHaveTextContent('1｜2')
+    } finally {
+      result.unmount()
+      resetMockStore()
+    }
+  })
+
+  it('同时有任务 execution 与会话累计时展示任务侧数值', async () => {
+    setMockQuestionID('task-prefer')
+    mockTaskDetailsMap.set('task-prefer', {
+      uuid: 'uuid-prefer',
+      execution: {
+        http_flow_count: 42,
+        risk_level_count: { critical: 4, high: 0, warning: 0, low: 0, info: 0, other: 0, total: 4 },
+      },
+    })
+    mockTaskStore.setState({
+      sessionExecution: {
+        http_flow_count: 15,
+        risk_level_count: { critical: 1, high: 2, warning: 0, low: 0, info: 0, other: 0, total: 3 },
+      },
+    })
+    const result = await renderPanel(<AIRightPanel />)
+    try {
+      expect(screen.getByLabelText('流量')).toHaveTextContent('42')
+      expect(screen.getByLabelText('漏洞')).toHaveTextContent(/^漏洞4$/)
+      expect(screen.getByLabelText('流量')).not.toHaveTextContent('15')
+      expect(screen.getByLabelText('漏洞')).not.toHaveTextContent('1｜2')
     } finally {
       result.unmount()
       resetMockStore()

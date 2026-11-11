@@ -620,6 +620,9 @@ export interface ChatStoreState {
   sessionTaskList: AIAgentGrpcApi.SessionSnapshotTaskSummary[]
   /** 会话任务索引水位：与单任务 sessionSnapshotRevision 独立，防止乱序旧包回退列表 */
   sessionTaskListRevision: number
+  /** 会话累计 execution（无 TaskId / questionID 时右侧面板用） */
+  sessionExecution?: AIAgentGrpcApi.SessionSnapshot['execution']
+  sessionExecutionRevision: number
   /** 问题队列信息 */
   questionQueue: AIQuestionQueues
 

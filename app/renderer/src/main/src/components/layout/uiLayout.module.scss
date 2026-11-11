@@ -139,6 +139,7 @@
           background: transparent;
           color: var(--Colors-Use-Neutral-Text-3-Secondary);
           cursor: pointer;
+          line-height: 1;
           &[aria-disabled='true'] {
             cursor: not-allowed;
           }
@@ -149,7 +150,13 @@
             color: var(--Colors-Use-Neutral-Text-1-Title);
             font-size: 14px;
             font-weight: 500;
-            line-height: 20px;
+            line-height: 1;
+          }
+          :global(.anticon) {
+            display: inline-flex;
+          }
+          svg {
+            display: block;
           }
         }
         // .park-above-icon-active {

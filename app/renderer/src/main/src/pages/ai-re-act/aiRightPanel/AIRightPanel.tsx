@@ -664,7 +664,9 @@ const ChatRightPanel: React.FC<ChatRightPanelProps> = React.memo((props) => {
   const { panel } = props
   const store = useCurrentStore()
   const questionID = useStore(store, (state) => state.currentChatStatus.questionID)
-  const executionData = useCurrentTaskExecution(questionID)
+  const taskExecution = useCurrentTaskExecution(questionID)
+  const sessionExecution = useStore(store, (state) => state.sessionExecution)
+  const executionData = taskExecution ?? sessionExecution
   const runningTaskCount = useRunningAsyncTaskCount()
   const levelCount = executionData?.risk_level_count
   // 快照映射见 riskLevelCount.mapSessionRiskLevelCount；首页全量别名归并见 useWelcomePanelStats。
