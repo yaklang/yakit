@@ -1,4 +1,4 @@
-import React, { memo, useMemo } from 'react'
+import React, { memo, useEffect, useMemo, useRef } from 'react'
 import ReactEChartsCore from 'echarts-for-react/lib/core'
 import type { EChartsOption } from 'echarts-for-react'
 import { LineChart } from 'echarts/charts'
@@ -55,8 +55,25 @@ interface TrendProps {
 }
 
 export default memo(function MITMDiagnosticsTrend({ kind, points, extended }: TrendProps) {
+  const plotRef = useRef<HTMLDivElement>(null)
+  const chartRef = useRef<ReactEChartsCore>(null)
   const colors = useGetColorsByTheme()
   const config = configs[kind]
+  useEffect(() => {
+    const plot = plotRef.current
+    if (!plot) return
+    // Tabs can mount the chart before the panel has a usable size.
+    const observer = new ResizeObserver(() => {
+      const { clientWidth: width, clientHeight: height } = plot
+      if (!width || !height) return
+      const chart = chartRef.current?.getEchartsInstance()
+      if (chart && (chart.getWidth() !== width || chart.getHeight() !== height)) {
+        chart.resize({ width, height })
+      }
+    })
+    observer.observe(plot)
+    return () => observer.disconnect()
+  }, [])
   const option = useMemo<EChartsOption>(() => {
     const samples = points.filter((point) => Number(point.AtUnixMs) > 0)
     const end = Number(samples.at(-1)?.AtUnixMs) || 0
@@ -132,8 +149,8 @@ export default memo(function MITMDiagnosticsTrend({ kind, points, extended }: Tr
   }, [colors, config, extended, kind, points])
 
   return (
-    <div className={styles.plot} role="img" aria-label={config.label}>
-      <ReactEChartsCore echarts={echarts} option={option} opts={chartOpts} style={chartSize} />
+    <div ref={plotRef} className={styles.plot} role="img" aria-label={config.label}>
+      <ReactEChartsCore ref={chartRef} echarts={echarts} option={option} opts={chartOpts} style={chartSize} />
     </div>
   )
 })

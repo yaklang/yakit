@@ -79,7 +79,6 @@ export const MITMPipelineStatus: React.FC = React.memo(() => {
 
   const health = resolvePipelineHealth(view)
   const backlog = view ? view.stats.ActiveTotal + view.stats.PersistActive : 0
-  const browserActive = view?.stats.Diagnostics?.stages.reduce((sum, stage) => sum + stage.browserCount, 0) ?? 0
   const content = !view ? (
     <div className={styles['empty-content']}>
       <div className={styles['popover-title']}>MITM 实时处理状态</div>
@@ -97,18 +96,12 @@ export const MITMPipelineStatus: React.FC = React.memo(() => {
           {health.label}
         </div>
       </div>
-      <div className={styles['health-detail']}>{health.detail}</div>
+      {health.tone !== 'healthy' && <div className={styles['health-detail']}>{health.detail}</div>}
       <div className={styles['metric-list']}>
         <MetricRow
           label="请求转发"
           value={`发出 ${rate(view.rates.dispatch)} · 返回 ${rate(view.rates.upstreamCompleted)}`}
-          description={
-            <>
-              待转发 {view.stats.PreDispatchActive} 条 · 上游处理中 {view.stats.UpstreamActive} 条 · 响应处理中{' '}
-              {view.stats.ResponseProcessingActive} 条
-              {browserActive > 0 && <div>HTTP 在途含 {browserActive} 条 Chrome 自动填充请求</div>}
-            </>
-          }
+          description={`待转发 ${view.stats.PreDispatchActive} 条 · 上游处理中 ${view.stats.UpstreamActive} 条 · 响应处理中 ${view.stats.ResponseProcessingActive} 条`}
         />
         <MetricRow
           label="流量入库"

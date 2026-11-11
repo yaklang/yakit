@@ -1,4 +1,4 @@
-import type { MITMStageSummary, MITMTrafficScope } from './MITMDiagnostics.types'
+import type { MITMStageSummary } from './MITMDiagnostics.types'
 import { formatMITMPipelineDuration, type MITMPipelineRates, type MITMPipelineStats } from './MITMPipelineStatus.utils'
 
 export interface FrontendPipelineState {
@@ -19,7 +19,7 @@ export interface MITMPipelineHealth {
   label: string
   detail: string
   focus?: 'storage' | 'trace'
-  trafficScope?: MITMTrafficScope
+  trafficScope?: 'all'
 }
 
 export const stageLabels: Record<string, string> = {
@@ -123,11 +123,8 @@ export const resolvePipelineHealth = (view?: MITMPipelineViewState): MITMPipelin
     }
   }
   let waiting: MITMStageSummary | undefined
-  let background: MITMStageSummary | undefined
   for (const stage of d?.stages ?? []) {
     if (!waitingDescriptions[stage.stage]) continue
-    if (stage.browserCount > 0 && stage.browserOldest >= slow && stage.browserOldest > (background?.browserOldest ?? 0))
-      background = stage
     if (
       stage.stage !== 'request_processing' &&
       stage.count > stage.browserCount &&
@@ -167,16 +164,7 @@ export const resolvePipelineHealth = (view?: MITMPipelineViewState): MITMPipelin
       focus: 'storage',
     }
   }
-  if (background) {
-    return {
-      tone: 'info',
-      label: '浏览器后台请求等待',
-      detail: `Chrome 自动填充有 ${background.browserCount} 条请求${describeWaitingStage(background.stage)}，最长 ${formatDuration(background.browserOldest)}。`,
-      focus: 'trace',
-      trafficScope: 'browser',
-    }
-  }
-  return { tone: 'healthy', label: '处理正常', detail: '当前转发、入库和列表更新均无明显积压。' }
+  return { tone: 'healthy', label: '处理正常', detail: '当前暂无需要关注的告警。' }
 }
 
 export const outcomeLabels: Record<string, string> = {

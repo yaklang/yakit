@@ -567,10 +567,9 @@ export const createHTTPFlowLiveStreamController = (options: HTTPFlowLiveStreamCo
   }
 
   const observeQuery = (response: YakQueryHTTPFlowResponse, filter?: YakQueryHTTPFlowRequest) => {
-    if (options.getMode() === 'off' || hasHTTPFlowFilterCriteria(filter)) {
-      options.onReset?.()
-      stopTransport()
-      options.observer?.recordHTTPFlowLiveStreamStopped()
+    // Protocol v1 covers only the unfiltered MITM source.
+    if (options.getMode() === 'off' || filter?.SourceType !== 'mitm' || hasHTTPFlowFilterCriteria(filter)) {
+      stop()
       return
     }
     const identity = response.SystemTiming?.DatabaseIdentity || ''

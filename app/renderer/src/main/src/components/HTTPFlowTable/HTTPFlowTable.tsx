@@ -84,7 +84,7 @@ import {
 } from '@/utils/getMainOperatorPageBodyContainer'
 import { getHTTPFlowExportFields } from './HTTPFlowExportFields'
 import { showYakitDrawer } from '../yakitUI/YakitDrawer/YakitDrawer'
-import MITMContext from '@/pages/mitm/Context/MITMContext'
+import MITMContext, { MITMVersion } from '@/pages/mitm/Context/MITMContext'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 import { isEqual } from 'lodash'
 import {
@@ -620,7 +620,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             Number(rsp.SystemTiming?.LatestPersistedId) || 0,
             latestResponseId,
           )
-          httpFlowLiveStreamController.observeQuery(rsp, Filter)
+          if (mitmVersion === MITMVersion.V2) {
+            httpFlowLiveStreamController.observeQuery(rsp, Filter)
+          }
         }
         if (timingToken) mitmFlowObservability.completeQuery(timingToken, rsp)
       } catch (error) {
@@ -863,7 +865,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   ])
 
   useEffect(() => {
-    if (pageType !== 'MITM' || !inViewport) {
+    if (pageType !== 'MITM' || mitmVersion !== MITMVersion.V2 || !inViewport) {
       httpFlowLiveDirectBatcher.cancel()
       httpFlowLiveDirectRecoveryGate.reset()
       httpFlowLiveRefreshScheduler.cancel()
@@ -875,6 +877,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     httpFlowLiveRefreshScheduler,
     httpFlowLiveStreamController,
     inViewport,
+    mitmVersion,
     pageType,
   ])
 

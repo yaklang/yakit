@@ -253,11 +253,7 @@ const LivePanel: React.FC<{
       size="small"
       onClick={health.focus === 'storage' ? onStorage : () => onTrace({ filter: 'active', scope: health.trafficScope })}
     >
-      {health.focus === 'storage'
-        ? '查看入库压力'
-        : health.trafficScope === 'browser'
-          ? '查看后台请求'
-          : '查看请求轨迹'}
+      {health.focus === 'storage' ? '查看入库压力' : '查看请求轨迹'}
     </YakitButton>
   )
   return (

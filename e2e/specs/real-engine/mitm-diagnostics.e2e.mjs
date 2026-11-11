@@ -1,12 +1,19 @@
 import http from 'node:http'
 import path from 'node:path'
+import { writeFile } from 'node:fs/promises'
 import {
   confirmStartupWorkspace,
   connectRemoteEngineThroughUI,
   enterDefaultProjectThroughUI,
   waitForMainWindow,
 } from '../../drivers/application.driver.mjs'
-import { openMITMV2ThroughUI, startMITMV2ThroughUI, stopMITMV2ThroughUI } from '../../drivers/mitm.driver.mjs'
+import {
+  getMITMPipelineSnapshot,
+  isScenarioRenderedInMITMTable,
+  openMITMV2ThroughUI,
+  startMITMV2ThroughUI,
+  stopMITMV2ThroughUI,
+} from '../../drivers/mitm.driver.mjs'
 import {
   reserveLoopbackPort,
   waitForLoopbackPort,
@@ -33,8 +40,57 @@ const resizeMain = (width, height) =>
     height,
   )
 
-const waitForPlot = (name) => $(`[role="img"][aria-label="${name}"] canvas`).waitForDisplayed({ timeout: 10000 })
+const waitForPlot = (name) =>
+  browser.waitUntil(
+    () =>
+      browser.execute((label) => {
+        const plot = document.querySelector(`[role="img"][aria-label="${label}"]`)
+        const canvas = plot?.querySelector('canvas')
+        return (
+          !!canvas &&
+          plot.clientWidth > 0 &&
+          plot.clientHeight > 0 &&
+          Math.abs(canvas.clientWidth - plot.clientWidth) <= 2 &&
+          Math.abs(canvas.clientHeight - plot.clientHeight) <= 2
+        )
+      }, name),
+    { timeout: 10000, timeoutMsg: `Chart did not fill its container after switching tabs: ${name}` },
+  )
 const capture = (name) => browser.saveScreenshot(path.join(process.env.YAKIT_E2E_ARTIFACTS_DIR, `${name}.png`))
+
+const importPluginFlow = async (route) => {
+  const harPath = path.join(process.env.YAKIT_E2E_ARTIFACTS_DIR, 'mitm-live-plugin-flow.har')
+  await writeFile(
+    harPath,
+    JSON.stringify({
+      log: {
+        version: '1.2',
+        creator: { name: 'Yakit E2E', version: '1' },
+        entries: [
+          {
+            startedDateTime: new Date().toISOString(),
+            time: 0,
+            request: {
+              method: 'GET',
+              url: `http://127.0.0.1/${route}`,
+              headers: [{ name: 'Host', value: '127.0.0.1' }],
+            },
+            response: { status: 200, statusText: 'OK' },
+          },
+        ],
+      },
+    }),
+  )
+  await browser.execute((inputPath) => {
+    const { ipcRenderer } = window.require('electron')
+    const token = crypto.randomUUID()
+    return new Promise((resolve, reject) => {
+      ipcRenderer.once(`${token}-end`, () => resolve())
+      ipcRenderer.once(`${token}-error`, (_, error) => reject(new Error(String(error))))
+      ipcRenderer.invoke('ImportHTTPFlowStream', { InputPath: inputPath }, token).catch(reject)
+    })
+  }, harPath)
+}
 
 describe('MITM diagnostics with a real Yak engine', () => {
   it('separates background waits, fills the drawer, plots live samples, and clears on stop', async () => {
@@ -64,8 +120,12 @@ describe('MITM diagnostics with a real Yak engine', () => {
 
     const proxyPort = await reserveLoopbackPort()
     const originResponses = []
-    const slowOrigin = http.createServer((_req, res) => {
+    const slowOrigin = http.createServer((req, res) => {
       res.setHeader('Content-Type', 'text/plain')
+      if (req.url === '/mitm-live-after-diagnostics') {
+        res.end('New MITM flow')
+        return
+      }
       originResponses.push(res)
     })
     await new Promise((resolve, reject) => {
@@ -110,13 +170,20 @@ describe('MITM diagnostics with a real Yak engine', () => {
       const trigger = await $('button[aria-label^="MITM 实时处理状态，每秒"]')
       await trigger.waitForClickable()
       await trigger.click()
+      expect(await $('.ant-popover:not(.ant-popover-hidden)').getText()).not.toContain('Chrome 自动填充')
       await clickText('打开流量诊断')
       const drawer = await $('[role="dialog"]')
       await drawer.waitForDisplayed()
-      await drawer.$('.//h3[normalize-space(.)="浏览器后台请求等待"]').waitForDisplayed({ timeout: 10000 })
       await waitForPlot('请求收发速率')
+      await clickText('入库压力', 'div[@role="tab"]')
+      await waitForPlot('本会话待写数量趋势')
+      await waitForPlot('提交与写入速率')
+      await clickText('实时状态', 'div[@role="tab"]')
+      await waitForPlot('请求收发速率')
+      expect(await drawer.getText()).toContain('Chrome 自动填充')
       await capture('mitm-diagnostics-live')
-      await clickText('查看后台请求')
+      await clickText('请求轨迹', 'div[@role="tab"]')
+      await clickText(`浏览器后台 · ${browserCount}`, 'label')
 
       const records = await $('[aria-label="选择请求"]')
       const details = await $('[aria-label="请求阶段明细"]')
@@ -171,6 +238,26 @@ describe('MITM diagnostics with a real Yak engine', () => {
       await capture('mitm-diagnostics-storage')
       await browser.keys('Escape')
       await drawer.waitForDisplayed({ reverse: true })
+      const liveRoute = 'mitm-live-after-diagnostics'
+      expect(await send('127.0.0.1', liveRoute)).toBe(200)
+      await browser.waitUntil(() => isScenarioRenderedInMITMTable(liveRoute), {
+        timeout: 10000,
+        timeoutMsg: 'The MITM table did not display a new flow automatically after closing the drawer',
+      })
+
+      const queryCount = (await getMITMPipelineSnapshot()).state.querySamples
+      const pluginSource = await $(
+        '//div[contains(@class,"mitm-log-heard-left")]//span[contains(@class,"ant-tag-checkable") and normalize-space(.)="插件"]',
+      )
+      await pluginSource.click()
+      await browser.waitUntil(async () => (await getMITMPipelineSnapshot()).state.querySamples > queryCount)
+      const pluginRoute = 'mitm-live-plugin-flow'
+      await importPluginFlow(pluginRoute)
+      await browser.waitUntil(() => isScenarioRenderedInMITMTable(pluginRoute), {
+        timeout: 5000,
+        timeoutMsg: 'The MITM table did not display a newly imported plugin flow with both sources selected',
+      })
+
       await stopMITMV2ThroughUI()
       await waitForLoopbackPortClosed({ port: proxyPort })
       await trigger.waitForExist({ reverse: true })

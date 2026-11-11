@@ -90,7 +90,7 @@ describe('MITM diagnostics', () => {
     expect(resolvePipelineHealth(old).label).toBe('上游处理中')
   })
 
-  it('names the actual waiting phase and keeps ordinary traffic and write pressure visible', () => {
+  it('keeps background waits out of alerts and names ordinary waits and write pressure', () => {
     const dial = {
       Stage: 'dial',
       Count: 22,
@@ -100,11 +100,7 @@ describe('MITM diagnostics', () => {
       OldestOtherAgeMs: 0,
     }
     const raw = { ...sample, Version: 3, PersistActive: 0, Diagnostics: { HTTPStages: [dial] } }
-    expect(resolvePipelineHealth(view(raw))).toMatchObject({
-      tone: 'info',
-      trafficScope: 'browser',
-      detail: 'Chrome 自动填充有 22 条请求正在连接目标服务器或下游代理，最长 28 秒。',
-    })
+    expect(resolvePipelineHealth(view(raw)).tone).toBe('healthy')
     const mixed = { ...raw, Diagnostics: { HTTPStages: [{ ...dial, Count: 23, OldestOtherAgeMs: 3100 }] } }
     expect(resolvePipelineHealth(view(mixed))).toMatchObject({
       tone: 'warning',

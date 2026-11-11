@@ -182,6 +182,28 @@ describe('HTTPFlow live stream controller', () => {
     expect(reset).toHaveBeenCalledTimes(1)
   })
 
+  it.each(['scan', 'mitm,scan', 'mitm,basic-crawler', ''])(
+    'leaves source selection "%s" on the query path',
+    (SourceType) => {
+      const transport = new FakeTransport()
+      const controller = createHTTPFlowLiveStreamController({
+        transport,
+        createToken: () => 'test',
+        getMode: () => 'canary',
+      })
+      controller.observeQuery(queryResponse('db-a', 7, [1]), { SourceType: 'mitm' })
+      expect(controller.snapshot().active).toBe(true)
+
+      controller.observeQuery(queryResponse('db-a', 7, [1]), { SourceType })
+      expect(controller.snapshot().active).toBe(false)
+      expect(transport.cancels).toEqual(['test'])
+
+      controller.observeQuery(queryResponse('db-a', 7, [1]), { SourceType: 'mitm' })
+      expect(controller.snapshot().active).toBe(true)
+      expect(transport.starts).toHaveLength(2)
+    },
+  )
+
   it('clears pending consumer state before switching projects', () => {
     const transport = new FakeTransport()
     const reset = vi.fn()
