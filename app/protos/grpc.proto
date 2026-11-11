@@ -10442,6 +10442,9 @@ message MITMStageStats {
   string Stage = 1;
   int64 Count = 2;
   int64 OldestAgeMs = 3;
+  int64 BrowserBackgroundCount = 4;
+  int64 OldestBrowserBackgroundAgeMs = 5;
+  int64 OldestOtherAgeMs = 6;
 }
 
 message GetMITMDiagnosticsRequest {
@@ -10454,6 +10457,8 @@ message GetMITMDiagnosticsRequest {
   int64 ToUnixMs = 6;
   uint64 TraceId = 7;
   string ConnectionId = 8;
+  // Empty or all preserves the full view. focus and browser filter before paging.
+  string TrafficScope = 9;
 }
 
 message GetMITMDiagnosticsResponse {
@@ -10463,11 +10468,19 @@ message GetMITMDiagnosticsResponse {
   repeated MITMTraceEntry Traces = 4;
   int32 Total = 5;
   MITMTraceEntry Detail = 6;
+  int32 BrowserBackgroundTotal = 7;
 }
 
 message MITMStorageSample {
   int64 AtUnixMs = 1;
   int64 PersistPending = 2;
+  uint64 RequestTotal = 3;
+  uint64 DispatchTotal = 4;
+  uint64 UpstreamCompletedTotal = 5;
+  uint64 PersistEnqueuedTotal = 6;
+  uint64 PersistedTotal = 7;
+  uint64 PersistFailedTotal = 8;
+  int64 PersistBlocked = 9;
 }
 
 message MITMTraceEntry {
@@ -10489,6 +10502,8 @@ message MITMTraceEntry {
   string ErrorCode = 14;
   repeated MITMTraceSpan Spans = 15;
   bool SpansTruncated = 16;
+  // Known browser service inferred from the destination hostname.
+  string BrowserService = 17;
 }
 
 message MITMTraceSpan {

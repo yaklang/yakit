@@ -1,3 +1,4 @@
+import type { MITMStageSummary, MITMTrafficScope } from './MITMDiagnostics.types'
 import { formatMITMPipelineDuration, type MITMPipelineRates, type MITMPipelineStats } from './MITMPipelineStatus.utils'
 
 export interface FrontendPipelineState {
@@ -18,14 +19,15 @@ export interface MITMPipelineHealth {
   label: string
   detail: string
   focus?: 'storage' | 'trace'
+  trafficScope?: MITMTrafficScope
 }
 
 export const stageLabels: Record<string, string> = {
   request_processing: '等待转发',
   manual_request: '等待手动处理请求',
   upstream: '准备上游请求',
-  pool_wait: '等待上游连接',
-  dial: '上游建连',
+  pool_wait: '等待连接池空位',
+  dial: '建立上游连接',
   send: '发送上游请求',
   first_byte: '等待上游首包',
   read: '响应传输',
@@ -43,6 +45,29 @@ export const stageLabels: Record<string, string> = {
 export const stageLabel = (stage: string, protocol?: string) =>
   protocol === 'WebSocket' && stage === 'first_byte' ? '等待握手响应' : stageLabels[stage] || '处理中'
 
+const waitingDescriptions: Record<string, string> = {
+  request_processing: '正在等待 MITM 转发',
+  upstream: '正在准备转发到上游',
+  pool_wait: '正在等待上游连接池释放空位',
+  dial: '正在连接目标服务器或下游代理',
+  send: '正在向上游发送请求',
+  first_byte: '正在等待上游返回响应首字节',
+}
+
+export const describeWaitingStage = (stage: string, protocol?: string) =>
+  protocol === 'WebSocket' && stage === 'first_byte' ? '正在等待 WebSocket 握手响应' : waitingDescriptions[stage]
+
+export const browserServiceLabel = (service?: string) => (service === 'chrome_autofill' ? 'Chrome 自动填充' : undefined)
+
+const clock = new Intl.DateTimeFormat('zh-CN', {
+  hourCycle: 'h23',
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit',
+})
+
+export const formatTraceClock = (time: number) => (time > 0 ? clock.format(time) : '–')
+
 export const formatDuration = (milliseconds?: number): string => {
   if (milliseconds === undefined) return '暂无样本'
   if (milliseconds >= 60_000) {
@@ -56,8 +81,6 @@ export const formatDuration = (milliseconds?: number): string => {
 }
 
 const slow = 2000
-const upstreamWaiting = ['pool_wait', 'dial', 'send', 'first_byte', 'upstream']
-
 export const resolvePipelineHealth = (view?: MITMPipelineViewState): MITMPipelineHealth => {
   if (!view) {
     return { tone: 'idle', label: '等待数据', detail: 'MITM 启动后，这里会显示实时处理状态。' }
@@ -86,26 +109,38 @@ export const resolvePipelineHealth = (view?: MITMPipelineViewState): MITMPipelin
       label: '等待手动处理',
       detail: `${stats.ManualActive} 条请求或响应正在等待手动处理。`,
       focus: 'trace',
+      trafficScope: 'all',
     }
   }
-  if (stats.OldestPreDispatchAgeMs >= slow) {
+  const preDispatch = d?.stages.find((stage) => stage.stage === 'request_processing')
+  const oldestPreDispatch = preDispatch?.browserCount ? preDispatch.otherOldest : stats.OldestPreDispatchAgeMs
+  if (oldestPreDispatch >= slow) {
     return {
       tone: 'warning',
       label: '等待转发',
-      detail: `${stats.PreDispatchActive} 条请求尚未转发，最长已等待 ${formatDuration(stats.OldestPreDispatchAgeMs)}。`,
+      detail: `${stats.PreDispatchActive - (preDispatch?.browserCount ?? 0)} 条请求尚未转发，最长已等待 ${formatDuration(oldestPreDispatch)}。`,
       focus: 'trace',
     }
   }
-  const waiting = d?.stages
-    .filter((stage) => upstreamWaiting.includes(stage.stage) && stage.oldest >= slow)
-    .reduce<
-      (typeof d.stages)[number] | undefined
-    >((oldest, stage) => (!oldest || stage.oldest > oldest.oldest ? stage : oldest), undefined)
+  let waiting: MITMStageSummary | undefined
+  let background: MITMStageSummary | undefined
+  for (const stage of d?.stages ?? []) {
+    if (!waitingDescriptions[stage.stage]) continue
+    if (stage.browserCount > 0 && stage.browserOldest >= slow && stage.browserOldest > (background?.browserOldest ?? 0))
+      background = stage
+    if (
+      stage.stage !== 'request_processing' &&
+      stage.count > stage.browserCount &&
+      stage.otherOldest >= slow &&
+      stage.otherOldest > (waiting?.otherOldest ?? 0)
+    )
+      waiting = stage
+  }
   if (waiting) {
     return {
       tone: 'warning',
       label: stageLabel(waiting.stage),
-      detail: `${waiting.count} 条请求处于该阶段，最长 ${formatDuration(waiting.oldest)}。`,
+      detail: `${waiting.count - waiting.browserCount} 条请求${describeWaitingStage(waiting.stage)}，最长 ${formatDuration(waiting.otherOldest)}。`,
       focus: 'trace',
     }
   }
@@ -130,6 +165,15 @@ export const resolvePipelineHealth = (view?: MITMPipelineViewState): MITMPipelin
       label: '列表更新慢',
       detail: `保存到显示 P95 为 ${formatDuration(frontend.persistToReactCommitP95)}，估计待显示约 ${frontend.visibleBacklog} 条。`,
       focus: 'storage',
+    }
+  }
+  if (background) {
+    return {
+      tone: 'info',
+      label: '浏览器后台请求等待',
+      detail: `Chrome 自动填充有 ${background.browserCount} 条请求${describeWaitingStage(background.stage)}，最长 ${formatDuration(background.browserOldest)}。`,
+      focus: 'trace',
+      trafficScope: 'browser',
     }
   }
   return { tone: 'healthy', label: '处理正常', detail: '当前转发、入库和列表更新均无明显积压。' }

@@ -3,7 +3,14 @@ import type { MITMPipelineMetricValue } from './MITMPipelineStatus.utils'
 type Metric = MITMPipelineMetricValue
 
 export interface RawMITMDiagnostics {
-  HTTPStages?: Array<{ Stage: string; Count: Metric; OldestAgeMs: Metric }>
+  HTTPStages?: Array<{
+    Stage: string
+    Count: Metric
+    OldestAgeMs: Metric
+    BrowserBackgroundCount?: Metric
+    OldestBrowserBackgroundAgeMs?: Metric
+    OldestOtherAgeMs?: Metric
+  }>
   WebSocketHandshaking?: Metric
   WebSocketOnline?: Metric
   OldestWebSocketHandshakeAgeMs?: Metric
@@ -19,8 +26,17 @@ export interface RawMITMDiagnostics {
   PersistQueueWaitSamples?: Metric
 }
 
+export interface MITMStageSummary {
+  stage: string
+  count: number
+  oldest: number
+  browserCount: number
+  browserOldest: number
+  otherOldest: number
+}
+
 export interface MITMDiagnosticsSummary {
-  stages: Array<{ stage: string; count: number; oldest: number }>
+  stages: MITMStageSummary[]
   wsHandshaking: number
   wsOnline: number
   oldestWSHandshake: number
@@ -34,6 +50,7 @@ export interface MITMDiagnosticsSummary {
 }
 
 export type MITMTraceView = 'active' | 'slow' | 'failed' | 'websocket' | 'range'
+export type MITMTrafficScope = 'focus' | 'browser' | 'all'
 
 export interface MITMDiagnosticsQuery {
   SessionId: string
@@ -44,6 +61,7 @@ export interface MITMDiagnosticsQuery {
   ToUnixMs?: number
   TraceId?: string
   ConnectionId?: string
+  TrafficScope?: MITMTrafficScope
 }
 
 export interface MITMTraceSpan {
@@ -71,11 +89,19 @@ export interface MITMTraceRow {
   Attempts: number
   Spans: MITMTraceSpan[]
   SpansTruncated: boolean
+  BrowserService?: string
 }
 
 export interface MITMStoragePoint {
   AtUnixMs: Metric
   PersistPending: Metric
+  PersistBlocked?: Metric
+  RequestTotal?: Metric
+  DispatchTotal?: Metric
+  UpstreamCompletedTotal?: Metric
+  PersistEnqueuedTotal?: Metric
+  PersistedTotal?: Metric
+  PersistFailedTotal?: Metric
 }
 
 export interface MITMDiagnosticsResponse {
@@ -84,6 +110,7 @@ export interface MITMDiagnosticsResponse {
   Storage?: MITMStoragePoint[]
   Traces?: MITMTraceRow[]
   Total?: number
+  BrowserBackgroundTotal?: number
   Detail?: MITMTraceRow | null
   Ended?: boolean
   Unsupported?: boolean

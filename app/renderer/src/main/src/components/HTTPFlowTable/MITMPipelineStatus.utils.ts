@@ -116,11 +116,19 @@ export const normalizeMITMPipelineStats = (raw: RawMITMPipelineStats): MITMPipel
   const d = raw.Diagnostics
   if (d) {
     normalized.Diagnostics = {
-      stages: (d.HTTPStages ?? []).map(({ Stage, Count, OldestAgeMs }) => ({
-        stage: Stage,
-        count: toNonNegativeNumber(Count),
-        oldest: toNonNegativeNumber(OldestAgeMs),
-      })),
+      stages: (d.HTTPStages ?? []).map((stage) => {
+        const count = toNonNegativeNumber(stage.Count)
+        const oldest = toNonNegativeNumber(stage.OldestAgeMs)
+        const browserCount = Math.min(count, toNonNegativeNumber(stage.BrowserBackgroundCount))
+        return {
+          stage: stage.Stage,
+          count,
+          oldest,
+          browserCount,
+          browserOldest: toNonNegativeNumber(stage.OldestBrowserBackgroundAgeMs),
+          otherOldest: browserCount ? toNonNegativeNumber(stage.OldestOtherAgeMs) : oldest,
+        }
+      }),
       wsHandshaking: toNonNegativeNumber(d.WebSocketHandshaking),
       wsOnline: toNonNegativeNumber(d.WebSocketOnline),
       oldestWSHandshake: toNonNegativeNumber(d.OldestWebSocketHandshakeAgeMs),

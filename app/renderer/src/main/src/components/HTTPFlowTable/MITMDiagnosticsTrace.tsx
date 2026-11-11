@@ -4,14 +4,22 @@ import { YakitEmpty } from '../yakitUI/YakitEmpty/YakitEmpty'
 import { YakitSegmented } from '../yakitUI/YakitSegmented/YakitSegmented'
 import { YakitTag } from '../yakitUI/YakitTag/YakitTag'
 import type { YakitTagColor } from '../yakitUI/YakitTag/YakitTagType'
-import type { MITMDiagnosticsQuery, MITMTraceRow, MITMTraceView } from './MITMDiagnostics.types'
-import { errorLabels, formatDuration, outcomeLabels, stageLabel } from './MITMDiagnostics.utils'
+import type { MITMDiagnosticsQuery, MITMTraceRow, MITMTraceView, MITMTrafficScope } from './MITMDiagnostics.types'
+import {
+  browserServiceLabel,
+  describeWaitingStage,
+  errorLabels,
+  formatDuration,
+  formatTraceClock,
+  outcomeLabels,
+  stageLabel,
+} from './MITMDiagnostics.utils'
 import { useMITMDiagnosticsQuery } from './useMITMDiagnosticsQuery'
 import styles from './MITMDiagnosticsPanel.module.scss'
 
 export type TraceRange = { from: number; to: number }
 
-const pageSize = 20
+const pageSize = 24
 const filters: { value: MITMTraceView; label: string }[] = [
   { value: 'active', label: '当前等待' },
   { value: 'slow', label: '近期慢请求' },
@@ -21,14 +29,6 @@ const filters: { value: MITMTraceView; label: string }[] = [
 
 const rangeFilters = [{ value: 'range' as const, label: '该时段样本' }, ...filters]
 const emptyImageStyle = { width: 88, height: 88, margin: '0 auto 8px' }
-
-const clock = new Intl.DateTimeFormat('zh-CN', {
-  hourCycle: 'h23',
-  hour: '2-digit',
-  minute: '2-digit',
-  second: '2-digit',
-})
-export const formatTraceClock = (time: number) => (time > 0 ? clock.format(time) : '–')
 
 const traceStatus = (trace: MITMTraceRow) => {
   if (trace.Stage === 'websocket_online' || !Number(trace.FinishedAtUnixMs))
@@ -52,15 +52,24 @@ interface TraceProps {
   sessionId: string
   initialFilter: MITMTraceView
   initialRange?: TraceRange
+  initialScope?: MITMTrafficScope
   onOpenFlow: (id: number) => void
 }
 
-export const MITMDiagnosticsTrace: React.FC<TraceProps> = ({ sessionId, initialFilter, initialRange, onOpenFlow }) => {
+export const MITMDiagnosticsTrace = React.memo(function MITMDiagnosticsTrace({
+  sessionId,
+  initialFilter,
+  initialRange,
+  initialScope,
+  onOpenFlow,
+}: TraceProps) {
   const [filter, setFilter] = useState(initialFilter)
   const [range, setRange] = useState(initialRange)
+  const [scope, setScope] = useState(initialScope)
   const [offset, setOffset] = useState(0)
   const [selected, setSelected] = useState<string>()
   const [connectionId, setConnectionId] = useState('')
+  const traceScope = filter === 'websocket' ? undefined : scope
 
   const query = useMemo<MITMDiagnosticsQuery>(
     () => ({
@@ -71,12 +80,14 @@ export const MITMDiagnosticsTrace: React.FC<TraceProps> = ({ sessionId, initialF
       FromUnixMs: filter === 'range' ? range?.from : undefined,
       ToUnixMs: filter === 'range' ? range?.to : undefined,
       ConnectionId: connectionId || undefined,
+      TrafficScope: traceScope,
     }),
-    [sessionId, filter, offset, range, connectionId],
+    [sessionId, filter, offset, range, connectionId, traceScope],
   )
   const list = useMITMDiagnosticsQuery(query, filter !== 'range' && offset === 0)
   const traces = list?.result?.Traces ?? []
   const total = list?.result?.Total ?? 0
+  const backgroundTotal = list?.result?.BrowserBackgroundTotal ?? 0
   const selectedRow = traces.find((row) => row.TraceId === selected) ?? traces[0]
   const traceId = selectedRow?.TraceId
   const detailQuery = useMemo<MITMDiagnosticsQuery | undefined>(
@@ -101,6 +112,11 @@ export const MITMDiagnosticsTrace: React.FC<TraceProps> = ({ sessionId, initialF
     setOffset(0)
     setSelected(undefined)
   }
+  const selectScope = (next: MITMTrafficScope) => {
+    setScope(next)
+    setOffset(0)
+    setSelected(undefined)
+  }
   const filterConnection = (id: string) => {
     setConnectionId(id)
     setOffset(0)
@@ -118,7 +134,22 @@ export const MITMDiagnosticsTrace: React.FC<TraceProps> = ({ sessionId, initialF
           options={range ? rangeFilters : filters}
           onChange={(value) => selectFilter(value as MITMTraceView)}
         />
-        {list?.result && !unavailable && <span className={styles.note}>共 {total} 条</span>}
+        <div className={styles.scopeControls}>
+          {traceScope && (
+            <YakitSegmented
+              size="small"
+              aria-label="按流量来源查看"
+              value={traceScope}
+              options={[
+                { value: 'focus', label: '其他流量' },
+                { value: 'browser', label: backgroundTotal ? `浏览器后台 · ${backgroundTotal}` : '浏览器后台' },
+                { value: 'all', label: '全部' },
+              ]}
+              onChange={(value) => selectScope(value as MITMTrafficScope)}
+            />
+          )}
+          {list?.result && !unavailable && <span className={styles.note}>共 {total} 条</span>}
+        </div>
       </div>
       {range && filter === 'range' && (
         <div className={styles.filterContext}>
@@ -159,7 +190,13 @@ export const MITMDiagnosticsTrace: React.FC<TraceProps> = ({ sessionId, initialF
         <YakitEmpty
           className={styles.empty}
           imageStyle={emptyImageStyle}
-          title={filter === 'active' ? '当前没有等待超过 2 秒的请求或写入任务' : '当前筛选下没有轨迹样本'}
+          title={
+            filter === 'active' && traceScope === 'browser'
+              ? '当前没有等待超过 2 秒的浏览器后台请求'
+              : filter === 'active'
+                ? '当前筛选下没有等待超过 2 秒的请求或写入任务'
+                : '当前筛选下没有轨迹样本'
+          }
         >
           {offset > 0 && (
             <YakitButton type="text" onClick={() => setOffset(0)}>
@@ -182,7 +219,12 @@ export const MITMDiagnosticsTrace: React.FC<TraceProps> = ({ sessionId, initialF
                 >
                   <span className={styles.row}>
                     <strong title={trace.Host}>{trace.Host || '未知目标'}</strong>
-                    <span className={styles.recordDuration}>{formatDuration(rowDuration(trace, listSampledAt))}</span>
+                    <span
+                      className={styles.recordDuration}
+                      title={Number(trace.FinishedAtUnixMs) ? '总耗时' : '当前阶段耗时'}
+                    >
+                      {formatDuration(rowDuration(trace, listSampledAt))}
+                    </span>
                   </span>
                   <span className={styles.recordMeta}>
                     <YakitTag size="small" color="blue" border={false}>
@@ -190,6 +232,9 @@ export const MITMDiagnosticsTrace: React.FC<TraceProps> = ({ sessionId, initialF
                     </YakitTag>
                     <span className={styles.recordStatus}>{traceStatus(trace)}</span>
                   </span>
+                  {traceScope === 'all' && browserServiceLabel(trace.BrowserService) && (
+                    <span className={styles.recordStatus}>{browserServiceLabel(trace.BrowserService)}</span>
+                  )}
                 </button>
               ))}
             </div>
@@ -240,7 +285,7 @@ export const MITMDiagnosticsTrace: React.FC<TraceProps> = ({ sessionId, initialF
       )}
     </section>
   )
-}
+})
 
 const TraceDetail: React.FC<{
   trace: MITMTraceRow
@@ -249,10 +294,25 @@ const TraceDetail: React.FC<{
   onOpenFlow: (id: number) => void
 }> = ({ trace, sampledAt, filterConnection, onOpenFlow }) => {
   const flowId = Number(trace.FlowId)
-  const duration = Math.max(0, (Number(trace.FinishedAtUnixMs) || sampledAt) - Number(trace.StartedAtUnixMs))
-  const spans = (trace.Spans ?? []).filter(
-    (span) => span.Stage !== 'upstream' || Number(span.StartedAtUnixMs) !== Number(span.FinishedAtUnixMs),
-  )
+  const finishedAt = Number(trace.FinishedAtUnixMs) || 0
+  const startedAt = Number(trace.StartedAtUnixMs)
+  const duration = Math.max(0, (finishedAt || sampledAt) - startedAt)
+  const spans = (trace.Spans ?? [])
+    .filter((span) => span.Stage !== 'upstream' || Number(span.StartedAtUnixMs) !== Number(span.FinishedAtUnixMs))
+    .map((span) => {
+      const at = Number(span.StartedAtUnixMs)
+      const end = Number(span.FinishedAtUnixMs) || 0
+      return {
+        ...span,
+        offset: Math.max(0, at - startedAt),
+        elapsed: Math.max(0, (end || sampledAt) - at),
+        active: !end,
+      }
+    })
+  const timelineDuration = Math.max(duration, ...spans.map((span) => span.offset + span.elapsed))
+  const position = (time: number) => `${(time / Math.max(1, timelineDuration)) * 100}%`
+  const browser = browserServiceLabel(trace.BrowserService)
+  const waiting = !finishedAt && describeWaitingStage(trace.Stage, trace.Protocol)
   return (
     <>
       <div className={styles.row}>
@@ -270,8 +330,20 @@ const TraceDetail: React.FC<{
             HTTP {trace.StatusCode}
           </YakitTag>
         )}
+        {browser && (
+          <span title="按目标域名识别为浏览器后台请求">
+            <YakitTag size="small" color="blue" border={false}>
+              {browser}
+            </YakitTag>
+          </span>
+        )}
         <span className={styles.note}>总耗时 {formatDuration(duration)}</span>
       </div>
+      {waiting && (
+        <p className={styles.note}>
+          {waiting}，已耗时 {formatDuration(rowDuration(trace, sampledAt))}。
+        </p>
+      )}
       {trace.ErrorCode && <p className={styles.traceError}>{errorLabels[trace.ErrorCode] || '处理失败'}</p>}
       <div className={styles.detailActions}>
         {trace.ConnectionId && (
@@ -285,29 +357,48 @@ const TraceDetail: React.FC<{
           </YakitButton>
         )}
       </div>
-      <ol className={styles.timeline}>
-        {spans.map((span, index) => {
-          const start = Number(span.StartedAtUnixMs)
-          const end = Number(span.FinishedAtUnixMs)
-          const attempt = span.Attempt && trace.Attempts > 1 && spans[index - 1]?.Attempt !== span.Attempt
-          return (
-            <li key={`${span.Stage}-${start}-${index}`} data-active={!end || undefined}>
-              {!!attempt && (
-                <span className={styles.attempt}>
-                  尝试 {span.Attempt} · {span.Protocol}
-                </span>
-              )}
-              <span className={styles.row}>
-                <span>{stageLabel(span.Stage, span.Protocol || trace.Protocol)}</span>
-                <span className={styles.note}>
-                  {formatDuration(Math.max(0, (end || sampledAt) - start))}
-                  {end ? '' : ' · 进行中'}
-                </span>
-              </span>
-            </li>
-          )
-        })}
-      </ol>
+      {spans.length > 0 && (
+        <section className={styles.waterfall} aria-label="阶段耗时瀑布图">
+          <div className={styles.row}>
+            <h3>阶段耗时</h3>
+            <span className={styles.note}>从收到请求起计</span>
+          </div>
+          <div className={styles.timelineScale} aria-hidden="true">
+            <span>0</span>
+            <span>{formatDuration(timelineDuration / 2)}</span>
+            <span>{formatDuration(timelineDuration)}</span>
+          </div>
+          <ol className={styles.timeline}>
+            {spans.map((span, index) => {
+              const attempt = span.Attempt && trace.Attempts > 1 && spans[index - 1]?.Attempt !== span.Attempt
+              return (
+                <li key={`${span.Stage}-${span.StartedAtUnixMs}-${index}`} data-active={span.active || undefined}>
+                  {!!attempt && (
+                    <span className={styles.attempt}>
+                      尝试 {span.Attempt} · {span.Protocol}
+                    </span>
+                  )}
+                  <span className={styles.row}>
+                    <span>{stageLabel(span.Stage, span.Protocol || trace.Protocol)}</span>
+                    <span className={styles.note}>
+                      {formatDuration(span.elapsed)}
+                      {span.active ? ' · 进行中' : ''}
+                    </span>
+                  </span>
+                  <div className={styles.timelineTrack} aria-hidden="true">
+                    <span
+                      style={{
+                        insetInlineStart: `min(${position(span.offset)}, calc(100% - 2px))`,
+                        width: position(span.elapsed),
+                      }}
+                    />
+                  </div>
+                </li>
+              )
+            })}
+          </ol>
+        </section>
+      )}
       {trace.SpansTruncated && <p className={styles.note}>阶段较多，已保留起始和最近阶段。</p>}
     </>
   )

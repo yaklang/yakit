@@ -17,6 +17,10 @@ vi.mock('../../yakitUI/YakitDrawer/YakitDrawer', () => ({
   ),
 }))
 
+vi.mock('../MITMDiagnosticsTrend', () => ({
+  default: ({ kind }: { kind: string }) => <div role="img" aria-label={kind} />,
+}))
+
 const now = Date.now()
 const sample: RawMITMPipelineStats = {
   SessionId: 'mitm-1',
@@ -86,6 +90,71 @@ describe('MITM diagnostics', () => {
     expect(resolvePipelineHealth(old).label).toBe('上游处理中')
   })
 
+  it('names the actual waiting phase and keeps ordinary traffic and write pressure visible', () => {
+    const dial = {
+      Stage: 'dial',
+      Count: 22,
+      OldestAgeMs: 28_000,
+      BrowserBackgroundCount: 22,
+      OldestBrowserBackgroundAgeMs: 28_000,
+      OldestOtherAgeMs: 0,
+    }
+    const raw = { ...sample, Version: 3, PersistActive: 0, Diagnostics: { HTTPStages: [dial] } }
+    expect(resolvePipelineHealth(view(raw))).toMatchObject({
+      tone: 'info',
+      trafficScope: 'browser',
+      detail: 'Chrome 自动填充有 22 条请求正在连接目标服务器或下游代理，最长 28 秒。',
+    })
+    const mixed = { ...raw, Diagnostics: { HTTPStages: [{ ...dial, Count: 23, OldestOtherAgeMs: 3100 }] } }
+    expect(resolvePipelineHealth(view(mixed))).toMatchObject({
+      tone: 'warning',
+      label: '建立上游连接',
+      detail: '1 条请求正在连接目标服务器或下游代理，最长 3.1 秒。',
+    })
+    expect(resolvePipelineHealth(view({ ...raw, Diagnostics: { ...raw.Diagnostics, PersistBlocked: 1 } })).focus).toBe(
+      'storage',
+    )
+  })
+
+  it('loads live history and switches between ordinary traffic and Chrome background traces', async () => {
+    const ordinary = { ...row, Protocol: 'HTTP/1.1', Stage: 'first_byte', StatusCode: 0 }
+    const autofill = {
+      ...ordinary,
+      TraceId: '3',
+      Host: 'content-autofill.googleapis.com',
+      BrowserService: 'chrome_autofill',
+    }
+    const { invoke } = installIPC((query) => ({
+      SessionId: query.SessionId,
+      GeneratedAtUnixMs: now,
+      ...(query.View === 'storage'
+        ? {
+            Storage: [
+              { AtUnixMs: now - 1000, RequestTotal: 1 },
+              { AtUnixMs: now, RequestTotal: 3 },
+            ],
+          }
+        : query.View === 'detail'
+        ? { Detail: query.TraceId === '3' ? autofill : ordinary }
+        : {
+            Traces: query.TrafficScope === 'browser' ? [autofill] : [ordinary],
+            Total: query.TrafficScope === 'browser' ? 22 : 1,
+            BrowserBackgroundTotal: 22,
+          }),
+    }))
+    render(<MITMDiagnosticsPanel view={view({ ...sample, Version: 3 })} onClose={vi.fn()} />)
+    expect(await screen.findByRole('img', { name: 'traffic' })).toBeVisible()
+    fireEvent.click(screen.getByRole('tab', { name: '请求轨迹' }))
+    expect(await screen.findByRole('heading', { name: 'GET example.invalid' })).toBeVisible()
+    expect(invoke).toHaveBeenCalledWith('mitmV2-get-diagnostics', expect.objectContaining({ TrafficScope: 'focus' }))
+    fireEvent.click(screen.getByRole('radio', { name: '浏览器后台 · 22' }))
+    const detail = await screen.findByRole('article', { name: '请求阶段明细' })
+    expect(await within(detail).findByText('Chrome 自动填充')).toBeVisible()
+    expect(within(detail).getByRole('heading', { name: 'GET content-autofill.googleapis.com' })).toBeVisible()
+    expect(invoke).toHaveBeenCalledWith('mitmV2-get-diagnostics', expect.objectContaining({ TrafficScope: 'browser' }))
+    expect(invoke.mock.calls.filter(([, query]) => query.View === 'storage')).toHaveLength(1)
+  })
+
   it('requests storage only when selected and jumps from an observed peak to that trace time range', async () => {
     const { invoke } = installIPC((query) => ({
       SessionId: query.SessionId,
@@ -98,27 +167,27 @@ describe('MITM diagnostics', () => {
             ],
           }
         : query.View === 'range'
-          ? {
-              Traces: [
-                { ...row, Protocol: 'HTTP/1.1', Stage: 'persist_write', Outcome: 'completed', FinishedAtUnixMs: now },
+        ? {
+            Traces: [
+              { ...row, Protocol: 'HTTP/1.1', Stage: 'persist_write', Outcome: 'completed', FinishedAtUnixMs: now },
+            ],
+            Total: 1,
+          }
+        : {
+            Detail: {
+              ...row,
+              Protocol: 'HTTP/1.1',
+              Spans: [
+                {
+                  Stage: 'persist_blocked',
+                  StartedAtUnixMs: now - 2000,
+                  FinishedAtUnixMs: now,
+                  Attempt: 0,
+                  Protocol: '',
+                },
               ],
-              Total: 1,
-            }
-          : {
-              Detail: {
-                ...row,
-                Protocol: 'HTTP/1.1',
-                Spans: [
-                  {
-                    Stage: 'persist_blocked',
-                    StartedAtUnixMs: now - 2000,
-                    FinishedAtUnixMs: now,
-                    Attempt: 0,
-                    Protocol: '',
-                  },
-                ],
-              },
-            }),
+            },
+          }),
     }))
     render(<MITMDiagnosticsPanel view={view()} onClose={vi.fn()} />)
     expect(invoke).not.toHaveBeenCalled()
@@ -193,8 +262,8 @@ describe('MITM diagnostics', () => {
           ...(query.View === 'slow'
             ? { Traces: [completed], Total: 1 }
             : query.View === 'detail'
-              ? { Detail: completed }
-              : { Traces: [], Total: 0 }),
+            ? { Detail: completed }
+            : { Traces: [], Total: 0 }),
         }
       })
       render(<MITMDiagnosticsPanel view={view()} onClose={vi.fn()} />)

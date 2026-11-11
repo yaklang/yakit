@@ -7,18 +7,25 @@ import { YakitCard } from '../yakitUI/YakitCard/YakitCard'
 import { YakitDrawer } from '../yakitUI/YakitDrawer/YakitDrawer'
 import { YakitTag } from '../yakitUI/YakitTag/YakitTag'
 import { formatMITMPipelineRate } from './MITMPipelineStatus.utils'
-import type { MITMDiagnosticsQuery, MITMStoragePoint, MITMTraceView } from './MITMDiagnostics.types'
-import { formatDuration, resolvePipelineHealth, type MITMPipelineViewState } from './MITMDiagnostics.utils'
-import { formatTraceClock, MITMDiagnosticsTrace, type TraceRange } from './MITMDiagnosticsTrace'
+import type { MITMDiagnosticsQuery, MITMStoragePoint, MITMTraceView, MITMTrafficScope } from './MITMDiagnostics.types'
+import {
+  formatDuration,
+  formatTraceClock,
+  resolvePipelineHealth,
+  type MITMPipelineViewState,
+} from './MITMDiagnostics.utils'
+import { MITMDiagnosticsTrace, type TraceRange } from './MITMDiagnosticsTrace'
 import { useMITMDiagnosticsQuery } from './useMITMDiagnosticsQuery'
 import styles from './MITMDiagnosticsPanel.module.scss'
 
 const FlowDetail = React.lazy(() =>
   import('../HTTPFlowDetail').then(({ HTTPFlowDetail }) => ({ default: HTTPFlowDetail })),
 )
+const Trend = React.lazy(() => import('./MITMDiagnosticsTrend'))
 
 type Tab = 'live' | 'storage' | 'trace'
-type TraceFocus = { filter: MITMTraceView; range?: TraceRange }
+type TraceFocus = { filter: MITMTraceView; range?: TraceRange; scope?: MITMTrafficScope }
+type History = ReturnType<typeof useMITMDiagnosticsQuery>
 const count = (value: number) => value.toLocaleString('zh-CN')
 const rate = formatMITMPipelineRate
 
@@ -33,9 +40,16 @@ export const MITMDiagnosticsPanel: React.FC<PanelProps> = ({ view, onClose }) =>
   const [flowId, setFlowId] = useState<number>()
   const { stats } = view
   const supported = !!stats.Diagnostics
+  const extended = supported && stats.Version >= 3
+  const showHistory = supported && (tab === 'storage' || (tab === 'live' && extended))
+  const historyQuery = useMemo<MITMDiagnosticsQuery | undefined>(
+    () => (showHistory ? { SessionId: stats.SessionId, View: 'storage' } : undefined),
+    [showHistory, stats.SessionId],
+  )
+  const history = useMITMDiagnosticsQuery(historyQuery, true)
 
-  const openTrace = (filter: MITMTraceView, range?: TraceRange) => {
-    setTraceFocus({ filter, range })
+  const openTrace = (focus: TraceFocus) => {
+    setTraceFocus(focus)
     setTab('trace')
   }
   const selectTab = (key: string) => {
@@ -59,6 +73,7 @@ export const MITMDiagnosticsPanel: React.FC<PanelProps> = ({ view, onClose }) =>
     >
       <div className={styles.panel}>
         <PluginTabs
+          type="line"
           wrapperClassName={styles.tabs}
           activeKey={tab}
           onChange={selectTab}
@@ -68,14 +83,27 @@ export const MITMDiagnosticsPanel: React.FC<PanelProps> = ({ view, onClose }) =>
               key: 'live',
               label: '实时状态',
               children: tab === 'live' && (
-                <LivePanel view={view} onStorage={() => setTab('storage')} onTrace={openTrace} />
+                <LivePanel
+                  view={view}
+                  history={history}
+                  extended={extended}
+                  onStorage={() => setTab('storage')}
+                  onTrace={openTrace}
+                />
               ),
             },
             {
               key: 'storage',
               label: '入库压力',
               disabled: !supported,
-              children: tab === 'storage' && <StoragePanel view={view} onPeak={(range) => openTrace('range', range)} />,
+              children: tab === 'storage' && (
+                <StoragePanel
+                  view={view}
+                  history={history}
+                  extended={extended}
+                  onPeak={(range) => openTrace({ filter: 'range', range, scope: 'all' })}
+                />
+              ),
             },
             {
               key: 'trace',
@@ -86,6 +114,7 @@ export const MITMDiagnosticsPanel: React.FC<PanelProps> = ({ view, onClose }) =>
                   sessionId={stats.SessionId}
                   initialFilter={traceFocus.filter}
                   initialRange={traceFocus.range}
+                  initialScope={extended ? (traceFocus.scope ?? 'focus') : undefined}
                   onOpenFlow={setFlowId}
                 />
               ),
@@ -126,65 +155,109 @@ const Line: React.FC<{ label: string; children: React.ReactNode }> = ({ label, c
   </div>
 )
 
-const PhaseTable: React.FC<{
-  label: string
-  rows: { label: string; count: number; oldest?: number; attention?: boolean }[]
-}> = ({ label, rows }) => (
-  <table className={styles.phaseTable} aria-label={label}>
-    <thead>
-      <tr>
-        <th scope="col">阶段</th>
-        <th scope="col">数量</th>
-        <th scope="col">最长耗时</th>
-      </tr>
-    </thead>
-    <tbody>
-      {rows.map(({ label, count: total, oldest, attention }) => (
-        <tr key={label} data-attention={attention || undefined}>
-          <th scope="row">{label}</th>
-          <td className={total ? undefined : styles.muted}>{count(total)}</td>
-          <td className={oldest === undefined ? styles.muted : undefined}>
-            {oldest === undefined ? '—' : formatDuration(oldest)}
-          </td>
-        </tr>
-      ))}
-    </tbody>
-  </table>
-)
-
-const liveStages = [
+const liveStages: Array<[string, string[]]> = [
   ['等待转发', ['request_processing']],
-  ['手动处理', ['manual_request', 'manual_response']],
-  ['等待上游连接', ['pool_wait']],
-  ['上游建连', ['dial']],
+  ['等待手动处理', ['manual_request', 'manual_response']],
+  ['等待连接池空位', ['pool_wait']],
+  ['建立上游连接', ['dial']],
   ['发送上游请求', ['upstream', 'send']],
   ['等待上游首包', ['first_byte']],
   ['响应传输', ['read']],
   ['SSE 传输', ['streaming']],
   ['处理响应', ['local_response', 'response_processing']],
-] as const
+]
+
+const HTTPPhases: React.FC<{ view: MITMPipelineViewState; extended: boolean; warning?: string }> = ({
+  view,
+  extended,
+  warning,
+}) => {
+  const stages = view.stats.Diagnostics?.stages ?? []
+  const rows = liveStages.map(([label, names]) => {
+    const matches = stages.filter(({ stage }) => names.includes(stage))
+    return {
+      label,
+      total: matches.reduce((sum, stage) => sum + stage.count, 0),
+      browser: matches.reduce((sum, stage) => sum + stage.browserCount, 0),
+      oldest: Math.max(0, ...matches.map((stage) => stage.oldest)),
+      otherOldest: Math.max(0, ...matches.map((stage) => stage.otherOldest)),
+      browserOldest: Math.max(0, ...matches.map((stage) => stage.browserOldest)),
+    }
+  })
+  const max = Math.max(1, ...rows.map((row) => row.total))
+  return (
+    <>
+      <table className={styles.phaseTable} aria-label="HTTP 在途阶段">
+        <thead>
+          <tr>
+            <th scope="col">阶段</th>
+            <th scope="col">请求数</th>
+            <th scope="col">最长耗时</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => {
+            const other = row.total - row.browser
+            const groups = row.browser
+              ? `Chrome 自动填充 ${row.browser} 条，最久 ${formatDuration(row.browserOldest)}${other ? ` · 其他流量 ${other} 条，最久 ${formatDuration(row.otherOldest)}` : ''}`
+              : undefined
+            return (
+              <tr key={row.label} data-attention={warning === row.label || undefined}>
+                <th scope="row">{row.label}</th>
+                <td title={groups}>
+                  <div className={styles.phaseValue}>
+                    <div className={styles.phaseTrack} aria-hidden="true">
+                      <span className={styles.phaseOther} style={{ width: `${(other / max) * 100}%` }} />
+                      <span className={styles.phaseBrowser} style={{ width: `${(row.browser / max) * 100}%` }} />
+                    </div>
+                    <span>{count(row.total)}</span>
+                    {groups && <span className={styles.visuallyHidden}>{groups}</span>}
+                  </div>
+                </td>
+                <td>{row.total ? formatDuration(row.oldest) : '–'}</td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
+      {extended && (
+        <div className={styles.phaseLegend}>
+          <span>
+            <i className={styles.phaseOther} />
+            其他流量
+          </span>
+          <span title="按目标域名识别">
+            <i className={styles.phaseBrowser} />
+            Chrome 自动填充
+          </span>
+        </div>
+      )}
+    </>
+  )
+}
 
 const LivePanel: React.FC<{
   view: MITMPipelineViewState
+  history: History
+  extended: boolean
   onStorage: () => void
-  onTrace: (view: MITMTraceView) => void
-}> = ({ view, onStorage, onTrace }) => {
+  onTrace: (focus: TraceFocus) => void
+}> = ({ view, history, extended, onStorage, onTrace }) => {
   const { stats, rates, frontend } = view
   const d = stats.Diagnostics
   const health = resolvePipelineHealth(view)
   const delta = rates.pendingDelta
-  const httpRows = liveStages.map(([label, names]) => {
-    const matches = d?.stages.filter(({ stage }) => names.some((name) => name === stage)) ?? []
-    return {
-      label,
-      count: matches.reduce((sum, { count }) => sum + count, 0),
-      oldest: matches.length ? Math.max(...matches.map(({ oldest }) => oldest)) : undefined,
-      attention: health.tone === 'warning' && health.label === label,
-    }
-  })
   const action = d && health.focus && (
-    <YakitButton type="text" size="small" onClick={health.focus === 'storage' ? onStorage : () => onTrace('active')}>
-      {health.focus === 'storage' ? '查看入库压力' : '查看请求轨迹'}
+    <YakitButton
+      type="text"
+      size="small"
+      onClick={health.focus === 'storage' ? onStorage : () => onTrace({ filter: 'active', scope: health.trafficScope })}
+    >
+      {health.focus === 'storage'
+        ? '查看入库压力'
+        : health.trafficScope === 'browser'
+          ? '查看后台请求'
+          : '查看请求轨迹'}
     </YakitButton>
   )
   return (
@@ -228,31 +301,34 @@ const LivePanel: React.FC<{
           note={`估计待显示约 ${count(frontend.visibleBacklog)} 条`}
         />
       </dl>
+      {extended && <TrendCard kind="traffic" title="请求收发速率" unit="条/秒" history={history} extended />}
       {d ? (
-        <div className={styles.split}>
+        <>
           <YakitCard title="HTTP 在途阶段" className={styles.card} bodyClassName={styles.tableBody}>
-            <PhaseTable label="HTTP 在途阶段" rows={httpRows} />
+            <HTTPPhases
+              view={view}
+              extended={extended}
+              warning={health.tone === 'warning' ? health.label : undefined}
+            />
           </YakitCard>
           <YakitCard
             title="WebSocket"
             className={styles.card}
-            bodyClassName={styles.tableBody}
             extra={
-              <YakitButton type="text" size="small" onClick={() => onTrace('websocket')}>
+              <YakitButton type="text" size="small" onClick={() => onTrace({ filter: 'websocket' })}>
                 查看连接
               </YakitButton>
             }
           >
-            <PhaseTable
-              label="WebSocket 状态"
-              rows={[
-                { label: '握手中', count: d.wsHandshaking, oldest: d.wsHandshaking ? d.oldestWSHandshake : undefined },
-                { label: '在线连接', count: d.wsOnline },
-                { label: '近一分钟握手失败', count: d.wsFailed, attention: d.wsFailed > 0 },
-              ]}
-            />
+            <dl className={styles.wsStats}>
+              <Line label="在线连接">{count(d.wsOnline)} 条</Line>
+              <Line label="握手中">
+                {count(d.wsHandshaking)} 条{d.wsHandshaking > 0 && ` · 最久 ${formatDuration(d.oldestWSHandshake)}`}
+              </Line>
+              <Line label="近一分钟握手失败">{count(d.wsFailed)} 条</Line>
+            </dl>
           </YakitCard>
-        </div>
+        </>
       ) : (
         <YakitAlert type="info" showIcon message="当前引擎仅提供实时汇总，分阶段统计和轨迹需要引擎支持。" />
       )}
@@ -260,17 +336,14 @@ const LivePanel: React.FC<{
   )
 }
 
-const StoragePanel: React.FC<{ view: MITMPipelineViewState; onPeak: (range: TraceRange) => void }> = ({
-  view,
-  onPeak,
-}) => {
+const StoragePanel: React.FC<{
+  view: MITMPipelineViewState
+  history: History
+  extended: boolean
+  onPeak: (range: TraceRange) => void
+}> = ({ view, history, extended, onPeak }) => {
   const { stats, rates, frontend } = view
   const d = stats.Diagnostics
-  const query = useMemo<MITMDiagnosticsQuery>(
-    () => ({ SessionId: stats.SessionId, View: 'storage' }),
-    [stats.SessionId],
-  )
-  const history = useMITMDiagnosticsQuery(query, true)
   if (!d) return null
   const utilization = stats.DatabaseWriteQueueCapacity
     ? Math.min(1, stats.DatabaseWriteQueueDepth / stats.DatabaseWriteQueueCapacity)
@@ -295,22 +368,16 @@ const StoragePanel: React.FC<{ view: MITMPipelineViewState; onPeak: (range: Trac
           note={`写成 ${rate(rates.persisted)}/秒 · 失败 ${rate(rates.persistFailed)}/秒`}
         />
       </dl>
+      <TrendCard
+        kind="pending"
+        title={extended ? '本会话待写与提交受阻' : '本会话待写趋势'}
+        unit="项"
+        history={history}
+        extended={extended}
+        onPeak={onPeak}
+      />
+      {extended && <TrendCard kind="writes" title="提交与写入速率" unit="项/秒" history={history} extended />}
       <div className={styles.split}>
-        <YakitCard
-          title="本会话待写趋势"
-          extra={<span className={styles.note}>近 3 分钟 · 项</span>}
-          className={styles.card}
-        >
-          {history?.result?.Storage?.length ? (
-            <StorageTrend points={history.result.Storage} onPeak={onPeak} />
-          ) : (
-            <div className={styles.empty} role="status">
-              {history?.failed || history?.result?.Ended || history?.result?.Unsupported
-                ? '暂时无法读取待写趋势'
-                : '正在收集会话样本…'}
-            </div>
-          )}
-        </YakitCard>
         <YakitCard
           title="引擎共享写队列"
           className={styles.card}
@@ -323,7 +390,7 @@ const StoragePanel: React.FC<{ view: MITMPipelineViewState; onPeak: (range: Trac
           }
         >
           <div className={styles.row}>
-            <span className={styles.note}>占用</span>
+            <span className={styles.note}>队列占用</span>
             <span>
               {count(stats.DatabaseWriteQueueDepth)} / {count(stats.DatabaseWriteQueueCapacity)}
             </span>
@@ -338,70 +405,73 @@ const StoragePanel: React.FC<{ view: MITMPipelineViewState; onPeak: (range: Trac
           />
           <dl className={styles.lines}>
             <Line label="已取出未完成">{count(d.databaseTaken)} 项</Line>
-            <Line label="提交到开写 P95">{formatDuration(d.submitToStartP95)}</Line>
-            <Line label="入队到开写 P95">{formatDuration(d.queueWaitP95)}</Line>
-            <Line label="保存到列表显示 P95">{formatDuration(frontend.persistToReactCommitP95)}</Line>
           </dl>
-          <p className={styles.note}>队列含其他写入任务。提交到开写含提交等待，写入耗时为近一分钟估算。</p>
+          <p className={styles.note}>包含本会话及其他写入任务</p>
+        </YakitCard>
+        <YakitCard
+          title="各环节耗时 P95"
+          extra={<span className={styles.note}>近 1 分钟</span>}
+          className={styles.card}
+        >
+          <dl className={styles.lines}>
+            <Line label="提交到开写">{formatDuration(d.submitToStartP95)}</Line>
+            <Line label="入队到开写">{formatDuration(d.queueWaitP95)}</Line>
+            <Line label="保存到列表显示">{formatDuration(frontend.persistToReactCommitP95)}</Line>
+          </dl>
         </YakitCard>
       </div>
     </div>
   )
 }
 
-const StorageTrend: React.FC<{ points: MITMStoragePoint[]; onPeak: (range: TraceRange) => void }> = React.memo(
-  ({ points, onPeak }) => {
-    const series = points.map((p) => ({ at: Number(p.AtUnixMs), pending: Number(p.PersistPending) }))
-    const end = series[series.length - 1].at
-    const start = end - 180_000
-    const peak = series.reduce((max, point) => (point.pending >= max.pending ? point : max))
-    const scale = Math.max(2, Math.ceil(peak.pending / 2) * 2)
-    const x = (at: number) => Math.max(0, ((at - start) / (end - start)) * 600)
-    const y = (pending: number) => 108 - (pending / scale) * 96
-    const path = series.map((point) => `${x(point.at)},${y(point.pending)}`).join(' ')
-    const showPeak = () => onPeak({ from: peak.at - 5000, to: peak.at + 5000 })
-    return (
-      <figure className={styles.chart}>
-        <div className={styles.chartBody}>
-          <span className={styles.chartScale} aria-hidden="true">
-            <span>{scale}</span>
-            <span>{scale / 2}</span>
-            <span>0</span>
-          </span>
-          <div className={styles.plot}>
-            <svg viewBox="0 0 600 120" preserveAspectRatio="none" role="img" aria-label="本会话待写数量趋势">
-              {[12, 60, 108].map((pos) => (
-                <line key={pos} x1="0" y1={pos} x2="600" y2={pos} />
-              ))}
-              {series.length > 1 && <polygon points={`${x(series[0].at)},108 ${path} 600,108`} />}
-              <polyline points={path} />
-            </svg>
-            {peak.pending > 0 && (
-              <button
-                className={styles.peak}
-                type="button"
-                aria-label={`查看 ${formatTraceClock(peak.at)} 的待写峰值`}
-                style={{ left: `${x(peak.at) / 6}%`, top: `${y(peak.pending) / 1.2}%` }}
-                onClick={showPeak}
-              />
-            )}
-          </div>
+const TrendCard: React.FC<{
+  kind: 'traffic' | 'pending' | 'writes'
+  title: string
+  unit: string
+  history: History
+  extended: boolean
+  onPeak?: (range: TraceRange) => void
+}> = ({ kind, title, unit, history, extended, onPeak }) => {
+  const points = history?.result?.Storage
+  const peak = useMemo(
+    () =>
+      onPeak &&
+      points?.reduce<MITMStoragePoint | undefined>(
+        (max, point) => (!max || Number(point.PersistPending) >= Number(max.PersistPending) ? point : max),
+        undefined,
+      ),
+    [onPeak, points],
+  )
+  const at = Number(peak?.AtUnixMs) || 0
+  const pending = Number(peak?.PersistPending) || 0
+  const unavailable = history?.failed || history?.result?.Ended || history?.result?.Unsupported
+  const ready = !!points && points.length >= (kind === 'pending' ? 1 : 2)
+  return (
+    <YakitCard
+      title={title}
+      extra={<span className={styles.note}>近 3 分钟 · {unit}</span>}
+      className={`${styles.card} ${styles.trendCard}`}
+      bodyClassName={styles.trendBody}
+    >
+      {ready ? (
+        <Suspense fallback={<div className={styles.chartEmpty}>正在加载图表…</div>}>
+          <Trend kind={kind} points={points} extended={extended} />
+        </Suspense>
+      ) : (
+        <div className={styles.chartEmpty} role="status">
+          {unavailable ? '暂时无法读取会话样本' : '正在收集会话样本…'}
         </div>
-        <div className={styles.chartTimes}>
-          <span>{formatTraceClock(start)}</span>
-          <span>{formatTraceClock(end)}</span>
-        </div>
-        <figcaption className={styles.row}>
+      )}
+      {onPeak && pending > 0 && (
+        <div className={styles.peakSummary}>
           <span className={styles.note}>
-            {peak.pending > 0 ? `峰值 ${count(peak.pending)} 项 · ${formatTraceClock(peak.at)}` : '采样期间无待写积压'}
+            待写峰值 {count(pending)} 项 · {formatTraceClock(at)}
           </span>
-          {peak.pending > 0 && (
-            <YakitButton type="text" size="small" onClick={showPeak}>
-              查看该时段请求
-            </YakitButton>
-          )}
-        </figcaption>
-      </figure>
-    )
-  },
-)
+          <YakitButton type="text" size="small" onClick={() => onPeak({ from: at - 5000, to: at + 5000 })}>
+            查看该时段请求
+          </YakitButton>
+        </div>
+      )}
+    </YakitCard>
+  )
+}
