@@ -16,6 +16,7 @@ const mocks = vi.hoisted(() => ({
   getFieldValue: vi.fn(() => undefined),
   finishValues: vi.fn(),
   initialValues: {} as Record<string, unknown>,
+  cvssWatch: undefined as number | undefined,
 }))
 
 vi.hoisted(() => {
@@ -78,7 +79,7 @@ vi.mock('antd', async (importOriginal) => {
       getFieldValue: mocks.getFieldValue,
     },
   ]
-  Form.useWatch = (name: string) => (name === 'disposal_status' ? ['已修复'] : undefined)
+  Form.useWatch = (name: string) => (name === 'disposal_status' ? ['已修复'] : mocks.cvssWatch)
   return { ...actual, Form, Tooltip: ({ children }: React.PropsWithChildren) => children }
 })
 vi.mock('@/store', () => ({ useStore: () => ({ userInfo: { isLogin: true } }) }))
@@ -120,12 +121,14 @@ vi.mock('@/components/yakitUI/YakitSelect/YakitSelect', () => {
   return { YakitSelect }
 })
 vi.mock('@/components/yakitUI/YakitInput/YakitInput', () => {
-  const YakitInput = () => <input />
+  const YakitInput = ({ value }: { value?: string }) => <input value={value} readOnly />
   YakitInput.TextArea = () => <textarea />
   return { YakitInput }
 })
 vi.mock('@/components/yakitUI/YakitInputNumber/YakitInputNumber', () => ({
-  YakitInputNumber: () => <input data-testid="cvss-input" />,
+  YakitInputNumber: ({ onChange }: { onChange?: (value: number) => void }) => (
+    <input data-testid="cvss-input" onChange={(event) => onChange?.(Number(event.target.value))} />
+  ),
 }))
 vi.mock('@/components/yakitUI/YakitDatePicker/YakitDatePicker', () => ({
   YakitDatePicker: ({ value }: { value?: moment.Moment }) => (
@@ -168,6 +171,7 @@ describe('YakitRiskEditForm 验证人回填', () => {
     mocks.verifierUid.mockResolvedValue(undefined)
     mocks.userSearch.mockResolvedValue({ data: [] })
     mocks.finishValues.mockReturnValue({})
+    mocks.cvssWatch = undefined
     mocks.getFieldValue.mockImplementation(() => {
       const lastCall = mocks.setFieldsValue.mock.calls.at(-1)?.[0]
       return lastCall?.verifier
@@ -395,6 +399,41 @@ describe('YakitRiskEditForm 验证人回填', () => {
         TagReason: '等待排期',
       }),
     )
+  })
+
+  it('CVSS 为 0 且已有等级时回显并保存原等级', async () => {
+    mocks.finishValues.mockReturnValue({ risk_type: 'SQL注入', cvss: 0, disposal_status: [] })
+    mocks.cvssWatch = 0
+    const onSave = vi.fn()
+    render(
+      <YakitRiskEditForm info={{ RiskType: 'SQL注入', SeverityScore: 0, Severity: 'high' } as never} onSave={onSave} />,
+    )
+
+    expect(screen.getByDisplayValue('YakitTag.high')).toBeInTheDocument()
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: '测试提交' })))
+
+    expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ SeverityScore: 0, Severity: 'high' }))
+  })
+
+  it('CVSS 为 0 且没有已有等级时显示无', () => {
+    mocks.cvssWatch = 0
+    render(<YakitRiskEditForm info={{ RiskType: 'SQL注入', SeverityScore: 0 } as never} onSave={vi.fn()} />)
+
+    expect(screen.getByDisplayValue('YakitTag.none')).toBeInTheDocument()
+  })
+
+  it('CVSS 被主动修改后按分数联动，改回 0 保存为无', async () => {
+    mocks.finishValues.mockReturnValue({ risk_type: 'SQL注入', cvss: 0, disposal_status: [] })
+    const onSave = vi.fn()
+    render(
+      <YakitRiskEditForm info={{ RiskType: 'SQL注入', SeverityScore: 0, Severity: 'high' } as never} onSave={onSave} />,
+    )
+
+    fireEvent.change(screen.getByTestId('cvss-input'), { target: { value: '5' } })
+    fireEvent.change(screen.getByTestId('cvss-input'), { target: { value: '0' } })
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: '测试提交' })))
+
+    expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ SeverityScore: 0, Severity: 'none' }))
   })
 
   it('批量保存等待接口完成再关闭，重复提交不会发出第二次请求', async () => {
