@@ -1,42 +1,72 @@
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
 import { Tooltip } from 'antd'
 import { useControllableValue, useDebounceFn, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import { QuestionMarkCircleOutlined, SearchOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitCombinationSearch } from '@/components/YakitCombinationSearch/YakitCombinationSearch'
-import type { HistoryPluginSearchType } from '@/utils/yakQueryHTTPFlow'
+import type { HistorySearchOptionType } from '@/utils/yakQueryHTTPFlow'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 import { getReleaseEditionName } from '@/utils/envfile'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import type { HistorySearchProps } from '../HTTPFlowTable.constants'
+import { shouldClearHistorySearchInput } from '../HTTPFlowTable.utils'
 import style from '../HTTPFlowTable.module.scss'
 
 const HistorySearch = React.memo<HistorySearchProps>((props) => {
-  const { showPopoverSearch, handleSearch, hint = true } = props
+  const {
+    showPopoverSearch,
+    handleSearch,
+    hint = true,
+    onEnterIdSearch,
+    onLeaveIdSearch,
+    setSearchType: setSearchTypeProp,
+  } = props
   const { t, i18n } = useI18nNamespaces(['history'])
   const [isHoverSearch, setIsHoverSearch] = useState<boolean>(false)
-  const [searchType, setSearchType, getSearchType] = useGetSetState<HistoryPluginSearchType>('all')
+  const [searchType, setSearchTypeState, getSearchType] = useGetSetState<HistorySearchOptionType>(
+    props.searchType ?? 'all',
+  )
+  const setSearchType = useMemoizedFn((next: HistorySearchOptionType) => {
+    setSearchTypeState(next)
+    setSearchTypeProp?.(next)
+  })
+  const skipTypeSearchRef = useRef(false)
   const [searchVal, setSearchVal] = useControllableValue<string>(props, {
     defaultValue: '',
     valuePropName: 'searchVal',
     trigger: 'setSearchVal',
   })
+  const { run: onSearch, cancel: cancelSearch } = useDebounceFn(
+    useMemoizedFn(() => {
+      handleSearch(searchVal, getSearchType())
+    }),
+    { wait: 300 },
+  )
   const onSelectBeforeOption = useMemoizedFn((o: string) => {
-    setSearchType(o as HistoryPluginSearchType)
+    const next = o as HistorySearchOptionType
+    const prev = getSearchType()
+    if (shouldClearHistorySearchInput(prev, next)) {
+      cancelSearch()
+      setSearchVal('')
+      if (prev === 'id') onLeaveIdSearch?.()
+      else {
+        skipTypeSearchRef.current = true
+        onEnterIdSearch?.()
+      }
+    }
+    setSearchType(next)
   })
   useUpdateEffect(() => {
+    if (skipTypeSearchRef.current) {
+      skipTypeSearchRef.current = false
+      return
+    }
     onSearch()
   }, [searchType])
   const onInputUpadte = useMemoizedFn((e: any) => {
     setSearchVal(e.target.value)
   })
-  const onSearch = useDebounceFn(
-    useMemoizedFn(() => {
-      handleSearch(searchVal, getSearchType())
-    }),
-    { wait: 300 },
-  ).run
   const handleSearchBlur = useMemoizedFn(() => {
     if (searchVal === '') {
       onSearch()

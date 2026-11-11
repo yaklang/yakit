@@ -18,6 +18,10 @@ export type MitmEventProps = {
   onHistorySourceTypeToMitm: string
   onMitmClearFromPlugin?: string
   onMitmSearchInputVal: string
+  /**表格通知 MITM 头部显示或关闭「查看附近数据包」标签 */
+  onMitmViewAttachEvent: string
+  /**MITM 头部关闭「查看附近数据包」 */
+  onMitmCloseViewAttachEvent: string
   onMITMLogProcessQuery: string
   onMitmCurProcess: string
   /**该信号不用传版本号，是mitm页面通知流量分析页面 */

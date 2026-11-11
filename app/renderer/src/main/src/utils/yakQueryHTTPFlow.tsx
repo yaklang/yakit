@@ -1,6 +1,8 @@
 import { yakitHTTPFlow } from '@/services/electronBridge'
 
 export type HistoryPluginSearchType = 'all' | 'request' | 'response'
+/** 关键词下拉里的 ID。与表格序号列分开保存，不作为 KeywordType 发给后端。 */
+export type HistorySearchOptionType = HistoryPluginSearchType | 'id'
 
 /** 与 grpc MITMExtractAggregateFlowFilterRow 一致，用于聚合左栏多选联动流量 */
 export interface MitmExtractAggregateFlowFilterRow {

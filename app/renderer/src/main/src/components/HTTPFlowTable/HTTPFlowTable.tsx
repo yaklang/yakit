@@ -10,7 +10,11 @@ import React, {
   Suspense,
 } from 'react'
 import { Divider, Tooltip, Badge } from 'antd'
-import type { YakDeleteHTTPFlowRequest, YakQueryHTTPFlowRequest } from '../../utils/yakQueryHTTPFlow'
+import type {
+  YakDeleteHTTPFlowRequest,
+  YakQueryHTTPFlowRequest,
+  HistorySearchOptionType,
+} from '../../utils/yakQueryHTTPFlow'
 import type { HTTPFlowDetailProp } from '../HTTPFlowDetail'
 import { yakitNotify, yakitFailed } from '../../utils/notification'
 import style from './HTTPFlowTable.module.scss'
@@ -130,6 +134,10 @@ import {
   isHTTPFlowTableActive,
   normalizeHTTPFlowTotal,
   parseIncludeIds,
+  mergeIncludeIds,
+  shouldCloseViewAttach,
+  shouldNotifySameViewAttach,
+  withIncludeId,
   parseMITMLogResetSignal,
   safeParseHTTPFlowTableCache,
   selectHTTPFlowTableResizeAction,
@@ -347,6 +355,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   const [checkBodyLength, setCheckBodyLength] = useState<boolean>(false) // 查询BodyLength大于0
   const [, setIdSort, getIdSort] = useGetSetState<'asc' | 'desc' | false>(false)
   const [, setIncludeIdSearch, getIncludeIdSearch] = useGetSetState('')
+  const [, setKeywordIncludeIds, getKeywordIncludeIds] = useGetSetState('')
 
   const [batchVisible, setBatchVisible] = useState<boolean>(false)
 
@@ -1246,7 +1255,11 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       if (filter['ContentType']) {
         filter['SearchContentType'] = filter['ContentType'].join(',')
       }
-      const searchIds = parseIncludeIds(getIncludeIdSearch())
+      const mergedIncludeIds = mergeIncludeIds(
+        parseIncludeIds(getIncludeIdSearch()),
+        parseIncludeIds(getKeywordIncludeIds()),
+      )
+      if (shouldCloseViewAttach(mergedIncludeIds.length, viewAttachId)) setViewAttachId(0)
       setParams({
         Filter: {
           ...getParams(),
@@ -1254,7 +1267,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
           Tags: buildHTTPFlowQueryTags(tagsFilter, onlyFavorite),
           bodyLength: !!(afterBodyLengthRef.current || beforeBodyLengthRef.current || checkBodyLength), // 用来判断响应长度的icon颜色是否显示高亮
           idFilter: !!(getIdSort() || getIncludeIdSearch()), // 用来判断id的icon颜色是否显示高亮
-          IncludeId: searchIds.length ? searchIds : viewAttachId ? getParams().IncludeId : [],
+          IncludeId: mergedIncludeIds.length ? mergedIncludeIds : viewAttachId ? getParams().IncludeId : [],
         },
         Pagination: {
           ...tableParams.Pagination,
@@ -1283,23 +1296,22 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   })
 
   const onIncludeIdSearchSure = useMemoizedFn(() => {
-    const rawInput = getIncludeIdSearch()
-    const ids = parseIncludeIds(rawInput)
-    const next = ids.length > 0 ? ids : undefined
+    const ids = parseIncludeIds(getIncludeIdSearch())
+    const next = mergeIncludeIds(ids, parseIncludeIds(getKeywordIncludeIds()))
     const prevIds = getParams().IncludeId
     // 判断新值和旧值是否“完全相同”（内容相等），同时处理两者都为 undefined/空数组的情况，视为相同，否则，必须两者都存在（非空）、长度相同、且每个元素按索引相等
     const same =
-      (!next || next.length === 0) && (!prevIds || prevIds.length === 0)
+      next.length === 0 && (!prevIds || prevIds.length === 0)
         ? true
-        : !!next && !!prevIds && next.length === prevIds.length && next.every((id, i) => id === prevIds[i])
-    // 如果新旧值相同，并且 viewAttachId 为假值（0 或 undefined），则不执行更新，直接返回
-    if (same && !viewAttachId) return
+        : !!prevIds && next.length === prevIds.length && next.every((id, i) => id === prevIds[i])
+    const nextIdFilter = !!(getIdSort() || ids.length)
+    // 合并结果相同且附近数据包未开时，还要看序号列高亮有没有变化
+    if (same && !viewAttachId && !!getParams().idFilter === nextIdFilter) return
     // 如果 viewAttachId 存在，则将其重置为 0（清除查看附近数据包状态）
     if (viewAttachId) setViewAttachId(0)
     setParams((prev) => ({
-      ...prev,
-      IncludeId: next,
-      idFilter: !!(getIdSort() || next?.length),
+      ...withIncludeId(prev, next),
+      idFilter: nextIdFilter,
     }))
   })
 
@@ -2751,6 +2763,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     setSearchVal('')
     setIdSort(false)
     setIncludeIdSearch('')
+    setKeywordIncludeIds('')
   })
   const onResetRefresh = useMemoizedFn(() => {
     resetAllFun({ ...resetParams })
@@ -2764,9 +2777,15 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   }, [importRefresh])
 
   /**查看附近数据包 */
+  const notifyMitmViewAttach = useMemoizedFn((id: number) => {
+    if (pageType !== 'MITM') return
+    emiter.emit('onMitmViewAttachEvent', JSON.stringify({ version: mitmVersion, id }))
+  })
   const onViewAttachmentDataRefresh = useMemoizedFn((id: number) => {
     viewAttachIdFirstRef.current = true
-    resetAllFun({ ...resetParams, SourceType: props.params?.SourceType || '', IncludeId: getFullRange(+id) }, +id)
+    const nextId = +id
+    resetAllFun({ ...resetParams, SourceType: props.params?.SourceType || '', IncludeId: getFullRange(nextId) }, nextId)
+    if (shouldNotifySameViewAttach(viewAttachId, nextId)) notifyMitmViewAttach(nextId)
   })
 
   /**
@@ -2850,7 +2869,34 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   })
 
   const [searchVal, setSearchVal] = useState<string>('')
+  const [searchType, setSearchType] = useState<HistorySearchOptionType>('all')
+  const applyKeywordIncludeIds = useMemoizedFn((searchValue: string) => {
+    setKeywordIncludeIds(searchValue)
+    const next = mergeIncludeIds(parseIncludeIds(getIncludeIdSearch()), parseIncludeIds(searchValue))
+    if (viewAttachId) setViewAttachId(0)
+    setParams((prev) => withIncludeId(prev, next))
+  })
+  const clearKeywordIncludeIds = useMemoizedFn(() => {
+    if (!getKeywordIncludeIds()) return
+    setKeywordIncludeIds('')
+    if (viewAttachId) return
+    const next = parseIncludeIds(getIncludeIdSearch())
+    setParams((prev) => withIncludeId(prev, next))
+  })
+  const clearKeywordSearch = useMemoizedFn(() => {
+    const current = getParams()
+    if (!current.Keyword && !current.KeywordType) return
+    setParams((prev) => ({
+      ...prev,
+      Keyword: undefined,
+      KeywordType: undefined,
+    }))
+  })
   const handleSearch = useMemoizedFn((searchValue, searchType) => {
+    if (searchType === 'id') {
+      applyKeywordIncludeIds(searchValue)
+      return
+    }
     setParams((prev) => ({ ...prev, Keyword: searchValue, KeywordType: searchType }))
   })
 
@@ -2962,6 +3008,18 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       const value = JSONParseLog(searchJson, { page: 'HTTPFlowTable', fun: 'onMitmSearchInputVal' }) || {}
       const { version, ...searchObj } = value
       if (version !== mitmVersion) return
+      if (searchObj.ClearKeywordSearch) {
+        clearKeywordSearch()
+        return
+      }
+      if (searchObj.LeaveIdSearch) {
+        clearKeywordIncludeIds()
+        return
+      }
+      if (searchObj.KeywordType === 'id') {
+        applyKeywordIncludeIds(String(searchObj.Keyword || ''))
+        return
+      }
       setParams((prev) => ({
         ...prev,
         ...searchObj,
@@ -2992,6 +3050,18 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     onResetRefresh()
   })
 
+  const closeViewAttach = useMemoizedFn(() => {
+    setViewAttachId(0)
+    setParams((prev) => ({ ...prev, IncludeId: [] }))
+  })
+  const onMitmCloseViewAttach = useMemoizedFn((version: string) => {
+    if (version !== mitmVersion) return
+    closeViewAttach()
+  })
+  useUpdateEffect(() => {
+    notifyMitmViewAttach(viewAttachId)
+  }, [viewAttachId])
+
   // mitm页面发送事件跳转过来
   useEffect(() => {
     if (pageType === 'MITM') {
@@ -3004,6 +3074,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       emiter.on('cleanMitmLogEvent', cleanLogTableData)
       emiter.on('onMitmNoResetRefreshEvent', onMitmNoResetRefresh)
       emiter.on('onMitmResetRefreshEvent', onMitmResetRefresh)
+      emiter.on('onMitmCloseViewAttachEvent', onMitmCloseViewAttach)
     }
     return () => {
       if (pageType === 'MITM') {
@@ -3016,6 +3087,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         emiter.off('cleanMitmLogEvent', cleanLogTableData)
         emiter.off('onMitmNoResetRefreshEvent', onMitmNoResetRefresh)
         emiter.off('onMitmResetRefreshEvent', onMitmResetRefresh)
+        emiter.off('onMitmCloseViewAttachEvent', onMitmCloseViewAttach)
       }
     }
   }, [pageType])
@@ -3091,13 +3163,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     () =>
       !!viewAttachId && (
         <Tooltip title={`${t('HTTPFlowTable.viewAttachTip', { Id: viewAttachId })}`}>
-          <YakitTag
-            closable
-            onClose={() => {
-              setViewAttachId(0)
-              setParams((prev) => ({ ...prev, IncludeId: [] }))
-            }}
-          >
+          <YakitTag closable onClose={closeViewAttach}>
             {t('HTTPFlowTable.RowContextMenu.viewAttach')}
           </YakitTag>
         </Tooltip>
@@ -3226,8 +3292,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
               <HistorySearch
                 searchVal={searchVal}
                 setSearchVal={setSearchVal}
+                searchType={searchType}
+                setSearchType={setSearchType}
                 showPopoverSearch={size?.width ? size?.width <= 1200 : true}
                 handleSearch={handleSearch}
+                onEnterIdSearch={clearKeywordSearch}
+                onLeaveIdSearch={clearKeywordIncludeIds}
                 addonBeforeOption={[
                   {
                     label: t('HistorySearch.keyword'),
@@ -3240,6 +3310,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                   {
                     label: t('HistorySearch.response'),
                     value: 'response',
+                  },
+                  {
+                    label: t('HistorySearch.id'),
+                    value: 'id',
                   },
                 ]}
               />
@@ -3464,6 +3538,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     params.SourceType,
     props.httpHistoryTableTitleStyle,
     searchVal,
+    searchType,
     selectedRowKeys.length,
     shieldData,
     showAdvancedSearch,
