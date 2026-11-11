@@ -115,23 +115,36 @@ export const normalizeMITMPipelineStats = (raw: RawMITMPipelineStats): MITMPipel
   })
   const d = raw.Diagnostics
   if (d) {
+    const filterAware = normalized.Version >= 4
+    const wsHandshaking = toNonNegativeNumber(d.WebSocketHandshaking)
+    const oldestWSHandshake = toNonNegativeNumber(d.OldestWebSocketHandshakeAgeMs)
     normalized.Diagnostics = {
       stages: (d.HTTPStages ?? []).map((stage) => {
         const count = toNonNegativeNumber(stage.Count)
         const oldest = toNonNegativeNumber(stage.OldestAgeMs)
         const browserCount = Math.min(count, toNonNegativeNumber(stage.BrowserBackgroundCount))
+        const otherOldest = browserCount ? toNonNegativeNumber(stage.OldestOtherAgeMs) : oldest
         return {
           stage: stage.Stage,
           count,
           oldest,
           browserCount,
           browserOldest: toNonNegativeNumber(stage.OldestBrowserBackgroundAgeMs),
-          otherOldest: browserCount ? toNonNegativeNumber(stage.OldestOtherAgeMs) : oldest,
+          otherOldest,
+          filteredCount: Math.min(count, toNonNegativeNumber(stage.FilteredCount)),
+          inScopeOtherCount: filterAware
+            ? Math.min(count - browserCount, toNonNegativeNumber(stage.InScopeOtherCount))
+            : count - browserCount,
+          inScopeOtherOldest: filterAware ? toNonNegativeNumber(stage.OldestInScopeOtherAgeMs) : otherOldest,
         }
       }),
-      wsHandshaking: toNonNegativeNumber(d.WebSocketHandshaking),
+      wsHandshaking,
       wsOnline: toNonNegativeNumber(d.WebSocketOnline),
-      oldestWSHandshake: toNonNegativeNumber(d.OldestWebSocketHandshakeAgeMs),
+      oldestWSHandshake,
+      inScopeWSHandshaking: filterAware ? toNonNegativeNumber(d.InScopeWebSocketHandshaking) : wsHandshaking,
+      oldestInScopeWSHandshake: filterAware
+        ? toNonNegativeNumber(d.OldestInScopeWebSocketHandshakeAgeMs)
+        : oldestWSHandshake,
       wsFailed: toNonNegativeNumber(d.WebSocketHandshakeFailedLastMinute),
       persistBlocked: toNonNegativeNumber(d.PersistBlocked),
       oldestBlocked: toNonNegativeNumber(d.OldestPersistBlockedAgeMs),

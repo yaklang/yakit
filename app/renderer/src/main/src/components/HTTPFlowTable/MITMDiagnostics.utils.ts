@@ -20,6 +20,7 @@ export interface MITMPipelineHealth {
   detail: string
   focus?: 'storage' | 'trace'
   trafficScope?: 'all'
+  stage?: string
 }
 
 export const stageLabels: Record<string, string> = {
@@ -113,13 +114,14 @@ export const resolvePipelineHealth = (view?: MITMPipelineViewState): MITMPipelin
     }
   }
   const preDispatch = d?.stages.find((stage) => stage.stage === 'request_processing')
-  const oldestPreDispatch = preDispatch?.browserCount ? preDispatch.otherOldest : stats.OldestPreDispatchAgeMs
+  const oldestPreDispatch = preDispatch?.inScopeOtherOldest ?? stats.OldestPreDispatchAgeMs
   if (oldestPreDispatch >= slow) {
     return {
       tone: 'warning',
       label: '等待转发',
-      detail: `${stats.PreDispatchActive - (preDispatch?.browserCount ?? 0)} 条请求尚未转发，最长已等待 ${formatDuration(oldestPreDispatch)}。`,
+      detail: `${preDispatch?.inScopeOtherCount ?? stats.PreDispatchActive} 条请求尚未转发，最长已等待 ${formatDuration(oldestPreDispatch)}。`,
       focus: 'trace',
+      stage: 'request_processing',
     }
   }
   let waiting: MITMStageSummary | undefined
@@ -127,9 +129,9 @@ export const resolvePipelineHealth = (view?: MITMPipelineViewState): MITMPipelin
     if (!waitingDescriptions[stage.stage]) continue
     if (
       stage.stage !== 'request_processing' &&
-      stage.count > stage.browserCount &&
-      stage.otherOldest >= slow &&
-      stage.otherOldest > (waiting?.otherOldest ?? 0)
+      stage.inScopeOtherCount > 0 &&
+      stage.inScopeOtherOldest >= slow &&
+      stage.inScopeOtherOldest > (waiting?.inScopeOtherOldest ?? 0)
     )
       waiting = stage
   }
@@ -137,15 +139,16 @@ export const resolvePipelineHealth = (view?: MITMPipelineViewState): MITMPipelin
     return {
       tone: 'warning',
       label: stageLabel(waiting.stage),
-      detail: `${waiting.count - waiting.browserCount} 条请求${describeWaitingStage(waiting.stage)}，最长 ${formatDuration(waiting.otherOldest)}。`,
+      detail: `${waiting.inScopeOtherCount} 条请求${describeWaitingStage(waiting.stage)}，最长 ${formatDuration(waiting.inScopeOtherOldest)}。`,
       focus: 'trace',
+      stage: waiting.stage,
     }
   }
-  if (d && d.oldestWSHandshake >= slow) {
+  if (d && d.oldestInScopeWSHandshake >= slow) {
     return {
       tone: 'warning',
       label: '等待 WebSocket 握手',
-      detail: `${d.wsHandshaking} 条连接正在握手，最长 ${formatDuration(d.oldestWSHandshake)}。`,
+      detail: `${d.inScopeWSHandshaking} 条连接正在握手，最长 ${formatDuration(d.oldestInScopeWSHandshake)}。`,
       focus: 'trace',
     }
   }

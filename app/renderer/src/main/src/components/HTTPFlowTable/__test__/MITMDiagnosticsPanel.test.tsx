@@ -151,7 +151,116 @@ describe('MITM diagnostics', () => {
     expect(invoke.mock.calls.filter(([, query]) => query.View === 'storage')).toHaveLength(1)
   })
 
-  it('requests storage only when selected and jumps from an observed peak to that trace time range', async () => {
+  it('keeps excluded waits in the summary and only loads their paged samples on demand', async () => {
+    vi.useFakeTimers()
+    try {
+      const ordinary = {
+        ...row,
+        Protocol: 'HTTP/1.1',
+        Stage: 'pool_wait',
+        StatusCode: 0,
+        FilterDecision: 'pending',
+      }
+      const excluded = { ...ordinary, TraceId: '3', Host: 'excluded.invalid', FilterDecision: 'request_excluded' }
+      const { invoke } = installIPC((query) => ({
+        SessionId: query.SessionId,
+        GeneratedAtUnixMs: now,
+        ...(query.View === 'storage'
+          ? { Storage: [] }
+          : query.View === 'detail'
+            ? { Detail: query.TraceId === excluded.TraceId ? excluded : ordinary }
+            : query.TrafficScope === 'all'
+              ? { Traces: [excluded, ordinary], Total: 101 }
+              : { Traces: [ordinary], Total: 1 }),
+      }))
+      const raw = {
+        ...sample,
+        Version: 4,
+        PersistActive: 0,
+        Diagnostics: {
+          HTTPStages: [
+            {
+              Stage: 'pool_wait',
+              Count: 101,
+              OldestAgeMs: 28_000,
+              FilteredCount: 100,
+              InScopeOtherCount: 1,
+              OldestInScopeOtherAgeMs: 3_100,
+            },
+            { Stage: 'dial', Count: 51, OldestAgeMs: 40_000, FilteredCount: 51 },
+          ],
+        },
+      }
+      expect(resolvePipelineHealth(view(raw))).toMatchObject({
+        label: '等待连接池空位',
+        detail: '1 条请求正在等待上游连接池释放空位，最长 3.1 秒。',
+      })
+      render(<MITMDiagnosticsPanel view={view(raw)} onClose={vi.fn()} />)
+      const phases = within(screen.getByRole('table', { name: 'HTTP 在途阶段' }))
+      expect(phases.getByText('101')).toBeVisible()
+      expect(phases.getByText('51')).toBeVisible()
+      await act(async () => {
+        fireEvent.click(phases.getByRole('button', { name: '等待连接池空位' }))
+      })
+      expect(screen.getByText('跟随 MITM 过滤器')).toBeVisible()
+      expect(screen.getByRole('heading', { name: 'GET example.invalid' })).toBeVisible()
+      expect(screen.queryByText('excluded.invalid')).not.toBeInTheDocument()
+      expect(invoke).toHaveBeenCalledWith(
+        'mitmV2-get-diagnostics',
+        expect.objectContaining({
+          View: 'active',
+          Stage: 'pool_wait',
+          TrafficScope: 'capture',
+          Limit: 24,
+          Offset: 0,
+        }),
+      )
+
+      await act(async () => {
+        fireEvent.click(screen.getByRole('checkbox', { name: '包含已过滤请求' }))
+      })
+      expect(screen.getByRole('heading', { name: 'GET excluded.invalid' })).toBeVisible()
+      expect(screen.getByText('命中 MITM 请求过滤规则。')).toBeVisible()
+      expect(invoke).toHaveBeenCalledWith(
+        'mitmV2-get-diagnostics',
+        expect.objectContaining({
+          View: 'active',
+          Stage: 'pool_wait',
+          TrafficScope: 'all',
+          Limit: 24,
+          Offset: 0,
+        }),
+      )
+      invoke.mockClear()
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(6_000)
+      })
+      expect(invoke).not.toHaveBeenCalled()
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: '刷新样本' }))
+      })
+      expect(invoke).toHaveBeenCalledTimes(1)
+      await act(async () => {
+        fireEvent.click(screen.getByRole('checkbox', { name: '包含已过滤请求' }))
+      })
+      expect(screen.queryByText('excluded.invalid')).not.toBeInTheDocument()
+      invoke.mockClear()
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(3_000)
+      })
+      expect(invoke).toHaveBeenCalledWith(
+        'mitmV2-get-diagnostics',
+        expect.objectContaining({
+          View: 'active',
+          TrafficScope: 'capture',
+        }),
+      )
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('jumps from an observed write peak to that trace time range with capture scope', async () => {
     const { invoke } = installIPC((query) => ({
       SessionId: query.SessionId,
       GeneratedAtUnixMs: now,
@@ -185,8 +294,8 @@ describe('MITM diagnostics', () => {
               },
             }),
     }))
-    render(<MITMDiagnosticsPanel view={view()} onClose={vi.fn()} />)
-    expect(invoke).not.toHaveBeenCalled()
+    render(<MITMDiagnosticsPanel view={view({ ...sample, Version: 4 })} onClose={vi.fn()} />)
+    expect(invoke.mock.calls.map(([, query]) => query.View)).toEqual(['storage'])
     fireEvent.click(screen.getByRole('button', { name: '查看入库压力' }))
     expect(await screen.findByText('37 项')).toBeVisible()
     fireEvent.click(await screen.findByRole('button', { name: '查看该时段请求' }))
@@ -196,6 +305,7 @@ describe('MITM diagnostics', () => {
         expect.objectContaining({
           SessionId: 'mitm-1',
           View: 'range',
+          TrafficScope: 'capture',
           FromUnixMs: now - 7000,
           ToUnixMs: now + 3000,
         }),
@@ -223,7 +333,7 @@ describe('MITM diagnostics', () => {
         ],
       },
     }))
-    render(<MITMDiagnosticsPanel view={view()} onClose={vi.fn()} />)
+    render(<MITMDiagnosticsPanel view={view({ ...sample, Version: 4 })} onClose={vi.fn()} />)
     fireEvent.click(screen.getByRole('button', { name: '查看连接' }))
     const detail = await screen.findByRole('article', { name: '请求阶段明细' })
     expect((await within(detail).findAllByText('连接在线'))[0]).toBeVisible()
@@ -234,6 +344,7 @@ describe('MITM diagnostics', () => {
         expect.objectContaining({
           View: 'websocket',
           ConnectionId: 'downstream-1',
+          TrafficScope: 'capture',
         }),
       ),
     )

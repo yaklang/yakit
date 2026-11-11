@@ -24,7 +24,7 @@ const FlowDetail = React.lazy(() =>
 const Trend = React.lazy(() => import('./MITMDiagnosticsTrend'))
 
 type Tab = 'live' | 'storage' | 'trace'
-type TraceFocus = { filter: MITMTraceView; range?: TraceRange; scope?: MITMTrafficScope }
+type TraceFocus = { filter: MITMTraceView; range?: TraceRange; scope?: MITMTrafficScope; stage?: string }
 type History = ReturnType<typeof useMITMDiagnosticsQuery>
 const count = (value: number) => value.toLocaleString('zh-CN')
 const rate = formatMITMPipelineRate
@@ -41,6 +41,7 @@ export const MITMDiagnosticsPanel: React.FC<PanelProps> = ({ view, onClose }) =>
   const { stats } = view
   const supported = !!stats.Diagnostics
   const extended = supported && stats.Version >= 3
+  const filterAware = supported && stats.Version >= 4
   const showHistory = supported && (tab === 'storage' || (tab === 'live' && extended))
   const historyQuery = useMemo<MITMDiagnosticsQuery | undefined>(
     () => (showHistory ? { SessionId: stats.SessionId, View: 'storage' } : undefined),
@@ -114,7 +115,8 @@ export const MITMDiagnosticsPanel: React.FC<PanelProps> = ({ view, onClose }) =>
                   sessionId={stats.SessionId}
                   initialFilter={traceFocus.filter}
                   initialRange={traceFocus.range}
-                  initialScope={extended ? (traceFocus.scope ?? 'focus') : undefined}
+                  initialScope={filterAware ? 'capture' : extended ? (traceFocus.scope ?? 'focus') : undefined}
+                  initialStage={filterAware ? traceFocus.stage : undefined}
                   onOpenFlow={setFlowId}
                 />
               ),
@@ -167,18 +169,21 @@ const liveStages: Array<[string, string[]]> = [
   ['处理响应', ['local_response', 'response_processing']],
 ]
 
-const HTTPPhases: React.FC<{ view: MITMPipelineViewState; extended: boolean; warning?: string }> = ({
-  view,
-  extended,
-  warning,
-}) => {
+const HTTPPhases: React.FC<{
+  view: MITMPipelineViewState
+  extended: boolean
+  warning?: string
+  onStage?: (stage: string) => void
+}> = ({ view, extended, warning, onStage }) => {
   const stages = view.stats.Diagnostics?.stages ?? []
   const rows = liveStages.map(([label, names]) => {
     const matches = stages.filter(({ stage }) => names.includes(stage))
     return {
       label,
+      stage: names.length === 1 ? names[0] : undefined,
       total: matches.reduce((sum, stage) => sum + stage.count, 0),
       browser: matches.reduce((sum, stage) => sum + stage.browserCount, 0),
+      filtered: matches.reduce((sum, stage) => sum + stage.filteredCount, 0),
       oldest: Math.max(0, ...matches.map((stage) => stage.oldest)),
       otherOldest: Math.max(0, ...matches.map((stage) => stage.otherOldest)),
       browserOldest: Math.max(0, ...matches.map((stage) => stage.browserOldest)),
@@ -198,13 +203,26 @@ const HTTPPhases: React.FC<{ view: MITMPipelineViewState; extended: boolean; war
         <tbody>
           {rows.map((row) => {
             const other = row.total - row.browser
-            const groups = row.browser
-              ? `Chrome 自动填充 ${row.browser} 条，最久 ${formatDuration(row.browserOldest)}${other ? ` · 其他流量 ${other} 条，最久 ${formatDuration(row.otherOldest)}` : ''}`
-              : undefined
+            const groups = [
+              row.browser > 0 &&
+                `Chrome 自动填充 ${row.browser} 条，最久 ${formatDuration(row.browserOldest)}${other ? ` · 其他流量 ${other} 条，最久 ${formatDuration(row.otherOldest)}` : ''}`,
+              row.filtered > 0 && `MITM 已过滤 ${row.filtered} 条`,
+            ]
+              .filter(Boolean)
+              .join(' · ')
+            const stage = row.stage
             return (
               <tr key={row.label} data-attention={warning === row.label || undefined}>
-                <th scope="row">{row.label}</th>
-                <td title={groups}>
+                <th scope="row">
+                  {onStage && stage && row.total > 0 ? (
+                    <YakitButton type="text" size="small" onClick={() => onStage(stage)}>
+                      {row.label}
+                    </YakitButton>
+                  ) : (
+                    row.label
+                  )}
+                </th>
+                <td title={groups || undefined}>
                   <div className={styles.phaseValue}>
                     <div className={styles.phaseTrack} aria-hidden="true">
                       <span className={styles.phaseOther} style={{ width: `${(other / max) * 100}%` }} />
@@ -251,7 +269,11 @@ const LivePanel: React.FC<{
     <YakitButton
       type="text"
       size="small"
-      onClick={health.focus === 'storage' ? onStorage : () => onTrace({ filter: 'active', scope: health.trafficScope })}
+      onClick={
+        health.focus === 'storage'
+          ? onStorage
+          : () => onTrace({ filter: 'active', scope: health.trafficScope, stage: health.stage })
+      }
     >
       {health.focus === 'storage' ? '查看入库压力' : '查看请求轨迹'}
     </YakitButton>
@@ -300,11 +322,17 @@ const LivePanel: React.FC<{
       {extended && <TrendCard kind="traffic" title="请求收发速率" unit="条/秒" history={history} extended />}
       {d ? (
         <>
-          <YakitCard title="HTTP 在途阶段" className={styles.card} bodyClassName={styles.tableBody}>
+          <YakitCard
+            title="HTTP 在途阶段"
+            extra={<span className={styles.note}>全部代理流量</span>}
+            className={styles.card}
+            bodyClassName={styles.tableBody}
+          >
             <HTTPPhases
               view={view}
               extended={extended}
               warning={health.tone === 'warning' ? health.label : undefined}
+              onStage={stats.Version >= 4 ? (stage) => onTrace({ filter: 'active', stage }) : undefined}
             />
           </YakitCard>
           <YakitCard

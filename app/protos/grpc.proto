@@ -10436,6 +10436,8 @@ message MITMPipelineDiagnostics {
   // Queue wait is measured for tasks whose accepted event precedes write start.
   int64 PersistQueueWaitP95Ms = 13;
   uint64 PersistQueueWaitSamples = 14;
+  int64 InScopeWebSocketHandshaking = 15;
+  int64 OldestInScopeWebSocketHandshakeAgeMs = 16;
 }
 
 message MITMStageStats {
@@ -10445,6 +10447,10 @@ message MITMStageStats {
   int64 BrowserBackgroundCount = 4;
   int64 OldestBrowserBackgroundAgeMs = 5;
   int64 OldestOtherAgeMs = 6;
+  int64 FilteredCount = 7;
+  // Includes traffic still awaiting a filter decision. Excludes browser background traffic.
+  int64 InScopeOtherCount = 8;
+  int64 OldestInScopeOtherAgeMs = 9;
 }
 
 message GetMITMDiagnosticsRequest {
@@ -10457,8 +10463,11 @@ message GetMITMDiagnosticsRequest {
   int64 ToUnixMs = 6;
   uint64 TraceId = 7;
   string ConnectionId = 8;
-  // Empty or all preserves the full view. focus and browser filter before paging.
+  // capture includes undecided traffic and excludes requests rejected by the MITM filters.
+  // Empty or all includes every retained sample. focus and browser are legacy scopes.
   string TrafficScope = 9;
+  // For the active view, select HTTP requests currently in this stage.
+  string Stage = 10;
 }
 
 message GetMITMDiagnosticsResponse {
@@ -10504,6 +10513,8 @@ message MITMTraceEntry {
   bool SpansTruncated = 16;
   // Known browser service inferred from the destination hostname.
   string BrowserService = 17;
+  // pending, passed, request_excluded, response_excluded, static_js_excluded, or websocket_excluded.
+  string FilterDecision = 18;
 }
 
 message MITMTraceSpan {

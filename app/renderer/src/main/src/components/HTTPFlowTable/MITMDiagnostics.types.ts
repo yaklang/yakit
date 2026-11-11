@@ -10,10 +10,15 @@ export interface RawMITMDiagnostics {
     BrowserBackgroundCount?: Metric
     OldestBrowserBackgroundAgeMs?: Metric
     OldestOtherAgeMs?: Metric
+    FilteredCount?: Metric
+    InScopeOtherCount?: Metric
+    OldestInScopeOtherAgeMs?: Metric
   }>
   WebSocketHandshaking?: Metric
   WebSocketOnline?: Metric
   OldestWebSocketHandshakeAgeMs?: Metric
+  InScopeWebSocketHandshaking?: Metric
+  OldestInScopeWebSocketHandshakeAgeMs?: Metric
   WebSocketHandshakeFailedLastMinute?: Metric
   PersistBlocked?: Metric
   OldestPersistBlockedAgeMs?: Metric
@@ -33,6 +38,9 @@ export interface MITMStageSummary {
   browserCount: number
   browserOldest: number
   otherOldest: number
+  filteredCount: number
+  inScopeOtherCount: number
+  inScopeOtherOldest: number
 }
 
 export interface MITMDiagnosticsSummary {
@@ -40,6 +48,8 @@ export interface MITMDiagnosticsSummary {
   wsHandshaking: number
   wsOnline: number
   oldestWSHandshake: number
+  inScopeWSHandshaking: number
+  oldestInScopeWSHandshake: number
   wsFailed: number
   persistBlocked: number
   oldestBlocked: number
@@ -50,7 +60,7 @@ export interface MITMDiagnosticsSummary {
 }
 
 export type MITMTraceView = 'active' | 'slow' | 'failed' | 'websocket' | 'range'
-export type MITMTrafficScope = 'focus' | 'browser' | 'all'
+export type MITMTrafficScope = 'focus' | 'browser' | 'all' | 'capture'
 
 export interface MITMDiagnosticsQuery {
   SessionId: string
@@ -62,6 +72,7 @@ export interface MITMDiagnosticsQuery {
   TraceId?: string
   ConnectionId?: string
   TrafficScope?: MITMTrafficScope
+  Stage?: string
 }
 
 export interface MITMTraceSpan {
@@ -90,6 +101,7 @@ export interface MITMTraceRow {
   Spans: MITMTraceSpan[]
   SpansTruncated: boolean
   BrowserService?: string
+  FilterDecision?: string
 }
 
 export interface MITMStoragePoint {

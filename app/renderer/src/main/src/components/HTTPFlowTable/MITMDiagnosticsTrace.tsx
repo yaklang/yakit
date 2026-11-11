@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react'
 import { YakitButton } from '../yakitUI/YakitButton/YakitButton'
+import { YakitCheckbox } from '../yakitUI/YakitCheckbox/YakitCheckbox'
 import { YakitEmpty } from '../yakitUI/YakitEmpty/YakitEmpty'
 import { YakitSegmented } from '../yakitUI/YakitSegmented/YakitSegmented'
 import { YakitTag } from '../yakitUI/YakitTag/YakitTag'
@@ -43,6 +44,24 @@ const traceStatusColor = (trace: MITMTraceRow): YakitTagColor | undefined => {
   return undefined
 }
 
+const filterReasons: Record<string, string> = {
+  request_excluded: '命中 MITM 请求过滤规则',
+  response_excluded: '命中 MITM 响应类型过滤规则',
+  static_js_excluded: '命中打包静态 JS 过滤规则',
+  websocket_excluded: '启用了 WebSocket 过滤',
+}
+
+const traceFilterLabel = (trace: MITMTraceRow) => {
+  const decision = trace.FilterDecision ?? ''
+  if (filterReasons[decision]) return '已过滤'
+  if (decision === 'passed') return '抓包范围内'
+  if (decision === 'pending') {
+    if (Number(trace.FinishedAtUnixMs)) return '过滤判定未完成'
+    return trace.Stage === 'request_processing' ? '待过滤判定' : '待响应判定'
+  }
+  return undefined
+}
+
 const rowDuration = (trace: MITMTraceRow, sampledAt: number) => {
   const finishedAt = Number(trace.FinishedAtUnixMs)
   return Math.max(0, finishedAt ? finishedAt - Number(trace.StartedAtUnixMs) : sampledAt - Number(trace.StageAtUnixMs))
@@ -53,6 +72,7 @@ interface TraceProps {
   initialFilter: MITMTraceView
   initialRange?: TraceRange
   initialScope?: MITMTrafficScope
+  initialStage?: string
   onOpenFlow: (id: number) => void
 }
 
@@ -61,15 +81,21 @@ export const MITMDiagnosticsTrace = React.memo(function MITMDiagnosticsTrace({
   initialFilter,
   initialRange,
   initialScope,
+  initialStage,
   onOpenFlow,
 }: TraceProps) {
   const [filter, setFilter] = useState(initialFilter)
   const [range, setRange] = useState(initialRange)
   const [scope, setScope] = useState(initialScope)
+  const [stage, setStage] = useState(initialStage)
   const [offset, setOffset] = useState(0)
   const [selected, setSelected] = useState<string>()
   const [connectionId, setConnectionId] = useState('')
-  const traceScope = filter === 'websocket' ? undefined : scope
+  const [snapshotRevision, setSnapshotRevision] = useState(0)
+  const filterAware = initialScope === 'capture'
+  const includeFiltered = filterAware && scope === 'all'
+  const traceScope = filter === 'websocket' && !filterAware ? undefined : scope
+  const refreshList = !includeFiltered && filter !== 'range' && offset === 0
 
   const query = useMemo<MITMDiagnosticsQuery>(
     () => ({
@@ -81,12 +107,14 @@ export const MITMDiagnosticsTrace = React.memo(function MITMDiagnosticsTrace({
       ToUnixMs: filter === 'range' ? range?.to : undefined,
       ConnectionId: connectionId || undefined,
       TrafficScope: traceScope,
+      Stage: stage,
     }),
-    [sessionId, filter, offset, range, connectionId, traceScope],
+    [sessionId, filter, offset, range, connectionId, traceScope, stage],
   )
-  const list = useMITMDiagnosticsQuery(query, filter !== 'range' && offset === 0)
+  const list = useMITMDiagnosticsQuery(query, refreshList, String(snapshotRevision))
   const traces = list?.result?.Traces ?? []
   const total = list?.result?.Total ?? 0
+  const listSampledAt = Number(list?.result?.GeneratedAtUnixMs) || 0
   const backgroundTotal = list?.result?.BrowserBackgroundTotal ?? 0
   const selectedRow = traces.find((row) => row.TraceId === selected) ?? traces[0]
   const traceId = selectedRow?.TraceId
@@ -97,18 +125,25 @@ export const MITMDiagnosticsTrace = React.memo(function MITMDiagnosticsTrace({
             SessionId: sessionId,
             View: 'detail',
             TraceId: traceId,
+            TrafficScope: filterAware ? traceScope : undefined,
           }
         : undefined,
-    [sessionId, traceId],
+    [sessionId, traceId, filterAware, traceScope],
   )
-  const revision = selectedRow && `${selectedRow.Stage}:${selectedRow.Outcome}:${selectedRow.FlowId}`
-  const detail = useMITMDiagnosticsQuery(detailQuery, !!selectedRow && !Number(selectedRow.FinishedAtUnixMs), revision)
+  const revision =
+    selectedRow &&
+    `${includeFiltered ? listSampledAt : ''}:${selectedRow.Stage}:${selectedRow.Outcome}:${selectedRow.FlowId}:${selectedRow.FilterDecision}`
+  const detail = useMITMDiagnosticsQuery(
+    detailQuery,
+    !includeFiltered && !!selectedRow && !Number(selectedRow.FinishedAtUnixMs),
+    revision,
+  )
   const current = detail?.result?.Detail
-  const listSampledAt = Number(list?.result?.GeneratedAtUnixMs) || 0
   const sampledAt = Number(detail?.result?.GeneratedAtUnixMs) || listSampledAt
 
   const selectFilter = (next: MITMTraceView) => {
     setFilter(next)
+    setStage(undefined)
     setOffset(0)
     setSelected(undefined)
   }
@@ -135,22 +170,47 @@ export const MITMDiagnosticsTrace = React.memo(function MITMDiagnosticsTrace({
           onChange={(value) => selectFilter(value as MITMTraceView)}
         />
         <div className={styles.scopeControls}>
-          {traceScope && (
-            <YakitSegmented
-              size="small"
-              aria-label="按流量来源查看"
-              value={traceScope}
-              options={[
-                { value: 'focus', label: '其他流量' },
-                { value: 'browser', label: backgroundTotal ? `浏览器后台 · ${backgroundTotal}` : '浏览器后台' },
-                { value: 'all', label: '全部' },
-              ]}
-              onChange={(value) => selectScope(value as MITMTrafficScope)}
-            />
+          {filterAware ? (
+            <>
+              {!includeFiltered && <span className={styles.note}>跟随 MITM 过滤器</span>}
+              <YakitCheckbox
+                checked={includeFiltered}
+                onChange={(event) => selectScope(event.target.checked ? 'all' : 'capture')}
+              >
+                包含已过滤请求
+              </YakitCheckbox>
+              {includeFiltered && (
+                <YakitButton type="text" size="small" onClick={() => setSnapshotRevision((revision) => revision + 1)}>
+                  刷新样本
+                </YakitButton>
+              )}
+            </>
+          ) : (
+            traceScope && (
+              <YakitSegmented
+                size="small"
+                aria-label="按流量来源查看"
+                value={traceScope}
+                options={[
+                  { value: 'focus', label: '其他流量' },
+                  { value: 'browser', label: backgroundTotal ? `浏览器后台 · ${backgroundTotal}` : '浏览器后台' },
+                  { value: 'all', label: '全部' },
+                ]}
+                onChange={(value) => selectScope(value as MITMTrafficScope)}
+              />
+            )
           )}
           {list?.result && !unavailable && <span className={styles.note}>共 {total} 条</span>}
         </div>
       </div>
+      {stage && (
+        <div className={styles.filterContext}>
+          <span>在途阶段 · {stageLabel(stage)}</span>
+          <YakitButton type="text" size="small" onClick={() => selectFilter('active')}>
+            清除阶段
+          </YakitButton>
+        </div>
+      )}
       {range && filter === 'range' && (
         <div className={styles.filterContext}>
           <span>
@@ -191,11 +251,13 @@ export const MITMDiagnosticsTrace = React.memo(function MITMDiagnosticsTrace({
           className={styles.empty}
           imageStyle={emptyImageStyle}
           title={
-            filter === 'active' && traceScope === 'browser'
-              ? '当前没有等待超过 2 秒的浏览器后台请求'
-              : filter === 'active'
-                ? '当前筛选下没有等待超过 2 秒的请求或写入任务'
-                : '当前筛选下没有轨迹样本'
+            stage
+              ? '当前范围没有处于该阶段的请求'
+              : filter === 'active' && traceScope === 'browser'
+                ? '当前没有等待超过 2 秒的浏览器后台请求'
+                : filter === 'active'
+                  ? '当前筛选下没有等待超过 2 秒的请求或写入任务'
+                  : '当前筛选下没有轨迹样本'
           }
         >
           {offset > 0 && (
@@ -209,34 +271,40 @@ export const MITMDiagnosticsTrace = React.memo(function MITMDiagnosticsTrace({
         <div className={styles.traceGrid}>
           <div className={styles.records}>
             <div className={styles.recordsList} role="group" aria-label="选择请求">
-              {traces.map((trace) => (
-                <button
-                  type="button"
-                  key={trace.TraceId}
-                  className={styles.record}
-                  aria-pressed={trace.TraceId === traceId}
-                  onClick={() => setSelected(trace.TraceId)}
-                >
-                  <span className={styles.row}>
-                    <strong title={trace.Host}>{trace.Host || '未知目标'}</strong>
-                    <span
-                      className={styles.recordDuration}
-                      title={Number(trace.FinishedAtUnixMs) ? '总耗时' : '当前阶段耗时'}
-                    >
-                      {formatDuration(rowDuration(trace, listSampledAt))}
+              {traces.map((trace) => {
+                const annotation = [
+                  traceScope === 'all' && browserServiceLabel(trace.BrowserService),
+                  traceFilterLabel(trace),
+                ]
+                  .filter(Boolean)
+                  .join(' · ')
+                return (
+                  <button
+                    type="button"
+                    key={trace.TraceId}
+                    className={styles.record}
+                    aria-pressed={trace.TraceId === traceId}
+                    onClick={() => setSelected(trace.TraceId)}
+                  >
+                    <span className={styles.row}>
+                      <strong title={trace.Host}>{trace.Host || '未知目标'}</strong>
+                      <span
+                        className={styles.recordDuration}
+                        title={Number(trace.FinishedAtUnixMs) ? '总耗时' : '当前阶段耗时'}
+                      >
+                        {formatDuration(rowDuration(trace, listSampledAt))}
+                      </span>
                     </span>
-                  </span>
-                  <span className={styles.recordMeta}>
-                    <YakitTag size="small" color="blue" border={false}>
-                      {trace.Protocol || 'HTTP'}
-                    </YakitTag>
-                    <span className={styles.recordStatus}>{traceStatus(trace)}</span>
-                  </span>
-                  {traceScope === 'all' && browserServiceLabel(trace.BrowserService) && (
-                    <span className={styles.recordStatus}>{browserServiceLabel(trace.BrowserService)}</span>
-                  )}
-                </button>
-              ))}
+                    <span className={styles.recordMeta}>
+                      <YakitTag size="small" color="blue" border={false}>
+                        {trace.Protocol || 'HTTP'}
+                      </YakitTag>
+                      <span className={styles.recordStatus}>{traceStatus(trace)}</span>
+                    </span>
+                    {annotation && <span className={styles.recordStatus}>{annotation}</span>}
+                  </button>
+                )
+              })}
             </div>
             {total > pageSize && (
               <div className={styles.pagination}>
@@ -312,6 +380,8 @@ const TraceDetail: React.FC<{
   const timelineDuration = Math.max(duration, ...spans.map((span) => span.offset + span.elapsed))
   const position = (time: number) => `${(time / Math.max(1, timelineDuration)) * 100}%`
   const browser = browserServiceLabel(trace.BrowserService)
+  const capture = traceFilterLabel(trace)
+  const filterReason = filterReasons[trace.FilterDecision ?? '']
   const waiting = !finishedAt && describeWaitingStage(trace.Stage, trace.Protocol)
   return (
     <>
@@ -330,6 +400,11 @@ const TraceDetail: React.FC<{
             HTTP {trace.StatusCode}
           </YakitTag>
         )}
+        {capture && (
+          <YakitTag size="small" color={filterReason ? 'info' : 'blue'} border={false}>
+            {capture}
+          </YakitTag>
+        )}
         {browser && (
           <span title="按目标域名识别为浏览器后台请求">
             <YakitTag size="small" color="blue" border={false}>
@@ -339,6 +414,7 @@ const TraceDetail: React.FC<{
         )}
         <span className={styles.note}>总耗时 {formatDuration(duration)}</span>
       </div>
+      {filterReason && <p className={styles.note}>{filterReason}。</p>}
       {waiting && (
         <p className={styles.note}>
           {waiting}，已耗时 {formatDuration(rowDuration(trace, sampledAt))}。
