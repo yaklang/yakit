@@ -498,6 +498,27 @@ describe('YakitRiskTable 批量操作', () => {
     })
   })
 
+  it('保存 0 分风险时将表单保留的已有等级传给接口和本地数据', async () => {
+    await renderTable()
+    fireEvent.click(screen.getByRole('button', { name: 'select-first' }))
+    const column = mocks.columns.find((item) => item.dataKey === 'RiskTypeVerbose')
+    const cell = render(column.render('', { ...rows[0], SeverityScore: 0, Severity: 'high' }))
+    fireEvent.click(cell.getByText('SQL注入'))
+    const formProps = mocks.showModal.mock.calls[0][0].content.props
+
+    await act(async () => {
+      await formProps.onSave({
+        ...rows[0],
+        SeverityScore: 0,
+        Severity: 'high',
+        Tags: '',
+      })
+    })
+
+    expect(mocks.batchSetRiskTags).toHaveBeenCalledWith(expect.objectContaining({ SetSeverity: 'high' }))
+    expect(mocks.queryRiskTags).toHaveBeenCalled()
+  })
+
   it.each([
     ['zh', 'English title', '中文标题', '中文标题'],
     ['zh', 'English title', undefined, 'English title'],
