@@ -135,12 +135,12 @@ describe('MITM diagnostics', () => {
             ],
           }
         : query.View === 'detail'
-        ? { Detail: query.TraceId === '3' ? autofill : ordinary }
-        : {
-            Traces: query.TrafficScope === 'browser' ? [autofill] : [ordinary],
-            Total: query.TrafficScope === 'browser' ? 22 : 1,
-            BrowserBackgroundTotal: 22,
-          }),
+          ? { Detail: query.TraceId === '3' ? autofill : ordinary }
+          : {
+              Traces: query.TrafficScope === 'browser' ? [autofill] : [ordinary],
+              Total: query.TrafficScope === 'browser' ? 22 : 1,
+              BrowserBackgroundTotal: 22,
+            }),
     }))
     render(<MITMDiagnosticsPanel view={view({ ...sample, Version: 3 })} onClose={vi.fn()} />)
     expect(await screen.findByRole('img', { name: 'traffic' })).toBeVisible()
@@ -167,27 +167,27 @@ describe('MITM diagnostics', () => {
             ],
           }
         : query.View === 'range'
-        ? {
-            Traces: [
-              { ...row, Protocol: 'HTTP/1.1', Stage: 'persist_write', Outcome: 'completed', FinishedAtUnixMs: now },
-            ],
-            Total: 1,
-          }
-        : {
-            Detail: {
-              ...row,
-              Protocol: 'HTTP/1.1',
-              Spans: [
-                {
-                  Stage: 'persist_blocked',
-                  StartedAtUnixMs: now - 2000,
-                  FinishedAtUnixMs: now,
-                  Attempt: 0,
-                  Protocol: '',
-                },
+          ? {
+              Traces: [
+                { ...row, Protocol: 'HTTP/1.1', Stage: 'persist_write', Outcome: 'completed', FinishedAtUnixMs: now },
               ],
-            },
-          }),
+              Total: 1,
+            }
+          : {
+              Detail: {
+                ...row,
+                Protocol: 'HTTP/1.1',
+                Spans: [
+                  {
+                    Stage: 'persist_blocked',
+                    StartedAtUnixMs: now - 2000,
+                    FinishedAtUnixMs: now,
+                    Attempt: 0,
+                    Protocol: '',
+                  },
+                ],
+              },
+            }),
     }))
     render(<MITMDiagnosticsPanel view={view()} onClose={vi.fn()} />)
     expect(invoke).not.toHaveBeenCalled()
@@ -262,8 +262,8 @@ describe('MITM diagnostics', () => {
           ...(query.View === 'slow'
             ? { Traces: [completed], Total: 1 }
             : query.View === 'detail'
-            ? { Detail: completed }
-            : { Traces: [], Total: 0 }),
+              ? { Detail: completed }
+              : { Traces: [], Total: 0 }),
         }
       })
       render(<MITMDiagnosticsPanel view={view()} onClose={vi.fn()} />)
