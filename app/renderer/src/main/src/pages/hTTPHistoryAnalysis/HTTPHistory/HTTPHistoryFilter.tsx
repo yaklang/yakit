@@ -152,6 +152,7 @@ import {
 } from '@/components/HTTPFlowTable/HTTPFlowTableFormConfiguration/HTTPFlowTableFormConfiguration'
 import { AIInputFooterRightEnum } from '@/pages/ai-agent/template/type'
 import { HistoryAIReActChatProvider, useHistoryAIReActChat } from '@/components/historyAIReActChat'
+import { useHttpFlowSelection } from '@/components/useHttpFlowSelection'
 import { HTTPFlowRuleDataFilter } from '@/components/HTTPFlowTable/HTTPFlowRuleDataFilter'
 import { isFilterSectionActive, safeParse } from '../HTTPHistoryAnalysis.utils'
 import { AISourceEnum } from '@/pages/ai-re-act/hooks/grpcApi'
@@ -189,29 +190,17 @@ const HTTPHistoryFilterInner: React.FC<HTTPHistoryFilterProps> = React.memo((pro
     closable,
   } = props
   const { t, i18nRefresh } = useI18nNamespaces(['history'])
-  const [selectedHttpFlowIds, setSelectedHttpFlowIds] = useState<string[]>([])
-
-  const clearHttpFlowSelection = useMemoizedFn(() => {
-    historyAIReActChatBridge.clearTableSelection()
-  })
+  const {
+    selectedHttpFlowIds,
+    onSetSelectedHttpFlowIds: updateChatSelection,
+    clearHttpFlowSelection,
+    onHttpFlowRemove,
+    onRegisterTableSelectApi,
+  } = useHttpFlowSelection(true, historyAIReActChatBridge.activeID)
 
   const handleSetSelectedHttpFlowIds = useMemoizedFn((ids: string[]) => {
-    setSelectedHttpFlowIds(ids)
+    updateChatSelection(ids)
     onSetSelectedHttpFlowIds(ids)
-  })
-
-  const compareSelectedHttpFlowIds = useCampare(selectedHttpFlowIds)
-  useDebounceEffect(() => {
-    historyAIReActChatBridge.syncSelectedHttpFlowIds(selectedHttpFlowIds)
-  }, [compareSelectedHttpFlowIds])
-
-  const onRegisterTableSelectApi = useMemoizedFn((api: { reset: () => void; deselectId: (id: string) => void }) => {
-    historyAIReActChatBridge.registerClearTableSelection(() => {
-      api.reset()
-    })
-    historyAIReActChatBridge.registerDeselectHttpFlowId((id) => {
-      api.deselectId(id)
-    })
   })
 
   // #region 左侧tab
@@ -363,7 +352,10 @@ const HTTPHistoryFilterInner: React.FC<HTTPHistoryFilterProps> = React.memo((pro
                           <YakitButton
                             type="text2"
                             icon={<MessageCirclePlusOutlined color="currentColor" />}
-                            onClick={() => historyAIReActChatBridge.onNewChat()}
+                            onClick={() => {
+                              clearHttpFlowSelection()
+                              historyAIReActChatBridge.onNewChat()
+                            }}
                           />
                         </Tooltip>
                       ),
@@ -387,10 +379,8 @@ const HTTPHistoryFilterInner: React.FC<HTTPHistoryFilterProps> = React.memo((pro
                       },
                     ],
                     filterMentionType: ['focusMode'],
-                    onHttpFlowRemove: (id, isSummary) => {
-                      if (isSummary) clearHttpFlowSelection()
-                      else historyAIReActChatBridge.deselectHttpFlowId(id)
-                    },
+                    selectedHttpFlowIds,
+                    onHttpFlowRemove: (id, isSummary) => onHttpFlowRemove(id, isSummary, true),
                     onAfterSubmit: clearHttpFlowSelection,
                   },
                 })}

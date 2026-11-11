@@ -8,8 +8,10 @@ export interface AIChatContentProps {
   /** 发起新会话后的回调，用于切换到自由对话模式。 */
   onChat: () => void
   /** 输入框删除流量引用时触发，用于取消对应的表格勾选。 */
+  selectedHttpFlowIds?: string[]
+  selectedRiskIds?: string[]
   onHttpFlowRemove?: (id: string, isSummary: boolean) => void
-  /** 提交消息并清空输入内容后触发，用于清理流量勾选和引用。 */
+  /** 提交消息并清空输入内容后触发，用于清理表格勾选和资料引用。 */
   onAfterSubmit?: () => void
   showFreeChat?: boolean
   setShowFreeChat?: (visible: boolean) => void
@@ -23,6 +25,8 @@ export type AIAgentFilePreviewHighlight = FileSearchEditorHighlight
 export interface AIAgentTabPayload {
   key: AITabsEnum
   value?: string
+  showSelectedHttpFlows?: boolean
+  showSelectedRisks?: boolean
   /** File_Preview：打开时定位并高亮的命中区间 */
   highlights?: AIAgentFilePreviewHighlight[]
 }

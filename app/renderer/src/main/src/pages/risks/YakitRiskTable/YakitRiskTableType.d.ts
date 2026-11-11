@@ -7,7 +7,15 @@ import { type CodeRangeProps } from '@/pages/yakRunnerAuditCode/RightAuditDetail
 import type { SSARisk } from '@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType'
 import type { BatchScope } from '@/components/BatchScopeSelector/batchScope'
 // import {SSARisk} from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType"
+export interface AIRiskSelection {
+  ids: string[]
+  selectedOnly: boolean
+  emptyBase?: boolean
+  onChange: (rows: Risk[], checked: boolean) => void
+  renderCount: (total: number | undefined) => ReactNode
+}
 export interface YakitRiskTableProps {
+  aiRiskSelection?: AIRiskSelection
   setRiskLoading: (b: boolean) => void
   /**是否开启高级查询 */
   advancedQuery?: boolean

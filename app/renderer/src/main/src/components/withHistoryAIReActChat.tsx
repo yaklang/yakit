@@ -67,11 +67,6 @@ export interface HistoryAIReActChatBridge {
   onStop: () => void
   onNewChat: () => void
   setActiveChat: React.Dispatch<React.SetStateAction<AISession | undefined>>
-  syncSelectedHttpFlowIds: (ids: string[]) => void
-  registerClearTableSelection: (fn: () => void) => void
-  clearTableSelection: () => void
-  registerDeselectHttpFlowId: (fn: (id: string) => void) => void
-  deselectHttpFlowId: (id: string) => void
   setMention: (v: AIMentionCommandParams) => void
   setValue: (v: string) => void
   handleStart: (value: AIChatSubmitParams) => void
@@ -209,8 +204,6 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   const casualLoadingRef = useRef(false)
   const initialRequestInCasualRef = useRef<string | null>(null)
   const initialCodeInCasualRef = useRef<string | null>(null)
-  const clearTableSelectionRef = useRef<(() => void) | null>(null)
-  const deselectHttpFlowIdRef = useRef<((id: string) => void) | null>(null)
   const pendingMentionRef = useRef<AIMentionCommandParams | null>(null)
   const chatReadyRef = useRef(false)
   const yakRunnerLastAttachedResourceInfoRef = useRef<AIInputEvent['AttachedResourceInfo']>([])
@@ -606,21 +599,6 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
       onStop,
       onNewChat,
       setActiveChat,
-      syncSelectedHttpFlowIds: (ids: string[]) => {
-        aiReActChatRef.current?.setHttpFlow?.(ids)
-      },
-      registerClearTableSelection: (fn: () => void) => {
-        clearTableSelectionRef.current = fn
-      },
-      clearTableSelection: () => {
-        clearTableSelectionRef.current?.()
-      },
-      registerDeselectHttpFlowId: (fn: (id: string) => void) => {
-        deselectHttpFlowIdRef.current = fn
-      },
-      deselectHttpFlowId: (id: string) => {
-        deselectHttpFlowIdRef.current?.(id)
-      },
       setMention: (v) => {
         if (chatReadyRef.current) {
           aiReActChatRef.current?.setMention(v)

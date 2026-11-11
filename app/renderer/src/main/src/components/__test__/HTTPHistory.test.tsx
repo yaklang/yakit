@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ReactNode } from 'react'
 import { HTTPFlowRealTimeTableAndEditor, HTTPHistory } from '../HTTPHistory'
@@ -7,10 +7,9 @@ import type { HTTPFlowDetailProp } from '../HTTPFlowDetail'
 
 const bridge = vi.hoisted(() => ({
   activeID: 'session-1',
-  syncSelectedHttpFlowIds: vi.fn(),
-  clearTableSelection: vi.fn(),
-  deselectHttpFlowId: vi.fn(),
+  onNewChat: vi.fn(),
 }))
+const tableSelection = vi.hoisted(() => ({ reset: vi.fn(), deselectId: vi.fn() }))
 
 const flowMark = vi.hoisted(() => ({
   handlers: new Map<string, ReturnType<typeof vi.fn>>(),
@@ -31,11 +30,17 @@ vi.mock('../historyAIReActChat', () => ({
     renderHistoryAIReActChat: ({
       externalParameters,
     }: {
-      externalParameters: { onHttpFlowRemove?: (id: string, isSummary: boolean) => void }
+      externalParameters: {
+        selectedHttpFlowIds?: string[]
+        onHttpFlowRemove?: (id: string, isSummary: boolean) => void
+        onAfterSubmit?: () => void
+      }
     }) => (
       <>
+        <output aria-label="聊天流量勾选">{externalParameters.selectedHttpFlowIds?.join(',')}</output>
         <button onClick={() => externalParameters.onHttpFlowRemove?.('1', false)}>删除单条引用</button>
         <button onClick={() => externalParameters.onHttpFlowRemove?.('1,2', true)}>清空引用</button>
+        <button onClick={externalParameters.onAfterSubmit}>发送完成</button>
       </>
     ),
     setShowFreeChat: vi.fn(),
@@ -97,10 +102,14 @@ vi.mock('../HTTPFlowTable/HTTPFlowTable', async () => {
   return {
     HTTPFlowTable: ({
       onSetSelectedHttpFlowIds,
+      onRegisterTableSelectApi,
       onRegisterFlowMarkPatch,
       historyId,
       setOnlyShowFirstNode,
     }: HTTPFlowTableProp) => {
+      useEffect(() => {
+        onRegisterTableSelectApi?.(tableSelection)
+      }, [onRegisterTableSelectApi])
       useEffect(() => {
         const patch = vi.fn()
         flowMark.handlers.set(historyId!, patch)
@@ -124,6 +133,7 @@ vi.mock('../HTTPFlowDetail', () => ({
 
 beforeEach(() => {
   vi.clearAllMocks()
+  bridge.activeID = 'session-1'
   flowMark.handlers.clear()
 })
 afterEach(cleanup)
@@ -132,46 +142,54 @@ describe('HTTPHistory 流量选择同步', () => {
   it('单条删除与清空引用分别调用表格取消勾选和清空操作', () => {
     render(<HTTPHistory pageType="History" />)
     fireEvent.click(screen.getByText('AI 页签'))
+    fireEvent.click(screen.getByText('勾选流量'))
+    const selected = screen.getByLabelText('聊天流量勾选')
+    expect(selected).toHaveTextContent('1,2')
     fireEvent.click(screen.getByText('删除单条引用'))
-    expect(bridge.deselectHttpFlowId).toHaveBeenCalledExactlyOnceWith('1')
-    expect(bridge.clearTableSelection).not.toHaveBeenCalled()
+    expect(tableSelection.deselectId).toHaveBeenCalledExactlyOnceWith('1')
+    expect(tableSelection.reset).not.toHaveBeenCalled()
+    expect(selected).toHaveTextContent(/^2$/)
 
     fireEvent.click(screen.getByText('清空引用'))
-    expect(bridge.clearTableSelection).toHaveBeenCalledOnce()
-    expect(bridge.syncSelectedHttpFlowIds).toHaveBeenCalledWith([])
-    expect(bridge.deselectHttpFlowId).toHaveBeenCalledOnce()
+    expect(tableSelection.reset).toHaveBeenCalledOnce()
+    expect(selected).toBeEmptyDOMElement()
   })
 
-  it('AI 侧栏展开、收起和重新展开时均同步勾选，收起不清空选择', async () => {
+  it('AI 侧栏收起并重新展开后保留勾选', () => {
     render(<HTTPHistory pageType="History" />)
     fireEvent.click(screen.getByText('AI 页签'))
     fireEvent.click(screen.getByText('勾选流量'))
-    expect(bridge.syncSelectedHttpFlowIds).toHaveBeenCalledExactlyOnceWith(['1', '2'])
-
     fireEvent.click(screen.getByText('收起侧栏'))
-    expect(bridge.clearTableSelection).not.toHaveBeenCalled()
-    bridge.syncSelectedHttpFlowIds.mockClear()
-    fireEvent.click(screen.getByText('勾选流量'))
-    expect(bridge.syncSelectedHttpFlowIds).toHaveBeenCalledExactlyOnceWith(['1', '2'])
-
     fireEvent.click(screen.getByText('展开侧栏'))
-    bridge.syncSelectedHttpFlowIds.mockClear()
-    fireEvent.click(screen.getByText('勾选流量'))
-    expect(bridge.syncSelectedHttpFlowIds).toHaveBeenCalledExactlyOnceWith(['1', '2'])
-    await waitFor(() => expect(bridge.clearTableSelection).not.toHaveBeenCalled())
+    expect(screen.getByLabelText('聊天流量勾选')).toHaveTextContent('1,2')
+    expect(tableSelection.reset).not.toHaveBeenCalled()
   })
 
-  it('切到其他侧栏页签后不再同步勾选，切回 AI 后恢复', async () => {
+  it('切到其他侧栏页签后暂停同步，切回 AI 后恢复', () => {
     render(<HTTPHistory pageType="History" />)
     fireEvent.click(screen.getByText('AI 页签'))
     fireEvent.click(screen.getByText('收起侧栏'))
     fireEvent.click(screen.getByText('网站树页签'))
     fireEvent.click(screen.getByText('勾选流量'))
-    expect(bridge.syncSelectedHttpFlowIds).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByText('AI 页签'))
+    expect(screen.getByLabelText('聊天流量勾选')).toBeEmptyDOMElement()
+    fireEvent.click(screen.getByText('勾选流量'))
+    expect(screen.getByLabelText('聊天流量勾选')).toHaveTextContent('1,2')
+  })
 
+  it('发送完成和切换会话都会清空输入框及表格的流量勾选', () => {
+    const { rerender } = render(<HTTPHistory pageType="History" />)
     fireEvent.click(screen.getByText('AI 页签'))
     fireEvent.click(screen.getByText('勾选流量'))
-    await waitFor(() => expect(bridge.syncSelectedHttpFlowIds).toHaveBeenCalledExactlyOnceWith(['1', '2']))
+    fireEvent.click(screen.getByText('发送完成'))
+    expect(screen.getByLabelText('聊天流量勾选')).toBeEmptyDOMElement()
+    expect(tableSelection.reset).toHaveBeenCalledOnce()
+
+    fireEvent.click(screen.getByText('勾选流量'))
+    bridge.activeID = 'session-2'
+    rerender(<HTTPHistory pageType="History" />)
+    expect(screen.getByLabelText('聊天流量勾选')).toBeEmptyDOMElement()
+    expect(tableSelection.reset).toHaveBeenCalledTimes(2)
   })
 })
 

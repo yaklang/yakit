@@ -6,7 +6,8 @@ import type { Node } from '@milkdown/kit/prose/model'
 import { callCommand } from '@milkdown/kit/utils'
 import { aiMentionCommand, aiMentionCustomId } from './aiMilkdownMention/aiMentionPlugin'
 import type { AIMentionCommandParams } from './aiMilkdownMention/aiMentionPlugin'
-import { type AIHttpFlowCommandParams, aiHttpFlowCustomId } from './aiMilkdownHttpFlow/aiHttpFlowPlugin'
+import { aiResourceReferenceCustomId } from './aiMilkdownResourceReference/aiResourceReferencePlugin'
+import type { AIResourceReferenceParams } from './aiMilkdownResourceReference/aiResourceReferencePlugin'
 import { type AICodeBlockCommandParams, aiCodeBlockCustomId } from './aiCodeBlock/aiCustomCodeBlockPlugin'
 import type { AIChatQSData } from '@/pages/ai-re-act/hooks/aiRender'
 
@@ -34,7 +35,7 @@ export const insertAIMention = (editor: EditorMilkdownProps, params: AIMentionCo
 export const extractDataWithMilkdown = (editor: EditorMilkdownProps) => {
   const mentions: AIMentionCommandParams[] = []
   const draftMentions: AIMentionCommandParams[] = []
-  const httpFlowList: AIHttpFlowCommandParams[] = []
+  const resourceReferences: AIResourceReferenceParams[] = []
   const codeBlockList: AICodeBlockCommandParams[] = []
   const imageList: string[] = []
   let plainText = ''
@@ -51,10 +52,9 @@ export const extractDataWithMilkdown = (editor: EditorMilkdownProps) => {
           mentions.push(mention)
           draftMentions.push(mention)
         }
-        if (node?.type?.name === aiHttpFlowCustomId) {
-          httpFlowList.push({
-            ...(node.attrs as AIHttpFlowCommandParams),
-          })
+        if (node?.type?.name === aiResourceReferenceCustomId) {
+          const { type, ids, displayText, isSummary } = node.attrs as AIResourceReferenceParams
+          resourceReferences.push({ type, ids, displayText, isSummary })
         }
         if (node?.type?.name === aiCodeBlockCustomId) {
           const attrs = node.attrs as AICodeBlockCommandParams & {
@@ -98,7 +98,7 @@ export const extractDataWithMilkdown = (editor: EditorMilkdownProps) => {
       })
       plainText = doc.textBetween(0, doc?.content?.size, '\n\n')
     })
-  return { mentions, draftMentions, plainText, imageList, httpFlowList, codeBlockList }
+  return { mentions, draftMentions, plainText, imageList, resourceReferences, codeBlockList }
 }
 
 type Mention = {

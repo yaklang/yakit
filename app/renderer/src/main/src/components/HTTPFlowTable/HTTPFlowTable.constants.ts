@@ -183,6 +183,12 @@ export interface HTTPFlowTableProp extends HistoryTableTitleShow {
   onSetHasNewData?: (f: boolean) => void
   onSetSelectedHttpFlowIds?: (ids: string[]) => void
   onRegisterTableSelectApi?: (api: { reset: () => void; deselectId: (id: string) => void }) => void
+  aiFlowSelection?: {
+    ids: string[]
+    selectedOnly: boolean
+    onChange: (ids: string[]) => void
+    renderCount: (total: number | undefined) => ReactNode
+  }
   defaultExcludeColumnsKey?: string[]
   builtinTagList?: FiltersItemProps[]
 }

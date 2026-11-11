@@ -889,3 +889,43 @@
     }
   }
 }
+
+.ai-flow-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+
+  .ai-flow-toggle {
+    flex: 1;
+    justify-content: flex-start;
+    padding-inline: 0;
+    font: inherit;
+  }
+
+  .ai-flow-divider {
+    flex: 0 0 1px;
+    height: 16px;
+    background: var(--Colors-Use-Neutral-Border);
+  }
+
+  .ai-flow-more {
+    flex-shrink: 0;
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    cursor: pointer;
+
+    &:hover,
+    &:global(.ant-dropdown-open) {
+      color: var(--Colors-Use-Main-Primary);
+    }
+
+    &:global(.ant-dropdown-open) {
+      border-radius: 4px;
+      background-color: var(--vt-cell-bg-hover, var(--Colors-Use-Neutral-Bg));
+    }
+
+    &:active {
+      color: var(--Colors-Use-Main-Pressed);
+    }
+  }
+}

@@ -1,18 +1,10 @@
 import React, { type ReactElement, type ReactNode, useEffect, useState } from 'react'
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type * as HistoryFilterModule from '../HTTPHistoryFilter'
 import type { AIReActChatProps } from '@/pages/ai-re-act/aiReActChat/AIReActChatType'
 import type { HttpFlowSelectionApi } from '@/components/useHttpFlowSelection'
 import { compileReactModule } from '@/utils/__test__/helpers/compileReactModule'
-
-const bridge = vi.hoisted(() => ({
-  syncSelectedHttpFlowIds: vi.fn(),
-  clearTableSelection: vi.fn<() => void>(),
-  deselectHttpFlowId: vi.fn<(id: string) => void>(),
-  registerClearTableSelection: vi.fn<(callback: () => void) => void>(),
-  registerDeselectHttpFlowId: vi.fn<(callback: (id: string) => void) => void>(),
-}))
 
 vi.hoisted(() => {
   Object.defineProperty(window, 'require', {
@@ -24,10 +16,11 @@ vi.hoisted(() => {
 vi.mock('@/components/historyAIReActChat', () => ({
   HistoryAIReActChatProvider: ({ children }: { children: ReactNode }) => children,
   useHistoryAIReActChat: () => ({
-    historyAIReActChatBridge: bridge,
+    historyAIReActChatBridge: { activeID: 'session-1' },
     setShowFreeChat: vi.fn(),
     renderHistoryAIReActChat: ({ externalParameters }: Pick<AIReActChatProps, 'externalParameters'>) => (
       <>
+        <output aria-label="聊天流量勾选">{externalParameters?.selectedHttpFlowIds?.join(',')}</output>
         <button onClick={() => externalParameters?.onHttpFlowRemove?.('2', false)}>删除单条引用</button>
         <button onClick={() => externalParameters?.onHttpFlowRemove?.('1,2,3', true)}>清空引用</button>
         <button onClick={externalParameters?.onAfterSubmit}>发送完成</button>
@@ -107,23 +100,10 @@ const { HTTPHistoryFilter } = await compileReactModule<typeof HistoryFilterModul
 
 beforeEach(() => {
   vi.resetAllMocks()
-  vi.useFakeTimers()
-  bridge.registerClearTableSelection.mockImplementation((callback) => {
-    bridge.clearTableSelection.mockImplementation(callback)
-  })
-  bridge.registerDeselectHttpFlowId.mockImplementation((callback) => {
-    bridge.deselectHttpFlowId.mockImplementation(callback)
-  })
 })
-afterEach(() => {
-  cleanup()
-  vi.useRealTimers()
-})
+afterEach(cleanup)
 
-// useDebounceEffect 未指定 wait 时使用 1000ms，推进真实 hook 的计时而不替换其实现。
-const flushSelectionSync = () => act(async () => vi.advanceTimersByTimeAsync(1000))
-
-async function setup() {
+const setup = () => {
   const onSetSelectedHttpFlowIds = vi.fn()
   render(
     <HTTPHistoryFilter
@@ -135,31 +115,24 @@ async function setup() {
   )
   fireEvent.click(screen.getByRole('button', { name: 'AI 页签' }))
   fireEvent.click(screen.getByRole('button', { name: '勾选流量' }))
-  await flushSelectionSync()
-  expect(bridge.syncSelectedHttpFlowIds).toHaveBeenLastCalledWith(['1', '2', '3'])
+  expect(screen.getByLabelText('聊天流量勾选')).toHaveTextContent('1,2,3')
   return { onSetSelectedHttpFlowIds }
 }
 
 describe('HTTPHistoryFilter 流量引用删除', () => {
-  it('删除单条只取消对应 ID，并将剩余选择同步到输入框', async () => {
-    const { onSetSelectedHttpFlowIds } = await setup()
+  it('删除单条只取消对应 ID，并将剩余选择同步到输入框', () => {
+    const { onSetSelectedHttpFlowIds } = setup()
     fireEvent.click(screen.getByRole('button', { name: '删除单条引用' }))
-    expect(bridge.deselectHttpFlowId).toHaveBeenCalledExactlyOnceWith('2')
-    expect(bridge.clearTableSelection).not.toHaveBeenCalled()
     expect(screen.getByLabelText('表格勾选')).toHaveTextContent('1,3')
     expect(onSetSelectedHttpFlowIds).toHaveBeenLastCalledWith(['1', '3'])
-    await flushSelectionSync()
-    expect(bridge.syncSelectedHttpFlowIds).toHaveBeenLastCalledWith(['1', '3'])
+    expect(screen.getByLabelText('聊天流量勾选')).toHaveTextContent('1,3')
   })
 
-  it.each(['清空引用', '发送完成'])('%s 清空全部选择和输入框引用', async (action) => {
-    const { onSetSelectedHttpFlowIds } = await setup()
+  it.each(['清空引用', '发送完成'])('%s 清空全部选择和输入框引用', (action) => {
+    const { onSetSelectedHttpFlowIds } = setup()
     fireEvent.click(screen.getByRole('button', { name: action }))
-    expect(bridge.clearTableSelection).toHaveBeenCalledOnce()
-    expect(bridge.deselectHttpFlowId).not.toHaveBeenCalled()
     expect(screen.getByLabelText('表格勾选')).toBeEmptyDOMElement()
     expect(onSetSelectedHttpFlowIds).toHaveBeenLastCalledWith([])
-    await flushSelectionSync()
-    expect(bridge.syncSelectedHttpFlowIds).toHaveBeenLastCalledWith([])
+    expect(screen.getByLabelText('聊天流量勾选')).toBeEmptyDOMElement()
   })
 })

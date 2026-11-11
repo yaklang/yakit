@@ -2,11 +2,12 @@ import type { YakitButtonProp } from '@/components/yakitUI/YakitButton/YakitButt
 import type { AIChatSubmitParams } from '../aiAgentChat/type'
 import type { AIReActChatRefProps } from '@/pages/ai-re-act/aiReActChat/AIReActChatType'
 import type { AIMentionCommandParams } from '../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
-import type { AIEnabledCapability } from '@/pages/ai-re-act/hooks/grpcApi'
 
 export interface AIChatWelcomeProps {
   onTriageSubmit: (data: AIChatSubmitParams) => void
   onSetReAct: () => void
+  selectedHttpFlowIds?: string[]
+  selectedRiskIds?: string[]
   onHttpFlowRemove?: (id: string, isSummary: boolean) => void
   ref?: React.ForwardedRef<AIReActChatRefProps>
 }
@@ -30,8 +31,3 @@ export interface RandomAIMaterialsDataProps {
 export interface SideSettingButtonProps extends YakitButtonProp {}
 
 export type DragSource = 'desktopToAItree' | 'AIRreeToChat' | null
-export interface AIChatWelcomeSettingCardProps {}
-export interface AIChatWelcomeSettingCardRef {
-  /** 获取当前选中的推荐场景（支持多选） */
-  getSelect: () => AIEnabledCapability[]
-}

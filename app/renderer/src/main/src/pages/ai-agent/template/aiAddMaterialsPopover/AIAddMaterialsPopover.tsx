@@ -9,21 +9,26 @@ import { yakitNotify } from '@/utils/notification'
 import type { AIMentionCommandParams } from '../../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
 import { MAX_ATTACHMENTS_PER_BATCH } from '../type'
 import MaterialAttachmentList from './materialAttachmentList/MaterialAttachmentList'
-import MaterialBrowserList from './materialBrowserList/MaterialBrowserList'
+import MaterialAddedBrowsersPanel from './MaterialAddedBrowsersPanel/MaterialAddedBrowsersPanel'
+import MaterialCapabilitiesPanel from './MaterialCapabilitiesPanel/MaterialCapabilitiesPanel'
 import MaterialCategoryPicker from './materialCategoryPicker/MaterialCategoryPicker'
 import MaterialFocusModeList from './materialFocusModeList/MaterialFocusModeList'
 import MaterialMenu from './materialMenu/MaterialMenu'
 import { getAddedBrowsers, getMaterialMenuItems, getMaterialSummaryGroups } from './materialPanelData'
 import MaterialSummary from './materialSummary/MaterialSummary'
+import type { MaterialSummaryGroup } from './materialSummary/type'
 import type { AIAddMaterialsPopoverProps, MaterialPanel, SelectedFocusMode } from './type'
 import styles from './AIAddMaterialsPopover.module.scss'
 
 const AIAddMaterialsPopover: FC<AIAddMaterialsPopoverProps> = ({
   children,
+  showScenarioCapabilities,
+  onEnabledCapabilitiesChange,
   onAdd,
   onRemove,
   mentions,
-  flowCount,
+  resourceIds,
+  selectedResourceIds,
   focusMode,
   onFocusModeChange,
   filterMode,
@@ -85,7 +90,8 @@ const AIAddMaterialsPopover: FC<AIAddMaterialsPopoverProps> = ({
   const menu = getMaterialMenuItems({
     t,
     mentions,
-    flowCount,
+    resourceIds,
+    selectedResourceIds,
     attachmentCount: attachments.length,
     browserCount: browsers.length,
     currentFocusMode: selectedFocusLabel?.id === focusMode ? selectedFocusLabel?.label : focusMode,
@@ -104,27 +110,20 @@ const AIAddMaterialsPopover: FC<AIAddMaterialsPopoverProps> = ({
     openCategory,
   })
 
-  const renderPanel = () => {
-    if (!picker) {
-      return (
-        <MaterialMenu
-          items={items}
-          filterMode={filterMode}
-          onOpenCategory={(category) => setPicker({ category, fromMenu: true })}
-        />
-      )
-    }
-
-    const { category, fromMenu } = picker
+  const getPanelHeader = (category: MaterialPanel) => {
     const { label: title, description, icon } = menu[category]
-    const header = { title, description, icon, onBack: fromMenu ? () => setPicker(undefined) : undefined }
+    return { title, description, icon, onBack: picker?.fromMenu ? () => setPicker(undefined) : undefined }
+  }
+
+  const renderPanel = () => {
+    const category = picker?.category
     switch (category) {
       case 'forge':
       case 'tool':
       case 'knowledgeBase':
         return (
           <MaterialCategoryPicker
-            {...header}
+            {...getPanelHeader(category)}
             key={category}
             category={category}
             mentions={mentions}
@@ -136,7 +135,7 @@ const AIAddMaterialsPopover: FC<AIAddMaterialsPopoverProps> = ({
       case 'focusMode':
         return (
           <MaterialFocusModeList
-            {...header}
+            {...getPanelHeader(category)}
             selectedId={focusMode}
             onChange={(next) => {
               setSelectedFocusLabel(next)
@@ -148,43 +147,62 @@ const AIAddMaterialsPopover: FC<AIAddMaterialsPopoverProps> = ({
       case 'attachments':
         return <MaterialAttachmentList attachments={attachments} onAdd={addAttachments} onRemove={onRemove} />
       case 'browser':
-        return <MaterialBrowserList browsers={browsers} onRemove={onRemove} />
+        return <MaterialAddedBrowsersPanel browsers={browsers} onRemove={onRemove} />
+      default:
+        return (
+          <MaterialMenu
+            items={items}
+            filterMode={filterMode}
+            onOpenCategory={(category) => setPicker({ category, fromMenu: true })}
+          />
+        )
     }
   }
 
+  const renderPopover = (capabilities?: MaterialSummaryGroup) => {
+    const groups = capabilities ? [capabilities, ...summaryGroups] : summaryGroups
+    return (
+      <YakitPopover
+        trigger="click"
+        placement="topLeft"
+        arrow={false}
+        open={open}
+        onOpenChange={(next) => {
+          if (!next) close()
+        }}
+        destroyOnHidden
+        classNames={{ root: styles.popover, body: styles.body }}
+        getPopupContainer={(anchor) => anchor.parentElement ?? document.body}
+        content={
+          <section
+            aria-label={t('AIChatTextarea.addMaterials')}
+            role="dialog"
+            className={classNames(styles.content, {
+              [styles['picker-content']]: picker && picker.category !== 'attachments' && picker.category !== 'browser',
+            })}
+            onClick={(event) => event.stopPropagation()}
+            onKeyDown={(event) => event.stopPropagation()}
+          >
+            {renderPanel()}
+          </section>
+        }
+      >
+        {children(
+          open,
+          () => (open ? close() : setOpen(true)),
+          groups.length ? <MaterialSummary groups={groups} onOpen={close} /> : null,
+          open && (!picker || picker.fromMenu),
+        )}
+      </YakitPopover>
+    )
+  }
+
+  if (!showScenarioCapabilities) return renderPopover()
+
   return (
-    <YakitPopover
-      trigger="click"
-      placement="topLeft"
-      arrow={false}
-      open={open}
-      onOpenChange={(next) => {
-        if (!next) close()
-      }}
-      destroyOnHidden
-      classNames={{ root: styles.popover, body: styles.body }}
-      getPopupContainer={(anchor) => anchor.parentElement ?? document.body}
-      content={
-        <section
-          aria-label={t('AIChatTextarea.addMaterials')}
-          role="dialog"
-          className={classNames(styles.content, {
-            [styles['picker-content']]: picker && picker.category !== 'attachments' && picker.category !== 'browser',
-          })}
-          onClick={(event) => event.stopPropagation()}
-          onKeyDown={(event) => event.stopPropagation()}
-        >
-          {renderPanel()}
-        </section>
-      }
-    >
-      {children(
-        open,
-        () => (open ? close() : setOpen(true)),
-        summaryGroups.length ? <MaterialSummary groups={summaryGroups} onOpen={close} /> : null,
-        open && (!picker || picker.fromMenu),
-      )}
-    </YakitPopover>
+    <MaterialCapabilitiesPanel onEnabledCapabilitiesChange={onEnabledCapabilitiesChange}>
+      {renderPopover}
+    </MaterialCapabilitiesPanel>
   )
 }
 

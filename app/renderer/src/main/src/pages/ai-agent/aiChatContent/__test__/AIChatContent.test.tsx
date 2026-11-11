@@ -4,13 +4,10 @@ import { useStore } from 'zustand'
 import { createStore } from 'zustand/vanilla'
 import { AIChatContent } from '../AIChatContent'
 import type { AIReActChatProps } from '@/pages/ai-re-act/aiReActChat/AIReActChatType'
-import { createRef } from 'react'
-import type { AIChatContentRefProps } from '../type'
 
 const store = createStore(() => ({ initLoading: true }))
 const agentStore = createStore(() => ({ activeChat: { SessionID: 'session-1', Source: 'ai' }, pageId: 'page-1' }))
 const { newChat } = vi.hoisted(() => ({ newChat: vi.fn() }))
-const flowCalls = vi.fn()
 
 vi.mock('@/pages/ai-re-act/hooks/useCurrentDataBySession', () => ({ useCurrentStore: () => store }))
 vi.mock('../../useContext/useStore', () => ({
@@ -21,18 +18,13 @@ vi.mock('../../useContext/useStore', () => ({
 vi.mock('../../historyChat/HistoryChat', () => ({ onNewChat: newChat }))
 vi.mock('../aiHorizontalScrollCard/AIHorizontalScrollCard', () => ({ AIHorizontalScrollCard: () => null }))
 vi.mock('@/pages/ai-re-act/aiReActChat/AIReActChat', async () => {
-  const { forwardRef, useImperativeHandle } = await import('react')
+  const { forwardRef } = await import('react')
   return {
     AIReActChat: forwardRef<HTMLDivElement, AIReActChatProps>(function Chat(props, _ref) {
-      const session = useStore(agentStore, (state) => state.activeChat.SessionID)
-      useImperativeHandle(
-        _ref,
-        () => ({ setHttpFlow: (ids: string[]) => flowCalls(session, ids) }) as unknown as HTMLDivElement,
-        [session],
-      )
       return (
         <div ref={props.rightPanelLayoutRef}>
           聊天内容
+          <output aria-label="会话流量勾选">{props.externalParameters?.selectedHttpFlowIds?.join(',')}</output>
           {props.showAIRightPanel && <span>内部面板</span>}
           <button onClick={() => props.setShowFreeChat(!props.showFreeChat)}>切换自由对话</button>
           <button onClick={() => props.externalParameters?.onHttpFlowRemove?.('1', false)}>删除流量</button>
@@ -78,16 +70,16 @@ const advance = (duration: number) => act(() => vi.advanceTimersByTime(duration)
 const queryBackButton = () => screen.queryByRole('button', { name: '回到首页' })
 
 describe('AIChatContent 加载超时操作', () => {
-  it('转发流量清理回调，并始终调用当前子输入框 ref', () => {
-    const ref = createRef<AIChatContentRefProps>()
+  it('转发流量勾选属性和清理回调', () => {
     const remove = vi.fn()
     const afterSubmit = vi.fn()
-    render(<AIChatContent ref={ref} onChat={vi.fn()} onHttpFlowRemove={remove} onAfterSubmit={afterSubmit} />)
-    act(() => ref.current?.setHttpFlow(['1']))
-    expect(flowCalls).toHaveBeenLastCalledWith('session-1', ['1'])
-    act(() => agentStore.setState({ activeChat: { SessionID: 'session-2', Source: 'ai' } }))
-    act(() => ref.current?.setHttpFlow(['2']))
-    expect(flowCalls).toHaveBeenLastCalledWith('session-2', ['2'])
+    const renderContent = (ids: string[]) => (
+      <AIChatContent selectedHttpFlowIds={ids} onChat={vi.fn()} onHttpFlowRemove={remove} onAfterSubmit={afterSubmit} />
+    )
+    const { rerender } = render(renderContent(['1']))
+    expect(screen.getByLabelText('会话流量勾选')).toHaveTextContent('1')
+    rerender(renderContent(['2']))
+    expect(screen.getByLabelText('会话流量勾选')).toHaveTextContent('2')
     fireEvent.click(screen.getByText('删除流量'))
     fireEvent.click(screen.getByText('清空流量'))
     fireEvent.click(screen.getByText('发送完成'))

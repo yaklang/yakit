@@ -1,3 +1,4 @@
+import { parseResourceReferenceIds } from '../../components/aiMilkdownInput/aiMilkdownResourceReference/resourceReferenceIds'
 import groupBy from 'lodash/groupBy'
 import {
   BookOpenTextOutlined,
@@ -21,7 +22,10 @@ import { MAX_ATTACHMENTS_PER_BATCH } from '../type'
 import type { MaterialSummaryGroup, MaterialSummaryRow } from './materialSummary/type'
 import type { AIAddMaterialsPopoverProps, MaterialMenuItem, MaterialPanel } from './type'
 
-interface MaterialMenuOptions extends Pick<AIAddMaterialsPopoverProps, 'mentions' | 'flowCount'> {
+interface MaterialMenuOptions extends Pick<
+  AIAddMaterialsPopoverProps,
+  'mentions' | 'resourceIds' | 'selectedResourceIds'
+> {
   t: TFunction
   attachmentCount: number
   browserCount: number
@@ -33,7 +37,8 @@ interface MaterialMenuOptions extends Pick<AIAddMaterialsPopoverProps, 'mentions
 /** 生成各类资料的菜单配置，包括文案、图标、已添加数量和点击行为。 */
 export const getMaterialMenuItems = ({
   mentions,
-  flowCount,
+  resourceIds,
+  selectedResourceIds,
   t,
   attachmentCount,
   browserCount,
@@ -46,6 +51,24 @@ export const getMaterialMenuItems = ({
   const openWorkspaceTab = (key: AITabsEnum) => {
     close()
     emiter.emit('switchAIActTab', JSON.stringify({ key }))
+  }
+
+  const getResourceMenu = (type: keyof typeof resourceIds) => {
+    const isHttp = type === 'http'
+    const key = isHttp ? AITabsEnum.HTTP : AITabsEnum.Risk
+    const selected = selectedResourceIds[type]
+    return {
+      action: () => openWorkspaceTab(key),
+      summaryAction: selected.length
+        ? () => {
+            close()
+            const filter = isHttp ? { showSelectedHttpFlows: true } : { showSelectedRisks: true }
+            emiter.emit('switchAIActTab', JSON.stringify({ key, ...filter }))
+          }
+        : undefined,
+      external: true,
+      count: parseResourceReferenceIds([...resourceIds[type], ...selected]).length,
+    }
   }
 
   const openSidebarTab = (active: AIAgentTabListEnum) => {
@@ -67,17 +90,13 @@ export const getMaterialMenuItems = ({
       label: t('AIAddMaterialsPopover.risk'),
       description: t('AIAddMaterialsPopover.riskHint'),
       icon: <ColorsRiskIcon />,
-      action: () => openWorkspaceTab(AITabsEnum.Risk),
-      external: true,
-      count: countMentions('risk'),
+      ...getResourceMenu('risk'),
     },
     flow: {
       label: t('AIAddMaterialsPopover.flow'),
       description: t('AIAddMaterialsPopover.flowHint'),
       icon: <ColorsFlowIcon />,
-      action: () => openWorkspaceTab(AITabsEnum.HTTP),
-      external: true,
-      count: flowCount,
+      ...getResourceMenu('http'),
     },
     forge: {
       label: t('AIMentionTabs.skill'),
@@ -195,7 +214,7 @@ export const getMaterialSummaryGroups = ({
     ]
   })
   const otherRows = items.flatMap<MaterialSummaryRow>(
-    ({ label, icon, count, action, category, tab, current, summaryPanel }) =>
+    ({ label, icon, count, action, summaryAction, category, tab, current, summaryPanel }) =>
       count && count > 0
         ? [
             {
@@ -210,7 +229,7 @@ export const getMaterialSummaryGroups = ({
                   ? undefined
                   : summaryPanel
                     ? () => openCategory(summaryPanel)
-                    : (action ?? (category ? () => openCategory(category) : undefined)),
+                    : (summaryAction ?? action ?? (category ? () => openCategory(category) : undefined)),
             },
           ]
         : [],

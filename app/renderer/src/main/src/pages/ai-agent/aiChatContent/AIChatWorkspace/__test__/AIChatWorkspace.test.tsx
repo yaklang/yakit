@@ -48,11 +48,15 @@ import emiter from '@/utils/eventBus/eventBus'
 import { AITabs, AITabsEnum } from '../../../defaultConstant'
 import type * as AIChatWorkspaceModule from '../AIChatWorkspace'
 import { compileReactModule } from '@/utils/__test__/helpers/compileReactModule'
-import type { PluginExecuteWebsiteTreeProps } from '@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResultType'
+import type {
+  PluginExecuteWebsiteTreeProps,
+  VulnerabilitiesRisksTableProps,
+} from '@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResultType'
 import { useHttpFlowSelection } from '@/components/useHttpFlowSelection'
 import { MAX_FILE_SIZE_BYTES } from '@/pages/yakRunner/utils'
 import { previewOpenFilesStore } from '../../../aiChatWelcome/FileTreeList/store/usePreviewOpenFiles'
 const flowCallbacks: PluginExecuteWebsiteTreeProps[] = []
+const riskCallbacks: VulnerabilitiesRisksTableProps[] = []
 
 beforeEach(() => {
   Element.prototype.scrollIntoView = vi.fn()
@@ -166,16 +170,23 @@ vi.mock('@/pages/ai-agent/chatTemplate/aiTaskExecutionDetails/AITaskExecutionDet
 vi.mock('@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult', () => ({
   PluginExecuteHttpFlow: (props: PluginExecuteWebsiteTreeProps) => {
     flowCallbacks.push(props)
-    const { runtimeId, pageType } = props
+    const { runtimeId, pageType, aiFlowSelection } = props
     return (
       <div data-testid="http-flows" data-page-type={pageType}>
         {runtimeId}
+        {aiFlowSelection?.renderCount(pageType === 'History' ? 12 : 0)}
       </div>
     )
   },
-  VulnerabilitiesRisksTable: ({ runTimeIDs }: { runTimeIDs: string[] }) => (
-    <div data-testid="risks">{runTimeIDs.join(',')}</div>
-  ),
+  VulnerabilitiesRisksTable: (props: VulnerabilitiesRisksTableProps) => {
+    riskCallbacks.push(props)
+    return (
+      <div data-testid="risks">
+        {props.runTimeIDs?.join(',')}
+        {props.aiRiskSelection?.renderCount(props.aiRiskSelection.emptyBase ? 0 : 12)}
+      </div>
+    )
+  },
 }))
 vi.mock('@/pages/ai-agent/components/aiFileSystemList/FilePreview/FilePreview', () => ({
   default: ({
@@ -210,6 +221,7 @@ vi.mock('@/components/yakitUI/YakitEmpty/YakitEmpty', () => ({ YakitEmpty: () =>
 
 beforeEach(() => {
   flowCallbacks.length = 0
+  riskCallbacks.length = 0
   agentStore.setState({
     activeChat: { SessionID: 'session-1', Title: '当前任务', RelatedRuntimeIDs: [] },
     pageId: 'test-page',
@@ -358,6 +370,62 @@ describe('AIChatWorkspace 菜单切换', () => {
     selected.mockClear()
     act(() => filtered.onSetSelectedHttpFlowIds?.(['late-filter']))
     expect(selected).not.toHaveBeenCalled()
+  })
+
+  it.each([true, false])('从其他资料重开流量页签后恢复勾选及筛选（欢迎页：%s）', (welcome) => {
+    if (welcome) agentStore.setState({ activeChat: undefined })
+    const WorkspaceSelection = () => {
+      const selection = useHttpFlowSelection(true, welcome ? undefined : 'session-1')
+      return <AIChatWorkspace welcome={welcome} setFilePreviewData={vi.fn()} {...selection} />
+    }
+    const openHttpTab = (showSelectedHttpFlows = false) =>
+      act(() => emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.HTTP, showSelectedHttpFlows })))
+
+    render(<WorkspaceSelection />)
+    openHttpTab()
+    const baseLabel = welcome ? 'AIChatWorkspace.allItems 12' : 'AIChatWorkspace.sessionItems 0'
+    expect(screen.getByRole('radio', { name: baseLabel })).toBeChecked()
+    const previousSelection = flowCallbacks.at(-1)!.aiFlowSelection!
+    act(() => previousSelection.onChange(['21', '22']))
+    expect(screen.getByRole('radio', { name: 'AIChatWorkspace.selectedItems 2' })).not.toBeChecked()
+
+    const close = screen.getByTestId('workspace-tab-bar').querySelector('.workspace-tab-close')
+    fireEvent.click(close!)
+    expect(screen.queryByTestId('http-flows')).not.toBeInTheDocument()
+    act(() => previousSelection.onChange([]))
+    openHttpTab(true)
+
+    expect(screen.getByRole('radio', { name: 'AIChatWorkspace.selectedItems 2' })).toBeChecked()
+    expect(flowCallbacks.at(-1)?.aiFlowSelection).toMatchObject({ ids: ['21', '22'], selectedOnly: true })
+    act(() => flowCallbacks.at(-1)!.aiFlowSelection!.onChange(['22']))
+    expect(screen.getByRole('radio', { name: 'AIChatWorkspace.selectedItems 1' })).toBeChecked()
+    fireEvent.click(screen.getByRole('radio', { name: baseLabel }))
+    expect(flowCallbacks.at(-1)?.aiFlowSelection).toMatchObject({ ids: ['22'], selectedOnly: false })
+  })
+
+  it.each([true, false])('从其他资料重开风险页签并回显选择（欢迎页：%s）', (welcome) => {
+    if (welcome) agentStore.setState({ activeChat: undefined })
+    const riskSelection = { ids: ['21', '22'], onChange: vi.fn() }
+    const openRiskTab = (showSelectedRisks = false) =>
+      act(() => emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.Risk, showSelectedRisks })))
+
+    render(<AIChatWorkspace welcome={welcome} setFilePreviewData={vi.fn()} riskSelection={riskSelection} />)
+    openRiskTab()
+    const baseLabel = welcome ? 'AIChatWorkspace.allItems 12' : 'AIChatWorkspace.sessionItems 0'
+    expect(screen.getByRole('radio', { name: baseLabel })).toBeChecked()
+    const close = screen.getByTestId('workspace-tab-bar').querySelector('.workspace-tab-close')
+    fireEvent.click(close!)
+    expect(screen.queryByTestId('risks')).not.toBeInTheDocument()
+
+    openRiskTab(true)
+    expect(screen.getByRole('radio', { name: 'AIChatWorkspace.selectedItems 2' })).toBeChecked()
+    expect(riskCallbacks.at(-1)?.aiRiskSelection).toMatchObject({
+      ids: ['21', '22'],
+      selectedOnly: true,
+      emptyBase: !welcome,
+    })
+    fireEvent.click(screen.getByRole('radio', { name: baseLabel }))
+    expect(riskCallbacks.at(-1)?.aiRiskSelection).toMatchObject({ ids: ['21', '22'], selectedOnly: false })
   })
   it.each([{ runtimeIds: [] }, { runtimeIds: ['stale-runtime'] }])(
     '欢迎页流量使用 History 模式、空 runtimeId 和空来源（$runtimeIds）',

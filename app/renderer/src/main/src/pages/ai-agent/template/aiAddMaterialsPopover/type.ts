@@ -1,7 +1,9 @@
+import type { AIResourceIds } from '../type'
 import type { ReactElement, ReactNode } from 'react'
 import type { AIChatMentionProps } from '../../components/aiChatMention/type'
 import type { AIMentionCommandParams } from '../../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
 import type { AIMentionTabsEnum } from '../../defaultConstant'
+import type { AIEnabledCapability } from '@/pages/ai-re-act/hooks/grpcApi'
 
 export type MaterialCategory = Extract<
   AIMentionCommandParams['mentionType'],
@@ -37,6 +39,7 @@ export interface MaterialMenuItem {
   summaryPanel?: MaterialPanel
   tab?: AIMentionTabsEnum
   action?: () => void
+  summaryAction?: () => void
   external?: boolean
   count?: number
   current?: string
@@ -44,10 +47,13 @@ export interface MaterialMenuItem {
 
 export interface AIAddMaterialsPopoverProps {
   children: (open: boolean, toggle: () => void, summary: ReactElement | null, menuOpen: boolean) => ReactElement
+  showScenarioCapabilities?: boolean
+  onEnabledCapabilitiesChange?: (items: AIEnabledCapability[]) => void
   onAdd: (material: AIMentionCommandParams) => void
   onRemove: (material: AIMentionCommandParams) => void
   mentions: AIMentionCommandParams[]
-  flowCount: number
+  resourceIds: AIResourceIds
+  selectedResourceIds: AIResourceIds
   focusMode?: string
   onFocusModeChange: (focusMode?: string) => void
   filterMode?: AIChatMentionProps['filterMode']

@@ -210,6 +210,10 @@
   font-weight: 400;
   line-height: 16px;
 
+  &.table-renderTitle-ai {
+    padding-left: 0;
+  }
+
   /* 133.333% */
   .table-renderTitle-left {
     @extend %display-flex-center;
