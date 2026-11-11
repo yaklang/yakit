@@ -62,6 +62,7 @@ export const grpcFetchIntranetYakitVersion: APIOptionalFunc<boolean, string> = (
           orderBy: 'updated_at',
           order: 'desc',
           keywords: version,
+          fileType: 'yak_data',
         },
       })
         .then((res) => {
