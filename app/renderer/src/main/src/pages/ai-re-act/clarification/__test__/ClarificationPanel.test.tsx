@@ -5,6 +5,7 @@ import { createStore } from 'zustand/vanilla'
 import { ClarificationPanel } from '../ClarificationPanel/ClarificationPanel'
 import { QuestionSummary } from '../QuestionSummary/QuestionSummary'
 import { AIChatQSDataTypeEnum, type ChatStoreState } from '../../hooks/aiRender'
+import { questionSummaryLines } from '../../interactive-ui/utils'
 import { syncQuestionPanel } from '../../interactive-ui/questionPanel'
 import { createChatStore } from '../../hooks/chatStore'
 
@@ -109,6 +110,35 @@ beforeEach(() => {
   )
 })
 afterEach(cleanup)
+it('renders submitted choice answers as a numbered summary without the chat prefix', () => {
+  const data = item('目标受众')
+  data.data.request.questions![0].title = '目标受众'
+  data.data.request.questions![0].prompt = '最终说明面向谁？'
+  data.data.request.questions![0].options[0].label = '开发者'
+  data.data.request.state = 'submitted'
+  data.data.request.answers = [{ questionId: 'q', selected: ['a'], text: '123' }]
+  expect(questionSummaryLines(data.data.request, data.data.request.answers)).toEqual([
+    '目标受众（最终说明面向谁？）：开发者；123',
+  ])
+  render(<QuestionSummary item={data} />)
+  expect(screen.getByText('已回答')).toBeInTheDocument()
+  expect(screen.queryByText(/对追问的回答/)).toBeNull()
+  expect(screen.getAllByRole('listitem').map((node) => node.textContent)).toEqual([
+    '目标受众（最终说明面向谁？）：开发者；123',
+  ])
+  expect(screen.queryByText('展开问题')).toBeNull()
+})
+it('renders submitted form values as a numbered summary without the form title prefix', () => {
+  const data = formItem('form')
+  data.data.request.state = 'submitted'
+  data.data.request.values = { target: '授权演示系统' }
+  expect(questionSummaryLines(data.data.request, [], data.data.request.values)).toEqual(['目标名称：授权演示系统'])
+  render(<QuestionSummary item={data} />)
+  expect(screen.getByText('已回答')).toBeInTheDocument()
+  expect(screen.queryByText(/对追问的回答/)).toBeNull()
+  expect(screen.queryByText(/参数表单 form/)).toBeNull()
+  expect(screen.getAllByRole('listitem').map((node) => node.textContent)).toEqual(['目标名称：授权演示系统'])
+})
 it('keeps history read-only and opens the composer panel explicitly', () => {
   const data = item('first')
   render(<QuestionSummary item={data} />)

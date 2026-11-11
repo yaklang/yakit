@@ -797,6 +797,49 @@ describe('frontend allocated session identity', () => {
     await pending
   })
 
+  it('keeps questionnaire free input off the chat tree and persist store', async () => {
+    const token = await start()
+    await emit(token, 'pong', 'client-session')
+    const session = controller.ensureSession('client-session')
+    const persistContent = vi.mocked(aiChatPersistStore.setSessionContent)
+    const persisted = persistContent.mock.calls.length
+    const elements = session.store.getState().chatElements.length
+    const sent = controller.handleSendMessage({
+      token: 'client-session',
+      type: 'casual',
+      params: {
+        IsFreeInput: true,
+        FreeInput: '对追问的回答：\n1. 目标：生产',
+        UserInteraction: JSON.stringify({
+          id: 'receipt',
+          source: 'questionnaire',
+          requestId: 'question',
+          answers: [],
+        }),
+      },
+    })
+    expect(sent).toBe(true)
+    const queued = [...session.rawData.contents.values()].find(
+      (item) => item.interactionMetadata?.source === 'questionnaire',
+    )
+    expect(queued?.type).toBe(AIChatQSDataTypeEnum.QUESTION)
+    expect(session.store.getState().chatElements).toHaveLength(elements)
+    expect(session.store.getState().items[queued!.id]).toBeUndefined()
+    expect(persistContent).toHaveBeenCalledTimes(persisted)
+    const outbound = ipcRendererMock.invoke.mock.calls.find(
+      ([, , request]) => request?.UserInteraction && JSON.parse(request.UserInteraction).source === 'questionnaire',
+    )![2]
+    expect(outbound.AttachedResourceInfo).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_DEFAULT,
+          Type: AttachedResourceTypeEnum.USER_FREE_INPUT_UUID,
+          Value: queued!.id,
+        }),
+      ]),
+    )
+    await controller.handleSessionEnd('client-session')
+  })
   it('accepts an already queued UI receipt before connection teardown', async () => {
     const token = await start()
     await emit(token, 'pong', 'client-session')

@@ -15,14 +15,8 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import type { AIChatQSData } from '../../hooks/aiRender'
 import type { AIChatQSDataTypeEnum } from '../../hooks/aiRender'
 import { globalSessionEngine } from '../../hooks/ChatMultiSessionController'
-import {
-  emptyAnswer,
-  questionAnswers,
-  questionText,
-  formAnswerText,
-  type QuestionOption,
-  type QuestionDraft,
-} from '../../interactive-ui/types'
+import type { QuestionOption, QuestionDraft } from '../../interactive-ui/types'
+import { emptyAnswer, questionAnswers, questionText, formAnswerText } from '../../interactive-ui/utils'
 import { questionStatusLabel } from '../questionStatus'
 import styles from './QuestionCard.module.scss'
 import { QuestionFormFields } from '../QuestionFormFields/QuestionFormFields'

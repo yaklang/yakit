@@ -1,5 +1,6 @@
 import { syncQuestionPanel } from '../interactive-ui/questionPanel'
-import { UI_PROTOCOL, type QuestionDraft } from '../interactive-ui/types'
+import type { QuestionDraft } from '../interactive-ui/types'
+import { UI_PROTOCOL, isQuestionnaireSubmission } from '../interactive-ui/utils'
 import type { AIAgentChatData, AIAgentChatMetaData } from '@/pages/ai-agent/type/aiChat'
 import catalogManifest from '../interactive-ui/catalog.manifest.json'
 import {
@@ -1352,6 +1353,7 @@ export class ChatMultiSessionController {
             Value: chatID,
           })
           params.AttachedResourceInfo = AttachedResourceInfos
+          const questionnaire = isQuestionnaireSubmission(params.UserInteraction)
           const chatData: AIChatQSData = {
             id: chatID,
             chatType: 'reAct',
@@ -1360,19 +1362,25 @@ export class ChatMultiSessionController {
             data: params.FreeInput || '',
             AIService: '',
             AIModelName: '',
-            // showQS为了UI渲染方便，重新构建的字段
             extraValue: { showQS: params.FreeInput || '' },
+            ...(questionnaire
+              ? {
+                  interactionMetadata: JSON.parse(params.UserInteraction || '{}'),
+                }
+              : {}),
           }
           rawData.contents.set(chatData.id, chatData)
-          persistIndependentItem(token, chatData, meta.lifecycle)
-          store.getState().dispatchStreamingNode({
-            chatType: 'reAct',
-            node: {
-              token: chatData.id,
-              kind: 'item',
-              type: chatData.type,
-            },
-          })
+          if (!questionnaire) {
+            persistIndependentItem(token, chatData, meta.lifecycle)
+            store.getState().dispatchStreamingNode({
+              chatType: 'reAct',
+              node: {
+                token: chatData.id,
+                kind: 'item',
+                type: chatData.type,
+              },
+            })
+          }
         }
 
         // 因为有用户问题发送，所以注册 获取问题队列轮询器

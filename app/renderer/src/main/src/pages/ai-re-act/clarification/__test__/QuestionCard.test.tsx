@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { QuestionCard } from '../QuestionCard/QuestionCard'
 import { AIChatQSDataTypeEnum } from '../../hooks/aiRender'
 import type { QuestionRequest } from '../../interactive-ui/types'
-import { questionText } from '../../interactive-ui/types'
+import { questionText } from '../../interactive-ui/utils'
 
 const send = vi.hoisted(() => vi.fn().mockResolvedValue(undefined))
 vi.mock('../../hooks/ChatMultiSessionController', () => ({

@@ -41,6 +41,23 @@ const handleInteractiveUI: AIMessageHandler = async (info) => {
   if (!payload.id) return
   if (!isQuestion) {
     await recordQuestionSubmission(info, payload.metadata)
+    if (payload.metadata?.source === 'questionnaire') {
+      const taskId = payload.taskId
+      if (typeof taskId === 'string' && taskId) {
+        const previousMessage = rawData.contents.get(taskId)
+        rawData.contents.set(taskId, {
+          ...(previousMessage || genBaseAIChatData(res)),
+          id: taskId,
+          chatType: 'reAct',
+          type: AIChatQSDataTypeEnum.QUESTION,
+          data: (previousMessage?.type === AIChatQSDataTypeEnum.QUESTION
+            ? previousMessage.data
+            : payload.text) as string,
+          interactionMetadata: payload.metadata,
+        })
+      }
+      return
+    }
   }
   const previous = rawData.contents.get(id) || (await persistGetSessionContent(sessionId, id))
   if (!info.meta.lifecycle.current) return
