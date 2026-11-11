@@ -564,7 +564,6 @@ const AIMCPListItem: React.FC<AIMCPListItemProps> = React.memo((props) => {
 
   const onEdit = useMemoizedFn((event: React.MouseEvent) => {
     event.stopPropagation()
-    if (item.Enable) return
     const defaultValues: UpdateMCPServerRequest = omit(item, ['Tools'])
     const m = showYakitModal({
       title: (modalT) => modalT('AIMCP.editMcp'),
@@ -572,10 +571,15 @@ const AIMCPListItem: React.FC<AIMCPListItemProps> = React.memo((props) => {
       content: (
         <AIMCPForm
           defaultValues={defaultValues}
-          onCancel={(saved) => {
+          onCancel={async (saved) => {
             m.destroy()
             if (!saved) return
-            onRefresh()
+            await onRefresh()
+            if (!saved.Enable) return
+            await new Promise((resolve) => setTimeout(resolve, 1000))
+            try {
+              onSetData(await getMCPServersById(item.ID))
+            } catch {}
           }}
         />
       ),
@@ -690,16 +694,8 @@ const AIMCPListItem: React.FC<AIMCPListItemProps> = React.memo((props) => {
               event.stopPropagation()
             }}
           >
-            {!item.Enable && (
-              <div className={styles['mcp-card-actions']}>
-                <Tooltip title={t('YakitButton.edit')}>
-                  <YakitButton
-                    type="text2"
-                    icon={<PencilOutlined color="currentColor" />}
-                    aria-label={t('YakitButton.edit')}
-                    onClick={onEdit}
-                  />
-                </Tooltip>
+            <div className={styles['mcp-card-actions']}>
+              {!item.Enable && (
                 <Tooltip title={t('YakitButton.delete')}>
                   <YakitButton
                     type="text2"
@@ -708,8 +704,16 @@ const AIMCPListItem: React.FC<AIMCPListItemProps> = React.memo((props) => {
                     onClick={onDelete}
                   />
                 </Tooltip>
-              </div>
-            )}
+              )}
+              <Tooltip title={t('YakitButton.edit')}>
+                <YakitButton
+                  type="text2"
+                  icon={<PencilOutlined color="currentColor" />}
+                  aria-label={t('YakitButton.edit')}
+                  onClick={onEdit}
+                />
+              </Tooltip>
+            </div>
             {item.Enable ? (
               <YakitPopconfirm
                 title={t('AIMCP.disableConfirm', { name: item.Name })}

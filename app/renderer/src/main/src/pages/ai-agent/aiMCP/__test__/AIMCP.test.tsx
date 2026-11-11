@@ -109,6 +109,7 @@ describe('AIMCP 服务器列表', () => {
     render(<AIMCP />)
     await screen.findByText(server.Name)
     expect(within(group('runningGroup')).getByText(server.Name)).toBeInTheDocument()
+    expect(within(group('runningGroup')).getByRole('button', { name: 'YakitButton.edit' })).toBeInTheDocument()
     expect(groupHeading('runningGroup')).toHaveTextContent('1')
     expect(screen.queryByRole('region', { name: 'AIMCP.disabledGroup' })).not.toBeInTheDocument()
   })
@@ -469,11 +470,13 @@ describe('AIMCP 服务器列表', () => {
     expect(screen.getByText(server.Name)).toBeInTheDocument()
   })
 
-  it('编辑保存为启用态后刷新列表且不打开工具列表', async () => {
+  it('编辑保存为启用态后刷新列表并延迟拉取工具，不打开工具列表', async () => {
     const renamed = { ...disabledServer, Name: 'renamed server', Enable: true }
+    const fetched = { ...renamed, ErrorMsg: 'connection refused' }
     vi.mocked(grpcGetAllMCPServers)
       .mockResolvedValueOnce(responseFor([disabledServer]))
       .mockResolvedValueOnce(responseFor([renamed]))
+    vi.mocked(getMCPServersById).mockResolvedValue(fetched)
     render(<AIMCP />)
     fireEvent.click(await screen.findByRole('button', { name: 'YakitButton.edit' }))
     const form = modalForm()
@@ -481,8 +484,15 @@ describe('AIMCP 服务器列表', () => {
       form.props.onCancel(renamed)
     })
     await waitFor(() => expect(grpcGetAllMCPServers).toHaveBeenCalledTimes(2))
+    expect(getMCPServersById).not.toHaveBeenCalled()
     expect(screen.queryByText('AIMCP.toolList')).not.toBeInTheDocument()
     expect(within(group('runningGroup')).getByText(renamed.Name)).toBeInTheDocument()
+    expect(within(group('runningGroup')).getByRole('button', { name: 'YakitButton.edit' })).toBeInTheDocument()
+    await waitFor(() => expect(getMCPServersById).toHaveBeenCalledExactlyOnceWith(disabledServer.ID), {
+      timeout: 2000,
+    })
+    expect(screen.queryByText('AIMCP.toolList')).not.toBeInTheDocument()
+    expect(screen.getByText('AIMCP.toolFetchFailed')).toBeInTheDocument()
   })
 
   it('编辑保存未启用时仅刷新列表', async () => {
@@ -496,6 +506,10 @@ describe('AIMCP 服务器列表', () => {
       form.props.onCancel({ ...disabledServer, Enable: false })
     })
     await waitFor(() => expect(grpcGetAllMCPServers).toHaveBeenCalledTimes(2))
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 1100))
+    })
+    expect(getMCPServersById).not.toHaveBeenCalled()
     expect(screen.queryByText('AIMCP.toolList')).not.toBeInTheDocument()
     expect(screen.getByText(disabledServer.Name)).toBeInTheDocument()
   })
