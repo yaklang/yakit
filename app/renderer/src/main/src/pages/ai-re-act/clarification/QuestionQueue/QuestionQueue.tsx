@@ -50,7 +50,7 @@ export function QuestionQueue({
   if (!items.length) return <>{children}</>
   return (
     <YakitPopover
-      trigger="hover"
+      trigger={['hover', 'click']}
       placement="bottomRight"
       mouseEnterDelay={0.1}
       mouseLeaveDelay={0.2}

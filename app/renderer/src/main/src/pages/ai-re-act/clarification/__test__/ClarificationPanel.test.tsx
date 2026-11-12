@@ -272,6 +272,28 @@ it('shows the queue overlay on hover and jumps to a pending item', async () => {
   await pinPending()
   expect(screen.getByText('选择 second')).toBeTruthy()
 })
+it('opens the queue overlay on click and keeps it after hover then click', async () => {
+  const first = item('first')
+  const second = item('second')
+  for (const data of [first, second]) {
+    context.contents.set(data.id, data)
+    syncQuestionPanel(context.store, data)
+  }
+  render(<ClarificationPanel />)
+  const trigger = screen.getByRole('button', { name: /问卷队列/ })
+  fireEvent.click(trigger)
+  expect(await screen.findByText('待回答')).toBeInTheDocument()
+  fireEvent.click(screen.getByText('待回答'))
+  expect(screen.getByText('选择 second')).toBeTruthy()
+  fireEvent.mouseEnter(screen.getByRole('button', { name: /问卷队列/ }))
+  expect(await screen.findByText('待回答')).toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: /问卷队列/ }))
+  fireEvent.mouseLeave(screen.getByRole('button', { name: /问卷队列/ }))
+  await act(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 300))
+  })
+  expect(screen.getByText('待回答')).toBeInTheDocument()
+})
 it('does not reopen or replace a collapsed questionnaire when a different form arrives', async () => {
   const producer = createChatStore()
   context.store = producer.renderStore

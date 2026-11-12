@@ -6,7 +6,7 @@ import type { AIMessageHandlerParams } from '../../hooks/type'
 import { aiInteractiveUIHandlers } from '../../hooks/grpcStreamHandler/aiInteractiveUI'
 import { clearAllUIDrafts, setUIDraft } from '../../hooks/persist/uiDraftStore'
 import { aiOtherDataHandlers } from '../../hooks/grpcStreamHandler/aiOther'
-import { persistIndependentItem } from '../../hooks/persist/contentPersistHelper'
+import { deletePersistedContent, persistIndependentItem } from '../../hooks/persist/contentPersistHelper'
 
 vi.mock('../../hooks/persist/contentPersistHelper', () => ({
   persistGetSessionContent: vi.fn().mockResolvedValue(undefined),
@@ -22,7 +22,23 @@ const resetState = () => {
     questionPanelTokens: [],
     questionPanelRevision: 0,
     items: {},
-    dispatchStreamingNode: dispatch,
+    chatElements: [] as { token: string }[],
+    dispatchStreamingNode: (payload: { chatType: string; node: { token: string; kind: string; type: string } }) => {
+      dispatch(payload)
+      const token = payload.node.token
+      if (!state.items[token]) {
+        state.items[token] = { kind: payload.node.kind, token, type: payload.node.type, chatType: payload.chatType }
+      }
+      if (!state.chatElements.some((element: { token: string }) => element.token === token)) {
+        state.chatElements.push({ token })
+      }
+    },
+    deleteElementNode: ({ token, onDelContent }: { token: string; onDelContent?: (token: string) => void }) => {
+      if (!state.items[token]) return
+      onDelContent?.(token)
+      delete state.items[token]
+      state.chatElements = state.chatElements.filter((element: { token: string }) => element.token !== token)
+    },
     incrementNodeVersion: vi.fn(),
     replaceItemToken: vi.fn(),
     updateStateCount: vi.fn(),
@@ -57,6 +73,8 @@ beforeEach(() => {
   contents = new Map()
   resetState()
   dispatch.mockClear()
+  vi.mocked(persistIndependentItem).mockClear()
+  vi.mocked(deletePersistedContent).mockClear()
   clearAllUIDrafts()
 })
 describe('UI event integration', () => {
@@ -156,6 +174,9 @@ describe('UI event integration', () => {
       }
       expect(contents.size).toBe(1)
       expect(contents.get('new-task').interactionMetadata).toEqual(metadata)
+      expect(state.items['new-task']).toBeUndefined()
+      expect(state.chatElements).toEqual([])
+      if (!messageFirst) expect(deletePersistedContent).toHaveBeenCalledWith('session', 'new-task', expect.anything())
     },
   )
   it('deletes the idle questionnaire uuid on dequeue without persisting or dispatching a user bubble', async () => {

@@ -2,7 +2,11 @@ import type { AIMessageHandler, AIMessageHandlerParams } from '../type'
 import { AIChatQSDataTypeEnum, type AIChatQSData } from '../aiRender'
 import { Uint8ArrayToString } from '@/utils/str'
 import { genBaseAIChatData } from '../utils'
-import { persistGetSessionContent, persistIndependentItem } from '../persist/contentPersistHelper'
+import {
+  deletePersistedContent,
+  persistGetSessionContent,
+  persistIndependentItem,
+} from '../persist/contentPersistHelper'
 import { getUIDraft } from '../persist/uiDraftStore'
 import type { QuestionRequest, UISubmission } from '../../interactive-ui/types'
 import { syncQuestionPanel } from '../../interactive-ui/questionPanel'
@@ -55,6 +59,18 @@ const handleInteractiveUI: AIMessageHandler = async (info) => {
             : payload.text) as string,
           interactionMetadata: payload.metadata,
         })
+        // dequeue 可能先把 taskId 当成普通用户问题上屏；metadata 到达后收回气泡，保留 contents 供后续出队识别。
+        const posted = store.getState().items[taskId]
+        if (posted) {
+          store.getState().deleteElementNode({
+            token: taskId,
+            kind: 'item',
+            chatType: 'reAct',
+            onDelContent: (token) => {
+              deletePersistedContent(sessionId, token, info.meta.lifecycle)
+            },
+          })
+        }
       }
       return
     }

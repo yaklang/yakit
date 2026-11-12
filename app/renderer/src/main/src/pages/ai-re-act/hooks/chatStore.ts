@@ -354,6 +354,7 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
               } else {
                 removeChatElement(token)
               }
+              delete state.items[token]
               break
             case 'group':
               onDelContent(token)
