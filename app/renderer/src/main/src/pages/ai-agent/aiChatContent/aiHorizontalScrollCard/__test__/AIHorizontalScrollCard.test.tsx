@@ -1,9 +1,9 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createStore } from 'zustand/vanilla'
 import { AIHorizontalScrollCard } from '../AIHorizontalScrollCard'
 
-const store = createStore(() => ({ card: [] as { title: string }[] }))
+const store = createStore(() => ({ card: [] as { title: string }[], focusMode: '' }))
 const { newChat, isMemfitMock, emit } = vi.hoisted(() => ({
   newChat: vi.fn(),
   isMemfitMock: vi.fn(() => false),
@@ -26,10 +26,20 @@ vi.mock('@/i18n/useI18nNamespaces', () => ({ useI18nNamespaces: () => ({ t: (key
 beforeEach(() => {
   vi.clearAllMocks()
   isMemfitMock.mockReturnValue(false)
-  store.setState({ card: [] })
+  store.setState({ card: [], focusMode: '' })
 })
 
 describe('AIHorizontalScrollCard', () => {
+  it('在会话标题右侧显示当前场景，场景为空时隐藏标签', () => {
+    render(<AIHorizontalScrollCard />)
+    const title = screen.getByText('当前会话')
+    expect(title.nextElementSibling).toBeNull()
+
+    act(() => store.setState({ focusMode: 'fast_context' }))
+
+    expect(title.nextElementSibling).toHaveTextContent('场景:fast_context')
+  })
+
   it('头部保留上下文与新建会话入口，不展示任务详情和更多操作', () => {
     render(<AIHorizontalScrollCard />)
     expect(screen.getByText('当前会话')).toBeVisible()

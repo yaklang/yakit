@@ -17,7 +17,8 @@ import {
   ColorsSkillIcon,
   ColorsToolIcon,
 } from '../../aiChatWelcome/icon'
-import { AIAgentTabListEnum, AIMentionTabsEnum, AITabsEnum, SwitchAIAgentTabEventEnum } from '../../defaultConstant'
+import { AIAgentTabListEnum, AIMentionTabsEnum, AITabsEnum } from '../../defaultConstant'
+import { showAIAgentSidebarTab } from '../../aiAgentTabNavigation'
 import { MAX_ATTACHMENTS_PER_BATCH } from '../type'
 import type { MaterialSummaryGroup, MaterialSummaryRow } from './materialSummary/type'
 import type { AIAddMaterialsPopoverProps, MaterialMenuItem, MaterialPanel } from './type'
@@ -73,10 +74,7 @@ export const getMaterialMenuItems = ({
 
   const openSidebarTab = (active: AIAgentTabListEnum) => {
     close()
-    emiter.emit(
-      'switchAIAgentTab',
-      JSON.stringify({ type: SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE, params: { active, show: true } }),
-    )
+    showAIAgentSidebarTab(active)
   }
 
   return {
@@ -174,9 +172,7 @@ export const getMaterialSummaryGroups = ({
     if (category !== 'forge' && category !== 'knowledgeBase') return []
     const entries = mentions.filter((mention) => mention.mentionType === category)
     if (!entries.length) return []
-    const forgeNames = new Map(
-      entries.filter((entry) => entry.forgeName).map((entry) => [entry.mentionId, entry.forgeName]),
-    )
+    const forgeNames = new Map(entries.filter((entry) => entry.name).map((entry) => [entry.mentionId, entry.name]))
     const entryGroups =
       category === 'forge'
         ? Object.values(

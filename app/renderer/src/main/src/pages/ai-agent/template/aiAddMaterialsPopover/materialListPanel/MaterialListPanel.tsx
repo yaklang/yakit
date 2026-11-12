@@ -6,6 +6,7 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { RESOURCE_FILTER_OPTIONS } from '../../../resourceFilter'
 import type { MaterialListPanelProps } from './type'
 import styles from '../AIAddMaterialsPopover.module.scss'
 
@@ -59,13 +60,14 @@ const MaterialListPanel: FC<MaterialListPanelProps> = ({
                   getPopupContainer: (trigger) => trigger.parentElement ?? document.body,
                 }}
                 menu={{
-                  data: [
-                    { key: 'all', label: t('AIMentionTabs.all') },
-                    { key: 'added', label: t('YakitButton.added') },
-                  ],
-                  selectedKeys: [filter.addedOnly ? 'added' : 'all'],
+                  data: Object.values(RESOURCE_FILTER_OPTIONS).map(({ label, value }) => ({
+                    key: value,
+                    label: t(label),
+                  })),
+                  selectedKeys: [filter.value],
                   onClick: ({ key }) => {
-                    filter.onChange(key === 'added')
+                    const option = Object.values(RESOURCE_FILTER_OPTIONS).find(({ value }) => value === key)
+                    if (option) filter.onChange(option.value)
                     setFilterOpen(false)
                   },
                 }}
@@ -77,7 +79,7 @@ const MaterialListPanel: FC<MaterialListPanelProps> = ({
                   aria-haspopup="menu"
                   aria-expanded={filterOpen}
                 >
-                  {t(filter.addedOnly ? 'YakitButton.added' : 'AIMentionTabs.all')}
+                  {t(RESOURCE_FILTER_OPTIONS[filter.value].label)}
                 </YakitButton>
               </YakitDropdownMenu>
               <span className={styles['filter-divider']} aria-hidden="true" />

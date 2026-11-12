@@ -17,7 +17,9 @@ import {
   Goal2Outlined,
   MCPOutlined,
   PointerOutlined,
-  TemplateOutlined,
+  PlusCircleOutlined,
+  PuzzleOutlined,
+  Wrench2Outlined,
   Wrench1Outlined,
   ChatAlt2Outlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
@@ -99,8 +101,7 @@ export const AiAgentTabList: YakitTabsProps[] = [
   { value: AIAgentTabListEnum.MCP, label: 'MCP', icon: <MCPOutlined color="currentColor" /> },
 ]
 export enum AIMentionTabsEnum {
-  /** 全部 */
-  All = 'all',
+  Recent = 'recent',
   /** forge 智能体 */
   Forge_Name = 'forgeName',
   /** 工具 */
@@ -115,37 +116,21 @@ export enum AIMentionTabsEnum {
   Browser = 'browser',
 }
 export const AIMentionTabs: YakitSideTabProps['yakitTabs'] = [
-  { value: AIMentionTabsEnum.All, label: 'AIMentionTabs.all' },
-  {
-    value: AIMentionTabsEnum.Forge_Name,
-    label: 'AIMentionTabs.skill',
-    icon: <TemplateOutlined color="currentColor" />,
-  },
-  {
-    value: AIMentionTabsEnum.Browser,
-    label: 'AIMentionTabs.browser',
-    icon: <ChromeOutlined color="currentColor" />,
-  },
-  {
-    value: AIMentionTabsEnum.Tool,
-    label: 'AIMentionTabs.tool',
-    icon: <Wrench1Outlined color="currentColor" />,
-  },
+  { value: AIMentionTabsEnum.Recent, label: 'AIMentionTabs.recent', icon: <PlusCircleOutlined color="currentColor" /> },
+  { value: AIMentionTabsEnum.Forge_Name, label: 'AIMentionTabs.skill', icon: <PuzzleOutlined color="currentColor" /> },
   {
     value: AIMentionTabsEnum.KnowledgeBase,
     label: 'AIMentionTabs.knowledgeBase',
     icon: <BookOpenTextOutlined color="currentColor" />,
   },
+  { value: AIMentionTabsEnum.Tool, label: 'AIMentionTabs.tool', icon: <Wrench2Outlined color="currentColor" /> },
   {
     value: AIMentionTabsEnum.File_System,
     label: 'AIMentionTabs.fileSystem',
     icon: <FolderOpenOutlined color="currentColor" />,
   },
-  {
-    value: AIMentionTabsEnum.FocusMode,
-    label: 'AiAgengt.focusMode',
-    icon: <BoxOutlined color="currentColor" />,
-  },
+  { value: AIMentionTabsEnum.Browser, label: 'AIMentionTabs.browser', icon: <ChromeOutlined color="currentColor" /> },
+  { value: AIMentionTabsEnum.FocusMode, label: 'AiAgengt.focusMode', icon: <BoxOutlined color="currentColor" /> },
 ]
 
 /** ai-agent 聊天全局配置参数默认值 */

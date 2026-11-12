@@ -24,6 +24,8 @@ export interface AIMilkdownInputBaseProps {
   onMemfitExtra?: (v: AIMentionCommandParams) => void
   // 外部传入需要筛选掉的选项
   filterMode?: AIChatMentionProps['filterMode']
+  materials?: AIMentionCommandParams[]
+  focusMode?: string
   /**文件缓存路径 */
   chatDataStoreKey: string
 }

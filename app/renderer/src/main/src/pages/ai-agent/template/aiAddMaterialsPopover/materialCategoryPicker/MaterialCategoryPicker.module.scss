@@ -8,6 +8,10 @@
 .virtual-list {
   flex: 1;
   min-height: 0;
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0.5px;
 }
 
 .virtual-scroll {
@@ -47,8 +51,14 @@
   border-radius: 8px;
 
   &:hover,
-  &:focus-within {
+  &:focus-within,
+  &[aria-selected='true'] {
     background: var(--Colors-Use-Neutral-Bg-Hover);
+  }
+
+  &[role='option'] {
+    padding-inline-end: 8px;
+    cursor: pointer;
   }
 
   &:hover {
@@ -72,6 +82,17 @@
 .row-content > svg {
   flex-shrink: 0;
   color: var(--Colors-Use-Neutral-Text-2-Primary);
+}
+
+.knowledge-icon {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
 }
 
 .name,
@@ -127,6 +148,10 @@
   gap: 1px;
   min-height: 0;
   overflow-y: auto;
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0.5px;
 }
 
 .scenario-list .scenario-row {
@@ -149,7 +174,8 @@
   cursor: pointer;
 
   &:hover,
-  &:focus-within {
+  &:focus-within,
+  &[aria-selected='true'] {
     background: var(--Colors-Use-Neutral-Bg-Hover);
     color: inherit;
   }

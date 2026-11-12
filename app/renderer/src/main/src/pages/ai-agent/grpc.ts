@@ -31,8 +31,32 @@ import { convertNodeIdToVerbose } from '../ai-re-act/hooks/defaultConstant'
 import { JSONParseLog } from '@/utils/tool'
 import type { DeleteAISessionRequest, QueryAISessionRequest, QueryAISessionResponse } from './type/aiChat'
 import { fromServerAIStartParams } from '../ai-re-act/hooks/grpcApi'
+import type {
+  GetAISessionCurrentResourcesRequest,
+  GetAISessionCurrentResourcesResponse,
+  QueryKnowledgeBaseRequest,
+  QueryKnowledgeBaseResponse,
+} from './type/sessionResources'
 
 const { ipcRenderer } = window.require('electron')
+
+export const grpcGetAISessionCurrentResources: APIFunc<
+  GetAISessionCurrentResourcesRequest,
+  GetAISessionCurrentResourcesResponse
+> = (params, hiddenError) =>
+  ipcRenderer.invoke('GetAISessionCurrentResources', params).catch((error) => {
+    if (!hiddenError) yakitNotify('error', '获取会话近期资源失败:' + error)
+    throw error
+  })
+
+export const grpcQueryKnowledgeBase: APIFunc<QueryKnowledgeBaseRequest, QueryKnowledgeBaseResponse> = (
+  params,
+  hiddenError,
+) =>
+  ipcRenderer.invoke('QueryKnowledgeBase', params).catch((error) => {
+    if (!hiddenError) yakitNotify('error', '查询知识库失败:' + error)
+    throw error
+  })
 
 /** @name 获取前端可直接选择的内置 ReAct Skill。 */
 export const grpcGetAIReActRecommendedSkills: APINoRequestFunc<GetAIReActRecommendedSkillsResponse> = (hiddenError) => {

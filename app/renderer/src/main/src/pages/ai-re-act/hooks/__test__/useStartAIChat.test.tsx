@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
   activeChat: undefined as AISession | undefined,
   onStart: vi.fn(),
   setActiveChat: vi.fn(),
+  syncAIAgentPageInfo: vi.fn(),
   emit: vi.fn(),
   setting: { Source: 'ai', TimelineSessionID: 'stale-setting' },
 }))
@@ -23,6 +24,9 @@ vi.mock('@/pages/ai-agent/utils', () => ({
   getAIReActRequestParams: (value: any) => ({ attachedResourceInfo: value.attachedResourceInfo }),
 }))
 vi.mock('@/utils/eventBus/eventBus', () => ({ default: { emit: mocks.emit } }))
+vi.mock('@/pages/ai-agent/utils/syncAIAgentPageInfo', () => ({
+  syncAIAgentPageInfo: mocks.syncAIAgentPageInfo,
+}))
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -145,7 +149,7 @@ describe('submission identity', () => {
     },
   )
 
-  it('publishes a background session without changing selection, even after the submitting view unmounts', () => {
+  it('persists a background session without changing selection, even after the submitting view unmounts', () => {
     const { result, unmount } = renderHook(() => useStartAIChat())
     act(() => result.current({ qs: 'first question', target: { kind: 'new', sessionId: 'client-session' } }))
     const input = mocks.onStart.mock.calls[0][0]
@@ -153,6 +157,14 @@ describe('submission identity', () => {
     unmount()
     input.onLinkSuccess('client-session', false)
     expect(mocks.setActiveChat).not.toHaveBeenCalled()
+    expect(mocks.syncAIAgentPageInfo).toHaveBeenCalledExactlyOnceWith({
+      sessionId: 'client-session',
+      title: 'first question',
+      aiAgentPageInfo: {
+        session: expect.objectContaining({ SessionID: 'client-session', isDraftSession: false }),
+      },
+      emitSessionData: false,
+    })
     const message = JSON.parse(mocks.emit.mock.calls[0][1])
     expect(message.type).toBe('prependSession')
     expect(message.payload).toMatchObject({

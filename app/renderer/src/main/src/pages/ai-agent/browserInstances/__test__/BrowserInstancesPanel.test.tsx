@@ -1,5 +1,5 @@
 import type React from 'react'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { BrowserPairingRequest } from '@/pages/browserExtension/browserExtensionClient'
 import type { AIBrowserInstance } from '../browserInstanceStore'
@@ -119,6 +119,7 @@ vi.mock('@/components/yakitUI/YakitPopover/YakitPopover', () => ({
 }))
 
 import {
+  BrowserInstanceCard,
   BrowserInstancesPanel,
   browserProductLabel,
   openPairingWindow,
@@ -137,6 +138,39 @@ const baseInstance = (
   lastSeenAt: 1_700_000_000_000,
   running: false,
   ...partial,
+})
+
+it('uses the same URL favicon and fallback in sidebar and material browser cards', () => {
+  const url = 'https://example.com/'
+  const faviconUrl = 'https://example.com/favicon.ico'
+  const cards = (favIconUrl?: string) => {
+    const instance = baseInstance({ id: 'A', online: true, tab: { id: 1, title: 'Example', url, favIconUrl } })
+    return (
+      <>
+        <section aria-label="sidebar">
+          <BrowserInstanceCard instance={instance} />
+        </section>
+        <section aria-label="material">
+          <BrowserInstanceCard instance={instance} variant="material" />
+        </section>
+      </>
+    )
+  }
+  const urlIcon = (name: string) =>
+    within(screen.getByRole('region', { name })).getByText(url).parentElement!.firstElementChild!
+
+  const { rerender } = render(cards())
+  const fallback = urlIcon('sidebar')
+  expect(fallback.querySelector('svg')).toBeInTheDocument()
+  expect(urlIcon('material').isEqualNode(fallback)).toBe(true)
+
+  rerender(cards(faviconUrl))
+  for (const name of ['sidebar', 'material']) {
+    const icon = urlIcon(name)
+    expect(icon).toHaveAttribute('src', faviconUrl)
+    fireEvent.error(icon)
+    expect(urlIcon(name).isEqualNode(fallback)).toBe(true)
+  }
 })
 
 const pairingRequest = (partial: Partial<BrowserPairingRequest> = {}): BrowserPairingRequest => ({

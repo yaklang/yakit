@@ -5,10 +5,10 @@ import { AIMilkdownMention } from '../aiMilkdownMention/AIMilkdownMention'
 import { AIMilkdownModeSlash } from '../aiMilkdownModeSlash/AIMilkdownModeSlash'
 import { releaseMilkdownPopup, tryClaimMilkdownPopup } from '../panelMutex'
 
-const context = vi.hoisted(() => ({ view: {} as any, content: '', providers: [] as any[] }))
+const context = vi.hoisted(() => ({ view: {} as any, prevState: {} as object, content: '', providers: [] as any[] }))
 vi.mock('@milkdown/react', () => ({ useInstance: () => [false, () => ({ action: vi.fn() })] }))
 vi.mock('@prosemirror-adapter/react', () => ({
-  usePluginViewContext: () => ({ view: context.view }),
+  usePluginViewContext: () => ({ view: context.view, prevState: context.prevState }),
   useNodeViewContext: vi.fn(),
 }))
 vi.mock('@milkdown/kit/plugin/slash', () => ({
@@ -58,6 +58,7 @@ let scrollContainer: HTMLDivElement
 beforeEach(() => {
   vi.useFakeTimers()
   context.providers = []
+  context.prevState = {}
   scrollContainer = document.createElement('div')
   const anchor = document.createElement('div')
   anchor.dataset.aiInputCard = ''
@@ -91,6 +92,60 @@ afterEach(() => {
   vi.useRealTimers()
   vi.unstubAllGlobals()
   vi.restoreAllMocks()
+})
+
+describe('mention popup outside clicks', () => {
+  it('closes before the add-materials click handler and stays closed for the same editor state', () => {
+    context.content = '@'
+    const openMaterials = vi.fn(() => context.providers[0].element.dataset.show)
+    const renderInput = () => (
+      <>
+        <AIMilkdownMention />
+        <button
+          onClick={(event) => {
+            event.stopPropagation()
+            openMaterials()
+          }}
+        >
+          添加资料
+        </button>
+      </>
+    )
+    const { getByRole, rerender } = render(renderInput())
+    act(() => vi.advanceTimersByTime(250))
+    const { element } = context.providers[0]
+    expect(element.dataset.show).toBe('true')
+
+    fireEvent.click(getByRole('button', { name: '添加资料' }))
+    expect(openMaterials).toHaveReturnedWith('false')
+    expect(context.view.focus).not.toHaveBeenCalled()
+    expect(tryClaimMilkdownPopup('modeSlash')).toBe(true)
+    releaseMilkdownPopup('modeSlash')
+
+    context.prevState = {}
+    rerender(renderInput())
+    act(() => vi.advanceTimersByTime(250))
+    expect(element.dataset.show).toBe('false')
+
+    context.prevState = context.view.state
+    context.view.state = { ...context.view.state }
+    context.content = '@skill'
+    rerender(renderInput())
+    act(() => vi.advanceTimersByTime(250))
+    expect(element.dataset.show).toBe('true')
+  })
+
+  it('keeps the popup open for clicks in the popup and editor', () => {
+    context.content = '@'
+    const { getByTestId } = render(<AIMilkdownMention />)
+    act(() => vi.advanceTimersByTime(250))
+    const { element } = context.providers[0]
+    expect(element.dataset.show).toBe('true')
+
+    fireEvent.click(getByTestId('mention-list'))
+    fireEvent.click(context.view.dom)
+    expect(element.dataset.show).toBe('true')
+  })
 })
 
 describe.each([

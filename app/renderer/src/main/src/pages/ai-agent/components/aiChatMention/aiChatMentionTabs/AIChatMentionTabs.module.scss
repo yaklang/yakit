@@ -2,8 +2,6 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 12px 8px;
-  border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
   flex-shrink: 0;
 }
 
@@ -19,7 +17,7 @@
   display: flex;
   flex-wrap: nowrap;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   flex: 1;
   min-width: 0;
   overflow-x: auto;
@@ -30,7 +28,7 @@
   }
 }
 
-.mention-tabs-arrow {
+.mention-tabs-wrap .mention-tabs-arrow:global(.yakit.ant-btn.ant-btn-default):not(:disabled) {
   display: inline-flex;
   flex-shrink: 0;
   align-items: center;
@@ -50,20 +48,20 @@
   }
 
   :global(svg) {
-    width: 14px;
-    height: 14px;
+    width: 16px;
+    height: 16px;
   }
 }
 
-.mention-tab {
+.mention-tabs-wrap .mention-tab:global(.yakit.ant-btn.ant-btn-default):not(:disabled) {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  height: 28px;
-  padding: 0 10px;
-  border: none;
-  border-radius: 999px;
-  background: var(--Colors-Use-Neutral-Bg);
+  height: 24px;
+  padding: 0 8px;
+  border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
+  border-radius: 8px;
+  background: var(--Colors-Use-Basic-Background);
   color: var(--Colors-Use-Neutral-Text-1-Title);
   font-size: 12px;
   font-weight: 500;
@@ -72,38 +70,48 @@
   cursor: pointer;
   flex-shrink: 0;
 
+  &:focus-visible {
+    outline: 1px solid var(--Colors-Use-Main-Primary);
+    outline-offset: -1px;
+  }
+
   &:hover {
     background: var(--Colors-Use-Neutral-Bg-Hover);
   }
-}
 
-.mention-tab-active {
-  background: var(--Colors-Use-Main-Primary);
-  color: var(--Colors-Use-Basic-White);
+  &.mention-tab-active {
+    border-color: transparent;
+    background: var(--Colors-Use-Main-Focus);
+    color: var(--Colors-Use-Main-Primary);
 
-  &:hover {
-    background: var(--Colors-Use-Main-Hover);
-  }
+    &:focus-visible {
+      outline: none;
+    }
 
-  .mention-tab-count {
-    background: rgba(255, 255, 255, 0.22);
-    color: var(--Colors-Use-Basic-White);
-  }
+    &:hover {
+      background: var(--Colors-Use-Main-Focus);
+    }
 
-  .mention-tab-icon {
-    color: var(--Colors-Use-Basic-White);
+    .mention-tab-count {
+      background: rgba(255, 255, 255, 0.22);
+      color: inherit;
+    }
+
+    .mention-tab-icon {
+      color: inherit;
+    }
   }
 }
 
 .mention-tab-icon {
   display: inline-flex;
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   color: var(--Colors-Use-Neutral-Text-3-Secondary);
 
   :global(svg) {
-    width: 14px;
-    height: 14px;
+    width: 16px;
+    height: 16px;
   }
 }
 

@@ -164,7 +164,12 @@ vi.mock('../aiAgentChat/AIAgentChat', async () => {
           <button onClick={() => dispatcher.setActiveChat(() => undefined)}>ignore-empty-session-updater</button>
           <button
             onClick={() =>
-              dispatcher.setActiveChat({ SessionID: 'created', Title: '你好', isCreate: true } as AISession)
+              dispatcher.setActiveChat({
+                SessionID: 'created',
+                Title: '你好',
+                isDraftSession: false,
+                isCreate: true,
+              } as AISession)
             }
           >
             create-session
@@ -1324,6 +1329,35 @@ describe('AIAgent 配置广播', () => {
     expect(ipc.updatePagesDataCacheById).not.toHaveBeenCalled()
     expect(screen.getByTestId('active-session')).toHaveTextContent('history')
     expect(ipc.detachPendingChat).toHaveBeenCalledOnce()
+  })
+
+  it('草稿建联后用同一 SessionID 更新标签缓存，重开时恢复正式会话', async () => {
+    const draft = { ...createWelcomeChat(), SessionID: 'created' }
+    const node = {
+      pageId: 'test',
+      pageName: 'AI Agent-2',
+      pageParamsInfo: { aiAgentPageInfo: { session: draft } },
+    }
+    ipc.pages.set(YakitRoute.AI_Agent, { pageList: [node] })
+    ipc.queryPagesDataById.mockReturnValue(node)
+    const { unmount } = render(<AIAgent pageId="test" initialSession={draft} />)
+    await act(async () => {})
+    expect(screen.getByTestId('active-session')).toHaveTextContent('welcome')
+
+    fireEvent.click(screen.getByRole('button', { name: 'create-session' }))
+    expect(screen.getByTestId('active-session')).toHaveTextContent('created')
+    const cached = ipc.pages.get(YakitRoute.AI_Agent)?.pageList[0]
+    expect(cached).toMatchObject({
+      pageName: '你好',
+      pageParamsInfo: { aiAgentPageInfo: { session: { SessionID: 'created', isDraftSession: false } } },
+    })
+
+    unmount()
+    const restored = JSON.parse(JSON.stringify(cached))
+    ipc.queryPagesDataById.mockReturnValue(restored)
+    render(<AIAgent pageId="test" initialSession={restored.pageParamsInfo.aiAgentPageInfo.session} />)
+    expect(screen.getByTestId('active-session')).toHaveTextContent('created')
+    expect(querySessionMock).toHaveBeenCalledWith(expect.objectContaining({ Filter: { SessionID: ['created'] } }))
   })
 
   it('切历史和欢迎页只脱离 pending 视图，提交继续在后台运行', async () => {

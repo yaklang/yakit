@@ -1,6 +1,7 @@
 import React, { createRef, useEffect, useImperativeHandle, useRef } from 'react'
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import type * as OutlineIcons from '@yakit-libs/yakit-ui-icons/outline'
 import { Editor, defaultValueCtx, editorViewCtx, parserCtx, rootCtx } from '@milkdown/kit/core'
 import { DOMParser, DOMSerializer } from '@milkdown/kit/prose/model'
 import { commonmark } from '@milkdown/kit/preset/commonmark'
@@ -164,7 +165,7 @@ vi.mock('../../aiRunModeSelect/useAIRunMode', () => ({
 }))
 vi.mock('@/utils/fileSystemDialog', () => ({ handleOpenFileSystemDialog: vi.fn() }))
 vi.mock('@yakit-libs/yakit-ui-icons/outline', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@yakit-libs/yakit-ui-icons/outline')>()),
+  ...(await importOriginal<typeof OutlineIcons>()),
   FlowOutlined: () => <svg data-testid="flow-icon" />,
   ShieldExclamationOutlined: () => <svg data-testid="shield-icon" />,
   Wrench1Outlined: () => <svg data-testid="wrench-icon" />,
@@ -902,7 +903,7 @@ describe('输入框资料栏', () => {
         mentionType: 'forge',
         mentionId: '1',
         mentionName: '审计技能',
-        forgeName: 'review-skill',
+        name: 'review-skill',
       })
     })
     fireEvent.click(screen.getByRole('button', { name: 'AIMentionTabs.skill 1' }))
@@ -920,6 +921,28 @@ describe('输入框资料栏', () => {
     fireEvent.click(within(row).getByRole('button', { name: 'YakitButton.cancel 审计技能' }))
     await waitFor(() => expect(screen.queryByTestId('skill-preview')).not.toBeInTheDocument())
     expect(screen.queryByRole('button', { name: 'AIMentionTabs.skill 1' })).not.toBeInTheDocument()
+  })
+
+  it('从旧 Markdown 和 DOM 技能引用恢复原名', async () => {
+    await setup('正文')
+    editors[0].action((ctx) => {
+      const markdown =
+        ':mention[审计技能]{mentionId="1" mentionType="forge" mentionName="审计技能" forgeName="review-skill"}'
+      const doc = ctx.get(parserCtx)(markdown)!
+      expect(doc.firstChild!.firstChild!.attrs).toMatchObject({ mentionName: '审计技能', name: 'review-skill' })
+
+      const container = document.createElement('div')
+      const element = document.createElement('div')
+      element.dataset.type = aiMentionCustomId
+      element.dataset.mentionId = '1'
+      element.dataset.mentionType = 'forge'
+      element.dataset.mentionName = '审计技能'
+      element.dataset.forgeName = 'review-skill'
+      element.textContent = '审计技能'
+      container.append(element)
+      const restored = DOMParser.fromSchema(doc.type.schema).parse(container)
+      expect(restored.firstChild!.firstChild!.attrs).toMatchObject({ mentionName: '审计技能', name: 'review-skill' })
+    })
   })
 
   it('技能分页加载时显示指示器，加载完成后可滚到末尾提示', async () => {
@@ -1019,9 +1042,13 @@ describe('输入框资料栏', () => {
     vi.mocked(grpcGetAIToolList).mockImplementation(async ({ Pagination }) => ({
       Pagination,
       Tools: [
-        { ID: 2, Name: '查询工具', Description: '工具说明' } as Awaited<
-          ReturnType<typeof grpcGetAIToolList>
-        >['Tools'][number],
+        {
+          ID: 2,
+          Name: 'query-tool',
+          VerboseName: 'Legacy query tool',
+          VerboseNameI18n: { Zh: '查询工具', En: 'Query Tool' },
+          Description: '工具说明',
+        } as Awaited<ReturnType<typeof grpcGetAIToolList>>['Tools'][number],
       ],
       Total: 1,
     }))
@@ -1080,7 +1107,17 @@ describe('输入框资料栏', () => {
       fireEvent.click(send)
       const submitted = onSubmit.mock.calls[0][0]
       expect(submitted.mentionList?.map(({ mentionType }) => mentionType)).toEqual(['tool', 'knowledgeBase'])
+      expect(submitted.mentionList?.[0]).toMatchObject({ mentionName: '查询工具', name: 'query-tool' })
       expect(parseMentions(submitted.qs).map(({ mentionId }) => mentionId)).toEqual(['2', '3'])
+      editors[0].action((ctx) => {
+        const doc = ctx.get(parserCtx)(submitted.qs)!
+        const node = doc.firstChild!.firstChild!
+        expect(node.attrs).toMatchObject({ mentionName: '查询工具', name: 'query-tool' })
+        const container = document.createElement('div')
+        container.append(DOMSerializer.fromSchema(doc.type.schema).serializeNode(node))
+        const restored = DOMParser.fromSchema(doc.type.schema).parse(container)
+        expect(restored.firstChild!.firstChild!.attrs).toMatchObject({ mentionName: '查询工具', name: 'query-tool' })
+      })
       expect(grpcQueryAIFocus).not.toHaveBeenCalled()
       fireEvent.click(within(panel).getByText('AiAgengt.focusMode'))
       const firstScenario = await within(panel).findByRole('button', { name: '测试场景' })
@@ -1192,13 +1229,13 @@ describe('输入框资料栏', () => {
         mentionType: 'forge',
         mentionId: '2',
         mentionName: '正文技能',
-        forgeName: 'shared-skill',
+        name: 'shared-skill',
       })
       ref.current?.setMention({
         mentionType: 'forge',
         mentionId: '3',
         mentionName: '列表技能',
-        forgeName: 'other-skill',
+        name: 'other-skill',
       })
     })
 

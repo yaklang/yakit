@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import classNames from 'classnames'
 import { useMemoizedFn } from 'ahooks'
 import { ChevronDoubleLeftOutlined, ChevronDoubleRightOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { AIMentionTabsEnum } from '../../../defaultConstant'
 import type { YakitSideTabProps } from '@/components/yakitSideTab/YakitSideTabType'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -35,8 +36,12 @@ export const AIChatMentionTabs: React.FC<AIChatMentionTabsProps> = React.memo((p
   const scrollActiveTabIntoView = useMemoizedFn(() => {
     const container = tabsRef.current
     if (!container) return
-    const active = container.querySelector('[data-mention-tab-active="true"]') as HTMLElement | null
+    const active = container.querySelector<HTMLButtonElement>('[data-mention-tab-active="true"]')
     if (!active) return
+    const focused = container.ownerDocument.activeElement
+    if (focused !== active && container.contains(focused)) {
+      active.focus({ preventScroll: true })
+    }
     const cRect = container.getBoundingClientRect()
     const aRect = active.getBoundingClientRect()
     const pad = 8
@@ -92,14 +97,15 @@ export const AIChatMentionTabs: React.FC<AIChatMentionTabsProps> = React.memo((p
     <div className={styles['mention-header']}>
       <div className={styles['mention-tabs-wrap']}>
         {showTabScrollLeft ? (
-          <button
-            type="button"
+          <YakitButton
+            type="text"
+            htmlType="button"
             className={styles['mention-tabs-arrow']}
             onClick={onScrollTabsLeft}
             aria-label="scroll-tabs-left"
           >
             <ChevronDoubleLeftOutlined color="currentColor" />
-          </button>
+          </YakitButton>
         ) : null}
         <div
           className={styles['mention-tabs']}
@@ -109,12 +115,12 @@ export const AIChatMentionTabs: React.FC<AIChatMentionTabsProps> = React.memo((p
         >
           {tabs.map((tab) => {
             const isActive = tab.value === activeKey
-            // 「全部」聚合不准（各分区分页/过滤口径不一致），不展示角标
-            const count = tab.value === AIMentionTabsEnum.All ? undefined : tabCounts[tab.value as AIMentionTabsEnum]
+            const count = tab.value === AIMentionTabsEnum.Recent ? undefined : tabCounts[tab.value as AIMentionTabsEnum]
             return (
-              <button
+              <YakitButton
                 key={tab.value}
-                type="button"
+                type="text"
+                htmlType="button"
                 data-mention-tab-active={isActive ? 'true' : undefined}
                 className={classNames(styles['mention-tab'], {
                   [styles['mention-tab-active']]: isActive,
@@ -124,19 +130,20 @@ export const AIChatMentionTabs: React.FC<AIChatMentionTabsProps> = React.memo((p
                 {tab.icon ? <span className={styles['mention-tab-icon']}>{tab.icon}</span> : null}
                 <span className={styles['mention-tab-label']}>{t(tab.label as string)}</span>
                 {count != null && count > 0 ? <span className={styles['mention-tab-count']}>{count}</span> : null}
-              </button>
+              </YakitButton>
             )
           })}
         </div>
         {showTabScrollRight ? (
-          <button
-            type="button"
+          <YakitButton
+            type="text"
+            htmlType="button"
             className={styles['mention-tabs-arrow']}
             onClick={onScrollTabsRight}
             aria-label="scroll-tabs-right"
           >
             <ChevronDoubleRightOutlined color="currentColor" />
-          </button>
+          </YakitButton>
         ) : null}
       </div>
     </div>

@@ -68,9 +68,18 @@ vi.mock('antd', async (importOriginal) => {
   return { ...antd, Tree }
 })
 
-const FileTree = () => {
+const FileTree = ({ searchQuery }: { searchQuery?: string }) => {
   const [selected, setSelected] = useState<FileNodeProps>()
-  return <FileTreeSystemList path="opened" isFolder isOpen selected={selected} setSelected={setSelected} />
+  return (
+    <FileTreeSystemList
+      path="opened"
+      isFolder
+      isOpen
+      searchQuery={searchQuery}
+      selected={selected}
+      setSelected={setSelected}
+    />
+  )
 }
 
 /** 经函数读取，避免 `current = null` 后控制流收窄导致 `?.height` 变成 never */
@@ -123,6 +132,39 @@ describe('我打开的文件：文件夹展开', () => {
     const children = directoryTreeProps.current?.treeData?.[0]?.children ?? []
     expect(children.find((c) => c.path === 'opened/nested')).toMatchObject({ selectable: false })
     expect(children.find((c) => c.path === 'opened/a.txt')?.selectable).toBeUndefined()
+  })
+
+  it('按文件名筛选已加载的子节点，并在清空搜索后恢复文件树', async () => {
+    fetchTree.mockImplementation(async (path: string) => {
+      if (path === 'opened') {
+        return [{ path: 'opened/nested', name: 'nested', parent: path, isFolder: true }]
+      }
+      return [
+        { path: 'opened/nested/Query_flows.yak', name: 'Query_flows.yak', parent: path, isFolder: false },
+        { path: 'opened/nested/hello.md', name: 'hello.md', parent: path, isFolder: false },
+      ]
+    })
+    const user = userEvent.setup()
+    const { rerender } = render(<FileTree />)
+    await user.click(await screen.findByText('opened'))
+    await waitFor(() => expect(screen.getByText('nested').closest('.ant-tree-treenode-motion')).toBeNull())
+    await user.click(screen.getByText('nested'))
+    expect(await screen.findByText('hello.md')).toBeVisible()
+    await user.click(screen.getByText('nested'))
+    await waitFor(() => expect(screen.queryByText('hello.md')).not.toBeInTheDocument())
+    fetchTree.mockClear()
+
+    rerender(<FileTree searchQuery="query" />)
+    expect(await screen.findByText('Query_flows.yak')).toBeVisible()
+    expect(screen.getByText('opened')).toBeVisible()
+    expect(screen.getByText('nested')).toBeVisible()
+    expect(screen.queryByText('hello.md')).not.toBeInTheDocument()
+    expect(fetchTree).not.toHaveBeenCalled()
+
+    rerender(<FileTree />)
+    await waitFor(() => expect(screen.queryByText('Query_flows.yak')).not.toBeInTheDocument())
+    await user.click(screen.getByText('nested'))
+    expect(await screen.findByText('hello.md')).toBeVisible()
   })
 })
 

@@ -75,10 +75,10 @@ const attribute = (tag: string, name: string, bindings: Record<string, unknown>)
   if (!attr?.initializer || !ts.isJsxExpression(attr.initializer)) return undefined
   return execute(`return ${attr.initializer.expression!.getText(source)}`, bindings)
 }
-const deferred = () => {
-  let resolve!: (value: string) => void
+const deferred = <T = string,>() => {
+  let resolve!: (value: T) => void
   let reject!: (error: Error) => void
-  const promise = new Promise<string>((yes, no) => {
+  const promise = new Promise<T>((yes, no) => {
     resolve = yes
     reject = no
   })
@@ -1178,6 +1178,7 @@ const setup = ({ mode = 'classic', savedKey = '', memfit = true, enterprise = fa
     saveAIAgentCache: Object.assign(vi.fn(), { cancel: vi.fn(), flush: vi.fn() }),
     saveFuzzerCache: Object.assign(vi.fn(), { cancel: vi.fn() }),
     getRemoteProjectValue: vi.fn(() => ai.promise),
+    grpcQueryAISession: vi.fn().mockResolvedValue({ Data: [] }),
     mergeAIAgentPageTabs: vi.fn((current) => current),
     RemoteAIAgentGV: { AIAgentTabs: 'ai-tabs' },
     RemoteGV: { SelectFirstMenuTabKey: 'selected' },
@@ -1644,9 +1645,35 @@ describe('MainOperatorContent initial cache loading', () => {
         }),
       )
       expect(app.bindings.setCurrentTabKey).toHaveBeenLastCalledWith('ai')
+      expect(app.bindings.grpcQueryAISession).not.toHaveBeenCalled()
       app.dispose()
     },
   )
+
+  it('restores connected tabs from cache and skips stale drafts without querying sessions', async () => {
+    const app = setup()
+    const connected = {
+      pageId: 'connected',
+      pageName: 'Cached title',
+      sortFieId: 2,
+      pageParamsInfo: {
+        aiAgentPageInfo: { session: { SessionID: 'connected', Title: 'Cached title', isDraftSession: false } },
+      },
+    }
+    const draft = {
+      pageId: 'draft',
+      sortFieId: 1,
+      pageParamsInfo: { aiAgentPageInfo: { session: { SessionID: 'draft', isDraftSession: true } } },
+    }
+    app.mount()
+    app.ai.resolve(JSON.stringify([draft, connected]))
+    app.wf.resolve('[]')
+    await settle()
+    expect(app.bindings.setPagesData.mock.calls[0][1].pageList.slice(1)).toEqual([connected])
+    expect(app.bindings.grpcQueryAISession).not.toHaveBeenCalled()
+    expect(app.bindings.aiCacheLoaded.current).toBe(true)
+    app.dispose()
+  })
 
   it('sorts cached tabs and selects the final restored tab', async () => {
     const app = setup()
@@ -1664,6 +1691,7 @@ describe('MainOperatorContent initial cache loading', () => {
       cached[0],
     ])
     expect(app.bindings.setCurrentTabKey).toHaveBeenLastCalledWith('later')
+    expect(app.bindings.grpcQueryAISession).not.toHaveBeenCalled()
     app.dispose()
   })
 

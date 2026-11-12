@@ -28,12 +28,21 @@ const isAncestor = (ancestor: string, target: string) => {
   return t === a || t.startsWith(a + '/')
 }
 
+const filterLoadedTree = (nodes: FileNodeProps[], query: string, expanded: string[]): FileNodeProps[] =>
+  nodes.flatMap((node) => {
+    const children = node.children ? filterLoadedTree(node.children, query, expanded) : []
+    if (!children.length && !node.name.toLowerCase().includes(query)) return []
+    if (children.length) expanded.push(node.path)
+    return { ...node, children, isLeaf: !children.length }
+  })
+
 const FileTreeSystemList = forwardRef<FileTreeSystemListRef, FileTreeSystemListProps>((props, ref) => {
   const {
     path,
     isOpen,
     isFolder = true,
     fillHeight = false,
+    searchQuery = '',
     selected,
     setSelected,
     onTreeDragStart,
@@ -61,7 +70,7 @@ const FileTreeSystemList = forwardRef<FileTreeSystemListRef, FileTreeSystemListP
   const size = useSize(wrapperRef)
 
   const [expandedKeys, setExpandedKeys] = useState<string[]>([])
-  const expandedKeySet = useMemo(() => new Set(expandedKeys), [expandedKeys])
+  const [searchExpansion, setSearchExpansion] = useState<{ query: string; keys: string[] }>()
 
   const [loadedKeys, setLoadedKeys] = useState<string[]>([])
   const [data, setData] = useControllableValue<FileNodeProps[]>(props, {
@@ -69,6 +78,17 @@ const FileTreeSystemList = forwardRef<FileTreeSystemListRef, FileTreeSystemListP
     valuePropName: 'treeData',
     trigger: 'setTreeData',
   })
+  const searchResult = useMemo(() => {
+    if (!searchQuery) return
+    const keys: string[] = []
+    return { data: filterLoadedTree(data, searchQuery, keys), keys }
+  }, [data, searchQuery])
+  const visibleExpandedKeys = searchResult
+    ? searchExpansion?.query === searchQuery
+      ? searchExpansion.keys
+      : searchResult.keys
+    : expandedKeys
+  const expandedKeySet = useMemo(() => new Set(visibleExpandedKeys), [visibleExpandedKeys])
   const [_, startTransition] = useTransition()
   const [fileTree, { onLoadFolderChildren, onResetTree, getDetailMap }] = useFileTree({
     target: { path, isFolder },
@@ -194,6 +214,8 @@ const FileTreeSystemList = forwardRef<FileTreeSystemListRef, FileTreeSystemListP
     )
   })
 
+  if (searchResult && !searchResult.data.length) return null
+
   return (
     <div
       ref={wrapperRef}
@@ -206,13 +228,14 @@ const FileTreeSystemList = forwardRef<FileTreeSystemListRef, FileTreeSystemListP
         height={treeHeight}
         itemHeight={TREE_ITEM_HEIGHT}
         switcherIcon={<ChevronDownOutlined color="currentColor" />}
-        expandedKeys={expandedKeys}
+        expandedKeys={visibleExpandedKeys}
         fieldNames={{ title: 'name', key: 'path', children: 'children' }}
-        treeData={data}
+        treeData={searchResult?.data ?? data}
         showIcon={false}
         selectedKeys={selected?.path ? [selected.path] : []}
         onExpand={(keys) => {
-          setExpandedKeys(keys as string[])
+          if (searchResult) setSearchExpansion({ query: searchQuery, keys: keys as string[] })
+          else setExpandedKeys(keys as string[])
         }}
         onSelect={(_, { node }) => {
           if (node.isFolder) return
@@ -241,7 +264,7 @@ const FileTreeSystemList = forwardRef<FileTreeSystemListRef, FileTreeSystemListP
           onTreeDragEnd?.()
         }}
         loadedKeys={loadedKeys}
-        loadData={loadData}
+        loadData={searchResult ? undefined : loadData}
         titleRender={titleRender}
       />
     </div>

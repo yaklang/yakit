@@ -90,6 +90,7 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
       }),
       [],
     )
+    const getMaterials = useMemoizedFn(() => ({ materials: props.materials, focusMode: props.focusMode }))
     const { get, loading } = useEditor(
       (root) => {
         const uploadPlugins = [
@@ -161,7 +162,13 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
           (ctx: Ctx) => () => {
             ctx.set(aiMentionFactory.key, {
               view: pluginViewFactory({
-                component: () => <AIMilkdownMention onMemfitExtra={onMemfitExtra} filterMode={filterMode} />,
+                component: () => (
+                  <AIMilkdownMention
+                    onMemfitExtra={onMemfitExtra}
+                    filterMode={filterMode}
+                    getMaterials={getMaterials}
+                  />
+                ),
               }),
             })
           },

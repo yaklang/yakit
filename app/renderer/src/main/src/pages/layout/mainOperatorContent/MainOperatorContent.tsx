@@ -3062,7 +3062,11 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         fun: 'restoreAITabs',
       })
       if (!Array.isArray(cached)) throw new Error('Invalid AI Agent tab cache')
-      const nodes = new Map(cached.map((node) => [node.pageId, node]))
+      const nodes = new Map(
+        cached
+          .filter((node) => !node.pageParamsInfo?.aiAgentPageInfo?.session?.isDraftSession)
+          .map((node) => [node.pageId, node]),
+      )
       const fixed = nodes.get(YakitRoute.AI_Agent)
       if (isMemfit() && fixed) {
         nodes.delete(YakitRoute.AI_Agent)

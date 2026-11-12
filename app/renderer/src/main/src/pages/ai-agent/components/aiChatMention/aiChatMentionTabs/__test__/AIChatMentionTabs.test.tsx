@@ -20,7 +20,7 @@ vi.mock('@yakit-libs/yakit-ui-icons/outline', async (importOriginal) => {
 })
 
 const tabs = [
-  { value: AIMentionTabsEnum.All, label: 'AIMentionTabs.all' },
+  { value: AIMentionTabsEnum.Recent, label: 'AIMentionTabs.recent' },
   { value: AIMentionTabsEnum.Forge_Name, label: 'AIMentionTabs.skill' },
   { value: AIMentionTabsEnum.Tool, label: 'AIMentionTabs.tool' },
   { value: AIMentionTabsEnum.KnowledgeBase, label: 'AIMentionTabs.knowledgeBase' },
@@ -48,7 +48,7 @@ function mockTabsOverflow(
 describe('AIChatMentionTabs', () => {
   it('点击 Tab 会回调 onChange', () => {
     const onChange = vi.fn()
-    render(<AIChatMentionTabs tabs={tabs} activeKey={AIMentionTabsEnum.All} tabCounts={{}} onChange={onChange} />)
+    render(<AIChatMentionTabs tabs={tabs} activeKey={AIMentionTabsEnum.Recent} tabCounts={{}} onChange={onChange} />)
     fireEvent.click(screen.getByText('AIMentionTabs.skill'))
     expect(onChange).toHaveBeenCalledWith(AIMentionTabsEnum.Forge_Name)
   })
@@ -57,19 +57,19 @@ describe('AIChatMentionTabs', () => {
     render(
       <AIChatMentionTabs
         tabs={tabs}
-        activeKey={AIMentionTabsEnum.All}
+        activeKey={AIMentionTabsEnum.Recent}
         tabCounts={{
-          [AIMentionTabsEnum.All]: 99,
+          [AIMentionTabsEnum.Recent]: 99,
           [AIMentionTabsEnum.Forge_Name]: 3,
           [AIMentionTabsEnum.Tool]: 0,
         }}
         onChange={vi.fn()}
       />,
     )
-    const allBtn = screen.getByText('AIMentionTabs.all').closest('button')!
+    const allBtn = screen.getByText('AIMentionTabs.recent').closest('button')!
     const forgeBtn = screen.getByText('AIMentionTabs.skill').closest('button')!
     const toolBtn = screen.getByText('AIMentionTabs.tool').closest('button')!
-    expect(allBtn.textContent).toBe('AIMentionTabs.all')
+    expect(allBtn.textContent).toBe('AIMentionTabs.recent')
     expect(forgeBtn.textContent).toContain('3')
     expect(toolBtn.textContent).toBe('AIMentionTabs.tool')
   })
@@ -77,12 +77,12 @@ describe('AIChatMentionTabs', () => {
   it('选中 Tab 带 data-mention-tab-active', () => {
     render(<AIChatMentionTabs tabs={tabs} activeKey={AIMentionTabsEnum.Tool} tabCounts={{}} onChange={vi.fn()} />)
     expect(screen.getByText('AIMentionTabs.tool').closest('button')).toHaveAttribute('data-mention-tab-active', 'true')
-    expect(screen.getByText('AIMentionTabs.all').closest('button')).not.toHaveAttribute('data-mention-tab-active')
+    expect(screen.getByText('AIMentionTabs.recent').closest('button')).not.toHaveAttribute('data-mention-tab-active')
   })
 
   it('溢出时显示右箭头，点击会 scrollBy', () => {
     const { rerender } = render(
-      <AIChatMentionTabs tabs={tabs} activeKey={AIMentionTabsEnum.All} tabCounts={{}} onChange={vi.fn()} />,
+      <AIChatMentionTabs tabs={tabs} activeKey={AIMentionTabsEnum.Recent} tabCounts={{}} onChange={vi.fn()} />,
     )
     const tabsEl = screen.getByTestId('ai-chat-mention-tabs-scroller')
     mockTabsOverflow(tabsEl, { scrollWidth: 500, clientWidth: 120, scrollLeft: 0 })
@@ -90,7 +90,7 @@ describe('AIChatMentionTabs', () => {
     rerender(
       <AIChatMentionTabs
         tabs={[...tabs, { value: AIMentionTabsEnum.Browser, label: 'AIMentionTabs.browser' }]}
-        activeKey={AIMentionTabsEnum.All}
+        activeKey={AIMentionTabsEnum.Recent}
         tabCounts={{}}
         onChange={vi.fn()}
       />,
@@ -103,7 +103,7 @@ describe('AIChatMentionTabs', () => {
 
   it('已向右滚动时显示左箭头', () => {
     const { rerender } = render(
-      <AIChatMentionTabs tabs={tabs} activeKey={AIMentionTabsEnum.All} tabCounts={{}} onChange={vi.fn()} />,
+      <AIChatMentionTabs tabs={tabs} activeKey={AIMentionTabsEnum.Recent} tabCounts={{}} onChange={vi.fn()} />,
     )
     const tabsEl = screen.getByTestId('ai-chat-mention-tabs-scroller')
     mockTabsOverflow(tabsEl, { scrollWidth: 500, clientWidth: 120, scrollLeft: 80 })
@@ -111,7 +111,7 @@ describe('AIChatMentionTabs', () => {
     rerender(
       <AIChatMentionTabs tabs={[...tabs]} activeKey={AIMentionTabsEnum.Forge_Name} tabCounts={{}} onChange={vi.fn()} />,
     )
-    // activeKey 变化会 scrollActiveTabIntoView + updateTabScroll
+    // activeKey 变化会同步选中项的位置和滚动按钮
     expect(screen.getByLabelText('scroll-tabs-left')).toBeInTheDocument()
   })
 })
