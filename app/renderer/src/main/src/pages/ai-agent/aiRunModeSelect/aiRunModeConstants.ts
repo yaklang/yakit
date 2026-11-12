@@ -1,11 +1,5 @@
 import type React from 'react'
-import {
-  BoxesOutlined,
-  BrainCircuitOutlined,
-  Goal2Outlined,
-  Grid2x2CheckOutlined,
-} from '@yakit-libs/yakit-ui-icons/outline'
-import { OutlineViewGridIcon } from '@yakit-libs/yakit-ui-icons/oldicon/OutlineViewGridIcon'
+import { BoxesOutlined, BrainCircuitOutlined, Goal2Outlined } from '@yakit-libs/yakit-ui-icons/outline'
 
 export type ModeOptionKey = 'plan' | 'multiAgent' | 'goal'
 
@@ -36,5 +30,3 @@ export const ModeOptionList: {
     icon: Goal2Outlined,
   },
 ]
-
-export { OutlineViewGridIcon, Grid2x2CheckOutlined }
