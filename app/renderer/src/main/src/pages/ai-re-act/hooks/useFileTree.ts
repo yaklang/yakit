@@ -665,7 +665,7 @@ function useFileTree(params: UseFileTreeParams) {
     executingQueue.current.push(folderPath)
     grpcFetchFileTree(folderPath)
       .then((res) => {
-        handleFetchChildrenResponse(folderPath, res)
+        handleFetchChildrenResponse(folderPath, res, onTriggerUIUpdate)
       })
       .catch(() => {
         // pendingFolderList.current.unshift(folderPath)

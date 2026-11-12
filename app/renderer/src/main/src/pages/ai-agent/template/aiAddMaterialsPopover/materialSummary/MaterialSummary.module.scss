@@ -78,7 +78,7 @@
 
 .header {
   min-height: 24px;
-  padding: 4px 8px 0;
+  padding: 4px 0px 0 8px;
   gap: 4px;
 
   .detail-count {
@@ -176,7 +176,8 @@
   line-height: 16px;
 }
 
-.add {
+.add,
+.header-action {
   margin-left: auto;
 }
 

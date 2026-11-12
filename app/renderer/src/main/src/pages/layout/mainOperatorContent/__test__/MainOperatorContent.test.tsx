@@ -1194,15 +1194,17 @@ const setup = ({ mode = 'classic', savedKey = '', memfit = true, enterprise = fa
     generateTabIdentity: () => ({ tabId: 'new-ai' }),
     routeConvertKey: () => 'ai',
     onSetPageInfoDataOfSingle: vi.fn(),
+    globalSessionEngine: { registerDraftSession: vi.fn(), discardClosedPageDrafts: vi.fn() },
     t: (key: string) => key,
   }
   const locked = () => attribute('Content', 'inert', { initializing }) === true
   const spinning = () => attribute('YakitSpin', 'spinning', { initializing, loading: false })
-  const open = () =>
-    execute(`return (${declaration('openAIAgentExtraTab')!.initializer!.getText(source)})()`, {
+  const open = (pageParams?: { aiAgentPageInfo: { session: { SessionID: string; isDraftSession: boolean } } }) =>
+    execute(`return (${declaration('openAIAgentExtraTab')!.initializer!.getText(source)})(pageParams)`, {
       ...bindings,
       pageCache: pages,
       initializing,
+      pageParams,
     })
   const mount = () => execute(`const ${declaration('onInitAIAgent')!.getText(source)};\n${effect}`, bindings)
   return { ai, wf, bindings, locked, spinning, open, mount, dispose: () => cleanup() }
@@ -1372,6 +1374,39 @@ describe('MainOperatorContent initial cache loading', () => {
     )
     app.open()
     expect(app.bindings.onSetPageInfoDataOfSingle).toHaveBeenCalledOnce()
+    app.dispose()
+  })
+
+  it('新标签在发布前接管首问草稿，并按仍打开的 AI Agent 标签清理草稿', async () => {
+    const app = setup()
+    app.mount()
+    app.ai.resolve('[]')
+    app.wf.resolve('[]')
+    await settle()
+    app.open({ aiAgentPageInfo: { session: { SessionID: 'draft', isDraftSession: true } } })
+
+    const { registerDraftSession, discardClosedPageDrafts } = app.bindings.globalSessionEngine
+    expect(registerDraftSession).toHaveBeenCalledExactlyOnceWith('draft', 'new-ai')
+    expect(registerDraftSession.mock.invocationCallOrder[0]).toBeLessThan(
+      app.bindings.onSetPageInfoDataOfSingle.mock.invocationCallOrder[0],
+    )
+
+    const cleanupEffect = find(
+      (node) =>
+        ts.isExpressionStatement(node) &&
+        node.getText(source).startsWith('useEffect(') &&
+        node.getText(source).includes('globalSessionEngine.discardClosedPageDrafts('),
+    )[0].getText(source)
+    execute(cleanupEffect, {
+      ...app.bindings,
+      pageCache: [
+        { route: 'ai', routeKey: 'ai' },
+        { route: 'ai', routeKey: 'other-ai', pageParams: { id: 'other-page' } },
+        { route: 'wf', routeKey: 'wf' },
+      ],
+      useEffect: (callback: () => void) => callback(),
+    })
+    expect(discardClosedPageDrafts).toHaveBeenCalledExactlyOnceWith(new Set(['ai', 'other-page']))
     app.dispose()
   })
 

@@ -69,4 +69,15 @@ describe('AIRunModeSelect', () => {
     fireEvent.click(screen.getByRole('button'))
     expect(screen.queryByTestId('run-mode-menu')).not.toBeInTheDocument()
   })
+
+  it('opens from the input callback and reports manual closing to the input', () => {
+    const onOpenChange = vi.fn()
+    const { rerender } = render(<AIRunModeSelect open={false} onOpenChange={onOpenChange} />)
+    expect(screen.queryByTestId('run-mode-menu')).not.toBeInTheDocument()
+
+    rerender(<AIRunModeSelect open onOpenChange={onOpenChange} />)
+    expect(screen.getByTestId('run-mode-menu')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button'))
+    expect(onOpenChange).toHaveBeenCalledWith(false)
+  })
 })

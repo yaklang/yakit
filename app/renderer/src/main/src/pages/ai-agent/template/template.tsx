@@ -114,6 +114,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
 
     const sessionId = useCurrentSessionId()
     const [inputSettingVisible, setInputSettingVisible] = useState<boolean>(false)
+    const [runModeOpen, setRunModeOpen] = useState(false)
 
     const footerLeftTypes: FooterLeftTypesComponentProps[] = useCreation(() => {
       if (props.footerLeftTypes?.length) {
@@ -614,12 +615,13 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                 materials={[...selectedMaterials, ...visibleInlineMaterials]}
                 focusMode={focusMode}
                 chatDataStoreKey={chatDataStoreKey}
+                onModeChangeComplete={() => setRunModeOpen(true)}
               />
               <div className={styles['footer']}>
                 {inputFooterLeft ?? (
                   <div className={styles['footer-left']}>
                     {renderFooterLeftTypes(footerLeftTypes)}
-                    <AIRunModeSelect />
+                    <AIRunModeSelect open={runModeOpen} onOpenChange={setRunModeOpen} />
                     <AIInputSettingPopover visible={inputSettingVisible} setVisible={setInputSettingVisible}>
                       <YakitButton
                         type="text2"

@@ -1,7 +1,12 @@
 import { useLayoutEffect, useState } from 'react'
 import type { FC } from 'react'
 import { useMemoizedFn, useRequest } from 'ahooks'
-import { FlowOutlined, ShieldExclamationOutlined, Wrench1Outlined } from '@yakit-libs/yakit-ui-icons/outline'
+import {
+  FlowOutlined,
+  RefreshOutlined,
+  ShieldExclamationOutlined,
+  Wrench1Outlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import { ColorsPreViewMDIcon } from '@yakit-libs/yakit-ui-icons/oldicon/ColorsPreViewMDIcon'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
@@ -21,6 +26,7 @@ import type { MaterialCapabilitiesPanelProps } from './type'
 import styles from './MaterialCapabilitiesPanel.module.scss'
 
 const capabilityKey = ({ Type, Name }: AIEnabledCapability) => `${Type}:${Name}`
+const emptyCapabilities: AIReActRecommendedSkill[] = []
 
 const getIconByName = (name: string) => {
   const outlineProps = { size: 16, color: 'var(--Colors-Use-Neutral-Text-3-Secondary)' }
@@ -37,23 +43,24 @@ const getIconByName = (name: string) => {
 }
 
 const MaterialCapabilitiesPanel: FC<MaterialCapabilitiesPanelProps> = ({ onEnabledCapabilitiesChange, children }) => {
-  const { t, i18n } = useI18nNamespaces(['aiAgent'])
+  const { t, i18n } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const [selectedCapabilityKeys, setSelectedCapabilityKeys] = useState<string[]>()
   const [editingSkill, setEditingSkill] = useState<AIReActRecommendedSkill>()
   const [editContent, setEditContent] = useState('')
   const [editLoading, setEditLoading] = useState(false)
-  const { data: recommendedSkills, refresh: refreshCapabilities } = useRequest(
-    () => grpcGetAIReActRecommendedSkills(true),
-    {
-      onSuccess: ({ Data }) => {
-        const first = Data?.[0]
-        if (first) setSelectedCapabilityKeys((current) => current ?? [capabilityKey(first)])
-      },
+  const {
+    data: recommendedSkills,
+    loading,
+    refresh: refreshCapabilities,
+  } = useRequest(() => grpcGetAIReActRecommendedSkills(true), {
+    onSuccess: ({ Data }) => {
+      const first = Data?.[0]
+      if (first) setSelectedCapabilityKeys((current) => current ?? [capabilityKey(first)])
     },
-  )
-  const capabilities = recommendedSkills?.Data
+  })
+  const capabilities = recommendedSkills?.Data ?? emptyCapabilities
   useLayoutEffect(() => {
-    const selected = (capabilities ?? [])
+    const selected = capabilities
       .filter((item) => selectedCapabilityKeys?.includes(capabilityKey(item)))
       .map(({ Name, Type }) => ({ Name, Type }))
     onEnabledCapabilitiesChange?.(selected)
@@ -101,29 +108,37 @@ const MaterialCapabilitiesPanel: FC<MaterialCapabilitiesPanelProps> = ({ onEnabl
   })
 
   const label = t('AIAddMaterialsPopover.scenarioCapabilities')
-  const group: MaterialSummaryGroup | undefined = capabilities?.length
-    ? {
-        key: 'capabilities',
-        label,
-        title: label,
-        icon: <ColorsCapabilityIcon />,
-        count: capabilities.filter((item) => selectedCapabilityKeys?.includes(capabilityKey(item))).length,
-        rows: capabilities.map((item) => {
-          const key = capabilityKey(item)
-          return {
-            key,
-            name: getDisplayName(item),
-            description: item.Description,
-            icon: getIconByName(item.Name),
-            selection: {
-              checked: selectedCapabilityKeys?.includes(key) ?? false,
-              onChange: () => toggleCapability(key),
-            },
-            onEdit: () => onEdit(item),
-          }
-        }),
+  const group: MaterialSummaryGroup = {
+    key: 'capabilities',
+    label,
+    title: label,
+    icon: <ColorsCapabilityIcon />,
+    count: capabilities.filter((item) => selectedCapabilityKeys?.includes(capabilityKey(item))).length,
+    headerAction: (
+      <YakitButton
+        type="text2"
+        size="small"
+        icon={<RefreshOutlined size={16} color="currentColor" />}
+        aria-label={t('YakitButton.refresh')}
+        loading={loading}
+        onClick={refreshCapabilities}
+      />
+    ),
+    rows: capabilities.map((item) => {
+      const key = capabilityKey(item)
+      return {
+        key,
+        name: getDisplayName(item),
+        description: item.Description,
+        icon: getIconByName(item.Name),
+        selection: {
+          checked: selectedCapabilityKeys?.includes(key) ?? false,
+          onChange: () => toggleCapability(key),
+        },
+        onEdit: () => onEdit(item),
       }
-    : undefined
+    }),
+  }
 
   return (
     <>

@@ -38,6 +38,7 @@ import { useCurrentStore } from '../hooks/useCurrentDataBySession'
 import useCurrentSessionId from '../hooks/useCurrentSessionId'
 import { useStore } from 'zustand'
 import { AIAgentSettingDefault } from '@/pages/ai-agent/defaultConstant'
+import { isChatSession } from '@/pages/ai-agent/utils/isChatSession'
 
 const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
   const { setShowFreeChat, setTimeLine, onTaskTabsChange } = props
@@ -147,7 +148,7 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
   const aiGlobalConfig = aiGlobalConfigData.aiGlobalConfig
   const globalSingleModelMode = !!aiGlobalConfig.SingleModelMode
   const effectiveSingleModelMode = globalSingleModelMode || !!setting.SingleModelMode
-  const singleModelModeLocked = globalSingleModelMode || !!activeChat?.SessionID || execute
+  const singleModelModeLocked = globalSingleModelMode || isChatSession(activeChat) || execute
   const allowUserPrompt = !(setting.DisallowRequireForUserPrompt ?? AIAgentSettingDefault.DisallowRequireForUserPrompt)
 
   const [visible, setVisible] = useControllableValue<boolean>(props, {

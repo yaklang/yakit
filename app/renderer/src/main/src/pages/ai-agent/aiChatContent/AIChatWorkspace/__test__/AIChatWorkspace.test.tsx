@@ -55,8 +55,10 @@ import type {
 import { useHttpFlowSelection } from '@/components/useHttpFlowSelection'
 import { MAX_FILE_SIZE_BYTES } from '@/pages/yakRunner/utils'
 import { previewOpenFilesStore } from '../../../aiChatWelcome/FileTreeList/store/usePreviewOpenFiles'
+import { grpcQueryHTTPFlows } from '../../../grpc'
 const flowCallbacks: PluginExecuteWebsiteTreeProps[] = []
 const riskCallbacks: VulnerabilitiesRisksTableProps[] = []
+let unknownHttpFlowTotal = false
 
 beforeEach(() => {
   Element.prototype.scrollIntoView = vi.fn()
@@ -174,7 +176,7 @@ vi.mock('@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult', () =
     return (
       <div data-testid="http-flows" data-page-type={pageType}>
         {runtimeId}
-        {aiFlowSelection?.renderCount(pageType === 'History' ? 12 : 0)}
+        {aiFlowSelection?.renderCount(unknownHttpFlowTotal ? undefined : pageType === 'History' ? 12 : 0)}
       </div>
     )
   },
@@ -222,6 +224,8 @@ vi.mock('@/components/yakitUI/YakitEmpty/YakitEmpty', () => ({ YakitEmpty: () =>
 beforeEach(() => {
   flowCallbacks.length = 0
   riskCallbacks.length = 0
+  unknownHttpFlowTotal = false
+  vi.mocked(grpcQueryHTTPFlows).mockReset()
   agentStore.setState({
     activeChat: { SessionID: 'session-1', Title: '当前任务', RelatedRuntimeIDs: [] },
     pageId: 'test-page',
@@ -401,6 +405,38 @@ describe('AIChatWorkspace 菜单切换', () => {
     expect(screen.getByRole('radio', { name: 'AIChatWorkspace.selectedItems 1' })).toBeChecked()
     fireEvent.click(screen.getByRole('radio', { name: baseLabel }))
     expect(flowCallbacks.at(-1)?.aiFlowSelection).toMatchObject({ ids: ['22'], selectedOnly: false })
+  })
+
+  it.each([0, 12])('流量总数补查失败时隐藏未知计数，重新查询成功后显示 %s', async (total) => {
+    unknownHttpFlowTotal = true
+    agentStore.setState({ activeChat: undefined })
+    vi.mocked(grpcQueryHTTPFlows)
+      .mockRejectedValueOnce(new Error('query failed'))
+      .mockResolvedValueOnce({
+        Total: total,
+        Data: [],
+        Pagination: { Page: 1, Limit: 1, OrderBy: 'id', Order: 'desc' },
+      })
+    render(
+      <AIChatWorkspace
+        welcome
+        setFilePreviewData={vi.fn()}
+        selectedHttpFlowIds={['21']}
+        onSetSelectedHttpFlowIds={vi.fn()}
+      />,
+    )
+    act(() => emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.HTTP, showSelectedHttpFlows: true })))
+    await waitFor(() => expect(grpcQueryHTTPFlows).toHaveBeenCalledTimes(1))
+
+    expect(screen.getByRole('radio', { name: 'AIChatWorkspace.allItems' })).not.toBeChecked()
+    expect(screen.queryByRole('radio', { name: 'AIChatWorkspace.allItems 0' })).not.toBeInTheDocument()
+    expect(screen.getByRole('radio', { name: 'AIChatWorkspace.selectedItems 1' })).toBeChecked()
+    expect(grpcQueryHTTPFlows).toHaveBeenCalledWith(expect.objectContaining({ Pagination: { Page: 1, Limit: 1 } }))
+
+    fireEvent.click(screen.getByRole('radio', { name: 'AIChatWorkspace.allItems' }))
+    fireEvent.click(screen.getByRole('radio', { name: 'AIChatWorkspace.selectedItems 1' }))
+    expect(await screen.findByRole('radio', { name: `AIChatWorkspace.allItems ${total}` })).not.toBeChecked()
+    expect(grpcQueryHTTPFlows).toHaveBeenCalledTimes(2)
   })
 
   it.each([true, false])('从其他资料重开风险页签并回显选择（欢迎页：%s）', (welcome) => {

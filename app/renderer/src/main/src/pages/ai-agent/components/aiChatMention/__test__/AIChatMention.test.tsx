@@ -317,13 +317,16 @@ describe('AIChatMention', () => {
     expect(screen.getAllByRole('tree')).toHaveLength(2)
   })
 
-  it('uses the default folder while the opened paths are empty', async () => {
+  it('passes the existing scene search to the default file tree when switching tabs', async () => {
     vi.mocked(defaultFolder).mockResolvedValue({ path: '/default/code', isFolder: true })
+    vi.mocked(grpcQueryAIFocus).mockResolvedValue({ Data: [] })
     render(<AIChatMention onSelect={vi.fn()} />)
+    fireEvent.click(screen.getByRole('button', { name: 'AiAgengt.focusMode' }))
+    const search = screen.getByRole('textbox')
+    fireEvent.change(search, { target: { value: 'S' } })
     fireEvent.click(screen.getByRole('button', { name: 'AIMentionTabs.fileSystem' }))
-    expect(await screen.findByRole('tree', { name: '/default/code' })).toBeInTheDocument()
-    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'Query' } })
-    expect(screen.getByRole('tree', { name: '/default/code' })).toHaveAttribute('data-search-query', 'query')
+    expect(search).toHaveValue('S')
+    expect(await screen.findByRole('tree', { name: '/default/code' })).toHaveAttribute('data-search-query', 's')
   })
 
   it('opens the first visible tab when the welcome composer hides recently added', async () => {

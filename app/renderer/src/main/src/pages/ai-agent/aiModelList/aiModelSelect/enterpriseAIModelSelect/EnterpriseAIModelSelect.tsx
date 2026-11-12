@@ -346,9 +346,9 @@ export const EnterpriseAIModelSelect: React.FC<AIModelSelectProps> = React.memo(
     const intelligentItem = intelligentModels[0]
     return intelligentItem
   }, [intelligentModels])
-  const effortModelKey = selectIntelligentItem
-    ? `${getModelKey(selectIntelligentItem)}:${selectIntelligentItem.ModelName}`
-    : undefined
+  const getEffortModelKey = (model: AIModelConfig) =>
+    JSON.stringify([getModelKey(model), providerToListAiModelConfig(model.Provider), model.ModelName])
+  const effortModelKey = selectIntelligentItem ? getEffortModelKey(selectIntelligentItem) : undefined
   const reasoningEffort = normalizeReasoningEffort(selectIntelligentItem?.Provider.ReasoningEffort)
   const reasoningEffortLabel = String(
     buildReasoningEffortOptions(t, selectIntelligentItem?.ProbedExtendedEfforts, reasoningEffort).find(
@@ -380,7 +380,7 @@ export const EnterpriseAIModelSelect: React.FC<AIModelSelectProps> = React.memo(
     data: effortProbe,
   } = useRequest(
     (model: AIModelConfig) => {
-      const modelKey = `${getModelKey(model)}:${model.ModelName}`
+      const modelKey = getEffortModelKey(model)
       return grpcProbeReasoningEffort({ Config: model.Provider, Model: model.ModelName }, true).then((response) => ({
         modelKey,
         response,
@@ -391,9 +391,17 @@ export const EnterpriseAIModelSelect: React.FC<AIModelSelectProps> = React.memo(
       onSuccess: ({ modelKey, response }) => {
         if (modelKey !== effortModelKey) return
         const { conclusive, efforts } = effortProbeResultFromResponse(response)
-        onUpdateReasoningEffort((current) => ({ ...current, EffortProbed: conclusive, ProbedExtendedEfforts: efforts }))
+        onUpdateReasoningEffort((current) =>
+          getEffortModelKey(current) === modelKey
+            ? { ...current, EffortProbed: conclusive, ProbedExtendedEfforts: efforts }
+            : current,
+        )
       },
-      onError: (error) => yakitNotify('error', 'grpcProbeReasoningEffort 失败:' + String(error)),
+      onError: (error, [model]) => {
+        if (getEffortModelKey(model) === effortModelKey) {
+          yakitNotify('error', 'grpcProbeReasoningEffort 失败:' + String(error))
+        }
+      },
     },
   )
   const probeResponse = effortProbe?.modelKey === effortModelKey ? effortProbe?.response : undefined

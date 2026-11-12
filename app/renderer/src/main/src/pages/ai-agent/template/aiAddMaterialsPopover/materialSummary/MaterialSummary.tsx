@@ -20,7 +20,7 @@ const AISkillDetails = lazy(
 )
 
 export const MaterialSummaryPanel: FC<MaterialSummaryPanelProps> = ({ group, onClose }) => {
-  const { title, count, icon, rows, onAdd } = group
+  const { title, count, icon, rows, onAdd, headerAction } = group
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const [previewSkillKey, setPreviewSkillKey] = useState<string>()
   const navigate = (action: () => void) => {
@@ -44,6 +44,7 @@ export const MaterialSummaryPanel: FC<MaterialSummaryPanelProps> = ({ group, onC
         )}
         <span className={styles['title']}>{title}</span>
         <span className={styles['detail-count']}>{count}</span>
+        {headerAction && <div className={styles['header-action']}>{headerAction}</div>}
         {onAdd && (
           <YakitButton
             className={styles['add']}

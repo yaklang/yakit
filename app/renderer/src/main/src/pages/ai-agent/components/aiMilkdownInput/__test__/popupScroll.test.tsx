@@ -4,8 +4,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { AIMilkdownMention } from '../aiMilkdownMention/AIMilkdownMention'
 import { AIMilkdownModeSlash } from '../aiMilkdownModeSlash/AIMilkdownModeSlash'
 import { releaseMilkdownPopup, tryClaimMilkdownPopup } from '../panelMutex'
+import type { AIExecutionStrategy } from '@/pages/ai-re-act/hooks/grpcApi'
 
-const context = vi.hoisted(() => ({ view: {} as any, prevState: {} as object, content: '', providers: [] as any[] }))
+const context = vi.hoisted(() => ({
+  view: {} as any,
+  prevState: {} as object,
+  content: '',
+  providers: [] as any[],
+  planSelected: false,
+  strategy: {} as AIExecutionStrategy,
+}))
 vi.mock('@milkdown/react', () => ({ useInstance: () => [false, () => ({ action: vi.fn() })] }))
 vi.mock('@prosemirror-adapter/react', () => ({
   usePluginViewContext: () => ({ view: context.view, prevState: context.prevState }),
@@ -47,9 +55,10 @@ vi.mock('@/pages/ai-agent/aiRunModeSelect/useAIRunMode', () => ({
   useAIRunMode: () => ({
     goalMinIterations: 1,
     maxSubAgents: 1,
+    strategy: context.strategy,
     onToggleMode: vi.fn(),
     onSetStrategy: vi.fn(),
-    isModeSelected: () => false,
+    isModeSelected: () => context.planSelected,
   }),
 }))
 vi.mock('@/i18n/useI18nNamespaces', () => ({ useI18nNamespaces: () => ({ t: (key: string) => key }) }))
@@ -59,6 +68,8 @@ beforeEach(() => {
   vi.useFakeTimers()
   context.providers = []
   context.prevState = {}
+  context.planSelected = false
+  context.strategy = {}
   scrollContainer = document.createElement('div')
   const anchor = document.createElement('div')
   anchor.dataset.aiInputCard = ''
@@ -145,6 +156,54 @@ describe('mention popup outside clicks', () => {
     fireEvent.click(getByTestId('mention-list'))
     fireEvent.click(context.view.dom)
     expect(element.dataset.show).toBe('true')
+  })
+})
+
+describe('mode slash settings completion', () => {
+  it.each(['plan', 'multiAgent', 'goal'])('closes / before notifying the %s mode change', (mode) => {
+    context.content = '/'
+    const onModeChangeComplete = vi.fn(() => context.providers[0].element.dataset.show)
+    const { getByText, getByRole } = render(<AIMilkdownModeSlash onModeChangeComplete={onModeChangeComplete} />)
+    act(() => vi.advanceTimersByTime(250))
+
+    fireEvent.click(getByText(`AIMilkdownModeSlash.${mode}`))
+    if (mode !== 'plan') {
+      expect(onModeChangeComplete).not.toHaveBeenCalled()
+      expect(context.providers[0].element.dataset.show).toBe('true')
+      if (mode === 'goal') fireEvent.click(getByText('AIMilkdownModeSlash.minIterations'))
+      fireEvent.click(getByRole('button', { name: 'confirm' }))
+    }
+
+    expect(onModeChangeComplete).toHaveBeenCalledOnce()
+    expect(onModeChangeComplete).toHaveReturnedWith('false')
+    expect(tryClaimMilkdownPopup('mention')).toBe(true)
+  })
+
+  it('keeps the lower popover closed when the selected mode is already enabled', () => {
+    context.content = '/'
+    context.planSelected = true
+    const onModeChangeComplete = vi.fn()
+    const { getByText } = render(<AIMilkdownModeSlash onModeChangeComplete={onModeChangeComplete} />)
+    act(() => vi.advanceTimersByTime(250))
+
+    fireEvent.click(getByText('AIMilkdownModeSlash.plan'))
+
+    expect(context.providers[0].element.dataset.show).toBe('false')
+    expect(onModeChangeComplete).not.toHaveBeenCalled()
+  })
+
+  it('keeps the lower popover closed when the strategy is confirmed without changes', () => {
+    context.content = '/'
+    context.strategy = { EnableMultiAgent: true, MaxSubAgents: 1 }
+    const onModeChangeComplete = vi.fn()
+    const { getByText, getByRole } = render(<AIMilkdownModeSlash onModeChangeComplete={onModeChangeComplete} />)
+    act(() => vi.advanceTimersByTime(250))
+
+    fireEvent.click(getByText('AIMilkdownModeSlash.multiAgent'))
+    fireEvent.click(getByRole('button', { name: 'confirm' }))
+
+    expect(context.providers[0].element.dataset.show).toBe('false')
+    expect(onModeChangeComplete).not.toHaveBeenCalled()
   })
 })
 

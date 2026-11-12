@@ -313,6 +313,8 @@ export class ChatMultiSessionController {
   }
   /** 按连接 token 保存运行记录；失败的 pending 也保留到重试或取消。 */
   private connectionsByToken = new Map<string, SessionConnection>()
+  /** AI Agent 草稿的标签归属，建联后转入正式会话索引。 */
+  private draftPageIds = new Map<string, string>()
   /** 业务操作使用 SessionId，通过此表找到当前这轮连接的 token。 */
   private tokenBySessionId = new Map<string, string>()
 
@@ -350,6 +352,29 @@ export class ChatMultiSessionController {
     this.sessionStores.setState(stores, true)
   }
 
+  public registerDraftSession(sessionId: string, pageId: string) {
+    if (sessionId && !this.sessionOwnerMap.has(sessionId)) this.draftPageIds.set(sessionId, pageId)
+  }
+
+  public discardUnsentDraft(sessionId: string, pageId: string) {
+    if (this.draftPageIds.get(sessionId) !== pageId) return
+    if ([...this.connectionsByToken.values()].some((connection) => connection.sessionId === sessionId)) return
+
+    this.draftPageIds.delete(sessionId)
+    const meta = this.metaPool.get(sessionId)
+    if (meta) {
+      meta.lifecycle.current = false
+      this.closeSessionTimers(meta)
+      this.removeSessionData(sessionId)
+    }
+  }
+
+  public discardClosedPageDrafts(openPageIds: ReadonlySet<string>) {
+    for (const [sessionId, pageId] of this.draftPageIds) {
+      if (!openPageIds.has(pageId)) this.discardUnsentDraft(sessionId, pageId)
+    }
+  }
+
   /** 用户取消时删除草稿；重试只释放旧连接，沿用草稿。 */
   public cancelPendingConnection(token: string, options: { keepDraft?: boolean } = {}) {
     const connection = this.connectionsByToken.get(token)
@@ -363,6 +388,7 @@ export class ChatMultiSessionController {
     if (options.keepDraft) return
     if (this.storePool.get(connection.sessionId) === connection.data.store) {
       // 新增清理是为了在丢弃草稿时把这份内存数据一起删掉，否则同一个 sessionId 再次读取时还会拿到它
+      this.draftPageIds.delete(connection.sessionId)
       this.removeSessionData(connection.sessionId)
     }
     this.discardConnectionDraft(connection)
@@ -640,6 +666,7 @@ export class ChatMultiSessionController {
     sessionId: string,
     owner: { route: YakitRouteType; pageId: string; source?: DeleteSessionsAISourceType },
   ) {
+    this.draftPageIds.delete(sessionId)
     const source: DeleteSessionsAISourceType = owner.source || 'ai'
     const existing = this.sessionOwnerMap.get(sessionId)
 

@@ -45,7 +45,7 @@ import { setRemoteValue } from '@/utils/kv'
 import { RemoteAIAgentGV } from '@/enums/aiAgent'
 import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
 import { normalizeReasoningEffort } from './reasoningEffort'
-import { YAK_SCRIPT_PROVIDER } from './providerConfig'
+import { providerToListAiModelConfig, YAK_SCRIPT_PROVIDER } from './providerConfig'
 
 const defaultFormValues = {
   Type: '',
@@ -155,6 +155,7 @@ export const buildAIConfigHealthCheckConfig = (values): ThirdPartyApplicationCon
     'model_type',
     '_ProbedExtendedEfforts',
     '_EffortProbed',
+    '_EffortProbeKey',
   ])
 
   Object.entries(values).forEach(([key, value]) => {
@@ -254,6 +255,10 @@ export const formValueToAIConfigProvider = (res): ThirdPartyApplicationConfig =>
   Object.assign(date, extraData)
   return date
 }
+
+export const getAIModelFormEffortKey = (values: AIThirdPartyApplicationConfig) =>
+  JSON.stringify([providerToListAiModelConfig(formValueToAIConfigProvider(values)), values.model])
+
 export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
   const { item, aiModelType, onSuccess, onClose } = props
 
@@ -326,6 +331,7 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
         return
       }
 
+      const hasCurrentEffortProbe = res._EffortProbed && res._EffortProbeKey === getAIModelFormEffortKey(res)
       const newItem: AIModelConfig = {
         ProviderId: res.api_key_id,
         Provider: {
@@ -334,7 +340,9 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
         ModelName: res.model,
         ExtraParams: [],
         ...(item?.IsOnline ? { IsOnline: true } : {}),
-        ...(res._EffortProbed ? { EffortProbed: true, ProbedExtendedEfforts: res._ProbedExtendedEfforts ?? [] } : {}),
+        ...(hasCurrentEffortProbe
+          ? { EffortProbed: true, ProbedExtendedEfforts: res._ProbedExtendedEfforts ?? [] }
+          : {}),
       }
       const setConfigOptions = {
         modelType: res.model_type,

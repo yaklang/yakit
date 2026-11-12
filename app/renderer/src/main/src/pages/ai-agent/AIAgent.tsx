@@ -1,6 +1,6 @@
 import type React from 'react'
 import type { Dispatch, SetStateAction } from 'react'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { AIAgentProps, AIAgentSetting, ActiveChatAction } from './aiAgentType'
 import { AIAgentSideList } from './AIAgentSideList'
 import AIAgentContext from './useContext/AIAgentContext'
@@ -160,6 +160,15 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
     pageId,
     true,
   )
+  const draftSessionId = activeChat.isDraftSession ? activeChat.SessionID : undefined
+  const previousDraftId = useRef<string>()
+  // 取消建联后当前页可能用同一个 ID 重建草稿数据，需要重新登记归属。
+  useLayoutEffect(() => {
+    const previous = previousDraftId.current
+    if (previous && previous !== draftSessionId) globalSessionEngine.discardUnsentDraft(previous, pageId)
+    if (draftSessionId) globalSessionEngine.registerDraftSession(draftSessionId, pageId)
+    previousDraftId.current = draftSessionId
+  }, [draftSessionId, pageId, pendingChat?.streamToken])
 
   const setActiveChatForContext = useMemoizedFn((session: ActiveChatAction) => {
     if (!session) return

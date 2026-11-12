@@ -21,6 +21,7 @@ import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInp
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { useAIRunMode } from '@/pages/ai-agent/aiRunModeSelect/useAIRunMode'
+import type { AIExecutionStrategy } from '@/pages/ai-re-act/hooks/grpcApi'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import styles from './AIMilkdownModeSlash.module.scss'
 import {
@@ -65,10 +66,11 @@ const GOAL_MODE_OPTIONS: { key: GoalModeKey; labelKey: string }[] = [
  * 输入 `/`：Plan 直接生效；Goal 进二级目标模式；Multi-Agent 配置子 Agent 数量。
  * 弹层宽高定位与 @ 一致。
  */
-export const AIMilkdownModeSlash: React.FC = () => {
+export const AIMilkdownModeSlash: React.FC<{ onModeChangeComplete?: () => void }> = ({ onModeChangeComplete }) => {
   const ref = useRef<HTMLDivElement>(null)
   const slashProvider = useRef<SlashProvider>()
   const [visible, setVisible] = useState(false)
+  const modeChangedRef = useRef(false)
   const [step, setStep] = useState<SlashStep>('root')
   /** 从标签点编辑打开时为 true：返回应回到 / 上级菜单并保活，而不是直接关面板 */
   const reopenSessionRef = useRef(false)
@@ -86,7 +88,20 @@ export const AIMilkdownModeSlash: React.FC = () => {
   const { view, prevState } = usePluginViewContext()
   const [loading, get] = useInstance()
   const { t, i18nRefresh } = useI18nNamespaces(['aiAgent'])
-  const { goalMinIterations, maxSubAgents, onToggleMode, onSetStrategy, isModeSelected } = useAIRunMode()
+  const { goalMinIterations, maxSubAgents, strategy, onToggleMode, onSetStrategy, isModeSelected } = useAIRunMode()
+
+  useEffect(() => {
+    if (visible || !modeChangedRef.current) return
+    modeChangedRef.current = false
+    onModeChangeComplete?.()
+  }, [visible, onModeChangeComplete])
+
+  const setStrategy = useMemoizedFn((next: AIExecutionStrategy) => {
+    if (Object.entries(next).some(([key, value]) => strategy?.[key as keyof AIExecutionStrategy] !== value)) {
+      modeChangedRef.current = true
+    }
+    onSetStrategy(next)
+  })
 
   const action = useMemoizedFn((fn: (ctx: Ctx) => void) => {
     if (loading) return
@@ -495,21 +510,24 @@ export const AIMilkdownModeSlash: React.FC = () => {
   const onPickRoot = useMemoizedFn((key: 'plan' | 'multiAgent' | 'goal') => {
     // 标签编辑会话不要在这里清 reopenSessionRef，否则 root→子配置→再返回 root 会被 debounce 关掉
     if (key === 'plan') {
-      if (!isModeSelected('plan')) onToggleMode('plan')
+      if (!isModeSelected('plan')) {
+        modeChangedRef.current = true
+        onToggleMode('plan')
+      }
       deleteSlashTrigger()
       finishAndClose()
       return
     }
     if (key === 'multiAgent') {
       // 一选中 Multi-Agent 即开启模式；数量可稍后配置，Esc 会留下占位「设置子 Agent 数量」
-      onSetStrategy({ EnableMultiAgent: true })
+      setStrategy({ EnableMultiAgent: true })
       setDraftSubAgents(maxSubAgents)
       setStep('multiAgentConfig')
       keepPanelOpen()
       return
     }
     // 一选中 Goal 即开启模式；具体目标可稍后配置，Esc 会留下占位「设置目标」
-    onSetStrategy({ EnableGoalMode: true })
+    setStrategy({ EnableGoalMode: true })
     setStep('goalModes')
     keepPanelOpen()
   })
@@ -533,14 +551,14 @@ export const AIMilkdownModeSlash: React.FC = () => {
   })
 
   const onConfirmMultiAgent = useMemoizedFn(() => {
-    onSetStrategy({ EnableMultiAgent: true, MaxSubAgents: draftSubAgents })
+    setStrategy({ EnableMultiAgent: true, MaxSubAgents: draftSubAgents })
     deleteSlashTrigger()
     finishAndClose()
   })
 
   const onConfirmGoalIterations = useMemoizedFn(() => {
     // Goal 三选一：最小迭代生效，清掉时间窗与验收条件
-    onSetStrategy({
+    setStrategy({
       EnableGoalMode: true,
       GoalMinIterations: Math.max(1, Number(draftIterations) || 1),
       GoalDurationSeconds: 0,
@@ -554,7 +572,7 @@ export const AIMilkdownModeSlash: React.FC = () => {
     const text = draftAcceptance.trim()
     if (!text) return
     // Goal 三选一：验收条件生效，清掉迭代次数与时间窗
-    onSetStrategy({
+    setStrategy({
       EnableGoalMode: true,
       GoalMinIterations: 0,
       GoalDurationSeconds: 0,
@@ -566,7 +584,7 @@ export const AIMilkdownModeSlash: React.FC = () => {
 
   const onConfirmDuration = useMemoizedFn(() => {
     // Goal 三选一：时间窗生效，清掉迭代次数与验收条件
-    onSetStrategy({
+    setStrategy({
       EnableGoalMode: true,
       GoalMinIterations: 0,
       GoalDurationSeconds: goalDurationKeyToSeconds(draftDuration),
