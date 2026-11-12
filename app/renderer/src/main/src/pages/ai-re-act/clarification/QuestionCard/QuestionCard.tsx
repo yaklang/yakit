@@ -7,6 +7,8 @@ import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitR
 import { YakitAlert } from '@/components/yakitUI/YakitAlert/YakitAlert'
 import {
   CheckOutlined,
+  ChevronLeftOutlined,
+  ChevronRightOutlined,
   ChevronsDownUpOutlined,
   ChevronsUpDownOutlined,
   QuestionMarkCircleOutlined,
@@ -22,17 +24,22 @@ import styles from './QuestionCard.module.scss'
 import { QuestionFormFields } from '../QuestionFormFields/QuestionFormFields'
 import { readQuestionForm } from '../formValidation'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
+import { QuestionQueue, type QuestionQueueItem } from '../QuestionQueue/QuestionQueue'
 
 export function QuestionCard({
   item,
   floating = false,
   queueCount = 0,
-  onCycleQueue,
+  queueItems = [],
+  onSelectQueue,
+  onRefreshQueue,
 }: {
   item: Extract<AIChatQSData, { type: AIChatQSDataTypeEnum.UI_QUESTION }>
   floating?: boolean
   queueCount?: number
-  onCycleQueue?: () => void
+  queueItems?: QuestionQueueItem[]
+  onSelectQueue?: (id: string) => void
+  onRefreshQueue?: () => void
 }) {
   const { request, sessionId } = item.data
   const { t } = useI18nNamespaces(['aiAgent'])
@@ -49,6 +56,12 @@ export function QuestionCard({
   const formContainer = useRef<HTMLDivElement>(null)
   const questions = request.questions || []
   const current = useRef(draft)
+  const composing = useRef(false)
+  const compositionEndedAt = useRef<number | null>(null)
+  const submitting = useRef(false)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  const [now, setNow] = useState(() => Date.now())
   useEffect(() => {
     const saved = item.uiState as QuestionDraft | undefined
     if (saved && saved !== current.current) {
@@ -56,12 +69,6 @@ export function QuestionCard({
       setDraft(saved)
     }
   }, [item.uiState])
-  const composing = useRef(false)
-  const compositionEndedAt = useRef<number | null>(null)
-  const submitting = useRef(false)
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState('')
-  const [now, setNow] = useState(() => Date.now())
   const submitted = request.state === 'submitted' || draft.outcome === 'submitted'
   const outcome = submitted ? 'submitted' : draft.outcome || request.state
   const terminal = ['submitted', 'skipped', 'cancelled'].includes(outcome)
@@ -295,21 +302,14 @@ export function QuestionCard({
             </span>
           ) : null}
           {floating && queueCount > 0 ? (
-            onCycleQueue ? (
-              <YakitButton type="text" size="small" onClick={onCycleQueue}>
+            <QuestionQueue items={queueItems} currentId={item.id} onSelect={onSelectQueue} onRefresh={onRefreshQueue}>
+              <YakitButton type="text" size="small">
                 {t('InteractiveUI.questionQueue')}
                 <YakitTag size="small" fullRadius>
                   {queueCount}
                 </YakitTag>
               </YakitButton>
-            ) : (
-              <span className={styles.questionQueue}>
-                {t('InteractiveUI.questionQueue')}
-                <YakitTag size="small" fullRadius>
-                  {queueCount}
-                </YakitTag>
-              </span>
-            )
+            </QuestionQueue>
           ) : null}
           <YakitButton
             type="text2"
@@ -443,14 +443,22 @@ export function QuestionCard({
                 <YakitButton
                   type="outline2"
                   disabled={busy}
+                  radius={16}
+                  icon={<ChevronLeftOutlined />}
                   onClick={() => save({ ...current.current, page: page - 1 })}
                 >
                   {t('InteractiveUI.previous')}
                 </YakitButton>
               )}
-              <YakitButton type="primary" radius={16} loading={busy} onClick={nextPage}>
+              <YakitButton
+                type="primary"
+                radius={16}
+                iconPosition="end"
+                icon={form || page === questions.length - 1 ? <CheckOutlined /> : <ChevronRightOutlined />}
+                loading={busy}
+                onClick={nextPage}
+              >
                 {form || page === questions.length - 1 ? t('InteractiveUI.submit') : t('InteractiveUI.next')}
-                {form || page === questions.length - 1 ? <CheckOutlined /> : null}
               </YakitButton>
             </div>
             <div className={`${styles.questionActionGroup} ${styles.questionSecondaryActions}`}>

@@ -110,6 +110,10 @@ beforeEach(() => {
   )
 })
 afterEach(cleanup)
+const pinPending = async () => {
+  fireEvent.mouseEnter(screen.getByRole('button', { name: /问卷队列/ }))
+  fireEvent.click(await screen.findByText('待回答'))
+}
 it('renders submitted choice answers as a numbered summary without the chat prefix', () => {
   const data = item('目标受众')
   data.data.request.questions![0].title = '目标受众'
@@ -157,9 +161,9 @@ it('queues requests, preserves drafts when switching and removes completed contr
   render(<ClarificationPanel />)
   fireEvent.click(screen.getAllByRole('checkbox')[1])
   fireEvent.change(screen.getByRole('textbox'), { target: { value: '保留这段补充' } })
-  fireEvent.click(screen.getByRole('button', { name: /问卷队列/ }))
+  await pinPending()
   expect(screen.getByText('选择 second')).toBeTruthy()
-  fireEvent.click(screen.getByRole('button', { name: /问卷队列/ }))
+  await pinPending()
   expect(screen.getAllByRole('checkbox')[1]).toBeChecked()
   expect(screen.getByRole('textbox')).toHaveValue('保留这段补充')
   await act(async () => {
@@ -205,12 +209,12 @@ it('keeps one editor when a choice request arrives during form editing and resto
   expect(screen.getByLabelText(/目标名称/)).toHaveValue('授权演示系统')
   expect(screen.queryByRole('checkbox')).toBeNull()
 
-  fireEvent.click(screen.getByRole('button', { name: /问卷队列/ }))
+  await pinPending()
   expect(view.container.querySelectorAll('section')).toHaveLength(1)
   expect(view.container.querySelector('form')).toBeNull()
   fireEvent.click(screen.getAllByRole('checkbox')[1])
   fireEvent.change(screen.getByRole('textbox'), { target: { value: '选择问卷的补充' } })
-  fireEvent.click(screen.getByRole('button', { name: /问卷队列/ }))
+  await pinPending()
   expect(screen.getByLabelText(/目标名称/)).toHaveValue('授权演示系统')
   expect(screen.queryByRole('checkbox')).toBeNull()
 
@@ -229,7 +233,46 @@ it('keeps one editor when a choice request arrives during form editing and resto
     values: { target: '授权演示系统' },
   })
 })
-it('does not reopen or replace a collapsed questionnaire when a different form arrives', () => {
+it('refresh restores missing pending tokens without changing the current item', async () => {
+  const first = item('first')
+  const extra = formItem('focus')
+  extra.data.request.mode = 'blocking'
+  extra.data.request.form!.title = '关注重点'
+  const stale = item('done')
+  stale.data.request.state = 'submitted'
+  context.contents.set(first.id, first)
+  context.contents.set(extra.id, extra)
+  context.contents.set(stale.id, stale)
+  syncQuestionPanel(context.store, first)
+  act(() => {
+    context.store.getState().updateState({
+      questionPanelTokens: [first.id, stale.id],
+      questionPanelRevision: 1,
+    })
+  })
+  render(<ClarificationPanel />)
+  expect(screen.getByText('选择 first')).toBeTruthy()
+  fireEvent.mouseEnter(screen.getByRole('button', { name: /问卷队列/ }))
+  const revision = context.store.getState().questionPanelRevision
+  fireEvent.click(await screen.findByRole('button', { name: '刷新' }))
+  expect(context.store.getState().questionPanelTokens).toEqual([first.id, extra.id])
+  expect(context.store.getState().questionPanelRevision).toBeGreaterThan(revision)
+  expect(screen.getByText('选择 first')).toBeTruthy()
+  expect(await screen.findByText('阻塞·参数表单')).toBeInTheDocument()
+  expect(screen.getByText('异步·选择问卷')).toBeInTheDocument()
+})
+it('shows the queue overlay on hover and jumps to a pending item', async () => {
+  const first = item('first')
+  const second = item('second')
+  for (const data of [first, second]) {
+    context.contents.set(data.id, data)
+    syncQuestionPanel(context.store, data)
+  }
+  render(<ClarificationPanel />)
+  await pinPending()
+  expect(screen.getByText('选择 second')).toBeTruthy()
+})
+it('does not reopen or replace a collapsed questionnaire when a different form arrives', async () => {
   const producer = createChatStore()
   context.store = producer.renderStore
   const first = item('collapsed-first')
@@ -249,10 +292,10 @@ it('does not reopen or replace a collapsed questionnaire when a different form a
   expect(screen.queryByRole('checkbox')).toBeNull()
   expect(view.container.querySelector('form')).toBeNull()
 
-  fireEvent.click(screen.getByRole('button', { name: /问卷队列/ }))
+  await pinPending()
   expect(screen.getByLabelText(/目标名称/)).toBeInTheDocument()
   expect(view.container.querySelectorAll('section')).toHaveLength(1)
-  fireEvent.click(screen.getByRole('button', { name: /问卷队列/ }))
+  await pinPending()
   expect(screen.getByText('展开问题')).toBeTruthy()
   expect(view.container.querySelector('form')).toBeNull()
   fireEvent.click(screen.getByText('展开问题'))
