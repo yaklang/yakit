@@ -1,5 +1,5 @@
 import React, { createRef, useImperativeHandle, useState } from 'react'
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { AIReActChatRefProps } from '@/pages/ai-re-act/aiReActChat/AIReActChatType'
 import type { AIChatTextareaProps, AIChatTextareaRefProps } from '../../template/type'
@@ -85,11 +85,23 @@ vi.mock('../WelcomeRecentSessions/WelcomeRecentSessions', () => ({
     <div data-testid="welcome-recent-sessions" data-density={density || 'full'} />
   ),
 }))
-vi.mock('../WelcomeTipsCards/WelcomeTipsCards', () => ({
-  default: ({ compact }: { compact?: boolean }) => (
-    <div data-testid="welcome-tips-cards" data-compact={compact ? 'true' : 'false'} />
-  ),
-}))
+const tipsMocks = vi.hoisted(() => ({ empty: false }))
+
+vi.mock('../WelcomeTipsCards/WelcomeTipsCards', () => {
+  function MockWelcomeTipsCards({
+    compact,
+    onEmptyChange,
+  }: {
+    compact?: boolean
+    onEmptyChange?: (empty: boolean) => void
+  }) {
+    React.useEffect(() => {
+      onEmptyChange?.(tipsMocks.empty)
+    }, [onEmptyChange])
+    return <div data-testid="welcome-tips-cards" data-compact={compact ? 'true' : 'false'} />
+  }
+  return { default: MockWelcomeTipsCards }
+})
 // CI 的根配置将样式模块替换为空对象；为滚动兜底结构用例断言的类名提供稳定映射。
 vi.mock('../AIChatWelcome.module.scss', () => ({
   default: {
@@ -112,6 +124,7 @@ const { default: AIChatWelcome } = await compileReactModule<typeof WelcomeModule
 beforeEach(() => {
   resizeObservers.instances.length = 0
   welcomeAnimationMocks.animationDisabled = false
+  tipsMocks.empty = false
   vi.stubGlobal('ResizeObserver', resizeObservers.MockResizeObserver)
   // jsdom 默认 clientWidth/Height 为 0，会误判成 compact/short；先固定为大屏。
   Object.defineProperty(HTMLElement.prototype, 'clientWidth', { configurable: true, get: () => 900 })
@@ -250,6 +263,18 @@ describe('AIChatWelcome 欢迎区集成', () => {
     expect(screen.getByTestId('welcome-tips-cards')).toHaveAttribute('data-compact', 'false')
     expect(screen.getByTestId('welcome-recent-sessions')).toHaveAttribute('data-density', 'full')
     expect(container.querySelector('.input-wrapper-compact')).toBeNull()
+  })
+})
+
+describe('AIChatWelcome 空态', () => {
+  it('漏洞与流量都为 0 时切换场景副标题并隐藏最近会话', async () => {
+    tipsMocks.empty = true
+    render(<AIChatWelcome onTriageSubmit={vi.fn()} onSetReAct={vi.fn()} />)
+    await waitFor(() => {
+      expect(screen.queryByText('AIChatWelcome.WelcomeHomeSubTitle')).not.toBeInTheDocument()
+    })
+    expect(screen.queryByTestId('welcome-recent-sessions')).not.toBeInTheDocument()
+    expect(screen.getByTestId('welcome-tips-cards')).toBeInTheDocument()
   })
 })
 

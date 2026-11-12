@@ -12,8 +12,23 @@ vi.mock('ahooks', async () => ({
 vi.mock('@/i18n/useI18nNamespaces', () => ({
   useI18nNamespaces: () => ({ t: (key: string) => key }),
 }))
+const statsMock = vi.hoisted(() => ({
+  riskTotal: 12,
+  trafficTotal: 34 as number | undefined,
+  riskCounts: undefined as Record<string, number> | undefined,
+}))
+
 vi.mock('../../hooks/useWelcomePanelStats', () => ({
-  useWelcomePanelStats: () => ({ riskTotal: 12, trafficTotal: 34, riskCounts: undefined }),
+  useWelcomePanelStats: () => ({
+    riskTotal: statsMock.riskTotal,
+    trafficTotal: statsMock.trafficTotal,
+    riskCounts: statsMock.riskCounts,
+  }),
+}))
+vi.mock('../../WelcomeSceneCards/WelcomeSceneCards', () => ({
+  default: ({ compact }: { compact?: boolean }) => (
+    <div data-testid="welcome-scene-cards" data-compact={compact ? 'true' : 'false'} />
+  ),
 }))
 vi.mock('../../../components/aiFileSystemList/store/useCustomFolder', () => ({
   useCustomFolder: () => [{ path: '/a' }, { path: '/b' }],
@@ -42,6 +57,9 @@ vi.mock('../WelcomeTipsCards.module.scss', () => ({
 
 beforeEach(() => {
   vi.clearAllMocks()
+  statsMock.riskTotal = 12
+  statsMock.trafficTotal = 34
+  statsMock.riskCounts = undefined
 })
 
 afterEach(() => {
@@ -106,6 +124,23 @@ describe('WelcomeTipsCards', () => {
     footers[0].focus()
     await userEvent.keyboard('{Enter}')
     expect(emitSpy).toHaveBeenCalledWith('switchAIActTab', JSON.stringify({ key: AITabsEnum.Risk }))
+  })
+
+  it('漏洞与流量都为 0 时渲染场景介绍卡', () => {
+    statsMock.riskTotal = 0
+    statsMock.trafficTotal = 0
+    const onEmptyChange = vi.fn()
+    render(<WelcomeTipsCards onEmptyChange={onEmptyChange} />)
+    expect(screen.getByTestId('welcome-scene-cards')).toBeInTheDocument()
+    expect(screen.queryByText('AIChatWelcome.tipRiskTitle')).not.toBeInTheDocument()
+    expect(onEmptyChange).toHaveBeenCalledWith(true)
+  })
+
+  it('流量尚未返回时按 0 处理，进入空态', () => {
+    statsMock.riskTotal = 0
+    statsMock.trafficTotal = undefined
+    render(<WelcomeTipsCards />)
+    expect(screen.getByTestId('welcome-scene-cards')).toBeInTheDocument()
   })
 
   it('compact 模式下整卡可点且使用 compact 样式', () => {

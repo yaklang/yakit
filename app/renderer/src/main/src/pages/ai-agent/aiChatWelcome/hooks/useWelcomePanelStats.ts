@@ -3,6 +3,12 @@ import { grpcQueryHTTPFlows } from '../../grpc'
 import { apiRiskFieldGroup, type RiskFieldGroupResponse } from '@/pages/risks/YakitRiskTable/utils'
 import type { AIRightPanelRiskCounts } from '@/pages/ai-re-act/aiRightPanel/type'
 
+/** gRPC int64 经 longs:String 后可能是 '0'，严格等于 0 会失败。 */
+export const toStatCount = (value: unknown) => {
+  const count = Number(value)
+  return Number.isFinite(count) ? count : 0
+}
+
 /**
  * 与漏洞列表的等级别名保持一致，其余等级汇入信息。
  * 注意：任务快照侧另有固定字段映射（aiRightPanel/riskLevelCount.mapSessionRiskLevelCount），
@@ -23,7 +29,7 @@ const getRiskCounts = (groups: RiskFieldGroupResponse['RiskLevelGroup']): AIRigh
   ])
   return groups.reduce<AIRightPanelRiskCounts>((counts, group) => {
     const field = levels.get(group.Name) ?? 'info'
-    counts[field] = (counts[field] ?? 0) + group.Total
+    counts[field] = (counts[field] ?? 0) + toStatCount(group.Total)
     return counts
   }, {})
 }
@@ -39,7 +45,7 @@ export const useWelcomePanelStats = (refresh: boolean) => {
     // 不带会话、任务等筛选条件，仅限制列表返回量。
     grpcQueryHTTPFlows({ Pagination: { Page: 1, Limit: 1 } })
       .then((res) => {
-        if (!cancelled) setTrafficTotal(res.Total)
+        if (!cancelled) setTrafficTotal(toStatCount(res.Total))
       })
       .catch(() => {})
     apiRiskFieldGroup()

@@ -158,6 +158,20 @@ describe('useWelcomePanelStats', () => {
     expect(apiRiskFieldGroup).toHaveBeenCalledTimes(3)
   })
 
+  it('gRPC 把 int64 编成字符串 0 时仍按数字 0 统计', async () => {
+    vi.mocked(grpcQueryHTTPFlows).mockResolvedValueOnce({
+      ...trafficResponse(0),
+      Total: '0' as unknown as number,
+    })
+    vi.mocked(apiRiskFieldGroup).mockResolvedValueOnce(
+      riskResponse([{ Name: 'high', Total: '0' as unknown as number }]),
+    )
+
+    const { result } = renderHook(() => useWelcomePanelStats(true))
+
+    await waitFor(() => expect(result.current).toEqual({ trafficTotal: 0, riskTotal: 0, riskCounts: { high: 0 } }))
+  })
+
   it('刷新返回空数据时清除旧计数', async () => {
     const { result, rerender } = renderHook(({ visible }) => useWelcomePanelStats(visible), {
       initialProps: { visible: true },

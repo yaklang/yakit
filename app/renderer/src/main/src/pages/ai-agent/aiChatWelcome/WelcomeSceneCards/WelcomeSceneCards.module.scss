@@ -1,0 +1,18 @@
+.welcome-scene {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.subtitle {
+  color: var(--Colors-Use-Neutral-Text-4-Help-text);
+  text-align: center;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+}
+
+.scene-list {
+  width: 100%;
+}

@@ -64,6 +64,10 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
     const animationDisabled = useWelcomeAnimationDisabled()
     const [isCompact, setIsCompact] = useState(false)
     const [isShortHeight, setIsShortHeight] = useState(false)
+    const [isEmptyStats, setIsEmptyStats] = useState(false)
+    const handleEmptyStatsChange = useMemoizedFn((empty: boolean) => {
+      setIsEmptyStats((prev) => (prev === empty ? prev : empty))
+    })
     useEffect(() => {
       const el = welcomeRef.current
       if (!el || typeof ResizeObserver === 'undefined') return
@@ -119,9 +123,11 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
                     ))}
               </div>
               <Flex vertical gap={12} className={styles['welcome-tips-block']}>
-                <div className={styles['subtitle']}>{t('AIChatWelcome.WelcomeHomeSubTitle')}</div>
-                <WelcomeTipsCards compact={isCompact} />
-                <WelcomeRecentSessions density={isCompact ? 'collapsed' : isShortHeight ? 'three' : 'full'} />
+                {!isEmptyStats && <div className={styles['subtitle']}>{t('AIChatWelcome.WelcomeHomeSubTitle')}</div>}
+                <WelcomeTipsCards compact={isCompact} onEmptyChange={handleEmptyStatsChange} />
+                {!isEmptyStats && (
+                  <WelcomeRecentSessions density={isCompact ? 'collapsed' : isShortHeight ? 'three' : 'full'} />
+                )}
               </Flex>
             </Flex>
             <div className={styles['input-body-wrapper']}>

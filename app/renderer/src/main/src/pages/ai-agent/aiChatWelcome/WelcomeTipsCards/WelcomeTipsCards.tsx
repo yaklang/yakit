@@ -1,5 +1,5 @@
 import type { FC } from 'react'
-import { memo, useRef } from 'react'
+import { memo, useEffect, useRef } from 'react'
 import { useCreation, useInViewport, useMemoizedFn } from 'ahooks'
 import classNames from 'classnames'
 import CountUp from 'react-countup'
@@ -12,19 +12,25 @@ import { useWelcomePanelStats } from '../hooks/useWelcomePanelStats'
 import styles from './WelcomeTipsCards.module.scss'
 import { ColorsRiskIcon, ColorsFlowIcon, ColorsFileSystemIcon } from '../icon'
 import { TransparentButton } from '../TransparentButton'
+import WelcomeSceneCards from '../WelcomeSceneCards/WelcomeSceneCards'
 
 type WelcomeTipKey = 'risk' | 'traffic' | 'file-system'
 
 interface WelcomeTipsCardsProps {
   compact?: boolean
+  onEmptyChange?: (empty: boolean) => void
 }
 
-const WelcomeTipsCards: FC<WelcomeTipsCardsProps> = memo(({ compact = false }) => {
+const WelcomeTipsCards: FC<WelcomeTipsCardsProps> = memo(({ compact = false, onEmptyChange }) => {
   const { t, i18nRefresh } = useI18nNamespaces(['aiAgent'])
   const containerRef = useRef<HTMLDivElement>(null)
   const [inViewport = true] = useInViewport(containerRef)
   const { riskTotal, trafficTotal } = useWelcomePanelStats(inViewport)
   const customFolder = useCustomFolder()
+  const isEmpty = (trafficTotal ?? 0) === 0 && riskTotal === 0
+  useEffect(() => {
+    onEmptyChange?.(isEmpty)
+  }, [isEmpty, onEmptyChange])
 
   const welcomeTipsList = useCreation(
     () => [
@@ -77,6 +83,14 @@ const WelcomeTipsCards: FC<WelcomeTipsCardsProps> = memo(({ compact = false }) =
         break
     }
   })
+
+  if (isEmpty) {
+    return (
+      <div ref={containerRef}>
+        <WelcomeSceneCards />
+      </div>
+    )
+  }
 
   return (
     <div

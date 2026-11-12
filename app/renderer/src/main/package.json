@@ -65,6 +65,7 @@
     "mark.js": "^8.11.1",
     "mitt": "^3.0.1",
     "moment": "^2.29.1",
+    "motion": "14.12.0",
     "monaco-editor": "^0.40.0",
     "monaco-themes": "^0.4.4",
     "numeral": "^2.0.6",
