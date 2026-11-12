@@ -1,7 +1,7 @@
 import type React from 'react'
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { QueryRisksRequest } from '../YakitRiskTableType'
+import type { QueryRisksRequest, QueryRisksResponse } from '../YakitRiskTableType'
 import type { Risk } from '../../schema'
 import { YakitRiskTable } from '../YakitRiskTable'
 import { DISPOSAL_STATUS_OPTIONS } from '../constants'
@@ -97,6 +97,7 @@ vi.mock('@/components/TableVirtualResize/TableVirtualResize', () => ({
       <div>
         {renderTitle}
         <span data-testid="loaded-count">{data.length}</span>
+        <span data-testid="table-total">{pagination.total}</span>
         <button type="button" onClick={() => onChange(1, 20, undefined, { SeverityList: ['none'] })}>
           filter-none
         </button>
@@ -105,6 +106,13 @@ vi.mock('@/components/TableVirtualResize/TableVirtualResize', () => ({
         </button>
         <button type="button" onClick={() => pagination.onChange(1)}>
           load-table
+        </button>
+        <button
+          type="button"
+          disabled={data.length >= pagination.total}
+          onClick={() => pagination.onChange(pagination.page + 1)}
+        >
+          load-next-page
         </button>
         <button type="button" onClick={() => rowSelection.onChangeCheckboxSingle(true, '11', rows[0])}>
           select-first
@@ -909,6 +917,87 @@ describe('AI risk selection', () => {
     mocks.queryRisks.mockResolvedValue({ Data: rows, Total: 2, Pagination: query.Pagination })
   })
   afterEach(cleanup)
+  it.each(['asc', 'desc'] as const)(
+    'loads every selected risk using the initial filtered total (%s)',
+    async (order) => {
+      const risks = Array.from({ length: 120 }, (_, index) => ({
+        ...rows[0],
+        Id: index + 1,
+        Title: index < 100 ? 'matching risk' : 'other risk',
+      }))
+      mocks.queryRisks.mockImplementation(async (params: QueryRisksRequest) => {
+        const remaining = risks
+          .filter((risk) => params.Ids.includes(risk.Id) && risk.Title === params.Search)
+          .filter((risk) => !params.FromId || risk.Id > params.FromId)
+          .filter((risk) => !params.UntilId || risk.Id < params.UntilId)
+          .sort((a, b) => (params.Pagination.Order === 'asc' ? a.Id - b.Id : b.Id - a.Id))
+        return {
+          Data: remaining.slice(0, params.Pagination.Limit),
+          Total: remaining.length,
+          Pagination: params.Pagination,
+        }
+      })
+      const props = {
+        query: { ...query, Search: 'matching risk', Pagination: { ...query.Pagination, Order: order } },
+        setQuery: vi.fn(),
+        setRiskLoading: vi.fn(),
+        allTotal: 7,
+        aiRiskSelection: {
+          ids: risks.map((risk) => String(risk.Id)),
+          selectedOnly: true,
+          onChange: vi.fn(),
+          renderCount: () => null,
+        },
+      }
+      const view = render(<YakitRiskTable {...props} />)
+      fireEvent.click(screen.getByRole('button', { name: 'load-table' }))
+      await waitFor(() => expect(screen.getByTestId('loaded-count')).toHaveTextContent(/^20$/))
+      for (const expected of [40, 60, 80, 100]) {
+        expect(screen.getByTestId('table-total')).toHaveTextContent(/^100$/)
+        expect(screen.getByRole('button', { name: 'load-next-page' })).toBeEnabled()
+        fireEvent.click(screen.getByRole('button', { name: 'load-next-page' }))
+        await waitFor(() => expect(screen.getByTestId('loaded-count')).toHaveTextContent(String(expected)))
+      }
+      expect(screen.getByTestId('table-total')).toHaveTextContent(/^100$/)
+      expect(screen.getByRole('button', { name: 'load-next-page' })).toBeDisabled()
+      expect(mocks.rowSelection.selectedRowKeys).toHaveLength(100)
+
+      view.rerender(<YakitRiskTable {...props} query={{ ...props.query, Search: 'no matching risk' }} />)
+      fireEvent.click(screen.getByRole('button', { name: 'load-table' }))
+      await waitFor(() => expect(screen.getByTestId('table-total')).toHaveTextContent(/^0$/))
+      expect(screen.getByTestId('loaded-count')).toHaveTextContent(/^0$/)
+      expect(screen.getByRole('button', { name: 'load-next-page' })).toBeDisabled()
+    },
+  )
+
+  it('keeps the latest selected total when a previous selection responds late', async () => {
+    const pagination: QueryRisksResponse['Pagination'] = { ...query.Pagination, OrderBy: 'id', Order: 'desc' }
+    let resolvePrevious!: (response: QueryRisksResponse) => void
+    mocks.queryRisks
+      .mockImplementationOnce(
+        () =>
+          new Promise<QueryRisksResponse>((resolve) => {
+            resolvePrevious = resolve
+          }),
+      )
+      .mockResolvedValueOnce({ Data: [rows[1]], Total: 1, Pagination: pagination })
+    const props = {
+      query,
+      setQuery: vi.fn(),
+      setRiskLoading: vi.fn(),
+      aiRiskSelection: { ids: ['11'], selectedOnly: true, onChange: vi.fn(), renderCount: () => null },
+    }
+    const view = render(<YakitRiskTable {...props} />)
+    fireEvent.click(screen.getByRole('button', { name: 'load-table' }))
+    await waitFor(() => expect(mocks.queryRisks).toHaveBeenCalledOnce())
+    view.rerender(<YakitRiskTable {...props} aiRiskSelection={{ ...props.aiRiskSelection, ids: ['22'] }} />)
+    fireEvent.click(screen.getByRole('button', { name: 'load-table' }))
+    await waitFor(() => expect(screen.getByTestId('table-total')).toHaveTextContent(/^1$/))
+    await act(async () => resolvePrevious({ Data: [rows[0]], Total: 100, Pagination: pagination }))
+    expect(screen.getByTestId('table-total')).toHaveTextContent(/^1$/)
+    expect(mocks.rowSelection.selectedRowKeys).toEqual([22])
+  })
+
   it('restores controlled selection and exposes add/cancel in the fixed action column', async () => {
     const onChange = vi.fn()
     render(

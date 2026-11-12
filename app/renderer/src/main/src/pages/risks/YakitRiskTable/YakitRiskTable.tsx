@@ -1401,6 +1401,8 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         prePage.current += 1
         setResponse({
           ...res,
+          // 已选列表沿用首屏无游标查询的总数，后续游标页的 Total 仅表示剩余数量。
+          Total: aiRiskSelection?.selectedOnly && !isInit ? getResponse().Total : res.Total,
           Data: d,
           Pagination: {
             ...res.Pagination,

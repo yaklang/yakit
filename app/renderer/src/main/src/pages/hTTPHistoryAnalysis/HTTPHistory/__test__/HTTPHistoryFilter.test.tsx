@@ -233,6 +233,13 @@ const renderFlowTable = async () => {
 }
 
 describe('HTTPHistoryFilter 序号合并', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+  })
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
   it('关键词 ID 搜索与序号列取并集，表格筛选变化时按两侧当前值重新合并', async () => {
     await renderFlowTable()
     confirmColumnIds('1,2')

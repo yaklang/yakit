@@ -15,6 +15,17 @@ const mocks = vi.hoisted(() => ({
   onSend: vi.fn(),
 }))
 
+// 根测试配置将样式模块替换为空对象，为状态和弹层定位提供稳定类名。
+vi.mock('../AIReviewRuleSelect.module.scss', () => ({
+  default: {
+    'select-icon-wrapper': 'select-icon-wrapper',
+    'select-option-ai': 'select-option-ai',
+    'select-option-yolo': 'select-option-yolo',
+    'ai-chat-select-wrapper': 'ai-chat-select-wrapper',
+    'drop-select-wrapper': 'drop-select-wrapper',
+  },
+}))
+
 vi.mock('@/pages/ai-agent/useContext/useStore', () => ({ default: () => ({ setting: mocks.setting }) }))
 vi.mock('@/pages/ai-agent/useContext/useDispatcher', () => ({
   default: () => ({ setSetting: mocks.setSetting, onSend: mocks.onSend }),
