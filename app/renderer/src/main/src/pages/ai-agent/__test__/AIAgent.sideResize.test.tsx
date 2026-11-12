@@ -116,7 +116,14 @@ vi.mock('../../ai-re-act/hooks/useChatIPC', () => ({
 
 vi.mock('../../ai-re-act/hooks/ChatMultiSessionController', async () => {
   const { createStore } = await import('zustand/vanilla')
-  return { globalSessionEngine: { updateSessionConfig: vi.fn(), sessionStores: createStore(() => new Map()) } }
+  return {
+    globalSessionEngine: {
+      registerDraftSession: vi.fn(),
+      discardUnsentDraft: vi.fn(),
+      updateSessionConfig: vi.fn(),
+      sessionStores: createStore(() => new Map()),
+    },
+  }
 })
 
 vi.mock('../../KnowledgeBase/hooks/useKnowledgeBase', () => ({

@@ -22,6 +22,7 @@ export interface MaterialSummaryGroup {
   icon?: ReactNode
   rows: MaterialSummaryRow[]
   onAdd?: () => void
+  headerAction?: ReactNode
 }
 
 export interface MaterialSummaryPanelProps {

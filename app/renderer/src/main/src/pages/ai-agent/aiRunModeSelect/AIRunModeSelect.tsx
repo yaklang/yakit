@@ -1,5 +1,5 @@
 import type React from 'react'
-import { useState } from 'react'
+import { useControllableValue } from 'ahooks'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
@@ -7,9 +7,18 @@ import { AtomOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import styles from './AIRunModeSelect.module.scss'
 import { AIRunModeMenu } from './AIRunModeMenu'
 
-const AIRunModeSelect: React.FC = () => {
+interface AIRunModeSelectProps {
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
+}
+
+const AIRunModeSelect: React.FC<AIRunModeSelectProps> = (props) => {
   const { t } = useI18nNamespaces(['aiAgent'])
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useControllableValue<boolean>(props, {
+    defaultValue: false,
+    valuePropName: 'open',
+    trigger: 'onOpenChange',
+  })
 
   return (
     <YakitPopover

@@ -37,15 +37,15 @@ const resource = (Type: string, Key: string, Value: string): AISessionTaskResour
   Type,
   Key,
   Value,
-  Scope: 'turn',
+  Scope: 'session',
   Source: 'attached_resource_info',
 })
-const response = (TaskResources: AISessionTaskResourceInfo[]): GetAISessionCurrentResourcesResponse => ({
+const response = (SessionResources: AISessionTaskResourceInfo[]): GetAISessionCurrentResourcesResponse => ({
   SessionID: 'session-1',
   TaskID: 'task-1',
   UserInputUUID: 'input-1',
-  TaskResources,
-  SessionResources: [],
+  TaskResources: [],
+  SessionResources,
 })
 
 beforeEach(() => vi.clearAllMocks())
@@ -54,6 +54,19 @@ describe('recent mention resources', () => {
   it('returns empty categories before a session exists without querying', async () => {
     expect(await loadRecentMentionResources('')).toEqual({ ...createEmptyRecentMentionResources(), browserIDs: [] })
     expect(grpcGetAISessionCurrentResources).not.toHaveBeenCalled()
+  })
+
+  it('returns empty categories when only the current task has resources', async () => {
+    vi.mocked(grpcGetAISessionCurrentResources).mockResolvedValue({
+      ...response([]),
+      TaskResources: [{ ...resource('aiforge', 'name', 'task-only-skill'), Scope: 'turn' }],
+    })
+
+    expect(await loadRecentMentionResources('session-1')).toEqual({
+      ...createEmptyRecentMentionResources(),
+      browserIDs: [],
+    })
+    expect(grpcQueryAIForge).not.toHaveBeenCalled()
   })
 
   it('deduplicates resource names and file paths and omits unsupported resource types', () => {
@@ -85,7 +98,7 @@ describe('recent mention resources', () => {
     expect(grpcQueryAITool).not.toHaveBeenCalled()
   })
 
-  it('resolves file and folder paths from the current task', async () => {
+  it('resolves file and folder paths from session resources', async () => {
     vi.mocked(grpcGetAISessionCurrentResources).mockResolvedValue(
       response([resource('file', 'file_path', '/docs/report.pdf'), resource('file', 'file_path', '/docs/archive')]),
     )
@@ -96,7 +109,7 @@ describe('recent mention resources', () => {
     ])
   })
 
-  it('queries full data by names and resolves only after every category finishes', async () => {
+  it('queries session resources by name, ignores task-only resources, and waits for every category', async () => {
     vi.mocked(grpcGetAISessionCurrentResources).mockResolvedValue({
       ...response([
         resource('aiforge', 'name', 'review'),
@@ -107,7 +120,7 @@ describe('recent mention resources', () => {
         resource('knowledge_base', 'system_flag', 'all_knowledge_base'),
         resource('browser', 'device_id', '{"deviceId":"browser-1"}'),
       ]),
-      SessionResources: [resource('aiforge', 'name', 'old-skill')],
+      TaskResources: [{ ...resource('aiforge', 'name', 'task-only-skill'), Scope: 'turn' }],
     })
     const skill = { Id: 1, ForgeName: 'review', Description: 'Review documents' }
     const tool = { ID: 2, Name: 'read-file', Description: 'Read a file' }
@@ -126,7 +139,7 @@ describe('recent mention resources', () => {
     await vi.waitFor(() => expect(grpcQueryKnowledgeBase).toHaveBeenCalled())
     expect(completed).not.toHaveBeenCalled()
     expect(grpcGetAISessionCurrentResources).toHaveBeenCalledWith({ SessionID: 'session-1' }, true)
-    expect(grpcQueryAIForge).toHaveBeenCalledWith(
+    expect(grpcQueryAIForge).toHaveBeenCalledExactlyOnceWith(
       expect.objectContaining({
         Pagination: expect.objectContaining({ Limit: -1 }),
         Filter: { ForgeNames: ['review'] },
@@ -146,13 +159,13 @@ describe('recent mention resources', () => {
     expect(completed).toHaveBeenCalledWith({
       ...createEmptyRecentMentionResources(),
       skills: [skill],
-      tools: [tool, listTool],
+      tools: [listTool, tool],
       knowledgeBases: [knowledgeBase],
       browserIDs: ['browser-1'],
     })
   })
 
-  it('keeps all tools returned by QueryAITool when names differ from the session references', async () => {
+  it('keeps the QueryAITool results in response order when names differ from the session references', async () => {
     vi.mocked(grpcGetAISessionCurrentResources).mockResolvedValue(
       response([
         resource('aitool', 'name', 'read-file'),
@@ -165,7 +178,7 @@ describe('recent mention resources', () => {
     const findTool = { ID: 4, Name: 'find_file' }
     vi.mocked(grpcQueryAITool).mockResolvedValue({ Data: [listTool, readTool, findTool] } as any)
 
-    expect((await loadRecentMentionResources('session-1')).tools).toEqual([readTool, listTool, findTool])
+    expect((await loadRecentMentionResources('session-1')).tools).toEqual([listTool, readTool, findTool])
   })
 
   it('propagates lookup failure after the other category finishes', async () => {

@@ -141,6 +141,7 @@ import {
 import { safeParseFuzzerCache, sanitizeFuzzerCachePageParams } from '@/store/parseFuzzerCache'
 import { adoptOrphanCacheTabs } from './adoptOrphanCacheTabs'
 import { useOpenAIAgentPage } from './useOpenAIAgentPage'
+import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
 import { ReActChatEventEnum } from '@/pages/ai-agent/defaultConstant'
 import { mergeAIAgentPageTabs } from './mergeAIAgentPageTabs'
 import { RemoteAIAgentGV } from '@/enums/aiAgent'
@@ -2620,6 +2621,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     const nextIndex = getAIAgentNextTabIndex(pageCache)
     const verbose = `${menuName}-${nextIndex}`
     const { tabId } = generateTabIdentity(routeConvertKey(YakitRoute.AI_Agent, ''))
+    const session = pageParams?.aiAgentPageInfo?.session
+    if (session?.isDraftSession) globalSessionEngine.registerDraftSession(session.SessionID, tabId)
     const node: MultipleNodeInfo = {
       id: tabId,
       verbose,
@@ -2684,6 +2687,15 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     openAIAgentExtraTab,
     openAIAgentWelcomePage,
   })
+
+  useEffect(() => {
+    const openPageIds = new Set(
+      pageCache
+        .filter(({ route }) => route === YakitRoute.AI_Agent)
+        .map(({ routeKey, pageParams }) => pageParams?.id || routeKey),
+    )
+    globalSessionEngine.discardClosedPageDrafts(openPageIds)
+  }, [pageCache])
 
   /** @name 打开页面 */
   const extraOpenMenuPage = useMemoizedFn((routeInfo: RouteToPageProps) => {

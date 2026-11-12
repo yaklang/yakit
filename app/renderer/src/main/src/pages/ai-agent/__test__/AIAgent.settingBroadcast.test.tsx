@@ -208,6 +208,8 @@ vi.mock('../../ai-re-act/hooks/ChatMultiSessionController', async () => {
   return {
     globalSessionEngine: {
       sessionStores,
+      registerDraftSession: vi.fn(),
+      discardUnsentDraft: vi.fn(),
       updateSessionConfig: vi.fn(),
       ensureSession: (id: string) => {
         if (!ipc.sessions.has(id)) {
@@ -286,6 +288,22 @@ describe('AIAgent 配置广播', () => {
         disconnect() {}
       } as typeof ResizeObserver
     }
+  })
+
+  it('草稿重置和切到历史时释放旧草稿，StrictMode 首次挂载不清理', () => {
+    const draft = createWelcomeChat()
+    render(<AIAgent pageId="welcome-tab" initialSession={draft} />, { reactStrictMode: true })
+
+    expect(globalSessionEngine.registerDraftSession).toHaveBeenCalledWith(draft.SessionID, 'welcome-tab')
+    expect(globalSessionEngine.discardUnsentDraft).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByText('back-to-welcome'))
+
+    const nextId = screen.getByTestId('welcome-session').textContent
+    expect(nextId).not.toBe(draft.SessionID)
+    expect(globalSessionEngine.discardUnsentDraft).toHaveBeenCalledExactlyOnceWith(draft.SessionID, 'welcome-tab')
+    expect(globalSessionEngine.registerDraftSession).toHaveBeenLastCalledWith(nextId, 'welcome-tab')
+    fireEvent.click(screen.getByText('select-history'))
+    expect(globalSessionEngine.discardUnsentDraft).toHaveBeenLastCalledWith(nextId, 'welcome-tab')
   })
 
   it.each([false, true])('新标签保留首问完整配置，消费后不读取缓存覆盖（StrictMode=%s）', async (reactStrictMode) => {

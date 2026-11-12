@@ -69,17 +69,21 @@ const WorkspaceHttpFlowSegments: React.FC<{
   useEffect(() => {
     if (!selectedOnly || total !== undefined || (!showAll && !runtimeId)) return
     let active = true
-    grpcQueryHTTPFlows({ ...getRunTimeIdObj(runtimeId), Pagination: { Page: 1, Limit: 1 } }, true)
+    setFallback(undefined)
+    grpcQueryHTTPFlows({ ...getRunTimeIdObj(runtimeId), Pagination: { Page: 1, Limit: 1 } })
       .then((result) => {
         if (active) setFallback({ runtimeId, total: normalizeHTTPFlowTotal(result.Total) })
       })
-      .catch(() => {})
+      .catch(() => {
+        // 接口封装提示查询失败，总数继续保持未知，切换筛选后可重新查询。
+      })
     return () => {
       active = false
     }
   }, [runtimeId, selectedOnly, showAll, total])
 
-  const baseCount = total ?? (fallback?.runtimeId === runtimeId ? fallback.total : 0)
+  const baseCount =
+    !showAll && !runtimeId ? 0 : (total ?? (fallback?.runtimeId === runtimeId ? fallback.total : undefined))
   return (
     <WorkspaceSelectionSegments
       showAll={showAll}
@@ -94,7 +98,7 @@ const WorkspaceHttpFlowSegments: React.FC<{
 const WorkspaceSelectionSegments: React.FC<{
   showAll: boolean
   selectedOnly: boolean
-  total: number
+  total?: number
   selectedCount: number
   onChange: (selectedOnly: boolean) => void
 }> = ({ showAll, selectedOnly, total, selectedCount, onChange }) => {
@@ -110,7 +114,7 @@ const WorkspaceSelectionSegments: React.FC<{
           value: 'base',
           label: (
             <>
-              {baseLabel} <span className={styles['material-selection-count']}>{total}</span>
+              {baseLabel} {total !== undefined && <span className={styles['material-selection-count']}>{total}</span>}
             </>
           ),
         },

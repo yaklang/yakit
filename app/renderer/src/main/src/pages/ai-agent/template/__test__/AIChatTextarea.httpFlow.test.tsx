@@ -368,6 +368,26 @@ describe('输入框资料栏', () => {
     expect(screen.queryByRole('button', { name: /^能力 \d+$/ })).toBeNull()
   })
 
+  it.each(['请求失败', '返回空列表'])('场景能力%s时仍可在面板标题旁刷新', async (outcome) => {
+    const request = vi.mocked(grpcGetAIReActRecommendedSkills)
+    if (outcome === '请求失败') request.mockRejectedValueOnce(new Error('unavailable'))
+    else request.mockResolvedValueOnce({ Data: [] })
+    request.mockResolvedValueOnce({ Data: [codeReview] })
+
+    await setup('', true)
+    fireEvent.click(await screen.findByRole('button', { name: '能力 0' }))
+    const panel = await screen.findByRole('dialog', { name: '能力' })
+    expect(within(panel).queryByRole('listitem')).not.toBeInTheDocument()
+
+    const refresh = within(panel).getByRole('button', { name: 'YakitButton.refresh' })
+    expect(refresh.closest('header')).toBeInTheDocument()
+    fireEvent.click(refresh)
+
+    expect(await within(panel).findByText('代码审计')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '能力 1' })).toHaveAttribute('aria-expanded', 'true')
+    expect(request).toHaveBeenCalledTimes(2)
+  })
+
   it('场景能力面板未打开时，默认选中的能力也随首问提交', async () => {
     vi.mocked(grpcGetAIReActRecommendedSkills).mockResolvedValueOnce({ Data: [codeReview] })
     const { send, onSubmit } = await setup('正文', true)

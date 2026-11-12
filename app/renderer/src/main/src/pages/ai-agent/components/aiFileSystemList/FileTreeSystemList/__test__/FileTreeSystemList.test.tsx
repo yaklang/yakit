@@ -90,6 +90,18 @@ const resetDirectoryTreeCapture = () => {
 }
 
 describe('我打开的文件：文件夹展开', () => {
+  it('打开文件树时已有搜索词，后台加载完成后直接显示匹配文件', async () => {
+    fetchTree.mockResolvedValue([
+      { path: 'opened/query_flows.yak', name: 'query_flows.yak', parent: 'opened', isFolder: false },
+      { path: 'opened/hello.md', name: 'hello.md', parent: 'opened', isFolder: false },
+    ])
+
+    render(<FileTree searchQuery="s" />)
+
+    expect(await screen.findByText('query_flows.yak')).toBeVisible()
+    expect(screen.queryByText('hello.md')).not.toBeInTheDocument()
+  })
+
   it('展开根目录及子目录后显示异步加载的子文件', async () => {
     const user = userEvent.setup()
     fetchTree.mockImplementation(async (path: string) => {

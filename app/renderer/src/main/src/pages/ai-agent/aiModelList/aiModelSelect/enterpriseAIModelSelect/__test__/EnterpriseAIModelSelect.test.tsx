@@ -252,6 +252,53 @@ describe('EnterpriseAIModelSelect', () => {
     })
   })
 
+  it.each([false, true])('同名模型换连接后重新探测并丢弃旧结果（旧请求先完成：%s）', async (oldResultFirst) => {
+    let resolveFirst!: (value: object) => void
+    let resolveSecond!: (value: object) => void
+    mocks.probe
+      .mockReturnValueOnce(
+        new Promise((resolve) => {
+          resolveFirst = resolve
+        }),
+      )
+      .mockReturnValueOnce(
+        new Promise((resolve) => {
+          resolveSecond = resolve
+        }),
+      )
+    const dropdown = await openModels()
+    await waitFor(() => expect(mocks.probe).toHaveBeenCalledTimes(1))
+    if (oldResultFirst) {
+      await act(async () => resolveFirst({ MaxSupported: true, XhighSupported: true }))
+    }
+
+    const config = useAIGlobalConfigStore.getState().aiGlobalConfig
+    const [model, ...rest] = config.IntelligentModels
+    const provider = { ...model.Provider, BaseURL: 'https://new-gateway.example/v1' }
+    act(() =>
+      useAIGlobalConfigStore.getState().setAIGlobalConfig({
+        ...config,
+        IntelligentModels: [{ ...model, Provider: provider }, ...rest],
+      }),
+    )
+    await waitFor(() => expect(mocks.probe).toHaveBeenCalledTimes(2))
+    expect(mocks.probe).toHaveBeenLastCalledWith({ Config: provider, Model: model.ModelName }, true)
+    if (!oldResultFirst) {
+      await act(async () => resolveFirst({ MaxSupported: true, XhighSupported: true }))
+    }
+    const trigger = within(dropdown).getByRole('button', { name: 'AIReasoningEffort.selectQuality' })
+    fireEvent.click(trigger)
+    expect(screen.queryByRole('menuitemradio', { name: 'ConfigNetworkPage.effortMax' })).not.toBeInTheDocument()
+    await act(async () => resolveSecond({ MaxSupported: false, XhighSupported: true }))
+    fireEvent.click(screen.getByRole('button', { name: '关闭选择' }))
+    await waitFor(() => expect(mocks.save).toHaveBeenCalled())
+    expect(mocks.save.mock.lastCall?.[0].IntelligentModels[0]).toMatchObject({
+      ModelName: model.ModelName,
+      Provider: provider,
+      ProbedExtendedEfforts: ['xhigh'],
+    })
+  })
+
   it.each([false, true])('并发刷新全部结束后才清除 loading（新请求先结束：%s）', async (latestFirst) => {
     vi.useFakeTimers()
     const completions: Array<() => void> = []

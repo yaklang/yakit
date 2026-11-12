@@ -7,7 +7,9 @@ import { AIInputEventHotPatchTypeEnum } from '../../hooks/grpcApi'
 
 const mocks = vi.hoisted(() => ({
   setting: { SingleModelMode: false, SyncPerceptionTrigger: false, EnablePlan: false } as Record<string, unknown>,
-  activeChat: undefined as { SessionID?: string; StartParams?: Record<string, unknown> } | undefined,
+  activeChat: undefined as
+    | { SessionID?: string; isDraftSession?: boolean; StartParams?: Record<string, unknown> }
+    | undefined,
   globalSingleModelMode: false,
   globalPresetPrompt: '',
   globalPlanPrompt: '',
@@ -177,7 +179,8 @@ describe('AIInputSettingPopover', () => {
     }
   })
 
-  it('新会话重置关闭两个开关并恢复 300 KB，保留其他设置', () => {
+  it('欢迎页草稿重置关闭两个开关并恢复 300 KB，保留其他设置', () => {
+    mocks.activeChat = { SessionID: 'draft-id', isDraftSession: true }
     mocks.setting = {
       SingleModelMode: true,
       SyncPerceptionTrigger: true,
@@ -207,7 +210,7 @@ describe('AIInputSettingPopover', () => {
   it.each(['global', 'session'] as const)('%s 锁定单模型时重置不会修改单模型设置', (lock) => {
     mocks.globalSingleModelMode = lock === 'global'
     mocks.setting.SingleModelMode = lock === 'session'
-    if (lock === 'session') mocks.activeChat = { SessionID: 'session-id' }
+    if (lock === 'session') mocks.activeChat = { SessionID: 'session-id', isDraftSession: false }
     mocks.setSetting.mockImplementation((update) => {
       mocks.setting = update(mocks.setting)
     })
@@ -308,7 +311,8 @@ describe('AIInputSettingPopover', () => {
     expect(input).toHaveValue('600')
   })
 
-  it('新会话可开启会话级单模型模式且不发送 Hotpatch', () => {
+  it('欢迎页草稿可开启会话级单模型模式且不发送 Hotpatch', () => {
+    mocks.activeChat = { SessionID: 'draft-id', isDraftSession: true }
     render(
       <AIInputSettingPopover visible>
         <button type="button">设置</button>
@@ -334,8 +338,8 @@ describe('AIInputSettingPopover', () => {
     expect(screen.getAllByRole('switch')[0]).toBeDisabled()
   })
 
-  it('已有会话不允许运行中切换', () => {
-    mocks.activeChat = { SessionID: 'existing-session' }
+  it.each([false, undefined])('已有会话禁用单模型开关（isDraftSession=%s）', (isDraftSession) => {
+    mocks.activeChat = { SessionID: 'existing-session', isDraftSession }
     render(<AIInputSettingPopover visible />)
 
     expect(screen.getAllByRole('switch')[0]).toBeDisabled()
@@ -595,7 +599,8 @@ describe('AIInputSettingPopover', () => {
           },
         },
         perception: {
-          change: () => fireEvent.click(screen.getByRole('switch', { name: 'AIReActTaskChatContent.syncPerceptionTrigger' })),
+          change: () =>
+            fireEvent.click(screen.getByRole('switch', { name: 'AIReActTaskChatContent.syncPerceptionTrigger' })),
           params: {
             IsConfigHotpatch: true,
             HotpatchType: 'SyncPerceptionTrigger',

@@ -105,6 +105,56 @@ describe('frontend allocated session identity', () => {
     expect(onRender).not.toHaveBeenCalled()
   })
 
+  it('清理未发送草稿的内存，保留仍打开的标签及其草稿', () => {
+    const discarded = controller.ensureSession('discarded')
+    const open = controller.ensureSession('open')
+    discarded.meta.pendingWelcomeInput = { qs: '未发送的首问' }
+    controller.registerDraftSession('discarded', 'closed-tab')
+    controller.registerDraftSession('open', 'open-tab')
+
+    controller.discardClosedPageDrafts(new Set(['open-tab']))
+
+    expect(controller.sessionStores.getState().has('discarded')).toBe(false)
+    expect(discarded.meta.lifecycle.current).toBe(false)
+    expect(controller.ensureSession('open')).toEqual(open)
+    const replacement = controller.ensureSession('discarded')
+    expect(replacement.request).not.toBe(discarded.request)
+    expect(replacement.rawData).not.toBe(discarded.rawData)
+    expect(replacement.meta.pendingWelcomeInput).toBeUndefined()
+    expect(aiChatPersistStore.deleteSessionPersist).not.toHaveBeenCalled()
+    expect(ipcRendererMock.invoke).not.toHaveBeenCalled()
+  })
+
+  it('首问草稿交给新标签后原页重置不清理，目标页建联前关闭才清理', () => {
+    const draft = controller.ensureSession('handoff')
+    draft.meta.pendingWelcomeInput = { qs: '首问' }
+    controller.registerDraftSession('handoff', 'welcome-tab')
+    controller.registerDraftSession('handoff', 'target-tab')
+
+    controller.discardUnsentDraft('handoff', 'welcome-tab')
+    controller.discardClosedPageDrafts(new Set(['target-tab']))
+    expect(controller.ensureSession('handoff').meta).toBe(draft.meta)
+    expect(draft.meta.pendingWelcomeInput).toEqual({ qs: '首问' })
+
+    controller.discardClosedPageDrafts(new Set(['welcome-tab']))
+    expect(controller.sessionStores.getState().has('handoff')).toBe(false)
+  })
+
+  it('草稿清理跳过建联中的数据，建联成功后由正式会话接管', async () => {
+    const draft = controller.ensureSession('client-session')
+    controller.registerDraftSession('client-session', 'page')
+    const token = await start()
+
+    controller.discardUnsentDraft('client-session', 'page')
+    expect(controller.sessionStores.getState().get('client-session')).toBe(draft.store)
+    await emit(token, 'pong', 'client-session')
+    controller.discardClosedPageDrafts(new Set())
+
+    expect(success).toHaveBeenCalledWith('client-session')
+    expect(controller.sessionStores.getState().get('client-session')).toBe(draft.store)
+    expect(controller.getSessionPageId('client-session', YakitRoute.AI_Agent)).toBe('page')
+  })
+
   it('stores KB and converts only outgoing start and hotpatch copies', async () => {
     const config = { RuntimeContextSizeLimit: 300, AICallTokenLimit: 40 }
     const input: AIChatIPCStartParams = {
