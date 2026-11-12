@@ -136,6 +136,7 @@ import {
   parseIncludeIds,
   mergeIncludeIds,
   shouldCloseViewAttach,
+  shouldIgnoreEmptyKeywordIdSearch,
   shouldNotifySameViewAttach,
   withIncludeId,
   parseMITMLogResetSignal,
@@ -2871,6 +2872,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   const [searchVal, setSearchVal] = useState<string>('')
   const [searchType, setSearchType] = useState<HistorySearchOptionType>('all')
   const applyKeywordIncludeIds = useMemoizedFn((searchValue: string) => {
+    if (shouldIgnoreEmptyKeywordIdSearch(searchValue, getKeywordIncludeIds(), viewAttachId)) return
     setKeywordIncludeIds(searchValue)
     const next = mergeIncludeIds(parseIncludeIds(getIncludeIdSearch()), parseIncludeIds(searchValue))
     if (viewAttachId) setViewAttachId(0)

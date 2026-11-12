@@ -622,6 +622,15 @@ export function shouldCloseViewAttach(mergedCount: number, viewAttachId: number)
   return mergedCount > 0 && viewAttachId > 0
 }
 
+/** 附近数据包还开着，这次 ID 搜索又没有新序号时，不要关掉附近范围。 */
+export function shouldIgnoreEmptyKeywordIdSearch(
+  searchValue: string,
+  keywordIds: string,
+  viewAttachId: number,
+): boolean {
+  return viewAttachId > 0 && !keywordIds && !parseIncludeIds(searchValue).length
+}
+
 /** 再次查看同一条附近数据包时 state 不变，需要再通知一次 MITM 头部。 */
 export function shouldNotifySameViewAttach(currentId: number, nextId: number): boolean {
   return nextId > 0 && currentId === nextId

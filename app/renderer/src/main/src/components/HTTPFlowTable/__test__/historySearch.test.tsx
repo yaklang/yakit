@@ -26,6 +26,7 @@ vi.mock('@/components/YakitCombinationSearch/YakitCombinationSearch', () => ({
       value: string
       onChange: (event: { target: { value: string } }) => void
       onSearch: () => void
+      onBlur?: () => void
     }
   }) => (
     <div>
@@ -44,6 +45,7 @@ vi.mock('@/components/YakitCombinationSearch/YakitCombinationSearch', () => ({
         aria-label="search-input"
         value={props.inputSearchModuleTypeProps.value}
         onChange={props.inputSearchModuleTypeProps.onChange}
+        onBlur={props.inputSearchModuleTypeProps.onBlur}
       />
       <button type="button" onClick={() => props.inputSearchModuleTypeProps.onSearch()}>
         search
@@ -53,6 +55,12 @@ vi.mock('@/components/YakitCombinationSearch/YakitCombinationSearch', () => ({
 }))
 
 import HistorySearch from '../components/historySearch'
+import {
+  getFullRange,
+  mergeIncludeIds,
+  parseIncludeIds,
+  shouldIgnoreEmptyKeywordIdSearch,
+} from '../HTTPFlowTable.utils'
 
 const options = [
   { label: '关键字', value: 'all' },
@@ -211,5 +219,61 @@ describe('HistorySearch type switch', () => {
     fireEvent.click(screen.getByRole('button', { name: 'search' }))
     await flushSearch()
     expect(handleSearch).toHaveBeenCalledWith('12', 'id')
+  })
+
+  it('keeps the nearby range when an empty ID input blurs, and clears it when the tag closes', async () => {
+    const nearby = getFullRange(12)
+    const Harness = () => {
+      const [viewAttachId, setViewAttachId] = useState(12)
+      const [includeId, setIncludeId] = useState<number[] | undefined>(nearby)
+      const [keywordIds, setKeywordIds] = useState('')
+      const [searchType, setSearchType] = useState<'all' | 'request' | 'response' | 'id'>('id')
+      const [searchVal, setSearchVal] = useState('')
+      return (
+        <div>
+          <output aria-label="查询序号">{(includeId || []).join(',')}</output>
+          {viewAttachId > 0 && (
+            <button
+              type="button"
+              onClick={() => {
+                setViewAttachId(0)
+                setIncludeId([])
+              }}
+            >
+              查看附近数据包
+            </button>
+          )}
+          <HistorySearch
+            showPopoverSearch={false}
+            addonBeforeOption={options}
+            searchType={searchType}
+            setSearchType={setSearchType}
+            searchVal={searchVal}
+            setSearchVal={setSearchVal}
+            handleSearch={(value, type) => {
+              if (type !== 'id') return
+              if (shouldIgnoreEmptyKeywordIdSearch(value, keywordIds, viewAttachId)) return
+              setKeywordIds(value)
+              const next = mergeIncludeIds([], parseIncludeIds(value))
+              if (viewAttachId) setViewAttachId(0)
+              setIncludeId(next.length ? next : undefined)
+            }}
+          />
+        </div>
+      )
+    }
+    render(<Harness />)
+    expect(screen.getByRole('button', { name: '查看附近数据包' })).toBeInTheDocument()
+    expect(screen.getByLabelText('查询序号')).toHaveTextContent(nearby.join(','))
+
+    fireEvent.blur(screen.getByLabelText('search-input'))
+    await flushSearch()
+
+    expect(screen.getByRole('button', { name: '查看附近数据包' })).toBeInTheDocument()
+    expect(screen.getByLabelText('查询序号')).toHaveTextContent(nearby.join(','))
+
+    fireEvent.click(screen.getByRole('button', { name: '查看附近数据包' }))
+    expect(screen.queryByRole('button', { name: '查看附近数据包' })).not.toBeInTheDocument()
+    expect(screen.getByLabelText('查询序号')).toHaveTextContent('')
   })
 })

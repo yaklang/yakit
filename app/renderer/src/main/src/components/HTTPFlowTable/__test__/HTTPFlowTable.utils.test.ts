@@ -26,6 +26,7 @@ import {
   resolveMitmViewAttachNotice,
   shouldClearHistorySearchInput,
   shouldCloseViewAttach,
+  shouldIgnoreEmptyKeywordIdSearch,
   shouldNotifySameViewAttach,
   withIncludeId,
   resolveHTTPFlowTableBatchSelection,
@@ -141,6 +142,14 @@ describe('view attach search transitions', () => {
     expect(shouldCloseViewAttach(2, 8)).toBe(true)
     expect(shouldCloseViewAttach(0, 8)).toBe(false)
     expect(shouldCloseViewAttach(2, 0)).toBe(false)
+  })
+
+  it('keeps the nearby range when an empty ID search has no keyword ids', () => {
+    expect(shouldIgnoreEmptyKeywordIdSearch('', '', 12)).toBe(true)
+    expect(shouldIgnoreEmptyKeywordIdSearch('abc', '', 12)).toBe(true)
+    expect(shouldIgnoreEmptyKeywordIdSearch('5', '', 12)).toBe(false)
+    expect(shouldIgnoreEmptyKeywordIdSearch('', '5', 12)).toBe(false)
+    expect(shouldIgnoreEmptyKeywordIdSearch('', '', 0)).toBe(false)
   })
 
   it('notifies MITM again only when opening the same nearby packet', () => {
