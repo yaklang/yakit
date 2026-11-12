@@ -8,13 +8,13 @@ main {
   max-width: 960px;
   height: calc(100vh - 48px);
   overflow: auto;
+  display: flex;
+  flex-direction: column;
 }
 .composer {
-  position: absolute;
-  top: 160px;
-  bottom: 28px;
-  left: 16px;
-  right: 16px;
+  position: relative;
+  margin-top: auto;
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
