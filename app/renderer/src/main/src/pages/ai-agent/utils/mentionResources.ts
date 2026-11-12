@@ -12,16 +12,15 @@ export const getResourceInfoByMention = (mention: AIMentionCommandParams): Attac
         Value: mention.mentionName,
       }
     case 'forge':
-      return {
-        Type: AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_AIFORGE,
-        Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_NAME,
-        Value: mention.mentionName,
-      }
     case 'tool':
       return {
-        Type: AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_AITOOL,
+        Type:
+          mention.mentionType === 'forge'
+            ? AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_AIFORGE
+            : AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_AITOOL,
         Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_NAME,
-        Value: mention.mentionName,
+        // 兼容只保存了 mentionName 的旧提及节点。
+        Value: mention.name || mention.mentionName,
       }
     case 'knowledgeBase':
       if (mention.mentionId === '@所有知识库') {

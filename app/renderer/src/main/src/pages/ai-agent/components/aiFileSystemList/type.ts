@@ -40,6 +40,7 @@ export interface FileTreeSystemListProps {
   isOpen?: boolean
   /** 撑满父容器并启用 Tree 虚拟滚动；默认 false，直连调用方需显式传入（多根场景勿开） */
   fillHeight?: boolean
+  searchQuery?: string
   selected?: FileTreeSystemListWrapperProps['selected']
   setSelected: FileTreeSystemListWrapperProps['setSelected']
   onTreeDragStart?: FileTreeSystemListWrapperProps['onTreeDragStart']

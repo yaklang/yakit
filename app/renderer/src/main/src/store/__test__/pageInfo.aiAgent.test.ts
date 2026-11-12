@@ -85,6 +85,28 @@ describe('AI pageInfo route persistence through existing actions', () => {
     expect(kv.set).not.toHaveBeenCalled()
   })
 
+  it('keeps a draft tab in memory and persists it only after the session connects', async () => {
+    const store = api.usePageInfo.getState()
+    const draft = {
+      ...node('new-ai'),
+      pageParamsInfo: { aiAgentPageInfo: { session: { ...session, isDraftSession: true } } },
+    }
+    store.addPagesDataCache(YakitRoute.AI_Agent, draft)
+    await vi.advanceTimersByTimeAsync(500)
+
+    expect(store.queryPagesDataById(YakitRoute.AI_Agent, draft.pageId)).toEqual(draft)
+    expect(savedPages()).toEqual([])
+
+    const connected = {
+      ...draft,
+      pageParamsInfo: { aiAgentPageInfo: { session: { ...session, isDraftSession: false } } },
+    }
+    store.updatePagesDataCacheById(YakitRoute.AI_Agent, connected)
+    await vi.advanceTimersByTimeAsync(500)
+
+    expect(savedPages()).toEqual([connected])
+  })
+
   it('debounces title changes for 500ms and saves the latest page and session title', async () => {
     const store = api.usePageInfo.getState()
     const page = node('ai-one')

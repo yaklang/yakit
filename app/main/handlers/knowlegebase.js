@@ -9,6 +9,18 @@ const { ipcMain } = require('electron')
 // const https = require("https")
 
 module.exports = (win, getClient) => {
+  ipcMain.handle('QueryKnowledgeBase', (e, params) => {
+    return new Promise((resolve, reject) => {
+      getClient().QueryKnowledgeBase(params, (err, data) => {
+        if (err) {
+          reject(err)
+          return
+        }
+        resolve(data)
+      })
+    })
+  })
+
   const handlerHelper = require('./handleStreamWithContext')
   // asyncBuildVectorIndexForKnowledgeBase wrapper
   const asyncBuildVectorIndexForKnowledgeBase = (params) => {

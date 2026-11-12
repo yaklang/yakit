@@ -1,35 +1,5 @@
 .list {
-  --browser-card-gap: 8px;
-
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(max(250px, calc((100% - 2 * var(--browser-card-gap)) / 2)), 1fr));
-  align-content: start;
-  gap: var(--browser-card-gap);
   min-height: 0;
   overflow: auto;
   padding: 4px 8px;
-
-  .remove:global(.yakit.ant-btn.ant-btn-icon-only) {
-    flex-shrink: 0;
-    border: 0;
-
-    svg {
-      color: var(--Colors-Use-Neutral-Text-4-Help-text);
-    }
-
-    &:not(:disabled):hover {
-      background: var(--Colors-Use-Error-Bg);
-
-      svg {
-        color: var(--Colors-Use-Error-Primary);
-      }
-    }
-  }
-}
-
-.empty {
-  grid-column: 1 / -1;
-  padding: 16px;
-  color: var(--Colors-Use-Neutral-Text-4-Help-text);
-  text-align: center;
 }

@@ -243,7 +243,7 @@
     "addedKnowledgeBases": "已添加知识库",
     "addedOtherMaterials": "其他已添加资料",
     "goToAdd": "去添加",
-    "searchMaterials": "搜索可添加到会话的资料…",
+    "searchMaterials": "请输入关键字搜索",
     "contextHint": "添加的资料会作为当前会话的上下文优先使用",
     "attachment": "添加附件",
     "attachments": "附件",
@@ -461,6 +461,11 @@
     "browser": "浏览器实例"
   },
   "AIMentionTabs": {
+    "recent": "近期添加",
+    "search": "搜索你想引用的资源…",
+    "searchEmpty": "搜索为空",
+    "files": "文件",
+    "viewMore": "查看更多",
     "all": "全部",
     "skill": "技能",
     "tool": "工具",

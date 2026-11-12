@@ -48,6 +48,7 @@ vi.mock('../../template/template', () => ({
     return (
       <div>
         <div data-testid="scenario-capabilities" data-enabled={props.showScenarioCapabilities} />
+        <div data-testid="mention-filter" data-filter={props.filterMentionType?.join(',')} />
         <button onClick={() => setRevision(1)}>更换输入框 ref</button>
         <button onClick={() => props.onHttpFlowRemove?.('101', false)}>删除单条流量</button>
         <button onClick={() => props.onHttpFlowRemove?.('101,102', true)}>删除聚合流量</button>
@@ -139,6 +140,11 @@ describe('AIChatWelcome 输入框转发', () => {
   it('在欢迎页开启场景能力入口', () => {
     render(<AIChatWelcome onTriageSubmit={vi.fn()} onSetReAct={vi.fn()} />)
     expect(screen.getByTestId('scenario-capabilities')).toHaveAttribute('data-enabled', 'true')
+  })
+
+  it('在欢迎页隐藏近期添加 Tab', () => {
+    render(<AIChatWelcome onTriageSubmit={vi.fn()} onSetReAct={vi.fn()} />)
+    expect(screen.getByTestId('mention-filter')).toHaveAttribute('data-filter', 'recent')
   })
 
   it('首次发送原样转发输入框提供的会话 ID', () => {

@@ -4,6 +4,7 @@ import type { AISession } from '@/pages/ai-agent/type/aiChat'
 import type { AIChatTextareaRefProps } from '@/pages/ai-agent/template/type'
 import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
 import { formatAIAgentSetting, getAIReActRequestParams } from '@/pages/ai-agent/utils'
+import { syncAIAgentPageInfo } from '@/pages/ai-agent/utils/syncAIAgentPageInfo'
 import { AISourceEnum, type AIInputEvent, type AIStartParams } from './grpcApi'
 import type { AIHandleStartResProps, AIReActChatProps } from '../aiReActChat/AIReActChatType'
 import { randomString } from '@/utils/randomUtil'
@@ -90,10 +91,20 @@ export function useStartAIChat({
             StartParams: { ...params.Params, TimelineSessionID: id, UserQuery: '' },
             TitleInitialized: false,
             Source: request.Source ?? 'ai',
+            isDraftSession: false,
             isCreate: true,
           }
-          // 用户已切走时只更新历史列表；仍在查看本次提交时，才激活绑定后的会话。
-          if (foreground) setActiveChat(newChat)
+          if (foreground) {
+            setActiveChat(newChat)
+          } else {
+            // 后台建联成功后直接更新原标签，使会话可以写入项目缓存。
+            syncAIAgentPageInfo({
+              sessionId: id,
+              title: newChat.Title,
+              aiAgentPageInfo: { session: newChat },
+              emitSessionData: false,
+            })
+          }
           emiter.emit(
             'sessionData',
             JSON.stringify({ type: 'prependSession', payload: { ...newChat, isCreate: false } }),

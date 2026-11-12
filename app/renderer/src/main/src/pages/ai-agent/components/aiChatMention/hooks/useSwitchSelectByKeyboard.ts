@@ -44,7 +44,7 @@ function useSwitchSelectByKeyboard<T>(
       onUpArrow()
     },
     {
-      target: getContainer ? getContainer() : undefined,
+      target: getContainer,
       exactMatch: true,
       useCapture: true,
     },
@@ -57,7 +57,7 @@ function useSwitchSelectByKeyboard<T>(
       onDownArrow()
     },
     {
-      target: getContainer ? getContainer() : undefined,
+      target: getContainer,
       exactMatch: true,
       useCapture: true,
     },
@@ -65,6 +65,7 @@ function useSwitchSelectByKeyboard<T>(
   useKeyPress(
     active ? 'enter' : () => false,
     (e) => {
+      if (e.target instanceof Element && e.target.closest('button')) return
       if (
         !shouldInterceptMentionEnter({
           enabled,
@@ -80,7 +81,7 @@ function useSwitchSelectByKeyboard<T>(
       onEnterKey()
     },
     {
-      target: getContainer ? getContainer() : undefined,
+      target: getContainer,
       exactMatch: true,
       useCapture: true,
     },

@@ -611,6 +611,8 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                 onUpdateContent={onUpdateContent}
                 onMemfitExtra={onMemfitExtra}
                 filterMode={filterMentionType}
+                materials={[...selectedMaterials, ...visibleInlineMaterials]}
+                focusMode={focusMode}
                 chatDataStoreKey={chatDataStoreKey}
               />
               <div className={styles['footer']}>

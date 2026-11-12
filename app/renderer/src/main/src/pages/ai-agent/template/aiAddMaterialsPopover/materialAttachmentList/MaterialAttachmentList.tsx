@@ -3,7 +3,6 @@ import type { FC } from 'react'
 import { useDeepCompareEffect, useRequest } from 'ahooks'
 import numeral from 'numeral'
 import { PaperClipOutlined, PlusSmOutlined, TrashOutlined } from '@yakit-libs/yakit-ui-icons/outline'
-import { getLocalFileLinkInfo } from '@/components/MilkdownEditor/CustomFile/utils'
 import { imgTypes } from '@/components/MilkdownEditor/utils/utils'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -12,6 +11,7 @@ import { FileExcelIcon, FilePdfIcon, FilePptIcon, FileUnknownIcon, FileWordIcon 
 import { MAX_ATTACHMENTS_PER_BATCH } from '../../type'
 import MaterialListPanel from '../materialListPanel/MaterialListPanel'
 import type { MaterialAttachmentListProps } from './type'
+import { loadAttachmentSizes } from './attachmentSizes'
 import styles from './MaterialAttachmentList.module.scss'
 
 const fileIcons = new Map([
@@ -29,22 +29,7 @@ const MaterialAttachmentList: FC<MaterialAttachmentListProps> = ({ attachments, 
   const [search, setSearch] = useState('')
   const [failedImagePaths, setFailedImagePaths] = useState(() => new Set<string>())
   const paths = attachments.map((attachment) => attachment.mentionId).filter((path) => !path.startsWith('blob:'))
-  const { data: sizes = {}, run: loadSizes } = useRequest(
-    async (filePaths: string[]) => {
-      const entries = await Promise.all(
-        filePaths.map(async (path): Promise<[string, number | undefined]> => {
-          try {
-            const info = await getLocalFileLinkInfo(path, true)
-            return [path, info.size]
-          } catch {
-            return [path, undefined]
-          }
-        }),
-      )
-      return Object.fromEntries(entries)
-    },
-    { manual: true },
-  )
+  const { data: sizes = {}, run: loadSizes } = useRequest(loadAttachmentSizes, { manual: true })
   useDeepCompareEffect(() => {
     loadSizes(paths)
   }, [paths])

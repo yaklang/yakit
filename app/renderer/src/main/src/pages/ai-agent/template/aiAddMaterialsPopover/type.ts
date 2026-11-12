@@ -3,7 +3,7 @@ import type { ReactElement, ReactNode } from 'react'
 import type { AIChatMentionProps } from '../../components/aiChatMention/type'
 import type { AIMentionCommandParams } from '../../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
 import type { AIMentionTabsEnum } from '../../defaultConstant'
-import type { AIEnabledCapability } from '@/pages/ai-re-act/hooks/grpcApi'
+import type { AIEnabledCapability, AIOutputI18n } from '@/pages/ai-re-act/hooks/grpcApi'
 
 export type MaterialCategory = Extract<
   AIMentionCommandParams['mentionType'],
@@ -21,7 +21,9 @@ export interface MaterialOption {
   id: string
   name: string
   description?: string
-  forgeName?: string
+  originalName?: string
+  verboseNameI18n?: AIOutputI18n
+  knowledgeIndex?: number
 }
 
 export interface MaterialPanelHeader {

@@ -1,4 +1,4 @@
-import { createElement, Fragment, useLayoutEffect, useState } from 'react'
+import { useLayoutEffect, useState } from 'react'
 import type { FC } from 'react'
 import { useMemoizedFn, useRequest } from 'ahooks'
 import { FlowOutlined, ShieldExclamationOutlined, Wrench1Outlined } from '@yakit-libs/yakit-ui-icons/outline'
@@ -10,7 +10,7 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import type { AIEnabledCapability, AIReActRecommendedSkill } from '@/pages/ai-re-act/hooks/grpcApi'
 import { getMainOperatorPageBodyContainerOrBody } from '@/utils/getMainOperatorPageBodyContainer'
 import { yakitNotify } from '@/utils/notification'
-import { ColorsSkillIcon } from '../../../aiChatWelcome/icon'
+import { ColorsCapabilityIcon } from '../../../aiChatWelcome/icon'
 import {
   grpcGetAIReActRecommendedSkills,
   grpcResetAIReActRecommendedSkill,
@@ -26,13 +26,13 @@ const getIconByName = (name: string) => {
   const outlineProps = { size: 16, color: 'var(--Colors-Use-Neutral-Text-3-Secondary)' }
   switch (name) {
     case 'code-review':
-      return createElement(ColorsPreViewMDIcon)
+      return <ColorsPreViewMDIcon />
     case 'security-engineering':
-      return createElement(ShieldExclamationOutlined, outlineProps)
+      return <ShieldExclamationOutlined {...outlineProps} />
     case 'pentest-task-design':
-      return createElement(FlowOutlined, outlineProps)
+      return <FlowOutlined {...outlineProps} />
     default:
-      return createElement(Wrench1Outlined, outlineProps)
+      return <Wrench1Outlined {...outlineProps} />
   }
 }
 
@@ -106,7 +106,7 @@ const MaterialCapabilitiesPanel: FC<MaterialCapabilitiesPanelProps> = ({ onEnabl
         key: 'capabilities',
         label,
         title: label,
-        icon: createElement(ColorsSkillIcon),
+        icon: <ColorsCapabilityIcon />,
         count: capabilities.filter((item) => selectedCapabilityKeys?.includes(capabilityKey(item))).length,
         rows: capabilities.map((item) => {
           const key = capabilityKey(item)
@@ -125,43 +125,33 @@ const MaterialCapabilitiesPanel: FC<MaterialCapabilitiesPanelProps> = ({ onEnabl
       }
     : undefined
 
-  return createElement(
-    Fragment,
-    null,
-    children(group),
-    createElement(
-      YakitModal,
-      {
-        open: !!editingSkill,
-        title: editingSkill ? getDisplayName(editingSkill) : undefined,
-        width: 700,
-        maskClosable: false,
-        centered: true,
-        confirmLoading: editLoading,
-        onOk: handleSave,
-        onCancel: () => {
+  return (
+    <>
+      {children(group)}
+      <YakitModal
+        open={!!editingSkill}
+        title={editingSkill ? getDisplayName(editingSkill) : undefined}
+        width={700}
+        maskClosable={false}
+        centered
+        confirmLoading={editLoading}
+        onOk={handleSave}
+        onCancel={() => {
           if (!editLoading) setEditingSkill(undefined)
-        },
-        getContainer: getMainOperatorPageBodyContainerOrBody,
-        footerExtra: createElement(
-          YakitButton,
-          { type: 'outline2', disabled: editLoading, onClick: handleReset },
-          '恢复默认',
-        ),
-        destroyOnHidden: true,
-      },
-      createElement(
-        'div',
-        { className: styles['edit-skill-modal'] },
-        createElement(YakitEditor, {
-          type: 'markdown',
-          value: editContent,
-          setValue: setEditContent,
-          noMiniMap: true,
-          noLineNumber: true,
-        }),
-      ),
-    ),
+        }}
+        getContainer={getMainOperatorPageBodyContainerOrBody}
+        footerExtra={
+          <YakitButton type="outline2" disabled={editLoading} onClick={handleReset}>
+            恢复默认
+          </YakitButton>
+        }
+        destroyOnHidden
+      >
+        <div className={styles['edit-skill-modal']}>
+          <YakitEditor type="markdown" value={editContent} setValue={setEditContent} noMiniMap noLineNumber />
+        </div>
+      </YakitModal>
+    </>
   )
 }
 

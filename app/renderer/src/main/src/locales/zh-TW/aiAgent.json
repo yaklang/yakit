@@ -243,7 +243,7 @@
     "addedKnowledgeBases": "已新增知識庫",
     "addedOtherMaterials": "其他已新增資料",
     "goToAdd": "去新增",
-    "searchMaterials": "搜尋可新增至對話的資料…",
+    "searchMaterials": "請輸入關鍵字搜尋",
     "contextHint": "新增的資料會優先用作目前對話的上下文",
     "attachment": "新增附件",
     "attachments": "附件",
@@ -461,6 +461,11 @@
     "browser": "瀏覽器例項"
   },
   "AIMentionTabs": {
+    "searchEmpty": "搜尋為空",
+    "recent": "近期新增",
+    "search": "搜尋你想引用的資源…",
+    "files": "檔案",
+    "viewMore": "查看更多",
     "all": "全部",
     "skill": "技能",
     "tool": "工具",

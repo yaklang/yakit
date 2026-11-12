@@ -1225,6 +1225,7 @@ export class ChatMultiSessionController {
    */
   public handleStartSession(requestParams: AIChatIPCStartParams, cb?: StartCallbacks): string | false {
     const { params, route, pageId, localSource, kind } = requestParams
+    console.log('handleStartSession', params)
     // 由 kind 明确区分新旧会话，避免配置中残留的 ID 将新建误判为重连。
     const sessionId = requestParams.sessionId.trim()
     if (!sessionId) return false
@@ -1351,7 +1352,7 @@ export class ChatMultiSessionController {
 
   /** 主动向grpc发送请求；达并发上限时返回 false，不改动当前会话内容 */
   public handleSendMessage(payload: AIChatSendParams): boolean {
-    // console.log('handleSendMessage', payload)
+    console.log('handleSendMessage', payload)
     try {
       const { token, type, params, optionValue } = payload
       // 只读同步查询（如弹窗打开时拉取用量）没有用户输入，守卫拦截时不应弹出面向发送操作的警告

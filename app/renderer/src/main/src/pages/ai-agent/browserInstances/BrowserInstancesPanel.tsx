@@ -10,6 +10,7 @@ import {
   PaperAirplaneOutlined,
   RefreshOutlined,
   PositionOutlined,
+  TrashOutlined,
   XOutlined,
   InformationCircleOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
@@ -228,12 +229,12 @@ const BrowserCardPreview: React.FC<{
 
 export interface BrowserInstanceCardProps {
   instance: AIBrowserInstance
-  actions?: React.ReactNode
+  removal?: { name: string; disabled?: boolean; onRemove: () => void }
   variant?: 'material'
 }
 
-export const BrowserInstanceCard: React.FC<BrowserInstanceCardProps> = ({ instance, actions, variant }) => {
-  const { t } = useI18nNamespaces(['aiAgent'])
+export const BrowserInstanceCard: React.FC<BrowserInstanceCardProps> = ({ instance, removal, variant }) => {
+  const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const isMaterial = variant === 'material'
   const [focusing, setFocusing] = useState(false)
   const thumbnailKey = thumbnailCacheKey(instance)
@@ -363,9 +364,18 @@ export const BrowserInstanceCard: React.FC<BrowserInstanceCardProps> = ({ instan
             {instance.tab?.title || instance.name}
           </span>
           <div className={styles['card-actions']}>
-            {actions !== undefined ? (
-              actions
-            ) : (
+            {removal && (
+              <YakitButton
+                className={styles.remove}
+                type="text2"
+                size="small"
+                icon={<TrashOutlined size={16} color="currentColor" />}
+                aria-label={`${t('YakitButton.delete')} ${removal.name}`}
+                disabled={removal.disabled}
+                onClick={removal.onRemove}
+              />
+            )}
+            {!isMaterial && !removal && (
               <>
                 <YakitButton
                   type="text2"
@@ -387,11 +397,7 @@ export const BrowserInstanceCard: React.FC<BrowserInstanceCardProps> = ({ instan
           </div>
         </div>
         <div className={styles['instance-url-row']} title={instance.tab?.url || instance.origin}>
-          {isMaterial && !instance.tab?.favIconUrl && instance.client ? (
-            <BrowserClientIcon client={instance.client} size={16} />
-          ) : (
-            <BrowserFavicon src={instance.tab?.favIconUrl} />
-          )}
+          <BrowserFavicon src={instance.tab?.favIconUrl} />
           <span className={styles['instance-url']}>
             {instance.tab?.url || (instance.online ? t('BrowserInstances.noAuthorizedPage') : instance.origin)}
           </span>

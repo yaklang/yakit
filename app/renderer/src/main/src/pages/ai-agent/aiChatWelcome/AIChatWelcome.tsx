@@ -109,6 +109,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
                   ref={aiChatTextareaRef}
                   onSubmit={onTriageSubmit}
                   showScenarioCapabilities
+                  filterMentionType={['recent']}
                   selectedHttpFlowIds={props.selectedHttpFlowIds}
                   selectedRiskIds={props.selectedRiskIds}
                   onHttpFlowRemove={props.onHttpFlowRemove}

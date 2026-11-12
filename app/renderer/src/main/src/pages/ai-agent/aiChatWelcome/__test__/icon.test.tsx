@@ -1,6 +1,7 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
+  ColorsCapabilityIcon,
   ColorsFileSystemIcon,
   ColorsFlowIcon,
   ColorsKnowledgeBaseIcon,
@@ -15,6 +16,7 @@ const icons = [
   ['file-system', ColorsFileSystemIcon],
   ['knowledge-base', ColorsKnowledgeBaseIcon],
   ['skill', ColorsSkillIcon],
+  ['capability', ColorsCapabilityIcon],
   ['tool', ColorsToolIcon],
 ] as const
 

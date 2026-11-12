@@ -243,7 +243,7 @@
     "addedKnowledgeBases": "Added knowledge bases",
     "addedOtherMaterials": "Other added materials",
     "goToAdd": "Add more",
-    "searchMaterials": "Search for sources to chat with…",
+    "searchMaterials": "Enter a keyword to search",
     "contextHint": "All added materials are used as context for the current conversation.",
     "attachment": "Add attachments",
     "attachments": "Attachments",
@@ -461,6 +461,11 @@
     "browser": "Browser Instance"
   },
   "AIMentionTabs": {
+    "recent": "Recently Added",
+    "search": "Search resources to reference…",
+    "searchEmpty": "No search results",
+    "files": "Files",
+    "viewMore": "View More",
     "all": "All",
     "skill": "Skill",
     "tool": "Tool",

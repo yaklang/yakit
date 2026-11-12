@@ -5,6 +5,8 @@ import type {
   DeleteAIToolRequest,
   GetAIToolListRequest,
   GetAIToolListResponse,
+  QueryAIToolRequest,
+  QueryAIToolResponse,
   ToggleAIToolFavoriteRequest,
   ToggleAIToolFavoriteResponse,
 } from '../type/aiTool'
@@ -22,6 +24,12 @@ export const grpcGetAIToolList: APIFunc<GetAIToolListRequest, GetAIToolListRespo
       })
   })
 }
+
+export const grpcQueryAITool: APIFunc<QueryAIToolRequest, QueryAIToolResponse> = (params, hiddenError) =>
+  ipcRenderer.invoke('QueryAITool', params).catch((error) => {
+    if (!hiddenError) yakitNotify('error', '查询 AI 工具失败:' + error)
+    throw error
+  })
 
 export const grpcGetAIToolById: APIFunc<number, AITool | null> = (toolId, hiddenError) => {
   return new Promise((resolve, reject) => {

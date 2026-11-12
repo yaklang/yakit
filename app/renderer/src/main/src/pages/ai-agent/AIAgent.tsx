@@ -174,8 +174,11 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
     // 同步绑定，确保随后回放的首个标题事件可以按 SessionID 找到页面。
     const { pages, queryPagesDataById } = usePageInfo.getState()
     const node = queryPagesDataById(YakitRoute.AI_Agent, pageId)
-    const sameSession = node?.pageParamsInfo.aiAgentPageInfo?.session?.SessionID === session.SessionID
-    if (node && !sameSession) {
+    const cachedSession = node?.pageParamsInfo.aiAgentPageInfo?.session
+    const sameSession = cachedSession?.SessionID === session.SessionID
+    // 首次建联沿用草稿的 SessionID，标签缓存仍需同步会话状态。
+    const draftBound = cachedSession?.isDraftSession && !session.isDraftSession
+    if (node && (!sameSession || draftBound)) {
       let title = session.Title
       // 固定入口保留菜单名，额外标签按当前 AI Tab 数量重置名称。
       if (session.isDraftSession) {

@@ -1,0 +1,31 @@
+.list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: start;
+  gap: 8px;
+}
+
+.item {
+  display: grid;
+  min-width: 0;
+
+  &[role='option'] {
+    cursor: pointer;
+
+    &:hover > div {
+      border-color: var(--Colors-Use-Main-Border);
+    }
+
+    &[aria-selected='true'] > div {
+      border-color: var(--Colors-Use-Main-Primary);
+      background: var(--Colors-Use-Main-Bg-Hover);
+    }
+  }
+}
+
+.empty {
+  grid-column: 1 / -1;
+  padding: 16px;
+  color: var(--Colors-Use-Neutral-Text-4-Help-text);
+  text-align: center;
+}

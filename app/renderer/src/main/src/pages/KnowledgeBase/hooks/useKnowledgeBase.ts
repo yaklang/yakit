@@ -26,6 +26,9 @@ interface KnowledgeBaseStoreProps {
   /** 获取指定知识库 */
   getKnowledgeBase: (id: string) => KnowledgeBaseItem | undefined
 
+  /** 按知识库名称搜索，并返回命中项在全量缓存中的索引。 */
+  searchKnowledgeBases: (keyword: string) => { item: KnowledgeBaseItem; index: number }[]
+
   /** 清空所有知识库 */
   clearAll: () => void
 
@@ -92,6 +95,13 @@ export const useKnowledgeBase = create<KnowledgeBaseStoreProps>((set, get) => ({
     }),
 
   getKnowledgeBase: (id) => get().knowledgeBases.find((kb) => kb.ID === id),
+
+  searchKnowledgeBases: (keyword) => {
+    const query = keyword.trim().toLowerCase()
+    return get().knowledgeBases.flatMap((item, index) =>
+      item.KnowledgeBaseName.toLowerCase().includes(query) ? [{ item, index }] : [],
+    )
+  },
 
   clearAll: () =>
     set(() => ({
