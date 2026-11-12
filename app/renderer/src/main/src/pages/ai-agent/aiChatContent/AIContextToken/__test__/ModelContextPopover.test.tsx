@@ -96,6 +96,37 @@ describe('composer model context popover', () => {
       prompt_tokens: 0,
     }))
   })
+  it.each([false, true])('submits exactly 100K despite a stale 102400 minimum: executing=%s', async (executing) => {
+    const legacy = { ...runtime, threshold_tokens: 102400, minimum_threshold_tokens: 102400 }
+    sessionStore.setState({ execute: executing })
+    mocks.sessionId = executing ? 'session' : ''
+    mocks.perf = executing ? legacy : null
+    mocks.onSend.mockReturnValue(true)
+    mocks.request.mockImplementation(async (identity, tokens) => ({
+      ...legacy,
+      ...identity,
+      threshold_tokens: tokens ?? legacy.threshold_tokens,
+    }))
+    render(<ModelContextPopover />)
+    const slider = await screen.findByRole('slider')
+    expect(slider).toHaveAttribute('aria-valuenow', '102400')
+    fireEvent.keyDown(slider, { key: 'Home' })
+    if (executing) {
+      expect(mocks.onSend).toHaveBeenCalledWith(
+        expect.objectContaining({
+          params: expect.objectContaining({
+            Params: expect.objectContaining({ RuntimeContextSizeLimit: 100000 }),
+          }),
+        }),
+      )
+    } else {
+      await waitFor(() =>
+        expect(mocks.request).toHaveBeenLastCalledWith({ provider: 'openai', model: 'selected' }, 100000),
+      )
+    }
+    await waitFor(() => expect(slider).toHaveAttribute('aria-valuenow', '100000'))
+  })
+
   it('saves the automatic adjustment switch for the selected model before a session', async () => {
     let disabled = false
     mocks.request.mockImplementation(async (identity, threshold, mode) => {

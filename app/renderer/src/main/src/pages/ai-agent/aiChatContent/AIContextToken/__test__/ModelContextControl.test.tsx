@@ -32,6 +32,32 @@ const preparePointer = () => {
   return slider
 }
 describe('model context slider', () => {
+  it.each([undefined, 100000, 102400])('keeps the global 100K floor with reported minimum %s', (minimum) => {
+    const onChange = vi.fn(() => true)
+    render(
+      <ModelContextControl
+        context={{ ...context, threshold_tokens: 102400, minimum_threshold_tokens: minimum }}
+        onChange={onChange}
+      />,
+    )
+    const slider = preparePointer()
+    const input = screen.getByRole('spinbutton')
+    expect(screen.getByText('100K', { exact: true })).toBeInTheDocument()
+    expect(slider).toHaveAttribute('aria-valuemin', '100000')
+    expect(input).toHaveAttribute('min', '100')
+    expect(input).toHaveValue(102.4)
+    expect(onChange).not.toHaveBeenCalled()
+    fireEvent.keyDown(slider, { key: 'Home' })
+    expect(onChange).toHaveBeenLastCalledWith(100000)
+    fireEvent.change(input, { target: { value: '99' } })
+    fireEvent.blur(input)
+    expect(onChange).toHaveBeenLastCalledWith(100000)
+    fireEvent.pointerDown(slider, { button: 0, clientX: 10 })
+    fireEvent.pointerMove(slider, { clientX: -200 })
+    fireEvent.pointerUp(slider)
+    expect(onChange).toHaveBeenLastCalledWith(100000)
+  })
+
   it.each([512000, 102400, 104857, 1024000])('preserves the exact saved %i tokens until an explicit edit', (tokens) => {
     const onChange = vi.fn(() => true)
     render(<ModelContextControl context={{ ...context, threshold_tokens: tokens }} onChange={onChange} />)
