@@ -54,6 +54,7 @@ import {
   onRemoveCalloutColor,
   onSendToTab,
   parseIncludeIds,
+  mergeIncludeIds,
   RangeInputNumberTableWrapper,
   SearchInputTableWrapper,
   isHTTPFlowFavorite,
@@ -61,7 +62,7 @@ import {
   toggleHTTPFlowFavorite,
   type YakQueryHTTPFlowResponse,
 } from '@/components/HTTPFlowTable/HTTPFlowTable'
-import type { YakQueryHTTPFlowRequest } from '@/utils/yakQueryHTTPFlow'
+import type { YakQueryHTTPFlowRequest, HistorySearchOptionType } from '@/utils/yakQueryHTTPFlow'
 import type {
   ColumnsTypeProps,
   FiltersItemProps,
@@ -830,6 +831,9 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
   /** ---- id start ----*/
   const [, setIdSort, getIdSort] = useGetSetState<'asc' | 'desc' | false>(false)
   const [, setIncludeIdSearch, getIncludeIdSearch] = useGetSetState('')
+  const [, setKeywordIncludeIds, getKeywordIncludeIds] = useGetSetState('')
+  const [searchVal, setSearchVal] = useState('')
+  const [searchType, setSearchType] = useState<HistorySearchOptionType>('all')
   const onIdSort = useMemoizedFn((sort: 'asc' | 'desc') => {
     const newSort = getIdSort() === sort ? false : sort
     if (newSort) {
@@ -848,13 +852,38 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
   })
   const onIncludeIdSearchSure = useMemoizedFn(() => {
     const ids = parseIncludeIds(getIncludeIdSearch())
+    const merged = mergeIncludeIds(ids, parseIncludeIds(getKeywordIncludeIds()))
     setQuery((prev) => {
       const nextQuery = {
         ...prev,
         idFilter: !!(getIdSort() || ids.length),
       }
-      if (ids.length) {
-        nextQuery.IncludeId = ids
+      if (merged.length) {
+        nextQuery.IncludeId = merged
+      } else {
+        delete nextQuery.IncludeId
+      }
+      return nextQuery
+    })
+  })
+  const clearKeywordSearch = useMemoizedFn(() => {
+    setQuery((prev) => {
+      if (!prev.Keyword && !prev.KeywordType) return prev
+      return {
+        ...prev,
+        Keyword: undefined,
+        KeywordType: undefined,
+      }
+    })
+  })
+  const clearKeywordIncludeIds = useMemoizedFn(() => {
+    if (!getKeywordIncludeIds()) return
+    setKeywordIncludeIds('')
+    const next = parseIncludeIds(getIncludeIdSearch())
+    setQuery((prev) => {
+      const nextQuery = { ...prev }
+      if (next.length) {
+        nextQuery.IncludeId = next
       } else {
         delete nextQuery.IncludeId
       }
@@ -887,14 +916,17 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
       setIdSort(false)
     }
     setQuery((prev) => {
-      const searchIds = parseIncludeIds(getIncludeIdSearch())
+      const mergedIncludeIds = mergeIncludeIds(
+        parseIncludeIds(getIncludeIdSearch()),
+        parseIncludeIds(getKeywordIncludeIds()),
+      )
       const newQuery = {
         ...prev,
         ...filter,
         Tags: buildHTTPFlowQueryTags([...tagsFilter], onlyFavorite),
         bodyLength: !!(afterBodyLength || beforeBodyLength || getBodyLengthSort() || checkBodyLength), // 主要是用来响应长度icon显示颜色
         idFilter: !!(getIdSort() || getIncludeIdSearch()), // 主要是用来ID icon显示颜色
-        IncludeId: searchIds.length ? searchIds : [],
+        IncludeId: mergedIncludeIds,
       }
 
       if (filter['ContentType']) {
@@ -2734,7 +2766,13 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                   </YakitSelect>
                 </div>
                 <HistorySearch
+                  searchVal={searchVal}
+                  setSearchVal={setSearchVal}
+                  searchType={searchType}
+                  setSearchType={setSearchType}
                   showPopoverSearch={size?.width ? size?.width <= 1200 : true}
+                  onEnterIdSearch={clearKeywordSearch}
+                  onLeaveIdSearch={clearKeywordIncludeIds}
                   addonBeforeOption={[
                     {
                       label: t('HistorySearch.keyword'),
@@ -2748,8 +2786,29 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                       label: t('HistorySearch.response'),
                       value: 'response',
                     },
+                    {
+                      label: t('HistorySearch.id'),
+                      value: 'id',
+                    },
                   ]}
                   handleSearch={useMemoizedFn((searchValue, searchType) => {
+                    if (searchType === 'id') {
+                      setKeywordIncludeIds(searchValue)
+                      const merged = mergeIncludeIds(
+                        parseIncludeIds(getIncludeIdSearch()),
+                        parseIncludeIds(searchValue),
+                      )
+                      setQuery((prev) => {
+                        const nextQuery = { ...prev }
+                        if (merged.length) {
+                          nextQuery.IncludeId = merged
+                        } else {
+                          delete nextQuery.IncludeId
+                        }
+                        return nextQuery
+                      })
+                      return
+                    }
                     setQuery((prev) => {
                       return {
                         ...prev,

@@ -73,7 +73,7 @@
   "HTTPFlowTable": {
     "requestDetailsNotFound": "Request details not found",
     "crawler": "Crawler",
-    "plugin": "Plugin",
+    "plugin": "Plugin / AI",
     "loadBlockedParamsFailed": "Failed to load blocked parameters:",
     "method": "Method",
     "statusCode": "Status Code",
@@ -226,6 +226,7 @@
     "keyword": "Keyword",
     "request": "Request",
     "response": "Response",
+    "id": "ID",
     "fuzzSearchExplanation": "In {{edition}}, the search feature uses a LIKE search whenever calling the backend FuzzSearch. This means users need to manually escape text like `email_`."
   },
   "EditTagsModal": {

@@ -2,6 +2,8 @@ import React, { useContext, useEffect, useMemo, useRef, useState } from 'react'
 import emiter from '@/utils/eventBus/eventBus'
 import styles from './MITMServerHijacking.module.scss'
 import { HistorySearch, HTTPFlowShield, type ShieldData, SourceType } from '@/components/HTTPFlowTable/HTTPFlowTable'
+import { resolveMitmViewAttachNotice } from '@/components/HTTPFlowTable/HTTPFlowTable.utils'
+import type { HistorySearchOptionType } from '@/utils/yakQueryHTTPFlow'
 import { useCreation, useDebounceFn, useMemoizedFn, useSize } from 'ahooks'
 import { yakitNotify } from '@/utils/notification'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -18,7 +20,7 @@ import { CheckSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { TableTotalAndSelectNumber } from '@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber'
 import MITMContext from '../Context/MITMContext'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
-import { Badge } from 'antd'
+import { Badge, Tooltip } from 'antd'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { JSONParseLog } from '@/utils/tool'
@@ -194,6 +196,22 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
   const headerRef = useRef<HTMLDivElement>(null)
   const headerSize = useSize(headerRef)
   const [searchVal, setSearchVal] = useState<string>('')
+  const [searchType, setSearchType] = useState<HistorySearchOptionType>('all')
+  const [viewAttachId, setViewAttachId] = useState(0)
+  const onMitmViewAttach = useMemoizedFn((data: string) => {
+    const value = JSONParseLog(data, { page: 'MITMLog', fun: 'onMitmViewAttach' }) || {}
+    const { version, id } = value
+    if (version !== mitmVersion) return
+    const notice = resolveMitmViewAttachNotice(id)
+    setViewAttachId(notice.viewAttachId)
+    if (notice.clearSearch) setSearchVal('')
+  })
+  useEffect(() => {
+    emiter.on('onMitmViewAttachEvent', onMitmViewAttach)
+    return () => {
+      emiter.off('onMitmViewAttachEvent', onMitmViewAttach)
+    }
+  }, [])
   const handleSearch = useMemoizedFn((searchValue, searchType) => {
     emiter.emit(
       'onMitmSearchInputVal',
@@ -256,6 +274,20 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
           ))}
         </div>
         <TableTotalAndSelectNumber total={tableTotal} selectNum={tableSelectNum} />
+        {!!viewAttachId && (
+          <Tooltip title={t('HTTPFlowTable.viewAttachTip', { Id: viewAttachId })}>
+            <YakitTag
+              closable
+              style={{ marginLeft: 8 }}
+              onClose={() => {
+                setViewAttachId(0)
+                emiter.emit('onMitmCloseViewAttachEvent', mitmVersion)
+              }}
+            >
+              {t('HTTPFlowTable.RowContextMenu.viewAttach')}
+            </YakitTag>
+          </Tooltip>
+        )}
         <div className={styles['mitm-pipeline-status']}>
           <MITMPipelineStatus />
         </div>
@@ -352,8 +384,16 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
         <HistorySearch
           searchVal={searchVal}
           setSearchVal={setSearchVal}
+          searchType={searchType}
+          setSearchType={setSearchType}
           showPopoverSearch={headerSize?.width ? headerSize?.width <= 900 : true}
           handleSearch={handleSearch}
+          onEnterIdSearch={() => {
+            emiter.emit('onMitmSearchInputVal', JSON.stringify({ ClearKeywordSearch: true, version: mitmVersion }))
+          }}
+          onLeaveIdSearch={() => {
+            emiter.emit('onMitmSearchInputVal', JSON.stringify({ LeaveIdSearch: true, version: mitmVersion }))
+          }}
           addonBeforeOption={[
             {
               label: t('HistorySearch.keyword'),
@@ -366,6 +406,10 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
             {
               label: t('HistorySearch.response'),
               value: 'response',
+            },
+            {
+              label: t('HistorySearch.id'),
+              value: 'id',
             },
           ]}
         />

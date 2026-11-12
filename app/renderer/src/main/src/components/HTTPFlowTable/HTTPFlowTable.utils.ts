@@ -1,6 +1,7 @@
 import type { FilterConfig } from './HTTPFlowTableFormConfiguration/HTTPFlowTableFormConfiguration'
 import type { FiltersItemProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import type {
+  HistorySearchOptionType,
   MitmExtractAggregateFlowFilterRow,
   MitmExtractedAggregateRowNormalized,
   YakDeleteHTTPFlowRequest,
@@ -585,6 +586,60 @@ export function parseIncludeIds(input: string): number[] {
     ids.push(num)
   })
   return ids
+}
+
+/** 关键词下拉在 ID 与其他项之间切换时清空输入框。关键字、请求、响应之间保留原文。 */
+export function shouldClearHistorySearchInput(prev: HistorySearchOptionType, next: HistorySearchOptionType): boolean {
+  return prev !== next && (prev === 'id') !== (next === 'id')
+}
+
+/** 表格序号列与关键词 ID 搜索的并集，相同值只留一个，表格侧在前。 */
+export function mergeIncludeIds(columnIds: number[] = [], keywordIds: number[] = []): number[] {
+  const seen = new Set<number>()
+  const merged: number[] = []
+  columnIds.forEach((id) => {
+    if (seen.has(id)) return
+    seen.add(id)
+    merged.push(id)
+  })
+  keywordIds.forEach((id) => {
+    if (seen.has(id)) return
+    seen.add(id)
+    merged.push(id)
+  })
+  return merged
+}
+
+/** 有序号就写入 IncludeId，没有则写成 undefined，避免合并查询条件时旧值留着。 */
+export function withIncludeId<T extends { IncludeId?: number[] }>(query: T, ids: number[]): T {
+  const next = { ...query }
+  next.IncludeId = ids.length ? ids : undefined
+  return next
+}
+
+/** 筛选已经改用序号时，附近数据包标签要关掉。 */
+export function shouldCloseViewAttach(mergedCount: number, viewAttachId: number): boolean {
+  return mergedCount > 0 && viewAttachId > 0
+}
+
+/** 附近数据包还开着，这次 ID 搜索又没有新序号时，不要关掉附近范围。 */
+export function shouldIgnoreEmptyKeywordIdSearch(
+  searchValue: string,
+  keywordIds: string,
+  viewAttachId: number,
+): boolean {
+  return viewAttachId > 0 && !keywordIds && !parseIncludeIds(searchValue).length
+}
+
+/** 再次查看同一条附近数据包时 state 不变，需要再通知一次 MITM 头部。 */
+export function shouldNotifySameViewAttach(currentId: number, nextId: number): boolean {
+  return nextId > 0 && currentId === nextId
+}
+
+/** MITM 头部收到附近数据包通知后，非 0 才清空搜索框。 */
+export function resolveMitmViewAttachNotice(id: unknown): { viewAttachId: number; clearSearch: boolean } {
+  const viewAttachId = Number(id) || 0
+  return { viewAttachId, clearSearch: viewAttachId > 0 }
 }
 
 export function getFullRange(id: number, count = 10, minId = 1, maxId = null) {

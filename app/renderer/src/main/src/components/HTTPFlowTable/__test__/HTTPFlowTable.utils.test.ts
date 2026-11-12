@@ -21,7 +21,14 @@ import {
   selectHTTPFlowTableResizeAction,
   splitHTTPFlowTableShieldData,
   uniqStrings,
+  mergeIncludeIds,
   parseIncludeIds,
+  resolveMitmViewAttachNotice,
+  shouldClearHistorySearchInput,
+  shouldCloseViewAttach,
+  shouldIgnoreEmptyKeywordIdSearch,
+  shouldNotifySameViewAttach,
+  withIncludeId,
   resolveHTTPFlowTableBatchSelection,
   shouldRefreshOnDeleteUpdate,
 } from '@/components/HTTPFlowTable/HTTPFlowTable.utils'
@@ -98,6 +105,72 @@ describe('resolveHTTPFlowTableBatchSelection', () => {
         maxRows: 2,
       }),
     ).toEqual({ ok: false, reason: 'max_exceeded' })
+  })
+})
+
+describe('shouldClearHistorySearchInput', () => {
+  it('clears the input only when switching between ID and another search type', () => {
+    expect(shouldClearHistorySearchInput('all', 'id')).toBe(true)
+    expect(shouldClearHistorySearchInput('id', 'request')).toBe(true)
+    expect(shouldClearHistorySearchInput('id', 'response')).toBe(true)
+    expect(shouldClearHistorySearchInput('request', 'id')).toBe(true)
+  })
+
+  it('keeps the shared text when switching among keyword, request and response', () => {
+    expect(shouldClearHistorySearchInput('all', 'request')).toBe(false)
+    expect(shouldClearHistorySearchInput('request', 'response')).toBe(false)
+    expect(shouldClearHistorySearchInput('response', 'all')).toBe(false)
+    expect(shouldClearHistorySearchInput('id', 'id')).toBe(false)
+  })
+})
+
+describe('withIncludeId', () => {
+  it('writes ids and deletes the field when the list is empty', () => {
+    expect(withIncludeId({ Keyword: 'login', IncludeId: [1] }, [2, 3])).toEqual({
+      Keyword: 'login',
+      IncludeId: [2, 3],
+    })
+    expect(withIncludeId({ Keyword: 'login', IncludeId: [1] }, [])).toEqual({
+      Keyword: 'login',
+      IncludeId: undefined,
+    })
+  })
+})
+
+describe('view attach search transitions', () => {
+  it('closes the nearby tag only when sequence ids take over the filter', () => {
+    expect(shouldCloseViewAttach(2, 8)).toBe(true)
+    expect(shouldCloseViewAttach(0, 8)).toBe(false)
+    expect(shouldCloseViewAttach(2, 0)).toBe(false)
+  })
+
+  it('keeps the nearby range when an empty ID search has no keyword ids', () => {
+    expect(shouldIgnoreEmptyKeywordIdSearch('', '', 12)).toBe(true)
+    expect(shouldIgnoreEmptyKeywordIdSearch('abc', '', 12)).toBe(true)
+    expect(shouldIgnoreEmptyKeywordIdSearch('5', '', 12)).toBe(false)
+    expect(shouldIgnoreEmptyKeywordIdSearch('', '5', 12)).toBe(false)
+    expect(shouldIgnoreEmptyKeywordIdSearch('', '', 0)).toBe(false)
+  })
+
+  it('notifies MITM again only when opening the same nearby packet', () => {
+    expect(shouldNotifySameViewAttach(8, 8)).toBe(true)
+    expect(shouldNotifySameViewAttach(0, 8)).toBe(false)
+    expect(shouldNotifySameViewAttach(8, 9)).toBe(false)
+  })
+
+  it('clears the MITM header search only when nearby view opens', () => {
+    expect(resolveMitmViewAttachNotice(12)).toEqual({ viewAttachId: 12, clearSearch: true })
+    expect(resolveMitmViewAttachNotice(0)).toEqual({ viewAttachId: 0, clearSearch: false })
+    expect(resolveMitmViewAttachNotice('')).toEqual({ viewAttachId: 0, clearSearch: false })
+  })
+})
+
+describe('mergeIncludeIds', () => {
+  it('unions column ids and keyword ids and keeps the first occurrence', () => {
+    expect(mergeIncludeIds([1, 2], [2, 3])).toEqual([1, 2, 3])
+    expect(mergeIncludeIds([4], [])).toEqual([4])
+    expect(mergeIncludeIds([], [5, 5])).toEqual([5])
+    expect(mergeIncludeIds()).toEqual([])
   })
 })
 

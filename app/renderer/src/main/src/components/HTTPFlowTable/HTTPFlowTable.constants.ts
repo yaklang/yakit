@@ -8,7 +8,7 @@ import type { OptionProps } from '@/components/YakitCombinationSearch/YakitCombi
 import type { YakParamProps } from '@/pages/plugins/pluginsType'
 import type { ContextMenuAction } from '@/pages/manageRightClickPlugins/types'
 import type { DebouncedFunc } from 'lodash'
-import type { HistoryPluginSearchType } from '@/utils/yakQueryHTTPFlow'
+import type { HistorySearchOptionType } from '@/utils/yakQueryHTTPFlow'
 import type { MitmExtractAggregateFlowFilterRow } from '@/utils/yakQueryHTTPFlow'
 import { MITM_FLOW_TABLE_OVERSCAN as MITM_FLOW_TABLE_OVERSCAN_VALUE } from './HTTPFlowTable.performance'
 import type { FlowMarkPatchPayload } from './HTTPFlowMark.constants'
@@ -376,8 +376,12 @@ export interface SearchInputTableWrapperProps {
 export interface HistorySearchProps {
   searchVal?: string
   setSearchVal?: (s: string) => void
+  searchType?: HistorySearchOptionType
+  setSearchType?: (s: HistorySearchOptionType) => void
   showPopoverSearch: boolean
-  handleSearch: (searchValue: string, searchType: HistoryPluginSearchType) => void
+  handleSearch: (searchValue: string, searchType: HistorySearchOptionType) => void
+  onEnterIdSearch?: () => void
+  onLeaveIdSearch?: () => void
   addonBeforeOption?: OptionProps[]
   hint?: boolean
 }

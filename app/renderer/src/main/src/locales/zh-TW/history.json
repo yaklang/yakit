@@ -73,7 +73,7 @@
   "HTTPFlowTable": {
     "requestDetailsNotFound": "找不到該請求詳情",
     "crawler": "爬蟲",
-    "plugin": "外掛",
+    "plugin": "外掛 / AI",
     "loadBlockedParamsFailed": "載入遮蔽引數失敗：",
     "method": "方法",
     "statusCode": "狀態碼",
@@ -226,6 +226,7 @@
     "keyword": "關鍵字",
     "request": "請求",
     "response": "響應",
+    "id": "ID",
     "fuzzSearchExplanation": "{{edition}}的搜尋功能只要是呼叫了後端FuzzSearch其實都是用的LIKE搜尋，這導致使用者如果想搜尋`email_`這樣的文字需要手動轉義"
   },
   "EditTagsModal": {
