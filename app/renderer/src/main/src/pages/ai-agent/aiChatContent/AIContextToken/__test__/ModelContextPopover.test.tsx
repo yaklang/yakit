@@ -69,9 +69,9 @@ vi.mock('@/i18n/useI18nNamespaces', () => ({
 const runtime = {
   provider: 'openai',
   model: 'actual',
-  context_tokens: 500 * 1024,
-  threshold_tokens: 100 * 1024,
-  prompt_tokens: 91 * 1024,
+  context_tokens: 500 * 1000,
+  threshold_tokens: 100 * 1000,
+  prompt_tokens: 91 * 1000,
   source: 'manual',
   pending: false,
   too_small: false,
@@ -92,7 +92,7 @@ describe('composer model context popover', () => {
     mocks.request.mockImplementation(async (identity, threshold) => ({
       ...runtime,
       ...identity,
-      threshold_tokens: threshold ?? 200 * 1024,
+      threshold_tokens: threshold ?? 200 * 1000,
       prompt_tokens: 0,
     }))
   })
@@ -100,7 +100,7 @@ describe('composer model context popover', () => {
     let disabled = false
     mocks.request.mockImplementation(async (identity, threshold, mode) => {
       if (mode !== undefined) disabled = mode
-      return { ...runtime, ...identity, threshold_tokens: 200 * 1024, disable_auto_adjust: disabled }
+      return { ...runtime, ...identity, threshold_tokens: 200 * 1000, disable_auto_adjust: disabled }
     })
     const view = render(<ModelContextPopover />)
     const toggle = await screen.findByRole('switch')
@@ -125,7 +125,7 @@ describe('composer model context popover', () => {
       ...runtime,
       source: 'learned',
       pending: true,
-      threshold_tokens: 200 * 1024,
+      threshold_tokens: 200 * 1000,
       change: { id: 'pending-1', reason: 'overflow' },
     }
     render(<ModelContextPopover />)
@@ -152,7 +152,7 @@ describe('composer model context popover', () => {
       mocks.perf = {
         ...runtime,
         disable_auto_adjust: true,
-        threshold_tokens: 500 * 1024,
+        threshold_tokens: 500 * 1000,
         change: { id: 'mode-ack', reason: 'manual' },
       }
       mocks.perfListeners.forEach((listener) => listener())
@@ -189,7 +189,7 @@ describe('composer model context popover', () => {
     mocks.sessionId = 'session'
     sessionStore.setState({ execute: true })
     mocks.onSend.mockReturnValue(true)
-    mocks.perf = { ...runtime, threshold_tokens: 999 * 1024 }
+    mocks.perf = { ...runtime, threshold_tokens: 999 * 1000 }
     render(<ModelContextPopover />)
     fireEvent.change(screen.getByRole('spinbutton'), { target: { value: '1200' } })
     fireEvent.keyDown(screen.getByRole('spinbutton'), { key: 'Enter' })
@@ -200,12 +200,12 @@ describe('composer model context popover', () => {
     expect(mocks.onSend).toHaveBeenLastCalledWith(
       expect.objectContaining({
         params: expect.objectContaining({
-          Params: expect.objectContaining({ RuntimeContextSizeLimit: 1000 * 1024, DisableContextAutoAdjust: true }),
+          Params: expect.objectContaining({ RuntimeContextSizeLimit: 1000 * 1000, DisableContextAutoAdjust: true }),
         }),
       }),
     )
     act(() => {
-      mocks.perf = { ...runtime, threshold_tokens: 1000 * 1024, change: { id: 'threshold-only-ack', reason: 'manual' } }
+      mocks.perf = { ...runtime, threshold_tokens: 1000 * 1000, change: { id: 'threshold-only-ack', reason: 'manual' } }
       mocks.perfListeners.forEach((listener) => listener())
     })
     expect(screen.getByRole('switch')).not.toBeChecked()
@@ -224,7 +224,7 @@ describe('composer model context popover', () => {
     expect(mocks.onSend).toHaveBeenLastCalledWith(
       expect.objectContaining({
         params: expect.objectContaining({
-          Params: expect.objectContaining({ RuntimeContextSizeLimit: 600 * 1024, DisableContextAutoAdjust: true }),
+          Params: expect.objectContaining({ RuntimeContextSizeLimit: 600 * 1000, DisableContextAutoAdjust: true }),
         }),
       }),
     )
@@ -246,27 +246,27 @@ describe('composer model context popover', () => {
     await user.clear(input)
     await user.type(input, '650{Enter}')
     await waitFor(() =>
-      expect(mocks.request).toHaveBeenLastCalledWith({ provider: 'openai', model: 'selected' }, 650 * 1024),
+      expect(mocks.request).toHaveBeenLastCalledWith({ provider: 'openai', model: 'selected' }, 650 * 1000),
     )
-    expect(screen.getByRole('slider')).toHaveAttribute('aria-valuenow', String(650 * 1024))
+    expect(screen.getByRole('slider')).toHaveAttribute('aria-valuenow', String(650 * 1000))
     expect(composerKeyDown).not.toHaveBeenCalled()
     expect(screen.getByRole('textbox', { name: 'composer' })).toHaveValue('')
     await user.clear(input)
     await user.type(input, '725')
     await user.tab()
-    await waitFor(() => expect(screen.getByRole('slider')).toHaveAttribute('aria-valuenow', String(725 * 1024)))
+    await waitFor(() => expect(screen.getByRole('slider')).toHaveAttribute('aria-valuenow', String(725 * 1000)))
   })
   it('offers a compact ring before the first message and saves to the selected model', async () => {
     const { container } = render(<ModelContextPopover />)
     const line = await screen.findByRole('slider')
-    expect(line).toHaveAttribute('aria-valuenow', String(200 * 1024))
+    expect(line).toHaveAttribute('aria-valuenow', String(200 * 1000))
     const trigger = screen.getByRole('button', { name: '上下文 0K/200K 0%' })
     expect(trigger).toHaveTextContent('')
     expect(trigger.querySelector('svg')).not.toBeNull()
     expect(container.querySelectorAll('button[aria-expanded]')).toHaveLength(1)
     fireEvent.keyDown(line, { key: 'ArrowUp' })
-    await waitFor(() => expect(line).toHaveAttribute('aria-valuenow', String(201 * 1024)))
-    expect(mocks.request).toHaveBeenLastCalledWith({ provider: 'openai', model: 'selected' }, 201 * 1024)
+    await waitFor(() => expect(line).toHaveAttribute('aria-valuenow', String(201 * 1000)))
+    expect(mocks.request).toHaveBeenLastCalledWith({ provider: 'openai', model: 'selected' }, 201 * 1000)
     expect(mocks.onSend).not.toHaveBeenCalled()
     expect(mocks.setActiveChat).not.toHaveBeenCalled()
   })
@@ -284,7 +284,7 @@ describe('composer model context popover', () => {
       params: {
         IsConfigHotpatch: true,
         HotpatchType: 'RuntimeContextSizeLimit',
-        Params: { RuntimeContextSizeLimit: 101 * 1024, AIService: 'openai', AIModelName: 'actual' },
+        Params: { RuntimeContextSizeLimit: 101 * 1000, AIService: 'openai', AIModelName: 'actual' },
       },
     })
     expect(mocks.setActiveChat).not.toHaveBeenCalled()
@@ -308,29 +308,29 @@ describe('composer model context popover', () => {
     expect(mocks.onSend).not.toHaveBeenCalled()
     fireEvent.pointerUp(slider)
     fireEvent.lostPointerCapture(slider)
-    expect(slider).toHaveAttribute('aria-valuenow', String(110 * 1024))
+    expect(slider).toHaveAttribute('aria-valuenow', String(110 * 1000))
     expect(mocks.onSend).toHaveBeenCalledTimes(1)
     expect(screen.getByRole('button', { name: '上下文 91K/110K 83%' })).toBeInTheDocument()
     expect(screen.getByText('actual')).toBe(model)
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
     // Streaming use counters can arrive before the hotpatch confirmation.
-    mocks.perf = { ...runtime, prompt_tokens: 92 * 1024 }
+    mocks.perf = { ...runtime, prompt_tokens: 92 * 1000 }
     act(() => mocks.perfListeners.forEach((listener) => listener()))
-    expect(slider).toHaveAttribute('aria-valuenow', String(110 * 1024))
+    expect(slider).toHaveAttribute('aria-valuenow', String(110 * 1000))
     expect(screen.getByText('actual')).toBe(model)
     mocks.perf = {
       ...mocks.perf,
-      threshold_tokens: 110 * 1024,
+      threshold_tokens: 110 * 1000,
       change: {
         id: 'manual-ack',
         reason: 'manual',
-        previous_threshold_tokens: 100 * 1024,
-        threshold_tokens: 110 * 1024,
+        previous_threshold_tokens: 100 * 1000,
+        threshold_tokens: 110 * 1000,
       },
     }
     act(() => mocks.perfListeners.forEach((listener) => listener()))
     expect(screen.getByRole('slider')).toBe(slider)
-    expect(slider).toHaveAttribute('aria-valuenow', String(110 * 1024))
+    expect(slider).toHaveAttribute('aria-valuenow', String(110 * 1000))
     expect(screen.getByText('actual')).toBe(model)
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
     expect(mocks.setActiveChat).not.toHaveBeenCalled()
@@ -346,18 +346,18 @@ describe('composer model context popover', () => {
     fireEvent.keyDown(screen.getByRole('slider'), { key: 'PageUp' })
     mocks.perf = {
       ...runtime,
-      threshold_tokens: 110 * 1024,
-      change: { id: 'first', reason: 'manual', previous_threshold_tokens: 100 * 1024, threshold_tokens: 110 * 1024 },
+      threshold_tokens: 110 * 1000,
+      change: { id: 'first', reason: 'manual', previous_threshold_tokens: 100 * 1000, threshold_tokens: 110 * 1000 },
     }
     act(() => mocks.perfListeners.forEach((listener) => listener()))
-    expect(screen.getByRole('slider')).toHaveAttribute('aria-valuenow', String(120 * 1024))
+    expect(screen.getByRole('slider')).toHaveAttribute('aria-valuenow', String(120 * 1000))
     mocks.perf = {
       ...runtime,
-      threshold_tokens: 120 * 1024,
-      change: { id: 'second', reason: 'manual', previous_threshold_tokens: 110 * 1024, threshold_tokens: 120 * 1024 },
+      threshold_tokens: 120 * 1000,
+      change: { id: 'second', reason: 'manual', previous_threshold_tokens: 110 * 1000, threshold_tokens: 120 * 1000 },
     }
     act(() => mocks.perfListeners.forEach((listener) => listener()))
-    expect(screen.getByRole('slider')).toHaveAttribute('aria-valuenow', String(120 * 1024))
+    expect(screen.getByRole('slider')).toHaveAttribute('aria-valuenow', String(120 * 1000))
     expect(screen.queryByText('AIContextToken.savingContext')).not.toBeInTheDocument()
   })
   it.each(['error', 'overflow', 'switch'])('abandons a pending adjustment on %s', (reason) => {
@@ -369,7 +369,7 @@ describe('composer model context popover', () => {
     fireEvent.keyDown(screen.getByRole('slider'), { key: 'PageUp' })
     mocks.perf = {
       ...runtime,
-      threshold_tokens: 200 * 1024,
+      threshold_tokens: 200 * 1000,
       ...(reason === 'error'
         ? { error: 'rejected' }
         : reason === 'switch'
@@ -378,13 +378,13 @@ describe('composer model context popover', () => {
             change: {
               id: 'overflow',
               reason: 'overflow',
-              previous_threshold_tokens: 500 * 1024,
-              threshold_tokens: 200 * 1024,
+              previous_threshold_tokens: 500 * 1000,
+              threshold_tokens: 200 * 1000,
             },
           }),
     }
     act(() => mocks.perfListeners.forEach((listener) => listener()))
-    expect(screen.getByRole('slider')).toHaveAttribute('aria-valuenow', String(200 * 1024))
+    expect(screen.getByRole('slider')).toHaveAttribute('aria-valuenow', String(200 * 1000))
     expect(screen.queryByText('AIContextToken.savingContext')).not.toBeInTheDocument()
   })
   it('reports a timeout and restores the confirmed threshold, accepting a late confirmation', () => {
@@ -395,14 +395,14 @@ describe('composer model context popover', () => {
     mocks.onSend.mockReturnValue(true)
     render(<ModelContextPopover />)
     fireEvent.keyDown(screen.getByRole('slider'), { key: 'PageUp' })
-    mocks.perf = { ...runtime, prompt_tokens: 92 * 1024 }
+    mocks.perf = { ...runtime, prompt_tokens: 92 * 1000 }
     act(() => mocks.perfListeners.forEach((listener) => listener()))
     act(() => vi.advanceTimersByTime(10000))
-    expect(screen.getByRole('slider')).toHaveAttribute('aria-valuenow', String(100 * 1024))
+    expect(screen.getByRole('slider')).toHaveAttribute('aria-valuenow', String(100 * 1000))
     expect(screen.getByRole('alert')).toHaveTextContent('AIContextToken.contextUpdateTimeout')
-    mocks.perf = { ...runtime, threshold_tokens: 110 * 1024 }
+    mocks.perf = { ...runtime, threshold_tokens: 110 * 1000 }
     act(() => mocks.perfListeners.forEach((listener) => listener()))
-    expect(screen.getByRole('slider')).toHaveAttribute('aria-valuenow', String(110 * 1024))
+    expect(screen.getByRole('slider')).toHaveAttribute('aria-valuenow', String(110 * 1000))
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
   it('migrates a legacy session override only after its model update is acknowledged', () => {
@@ -410,11 +410,11 @@ describe('composer model context popover', () => {
     mocks.sessionId = 'session'
     mocks.perf = runtime
     mocks.onSend.mockReturnValue(true)
-    mocks.activeChat.StartParams.RuntimeContextSizeLimit = 300 * 1024
+    mocks.activeChat.StartParams.RuntimeContextSizeLimit = 300 * 1000
     render(<ModelContextPopover />)
     fireEvent.keyDown(screen.getByRole('slider'), { key: 'PageUp' })
     expect(mocks.setActiveChat).not.toHaveBeenCalled()
-    mocks.perf = { ...runtime, threshold_tokens: 110 * 1024 }
+    mocks.perf = { ...runtime, threshold_tokens: 110 * 1000 }
     act(() => mocks.perfListeners.forEach((listener) => listener()))
     expect(mocks.setActiveChat).toHaveBeenCalledTimes(1)
     expect(mocks.setActiveChat.mock.calls[0][0](mocks.activeChat).StartParams.RuntimeContextSizeLimit).toBe(0)
@@ -435,8 +435,8 @@ describe('composer model context popover', () => {
     await user.type(input, '900')
     mocks.request.mockClear()
     await user.click(screen.getByRole('button', { name: 'AIContextToken.resetContextThreshold' }))
-    await waitFor(() => expect(screen.getByRole('slider')).toHaveAttribute('aria-valuenow', String(500 * 1024)))
-    expect(mocks.request).toHaveBeenCalledExactlyOnceWith({ provider: 'openai', model: 'selected' }, 500 * 1024)
+    await waitFor(() => expect(screen.getByRole('slider')).toHaveAttribute('aria-valuenow', String(500 * 1000)))
+    expect(mocks.request).toHaveBeenCalledExactlyOnceWith({ provider: 'openai', model: 'selected' }, 500 * 1000)
     expect(screen.getByRole('spinbutton')).toHaveValue(500)
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
@@ -447,7 +447,7 @@ describe('composer model context popover', () => {
     const slider = await screen.findByRole('slider')
     fireEvent.keyDown(slider, { key: 'ArrowUp' })
     await waitFor(() =>
-      expect(mocks.request).toHaveBeenLastCalledWith({ provider: 'openai', model: 'actual' }, 201 * 1024),
+      expect(mocks.request).toHaveBeenLastCalledWith({ provider: 'openai', model: 'actual' }, 201 * 1000),
     )
     expect(mocks.onSend).not.toHaveBeenCalled()
   })
@@ -457,23 +457,23 @@ describe('composer model context popover', () => {
     mocks.request.mockRejectedValueOnce(new Error('offline'))
     fireEvent.keyDown(line, { key: 'ArrowUp' })
     expect(await screen.findByRole('alert')).toHaveTextContent('AIContextToken.contextRequestFailed')
-    expect(line).toHaveAttribute('aria-valuenow', String(200 * 1024))
+    expect(line).toHaveAttribute('aria-valuenow', String(200 * 1000))
   })
   it('updates both the ring ratio and dial when an automatic calibration arrives', () => {
     sessionStore.setState({ execute: true })
     mocks.sessionId = 'session'
-    mocks.perf = { ...runtime, threshold_tokens: 500 * 1024 }
+    mocks.perf = { ...runtime, threshold_tokens: 500 * 1000 }
     render(<ModelContextPopover />)
     expect(screen.getByRole('button', { name: '上下文 91K/500K 18%' })).toBeInTheDocument()
     // Opening the panel reads the latest runtime snapshot without resetting its budget.
     mocks.perf = {
       ...runtime,
       pending: true,
-      change: { id: 'shrink', reason: 'overflow', previous_threshold_tokens: 500 * 1024, threshold_tokens: 100 * 1024 },
+      change: { id: 'shrink', reason: 'overflow', previous_threshold_tokens: 500 * 1000, threshold_tokens: 100 * 1000 },
     }
     fireEvent.click(screen.getByRole('button', { name: '上下文 91K/500K 18%' }))
     expect(screen.getByRole('button', { name: '上下文 91K/100K 91%' })).toBeInTheDocument()
-    expect(screen.getByRole('slider')).toHaveAttribute('aria-valuenow', String(100 * 1024))
+    expect(screen.getByRole('slider')).toHaveAttribute('aria-valuenow', String(100 * 1000))
     expect(screen.getByText('AIContextToken.contextAdjusting')).toBeInTheDocument()
     expect(screen.getByText('actual')).toBeInTheDocument()
   })
@@ -485,34 +485,34 @@ describe('composer model context popover', () => {
     const learned = {
       ...runtime,
       source: 'learned',
-      threshold_tokens: 200 * 1024,
+      threshold_tokens: 200 * 1000,
       change: {
         id: 'first-recovery',
         reason: 'confirmed',
-        previous_threshold_tokens: 500 * 1024,
-        threshold_tokens: 200 * 1024,
+        previous_threshold_tokens: 500 * 1000,
+        threshold_tokens: 200 * 1000,
       },
     }
     mocks.perf = learned
     render(<ModelContextPopover />)
     expect(screen.getByText('AIContextToken.contextAdjusted')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'AIContextToken.resetContextThreshold' }))
-    expect(screen.getByRole('slider')).toHaveAttribute('aria-valuenow', String(500 * 1024))
+    expect(screen.getByRole('slider')).toHaveAttribute('aria-valuenow', String(500 * 1000))
     expect(screen.queryByText('AIContextToken.contextAdjusted')).not.toBeInTheDocument()
     // An unchanged old snapshot during the hotpatch cannot undo the new setting.
     mocks.perf = structuredClone(learned)
     act(() => mocks.perfListeners.forEach((listener) => listener()))
-    expect(screen.getByRole('slider')).toHaveAttribute('aria-valuenow', String(500 * 1024))
+    expect(screen.getByRole('slider')).toHaveAttribute('aria-valuenow', String(500 * 1000))
     mocks.perf = {
       ...runtime,
-      threshold_tokens: 500 * 1024,
-      change: { id: 'manual', reason: 'manual', previous_threshold_tokens: 200 * 1024, threshold_tokens: 500 * 1024 },
+      threshold_tokens: 500 * 1000,
+      change: { id: 'manual', reason: 'manual', previous_threshold_tokens: 200 * 1000, threshold_tokens: 500 * 1000 },
     }
     act(() => mocks.perfListeners.forEach((listener) => listener()))
     expect(screen.queryByText('AIContextToken.contextAdjusted')).not.toBeInTheDocument()
     mocks.perf = { ...learned, change: { ...learned.change, id: 'second-recovery' } }
     act(() => mocks.perfListeners.forEach((listener) => listener()))
-    expect(screen.getByRole('slider')).toHaveAttribute('aria-valuenow', String(200 * 1024))
+    expect(screen.getByRole('slider')).toHaveAttribute('aria-valuenow', String(200 * 1000))
     expect(screen.getByText('AIContextToken.contextAdjusted')).toBeInTheDocument()
   })
 })

@@ -880,7 +880,7 @@ const getTokenCountOption = (
           .map((item) => {
             const val = Number(item.value || 0)
             const pct = totalAtPoint > 0 ? ` (${((val / totalAtPoint) * 100).toFixed(1)}%)` : ''
-            return `${item.marker}${item.seriesName} ${formatNumberUnits(val)}${pct}`
+            return `${item.marker}${item.seriesName} ${formatNumberUnits(val, metric === 'bytes' ? 1024 : 1000)}${pct}`
           })
           .join('<br/>')
 

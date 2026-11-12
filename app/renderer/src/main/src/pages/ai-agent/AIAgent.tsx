@@ -232,11 +232,11 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
         initializeSetting({
           ...cloneDeep(AIAgentSettingDefault),
           ...omit(params, ['CoordinatorId', 'Sequence', 'McpServers', 'UserQuery', 'TimelineContentSizeLimit']),
-          // 启动参数使用字节，页面设置使用 KB。
+          // 上下文启动参数使用整数 token，页面设置使用十进制 K tokens。
           RuntimeContextSizeLimit:
             params?.RuntimeContextSizeLimit == null
               ? AIAgentSettingDefault.RuntimeContextSizeLimit
-              : params.RuntimeContextSizeLimit / 1024,
+              : params.RuntimeContextSizeLimit / 1000,
           AICallTokenLimit:
             params?.AICallTokenLimit == null ? AIAgentSettingDefault.AICallTokenLimit : params.AICallTokenLimit / 1024,
           Strategy: { ...AIAgentSettingDefault.Strategy, ...params?.Strategy },

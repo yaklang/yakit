@@ -129,7 +129,7 @@ export default memo(function ModelContextPopover() {
 
   const onChange = useMemoizedFn((tokens: number, disabled?: boolean) => {
     if (!confirmedContext?.model) return false
-    if (disabled === undefined && tokens < Math.max(100 * 1024, confirmedContext.minimum_threshold_tokens ?? 0))
+    if (disabled === undefined && tokens < Math.max(100 * 1000, confirmedContext.minimum_threshold_tokens ?? 0))
       return false
     // A quick switch after a threshold edit must carry the still-unconfirmed value forward.
     const pendingTokens = disabled === undefined ? tokens : pending?.tokens
