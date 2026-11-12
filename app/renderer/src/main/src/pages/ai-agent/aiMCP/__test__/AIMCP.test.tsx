@@ -109,6 +109,8 @@ describe('AIMCP 服务器列表', () => {
     render(<AIMCP />)
     await screen.findByText(server.Name)
     expect(within(group('runningGroup')).getByText(server.Name)).toBeInTheDocument()
+    fireEvent.click(within(group('runningGroup')).getByRole('button', { name: 'YakitButton.edit' }))
+    expect(showYakitModal).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ width: '50%' }))
     expect(groupHeading('runningGroup')).toHaveTextContent('1')
     expect(screen.queryByRole('region', { name: 'AIMCP.disabledGroup' })).not.toBeInTheDocument()
   })
@@ -469,11 +471,13 @@ describe('AIMCP 服务器列表', () => {
     expect(screen.getByText(server.Name)).toBeInTheDocument()
   })
 
-  it('编辑保存为启用态后刷新列表且不打开工具列表', async () => {
+  it('编辑保存为启用态后刷新列表并延迟拉取工具，不打开工具列表', async () => {
     const renamed = { ...disabledServer, Name: 'renamed server', Enable: true }
+    const fetched = { ...renamed, ErrorMsg: 'connection refused' }
     vi.mocked(grpcGetAllMCPServers)
       .mockResolvedValueOnce(responseFor([disabledServer]))
       .mockResolvedValueOnce(responseFor([renamed]))
+    vi.mocked(getMCPServersById).mockResolvedValue(fetched)
     render(<AIMCP />)
     fireEvent.click(await screen.findByRole('button', { name: 'YakitButton.edit' }))
     const form = modalForm()
@@ -481,8 +485,15 @@ describe('AIMCP 服务器列表', () => {
       form.props.onCancel(renamed)
     })
     await waitFor(() => expect(grpcGetAllMCPServers).toHaveBeenCalledTimes(2))
+    expect(getMCPServersById).not.toHaveBeenCalled()
     expect(screen.queryByText('AIMCP.toolList')).not.toBeInTheDocument()
     expect(within(group('runningGroup')).getByText(renamed.Name)).toBeInTheDocument()
+    expect(within(group('runningGroup')).getByRole('button', { name: 'YakitButton.edit' })).toBeInTheDocument()
+    await waitFor(() => expect(getMCPServersById).toHaveBeenCalledExactlyOnceWith(disabledServer.ID), {
+      timeout: 2000,
+    })
+    expect(screen.queryByText('AIMCP.toolList')).not.toBeInTheDocument()
+    expect(screen.getByText('AIMCP.toolFetchFailed')).toBeInTheDocument()
   })
 
   it('编辑保存未启用时仅刷新列表', async () => {
@@ -496,8 +507,77 @@ describe('AIMCP 服务器列表', () => {
       form.props.onCancel({ ...disabledServer, Enable: false })
     })
     await waitFor(() => expect(grpcGetAllMCPServers).toHaveBeenCalledTimes(2))
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 1100))
+    })
+    expect(getMCPServersById).not.toHaveBeenCalled()
     expect(screen.queryByText('AIMCP.toolList')).not.toBeInTheDocument()
     expect(screen.getByText(disabledServer.Name)).toBeInTheDocument()
+  })
+
+  it('编辑保存后延迟拉取详情失败被吞掉，列表保持刷新结果', async () => {
+    const renamed = { ...disabledServer, Name: 'renamed server', Enable: true }
+    vi.mocked(grpcGetAllMCPServers)
+      .mockResolvedValueOnce(responseFor([disabledServer]))
+      .mockResolvedValueOnce(responseFor([renamed]))
+    vi.mocked(getMCPServersById).mockRejectedValueOnce(new Error('detail failed'))
+    render(<AIMCP />)
+    fireEvent.click(await screen.findByRole('button', { name: 'YakitButton.edit' }))
+    const form = modalForm()
+    await act(async () => {
+      form.props.onCancel(renamed)
+    })
+    await waitFor(() => expect(grpcGetAllMCPServers).toHaveBeenCalledTimes(2))
+    await waitFor(() => expect(getMCPServersById).toHaveBeenCalledExactlyOnceWith(disabledServer.ID), {
+      timeout: 2000,
+    })
+    // 拒绝被 catch 吞掉（无 catch 时 unhandled rejection 会直接判失败），卡片保持列表刷新结果
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 300))
+    })
+    expect(within(group('runningGroup')).getByText(renamed.Name)).toBeInTheDocument()
+  })
+
+  it('编辑保存等待期间用户再次停用后迟到的旧详情不覆盖新状态', async () => {
+    const renamed = { ...disabledServer, Name: 'renamed server', Enable: true }
+    const disabledAgain = { ...renamed, Enable: false }
+    const stale = { ...renamed, ErrorMsg: 'connection refused' }
+    let detailCalls = 0
+    vi.mocked(grpcGetAllMCPServers)
+      .mockResolvedValueOnce(responseFor([disabledServer]))
+      .mockResolvedValueOnce(responseFor([renamed]))
+    vi.mocked(getMCPServersById).mockImplementation(() => {
+      detailCalls += 1
+      // 首次是停用链拉到的最新停用详情，其后是编辑保存迟到的旧启用详情
+      return detailCalls === 1 ? Promise.resolve(disabledAgain) : Promise.resolve(stale)
+    })
+    render(<AIMCP />)
+    fireEvent.click(await screen.findByRole('button', { name: 'YakitButton.edit' }))
+    const form = modalForm()
+    await act(async () => {
+      form.props.onCancel(renamed)
+    })
+    await waitFor(() => expect(grpcGetAllMCPServers).toHaveBeenCalledTimes(2))
+    // 保存为启用后卡片换组重挂载，此时编辑详情尚未发出
+    expect(getMCPServersById).not.toHaveBeenCalled()
+    expect(within(group('runningGroup')).getByText(renamed.Name)).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('switch', { name: 'YakitButton.deactivated' }))
+    fireEvent.click(screen.getByRole('button', { name: 'YakitButton.ok' }))
+    await waitFor(() =>
+      expect(grpcUpdateMCPServer).toHaveBeenCalledExactlyOnceWith(
+        expect.objectContaining({ ID: disabledServer.ID, Enable: false }),
+      ),
+    )
+    // 停用详情先返回：卡片进入停用分组
+    await waitFor(() => expect(within(group('disabledGroup')).getByText(renamed.Name)).toBeInTheDocument())
+    // 编辑保存的迟到详情返回后不得把卡片拉回启用分组
+    await waitFor(() => expect(getMCPServersById).toHaveBeenCalledTimes(2), { timeout: 2000 })
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 300))
+    })
+    expect(within(group('disabledGroup')).getByText(renamed.Name)).toBeInTheDocument()
+    expect(screen.queryByText('AIMCP.toolFetchFailed')).not.toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: 'AIMCP.runningGroup' })).not.toBeInTheDocument()
   })
 
   it('删除需二次确认，确认前不删除且点击不冒泡打开工具页', async () => {

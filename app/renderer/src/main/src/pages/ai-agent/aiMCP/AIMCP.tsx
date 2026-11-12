@@ -22,7 +22,6 @@ import { getMCPServersById, grpcDeleteMCPServer, grpcGetAllMCPServers, grpcUpdat
 import { YakitRoundCornerTag } from '@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
-  CogOutlined,
   DesktopComputerOutlined,
   GlobeAltOutlined,
   PencilOutlined,
@@ -32,6 +31,7 @@ import {
   SearchOutlined,
   TrashOutlined,
   ReplyOutlined,
+  MCPOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
@@ -305,6 +305,13 @@ const AIMCPList: React.FC<AIMCPListProps> = React.memo((props) => {
     Total: 0,
   })
   const requestIdRef = useRef(0)
+  // 编辑回填与卡片启停共用序号。卡片换分组会重挂载，序号必须留在列表上
+  const detailTokenRef = useRef(new Map<number, number>())
+  const takeDetailToken = useMemoizedFn((id: number) => {
+    const token = (detailTokenRef.current.get(id) ?? 0) + 1
+    detailTokenRef.current.set(id, token)
+    return token
+  })
   const mcpListRef = useRef<HTMLDivElement>(null)
   const [inViewPort = true] = useInViewport(mcpListRef)
   const getList = useMemoizedFn(async () => {
@@ -383,7 +390,8 @@ const AIMCPList: React.FC<AIMCPListProps> = React.memo((props) => {
   const openYakMcpSettings = useMemoizedFn(() => {
     emiter.emit('openPage', JSON.stringify({ route: YakitRoute.Settings, params: { anchor: 'yak-mcp' } }))
   })
-  const onSetData = useMemoizedFn((item: MCPServer) => {
+  const onSetData = useMemoizedFn((item: MCPServer, token?: number) => {
+    if (token !== undefined && detailTokenRef.current.get(item.ID) !== token) return
     setResponse((preV) => {
       // 迟到的启停结果可能晚于搜索词切换：当前结果不含该服务器时丢弃，避免把旧卡片插进新搜索结果
       if (!preV.MCPServers.some((ele) => ele.ID === item.ID)) return preV
@@ -423,7 +431,7 @@ const AIMCPList: React.FC<AIMCPListProps> = React.memo((props) => {
               onClick={openYakMcpSettings}
               aria-label={t('SettingsPage.item.yak-mcp')}
               iconPosition="end"
-              icon={<CogOutlined color="currentColor" size={16} />}
+              icon={<MCPOutlined color="currentColor" size={16} />}
             />
           </Tooltip>
           <Tooltip title={t('AIMCP.addMcpServer')}>
@@ -483,6 +491,7 @@ const AIMCPList: React.FC<AIMCPListProps> = React.memo((props) => {
                                 item={item}
                                 onRefresh={getList}
                                 onSetData={onSetData}
+                                takeDetailToken={takeDetailToken}
                                 setCurrentMCP={setCurrentMCP}
                               />
                             ))}
@@ -512,7 +521,7 @@ const AIMCPList: React.FC<AIMCPListProps> = React.memo((props) => {
 })
 
 const AIMCPListItem: React.FC<AIMCPListItemProps> = React.memo((props) => {
-  const { item, onRefresh, setCurrentMCP, onSetData } = props
+  const { item, onRefresh, setCurrentMCP, onSetData, takeDetailToken } = props
   const { t, i18nRefresh } = useI18nNamespaces(['aiAgent', 'yakitUi'])
 
   const [stopVisible, setStopVisible] = useState<boolean>(false)
@@ -527,6 +536,7 @@ const AIMCPListItem: React.FC<AIMCPListItemProps> = React.memo((props) => {
   }, [])
 
   const updateMCPServer = useMemoizedFn((enable: boolean) => {
+    const token = takeDetailToken(item.ID)
     setStopLoading(true)
     const updateValue: UpdateMCPServerRequest = {
       ...item,
@@ -538,7 +548,7 @@ const AIMCPListItem: React.FC<AIMCPListItemProps> = React.memo((props) => {
         const openToolList = (server: MCPServer) => {
           // 启用期间用户已打开其他服务器（本卡片随列表卸载）时，迟到的结果不再覆盖当前工具页
           if (!aliveRef.current) return
-          onSetData(server)
+          onSetData(server, token)
         }
         const loadServer = () =>
           getMCPServersById(item.ID)
@@ -564,7 +574,6 @@ const AIMCPListItem: React.FC<AIMCPListItemProps> = React.memo((props) => {
 
   const onEdit = useMemoizedFn((event: React.MouseEvent) => {
     event.stopPropagation()
-    if (item.Enable) return
     const defaultValues: UpdateMCPServerRequest = omit(item, ['Tools'])
     const m = showYakitModal({
       title: (modalT) => modalT('AIMCP.editMcp'),
@@ -572,10 +581,18 @@ const AIMCPListItem: React.FC<AIMCPListItemProps> = React.memo((props) => {
       content: (
         <AIMCPForm
           defaultValues={defaultValues}
-          onCancel={(saved) => {
+          onCancel={async (saved) => {
             m.destroy()
             if (!saved) return
-            onRefresh()
+            await onRefresh()
+            if (!saved.Enable) return
+            const token = takeDetailToken(item.ID)
+            await new Promise((resolve) => setTimeout(resolve, 1000))
+            try {
+              const detail = await getMCPServersById(item.ID)
+              // 等待与拉取期间用户再次启停过该服务器时，迟到的旧详情不得覆盖新状态
+              onSetData(detail, token)
+            } catch {}
           }}
         />
       ),
@@ -690,16 +707,8 @@ const AIMCPListItem: React.FC<AIMCPListItemProps> = React.memo((props) => {
               event.stopPropagation()
             }}
           >
-            {!item.Enable && (
-              <div className={styles['mcp-card-actions']}>
-                <Tooltip title={t('YakitButton.edit')}>
-                  <YakitButton
-                    type="text2"
-                    icon={<PencilOutlined color="currentColor" />}
-                    aria-label={t('YakitButton.edit')}
-                    onClick={onEdit}
-                  />
-                </Tooltip>
+            <div className={styles['mcp-card-actions']}>
+              {!item.Enable && (
                 <Tooltip title={t('YakitButton.delete')}>
                   <YakitButton
                     type="text2"
@@ -708,8 +717,16 @@ const AIMCPListItem: React.FC<AIMCPListItemProps> = React.memo((props) => {
                     onClick={onDelete}
                   />
                 </Tooltip>
-              </div>
-            )}
+              )}
+              <Tooltip title={t('YakitButton.edit')}>
+                <YakitButton
+                  type="text2"
+                  icon={<PencilOutlined color="currentColor" />}
+                  aria-label={t('YakitButton.edit')}
+                  onClick={onEdit}
+                />
+              </Tooltip>
+            </div>
             {item.Enable ? (
               <YakitPopconfirm
                 title={t('AIMCP.disableConfirm', { name: item.Name })}

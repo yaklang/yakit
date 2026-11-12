@@ -18,5 +18,6 @@ export interface AIMCPListItemProps {
   item: MCPServer
   onRefresh: () => void
   setCurrentMCP: (item: MCPServer) => void
-  onSetData: (item: MCPServer) => void
+  onSetData: (item: MCPServer, token?: number) => void
+  takeDetailToken: (id: number) => number
 }
