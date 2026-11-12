@@ -3,6 +3,7 @@ import { capture } from '../../fixtures/memfit-ui/capture.mjs'
 import { examples } from '../../fixtures/memfit-ui/examples.mjs'
 
 const button = (label) => $(`//button[normalize-space(.)='${label}']`)
+const regionButton = (region, label) => region.$(`.//button[normalize-space(.)='${label}']`)
 const show = async (name, options = {}) => {
   await browser.execute((name, options) => window.memfitUITest.show(name, options), name, options)
   await $(
@@ -302,7 +303,7 @@ describe('Memfit real Chromium component regression', () => {
         assert.equal((await messages()).length, 0)
         await browser.keys('Escape')
         await region.$('textarea').waitForExist({ reverse: true })
-        await region.$('button').click()
+        await regionButton(region, '展开问题').click()
         await expect(region.$('textarea')).toHaveValue('架构师')
         await button('下一题').click()
         assert.equal(await region.$('textarea').isExisting(), false)
@@ -349,7 +350,7 @@ describe('Memfit real Chromium component regression', () => {
         }, element)
       for (const kind of ['radio', 'checkbox']) {
         if (kind === 'checkbox') await button('下一题').click()
-        await region.$('button').moveTo()
+        await regionButton(region, '收起').moveTo()
         const selector = kind === 'radio' ? 'label.ant-radio-button-wrapper' : 'label.ant-checkbox-wrapper'
         const rows = await region.$$(selector)
         const first = await appearance(rows[0])
@@ -365,7 +366,7 @@ describe('Memfit real Chromium component regression', () => {
         })
         await capture(`ask-${kind}-${theme}-hover`)
         await rows[0].click()
-        await region.$('button').moveTo()
+        await regionButton(region, '收起').moveTo()
         await expect(rows[0].$('input')).toBeChecked()
         const selected = await appearance(rows[0])
         assert.notEqual(selected.background, first.background, `${kind}: selection keeps a background highlight`)
