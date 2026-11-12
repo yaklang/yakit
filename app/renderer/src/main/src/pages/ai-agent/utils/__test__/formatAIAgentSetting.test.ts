@@ -78,15 +78,15 @@ describe('formatAIAgentSetting', () => {
     expect(result.Strategy?.GoalAcceptanceCriteria).toBe('接口 200')
   })
 
-  it('不再下发已废弃的 TimelineContentSizeLimit，运行时上下文走新字段', () => {
+  it('新会话忽略旧的全局上下文默认值，交由后端恢复模型阈值', () => {
     const result = formatAIAgentSetting({
       ...AIAgentSettingDefault,
       TimelineContentSizeLimit: 60,
       RuntimeContextSizeLimit: 300,
     })
     expect(result).not.toHaveProperty('TimelineContentSizeLimit')
-    // 设置里单位是KB，下发时换算成字节
-    expect(result.RuntimeContextSizeLimit).toBe(300 * 1024)
+    // 0 表示恢复模型记录，不把旧的全局 300K 写给每个会话
+    expect(result.RuntimeContextSizeLimit).toBe(0)
   })
 
   it('运行时上下文留空时不覆盖服务端默认阈值', () => {

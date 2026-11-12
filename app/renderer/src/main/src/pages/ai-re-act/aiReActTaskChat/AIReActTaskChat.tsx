@@ -20,14 +20,12 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { type AIInputEvent, AIInputEventHotPatchTypeEnum } from '../hooks/grpcApi'
 import { Form, Tooltip } from 'antd'
 import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
-import useRuntimeContextSizeLimit from '@/pages/ai-agent/useContext/useRuntimeContextSizeLimit'
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import useAIGlobalConfig from '../hooks/useAIGlobalConfig'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
-import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInputNumber'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
 import has from 'lodash/has'
@@ -140,7 +138,6 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
   const execute = useStore(store, (state) => state.execute)
 
   const { setting, activeChat } = useAIAgentStore()
-  const runtimeContextSizeLimit = useRuntimeContextSizeLimit()
   const [aiGlobalConfigData, aiGlobalConfigEvent] = useAIGlobalConfig()
   const aiGlobalConfig = aiGlobalConfigData.aiGlobalConfig
   const globalSingleModelMode = !!aiGlobalConfig.SingleModelMode
@@ -231,16 +228,6 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
         }
       }
     }
-    const runtimeContextSizeLimit = changedValues.RuntimeContextSizeLimit
-    if (runtimeContextSizeLimit && runtimeContextSizeLimit >= 60 && Number.isInteger(runtimeContextSizeLimit)) {
-      onHotConfigChange(AIInputEventHotPatchTypeEnum.HotPatchType_RuntimeContextSizeLimit, {
-        RuntimeContextSizeLimit: runtimeContextSizeLimit * 1024,
-      })
-      setSetting?.((v) => ({
-        ...v,
-        RuntimeContextSizeLimit: runtimeContextSizeLimit,
-      }))
-    }
     if (has(changedValues, 'SingleModelMode') && !singleModelModeLocked) {
       setSetting?.((v) => ({
         ...v,
@@ -268,7 +255,6 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
       form.setFieldsValue({
         AllowUserPrompt: allowUserPrompt,
         SingleModelMode: effectiveSingleModelMode,
-        RuntimeContextSizeLimit: runtimeContextSizeLimit,
         AIPresetPrompt: aiGlobalConfig.AIPresetPrompt || '',
         AIPlanPrompt: aiGlobalConfig.AIPlanPrompt || '',
       })
@@ -300,7 +286,6 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
             AllowUserPrompt: allowUserPrompt,
             SingleModelMode: effectiveSingleModelMode,
             SyncPerceptionTrigger: setting.SyncPerceptionTrigger,
-            RuntimeContextSizeLimit: runtimeContextSizeLimit,
             EnablePlan: setting.EnablePlan,
             AIPresetPrompt: aiGlobalConfig.AIPresetPrompt || '',
             AIPlanPrompt: aiGlobalConfig.AIPlanPrompt || '',
@@ -320,8 +305,8 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
                     globalSingleModelMode
                       ? t('AIReActTaskChatContent.singleModelModeGlobalTip')
                       : singleModelModeLocked
-                        ? t('AIReActTaskChatContent.singleModelModeSessionTip')
-                        : t('AIReActTaskChatContent.singleModelModeTip')
+                      ? t('AIReActTaskChatContent.singleModelModeSessionTip')
+                      : t('AIReActTaskChatContent.singleModelModeTip')
                   }
                 >
                   <InformationCircleOutlined className={styles['info-icon']} color="currentColor" />
@@ -360,28 +345,6 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
             className={styles['switch-form-item']}
           >
             <YakitSwitch />
-          </Form.Item>
-          <Form.Item
-            label={
-              <>
-                {t('AIChatSetting.runtimeContextSize')}
-                <Tooltip
-                  classNames={{ root: styles['form-info-icon-tooltip'] }}
-                  title={t('AIChatSetting.runtimeContextSizeDesc')}
-                >
-                  <InformationCircleOutlined className={styles['info-icon']} color="currentColor" />
-                </Tooltip>
-              </>
-            }
-            name="RuntimeContextSizeLimit"
-          >
-            <YakitInputNumber
-              min={60}
-              precision={0}
-              suffix="K"
-              className={styles['runtime-context-size-input']}
-              wrapperClassName={styles['runtime-context-size-input']}
-            />
           </Form.Item>
           <Form.Item label={t('AIReActTaskChatContent.globalDirective')} name="AIPresetPrompt">
             <YakitInput.TextArea

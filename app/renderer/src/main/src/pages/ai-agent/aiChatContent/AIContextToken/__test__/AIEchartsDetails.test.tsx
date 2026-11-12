@@ -178,6 +178,49 @@ describe('AIEchartsDetails 辅助模型用量展示回退', () => {
     expect(getByTestId('pressure-threshold')).toHaveTextContent(/^614400$/)
   })
 
+  it('红线优先使用当前模型阈值，并在压力数据不变时跟随手动调整及自动校准', () => {
+    mocks.activeChat = { SessionID: 'session-id', StartParams: { RuntimeContextSizeLimit: 0 } }
+    const pressure: NonNullable<AIEchartsDetailsProps['pressure']> = {
+      intelligent: [
+        {
+          current_cost_token_size: 58000,
+          model_name: 'main',
+          model_tier: 'intelligent',
+          pressure_token_size: 58000,
+          timestamp: 1,
+        },
+      ],
+      lightweight: [],
+      vision: [],
+    }
+    const modelContext: NonNullable<AIEchartsDetailsProps['modelContext']> = {
+      provider: 'openai',
+      model: 'main',
+      context_tokens: 500 * 1024,
+      threshold_tokens: 100 * 1024,
+      prompt_tokens: 58000,
+      source: 'manual',
+      pending: false,
+      too_small: false,
+    }
+    const view = render(<AIEchartsDetails {...baseProps} pressure={pressure} modelContext={modelContext} />)
+    expect(view.getByTestId('pressure-threshold')).toHaveTextContent(/^102400$/)
+    for (const [threshold_tokens, source] of [
+      [500 * 1024, 'manual'],
+      [128 * 1024, 'learned'],
+    ] as const) {
+      view.rerender(
+        <AIEchartsDetails
+          {...baseProps}
+          pressure={pressure}
+          modelContext={{ ...modelContext, threshold_tokens, source }}
+        />,
+      )
+      expect(view.getByTestId('pressure-threshold').textContent).toBe(String(threshold_tokens))
+    }
+    expect(view.queryByText(/AIContextToken.limit/)).not.toBeInTheDocument()
+  })
+
   it.each([
     [undefined, '307200'],
     [60, '61440'],

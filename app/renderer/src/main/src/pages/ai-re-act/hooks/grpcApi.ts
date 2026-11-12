@@ -135,11 +135,13 @@ export interface AIStartParams {
    */
   TimelineContentSizeLimit?: number
   /**
-   * 运行时上下文（普通历史、Skill 正文、Evidence 等）压缩阈值，单位字节。
+   * 运行时上下文（普通历史、Skill 正文、Evidence 等）压缩阈值，单位 token。
    * >0 覆盖服务端默认；<=0 或不传时使用服务端默认值。
    * 下发前将 gRPC 数字字符串规范化为安全整数。
    */
   RuntimeContextSizeLimit?: number
+  /** Model-scoped hotpatch; omission preserves the saved preference. */
+  DisableContextAutoAdjust?: boolean
   /** 用户交互的最大次数限制,超过这个次数，AI 将不再被允许问用户问题 */
   UserInteractLimit?: number
   /** timeline sessionID  用于多轮对话保持上下文 */
@@ -468,6 +470,27 @@ export declare namespace AIAgentGrpcApi {
     effective_single_model_mode?: boolean
     /** 按逻辑 Tier、实际模型和思考强度聚合的用量；旧引擎可能不返回 */
     tier_model_consumption?: Partial<Record<AIModelTier, AIModelConsumptionStats[]>>
+  }
+
+  /** 模型上下文容量及本次会话实际压缩阈值，单位 token。 */
+  export interface ModelContext {
+    provider: string
+    model: string
+    context_tokens: number
+    threshold_tokens: number
+    prompt_tokens: number
+    source: 'default' | 'learned' | 'manual'
+    pending: boolean
+    too_small: boolean
+    minimum_threshold_tokens?: number
+    disable_auto_adjust?: boolean
+    error?: string
+    change?: {
+      id: string
+      reason: 'overflow' | 'confirmed' | 'manual'
+      previous_threshold_tokens: number
+      threshold_tokens: number
+    }
   }
 
   /** 上下文压力 */

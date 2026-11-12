@@ -81,6 +81,7 @@ const ContextDetailPopover: React.FC<ContextDetailPopoverProps> = ({ buttonProps
         overallToken={overallToken}
         consumption={perfData?.consumption}
         pressure={perfData?.pressure}
+        modelContext={perfData?.modelContext}
         firstCost={perfData?.firstCost}
         onClose={onClose}
         contextStats={perfData?.contextStats}

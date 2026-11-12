@@ -1,0 +1,318 @@
+.panel {
+  font-size: 12px;
+  line-height: 20px;
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+}
+.title,
+.inputRow,
+.scale,
+.metadata {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.title strong {
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.metrics {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+}
+.usageTrack {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 6px;
+  margin: 10px 0 16px;
+  background: var(--Colors-Use-Neutral-Bg-Hover);
+}
+.usageFill {
+  height: 100%;
+  border-radius: inherit;
+  background: currentColor;
+  color: var(--Colors-Use-Main-Primary);
+}
+.inputBox {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--Colors-Use-Neutral-Border);
+  border-radius: 5px;
+  padding: 0 5px;
+  gap: 3px;
+  height: 24px;
+  &:hover {
+    border-color: var(--Colors-Use-Neutral-Border);
+  }
+  &:focus-within {
+    border-color: var(--Colors-Use-Main-Primary);
+  }
+  input {
+    width: 56px;
+    border: none;
+    outline: none;
+    padding: 0;
+    text-align: right;
+    appearance: textfield;
+    &::-webkit-inner-spin-button,
+    &::-webkit-outer-spin-button {
+      appearance: none;
+      margin: 0;
+    }
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-variant-numeric: tabular-nums;
+  }
+  span {
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  }
+}
+.slider {
+  position: relative;
+  height: 28px;
+  margin: 5px 10px 0;
+}
+.sliderRail,
+.sliderFill {
+  position: absolute;
+  top: 12px;
+  height: 4px;
+  border-radius: 4px;
+  pointer-events: none;
+}
+.sliderRail {
+  width: 100%;
+  background: var(--Colors-Use-Neutral-Bg-Hover);
+}
+.sliderFill {
+  background: var(--Colors-Use-Main-Primary);
+}
+.handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  width: 30px;
+  height: 28px;
+  top: 0;
+  padding: 0;
+  transform: translateX(-50%);
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  cursor: grab;
+  user-select: none;
+  outline: none;
+  touch-action: none;
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  &:hover,
+  &:active {
+    color: var(--Colors-Use-Main-Primary);
+  }
+  &:active {
+    cursor: grabbing;
+  }
+  &:focus-visible .thumb {
+    border-color: var(--Colors-Use-Main-Primary);
+  }
+  &:disabled {
+    cursor: default;
+    opacity: 0.5;
+  }
+}
+.thumb {
+  width: 18px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--Colors-Use-Neutral-Border);
+  border-radius: 5px;
+  background: var(--Colors-Use-Basic-Background);
+  box-shadow: 0 1px 3px var(--Colors-Use-Basic-Shadow);
+}
+.scale {
+  margin: 0 10px;
+  font-size: 10px;
+  line-height: 14px;
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+}
+.autoLabel {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.autoHelp {
+  display: inline-flex;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  cursor: help;
+  &:hover {
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+  }
+  &:focus-visible {
+    outline: 1px solid var(--Colors-Use-Neutral-Border);
+  }
+}
+.autoRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
+  height: 20px;
+}
+.footer {
+  display: flex;
+  align-items: center;
+  box-sizing: content-box;
+  height: 32px;
+  margin-top: 13px;
+  padding-top: 10px;
+  border-top: 1px solid var(--Colors-Use-Neutral-Border);
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  font-size: 11px;
+  line-height: 16px;
+}
+.metadata {
+  width: 100%;
+}
+.adjustment {
+  flex-shrink: 0;
+  padding: 0 5px;
+  border-radius: 4px;
+  background: var(--Colors-Use-Neutral-Bg-Hover);
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  font-size: 10px;
+  cursor: help;
+  &:focus-visible {
+    outline: 1px solid var(--Colors-Use-Neutral-Border);
+  }
+}
+.model {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  cursor: pointer;
+  &:hover,
+  &[aria-expanded='true'] {
+    background: var(--Colors-Use-Neutral-Bg-Hover);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--Colors-Use-Main-Primary);
+    outline-offset: 2px;
+  }
+}
+.ring {
+  width: 28px;
+  height: 28px;
+  color: var(--Colors-Use-Main-Primary);
+}
+.ringTrack,
+.ringValue {
+  fill: none;
+  stroke-width: 3;
+}
+.ringTrack {
+  stroke: var(--Colors-Use-Neutral-Border);
+}
+.ringValue {
+  stroke: currentColor;
+  stroke-linecap: round;
+}
+.unknown {
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  .ringTrack {
+    stroke-dasharray: 3 3;
+  }
+}
+.popover {
+  box-sizing: border-box;
+  width: 300px;
+  max-width: calc(100vw - 24px);
+  padding: 16px;
+}
+.popoverRoot:global(.ant-popover) {
+  :global(.ant-popover-inner) {
+    padding: 0;
+    border: 1px solid var(--Colors-Use-Neutral-Border);
+    border-radius: 12px;
+    box-shadow: 0 6px 24px var(--Colors-Use-Basic-Shadow);
+  }
+}
+.warning {
+  color: var(--Colors-Use-Warning-Primary);
+}
+.danger {
+  color: var(--Colors-Use-Error-Primary);
+}
+.hint,
+.panel > [role='alert'],
+.popover > [role='alert'] {
+  margin-top: 10px;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.hint {
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+}
+
+.reset {
+  border: 0;
+  border-radius: 4px;
+  padding: 0 4px;
+  background: transparent;
+  font: inherit;
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  text-decoration: none;
+  cursor: pointer;
+  &:hover:not(:disabled),
+  &:active:not(:disabled) {
+    color: var(--Colors-Use-Main-Primary);
+    background: var(--Colors-Use-Neutral-Bg-Hover);
+    text-decoration: none;
+  }
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+  &:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 1px var(--Colors-Use-Neutral-Border);
+  }
+}
+.notice {
+  width: 100%;
+  max-height: 32px;
+  overflow-y: auto;
+  font-size: 11px;
+  line-height: 16px;
+  .hint {
+    margin: 0;
+    font-size: inherit;
+    line-height: inherit;
+  }
+}
