@@ -1,4 +1,9 @@
 .questionDock {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(100% + 8px);
+  z-index: 20;
   width: 100%;
   border: 1px solid var(--Colors-Use-Neutral-Border);
   border-radius: 12px;
