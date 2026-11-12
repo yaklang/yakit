@@ -79,7 +79,7 @@ it.each([
     },
   })
   // 这里只验证前端请求契约，缓存配置的实际读取由后端负责。
-  expect(onStart.mock.calls[0][0].params.Params.RuntimeContextSizeLimit).toBe(runtimeContextSizeLimit ?? 300)
+  expect(onStart.mock.calls[0][0].params.Params.RuntimeContextSizeLimit).toBe(runtimeContextSizeLimit ?? 0)
   expect(activeChat.StartParams).toBe(startParams)
   expect(startParams).toEqual(originalStartParams)
 })

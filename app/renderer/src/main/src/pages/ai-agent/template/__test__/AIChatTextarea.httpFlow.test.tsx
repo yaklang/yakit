@@ -138,6 +138,9 @@ vi.mock('@/utils/clipboard', () => ({ setClipboardText: vi.fn() }))
 vi.mock('../../aiModelList/aiModelSelect/AIModelSelect', () => ({
   AIModelSelect: () => <button type="button">默认模型选择</button>,
 }))
+vi.mock('../../aiChatContent/AIContextToken/ModelContextPopover', () => ({
+  default: () => <button aria-label="调整上下文阈值" />,
+}))
 vi.mock('@/pages/ai-re-act/aiReviewRuleSelect/AIReviewRuleSelect', () => ({ default: () => null }))
 vi.mock('@/pages/ai-re-act/aiReasoningEffortSelect/AIReasoningEffortSelect', () => ({
   AIReasoningEffortSelect: () => null,
@@ -258,6 +261,11 @@ vi.mock('../../components/aiMilkdownInput/AIMilkdownInput', () => ({
 }))
 
 const { AIChatTextarea } = await compileReactModule<typeof TemplateModule>(import.meta.url, '../template.tsx')
+
+it('shows the context threshold entry beside the model selector before starting a chat', async () => {
+  render(<AIChatTextarea chatDataStoreKey="context-entry-test" inputFooterLeft={<span />} />)
+  expect(screen.getByRole('button', { name: '调整上下文阈值' })).toBeVisible()
+})
 
 beforeEach(() => {
   fileSessions.clear()

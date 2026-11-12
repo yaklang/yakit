@@ -131,7 +131,8 @@ export const formatAIAgentSetting = (setting: AIAgentSetting): AIAgentSetting =>
     if (!isNil(setting?.ReActMaxIteration)) {
       data.ReActMaxIteration = setting.ReActMaxIteration || AIAgentSettingDefault.ReActMaxIteration
     }
-    data.RuntimeContextSizeLimit = setting.RuntimeContextSizeLimit ?? 0
+    // 新会话按模型恢复阈值，不再把旧的全局/会话设置应用到所有模型。
+    data.RuntimeContextSizeLimit = 0
     data.AICallTokenLimit = setting.AICallTokenLimit ?? AIAgentSettingDefault.AICallTokenLimit
     if (!isNil(setting?.UserInteractLimit)) {
       data.UserInteractLimit = setting.UserInteractLimit || AIAgentSettingDefault.UserInteractLimit
@@ -295,6 +296,7 @@ export const onReStart = (props: ReStartParams) => {
     const request: AIStartParams = setting ?? {
       ...AIAgentSettingDefault,
       ...activeChat.StartParams,
+      RuntimeContextSizeLimit: activeChat.StartParams?.RuntimeContextSizeLimit ?? 0,
       PreferSessionCachedConfig: true,
       UserQuery: '',
     }

@@ -263,6 +263,8 @@ const getPressureDetailsOption = (value: PressureDetailsOptionProps): EChartsOpt
     ],
     yAxis: {
       type: 'value',
+      // An empty markLine series does not extend the axis range automatically.
+      max: (extent) => Math.ceil(Math.max(extent.max, threshold) * 1.1),
       axisLabel: {
         fontSize: 11,
         color: colors['--Colors-Use-Neutral-Text-3-Secondary'],

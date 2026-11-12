@@ -41,6 +41,7 @@ import type { Node as ProseMirrorNode } from '@milkdown/kit/prose/model'
 import { convertKeyEventToKeyCombination } from '@/utils/globalShortcutKey/utils'
 import { YakitKeyBoard } from '@/utils/globalShortcutKey/keyboard'
 import { AIModelSelect } from '../aiModelList/aiModelSelect/AIModelSelect'
+import ModelContextPopover from '../aiChatContent/AIContextToken/ModelContextPopover'
 import AIReviewRuleSelect from '@/pages/ai-re-act/aiReviewRuleSelect/AIReviewRuleSelect'
 import isString from 'lodash/isString'
 import isEqual from 'lodash/isEqual'
@@ -520,6 +521,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                 />
               ),
             )
+            node.push(<ModelContextPopover key="model-context" />)
             break
           case AIInputFooterRightEnum.Custom:
             node.push(<Fragment key={item.key}>{item.component}</Fragment>)
