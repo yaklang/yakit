@@ -305,6 +305,13 @@ const AIMCPList: React.FC<AIMCPListProps> = React.memo((props) => {
     Total: 0,
   })
   const requestIdRef = useRef(0)
+  // 编辑回填与卡片启停共用序号。卡片换分组会重挂载，序号必须留在列表上
+  const detailTokenRef = useRef(new Map<number, number>())
+  const takeDetailToken = useMemoizedFn((id: number) => {
+    const token = (detailTokenRef.current.get(id) ?? 0) + 1
+    detailTokenRef.current.set(id, token)
+    return token
+  })
   const mcpListRef = useRef<HTMLDivElement>(null)
   const [inViewPort = true] = useInViewport(mcpListRef)
   const getList = useMemoizedFn(async () => {
@@ -383,7 +390,8 @@ const AIMCPList: React.FC<AIMCPListProps> = React.memo((props) => {
   const openYakMcpSettings = useMemoizedFn(() => {
     emiter.emit('openPage', JSON.stringify({ route: YakitRoute.Settings, params: { anchor: 'yak-mcp' } }))
   })
-  const onSetData = useMemoizedFn((item: MCPServer) => {
+  const onSetData = useMemoizedFn((item: MCPServer, token?: number) => {
+    if (token !== undefined && detailTokenRef.current.get(item.ID) !== token) return
     setResponse((preV) => {
       // 迟到的启停结果可能晚于搜索词切换：当前结果不含该服务器时丢弃，避免把旧卡片插进新搜索结果
       if (!preV.MCPServers.some((ele) => ele.ID === item.ID)) return preV
@@ -483,6 +491,7 @@ const AIMCPList: React.FC<AIMCPListProps> = React.memo((props) => {
                                 item={item}
                                 onRefresh={getList}
                                 onSetData={onSetData}
+                                takeDetailToken={takeDetailToken}
                                 setCurrentMCP={setCurrentMCP}
                               />
                             ))}
@@ -512,7 +521,7 @@ const AIMCPList: React.FC<AIMCPListProps> = React.memo((props) => {
 })
 
 const AIMCPListItem: React.FC<AIMCPListItemProps> = React.memo((props) => {
-  const { item, onRefresh, setCurrentMCP, onSetData } = props
+  const { item, onRefresh, setCurrentMCP, onSetData, takeDetailToken } = props
   const { t, i18nRefresh } = useI18nNamespaces(['aiAgent', 'yakitUi'])
 
   const [stopVisible, setStopVisible] = useState<boolean>(false)
@@ -527,6 +536,7 @@ const AIMCPListItem: React.FC<AIMCPListItemProps> = React.memo((props) => {
   }, [])
 
   const updateMCPServer = useMemoizedFn((enable: boolean) => {
+    const token = takeDetailToken(item.ID)
     setStopLoading(true)
     const updateValue: UpdateMCPServerRequest = {
       ...item,
@@ -538,7 +548,7 @@ const AIMCPListItem: React.FC<AIMCPListItemProps> = React.memo((props) => {
         const openToolList = (server: MCPServer) => {
           // 启用期间用户已打开其他服务器（本卡片随列表卸载）时，迟到的结果不再覆盖当前工具页
           if (!aliveRef.current) return
-          onSetData(server)
+          onSetData(server, token)
         }
         const loadServer = () =>
           getMCPServersById(item.ID)
@@ -576,9 +586,12 @@ const AIMCPListItem: React.FC<AIMCPListItemProps> = React.memo((props) => {
             if (!saved) return
             await onRefresh()
             if (!saved.Enable) return
+            const token = takeDetailToken(item.ID)
             await new Promise((resolve) => setTimeout(resolve, 1000))
             try {
-              onSetData(await getMCPServersById(item.ID))
+              const detail = await getMCPServersById(item.ID)
+              // 等待与拉取期间用户再次启停过该服务器时，迟到的旧详情不得覆盖新状态
+              onSetData(detail, token)
             } catch {}
           }}
         />
