@@ -6,7 +6,7 @@ vi.mock('lottie-web', () => ({ default: vi.fn() }))
 vi.mock('@/pages/yakRunner/utils', () => ({ isYaklangScriptDeliveryPath: vi.fn() }))
 vi.mock('../../historyChat/utils', async () => await import('../../historyChat/deleteSource'))
 vi.mock('@/pages/ai-re-act/hooks/ChatMultiSessionController', () => ({ globalSessionEngine: {} }))
-import { formatAIAgentSetting } from '..'
+import { formatAIAgentSetting, formatNumberUnits } from '..'
 import { AIAgentSettingDefault } from '../../defaultConstant'
 
 describe('formatAIAgentSetting', () => {
@@ -99,5 +99,27 @@ describe('formatAIAgentSetting', () => {
     expect(formatAIAgentSetting({ ...AIAgentSettingDefault, RuntimeContextSizeLimit: 0 }).RuntimeContextSizeLimit).toBe(
       0,
     )
+  })
+})
+
+// The same formatter feeds token totals, pressure labels and chart tooltips.
+describe('decimal token display', () => {
+  it.each([
+    [999, '999'],
+    [1000, '1.0K'],
+    [1024, '1.0K'],
+    [100000, '100.0K'],
+    [512000, '512.0K'],
+    [999999, '1.0M'],
+    [1000000, '1.0M'],
+    [1500000, '1.5M'],
+  ])('formats %i tokens as %s', (tokens, label) => {
+    expect(formatNumberUnits(tokens)).toBe(label)
+  })
+
+  it('keeps byte statistics on their existing binary scale', () => {
+    expect(formatNumberUnits(1000, 1024)).toBe('1000')
+    expect(formatNumberUnits(102400, 1024)).toBe('100.0K')
+    expect(formatNumberUnits(1048576, 1024)).toBe('1.0M')
   })
 })

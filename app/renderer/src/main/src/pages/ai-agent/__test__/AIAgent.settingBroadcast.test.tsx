@@ -561,9 +561,9 @@ describe('AIAgent 配置广播', () => {
     await act(async () => {})
 
     const setting = JSON.parse(screen.getByTestId('setting').textContent!)
-    expect(setting).toMatchObject({ RuntimeContextSizeLimit: runtimeKB, AICallTokenLimit: tokenKB })
+    expect(setting).toMatchObject({ RuntimeContextSizeLimit: (runtimeKB * 1024) / 1000, AICallTokenLimit: tokenKB })
     expect(setting).not.toHaveProperty('TimelineContentSizeLimit')
-    expect(screen.getByTestId('runtime-limit')).toHaveTextContent(String(runtimeKB > 0 ? runtimeKB : 300))
+    expect(screen.getByTestId('runtime-limit')).toHaveTextContent(String(runtimeKB > 0 ? runtimeKB : 500))
     expect(screen.getByTestId('raw-limit')).toHaveTextContent(String(runtimeKB))
     expect(globalSessionEngine.updateSessionConfig).not.toHaveBeenCalled()
     expect(setRemoteValueMock).not.toHaveBeenCalled()
@@ -583,7 +583,7 @@ describe('AIAgent 配置广播', () => {
     } as AISession
     querySessionMock.mockResolvedValueOnce(sessionResponse([session]))
     render(<AIAgent pageId="test" initialSession={session} />)
-    await waitFor(() => expect(screen.getByTestId('default-limit')).toHaveTextContent(/^300$/))
+    await waitFor(() => expect(screen.getByTestId('default-limit')).toHaveTextContent(/^307\.2$/))
     await act(async () => {})
     expect(globalSessionEngine.updateSessionConfig).not.toHaveBeenCalled()
     // 初始化恢复不写引擎；用户修改设置后进入正常配置同步路径。
@@ -612,7 +612,7 @@ describe('AIAgent 配置广播', () => {
     })
     expect(screen.getByTestId('runtime-limit')).toHaveTextContent(/^600$/)
     expect(screen.getByTestId('raw-limit')).toHaveTextContent(/^600$/)
-    expect(screen.getByTestId('default-limit')).toHaveTextContent(/^300$/)
+    expect(screen.getByTestId('default-limit')).toHaveTextContent(/^500$/)
     expect(globalSessionEngine.updateSessionConfig).toHaveBeenCalledExactlyOnceWith(
       'history',
       expect.objectContaining({ RuntimeContextSizeLimit: 600 }),
@@ -650,8 +650,8 @@ describe('AIAgent 配置广播', () => {
         source === 'user'
           ? { EnablePlan: true }
           : source === 'context'
-            ? { RuntimeContextSizeLimit: 600 }
-            : { ReviewPolicy: 'yolo' },
+          ? { RuntimeContextSizeLimit: 600 }
+          : { ReviewPolicy: 'yolo' },
       )
       const { RuntimeContextSizeLimit: _defaultLimit, ...sessionConfig } = currentSetting
       expect(globalSessionEngine.updateSessionConfig).toHaveBeenCalledExactlyOnceWith('history', {
@@ -671,7 +671,7 @@ describe('AIAgent 配置广播', () => {
       expect(JSON.parse(screen.getByTestId('setting').textContent!)).toEqual(currentSetting)
       expect(globalSessionEngine.updateSessionConfig).toHaveBeenCalledOnce()
       expect(setRemoteValueMock).toHaveBeenCalledTimes(persistedCount)
-      if (source === 'context') expect(screen.getByTestId('runtime-limit')).toHaveTextContent(/^600$/)
+      if (source === 'context') expect(screen.getByTestId('runtime-limit')).toHaveTextContent(/^614\.4$/)
       expect(ipc.pages.get(YakitRoute.AI_Agent).pageList[0].pageName).toBe('查询标题')
     },
   )
@@ -963,8 +963,8 @@ describe('AIAgent 配置广播', () => {
       pageParamsInfo: { aiAgentPageInfo: { session: { SessionID: 'other' } } },
     }
     ipc.pages.set(YakitRoute.AI_Agent, { pageList: [node, otherPage] })
-    ipc.queryPagesDataById.mockImplementation((route, id) =>
-      ipc.pages.get(route)?.pageList.find((page) => page.pageId === id),
+    ipc.queryPagesDataById.mockImplementation(
+      (route, id) => ipc.pages.get(route)?.pageList.find((page) => page.pageId === id),
     )
 
     render(<AIAgent pageId="test" initialSession={session} />)
@@ -1023,12 +1023,12 @@ describe('AIAgent 配置广播', () => {
     const b = within(screen.getByTestId('session-b'))
     const next = within(screen.getByTestId('new-session'))
     await waitFor(() => expect(next.getByTestId('review-policy')).toHaveTextContent('yolo'))
-    expect(a.getByTestId('runtime-limit')).toHaveTextContent(/^300$/)
-    expect(b.getByTestId('runtime-limit')).toHaveTextContent(/^120$/)
+    expect(a.getByTestId('runtime-limit')).toHaveTextContent(/^307\.2$/)
+    expect(b.getByTestId('runtime-limit')).toHaveTextContent(/^122\.88$/)
     fireEvent.click(a.getByText('change-limit'))
     await waitFor(() => expect(next.getByTestId('runtime-limit')).toHaveTextContent(/^600$/))
-    expect(a.getByTestId('runtime-limit')).toHaveTextContent(/^600$/)
-    expect(b.getByTestId('runtime-limit')).toHaveTextContent(/^120$/)
+    expect(a.getByTestId('runtime-limit')).toHaveTextContent(/^614\.4$/)
+    expect(b.getByTestId('runtime-limit')).toHaveTextContent(/^122\.88$/)
     expect(b.getByTestId('default-limit')).toHaveTextContent(/^600$/)
     const updates = vi.mocked(globalSessionEngine.updateSessionConfig).mock.calls
     expect(updates.filter(([id]) => id === 'a').at(-1)?.[1].RuntimeContextSizeLimit).toBe(600)
@@ -1050,8 +1050,8 @@ describe('AIAgent 配置广播', () => {
     )
     await waitFor(() => expect(querySessionMock).toHaveBeenCalledOnce())
     expect(getRemoteValueMock).not.toHaveBeenCalledWith(RemoteAIAgentGV.AIAgentChatSetting)
-    expect(screen.getByTestId('default-limit')).toHaveTextContent(/^300$/)
-    expect(screen.getByTestId('runtime-limit')).toHaveTextContent(/^300$/)
+    expect(screen.getByTestId('default-limit')).toHaveTextContent(/^500$/)
+    expect(screen.getByTestId('runtime-limit')).toHaveTextContent(/^500$/)
     expect(screen.getByTestId('raw-limit').textContent).toBe(limit === undefined ? '' : '0')
     expect(globalSessionEngine.updateSessionConfig).not.toHaveBeenCalled()
     expect(setRemoteValueMock).not.toHaveBeenCalled()
@@ -1418,8 +1418,8 @@ describe('AIAgent 配置广播', () => {
       pageParamsInfo: { aiAgentPageInfo: { session: { SessionID: `other-${index}` } } },
     }))
     ipc.pages.set(YakitRoute.AI_Agent, { pageList: [node, ...otherPages] })
-    ipc.queryPagesDataById.mockImplementation((route, id) =>
-      ipc.pages.get(route)?.pageList.find((page) => page.pageId === id),
+    ipc.queryPagesDataById.mockImplementation(
+      (route, id) => ipc.pages.get(route)?.pageList.find((page) => page.pageId === id),
     )
     render(<AIAgent pageId="test" initialSession={session} />)
     await act(async () => {})

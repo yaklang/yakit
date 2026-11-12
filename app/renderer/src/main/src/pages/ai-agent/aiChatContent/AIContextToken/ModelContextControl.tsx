@@ -8,8 +8,8 @@ import styles from './ModelContextControl.module.scss'
 import { formatContextTokens } from './contextTokens'
 export { formatContextTokens } from './contextTokens'
 
-const DEFAULT_THRESHOLD = 500 * 1024
-const LARGE_THRESHOLD_WARNING = 750 * 1024
+const DEFAULT_THRESHOLD = 500 * 1000
+const LARGE_THRESHOLD_WARNING = 750 * 1000
 export const contextUsagePercent = (context: AIAgentGrpcApi.ModelContext) =>
   Math.round((Math.max(0, context.prompt_tokens) / context.threshold_tokens) * 100)
 const usageTone = (context: AIAgentGrpcApi.ModelContext) => {
@@ -69,13 +69,13 @@ export default function ModelContextControl({
   }, [context.provider, context.model, context.threshold_tokens])
 
   const threshold = preview ?? context.threshold_tokens
-  const min = Math.max(100 * 1024, context.minimum_threshold_tokens ?? 0)
+  const min = Math.max(100 * 1000, context.minimum_threshold_tokens ?? 0)
   // Keep the scale stable across ordinary edits, expanding only for larger models/budgets.
   const max = Math.max(
-    1000 * 1024,
-    Math.ceil(Math.max(context.context_tokens, context.threshold_tokens, min + 1024) / (1000 * 1024)) * 1000 * 1024,
+    1000 * 1000,
+    Math.ceil(Math.max(context.context_tokens, context.threshold_tokens, min + 1000) / (1000 * 1000)) * 1000 * 1000,
   )
-  const clamp = (value: number) => Math.min(max, Math.max(min, Math.round(value / 1024) * 1024))
+  const clamp = (value: number) => Math.min(max, Math.max(min, Math.round(value)))
   const ratio = Math.max(0, Math.min(1, (threshold - min) / (max - min)))
   const percent = contextUsagePercent({ ...context, threshold_tokens: threshold })
   const commit = (value: number) => {
@@ -88,17 +88,19 @@ export default function ModelContextControl({
     if (!geometry?.width) return
     geometry.value = Math.min(
       max,
-      clamp(geometry.startValue + ((clientX - geometry.startX) / geometry.width) * (max - min)),
+      clamp(
+        Math.round((geometry.startValue + ((clientX - geometry.startX) / geometry.width) * (max - min)) / 1000) * 1000,
+      ),
     )
     setPreview(geometry.value)
   }
   const finishInput = () => {
     if (draft === null) return
-    const tokens = Number(draft) * 1024
+    const tokens = Math.round(Number(draft) * 1000)
     if (draft.trim() && Number.isSafeInteger(tokens)) commit(tokens)
     setDraft(null)
   }
-  const warningThreshold = draft !== null && draft.trim() ? Number(draft) * 1024 : threshold
+  const warningThreshold = draft !== null && draft.trim() ? Number(draft) * 1000 : threshold
   const notice =
     status === 'error'
       ? timeoutError
@@ -152,10 +154,10 @@ export default function ModelContextControl({
         <span className={styles.inputBox}>
           <input
             type="number"
-            min={min / 1024}
-            max={max / 1024}
-            step="1"
-            value={draft ?? threshold / 1024}
+            min={min / 1000}
+            max={max / 1000}
+            step="0.001"
+            value={draft ?? threshold / 1000}
             disabled={!onChange}
             aria-label={t('AIContextToken.compressionThreshold')}
             onChange={(event) => setDraft(event.target.value)}
@@ -225,12 +227,12 @@ export default function ModelContextControl({
           }}
           onKeyDown={(event) => {
             const deltas: Record<string, number> = {
-              ArrowUp: 1024,
-              ArrowRight: 1024,
-              ArrowDown: -1024,
-              ArrowLeft: -1024,
-              PageUp: 10 * 1024,
-              PageDown: -10 * 1024,
+              ArrowUp: 1000,
+              ArrowRight: 1000,
+              ArrowDown: -1000,
+              ArrowLeft: -1000,
+              PageUp: 10 * 1000,
+              PageDown: -10 * 1000,
             }
             if (deltas[event.key] || event.key === 'Home' || event.key === 'End') {
               event.preventDefault()

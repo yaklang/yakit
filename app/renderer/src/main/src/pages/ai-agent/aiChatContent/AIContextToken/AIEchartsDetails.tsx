@@ -89,7 +89,7 @@ const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = ({
     return getCostData(firstCost)
   }, [renderNumber, firstCost?.intelligent, firstCost?.lightweight])
 
-  const threshold = modelContext?.threshold_tokens ?? runtimeContextSizeLimit * 1024
+  const threshold = modelContext?.threshold_tokens ?? Math.round(runtimeContextSizeLimit * 1000)
 
   const contextStatsData = useCreation(() => {
     return getContextStatsData(contextStats?.data)
@@ -99,7 +99,7 @@ const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = ({
     if (contextStatsMetric === 'tokens') {
       return formatNumberUnits(contextStats?.prompt_tokens ?? 0)
     }
-    return formatNumberUnits(contextStats?.prompt_bytes ?? 0)
+    return formatNumberUnits(contextStats?.prompt_bytes ?? 0, 1024)
   }, [contextStatsMetric, contextStats?.prompt_bytes, contextStats?.prompt_tokens])
 
   const contextSectionsData = useCreation(() => {

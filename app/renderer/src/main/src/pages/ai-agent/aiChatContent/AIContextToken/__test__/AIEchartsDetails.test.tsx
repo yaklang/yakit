@@ -151,7 +151,7 @@ describe('AIEchartsDetails 辅助模型用量展示回退', () => {
     expect(getByTestId('main-model-tokens')).toBeInTheDocument()
   })
 
-  it('上下文大小配置变化时，按最新配置换算字节阈值', () => {
+  it('上下文大小配置变化时，按最新配置换算十进制 token 阈值', () => {
     mocks.settings = { RuntimeContextSizeLimit: 300 }
     const pressure: NonNullable<AIEchartsDetailsProps['pressure']> = {
       intelligent: [
@@ -167,13 +167,13 @@ describe('AIEchartsDetails 辅助模型用量展示回退', () => {
       vision: [],
     }
     const { getByTestId, rerender } = render(<AIEchartsDetails {...baseProps} pressure={pressure} />)
-    expect(getByTestId('pressure-threshold')).toHaveTextContent(/^307200$/)
+    expect(getByTestId('pressure-threshold')).toHaveTextContent(/^300000$/)
 
     pressure.intelligent[0].pressure_token_size = 200
     mocks.settings = { RuntimeContextSizeLimit: 600 }
     rerender(<AIEchartsDetails {...baseProps} pressure={pressure} overallToken={[10, 5, 2]} />)
 
-    expect(getByTestId('pressure-threshold')).toHaveTextContent(/^614400$/)
+    expect(getByTestId('pressure-threshold')).toHaveTextContent(/^600000$/)
   })
 
   it('红线优先使用当前模型阈值，并在压力数据不变时跟随手动调整及自动校准', () => {
@@ -220,10 +220,10 @@ describe('AIEchartsDetails 辅助模型用量展示回退', () => {
   })
 
   it.each([
-    [undefined, '307200'],
-    [60, '61440'],
-    [0, '307200'],
-    [-1, '307200'],
+    [undefined, '500000'],
+    [60, '60000'],
+    [0, '500000'],
+    [-1, '500000'],
   ])('详情图配置为 %s 时使用对应的默认值和单位规则', (limit, expected) => {
     mocks.settings = { RuntimeContextSizeLimit: limit }
     const pressure: NonNullable<AIEchartsDetailsProps['pressure']> = {
@@ -244,12 +244,12 @@ describe('AIEchartsDetails 辅助模型用量展示回退', () => {
   })
 
   it.each([
-    [undefined, '307200'],
-    [0, '307200'],
-    [-1, '307200'],
+    [undefined, '500000'],
+    [0, '500000'],
+    [-1, '500000'],
     [120, '122880'],
     [600, '614400'],
-  ])('已有会话阈值为 %s KB 时显示换算后的字节值或默认值，不使用全局设置', (limit, expected) => {
+  ])('已有会话阈值为 %s KB 时显示实际 token 值或模型默认值，不使用全局设置', (limit, expected) => {
     mocks.settings = { RuntimeContextSizeLimit: 900 }
     mocks.activeChat = { SessionID: 'session-id', StartParams: { RuntimeContextSizeLimit: limit } }
     const pressure: NonNullable<AIEchartsDetailsProps['pressure']> = {
