@@ -66,13 +66,9 @@ export const grpcFetchIntranetYakitVersion: APIOptionalFunc<boolean, string> = (
         },
       })
         .then((res) => {
-          let filePath: string = ''
-          if ((res?.data || []).length > 0) {
-            filePath = res.data[0].filePath
-            resolve(filePath)
-          } else {
-            reject()
-          }
+          const installer = (res?.data || []).find((item) => item.fileType === 'yak_data' && item.filePath)
+          if (installer) resolve(installer.filePath)
+          else reject()
         })
         .catch((e) => {
           if (!hiddenError)
