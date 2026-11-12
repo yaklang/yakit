@@ -16,6 +16,7 @@ import emiter from '@/utils/eventBus/eventBus'
 import { useSavedModelContext } from './useSavedModelContext'
 import { CONTEXT_PERF_POLL_INTERVAL, useContextPerfStore } from './useContextPerfStore'
 import ModelContextControl, { ContextUsageRing, contextUsagePercent, formatContextTokens } from './ModelContextControl'
+import { MIN_CONTEXT_THRESHOLD_TOKENS } from './contextTokens'
 import styles from './ModelContextControl.module.scss'
 
 /** The composer owns model settings; the existing statistics popover stays independent. */
@@ -129,8 +130,7 @@ export default memo(function ModelContextPopover() {
 
   const onChange = useMemoizedFn((tokens: number, disabled?: boolean) => {
     if (!confirmedContext?.model) return false
-    if (disabled === undefined && tokens < Math.max(100 * 1000, confirmedContext.minimum_threshold_tokens ?? 0))
-      return false
+    if (disabled === undefined && tokens < MIN_CONTEXT_THRESHOLD_TOKENS) return false
     // A quick switch after a threshold edit must carry the still-unconfirmed value forward.
     const pendingTokens = disabled === undefined ? tokens : pending?.tokens
     const requestedTokens = pendingTokens ?? 0

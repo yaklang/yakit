@@ -5,7 +5,7 @@ import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import type { AIAgentGrpcApi } from '@/pages/ai-re-act/hooks/grpcApi'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import styles from './ModelContextControl.module.scss'
-import { formatContextTokens } from './contextTokens'
+import { formatContextTokens, MIN_CONTEXT_THRESHOLD_TOKENS } from './contextTokens'
 export { formatContextTokens } from './contextTokens'
 
 const DEFAULT_THRESHOLD = 500 * 1000
@@ -69,7 +69,8 @@ export default function ModelContextControl({
   }, [context.provider, context.model, context.threshold_tokens])
 
   const threshold = preview ?? context.threshold_tokens
-  const min = Math.max(100 * 1000, context.minimum_threshold_tokens ?? 0)
+  // The global manual floor must not inherit the old 102,400 value from runtime/history snapshots.
+  const min = MIN_CONTEXT_THRESHOLD_TOKENS
   // Keep the scale stable across ordinary edits, expanding only for larger models/budgets.
   const max = Math.max(
     1000 * 1000,
