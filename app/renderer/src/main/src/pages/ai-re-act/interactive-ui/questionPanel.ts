@@ -1,18 +1,30 @@
 import type { StoreApi } from 'zustand'
-import type { AIChatQSDataTypeEnum, AIChatQSData, ChatStoreState } from '../hooks/aiRender'
+import { AIChatQSDataTypeEnum, type AIChatQSData, type ChatStoreState } from '../hooks/aiRender'
 import type { QuestionDraft } from './types'
+
+export type PanelQuestion = Extract<AIChatQSData, { type: AIChatQSDataTypeEnum.UI_QUESTION }>
+
+export function questionPanelOutcome(item: PanelQuestion) {
+  const draft = item.uiState as QuestionDraft | undefined
+  return item.data.request.state === 'submitted' ? 'submitted' : draft?.outcome || item.data.request.state
+}
+
+export function isQueuedQuestion(item: AIChatQSData | undefined): item is PanelQuestion {
+  if (item?.type !== AIChatQSDataTypeEnum.UI_QUESTION) return false
+  const draft = item.uiState as QuestionDraft | undefined
+  const outcome = questionPanelOutcome(item)
+  return outcome === 'pending' || (outcome === 'expired' && !!draft?.touched)
+}
 
 export function syncQuestionPanel(
   store: Pick<StoreApi<ChatStoreState>, 'getState'>,
-  item: Extract<AIChatQSData, { type: AIChatQSDataTypeEnum.UI_QUESTION }>,
+  item: PanelQuestion,
   activate = false,
 ) {
   const state = store.getState()
-  const draft = item.uiState as QuestionDraft | undefined
-  const outcome = item.data.request.state === 'submitted' ? 'submitted' : draft?.outcome || item.data.request.state
+  const outcome = questionPanelOutcome(item)
   const tokens = state.questionPanelTokens || []
-  const pending = outcome === 'pending' || (outcome === 'expired' && draft?.touched)
-  const keep = pending || (activate && outcome === 'expired')
+  const keep = isQueuedQuestion(item) || (activate && outcome === 'expired')
   const next = tokens.filter((token) => token !== item.id)
   if (keep) {
     if (activate) next.unshift(item.id)

@@ -1,17 +1,9 @@
 import { useStore } from 'zustand'
 import { useCurrentRawData, useCurrentStore } from '../../hooks/useCurrentDataBySession'
-import { AIChatQSDataTypeEnum, type AIChatQSData } from '../../hooks/aiRender'
-import type { QuestionDraft } from '../../interactive-ui/types'
+import { AIChatQSDataTypeEnum } from '../../hooks/aiRender'
+import { isQueuedQuestion } from '../../interactive-ui/questionPanel'
 import { QuestionCard } from '../QuestionCard/QuestionCard'
-import type { QuestionQueueItem } from '../QuestionQueue/QuestionQueue'
 import styles from './ClarificationPanel.module.scss'
-
-function isQueuedQuestion(item: AIChatQSData | undefined): item is QuestionQueueItem {
-  if (item?.type !== AIChatQSDataTypeEnum.UI_QUESTION) return false
-  const draft = item.uiState as QuestionDraft | undefined
-  const outcome = item.data.request.state === 'submitted' ? 'submitted' : draft?.outcome || item.data.request.state
-  return outcome === 'pending' || (outcome === 'expired' && !!draft?.touched)
-}
 
 export function ClarificationPanel() {
   const store = useCurrentStore()
