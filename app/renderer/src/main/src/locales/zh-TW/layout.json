@@ -730,5 +730,11 @@
     "noProcess": "未識別到已啟動的引擎程序",
     "killProcessFailed": "引擎程序(pid:{{pid}},port:{{port}})關閉失敗 {{error}}",
     "closing": "程序關閉中，請稍等 ..."
+  },
+  "Screenshot": {
+    "capture": "一鍵截圖",
+    "saved": "截圖已儲存",
+    "failed": "截圖失敗：{{error}}",
+    "openDirectory": "開啟截圖資料夾"
   }
 }

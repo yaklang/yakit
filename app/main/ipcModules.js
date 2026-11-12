@@ -23,5 +23,6 @@ module.exports = {
     download: () => require('./utils/download'),
     fileSystemDialog: () => require('./utils/fileSystemDialog'),
     nodeFiles: () => require('./utils/nodeFiles'),
+    screenshot: () => require('./utils/screenshot'),
   },
 }

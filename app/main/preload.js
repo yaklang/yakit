@@ -80,6 +80,14 @@ process.on('loaded', function () {
       relaunchApp: () => invoke('relaunch-app'),
       isMITMDebugHooksEnabled: () => mitmDebugHooksEnabled,
     },
+    screenshot: {
+      captureAndSave: () => invoke('screenshot-capture-and-save'),
+      getSettings: () => invoke('screenshot-get-settings'),
+      updateWatermark: (options) => invoke('screenshot-update-watermark', options),
+      selectDirectory: () => invoke('screenshot-select-directory'),
+      resetDirectory: () => invoke('screenshot-reset-directory'),
+      openDirectory: () => invoke('screenshot-open-directory'),
+    },
     theme: {
       setTheme: (theme) => invoke('aux-window:app-sync', { type: 'theme', payload: theme }),
       onUpdated: (callback) =>

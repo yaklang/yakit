@@ -100,6 +100,22 @@
       "tabSingle": "History (單選)",
       "tabMultiple": "History (多選)",
       "tabPacket": "資料包"
+    },
+    "screenshot": {
+      "title": "截圖設定",
+      "selectDirectory": "選擇資料夾",
+      "resetDirectory": "恢復預設",
+      "description": "點擊頂部相機按鈕，將目前可見頁面儲存為 PNG。預設儲存在本機工作空間的 screenshots 資料夾；變更目錄立即生效，現有截圖不會移動。",
+      "failed": "截圖設定操作失敗：{{error}}",
+      "watermarkEnabled": "啟用時間浮水印",
+      "watermarkDescription": "使用目前電腦的系統時間和時區。",
+      "watermarkPosition": "浮水印位置",
+      "positions": {
+        "top-left": "左上角",
+        "top-right": "右上角",
+        "bottom-left": "左下角",
+        "bottom-right": "右下角"
+      }
     }
   }
 }

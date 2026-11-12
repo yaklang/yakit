@@ -16,6 +16,7 @@ const makeNs = () =>
   )
 
 export const yakitApp = makeNs()
+export const yakitScreenshot = makeNs()
 export const yakitTheme = makeNs()
 export const yakitSystem = makeNs()
 export const yakitNetwork = makeNs()

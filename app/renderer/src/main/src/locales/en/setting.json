@@ -100,6 +100,22 @@
       "tabSingle": "History (Single)",
       "tabMultiple": "History (Multiple)",
       "tabPacket": "Packet"
+    },
+    "screenshot": {
+      "title": "Screenshot settings",
+      "selectDirectory": "Choose folder",
+      "resetDirectory": "Restore default",
+      "description": "Use the camera button in the top bar to save the visible page as a PNG. Files are saved in the local workspace screenshots folder by default. Folder changes apply immediately; existing screenshots are not moved.",
+      "failed": "Screenshot settings operation failed: {{error}}",
+      "watermarkEnabled": "Enable timestamp watermark",
+      "watermarkDescription": "Uses this computer’s system time and time zone.",
+      "watermarkPosition": "Watermark position",
+      "positions": {
+        "top-left": "Top left",
+        "top-right": "Top right",
+        "bottom-left": "Bottom left",
+        "bottom-right": "Bottom right"
+      }
     }
   }
 }

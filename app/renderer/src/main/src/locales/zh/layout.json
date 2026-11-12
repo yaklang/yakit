@@ -730,5 +730,11 @@
     "noProcess": "未识别到已启动的引擎进程",
     "killProcessFailed": "引擎进程(pid:{{pid}},port:{{port}})关闭失败 {{error}}",
     "closing": "进程关闭中，请稍等 ..."
+  },
+  "Screenshot": {
+    "capture": "一键截图",
+    "saved": "截图已保存",
+    "failed": "截图失败：{{error}}",
+    "openDirectory": "打开截图目录"
   }
 }
