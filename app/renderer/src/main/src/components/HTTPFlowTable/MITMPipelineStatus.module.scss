@@ -41,14 +41,6 @@
       stroke: var(--Colors-Use-Error-Primary);
     }
   }
-
-  .trigger-processing-dot {
-    width: 6px;
-    height: 6px;
-    flex: 0 0 6px;
-    border-radius: 50%;
-    background: var(--Colors-Use-Warning-Primary);
-  }
 }
 
 .pipeline-popover-overlay {

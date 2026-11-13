@@ -78,7 +78,6 @@ export const MITMPipelineStatus: React.FC = React.memo(() => {
   }, [])
 
   const health = resolvePipelineHealth(view)
-  const backlog = view ? view.stats.ActiveTotal + view.stats.PersistActive : 0
   const content = !view ? (
     <div className={styles['empty-content']}>
       <div className={styles['popover-title']}>MITM 实时处理状态</div>
@@ -145,7 +144,7 @@ export const MITMPipelineStatus: React.FC = React.memo(() => {
           className={classNames(styles['pipeline-trigger'], styles[`pipeline-trigger-${health.tone}`])}
           aria-label={
             view
-              ? `MITM 实时处理状态，每秒发出 ${formatMITMPipelineRate(view.rates.dispatch)} 条请求，每秒收到 ${formatMITMPipelineRate(view.rates.upstreamCompleted)} 条响应，处理中 ${backlog} 项`
+              ? `MITM 实时处理状态，每秒发出 ${formatMITMPipelineRate(view.rates.dispatch)} 条请求，每秒收到 ${formatMITMPipelineRate(view.rates.upstreamCompleted)} 条响应，在途 ${view.stats.ActiveTotal} 条请求，本会话待写 ${view.stats.PersistActive} 项`
               : 'MITM 实时处理状态，等待统计数据'
           }
         >
@@ -164,10 +163,7 @@ export const MITMPipelineStatus: React.FC = React.memo(() => {
               />
               <span>{view ? formatMITMPipelineRate(view.rates.upstreamCompleted) : '–'}/s</span>
             </span>
-            <span className={styles['trigger-metric']}>
-              <span className={styles['trigger-processing-dot']} />
-              <span>{view ? backlog : '–'}</span>
-            </span>
+            <span className={styles['trigger-metric']}>在途 {view?.stats.ActiveTotal ?? '–'}</span>
           </span>
         </YakitButton>
       </YakitPopover>

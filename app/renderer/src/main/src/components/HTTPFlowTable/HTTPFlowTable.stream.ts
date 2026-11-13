@@ -1,6 +1,6 @@
 import type { YakQueryHTTPFlowRequest } from '@/utils/yakQueryHTTPFlow'
 import type { HTTPFlow, YakQueryHTTPFlowResponse } from './HTTPFlowTable.constants'
-import { hasHTTPFlowFilterCriteria } from './HTTPFlowTable.utils'
+import { buildHTTPFlowProjectKey, hasHTTPFlowFilterCriteria } from './HTTPFlowTable.utils'
 import {
   HTTP_FLOW_LIVE_REFRESH_MIN_INTERVAL_MS,
   type HTTPFlowLiveStreamFault,
@@ -402,8 +402,6 @@ const responseMaxID = (response: YakQueryHTTPFlowResponse): number => {
   return maxID
 }
 
-const projectKeyOf = (databaseIdentity: string, projectGeneration: number) => `${databaseIdentity}:${projectGeneration}`
-
 export const createHTTPFlowLiveStreamController = (options: HTTPFlowLiveStreamControllerOptions) => {
   let activeToken = ''
   let activeProjectKey = ''
@@ -411,6 +409,7 @@ export const createHTTPFlowLiveStreamController = (options: HTTPFlowLiveStreamCo
   let projectGeneration = 0
   let lastSeenSequence = 0
   let lastSeenId = 0
+  let queryCursor = { projectKey: '', id: 0 }
   let haveSequenceBaseline = false
   let recovering = false
   let unavailableProjectKey = ''
@@ -567,19 +566,27 @@ export const createHTTPFlowLiveStreamController = (options: HTTPFlowLiveStreamCo
   }
 
   const observeQuery = (response: YakQueryHTTPFlowResponse, filter?: YakQueryHTTPFlowRequest) => {
-    // Protocol v1 covers only the unfiltered MITM source.
-    if (options.getMode() === 'off' || filter?.SourceType !== 'mitm' || hasHTTPFlowFilterCriteria(filter)) {
+    if (options.getMode() === 'off') {
       stop()
       return
     }
     const identity = response.SystemTiming?.DatabaseIdentity || ''
     const generation = asSafeNumber(response.SystemTiming?.ProjectGeneration)
-    if (!identity || generation === 0) {
+    const nextProjectKey = buildHTTPFlowProjectKey(identity, generation)
+    // Protocol v1 covers only the unfiltered MITM source.
+    if (filter?.SourceType !== 'mitm' || hasHTTPFlowFilterCriteria(filter)) {
+      if (nextProjectKey && nextProjectKey === queryCursor.projectKey) {
+        resetSubscription()
+      } else {
+        stop()
+      }
+      return
+    }
+    if (!nextProjectKey) {
       stopTransport()
       return
     }
 
-    const nextProjectKey = projectKeyOf(identity, generation)
     // An empty query after MITM "reset" still has a valid resume boundary in
     // Filter.AfterId. Losing it here makes a recovering/new subscription start
     // from ID 0, which can repeatedly hit the replay-window GAP and never
@@ -592,27 +599,29 @@ export const createHTTPFlowLiveStreamController = (options: HTTPFlowLiveStreamCo
       databaseIdentity = identity
       projectGeneration = generation
       lastSeenSequence = 0
-      lastSeenId = queryResumeID
+      // A source change cancels pending direct rows. An empty page can
+      // resume from this project's last query boundary and replay those rows.
+      lastSeenId = queryResumeID || (queryCursor.projectKey === nextProjectKey ? queryCursor.id : 0)
+      queryCursor = { projectKey: nextProjectKey, id: lastSeenId }
       haveSequenceBaseline = false
       recovering = false
       unavailableProjectKey = ''
+    } else if (recovering) {
+      // A gap invalidates direct rows that were received but not rendered.
+      // Resume from the database recovery result so those rows can replay.
+      lastSeenId = queryResumeID
+      queryCursor.id = queryResumeID
+      recovering = false
+      lastSeenSequence = 0
+      haveSequenceBaseline = false
     } else {
-      if (recovering) {
-        // A gap invalidates every direct row that was received but not yet
-        // rendered. Resume from the database recovery result, not the old
-        // receive cursor, or those cancelled rows could be skipped forever.
-        lastSeenId = queryResumeID
-        recovering = false
-        lastSeenSequence = 0
-        haveSequenceBaseline = false
-      } else {
-        lastSeenId = Math.max(lastSeenId, queryResumeID)
-      }
+      lastSeenId = Math.max(lastSeenId, queryResumeID)
+      queryCursor.id = Math.max(queryCursor.id, queryResumeID)
     }
     start()
   }
 
-  const stop = () => {
+  const resetSubscription = () => {
     options.onReset?.()
     stopTransport()
     options.observer?.recordHTTPFlowLiveStreamStopped()
@@ -624,6 +633,11 @@ export const createHTTPFlowLiveStreamController = (options: HTTPFlowLiveStreamCo
     haveSequenceBaseline = false
     recovering = false
     unavailableProjectKey = ''
+  }
+
+  const stop = () => {
+    resetSubscription()
+    queryCursor = { projectKey: '', id: 0 }
   }
 
   const snapshot = (): HTTPFlowLiveStreamSnapshot => ({

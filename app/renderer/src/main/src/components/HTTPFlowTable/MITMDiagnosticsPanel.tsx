@@ -12,6 +12,7 @@ import {
   formatDuration,
   formatTraceClock,
   resolvePipelineHealth,
+  stageLabel,
   type MITMPipelineViewState,
 } from './MITMDiagnostics.utils'
 import { MITMDiagnosticsTrace, type TraceRange } from './MITMDiagnosticsTrace'
@@ -127,7 +128,7 @@ export const MITMDiagnosticsPanel: React.FC<PanelProps> = ({ view, onClose }) =>
       {flowId !== undefined && (
         <YakitDrawer open title={`流量 #${flowId}`} width="80%" onClose={() => setFlowId(undefined)}>
           <Suspense fallback={<div className={styles.empty}>正在加载流量…</div>}>
-            <FlowDetail id={flowId} onClose={() => setFlowId(undefined)} />
+            <FlowDetail id={flowId} pageType="MITM" onClose={() => setFlowId(undefined)} />
           </Suspense>
         </YakitDrawer>
       )}
@@ -157,16 +158,19 @@ const Line: React.FC<{ label: string; children: React.ReactNode }> = ({ label, c
   </div>
 )
 
-const liveStages: Array<[string, string[]]> = [
-  ['等待转发', ['request_processing']],
-  ['等待手动处理', ['manual_request', 'manual_response']],
-  ['等待连接池空位', ['pool_wait']],
-  ['建立上游连接', ['dial']],
-  ['发送上游请求', ['upstream', 'send']],
-  ['等待上游首包', ['first_byte']],
-  ['响应传输', ['read']],
-  ['SSE 传输', ['streaming']],
-  ['处理响应', ['local_response', 'response_processing']],
+const liveStages = [
+  'request_processing',
+  'manual_request',
+  'upstream',
+  'pool_wait',
+  'dial',
+  'send',
+  'first_byte',
+  'read',
+  'streaming',
+  'local_response',
+  'response_processing',
+  'manual_response',
 ]
 
 const HTTPPhases: React.FC<{
@@ -175,21 +179,8 @@ const HTTPPhases: React.FC<{
   warning?: string
   onStage?: (stage: string) => void
 }> = ({ view, extended, warning, onStage }) => {
-  const stages = view.stats.Diagnostics?.stages ?? []
-  const rows = liveStages.map(([label, names]) => {
-    const matches = stages.filter(({ stage }) => names.includes(stage))
-    return {
-      label,
-      stage: names.length === 1 ? names[0] : undefined,
-      total: matches.reduce((sum, stage) => sum + stage.count, 0),
-      browser: matches.reduce((sum, stage) => sum + stage.browserCount, 0),
-      filtered: matches.reduce((sum, stage) => sum + stage.filteredCount, 0),
-      oldest: Math.max(0, ...matches.map((stage) => stage.oldest)),
-      otherOldest: Math.max(0, ...matches.map((stage) => stage.otherOldest)),
-      browserOldest: Math.max(0, ...matches.map((stage) => stage.browserOldest)),
-    }
-  })
-  const max = Math.max(1, ...rows.map((row) => row.total))
+  const stages = new Map(view.stats.Diagnostics?.stages.map((summary) => [summary.stage, summary]))
+  const max = Math.max(1, ...liveStages.map((stage) => stages.get(stage)?.count ?? 0))
   return (
     <>
       <table className={styles.phaseTable} aria-label="HTTP 在途阶段">
@@ -201,38 +192,46 @@ const HTTPPhases: React.FC<{
           </tr>
         </thead>
         <tbody>
-          {rows.map((row) => {
-            const other = row.total - row.browser
+          {liveStages.map((stage) => {
+            const {
+              count: total = 0,
+              browserCount: browser = 0,
+              filteredCount: filtered = 0,
+              oldest = 0,
+              otherOldest = 0,
+              browserOldest = 0,
+            } = stages.get(stage) ?? {}
+            const label = stageLabel(stage)
+            const other = total - browser
             const groups = [
-              row.browser > 0 &&
-                `Chrome 自动填充 ${row.browser} 条，最久 ${formatDuration(row.browserOldest)}${other ? ` · 其他流量 ${other} 条，最久 ${formatDuration(row.otherOldest)}` : ''}`,
-              row.filtered > 0 && `MITM 已过滤 ${row.filtered} 条`,
+              browser > 0 &&
+                `Chrome 自动填充 ${browser} 条，最久 ${formatDuration(browserOldest)}${other ? ` · 其他流量 ${other} 条，最久 ${formatDuration(otherOldest)}` : ''}`,
+              filtered > 0 && `MITM 已过滤 ${filtered} 条`,
             ]
               .filter(Boolean)
               .join(' · ')
-            const stage = row.stage
             return (
-              <tr key={row.label} data-attention={warning === row.label || undefined}>
+              <tr key={stage} data-attention={warning === label || undefined}>
                 <th scope="row">
-                  {onStage && stage && row.total > 0 ? (
+                  {onStage && total > 0 ? (
                     <YakitButton type="text" size="small" onClick={() => onStage(stage)}>
-                      {row.label}
+                      {label}
                     </YakitButton>
                   ) : (
-                    row.label
+                    label
                   )}
                 </th>
                 <td title={groups || undefined}>
                   <div className={styles.phaseValue}>
                     <div className={styles.phaseTrack} aria-hidden="true">
                       <span className={styles.phaseOther} style={{ width: `${(other / max) * 100}%` }} />
-                      <span className={styles.phaseBrowser} style={{ width: `${(row.browser / max) * 100}%` }} />
+                      <span className={styles.phaseBrowser} style={{ width: `${(browser / max) * 100}%` }} />
                     </div>
-                    <span>{count(row.total)}</span>
+                    <span>{count(total)}</span>
                     {groups && <span className={styles.visuallyHidden}>{groups}</span>}
                   </div>
                 </td>
-                <td>{row.total ? formatDuration(row.oldest) : '–'}</td>
+                <td>{total ? formatDuration(oldest) : '–'}</td>
               </tr>
             )
           })}

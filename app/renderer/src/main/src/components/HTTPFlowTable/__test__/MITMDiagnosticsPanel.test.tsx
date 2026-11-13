@@ -21,6 +21,14 @@ vi.mock('../MITMDiagnosticsTrend', () => ({
   default: ({ kind }: { kind: string }) => <div role="img" aria-label={kind} />,
 }))
 
+vi.mock('../../HTTPFlowDetail', () => ({
+  HTTPFlowDetail: ({ id, pageType }: { id: number; pageType?: string }) => (
+    <div>
+      {pageType} #{id}
+    </div>
+  ),
+}))
+
 const now = Date.now()
 const sample: RawMITMPipelineStats = {
   SessionId: 'mitm-1',
@@ -314,6 +322,38 @@ describe('MITM diagnostics', () => {
     expect(await screen.findByText('等待共享队列空位')).toBeVisible()
   })
 
+  it('opens each request phase in the trace using its engine stage', async () => {
+    const stages = [
+      ['manual_request', '等待手动处理请求'],
+      ['manual_response', '等待手动处理响应'],
+      ['upstream', '准备上游请求'],
+      ['send', '发送上游请求'],
+      ['local_response', '本地响应'],
+      ['response_processing', '处理响应'],
+    ]
+    const { invoke } = installIPC((query) => ({ SessionId: query.SessionId, Traces: [] }))
+    const raw = {
+      ...sample,
+      Version: 4,
+      Diagnostics: {
+        HTTPStages: stages.map(([Stage]) => ({ Stage, Count: 1, OldestAgeMs: 1000 })),
+      },
+    }
+    render(<MITMDiagnosticsPanel view={view(raw)} onClose={vi.fn()} />)
+    for (const [stage, label] of stages) {
+      const phases = within(screen.getByRole('table', { name: 'HTTP 在途阶段' }))
+      await act(async () => {
+        fireEvent.click(phases.getByRole('button', { name: label }))
+      })
+      expect(screen.getByText(`在途阶段 · ${label}`)).toBeVisible()
+      expect(invoke).toHaveBeenCalledWith(
+        'mitmV2-get-diagnostics',
+        expect.objectContaining({ View: 'active', Stage: stage, TrafficScope: 'capture' }),
+      )
+      fireEvent.click(screen.getByRole('tab', { name: '实时状态' }))
+    }
+  })
+
   it('shows online WebSockets and filters by the actual downstream connection', async () => {
     const { invoke } = installIPC((query) => ({
       SessionId: query.SessionId,
@@ -350,7 +390,7 @@ describe('MITM diagnostics', () => {
     )
   })
 
-  it('refreshes completed trace details when the flow is saved later', async () => {
+  it('opens MITM flow details when a completed trace is saved later', async () => {
     vi.useFakeTimers()
     try {
       let flowId = '0'
@@ -388,6 +428,9 @@ describe('MITM diagnostics', () => {
     } finally {
       vi.useRealTimers()
     }
+    fireEvent.click(screen.getByRole('button', { name: '查看流量 #42' }))
+    const drawer = screen.getByRole('region', { name: '流量 #42' })
+    expect(await within(drawer).findByText('MITM #42')).toBeVisible()
   })
 
   it('clears an open panel on stop and leaves old engine summaries usable', async () => {
@@ -395,9 +438,13 @@ describe('MITM diagnostics', () => {
     render(<MITMPipelineStatus />)
     const handler = on.mock.calls.find(([event]) => event === 'client-mitmV2-pipeline-stats')?.[1]
     expect(handler).toBeTypeOf('function')
-    act(() => handler(undefined, { ...sample, Diagnostics: null }))
-    fireEvent.click(screen.getByRole('button', { name: /MITM 实时处理状态，每秒/ }))
-    fireEvent.click(await screen.findByRole('button', { name: '打开流量诊断' }))
+    act(() => handler(undefined, { ...sample, ActiveTotal: '7', Diagnostics: null }))
+    const trigger = screen.getByRole('button', { name: /MITM 实时处理状态，每秒.*在途 7 条请求，本会话待写 3 项/ })
+    expect(within(trigger).getByText('在途 7')).toBeVisible()
+    fireEvent.click(trigger)
+    const openDiagnostics = await screen.findByRole('button', { name: '打开流量诊断' })
+    expect(screen.getByText(/^本会话待写 3 项 ·/)).toBeInTheDocument()
+    fireEvent.click(openDiagnostics)
     expect(screen.getByRole('tab', { name: '入库压力' })).toHaveAttribute('aria-disabled', 'true')
     expect(invoke).not.toHaveBeenCalled()
     act(() => handler(undefined, null))

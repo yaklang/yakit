@@ -447,6 +447,18 @@ describe('MITM diagnostics with a real Yak engine', () => {
         timeout: 5000,
         timeoutMsg: 'The MITM table did not display a newly imported plugin flow with both sources selected',
       })
+      await pluginSource.click()
+      await browser.waitUntil(async () => !(await isScenarioRenderedInMITMTable(pluginRoute)), {
+        timeout: 5000,
+        timeoutMsg: 'The MITM table still showed the plugin flow after returning to MITM only',
+      })
+      const resumedRoute = 'mitm-scope-resumed'
+      expect(await send('127.0.0.1', resumedRoute)).toBe(200)
+      await browser.waitUntil(() => isScenarioRenderedInMITMTable(resumedRoute), {
+        timeout: 5000,
+        timeoutMsg: 'The MITM table did not resume live updates after switching back to MITM only',
+      })
+      expect((await queryMITMScenarioFlows({ token: resumedRoute, limit: 1 })).total).toBe(1)
 
       await stopMITMV2ThroughUI()
       await waitForLoopbackPortClosed({ port: proxyPort })
