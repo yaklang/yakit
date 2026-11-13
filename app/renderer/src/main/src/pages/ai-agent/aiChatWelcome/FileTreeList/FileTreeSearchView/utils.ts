@@ -2,7 +2,6 @@ import { mergePathArray } from '../../../components/aiFileSystemList/utils'
 import type { HistoryItem } from '../../../components/aiFileSystemList/type'
 import type { FileTreeSearchScopeValue } from './constants'
 import { FileTreeSearchScope } from './constants'
-
 /**
  * 从路径提取 AI 会话根：.../aispace/<session_dir>
  * 例：...\aispace\38_session_xxx\task\a.md → ...\aispace\38_session_xxx
@@ -100,5 +99,3 @@ const dedupePaths = (list: { path: string }[]): { path: string }[] => {
     return true
   })
 }
-
-export const getPathBaseName = (path: string) => path.split(/[\\/]/).pop() || path

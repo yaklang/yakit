@@ -18,11 +18,14 @@ import { yakitNotify } from '@/utils/notification'
 import styles from './AIChatWorkspace.module.scss'
 import { AIChatWorkspaceTabs, type AIChatWorkspaceTab } from './AIChatWorkspaceTabs/AIChatWorkspaceTabs'
 import { AIChatWorkspaceTabContent, type HttpFlowSelectionProps } from './AIChatWorkspaceTabs/AIChatWorkspaceTabContent'
+import type { RiskSelectionProps } from './AIChatWorkspaceTabs/AIChatWorkspaceTabContent'
 import { previewOpenFilesStore } from '../../aiChatWelcome/FileTreeList/store/usePreviewOpenFiles'
+import { isChatSession } from '../../utils/isChatSession'
 
 interface AIChatWorkspaceProps extends HttpFlowSelectionProps {
+  riskSelection?: RiskSelectionProps
   inViewPort?: boolean
-  /** 欢迎页且没有激活会话时，流量和漏洞页签展示全量数据 */
+  /** 欢迎页尚未进入对话时，流量和漏洞页签展示全量数据 */
   welcome?: boolean
   filePreviewData?: FileNodeProps
   setFilePreviewData: (data?: FileNodeProps) => void
@@ -36,10 +39,11 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
   const selectionProps = useMemo(
     () => ({
       selectionScope: props.selectionScope,
+      selectedHttpFlowIds: props.selectedHttpFlowIds,
       onSetSelectedHttpFlowIds: props.onSetSelectedHttpFlowIds,
       onRegisterTableSelectApi: props.onRegisterTableSelectApi,
     }),
-    [props.selectionScope, props.onSetSelectedHttpFlowIds, props.onRegisterTableSelectApi],
+    [props.selectionScope, props.selectedHttpFlowIds, props.onSetSelectedHttpFlowIds, props.onRegisterTableSelectApi],
   )
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi', 'yakitRoute'])
 
@@ -57,6 +61,8 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
 
   const [tabs, setTabs] = useState<WorkspaceTab[]>([])
   const [activeTabKey, setActiveTabKey] = useState('')
+  const [showSelectedHttpFlows, setShowSelectedHttpFlows] = useState(false)
+  const [showSelectedRisks, setShowSelectedRisks] = useState(false)
   const [showFileTooLargeHint, setShowFileTooLargeHint] = useState(false)
   /** switchAIActTab 带来的高亮，经 filePreviewData effect 打开 tab 时消费 */
   const pendingFileHighlightsRef = useRef<AIAgentFilePreviewHighlight[] | undefined>()
@@ -144,6 +150,8 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
     openPreviewEpochRef.current += 1
     setTabs([])
     setActiveTabKey('')
+    setShowSelectedHttpFlows(false)
+    setShowSelectedRisks(false)
     setFilePreviewData(undefined)
   }, [activeChat?.SessionID])
 
@@ -183,6 +191,15 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
     }
 
     if (key === AITabsEnum.Task_Detail) return
+    const showSelected =
+      (key === AITabsEnum.HTTP && payload.showSelectedHttpFlows === true) ||
+      (key === AITabsEnum.Risk && payload.showSelectedRisks === true)
+    if (key === AITabsEnum.HTTP) setShowSelectedHttpFlows(showSelected)
+    if (key === AITabsEnum.Risk) setShowSelectedRisks(showSelected)
+    if (showSelected && tabs.some((tab) => tab.key === key)) {
+      setActiveTabKey(key)
+      return
+    }
 
     // 手动切换始终打开 tab，无数据时由内容区域展示空状态。
     openTab({
@@ -311,7 +328,7 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
     setActiveTabKey('')
   })
 
-  const showAll = welcome && !activeChat?.SessionID
+  const showAll = welcome && !isChatSession(activeChat)
   const runtimeId = activeTab?.runtimeId
   const runTimeIds = useMemo(
     () => [...new Set(runtimeId ? [runtimeId] : httpRunTimeIDs.concat(relatedRuntimeIDs))],
@@ -347,6 +364,11 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
             riskRunTimeIds={riskRunTimeIds}
             filterTagDom={filterTagDom}
             selectionProps={selectionProps}
+            showSelectedHttpFlows={showSelectedHttpFlows}
+            onShowSelectedHttpFlowsChange={setShowSelectedHttpFlows}
+            riskSelection={props.riskSelection}
+            showSelectedRisks={showSelectedRisks}
+            onShowSelectedRisksChange={setShowSelectedRisks}
             operationLogList={operationLogList}
             sessionID={activeChat?.SessionID}
           />

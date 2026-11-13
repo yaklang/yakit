@@ -1,5 +1,8 @@
 import type { TFunction } from '@/i18n/useI18nNamespaces'
 
+/** HTTP 流量和漏洞风险的引用数量达到此阈值时显示数量摘要，低于阈值时逐个显示 ID。 */
+export const AI_RESOURCE_REFERENCE_SUMMARY_THRESHOLD = 3
+
 /** Goal 持续时间预设：单一数据源（UI key / 展示文案 / GoalDurationSeconds） */
 
 export const GOAL_DURATION_PRESETS = [

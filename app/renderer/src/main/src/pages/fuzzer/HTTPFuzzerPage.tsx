@@ -123,7 +123,6 @@ import {
   registerWebFuzzerPageOnAIFuzzStatus,
   type WebFuzzerCasualReplaceReviewPayload,
 } from './webFuzzerAiRequestApplyBridge'
-import { AIInputFooterRightEnum } from '@/pages/ai-agent/template/type'
 import { AISourceEnum } from '@/pages/ai-re-act/hooks/grpcApi'
 import { shallow } from 'zustand/shallow'
 import {
@@ -159,7 +158,6 @@ import {
   DefFuzzerTableMaxData,
   FuzzerResponseSizeWarnBytes,
   defaultAdvancedConfigShow,
-  defaultPostTemplate,
   emptyFuzzer,
   defaultWebFuzzerPageInfo,
   defaultLabel,
@@ -3411,17 +3409,6 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                           ),
                           taskDetails: true,
                         },
-                        footerRightTypes: [
-                          {
-                            type: AIInputFooterRightEnum.AIFocusMode,
-                            props: {
-                              value: focusModeLoop,
-                              onChange: () => {},
-                              disabled: true,
-                            },
-                          },
-                        ],
-                        filterMentionType: ['focusMode'],
                       },
                     })}
                     proxyListRef={proxyListRef}

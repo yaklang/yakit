@@ -49,6 +49,8 @@
 }
 
 .aiChatWrap {
+  --ai-chat-footer-right-min-width: 232px;
+
   flex: 1 1 0;
   min-height: 0;
   min-width: 0;
@@ -57,9 +59,4 @@
   flex-direction: column;
   align-self: stretch;
   width: 100%;
-}
-
-/* 右下角「代码审计 / Skill」二选一切换：替代被锁死的 AIFocusMode 下拉 */
-.auditStyleToggle {
-  flex-shrink: 0;
 }

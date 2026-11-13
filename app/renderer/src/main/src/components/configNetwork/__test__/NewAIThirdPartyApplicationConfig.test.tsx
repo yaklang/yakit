@@ -14,10 +14,13 @@ import { AIModelTypeEnum } from '@/pages/ai-agent/defaultConstant'
 import { AIOnlineModel } from '@/pages/ai-agent/aiModelList/AIModelList'
 import providerExample from '../yakProviderExample.yak?raw'
 
+// textarea 会将 Windows 检出的 CRLF 转为 LF。
+const providerExampleTextareaValue = providerExample.replace(/\r\n/g, '\n')
+
 const mocks = vi.hoisted(() => {
   const invoke = vi.fn()
   window.require = (() => ({ ipcRenderer: { invoke } })) as unknown as typeof window.require
-  return { invoke, healthCheck: vi.fn(), save: vi.fn(), config: {} as AIGlobalConfig }
+  return { invoke, healthCheck: vi.fn(), probe: vi.fn(), save: vi.fn(), config: {} as AIGlobalConfig }
 })
 
 vi.mock('@/i18n/useI18nNamespaces', () => ({
@@ -68,7 +71,7 @@ vi.mock('@/pages/ai-agent/aiModelList/utils', async () => {
     }),
     grpcAIConfigHealthCheck: mocks.healthCheck,
     grpcQueryAIProviderAll: async () => ({ Providers: [] }),
-    grpcProbeReasoningEffort: vi.fn(),
+    grpcProbeReasoningEffort: mocks.probe,
     sortMemfitNameFirst: (names: string[]) => names,
   }
 })
@@ -76,6 +79,7 @@ vi.mock('@/pages/ai-agent/aiModelList/utils', async () => {
 beforeEach(() => {
   mocks.invoke.mockReset().mockResolvedValue({ ModelName: ['remote-model'] })
   mocks.healthCheck.mockReset().mockResolvedValue({ Success: true })
+  mocks.probe.mockReset().mockResolvedValue({ MaxSupported: false, XhighSupported: true })
   mocks.save.mockReset().mockResolvedValue(undefined)
   mocks.config = { IntelligentModels: [], LightweightModels: [], VisionModels: [] } as unknown as AIGlobalConfig
   vi.stubGlobal(
@@ -129,7 +133,7 @@ describe('Yak script model configuration', () => {
     })
     expect(screen.getByRole('switch', { name: 'ConfigNetworkPage.nativeToolCalling' })).not.toBeChecked()
     const editor = await screen.findByLabelText('yak-model-script')
-    expect(editor).toHaveValue(providerExample)
+    expect(editor).toHaveValue(providerExampleTextareaValue)
     expect(screen.queryByText('ConfigNetworkPage.scriptTemplate')).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'ConfigNetworkPage.loadProviderExample' })).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'AIModelList.confirmAddBtn' }))
@@ -196,7 +200,7 @@ describe('Yak script model configuration', () => {
       />,
     )
     const editor = await screen.findByLabelText('yak-model-script')
-    expect(editor).toHaveValue(providerExample)
+    expect(editor).toHaveValue(providerExampleTextareaValue)
     const form = ref.current!.form
     expect(screen.queryByLabelText('ConfigNetworkPage.scriptParams')).not.toBeInTheDocument()
     await act(async () => {
@@ -295,7 +299,7 @@ describe('Yak script model configuration', () => {
     fireEvent.change(screen.getByRole('combobox', { name: 'ConfigNetworkPage.typeLabel' }), {
       target: { value: 'yak-script' },
     })
-    expect(await screen.findByLabelText('yak-model-script')).toHaveValue(providerExample)
+    expect(await screen.findByLabelText('yak-model-script')).toHaveValue(providerExampleTextareaValue)
     expect(screen.getByRole('switch', { name: 'ConfigNetworkPage.nativeToolCalling' })).not.toBeChecked()
     expect(formValueToAIConfigProvider(ref.current!.form.getFieldsValue())).toEqual({
       Type: 'yak-script',
@@ -360,6 +364,48 @@ describe('NewAIThirdPartyApplicationConfigBase model discovery', () => {
         api_type: 'responses',
         enable_endpoint: enableEndpoint,
       })
+    },
+  )
+})
+
+describe('Saved reasoning effort results', () => {
+  it.each([
+    { changeBaseURL: false, reprobe: false, expectedEfforts: ['max'] },
+    { changeBaseURL: true, reprobe: false, expectedEfforts: undefined },
+    { changeBaseURL: true, reprobe: true, expectedEfforts: ['xhigh'] },
+  ])(
+    '按连接保存探测结果（修改 BaseURL：$changeBaseURL，重探：$reprobe）',
+    async ({ changeBaseURL, reprobe, expectedEfforts }) => {
+      const item: AIModelConfig = {
+        ProviderId: '',
+        ModelName: 'current-model',
+        Provider: { Type: 'custom', APIKey: 'fixture-key', BaseURL: 'https://old-gateway.example/v1' },
+        ExtraParams: [],
+        EffortProbed: true,
+        ProbedExtendedEfforts: ['max'],
+      }
+      mocks.config.IntelligentModels = [item]
+      render(<AIModelForm item={item} aiModelType={AIModelTypeEnum.TierIntelligent} onClose={vi.fn()} />)
+      const baseURL = await screen.findByLabelText('BaseURL')
+      if (changeBaseURL) fireEvent.change(baseURL, { target: { value: 'https://new-gateway.example/v1' } })
+      if (reprobe) {
+        fireEvent.click(screen.getByText('ConfigNetworkPage.modelConfigTitle'))
+        fireEvent.mouseDown(screen.getByText('ConfigNetworkPage.effortDefault'))
+        expect(await screen.findByTitle('ConfigNetworkPage.effortXhigh')).toBeInTheDocument()
+        expect(mocks.probe).toHaveBeenCalledExactlyOnceWith({
+          Config: expect.objectContaining({ BaseURL: 'https://new-gateway.example/v1' }),
+          Model: item.ModelName,
+        })
+      }
+      fireEvent.click(screen.getByRole('button', { name: 'AIModelList.testAndAddBtn' }))
+      await waitFor(() => expect(mocks.save).toHaveBeenCalledOnce())
+      const saved = mocks.save.mock.calls[0][0].IntelligentModels[0]
+      expect(saved.Provider.BaseURL).toBe(changeBaseURL ? 'https://new-gateway.example/v1' : item.Provider.BaseURL)
+      expect(saved.EffortProbed).toBe(expectedEfforts ? true : undefined)
+      expect(saved.ProbedExtendedEfforts).toEqual(expectedEfforts)
+      expect(mocks.healthCheck.mock.calls[0][0].Config.ExtraParams).not.toContainEqual(
+        expect.objectContaining({ Key: '_EffortProbeKey' }),
+      )
     },
   )
 })

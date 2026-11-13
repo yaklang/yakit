@@ -11,9 +11,12 @@ import { persistIndependentItem, drainSessionContentWrites } from '../persist/co
 import { sessionStatusStore, SessionDeleteStatus } from '../sessionStatus/sessionStatusStore'
 import { grpcQueryAIEvent } from '@/pages/ai-agent/grpc'
 import { yakitNotify } from '@/utils/notification'
+import { restoreAIAgentTabCache } from '@/store/aiAgentTabCache'
+import { onReStart } from '@/pages/ai-agent/utils'
 
 vi.mock('@/utils/notification', () => ({ yakitNotify: vi.fn() }))
 vi.mock('@/pages/ai-agent/grpc', () => ({ grpcQueryAIEvent: vi.fn().mockResolvedValue({ Events: [], Total: 0 }) }))
+vi.mock('@/pages/yakRunner/utils', () => ({ isYaklangScriptDeliveryPath: vi.fn() }))
 vi.mock('../AIAgentLogEmitter', () => ({ aiAgentLogEmitter: { dispatch: vi.fn(), clearSessionBuffer: vi.fn() } }))
 vi.mock('../persist/aiChatPersistStore', () => ({
   default: {
@@ -105,6 +108,55 @@ describe('session reconnect / IDB lifecycle', () => {
   afterEach(async () => {
     for (const id of sessions) if (ctrl.isSessionReady(id)) await ctrl.handleSessionEnd(id).catch(() => {})
     vi.useRealTimers()
+  })
+
+  it('重连替换 meta 时清除未领取首问', async () => {
+    const { meta } = ctrl.ensureSession('existing-session')
+    meta.pendingWelcomeInput = { qs: 'stale question' }
+
+    await start('existing-session')
+
+    const current = ctrl.ensureSession('existing-session').meta
+    expect(current).not.toBe(meta)
+    expect(current.pendingWelcomeInput).toBeUndefined()
+  })
+
+  it('用旧标签缓存自动重连时保持原有的字节限额', async () => {
+    const id = 'legacy-cached-session'
+    const [page] = restoreAIAgentTabCache([
+      {
+        pageParamsInfo: {
+          aiAgentPageInfo: {
+            session: {
+              SessionID: id,
+              Source: 'ai',
+              StartParams: { Source: 'ai', RuntimeContextSizeLimit: 256000, AICallTokenLimit: 49152 },
+            },
+          },
+        },
+      },
+    ])
+    sessions.add(id)
+    onReStart({
+      activeChat: page.pageParamsInfo.aiAgentPageInfo!.session!,
+      onStart: (params) => {
+        ctrl.handleStartSession({ ...params, route: YakitRoute.AI_Agent, pageId: 'page' })
+      },
+    })
+    await ctrl.ensureSession(id).meta.lifecycle.preparation
+
+    expect(ipcRendererMock.invoke).toHaveBeenCalledWith(
+      'start-ai-re-act',
+      expect.any(String),
+      expect.objectContaining({
+        Params: expect.objectContaining({
+          TimelineSessionID: id,
+          RuntimeContextSizeLimit: 256000,
+          AICallTokenLimit: 49152,
+        }),
+      }),
+    )
+    await emitIPC(id, makeGrpcJsonRes('pong', {}, { SessionId: id }))
   })
 
   // TODO: 预查询方法及字段暂时注释，消费方案确定后同步恢复以下测试。

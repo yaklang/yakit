@@ -26,17 +26,6 @@
     .chat-header-title-text {
       flex-shrink: 0;
     }
-    .chat-header-focus-mode {
-      overflow: hidden;
-      .text {
-        min-width: 0;
-        max-width: 100%;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        flex-shrink: 1;
-      }
-    }
   }
   .chat-header-extra {
     @extend %display-flex-center;

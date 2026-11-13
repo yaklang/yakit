@@ -4,7 +4,7 @@ import { Tooltip } from 'antd'
 import { useStore } from 'zustand'
 import styles from './AIReActChatHeader.module.scss'
 import { ColorsChatIcon } from '@yakit-libs/yakit-ui-icons/oldicon/ColorsChatIcon'
-import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
+import AIReActChatFocusModeTag from '../aiReActChatFocusModeTag/AIReActChatFocusModeTag'
 import TaskDetailsPopover from '@/components/historyAIReActChat/TaskDetailsPopover'
 import HistoryChat from '@/pages/ai-agent/historyChat/HistoryChat'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -23,20 +23,12 @@ import { useMemoizedFn, useCreation } from 'ahooks'
 export const AIReActChatHeader: React.FC<AIReActChatHeaderProps> = React.memo((props) => {
   const { title, chatContainerHeaderClassName, isShowRetract, externalParameters, scrollToItemIndex } = props
 
-  // 内部订阅 Store 数据
-  const store = useCurrentStore()
-  const focusMode = useStore(store, (state) => state.focusMode)
-
   return (
     <div className={classNames(styles['chat-header'], chatContainerHeaderClassName)}>
       <div className={styles['chat-header-title']}>
         <ColorsChatIcon />
         <span className={styles['chat-header-title-text']}>{title}</span>
-        {focusMode && (
-          <YakitTag fullRadius={true} className={styles['chat-header-focus-mode']}>
-            场景:<span className={styles['text']}>{focusMode}</span>
-          </YakitTag>
-        )}
+        <AIReActChatFocusModeTag />
       </div>
       <div className={styles['chat-header-extra']}>
         {isShowRetract && (

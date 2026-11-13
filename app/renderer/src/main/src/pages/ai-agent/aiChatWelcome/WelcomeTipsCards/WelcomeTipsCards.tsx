@@ -13,12 +13,17 @@ import styles from './WelcomeTipsCards.module.scss'
 import { ColorsRiskIcon, ColorsFlowIcon, ColorsFileSystemIcon } from '../icon'
 import { TransparentButton } from '../TransparentButton'
 import WelcomeSceneCards from '../WelcomeSceneCards/WelcomeSceneCards'
+import type { WorkspaceAddedCounts } from '../../template/aiAddMaterialsPopover/workspaceAddedCounts'
 
 type WelcomeTipKey = 'risk' | 'traffic' | 'file-system'
+
+const emptyAdded: WorkspaceAddedCounts = { risk: 0, traffic: 0, fileSystem: 0 }
 
 interface WelcomeTipsCardsProps {
   compact?: boolean
   onEmptyChange?: (empty: boolean) => void
+  /** 当前会话已添加的漏洞、流量和文件系统数量。 */
+  added?: WorkspaceAddedCounts
 }
 
 /** 同一数字只滚动一次。布局切换会卸掉 CountUp，再次挂载时直接显示终值。 */
@@ -39,7 +44,7 @@ const WelcomeCount: FC<{
   return <CountUp start={animate ? 0 : end} end={end} duration={animate ? 1.2 : 0} separator="," />
 }
 
-const WelcomeTipsCards: FC<WelcomeTipsCardsProps> = memo(({ compact = false, onEmptyChange }) => {
+const WelcomeTipsCards: FC<WelcomeTipsCardsProps> = memo(({ compact = false, onEmptyChange, added = emptyAdded }) => {
   const { t, i18nRefresh } = useI18nNamespaces(['aiAgent'])
   const containerRef = useRef<HTMLDivElement>(null)
   const playedCountRef = useRef<Partial<Record<WelcomeTipKey, number>>>({})
@@ -59,7 +64,7 @@ const WelcomeTipsCards: FC<WelcomeTipsCardsProps> = memo(({ compact = false, onE
         number: riskTotal,
         icon: <ColorsRiskIcon />,
         description: t('AIChatWelcome.tipViewFullData'),
-        add: 0,
+        add: added.risk,
       },
       {
         key: 'traffic' as const,
@@ -67,7 +72,7 @@ const WelcomeTipsCards: FC<WelcomeTipsCardsProps> = memo(({ compact = false, onE
         number: trafficTotal ?? 0,
         icon: <ColorsFlowIcon />,
         description: t('AIChatWelcome.tipViewFullData'),
-        add: 0,
+        add: added.traffic,
       },
       {
         key: 'file-system' as const,
@@ -75,10 +80,10 @@ const WelcomeTipsCards: FC<WelcomeTipsCardsProps> = memo(({ compact = false, onE
         number: customFolder?.length ?? 0,
         icon: <ColorsFileSystemIcon />,
         description: t('AIChatWelcome.tipOpenFileTree'),
-        add: 0,
+        add: added.fileSystem,
       },
     ],
-    [riskTotal, trafficTotal, customFolder, i18nRefresh],
+    [riskTotal, trafficTotal, customFolder, i18nRefresh, added.risk, added.traffic, added.fileSystem],
   )
 
   const handleTipClick = useMemoizedFn((key: WelcomeTipKey) => {

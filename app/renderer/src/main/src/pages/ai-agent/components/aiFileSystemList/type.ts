@@ -17,6 +17,8 @@ export interface FileTreeSystemListWrapperProps {
   onTitleSearch?: () => void
   /** 根节点右侧搜索：传入则在「我打开的文件」根上展示，点击后按该路径打开搜索 */
   onRootSearch?: (path: string) => void
+  addedFilePaths?: string[]
+  onRemoveAddedFile?: (path: string) => void
   selected?: FileNodeProps
   setSelected: (v?: FileNodeProps) => void
   onTreeDragStart?: () => void
@@ -38,11 +40,14 @@ export interface FileTreeSystemListProps {
   isOpen?: boolean
   /** 撑满父容器并启用 Tree 虚拟滚动；默认 false，直连调用方需显式传入（多根场景勿开） */
   fillHeight?: boolean
+  searchQuery?: string
   selected?: FileTreeSystemListWrapperProps['selected']
   setSelected: FileTreeSystemListWrapperProps['setSelected']
   onTreeDragStart?: FileTreeSystemListWrapperProps['onTreeDragStart']
   onTreeDragEnd?: FileTreeSystemListWrapperProps['onTreeDragEnd']
   onRootSearch?: FileTreeSystemListWrapperProps['onRootSearch']
+  addedFilePaths?: FileTreeSystemListWrapperProps['addedFilePaths']
+  onRemoveAddedFile?: FileTreeSystemListWrapperProps['onRemoveAddedFile']
   checkable?: boolean
   checkedKeys?: HistoryItem[]
   setCheckedKeys?: (v: boolean, nodeData: FileNodeProps) => void
@@ -69,6 +74,8 @@ export interface FileTreeSystemItemProps {
   setSelected: FileTreeSystemListWrapperProps['setSelected']
   /** 根节点（depth===1）搜索回调；仅「我打开的文件」传入 */
   onRootSearch?: (path: string) => void
+  addedFilePaths?: string[]
+  onRemoveAddedFile?: (path: string) => void
 }
 
 export interface FileInfo {

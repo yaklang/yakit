@@ -181,3 +181,32 @@
 .workspace-pane-gutter {
   padding: 0 12px;
 }
+
+.material-selection-segmented:global(.ant-segmented.ant-segmented-sm) {
+  border-radius: 6px;
+  background: var(--Colors-Use-Neutral-Bg);
+  box-shadow: inset 0 0 0 1px var(--Colors-Use-Neutral-Bg-Hover);
+  font-weight: 500;
+  letter-spacing: 0.5px;
+
+  :global {
+    .ant-segmented-item,
+    .ant-segmented-thumb {
+      border-radius: 4px;
+    }
+
+    .ant-segmented-item-selected,
+    .ant-segmented-thumb {
+      background: var(--Colors-Use-Basic-Background);
+      box-shadow: inset 0 0 0 1px var(--Colors-Use-Neutral-Border);
+    }
+
+    .ant-segmented-item-label {
+      padding-inline: 12px;
+    }
+  }
+}
+
+.material-selection-count {
+  color: var(--Colors-Use-Main-Primary);
+}

@@ -7,7 +7,6 @@ export interface AIMilkdownInputProps extends AIMilkdownInputBaseProps {}
 
 export interface AIMilkdownInputRef {
   setMention: (v: AIMentionCommandParams) => void
-  setImage: () => void
   setCodeRef: (v: AICodeBlockCommandParams) => void
   getSessionId: () => string
 }
@@ -25,6 +24,10 @@ export interface AIMilkdownInputBaseProps {
   onMemfitExtra?: (v: AIMentionCommandParams) => void
   // 外部传入需要筛选掉的选项
   filterMode?: AIChatMentionProps['filterMode']
+  materials?: AIMentionCommandParams[]
+  focusMode?: string
+  /** / 面板修改模式并关闭后触发 */
+  onModeChangeComplete?: () => void
   /**文件缓存路径 */
   chatDataStoreKey: string
 }

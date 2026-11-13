@@ -1,152 +1,146 @@
 import type React from 'react'
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import emiter from '@/utils/eventBus/eventBus'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { AIReasoningEffortSelect } from '../AIReasoningEffortSelect'
+import type { AIModelConfig } from '@/pages/ai-agent/aiModelList/utils'
 
-const mocks = vi.hoisted(() => ({
-  config: {
-    Enabled: true,
-    IntelligentModels: [
-      {
-        ProviderId: 'provider-1',
-        ModelName: 'model-1',
-        Provider: { Type: 'openai', APIKey: 'test-key', ReasoningEffort: 'low' },
-        ExtraParams: [],
-        EffortProbed: true,
-      },
-      {
-        ProviderId: 'provider-2',
-        ModelName: 'model-2',
-        Provider: { Type: 'openai', APIKey: 'other-key', ReasoningEffort: 'medium' },
-        ExtraParams: [],
-        EffortProbed: true,
-      },
-    ],
-  },
-  save: vi.fn(),
-  probe: vi.fn(),
-}))
+const baseModel: AIModelConfig = {
+  ProviderId: 'provider-1',
+  ModelName: 'model-1',
+  Provider: { Type: 'openai', ReasoningEffort: 'low' },
+  ExtraParams: [],
+}
 
-vi.mock('@/pages/ai-re-act/hooks/useAIGlobalConfig', () => ({
-  default: () => [{ aiGlobalConfig: mocks.config }, { setAIGlobalConfig: mocks.save }],
-}))
-vi.mock('@/pages/ai-agent/aiModelList/utils', () => ({ grpcProbeReasoningEffort: mocks.probe }))
 vi.mock('@/i18n/useI18nNamespaces', () => ({
   useI18nNamespaces: () => ({ t: (key: string) => key, i18nRefresh: 0 }),
 }))
 vi.mock('@yakit-libs/yakit-ui-icons/outline', () => ({
-  BrainOutlined: () => null,
-  QuestionMarkCircleOutlined: () => null,
+  InformationCircleOutlined: () => null,
+  ChevronRightOutlined: () => null,
+  ExclamationOutlined: () => null,
+  CheckOutlined: () => null,
+}))
+vi.mock('@/components/yakitUI/YakitTag/YakitTag', () => ({
+  YakitTag: ({ children }: React.PropsWithChildren) => <span>{children}</span>,
 }))
 vi.mock('@/components/yakitUI/YakitSolidLoading/YakitSolidLoading', () => ({ default: () => null }))
 vi.mock('antd', () => ({ Tooltip: ({ children }: React.PropsWithChildren) => children }))
-vi.mock('@/components/yakitUI/YakitSelect/YakitSelect', () => ({
-  YakitSelect: {
-    Option: ({ value }: { value: string }) => <option value={value}>{value}</option>,
-  },
-}))
-vi.mock('../../aiReviewRuleSelect/AIReviewRuleSelect', () => ({
-  AIChatSelect: ({
-    value,
-    onSelect,
+vi.mock('@/components/yakitUI/YakitPopover/YakitPopover', () => ({
+  YakitPopover: ({
+    open,
+    onOpenChange,
     children,
+    content,
+    arrow,
+    placement,
+    trigger,
   }: React.PropsWithChildren<{
-    value: string
-    onSelect: (value: string) => void
+    open: boolean
+    onOpenChange: (open: boolean) => void
+    content: React.ReactNode
+    arrow: boolean
+    placement: string
+    trigger: string | string[]
   }>) => (
-    <select aria-label="Reasoning effort" value={value} onChange={(event) => onSelect(event.target.value)}>
-      {children}
-    </select>
+    <div data-testid="effort-popover" data-arrow={String(arrow)} data-placement={placement}>
+      <div
+        onMouseEnter={() => trigger.includes('hover') && onOpenChange(true)}
+        onClickCapture={() => trigger.includes('click') && onOpenChange(!open)}
+      >
+        {children}
+      </div>
+      {open && content}
+    </div>
   ),
 }))
 
-const deferred = <T,>() => {
-  let resolve!: (value: T) => void
-  let reject!: (reason: Error) => void
-  const promise = new Promise<T>((res, rej) => {
-    resolve = res
-    reject = rej
-  })
-  return { promise, resolve, reject }
+const openEffort = () => fireEvent.click(screen.getByRole('button', { name: 'AIReasoningEffort.selectQuality' }))
+const chooseEffort = (key: string) => {
+  openEffort()
+  fireEvent.click(screen.getByRole('menuitemradio', { name: `ConfigNetworkPage.${key}` }))
 }
 
-describe('AIReasoningEffortSelect 保存完成刷新事件', () => {
-  const onRefresh = vi.fn()
+afterEach(cleanup)
 
-  beforeEach(() => {
-    vi.useFakeTimers()
-    vi.clearAllMocks()
-    mocks.config.IntelligentModels[0].EffortProbed = true
-    emiter.on('onRefreshAvailableAIModelList', onRefresh)
+describe('AIReasoningEffortSelect', () => {
+  it('显示当前档位，打开右侧无箭头子菜单，选择后关闭', () => {
+    const onChange = vi.fn()
+    const model = { ...baseModel, ProbedExtendedEfforts: ['xhigh', 'max'] }
+    render(<AIReasoningEffortSelect model={model} onChange={onChange} />)
+    const trigger = screen.getByRole('button', { name: 'AIReasoningEffort.selectQuality' })
+    expect(trigger).toHaveTextContent('ConfigNetworkPage.effortLow')
+    expect(trigger).toHaveAttribute('aria-expanded', 'false')
+    expect(screen.queryByRole('menuitemradio')).not.toBeInTheDocument()
+    fireEvent.mouseEnter(trigger)
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument()
+    fireEvent.keyDown(trigger, { key: 'Enter' })
+    expect(trigger).not.toHaveAttribute('tabindex')
+    expect(trigger).toHaveAttribute('aria-expanded', 'false')
+    openEffort()
+    expect(trigger).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.getByTestId('effort-popover')).toHaveAttribute('data-arrow', 'false')
+    expect(screen.getByTestId('effort-popover')).toHaveAttribute('data-placement', 'rightTop')
+    expect(screen.getAllByRole('menuitemradio').map((item) => item.textContent)).toEqual([
+      'ConfigNetworkPage.effortDefault',
+      'ConfigNetworkPage.effortOff',
+      'ConfigNetworkPage.effortLow',
+      'ConfigNetworkPage.effortMedium',
+      'ConfigNetworkPage.effortHigh',
+      'ConfigNetworkPage.effortXhigh',
+      'ConfigNetworkPage.effortMax',
+    ])
+    expect(screen.getByRole('menuitemradio', { name: 'ConfigNetworkPage.effortLow' })).toHaveAttribute(
+      'aria-checked',
+      'true',
+    )
+    const high = screen.getByRole('menuitemradio', { name: 'ConfigNetworkPage.effortHigh' })
+    expect(high).not.toHaveAttribute('tabindex')
+    fireEvent.keyDown(high, { key: ' ' })
+    expect(onChange).not.toHaveBeenCalled()
+    fireEvent.click(high)
+    expect(trigger).toHaveAttribute('aria-expanded', 'false')
+    expect(screen.queryByRole('menuitemradio')).not.toBeInTheDocument()
+    expect(onChange).toHaveBeenCalledTimes(1)
   })
 
-  afterEach(() => {
-    cleanup()
-    emiter.off('onRefreshAvailableAIModelList', onRefresh)
-    vi.clearAllTimers()
-    vi.useRealTimers()
+  it.each([
+    ['effortDefault', undefined],
+    ['effortOff', 'off'],
+    ['effortHigh', 'high'],
+  ])('草稿模式选择 %s 只更新对应字段，保留当前模型和连接配置', (key, expected) => {
+    const model = { ...baseModel, ModelName: 'draft-model' }
+    const onChange = vi.fn<(mutate: (model: AIModelConfig) => AIModelConfig) => void>()
+    render(<AIReasoningEffortSelect model={model} onChange={onChange} />)
+    chooseEffort(key as string)
+    expect(onChange).toHaveBeenCalledTimes(1)
+    expect(onChange.mock.calls[0][0](model)).toEqual({
+      ...model,
+      Provider: { ...model.Provider, ReasoningEffort: expected },
+    })
+    expect(model.Provider.ReasoningEffort).toBe('low')
   })
 
-  it.each(['success', 'failure'] as const)('手动更改：保存等待中不刷新，%s 后按结果通知', async (outcome) => {
-    const save = deferred<void>()
-    mocks.save.mockReturnValueOnce(save.promise)
-    render(<AIReasoningEffortSelect />)
-
-    fireEvent.change(screen.getByRole('combobox', { name: 'Reasoning effort' }), { target: { value: 'high' } })
-    expect(mocks.save).toHaveBeenCalledExactlyOnceWith({
-      ...mocks.config,
-      IntelligentModels: [
-        {
-          ...mocks.config.IntelligentModels[0],
-          Provider: { ...mocks.config.IntelligentModels[0].Provider, ReasoningEffort: 'high' },
-        },
-        mocks.config.IntelligentModels[1],
-      ],
-    })
-    await act(async () => {})
-    expect(onRefresh).not.toHaveBeenCalled()
-    expect(mocks.probe).not.toHaveBeenCalled()
-
-    await act(async () => {
-      if (outcome === 'success') save.resolve()
-      else save.reject(new Error('save failed'))
-    })
-    expect(onRefresh).toHaveBeenCalledTimes(outcome === 'success' ? 1 : 0)
-    expect(mocks.config.IntelligentModels[0].Provider.ReasoningEffort).toBe('low')
+  it('未探测到扩展档位时仍显示当前扩展值，且不会增加其他扩展项', () => {
+    const model = {
+      ...baseModel,
+      Provider: { ...baseModel.Provider, ReasoningEffort: 'xhigh' },
+    }
+    render(<AIReasoningEffortSelect model={model} onChange={vi.fn()} />)
+    openEffort()
+    expect(screen.getByRole('menuitemradio', { name: 'ConfigNetworkPage.effortXhigh' })).toHaveAttribute(
+      'aria-checked',
+      'true',
+    )
+    expect(screen.queryByRole('menuitemradio', { name: 'ConfigNetworkPage.effortMax' })).not.toBeInTheDocument()
   })
 
-  it.each(['success', 'failure'] as const)('自动探测：结果保存等待中不刷新，%s 后按结果通知', async (outcome) => {
-    mocks.config.IntelligentModels[0].EffortProbed = false
-    const save = deferred<void>()
-    const probe = deferred<{ XhighSupported: boolean; MaxSupported: boolean }>()
-    mocks.save.mockReturnValueOnce(save.promise)
-    mocks.probe.mockReturnValueOnce(probe.promise)
-    render(<AIReasoningEffortSelect />)
-
-    expect(mocks.probe).toHaveBeenCalledExactlyOnceWith({
-      Config: mocks.config.IntelligentModels[0].Provider,
-      Model: 'model-1',
-    })
-    expect(mocks.save).not.toHaveBeenCalled()
-    expect(onRefresh).not.toHaveBeenCalled()
-    await act(async () => {
-      probe.resolve({ XhighSupported: true, MaxSupported: true })
-    })
-    expect(mocks.save).toHaveBeenCalledExactlyOnceWith({
-      ...mocks.config,
-      IntelligentModels: [
-        { ...mocks.config.IntelligentModels[0], EffortProbed: true, ProbedExtendedEfforts: ['xhigh', 'max'] },
-        mocks.config.IntelligentModels[1],
-      ],
-    })
-    expect(onRefresh).not.toHaveBeenCalled()
-
-    await act(async () => {
-      if (outcome === 'success') save.resolve()
-      else save.reject(new Error('save failed'))
-    })
-    expect(onRefresh).toHaveBeenCalledTimes(outcome === 'success' ? 1 : 0)
-    expect(mocks.config.IntelligentModels[0].EffortProbed).toBe(false)
+  it('禁用状态不能打开子菜单', () => {
+    render(<AIReasoningEffortSelect model={baseModel} disabled onChange={vi.fn()} />)
+    expect(screen.getByRole('button', { name: 'AIReasoningEffort.selectQuality' })).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    )
+    openEffort()
+    expect(screen.queryByRole('menuitemradio')).not.toBeInTheDocument()
   })
 })

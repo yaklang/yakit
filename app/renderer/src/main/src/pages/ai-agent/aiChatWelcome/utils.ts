@@ -1,5 +1,6 @@
 import { yakitNotify } from '@/utils/notification'
 import type { HistoryItem } from '../components/aiFileSystemList/type'
+import { MAX_ATTACHMENTS_PER_BATCH } from '../template/type'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -30,8 +31,8 @@ export const fetchIsFolderByPath = async (path: string): Promise<boolean | null>
 
 export const handleOnFiles = async (files: File[]): Promise<HistoryItem[]> => {
   if (files.length === 0) return []
-  if (files.length > 10) {
-    yakitNotify('error', '文件数量不能超过10个')
+  if (files.length > MAX_ATTACHMENTS_PER_BATCH) {
+    yakitNotify('error', `已选择 ${files.length} 个附件，单次最多添加 ${MAX_ATTACHMENTS_PER_BATCH} 个`)
     return []
   }
 

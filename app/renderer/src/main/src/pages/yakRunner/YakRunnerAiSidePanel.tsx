@@ -8,7 +8,6 @@ import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeB
 import { YakitSideTab } from '@/components/yakitSideTab/YakitSideTab'
 import type { YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
 import { useHistoryAIReActChat } from '@/components/historyAIReActChat'
-import { AIInputFooterRightEnum } from '@/pages/ai-agent/template/type'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import classNames from 'classnames'
 import styles from './YakRunnerAiSidePanel.module.scss'
@@ -30,7 +29,7 @@ export interface YakRunnerAiSidePanelProps {
 /** Yak Runner 右侧 AI 侧栏：消费 `useHistoryAIReActChat` */
 export const YakRunnerAiSidePanel: React.FC<YakRunnerAiSidePanelProps> = ({ children, rootClassName }) => {
   const { t, i18nRefresh } = useI18nNamespaces(['history', 'yakRunner'])
-  const { renderHistoryAIReActChat, setShowFreeChat, historyAIReActChatBridge, focusModeLoop } = useHistoryAIReActChat()
+  const { renderHistoryAIReActChat, setShowFreeChat, historyAIReActChatBridge } = useHistoryAIReActChat()
   const [activeKey, setActiveKey] = useState<string>('ai')
   const [openTabsFlag, setOpenTabsFlag] = useState<boolean>(true)
 
@@ -107,17 +106,6 @@ export const YakRunnerAiSidePanel: React.FC<YakRunnerAiSidePanelProps> = ({ chil
           ),
           taskDetails: true,
         },
-        footerRightTypes: [
-          {
-            type: AIInputFooterRightEnum.AIFocusMode,
-            props: {
-              value: focusModeLoop,
-              onChange: () => {},
-              disabled: true,
-            },
-          },
-        ],
-        filterMentionType: ['focusMode'],
       },
     })
 

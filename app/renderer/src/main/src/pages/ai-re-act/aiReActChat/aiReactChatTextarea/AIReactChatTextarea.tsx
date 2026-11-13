@@ -27,15 +27,15 @@ export const AIReactChatTextarea: React.FC<AIReactChatTextareaProps> = React.mem
         loading={pendingChat?.status === 'connecting'}
         onSubmit={handleSubmit}
         inputFooterRight={
-          <div className={styles['extra-footer-right']}>
-            {casualLoading && (
+          casualLoading && (
+            <div className={styles['extra-footer-right']}>
               <RoundedStopButton
                 loading={cancelChatLoading}
                 onClick={handleStopCasualTask}
                 style={{ width: 24, height: 24 }}
               />
-            )}
-          </div>
+            </div>
+          )
         }
         chatDataStoreKey={chatDataStoreKey}
         {...omit(externalParameters, 'rightIcon')}

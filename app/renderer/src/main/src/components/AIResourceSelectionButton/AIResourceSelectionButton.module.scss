@@ -1,0 +1,30 @@
+.selected-content {
+  display: inline-grid;
+}
+
+.added,
+.cancel {
+  grid-area: 1 / 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.added {
+  color: var(--Colors-Use-Neutral-Disable);
+}
+
+.cancel {
+  color: var(--Colors-Use-Error-Primary);
+  visibility: hidden;
+}
+
+.button:is(:hover, :focus-visible) {
+  .added {
+    visibility: hidden;
+  }
+
+  .cancel {
+    visibility: visible;
+  }
+}

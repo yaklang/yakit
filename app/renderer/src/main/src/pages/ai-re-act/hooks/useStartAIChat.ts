@@ -4,6 +4,7 @@ import type { AISession } from '@/pages/ai-agent/type/aiChat'
 import type { AIChatTextareaRefProps } from '@/pages/ai-agent/template/type'
 import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
 import { formatAIAgentSetting, getAIReActRequestParams } from '@/pages/ai-agent/utils'
+import { syncAIAgentPageInfo } from '@/pages/ai-agent/utils/syncAIAgentPageInfo'
 import { AISourceEnum, type AIInputEvent, type AIStartParams } from './grpcApi'
 import type { AIHandleStartResProps, AIReActChatProps } from '../aiReActChat/AIReActChatType'
 import { randomString } from '@/utils/randomUtil'
@@ -13,6 +14,7 @@ import emiter from '@/utils/eventBus/eventBus'
  * 欢迎页和聊天组件共用的会话启动入口，负责组装请求及处理绑定后的 UI 更新。
  * 调用时固定目标和参数，后续异步准备、绑定回调不再根据当前选中会话决定请求归属。
  * 已建联会话的自由输入由调用方的发送逻辑处理，不经过这里。
+ * 返回值表示同步受理（异步准备尚未完成）；onAccepted 仅在底层接受启动后调用。
  */
 export function useStartAIChat({
   startRequest,
@@ -24,7 +26,7 @@ export function useStartAIChat({
   setMention?: AIChatTextareaRefProps['setMention']
 } = {}) {
   const { getSetting, onStart, setActiveChat } = useAIAgentDispatcher()
-  return useMemoizedFn((value: HandleStartParams) => {
+  return useMemoizedFn((value: HandleStartParams, onAccepted?: () => void) => {
     const { qs, target, enabledCapabilities } = value
     const { kind, sessionId: sessionID } = target
     const isNew = kind === 'new'
@@ -60,12 +62,7 @@ export function useStartAIChat({
       // token 标识本轮 IPC/gRPC 连接，不是后端 sessionId；绑定后也作为 UI 的稳定 viewKey。
       let streamToken = ''
       if (isNew) onChat?.()
-      setMention?.({
-        mentionId: params.FocusModeLoop || randomString(8),
-        mentionType: 'focusMode',
-        mentionName: params.FocusModeLoop || '',
-      })
-      onStart({
+      const accepted = onStart({
         kind,
         sessionId: sessionID,
         params,
@@ -90,16 +87,34 @@ export function useStartAIChat({
             StartParams: { ...params.Params, TimelineSessionID: id, UserQuery: '' },
             TitleInitialized: false,
             Source: request.Source ?? 'ai',
+            isDraftSession: false,
             isCreate: true,
           }
-          // 用户已切走时只更新历史列表；仍在查看本次提交时，才激活绑定后的会话。
-          if (foreground) setActiveChat(newChat)
+          if (foreground) {
+            setActiveChat(newChat)
+          } else {
+            // 后台建联成功后直接更新原标签，使会话可以写入项目缓存。
+            syncAIAgentPageInfo({
+              sessionId: id,
+              title: newChat.Title,
+              aiAgentPageInfo: { session: newChat },
+              emitSessionData: false,
+            })
+          }
           emiter.emit(
             'sessionData',
             JSON.stringify({ type: 'prependSession', payload: { ...newChat, isCreate: false } }),
           )
         },
       })
+      if (accepted === false) return false
+      setMention?.({
+        mentionId: params.FocusModeLoop || randomString(8),
+        mentionType: 'focusMode',
+        mentionName: params.FocusModeLoop || '',
+      })
+      onAccepted?.()
+      return true
     }
     if (startRequest) {
       // 保留 Fuzzer、History 等入口的请求加工和绑定订阅；启动目标仍使用上面捕获的值。
@@ -115,8 +130,9 @@ export function useStartAIChat({
             params: aiInputEvent,
           })
         })
+      return true
     } else {
-      onStartChat({
+      return onStartChat({
         params: aiInputEvent,
       })
     }

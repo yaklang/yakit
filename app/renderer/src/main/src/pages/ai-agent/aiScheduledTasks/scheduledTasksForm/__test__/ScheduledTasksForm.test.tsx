@@ -47,9 +47,9 @@ afterEach(() => {
 
 describe('ScheduledTasksForm 保存运行时上下文参数', () => {
   it.each([
-    { limit: 300, expected: 307200 },
+    { limit: 300, expected: 300 },
     { limit: undefined, expected: 0 },
-  ])('新建任务将 $limit KB 保存为 $expected 字节', async ({ limit, expected }) => {
+  ])('新建任务将 $limit KB 以 $expected KB 交给发送层', async ({ limit, expected }) => {
     getSetting.mockReturnValue({
       ...AIAgentSettingDefault,
       RuntimeContextSizeLimit: limit,
@@ -81,7 +81,7 @@ describe('ScheduledTasksForm 保存运行时上下文参数', () => {
     expect(onSuccess).toHaveBeenCalledTimes(1)
   })
 
-  it.each(['307200', undefined])('编辑任务仅修改名称时保留服务端字节阈值 %s', async (limit) => {
+  it.each(['307200', undefined])('编辑任务仅修改名称时保留响应转换后的 KB 阈值 %s', async (limit) => {
     const startParams = {
       ...AIAgentSettingDefault,
       TimelineContentSizeLimit: 123,
@@ -101,7 +101,7 @@ describe('ScheduledTasksForm 保存运行时上下文参数', () => {
     }
     ipcRendererMock.invoke.mockResolvedValue(response)
     const editing = await grpcGetAIReActSchedule({ UUID: response.UUID })
-    expect(editing.Payload.StartParams.RuntimeContextSizeLimit).toBe(Number(limit ?? 0))
+    expect(editing.Payload.StartParams.RuntimeContextSizeLimit).toBe(Number(limit ?? 0) / 1024)
     const onSuccess = vi.fn()
     render(<ScheduledTasksForm editing={editing} onClose={vi.fn()} onSuccess={onSuccess} />)
     fireEvent.change(screen.getByPlaceholderText('AIScheduledTasks.namePlaceholder'), {
@@ -116,7 +116,7 @@ describe('ScheduledTasksForm 保存运行时上下文参数', () => {
     expect(schedule.Payload.Prompt).toBe(editing.Payload.Prompt)
     expect(schedule.Schedule).toEqual(editing.Schedule)
     expect(schedule.Payload.StartParams).toMatchObject({
-      RuntimeContextSizeLimit: Number(limit ?? 0),
+      RuntimeContextSizeLimit: Number(limit ?? 0) / 1024,
       AICallAutoRetry: 7,
     })
     expect(schedule.Payload.StartParams).not.toHaveProperty('TimelineContentSizeLimit')

@@ -1,4 +1,5 @@
 @use '../../../styles/mixin.scss' as mixin;
+@use '../../../theme/themeify.scss' as themeify;
 
 .browser-instances-panel {
   color: var(--Colors-Use-Neutral-Text-1-Title);
@@ -425,6 +426,82 @@
 .status-offline {
   background: var(--Colors-Use-Neutral-Bg-Hover);
   color: var(--Colors-Use-Neutral-Text-3-Secondary);
+}
+
+.browser-card.material-card {
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px;
+  border-color: var(--Colors-Use-Neutral-Bg-Hover);
+  border-radius: 8px;
+  background: var(--Colors-Use-Basic-Background);
+
+  &:hover {
+    border-color: var(--Colors-Use-Neutral-Bg-Hover);
+  }
+
+  .page-preview {
+    @include themeify.color-mix-border(1px, solid, var(--Colors-Use-Neutral-Disable), 50%);
+    border-radius: 6px;
+    box-shadow: 0 4px 8px rgb(23 23 23 / 4%);
+  }
+
+  .preview-shell .identity-mark {
+    top: 6px;
+    left: 6px;
+    width: 14px;
+    height: 14px;
+    font-size: 9px;
+    font-weight: 600;
+    line-height: 14px;
+    letter-spacing: 0.5px;
+  }
+
+  .card-body {
+    gap: 2px;
+  }
+
+  .card-header {
+    gap: 8px;
+  }
+
+  .instance-title {
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 500;
+  }
+
+  .instance-url-row {
+    gap: 4px;
+
+    img,
+    svg {
+      width: 16px;
+      height: 16px;
+    }
+  }
+
+  .instance-meta {
+    gap: 4px;
+    padding-top: 8px;
+    line-height: 14px;
+    color: var(--Colors-Use-Neutral-Text-4-Help-text);
+  }
+
+  .status {
+    display: inline-flex;
+    align-items: center;
+    height: 16px;
+    padding: 0 6px;
+    font-size: 11px;
+    line-height: 14px;
+    font-weight: 400;
+
+    &:not(.status-offline) {
+      background: var(--Colors-Use-Lake-blue-Bg-Hover);
+      color: var(--Colors-Use-Lake-blue-Primary);
+    }
+  }
 }
 
 .status-failed {

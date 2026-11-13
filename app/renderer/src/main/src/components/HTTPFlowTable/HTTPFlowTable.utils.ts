@@ -567,26 +567,26 @@ export const getRunTimeIdObj = (runTimeId?: string) => {
   }
 }
 
-/**
- * 将逗号分隔的字符串解析为不重复的非负整数数组
- * @param input - 例如 "1, 2, 3" 或 "1,2,3"
- * @returns 过滤后的数字数组，例如 [1, 2, 3]
- */
-export function parseIncludeIds(input: string): number[] {
-  if (!input) return []
-  const ids: number[] = []
-  const seen = new Set<number>()
-  input.split(',').forEach((part) => {
-    const trimmed = part.trim()
-    if (!trimmed) return
-    const num = Number(trimmed)
-    if (!Number.isInteger(num) || num < 0) return
-    if (seen.has(num)) return
-    seen.add(num)
-    ids.push(num)
-  })
-  return ids
+const MAX_INT64_ID = '9223372036854775807'
+
+const normalizeIncludeId = (value: string | number): string | undefined => {
+  if (typeof value === 'number' && !Number.isSafeInteger(value)) return
+  const text = String(value).trim()
+  if (!/^\d+$/.test(text)) return
+  const id = text.replace(/^0+(?=\d)/, '')
+  if (id.length > MAX_INT64_ID.length || (id.length === MAX_INT64_ID.length && id > MAX_INT64_ID)) return
+  return id
 }
+
+/** 解析并去重逗号分隔的非负 int64 ID，保留十进制字符串精度。 */
+export const parseIncludeIds = (input: string): string[] => [
+  ...new Set(
+    input
+      .split(',')
+      .map(normalizeIncludeId)
+      .filter((id) => id !== undefined),
+  ),
+]
 
 /** 关键词下拉在 ID 与其他项之间切换时清空输入框。关键字、请求、响应之间保留原文。 */
 export function shouldClearHistorySearchInput(prev: HistorySearchOptionType, next: HistorySearchOptionType): boolean {
@@ -594,28 +594,15 @@ export function shouldClearHistorySearchInput(prev: HistorySearchOptionType, nex
 }
 
 /** 表格序号列与关键词 ID 搜索的并集，相同值只留一个，表格侧在前。 */
-export function mergeIncludeIds(columnIds: number[] = [], keywordIds: number[] = []): number[] {
-  const seen = new Set<number>()
-  const merged: number[] = []
-  columnIds.forEach((id) => {
-    if (seen.has(id)) return
-    seen.add(id)
-    merged.push(id)
-  })
-  keywordIds.forEach((id) => {
-    if (seen.has(id)) return
-    seen.add(id)
-    merged.push(id)
-  })
-  return merged
-}
+export const mergeIncludeIds = (columnIds: string[] = [], keywordIds: string[] = []): string[] => [
+  ...new Set([...columnIds, ...keywordIds]),
+]
 
 /** 有序号就写入 IncludeId，没有则写成 undefined，避免合并查询条件时旧值留着。 */
-export function withIncludeId<T extends { IncludeId?: number[] }>(query: T, ids: number[]): T {
-  const next = { ...query }
-  next.IncludeId = ids.length ? ids : undefined
-  return next
-}
+export const withIncludeId = (query: YakQueryHTTPFlowRequest, ids: string[]): YakQueryHTTPFlowRequest => ({
+  ...query,
+  IncludeId: ids.length ? ids : undefined,
+})
 
 /** 筛选已经改用序号时，附近数据包标签要关掉。 */
 export function shouldCloseViewAttach(mergedCount: number, viewAttachId: number): boolean {
@@ -640,6 +627,20 @@ export function shouldNotifySameViewAttach(currentId: number, nextId: number): b
 export function resolveMitmViewAttachNotice(id: unknown): { viewAttachId: number; clearSearch: boolean } {
   const viewAttachId = Number(id) || 0
   return { viewAttachId, clearSearch: viewAttachId > 0 }
+}
+
+/**
+ * 构建「只看已选」的流量查询，移除运行任务和来源限制，保留其他筛选条件
+ * @param query - 当前表格查询条件，有 ID 筛选时与已选 ID 取交集
+ * @param selectedIds - 已选流量的 ID 字符串数组
+ * @returns 带有 IncludeId 的查询条件，没有匹配的 ID 时返回 undefined
+ */
+export const buildAISelectedHTTPFlowQuery = (query: YakQueryHTTPFlowRequest, selectedIds: string[]) => {
+  const { RuntimeId, RuntimeIDs, SourceType, IncludeId, ...filters } = query
+  const ids = [...new Set(selectedIds.map(normalizeIncludeId).filter((id) => id !== undefined))]
+  const filterIds = IncludeId?.length ? new Set(IncludeId.map(normalizeIncludeId)) : undefined
+  const included = filterIds ? ids.filter((id) => filterIds.has(id)) : ids
+  return included.length ? { ...filters, IncludeId: included } : undefined
 }
 
 export function getFullRange(id: number, count = 10, minId = 1, maxId = null) {

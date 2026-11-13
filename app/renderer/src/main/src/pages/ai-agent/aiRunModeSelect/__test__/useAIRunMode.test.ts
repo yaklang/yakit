@@ -8,6 +8,7 @@ const onSend = vi.fn()
 const setSetting = vi.fn()
 const executeRef = { value: false }
 const sessionIdRef = { value: 'token-1' }
+const welcomeRef = { value: false }
 const settingRef: {
   value: {
     EnablePlan: boolean
@@ -40,6 +41,7 @@ vi.mock('@/pages/ai-agent/useContext/useStore', () => ({
     activeChat: sessionIdRef.value
       ? {
           SessionID: sessionIdRef.value,
+          isDraftSession: welcomeRef.value,
           StartParams: {
             RuntimeContextSizeLimit: 300 * 1024,
             SyncPerceptionTrigger: false,
@@ -66,10 +68,6 @@ vi.mock('zustand', () => ({
     selector({ execute: executeRef.value }),
 }))
 
-vi.mock('@/pages/ai-re-act/hooks/useCurrentSessionId', () => ({
-  default: () => sessionIdRef.value,
-}))
-
 vi.mock('@/utils/eventBus/eventBus', () => ({
   default: { emit: vi.fn(), on: vi.fn(), off: vi.fn() },
 }))
@@ -80,6 +78,7 @@ describe('useAIRunMode', () => {
     vi.useFakeTimers()
     executeRef.value = false
     sessionIdRef.value = 'token-1'
+    welcomeRef.value = false
     settingRef.value = {
       EnablePlan: false,
       Strategy: {
@@ -97,6 +96,19 @@ describe('useAIRunMode', () => {
     cleanup()
     vi.clearAllTimers()
     vi.useRealTimers()
+  })
+
+  it('欢迎页已有 SessionID 时只更新设置，不发送会话补丁或历史事件', () => {
+    welcomeRef.value = true
+    executeRef.value = true
+    const { result } = renderHook(() => useAIRunMode())
+    act(() => {
+      result.current.onToggleMode('plan')
+      result.current.onToggleMode('goal')
+    })
+    expect(setSetting).toHaveBeenCalledTimes(2)
+    expect(onSend).not.toHaveBeenCalled()
+    expect(emiter.emit).not.toHaveBeenCalled()
   })
 
   it.each(['plan', 'multiAgent', 'goal'] as const)(
@@ -227,6 +239,42 @@ describe('useAIRunMode', () => {
 
     expect(onSend).not.toHaveBeenCalled()
     expect(setSetting).toHaveBeenCalled()
+  })
+
+  it('开启 Goal 时默认最小迭代次数为 1，并同步设置和运行中会话', () => {
+    executeRef.value = true
+    const { result } = renderHook(() => useAIRunMode())
+    act(() => result.current.onToggleMode('goal'))
+    expect(setSetting.mock.calls[0][0](settingRef.value).Strategy).toEqual({
+      ...settingRef.value.Strategy,
+      EnableGoalMode: true,
+      GoalMinIterations: 1,
+    })
+    expect(onSend.mock.calls[0][0].params.Params.Strategy).toEqual({
+      ...settingRef.value.Strategy,
+      EnableGoalMode: true,
+      GoalMinIterations: 1,
+    })
+    expect(emiter.emit).toHaveBeenCalledWith(
+      'sessionData',
+      JSON.stringify({
+        type: 'updateSession',
+        sessionId: 'token-1',
+        updates: { StartParams: { Strategy: { EnableGoalMode: true, GoalMinIterations: 1 } } },
+      }),
+    )
+  })
+
+  it.each(['iterations', 'acceptance', 'duration'] as const)('开启 Goal 时保留已有 %s 参数', (mode) => {
+    if (mode === 'iterations') settingRef.value.Strategy.GoalMinIterations = 4
+    else if (mode === 'acceptance') settingRef.value.Strategy.GoalAcceptanceCriteria = 'existing'
+    else settingRef.value.Strategy.GoalDurationSeconds = 3600
+    const { result } = renderHook(() => useAIRunMode())
+    act(() => result.current.onToggleMode('goal'))
+    expect(setSetting.mock.calls[0][0](settingRef.value).Strategy).toEqual({
+      ...settingRef.value.Strategy,
+      EnableGoalMode: true,
+    })
   })
 
   it('运行中仍可 toggle Multi-Agent（不再锁定）', () => {

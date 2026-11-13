@@ -7,7 +7,7 @@ import {
   mergeRisksById,
   nextIncrementFromId,
   shouldSkipRiskCursorPage,
-  toRiskNumericId,
+  normalizeRiskId,
 } from '../riskTableUtils'
 
 describe('getDiscoveryTimeColumnFixed', () => {
@@ -24,8 +24,8 @@ describe('getDiscoveryTimeColumnFixed', () => {
 
 describe('risk table cursor merge', () => {
   it('coerces grpc string ids and treats page "1" as init', () => {
-    expect(toRiskNumericId('12')).toBe(12)
-    expect(toRiskNumericId(0)).toBe(0)
+    expect(normalizeRiskId('12')).toBe(12)
+    expect(normalizeRiskId(0)).toBe(0)
     expect(isRiskTableInitPage(1)).toBe(true)
     expect(isRiskTableInitPage('1')).toBe(true)
     expect(isRiskTableInitPage(2)).toBe(false)
@@ -61,5 +61,6 @@ describe('risk table cursor merge', () => {
   it('advances increment FromId to the newest id', () => {
     expect(nextIncrementFromId([{ Id: '12' }, { Id: 11 }], 5)).toBe(12)
     expect(nextIncrementFromId([], 5)).toBe(5)
+    expect(nextIncrementFromId([{ Id: '9007199254740993' }], '9007199254740992')).toBe('9007199254740993')
   })
 })

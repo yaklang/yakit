@@ -282,7 +282,9 @@ describe('AIAgentChat SingleModelMode 生命周期', () => {
         EnableGoalMode: false,
       }),
     })
-    expect(mocks.setActiveChat).toHaveBeenCalledWith(undefined)
+    expect(mocks.setActiveChat).toHaveBeenCalledWith(
+      expect.objectContaining({ isDraftSession: true, SessionID: expect.any(String) }),
+    )
   })
 })
 
@@ -306,7 +308,11 @@ describe('AIAgentChat 当前会话在别处被删除', () => {
 
       if (deletedSessionId === ctx.activeChat.SessionID) {
         expect.soft(mode()).toBe('welcome')
-        expect.soft(mocks.setActiveChat).toHaveBeenCalledExactlyOnceWith(undefined)
+        expect
+          .soft(mocks.setActiveChat)
+          .toHaveBeenCalledExactlyOnceWith(
+            expect.objectContaining({ isDraftSession: true, SessionID: expect.any(String) }),
+          )
         expect(mocks.onReStart).not.toHaveBeenCalled()
       } else {
         expect(mode()).toBe('re-act')
@@ -322,7 +328,9 @@ describe('AIAgentChat 当前会话在别处被删除', () => {
     expect(mode()).toBe('re-act')
     markDeleted('s-live')
     expect(mode()).toBe('welcome')
-    expect(mocks.setActiveChat).toHaveBeenCalledExactlyOnceWith(undefined)
+    expect(mocks.setActiveChat).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({ isDraftSession: true, SessionID: expect.any(String) }),
+    )
   })
 
   it('删除其他会话或卸载后不再响应', () => {

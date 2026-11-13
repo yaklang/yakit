@@ -14,6 +14,7 @@ import { type AIInputEvent, AIInputEventSyncTypeEnum, AINotifyType } from '../ho
 import { AITaskQuery } from '@/pages/ai-agent/components/aiTaskQuery/AITaskQuery'
 import type { AIChatSubmitParams } from '@/pages/ai-agent/aiAgentChat/type'
 import { createActiveChatSessionId, getAIReActRequestParams } from '@/pages/ai-agent/utils'
+import { isChatSession } from '@/pages/ai-agent/utils/isChatSession'
 import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
 import { randomString } from '@/utils/randomUtil'
 import useAINodeLabel from '../hooks/useAINodeLabel'
@@ -67,11 +68,16 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
     })
 
     const { activeChat, setting, pendingChat } = useAIAgentStore()
+    const inputGeneration = useRef(0)
+    useEffect(() => {
+      return () => {
+        inputGeneration.current += 1
+      }
+    }, [activeChat?.SessionID])
 
     const aiChatTextareaRef = useRef<AIChatTextareaRefProps>({
       setMention: () => {},
       setValue: () => {},
-      setHttpFlow: () => {},
       getValue: () => {},
     })
     useEffect(() => {
@@ -123,19 +129,21 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
       startRequest,
       setMention: (value) => aiChatTextareaRef.current?.setMention(value),
     })
-    const handleStart = useMemoizedFn((input: AIChatSubmitParams) => {
+    const handleStart = useMemoizedFn((input: AIChatSubmitParams, onAccepted?: () => void) => {
       const { sessionId, ...value } = input
-      startChat({
-        ...value,
-        target: activeChat?.SessionID
-          ? { kind: 'resume', sessionId: activeChat.SessionID }
-          : { kind: 'new', sessionId: sessionId || createActiveChatSessionId() },
-      })
+      return startChat(
+        {
+          ...value,
+          target: isChatSession(activeChat)
+            ? { kind: 'resume', sessionId: activeChat.SessionID }
+            : { kind: 'new', sessionId: activeChat?.SessionID || sessionId || createActiveChatSessionId() },
+        },
+        onAccepted,
+      )
     })
 
     useImperativeHandle(ref, () => {
       return {
-        setHttpFlow: (ids) => aiChatTextareaRef.current?.setHttpFlow(ids),
         setValue: (value) => aiChatTextareaRef.current?.setValue(value),
         getValue: () => aiChatTextareaRef.current?.getValue(),
         setMention: (value) => aiChatTextareaRef.current?.setMention(value),
@@ -143,8 +151,8 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
       }
     }, [])
     /**自由对话 */
-    const handleSend = useMemoizedFn((data: AIChatSubmitParams) => {
-      if (!activeChat?.SessionID) return
+    const handleSend = useMemoizedFn((data: AIChatSubmitParams, onAccepted?: () => void) => {
+      if (!activeChat?.SessionID) return false
       const sendChat = () => {
         const { attachedResourceInfo } = getAIReActRequestParams(data)
         const chatMessage: AIInputEvent = {
@@ -155,7 +163,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
         }
         const onSendChat = (res: AISendResProps) => {
           const { params } = res
-          onSend({
+          const accepted = onSend({
             token: activeChat.SessionID,
             type: 'casual',
             params: {
@@ -163,7 +171,10 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
               ...params,
             },
           })
+          if (accepted === false) return false
+          onAccepted?.()
           emiter.emit('sessionData', JSON.stringify({ type: 'refresh', sessionId: activeChat.SessionID }))
+          return true
         }
         if (sendRequest) {
           sendRequest?.({ params: chatMessage })
@@ -179,15 +190,18 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                 params: chatMessage,
               })
             })
+          return true
         } else {
-          onSendChat({
+          return onSendChat({
             params: chatMessage,
           })
         }
       }
       try {
-        sendChat()
-      } catch (error) {}
+        return sendChat()
+      } catch (error) {
+        return false
+      }
     })
 
     // #endregion
@@ -210,13 +224,17 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
         yakitNotify('error', '请先配置 AI ReAct 参数')
         return
       }
-      if (store.getState().execute) {
-        handleSend(value)
-      } else {
-        handleStart(value)
+      const generation = inputGeneration.current
+      const onAccepted = () => {
+        if (generation !== inputGeneration.current) return
+        onSetQuestion('')
+        externalParameters?.onAfterSubmit?.()
       }
-      onSetQuestion('')
-      externalParameters?.onAfterSubmit?.()
+      if (store.getState().execute) {
+        handleSend(value, onAccepted)
+      } else {
+        handleStart(value, onAccepted)
+      }
     })
 
     const handleStopCasualTask = useMemoizedFn(() => {

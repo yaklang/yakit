@@ -1,11 +1,14 @@
 import type { ReactNode } from 'react'
 import { isMemfit } from '@/utils/envfile'
+import { v4 as uuidv4 } from 'uuid'
+import type { AISession } from './type/aiChat'
 import type { AIAgentSetting } from './aiAgentType'
 import {
   AIOutlined,
   BookOpenTextOutlined,
   BotOutlined,
   BoxOutlined,
+  BugOutlined,
   CalendarOutlined,
   ChromeOutlined,
   DocumentTextOutlined,
@@ -14,7 +17,9 @@ import {
   Goal2Outlined,
   MCPOutlined,
   PointerOutlined,
-  TemplateOutlined,
+  PlusCircleOutlined,
+  PuzzleOutlined,
+  Wrench2Outlined,
   Wrench1Outlined,
   ChatAlt2Outlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
@@ -51,6 +56,20 @@ import type { ExportAIForgeRequest } from './forgeName/type'
 /** AI-Agent 页面的唯一 id */
 export const YakitAIAgentPageID = 'yakit-ai-agent'
 
+/** 欢迎页默认会话，首次发送沿用这个 ID。 */
+export const createWelcomeChat = (): AISession => ({
+  Id: '',
+  SessionID: uuidv4(),
+  Title: '',
+  question: '',
+  CreatedAt: 0,
+  UpdatedAt: 0,
+  LastUsedAt: 0,
+  TitleInitialized: false,
+  Source: 'ai',
+  isDraftSession: true,
+})
+
 export enum AIAgentTabListEnum {
   Session = 'session',
   File = 'file',
@@ -82,8 +101,7 @@ export const AiAgentTabList: YakitTabsProps[] = [
   { value: AIAgentTabListEnum.MCP, label: 'MCP', icon: <MCPOutlined color="currentColor" /> },
 ]
 export enum AIMentionTabsEnum {
-  /** 全部 */
-  All = 'all',
+  Recent = 'recent',
   /** forge 智能体 */
   Forge_Name = 'forgeName',
   /** 工具 */
@@ -98,37 +116,21 @@ export enum AIMentionTabsEnum {
   Browser = 'browser',
 }
 export const AIMentionTabs: YakitSideTabProps['yakitTabs'] = [
-  { value: AIMentionTabsEnum.All, label: 'AIMentionTabs.all' },
-  {
-    value: AIMentionTabsEnum.Forge_Name,
-    label: 'AIMentionTabs.skill',
-    icon: <TemplateOutlined color="currentColor" />,
-  },
-  {
-    value: AIMentionTabsEnum.Browser,
-    label: 'AIMentionTabs.browser',
-    icon: <ChromeOutlined color="currentColor" />,
-  },
-  {
-    value: AIMentionTabsEnum.Tool,
-    label: 'AIMentionTabs.tool',
-    icon: <Wrench1Outlined color="currentColor" />,
-  },
+  { value: AIMentionTabsEnum.Recent, label: 'AIMentionTabs.recent', icon: <PlusCircleOutlined color="currentColor" /> },
+  { value: AIMentionTabsEnum.Forge_Name, label: 'AIMentionTabs.skill', icon: <PuzzleOutlined color="currentColor" /> },
   {
     value: AIMentionTabsEnum.KnowledgeBase,
     label: 'AIMentionTabs.knowledgeBase',
     icon: <BookOpenTextOutlined color="currentColor" />,
   },
+  { value: AIMentionTabsEnum.Tool, label: 'AIMentionTabs.tool', icon: <Wrench2Outlined color="currentColor" /> },
   {
     value: AIMentionTabsEnum.File_System,
     label: 'AIMentionTabs.fileSystem',
     icon: <FolderOpenOutlined color="currentColor" />,
   },
-  {
-    value: AIMentionTabsEnum.FocusMode,
-    label: 'AiAgengt.focusMode',
-    icon: <BoxOutlined color="currentColor" />,
-  },
+  { value: AIMentionTabsEnum.Browser, label: 'AIMentionTabs.browser', icon: <ChromeOutlined color="currentColor" /> },
+  { value: AIMentionTabsEnum.FocusMode, label: 'AiAgengt.focusMode', icon: <BoxOutlined color="currentColor" /> },
 ]
 
 /** ai-agent 聊天全局配置参数默认值 */
@@ -354,6 +356,7 @@ export const iconMap = {
   knowledgeBase: <BookOpenTextOutlined color="currentColor" />,
   focusMode: <BookOpenTextOutlined color="currentColor" />,
   browser: <ChromeOutlined color="currentColor" />,
+  risk: <BugOutlined color="currentColor" />,
   goal: <Goal2Outlined color="currentColor" />,
   multiAgent: <BoxOutlined color="currentColor" />,
 }
@@ -366,6 +369,7 @@ export enum AttachedResourceTypeEnum {
   CONTEXT_PROVIDER_TYPE_AITOOL = 'aitool',
   CONTEXT_PROVIDER_TYPE_AIFORGE = 'aiforge',
   CONTEXT_PROVIDER_TYPE_HTTP_FLOW = 'http_flow',
+  CONTEXT_PROVIDER_TYPE_RISK = 'risk',
   CONTEXT_PROVIDER_TYPE_CODE_BLOCK_File = 'file',
   CONTEXT_PROVIDER_TYPE_CODE_BLOCK_Content = 'selected',
   CONTEXT_PROVIDER_TYPE_BROWSER = 'browser',
@@ -378,6 +382,7 @@ export enum AttachedResourceKeyEnum {
   CONTEXT_PROVIDER_KEY_NAME = 'name',
   CONTEXT_PROVIDER_KEY_SYSTEM_FLAG = 'system_flag',
   CONTEXT_PROVIDER_KEY_HTTP_FLOW_ID = 'id',
+  CONTEXT_PROVIDER_KEY_RISK_IDS = 'ids',
   CONTEXT_PROVIDER_KEY_CODE_BLOCK_Directory_ID = 'directory_path',
   CONTEXT_PROVIDER_KEY_CODE_BLOCK_File_ID = 'file_path',
   CONTEXT_PROVIDER_TYPE_CODE_BLOCK_Content = 'content',

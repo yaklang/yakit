@@ -5,7 +5,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import emiter from '@/utils/eventBus/eventBus'
 import { serializeAIAgentChatSetting } from '../utils/aiAgentChatSettingCache'
-import { AIAgentSettingDefault } from '../defaultConstant'
+import { AIAgentSettingDefault, createWelcomeChat } from '../defaultConstant'
+import cloneDeep from 'lodash/cloneDeep'
 import { AIAgent } from '../AIAgent'
 import type { AISession, QueryAISessionResponse } from '../type/aiChat'
 import { grpcQueryAISession } from '../grpc'
@@ -24,6 +25,9 @@ const ipc = vi.hoisted(() => ({
   pages: new Map(),
   sessions: new Map(),
   showHistory: false,
+  prepareWelcomeStore: false,
+  chatMounted: vi.fn(),
+  chatUnmounted: vi.fn(),
 }))
 
 vi.mock('@/i18n/useI18nNamespaces', () => ({
@@ -94,13 +98,28 @@ vi.mock('../../yakRunner/SplitView/SplitView', () => ({
 }))
 
 vi.mock('../aiAgentChat/AIAgentChat', async () => {
-  const { useContext } = await import('react')
+  const { useContext, useEffect } = await import('react')
   const { default: AIAgentContext } = await import('../useContext/AIAgentContext')
   const { default: useRuntimeContextSizeLimit } = await import('../useContext/useRuntimeContextSizeLimit')
   return {
     AIAgentChat: () => {
       const { store, dispatcher } = useContext(AIAgentContext)
       const runtimeLimit = useRuntimeContextSizeLimit()
+      if (ipc.prepareWelcomeStore && store.activeChat?.isDraftSession && store.activeChat.SessionID) {
+        globalSessionEngine.ensureSession(store.activeChat.SessionID)
+      }
+      useEffect(() => {
+        ipc.chatMounted()
+        return () => ipc.chatUnmounted()
+      }, [])
+      useEffect(() => {
+        if (
+          store.activeChat?.isDraftSession &&
+          globalSessionEngine.sessionStores.getState().has(store.activeChat.SessionID)
+        ) {
+          globalSessionEngine.ensureSession(store.activeChat.SessionID).meta.pendingWelcomeInput = undefined
+        }
+      }, [store.activeChat?.SessionID])
       return (
         <div>
           <span data-testid="runtime-limit">{runtimeLimit}</span>
@@ -112,7 +131,7 @@ vi.mock('../aiAgentChat/AIAgentChat', async () => {
                 current
                   ? {
                       ...current,
-                      StartParams: { ...current.StartParams, RuntimeContextSizeLimit: 600 * 1024 },
+                      StartParams: { ...current.StartParams, RuntimeContextSizeLimit: 600 },
                     }
                   : current,
               )
@@ -128,17 +147,29 @@ vi.mock('../aiAgentChat/AIAgentChat', async () => {
           <span data-testid="setting">{JSON.stringify(store.setting)}</span>
           <span data-testid="active-chat">{JSON.stringify(store.activeChat)}</span>
           <span data-testid="active-title">{store.activeChat?.Title}</span>
-          <span data-testid="active-session">{store.activeChat?.SessionID || 'welcome'}</span>
+          <span data-testid="active-session">
+            {store.activeChat?.isDraftSession ? 'welcome' : store.activeChat?.SessionID}
+          </span>
+          <span data-testid="welcome-session">
+            {store.activeChat?.isDraftSession ? store.activeChat.SessionID : ''}
+          </span>
           <button onClick={() => dispatcher.setActiveChat({ SessionID: 'history' } as AISession)}>
             select-history
           </button>
           <button onClick={() => dispatcher.setActiveChat({ SessionID: 'created', isCreate: false } as AISession)}>
             select-created-history
           </button>
-          <button onClick={() => dispatcher.setActiveChat(undefined)}>back-to-welcome</button>
+          <button onClick={() => dispatcher.setActiveChat(createWelcomeChat())}>back-to-welcome</button>
+          <button onClick={() => dispatcher.setActiveChat(undefined)}>ignore-empty-session</button>
+          <button onClick={() => dispatcher.setActiveChat(() => undefined)}>ignore-empty-session-updater</button>
           <button
             onClick={() =>
-              dispatcher.setActiveChat({ SessionID: 'created', Title: '你好', isCreate: true } as AISession)
+              dispatcher.setActiveChat({
+                SessionID: 'created',
+                Title: '你好',
+                isDraftSession: false,
+                isCreate: true,
+              } as AISession)
             }
           >
             create-session
@@ -171,16 +202,22 @@ vi.mock('@/store/pageInfo', () => ({
 }))
 vi.mock('../../ai-re-act/hooks/ChatMultiSessionController', async () => {
   const { createStore } = await import('zustand/vanilla')
+  const { createChatStore } = await import('../../ai-re-act/hooks/chatStore')
+  const { AIAgentSettingDefault } = await import('../defaultConstant')
   const sessionStores = createStore(() => new Map())
   return {
     globalSessionEngine: {
       sessionStores,
+      registerDraftSession: vi.fn(),
+      discardUnsentDraft: vi.fn(),
       updateSessionConfig: vi.fn(),
       ensureSession: (id: string) => {
         if (!ipc.sessions.has(id)) {
           ipc.sessions.set(id, {
-            store: createStore(() => ({ sessionTitleUpdate: 0, execute: false })),
+            store: createChatStore(),
             rawData: { sessionTitle: '' },
+            meta: {},
+            request: { ...AIAgentSettingDefault },
           })
           sessionStores.setState(new Map(sessionStores.getState()).set(id, ipc.sessions.get(id).store), true)
         }
@@ -222,6 +259,7 @@ describe('AIAgent 配置广播', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     ipc.showHistory = false
+    ipc.prepareWelcomeStore = false
     ipc.pages.clear()
     ipc.sessions.clear()
     globalSessionEngine.sessionStores.setState(new Map(), true)
@@ -251,6 +289,175 @@ describe('AIAgent 配置广播', () => {
       } as typeof ResizeObserver
     }
   })
+
+  it('草稿重置和切到历史时释放旧草稿，StrictMode 首次挂载不清理', () => {
+    const draft = createWelcomeChat()
+    render(<AIAgent pageId="welcome-tab" initialSession={draft} />, { reactStrictMode: true })
+
+    expect(globalSessionEngine.registerDraftSession).toHaveBeenCalledWith(draft.SessionID, 'welcome-tab')
+    expect(globalSessionEngine.discardUnsentDraft).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByText('back-to-welcome'))
+
+    const nextId = screen.getByTestId('welcome-session').textContent
+    expect(nextId).not.toBe(draft.SessionID)
+    expect(globalSessionEngine.discardUnsentDraft).toHaveBeenCalledExactlyOnceWith(draft.SessionID, 'welcome-tab')
+    expect(globalSessionEngine.registerDraftSession).toHaveBeenLastCalledWith(nextId, 'welcome-tab')
+    fireEvent.click(screen.getByText('select-history'))
+    expect(globalSessionEngine.discardUnsentDraft).toHaveBeenLastCalledWith(nextId, 'welcome-tab')
+  })
+
+  it.each([false, true])('新标签保留首问完整配置，消费后不读取缓存覆盖（StrictMode=%s）', async (reactStrictMode) => {
+    const session = createWelcomeChat()
+    const transferredSetting = {
+      ...AIAgentSettingDefault,
+      EnablePlan: true,
+      SyncPerceptionTrigger: true,
+      SingleModelMode: true,
+      DisableMemoryTriage: true,
+      RuntimeContextSizeLimit: 345,
+      Strategy: {
+        ...AIAgentSettingDefault.Strategy,
+        EnableGoalMode: true,
+        EnableMultiAgent: true,
+        GoalMinIterations: 7,
+        MaxSubAgents: 5,
+      },
+    }
+    const pendingCache = deferred<string>()
+    getRemoteValueMock.mockReturnValue(pendingCache.promise)
+    const { meta, request } = globalSessionEngine.ensureSession(session.SessionID)
+    Object.assign(meta, {
+      pendingWelcomeInput: { qs: 'hello' },
+    })
+    Object.assign(request, cloneDeep(transferredSetting))
+    const view = render(<AIAgent pageId="submitted-tab" initialSession={session} />, { reactStrictMode })
+    expect(meta.pendingWelcomeInput).toBeUndefined()
+    expect(request).toEqual(transferredSetting)
+    expect(JSON.parse(screen.getByTestId('setting').textContent!)).toEqual(transferredSetting)
+    expect(getRemoteValueMock).not.toHaveBeenCalledWith(RemoteAIAgentGV.AIAgentChatSetting)
+    expect(querySessionMock).not.toHaveBeenCalled()
+    expect(globalSessionEngine.sessionStores.getState().size).toBe(1)
+    expect(globalSessionEngine.updateSessionConfig).not.toHaveBeenCalled()
+    transferredSetting.Strategy.GoalMinIterations = 99
+    await act(async () => {
+      pendingCache.resolve(JSON.stringify({ ...AIAgentSettingDefault, EnablePlan: false }))
+    })
+    view.rerender(<AIAgent pageId="submitted-tab" initialSession={session} />)
+    expect(screen.getByTestId('goal')).toHaveTextContent('7')
+    expect(screen.getByTestId('enable-plan')).toHaveTextContent('true')
+    expect(getRemoteValueMock).not.toHaveBeenCalledWith(RemoteAIAgentGV.AIAgentChatSetting)
+  })
+
+  it.each([false, true])('子组件创建默认会话后欢迎页仍读取缓存（StrictMode=%s）', async (reactStrictMode) => {
+    ipc.prepareWelcomeStore = true
+    const session = createWelcomeChat()
+    render(<AIAgent pageId="welcome-tab" initialSession={session} />, { reactStrictMode })
+
+    await waitFor(() => expect(screen.getByTestId('review-policy')).toHaveTextContent('yolo'))
+
+    expect(getRemoteValueMock).toHaveBeenCalledWith(RemoteAIAgentGV.AIAgentChatSetting)
+    expect(globalSessionEngine.ensureSession(session.SessionID).request.ReviewPolicy).toBe('yolo')
+    expect(querySessionMock).not.toHaveBeenCalled()
+  })
+
+  it('正式会话忽略同 ID 的欢迎页待提交配置，仍查询恢复会话设置', async () => {
+    const session = { ...createWelcomeChat(), isDraftSession: false }
+    const { meta, request } = globalSessionEngine.ensureSession(session.SessionID)
+    Object.assign(meta, {
+      pendingWelcomeInput: { qs: 'hello' },
+    })
+    Object.assign(request, cloneDeep({ ...AIAgentSettingDefault, EnablePlan: true }))
+    const pendingSession = deferred<QueryAISessionResponse>()
+    querySessionMock.mockReturnValueOnce(pendingSession.promise)
+    render(<AIAgent pageId="history-tab" initialSession={session} />)
+
+    expect(JSON.parse(screen.getByTestId('setting').textContent!)).toEqual(AIAgentSettingDefault)
+    expect(meta.pendingWelcomeInput).toEqual({ qs: 'hello' })
+    expect(querySessionMock).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({ Filter: { SessionID: [session.SessionID] } }),
+    )
+    await act(async () => {
+      pendingSession.resolve(sessionResponse([{ ...session, StartParams: { ReviewPolicy: 'manual' } } as AISession]))
+    })
+    expect(screen.getByTestId('review-policy')).toHaveTextContent('manual')
+    expect(globalSessionEngine.updateSessionConfig).not.toHaveBeenCalled()
+  })
+
+  it('欢迎页先分配独立 ID，普通渲染复用，新建或从历史返回时换新', async () => {
+    const view = render(<AIAgent pageId="welcome-tab" />)
+    const firstId = screen.getByTestId('welcome-session').textContent
+    expect(firstId).toBeTruthy()
+    expect(JSON.parse(screen.getByTestId('active-chat').textContent!)).toMatchObject({
+      SessionID: firstId,
+      isDraftSession: true,
+    })
+    expect(querySessionMock).not.toHaveBeenCalled()
+    view.rerender(<AIAgent pageId="welcome-tab" />)
+    expect(screen.getByTestId('welcome-session')).toHaveTextContent(firstId!)
+
+    fireEvent.click(screen.getByRole('button', { name: 'back-to-welcome' }))
+    const secondId = screen.getByTestId('welcome-session').textContent
+    expect(secondId).toBeTruthy()
+    expect(secondId).not.toBe(firstId)
+    fireEvent.click(screen.getByRole('button', { name: 'select-history' }))
+    expect(screen.getByTestId('welcome-session')).toBeEmptyDOMElement()
+    fireEvent.click(screen.getByRole('button', { name: 'back-to-welcome' }))
+    expect(screen.getByTestId('welcome-session').textContent).not.toBe(secondId)
+  })
+
+  it('重置固定欢迎页时清空聊天组件局部状态，菜单名称保持不变', async () => {
+    const session = createWelcomeChat()
+    const node = {
+      pageId: YakitRoute.AI_Agent,
+      pageName: YakitRouteToPageInfo[YakitRoute.AI_Agent].label,
+      pageParamsInfo: {},
+    }
+    ipc.queryPagesDataById.mockReturnValue(node)
+    render(<AIAgent pageId={YakitRoute.AI_Agent} initialSession={session} />)
+    await act(async () => {})
+    expect(ipc.chatMounted).toHaveBeenCalledTimes(1)
+    fireEvent.click(screen.getByRole('button', { name: 'back-to-welcome' }))
+    expect(ipc.chatUnmounted).toHaveBeenCalledTimes(1)
+    expect(ipc.chatMounted).toHaveBeenCalledTimes(2)
+    expect(screen.getByTestId('welcome-session').textContent).not.toBe(session.SessionID)
+    expect(ipc.updatePagesDataCacheById).toHaveBeenLastCalledWith(
+      YakitRoute.AI_Agent,
+      expect.objectContaining({ pageName: YakitRouteToPageInfo[YakitRoute.AI_Agent].label }),
+    )
+  })
+
+  it('不同欢迎页 Tab 分配不同的会话 ID', () => {
+    const view = render(
+      <>
+        <AIAgent pageId="first-welcome" />
+        <AIAgent pageId="second-welcome" />
+      </>,
+    )
+    const ids = screen.getAllByTestId('welcome-session').map((element) => element.textContent)
+    expect(ids.every(Boolean)).toBe(true)
+    expect(new Set(ids).size).toBe(2)
+    view.unmount()
+  })
+
+  it.each(['ignore-empty-session', 'ignore-empty-session-updater'])(
+    '%s 保留当前会话，不更新页面绑定或脱离 pending',
+    async (action) => {
+      const session = { ...createWelcomeChat(), isDraftSession: false }
+      render(<AIAgent pageId="test" initialSession={session} />)
+      await act(async () => {})
+      ipc.updatePagesDataCacheById.mockClear()
+      ipc.queryPagesDataById.mockClear()
+
+      fireEvent.click(screen.getByRole('button', { name: action }))
+
+      expect(JSON.parse(screen.getByTestId('active-chat').textContent!)).toEqual(session)
+      expect(ipc.chatMounted).toHaveBeenCalledTimes(1)
+      expect(ipc.chatUnmounted).not.toHaveBeenCalled()
+      expect(ipc.queryPagesDataById).not.toHaveBeenCalled()
+      expect(ipc.updatePagesDataCacheById).not.toHaveBeenCalled()
+      expect(ipc.detachPendingChat).not.toHaveBeenCalled()
+    },
+  )
 
   it('按当前 SessionID 恢复设置和标题，保留输入参数且不写入全局设置', async () => {
     const session = { SessionID: 'selected-history', Title: '旧标题', isCreate: true } as AISession
@@ -343,11 +550,11 @@ describe('AIAgent 配置广播', () => {
   it.each([
     [60, 40],
     [0, 0],
-  ])('将启动参数中的字节值恢复为 %s/%s KB', async (runtimeKB, tokenKB) => {
+  ])('从会话参数恢复前端单位 %s/%s KB', async (runtimeKB, tokenKB) => {
     const StartParams = {
-      RuntimeContextSizeLimit: runtimeKB * 1024,
-      TimelineContentSizeLimit: 10 * 1024,
-      AICallTokenLimit: tokenKB * 1024,
+      RuntimeContextSizeLimit: runtimeKB,
+      TimelineContentSizeLimit: 10,
+      AICallTokenLimit: tokenKB,
     }
     querySessionMock.mockResolvedValueOnce(sessionResponse([{ SessionID: 'history', StartParams } as AISession]))
     render(<AIAgent pageId="test" initialSession={{ SessionID: 'history' } as AISession} />)
@@ -357,18 +564,18 @@ describe('AIAgent 配置广播', () => {
     expect(setting).toMatchObject({ RuntimeContextSizeLimit: runtimeKB, AICallTokenLimit: tokenKB })
     expect(setting).not.toHaveProperty('TimelineContentSizeLimit')
     expect(screen.getByTestId('runtime-limit')).toHaveTextContent(String(runtimeKB > 0 ? runtimeKB : 300))
-    expect(screen.getByTestId('raw-limit')).toHaveTextContent(String(runtimeKB * 1024))
+    expect(screen.getByTestId('raw-limit')).toHaveTextContent(String(runtimeKB))
     expect(globalSessionEngine.updateSessionConfig).not.toHaveBeenCalled()
     expect(setRemoteValueMock).not.toHaveBeenCalled()
   })
 
-  it.each([false, true])('真实历史事件通过 AIAgent 合并同批参数并保留请求字节值，反向顺序：%s', async (reverse) => {
+  it.each([false, true])('真实历史事件通过 AIAgent 合并同批参数并保留请求前端单位值，反向顺序：%s', async (reverse) => {
     ipc.showHistory = true
     const session = {
       SessionID: 'history',
       Title: 'original',
       StartParams: {
-        RuntimeContextSizeLimit: 300 * 1024,
+        RuntimeContextSizeLimit: 300,
         SyncPerceptionTrigger: true,
         EnablePlan: true,
         Strategy: { EnableGoalMode: true, MaxSubAgents: 4 },
@@ -386,7 +593,7 @@ describe('AIAgent 配置广播', () => {
     ipc.detachPendingChat.mockClear()
     ipc.updatePagesDataCacheById.mockClear()
     const updates = [
-      { StartParams: { RuntimeContextSizeLimit: 600 * 1024 } },
+      { StartParams: { RuntimeContextSizeLimit: 600 } },
       { StartParams: { SyncPerceptionTrigger: false, Strategy: { MaxSubAgents: 0 } } },
     ]
     act(() => {
@@ -398,21 +605,21 @@ describe('AIAgent 配置广播', () => {
       ...session,
       StartParams: {
         ...session.StartParams,
-        RuntimeContextSizeLimit: 600 * 1024,
+        RuntimeContextSizeLimit: 600,
         SyncPerceptionTrigger: false,
         Strategy: { EnableGoalMode: true, MaxSubAgents: 0 },
       },
     })
     expect(screen.getByTestId('runtime-limit')).toHaveTextContent(/^600$/)
-    expect(screen.getByTestId('raw-limit')).toHaveTextContent(/^614400$/)
+    expect(screen.getByTestId('raw-limit')).toHaveTextContent(/^600$/)
     expect(screen.getByTestId('default-limit')).toHaveTextContent(/^300$/)
     expect(globalSessionEngine.updateSessionConfig).toHaveBeenCalledExactlyOnceWith(
       'history',
-      expect.objectContaining({ RuntimeContextSizeLimit: 614400 }),
+      expect.objectContaining({ RuntimeContextSizeLimit: 600 }),
     )
     expect(ipc.detachPendingChat).not.toHaveBeenCalled()
     expect(ipc.updatePagesDataCacheById).not.toHaveBeenCalled()
-    expect(session.StartParams?.RuntimeContextSizeLimit).toBe(307200)
+    expect(session.StartParams?.RuntimeContextSizeLimit).toBe(300)
     expect(session.StartParams?.Strategy?.MaxSubAgents).toBe(4)
   })
 
@@ -449,7 +656,7 @@ describe('AIAgent 配置广播', () => {
       const { RuntimeContextSizeLimit: _defaultLimit, ...sessionConfig } = currentSetting
       expect(globalSessionEngine.updateSessionConfig).toHaveBeenCalledExactlyOnceWith('history', {
         ...sessionConfig,
-        ...(source === 'context' ? { RuntimeContextSizeLimit: 600 * 1024 } : {}),
+        ...(source === 'context' ? { RuntimeContextSizeLimit: 600 } : {}),
       })
       const persistedCount = setRemoteValueMock.mock.calls.length
 
@@ -641,6 +848,32 @@ describe('AIAgent 配置广播', () => {
     await waitFor(() => expect(setRemoteValueMock).toHaveBeenCalled())
   })
 
+  it('欢迎页缓存读取完成后应用初始化配置', async () => {
+    const pendingCache = deferred<string>()
+    getRemoteValueMock.mockReturnValue(pendingCache.promise)
+    render(<AIAgent pageId="test" />)
+    fireEvent.click(screen.getByText('turn-on-plan'))
+
+    await act(async () => pendingCache.resolve(JSON.stringify({ ...AIAgentSettingDefault, EnablePlan: false })))
+
+    expect(screen.getByTestId('enable-plan')).toHaveTextContent('false')
+    expect(globalSessionEngine.updateSessionConfig).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({ EnablePlan: true, RuntimeContextSizeLimit: 300 }),
+    )
+  })
+
+  it.each([false, true])('空 SessionID 不查询或更新引擎，即使 isDraftSession=%s', async (isDraftSession) => {
+    render(<AIAgent pageId="test" initialSession={{ ...createWelcomeChat(), SessionID: '', isDraftSession }} />)
+    await waitFor(() => expect(screen.getByTestId('review-policy')).toHaveTextContent('yolo'))
+    fireEvent.click(screen.getByText('turn-on-plan'))
+    await waitFor(() => expect(setRemoteValueMock).toHaveBeenCalled())
+
+    expect(querySessionMock).not.toHaveBeenCalled()
+    expect(globalSessionEngine.sessionStores.getState().size).toBe(0)
+    expect(globalSessionEngine.updateSessionConfig).not.toHaveBeenCalled()
+  })
+
   it.each(['found', 'empty'])('切换会话后忽略旧会话查询响应：%s', async (result) => {
     const pending = deferred<QueryAISessionResponse>()
     querySessionMock.mockReturnValueOnce(pending.promise)
@@ -766,19 +999,19 @@ describe('AIAgent 配置广播', () => {
     expect(ipc.detachPendingChat).not.toHaveBeenCalled()
   })
 
-  it('修改 A 生效值和新会话默认值，但不改变 B 的阈值和请求字节配置', async () => {
+  it('修改 A 生效值和新会话默认值，但不改变 B 的阈值和请求前端单位配置', async () => {
     render(
       <>
         <section data-testid="session-a">
           <AIAgent
             pageId="a"
-            initialSession={{ SessionID: 'a', StartParams: { RuntimeContextSizeLimit: 300 * 1024 } } as AISession}
+            initialSession={{ SessionID: 'a', StartParams: { RuntimeContextSizeLimit: 300 } } as AISession}
           />
         </section>
         <section data-testid="session-b">
           <AIAgent
             pageId="b"
-            initialSession={{ SessionID: 'b', StartParams: { RuntimeContextSizeLimit: 120 * 1024 } } as AISession}
+            initialSession={{ SessionID: 'b', StartParams: { RuntimeContextSizeLimit: 120 } } as AISession}
           />
         </section>
         <section data-testid="new-session">
@@ -798,8 +1031,8 @@ describe('AIAgent 配置广播', () => {
     expect(b.getByTestId('runtime-limit')).toHaveTextContent(/^120$/)
     expect(b.getByTestId('default-limit')).toHaveTextContent(/^600$/)
     const updates = vi.mocked(globalSessionEngine.updateSessionConfig).mock.calls
-    expect(updates.filter(([id]) => id === 'a').at(-1)?.[1].RuntimeContextSizeLimit).toBe(614400)
-    expect(updates.filter(([id]) => id === 'b').every(([, config]) => config.RuntimeContextSizeLimit === 122880)).toBe(
+    expect(updates.filter(([id]) => id === 'a').at(-1)?.[1].RuntimeContextSizeLimit).toBe(600)
+    expect(updates.filter(([id]) => id === 'b').every(([, config]) => config.RuntimeContextSizeLimit === 120)).toBe(
       true,
     )
     expect(setRemoteValueMock.mock.calls.at(-1)?.[1]).toContain('"RuntimeContextSizeLimit":600')
@@ -1114,6 +1347,35 @@ describe('AIAgent 配置广播', () => {
     expect(ipc.updatePagesDataCacheById).not.toHaveBeenCalled()
     expect(screen.getByTestId('active-session')).toHaveTextContent('history')
     expect(ipc.detachPendingChat).toHaveBeenCalledOnce()
+  })
+
+  it('草稿建联后用同一 SessionID 更新标签缓存，重开时恢复正式会话', async () => {
+    const draft = { ...createWelcomeChat(), SessionID: 'created' }
+    const node = {
+      pageId: 'test',
+      pageName: 'AI Agent-2',
+      pageParamsInfo: { aiAgentPageInfo: { session: draft } },
+    }
+    ipc.pages.set(YakitRoute.AI_Agent, { pageList: [node] })
+    ipc.queryPagesDataById.mockReturnValue(node)
+    const { unmount } = render(<AIAgent pageId="test" initialSession={draft} />)
+    await act(async () => {})
+    expect(screen.getByTestId('active-session')).toHaveTextContent('welcome')
+
+    fireEvent.click(screen.getByRole('button', { name: 'create-session' }))
+    expect(screen.getByTestId('active-session')).toHaveTextContent('created')
+    const cached = ipc.pages.get(YakitRoute.AI_Agent)?.pageList[0]
+    expect(cached).toMatchObject({
+      pageName: '你好',
+      pageParamsInfo: { aiAgentPageInfo: { session: { SessionID: 'created', isDraftSession: false } } },
+    })
+
+    unmount()
+    const restored = JSON.parse(JSON.stringify(cached))
+    ipc.queryPagesDataById.mockReturnValue(restored)
+    render(<AIAgent pageId="test" initialSession={restored.pageParamsInfo.aiAgentPageInfo.session} />)
+    expect(screen.getByTestId('active-session')).toHaveTextContent('created')
+    expect(querySessionMock).toHaveBeenCalledWith(expect.objectContaining({ Filter: { SessionID: ['created'] } }))
   })
 
   it('切历史和欢迎页只脱离 pending 视图，提交继续在后台运行', async () => {

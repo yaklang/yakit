@@ -48,11 +48,17 @@ import emiter from '@/utils/eventBus/eventBus'
 import { AITabs, AITabsEnum } from '../../../defaultConstant'
 import type * as AIChatWorkspaceModule from '../AIChatWorkspace'
 import { compileReactModule } from '@/utils/__test__/helpers/compileReactModule'
-import type { PluginExecuteWebsiteTreeProps } from '@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResultType'
+import type {
+  PluginExecuteWebsiteTreeProps,
+  VulnerabilitiesRisksTableProps,
+} from '@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResultType'
 import { useHttpFlowSelection } from '@/components/useHttpFlowSelection'
 import { MAX_FILE_SIZE_BYTES } from '@/pages/yakRunner/utils'
 import { previewOpenFilesStore } from '../../../aiChatWelcome/FileTreeList/store/usePreviewOpenFiles'
+import { grpcQueryHTTPFlows } from '../../../grpc'
 const flowCallbacks: PluginExecuteWebsiteTreeProps[] = []
+const riskCallbacks: VulnerabilitiesRisksTableProps[] = []
+let unknownHttpFlowTotal = false
 
 beforeEach(() => {
   Element.prototype.scrollIntoView = vi.fn()
@@ -133,7 +139,7 @@ const store = createStore(() => ({
 const initialState = store.getState()
 const rawData = { httpRunTimeIDs: [] as string[], riskRunTimeIDs: [] as string[], contents: new Map() }
 const agentStore = createStore<{
-  activeChat?: { SessionID: string; Title: string; RelatedRuntimeIDs: string[] }
+  activeChat?: { SessionID: string; Title: string; RelatedRuntimeIDs: string[]; isDraftSession?: boolean }
   pageId?: string
 }>(() => ({ pageId: 'test-page' }))
 
@@ -166,16 +172,23 @@ vi.mock('@/pages/ai-agent/chatTemplate/aiTaskExecutionDetails/AITaskExecutionDet
 vi.mock('@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult', () => ({
   PluginExecuteHttpFlow: (props: PluginExecuteWebsiteTreeProps) => {
     flowCallbacks.push(props)
-    const { runtimeId, pageType } = props
+    const { runtimeId, pageType, aiFlowSelection } = props
     return (
       <div data-testid="http-flows" data-page-type={pageType}>
         {runtimeId}
+        {aiFlowSelection?.renderCount(unknownHttpFlowTotal ? undefined : pageType === 'History' ? 12 : 0)}
       </div>
     )
   },
-  VulnerabilitiesRisksTable: ({ runTimeIDs }: { runTimeIDs: string[] }) => (
-    <div data-testid="risks">{runTimeIDs.join(',')}</div>
-  ),
+  VulnerabilitiesRisksTable: (props: VulnerabilitiesRisksTableProps) => {
+    riskCallbacks.push(props)
+    return (
+      <div data-testid="risks">
+        {props.runTimeIDs?.join(',')}
+        {props.aiRiskSelection?.renderCount(props.aiRiskSelection.emptyBase ? 0 : 12)}
+      </div>
+    )
+  },
 }))
 vi.mock('@/pages/ai-agent/components/aiFileSystemList/FilePreview/FilePreview', () => ({
   default: ({
@@ -210,6 +223,9 @@ vi.mock('@/components/yakitUI/YakitEmpty/YakitEmpty', () => ({ YakitEmpty: () =>
 
 beforeEach(() => {
   flowCallbacks.length = 0
+  riskCallbacks.length = 0
+  unknownHttpFlowTotal = false
+  vi.mocked(grpcQueryHTTPFlows).mockReset()
   agentStore.setState({
     activeChat: { SessionID: 'session-1', Title: '当前任务', RelatedRuntimeIDs: [] },
     pageId: 'test-page',
@@ -359,6 +375,94 @@ describe('AIChatWorkspace 菜单切换', () => {
     act(() => filtered.onSetSelectedHttpFlowIds?.(['late-filter']))
     expect(selected).not.toHaveBeenCalled()
   })
+
+  it.each([true, false])('从其他资料重开流量页签后恢复勾选及筛选（欢迎页：%s）', (welcome) => {
+    if (welcome) agentStore.setState({ activeChat: undefined })
+    const WorkspaceSelection = () => {
+      const selection = useHttpFlowSelection(true, welcome ? undefined : 'session-1')
+      return <AIChatWorkspace welcome={welcome} setFilePreviewData={vi.fn()} {...selection} />
+    }
+    const openHttpTab = (showSelectedHttpFlows = false) =>
+      act(() => emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.HTTP, showSelectedHttpFlows })))
+
+    render(<WorkspaceSelection />)
+    openHttpTab()
+    const baseLabel = welcome ? 'AIChatWorkspace.allItems 12' : 'AIChatWorkspace.sessionItems 0'
+    expect(screen.getByRole('radio', { name: baseLabel })).toBeChecked()
+    const previousSelection = flowCallbacks.at(-1)!.aiFlowSelection!
+    act(() => previousSelection.onChange(['21', '22']))
+    expect(screen.getByRole('radio', { name: 'AIChatWorkspace.selectedItems 2' })).not.toBeChecked()
+
+    const close = screen.getByTestId('workspace-tab-bar').querySelector('.workspace-tab-close')
+    fireEvent.click(close!)
+    expect(screen.queryByTestId('http-flows')).not.toBeInTheDocument()
+    act(() => previousSelection.onChange([]))
+    openHttpTab(true)
+
+    expect(screen.getByRole('radio', { name: 'AIChatWorkspace.selectedItems 2' })).toBeChecked()
+    expect(flowCallbacks.at(-1)?.aiFlowSelection).toMatchObject({ ids: ['21', '22'], selectedOnly: true })
+    act(() => flowCallbacks.at(-1)!.aiFlowSelection!.onChange(['22']))
+    expect(screen.getByRole('radio', { name: 'AIChatWorkspace.selectedItems 1' })).toBeChecked()
+    fireEvent.click(screen.getByRole('radio', { name: baseLabel }))
+    expect(flowCallbacks.at(-1)?.aiFlowSelection).toMatchObject({ ids: ['22'], selectedOnly: false })
+  })
+
+  it.each([0, 12])('流量总数补查失败时隐藏未知计数，重新查询成功后显示 %s', async (total) => {
+    unknownHttpFlowTotal = true
+    agentStore.setState({ activeChat: undefined })
+    vi.mocked(grpcQueryHTTPFlows)
+      .mockRejectedValueOnce(new Error('query failed'))
+      .mockResolvedValueOnce({
+        Total: total,
+        Data: [],
+        Pagination: { Page: 1, Limit: 1, OrderBy: 'id', Order: 'desc' },
+      })
+    render(
+      <AIChatWorkspace
+        welcome
+        setFilePreviewData={vi.fn()}
+        selectedHttpFlowIds={['21']}
+        onSetSelectedHttpFlowIds={vi.fn()}
+      />,
+    )
+    act(() => emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.HTTP, showSelectedHttpFlows: true })))
+    await waitFor(() => expect(grpcQueryHTTPFlows).toHaveBeenCalledTimes(1))
+
+    expect(screen.getByRole('radio', { name: 'AIChatWorkspace.allItems' })).not.toBeChecked()
+    expect(screen.queryByRole('radio', { name: 'AIChatWorkspace.allItems 0' })).not.toBeInTheDocument()
+    expect(screen.getByRole('radio', { name: 'AIChatWorkspace.selectedItems 1' })).toBeChecked()
+    expect(grpcQueryHTTPFlows).toHaveBeenCalledWith(expect.objectContaining({ Pagination: { Page: 1, Limit: 1 } }))
+
+    fireEvent.click(screen.getByRole('radio', { name: 'AIChatWorkspace.allItems' }))
+    fireEvent.click(screen.getByRole('radio', { name: 'AIChatWorkspace.selectedItems 1' }))
+    expect(await screen.findByRole('radio', { name: `AIChatWorkspace.allItems ${total}` })).not.toBeChecked()
+    expect(grpcQueryHTTPFlows).toHaveBeenCalledTimes(2)
+  })
+
+  it.each([true, false])('从其他资料重开风险页签并回显选择（欢迎页：%s）', (welcome) => {
+    if (welcome) agentStore.setState({ activeChat: undefined })
+    const riskSelection = { ids: ['21', '22'], onChange: vi.fn() }
+    const openRiskTab = (showSelectedRisks = false) =>
+      act(() => emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.Risk, showSelectedRisks })))
+
+    render(<AIChatWorkspace welcome={welcome} setFilePreviewData={vi.fn()} riskSelection={riskSelection} />)
+    openRiskTab()
+    const baseLabel = welcome ? 'AIChatWorkspace.allItems 12' : 'AIChatWorkspace.sessionItems 0'
+    expect(screen.getByRole('radio', { name: baseLabel })).toBeChecked()
+    const close = screen.getByTestId('workspace-tab-bar').querySelector('.workspace-tab-close')
+    fireEvent.click(close!)
+    expect(screen.queryByTestId('risks')).not.toBeInTheDocument()
+
+    openRiskTab(true)
+    expect(screen.getByRole('radio', { name: 'AIChatWorkspace.selectedItems 2' })).toBeChecked()
+    expect(riskCallbacks.at(-1)?.aiRiskSelection).toMatchObject({
+      ids: ['21', '22'],
+      selectedOnly: true,
+      emptyBase: !welcome,
+    })
+    fireEvent.click(screen.getByRole('radio', { name: baseLabel }))
+    expect(riskCallbacks.at(-1)?.aiRiskSelection).toMatchObject({ ids: ['21', '22'], selectedOnly: false })
+  })
   it.each([{ runtimeIds: [] }, { runtimeIds: ['stale-runtime'] }])(
     '欢迎页流量使用 History 模式、空 runtimeId 和空来源（$runtimeIds）',
     ({ runtimeIds }) => {
@@ -372,6 +476,36 @@ describe('AIChatWorkspace 菜单切换', () => {
       expect(screen.queryByText('暂无数据')).not.toBeInTheDocument()
     },
   )
+
+  it.each([
+    { tab: AITabsEnum.HTTP, testId: 'http-flows' },
+    { tab: AITabsEnum.Risk, testId: 'risks' },
+  ])('欢迎页预生成会话 ID 时 $tab 展示全量，进入同一会话后按关联运行 ID 展示', ({ tab, testId }) => {
+    const session = { SessionID: 'welcome-session', Title: '', RelatedRuntimeIDs: [], isDraftSession: true }
+    agentStore.setState({ activeChat: session })
+    const setFilePreviewData = vi.fn()
+    const { rerender } = render(<AIChatWorkspace welcome setFilePreviewData={setFilePreviewData} />)
+    act(() => emiter.emit('switchAIActTab', JSON.stringify({ key: tab })))
+    expect(screen.getByTestId(testId)).toBeEmptyDOMElement()
+    if (tab === AITabsEnum.HTTP) {
+      expect(screen.getByTestId(testId)).toHaveAttribute('data-page-type', 'History')
+      expect(flowCallbacks[flowCallbacks.length - 1].sourceType).toBe('')
+    }
+    expect(screen.queryByText('暂无数据')).not.toBeInTheDocument()
+
+    act(() => agentStore.setState({ activeChat: { ...session, isDraftSession: false } }))
+    expect(screen.queryByTestId(testId)).not.toBeInTheDocument()
+    expect(screen.getByText('暂无数据')).toBeInTheDocument()
+
+    act(() =>
+      agentStore.setState({ activeChat: { ...session, isDraftSession: false, RelatedRuntimeIDs: ['runtime-1'] } }),
+    )
+    rerender(<AIChatWorkspace welcome={false} setFilePreviewData={setFilePreviewData} />)
+    expect(screen.getByTestId(testId)).toHaveTextContent(/^runtime-1$/)
+    if (tab === AITabsEnum.HTTP) {
+      expect(screen.getByTestId(testId)).toHaveAttribute('data-page-type', 'Plugin')
+    }
+  })
 
   it('未激活会话时，只有欢迎页允许展示全部流量', () => {
     agentStore.setState({ activeChat: undefined })

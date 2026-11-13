@@ -38,6 +38,7 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
       timelineDumpUpdate: 0,
       loadedSkillsUpdate: 0,
       availableSkillsUpdate: 0,
+      draftMaterialsUpdate: 0,
 
       grpcFolders: [],
       reActTimelines: [],

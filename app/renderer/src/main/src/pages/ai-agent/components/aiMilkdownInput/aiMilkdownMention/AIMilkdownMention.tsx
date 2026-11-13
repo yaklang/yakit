@@ -5,7 +5,7 @@ import { type Ctx } from '@milkdown/kit/ctx'
 import { slashFactory, SlashProvider } from '@milkdown/kit/plugin/slash'
 import { useInstance } from '@milkdown/react'
 import { useNodeViewContext, usePluginViewContext } from '@prosemirror-adapter/react'
-import { useClickAway, useCreation, useDebounceEffect, useKeyPress, useMemoizedFn } from 'ahooks'
+import { useCreation, useDebounceEffect, useEventListener, useKeyPress, useMemoizedFn } from 'ahooks'
 import styles from './AIMilkdownMention.module.scss'
 import { PANEL_GAP, PANEL_OFFSET_UP, PANEL_WIDTH_EXTRA_EACH } from '../constants'
 import { iconMap } from '@/pages/ai-agent/defaultConstant'
@@ -25,17 +25,19 @@ export const aiMentionFactory = slashFactory('ai-mention-commands')
 interface AIMilkdownMentionProps {
   onMemfitExtra?: (v: AIMentionCommandParams) => void
   filterMode?: AIChatMentionProps['filterMode']
+  getMaterials?: () => Pick<AIChatMentionProps, 'materials' | 'focusMode'>
 }
 
 const mentionTarget = '@'
 export const AIMilkdownMention: React.FC<AIMilkdownMentionProps> = (props) => {
-  const { onMemfitExtra, filterMode } = props
+  const { onMemfitExtra, filterMode, getMaterials } = props
   const ref = useRef<HTMLDivElement>(null)
   const slashProvider = useRef<SlashProvider>()
   const [filterKeyword, setFilterKeyword] = useState('')
   const [visible, setVisible] = useState(false)
 
   const { view, prevState } = usePluginViewContext()
+  const dismissedState = useRef<typeof view.state>()
   const [loading, get] = useInstance()
   const action = useCallback(
     (fn: (ctx: Ctx) => void) => {
@@ -58,10 +60,16 @@ export const AIMilkdownMention: React.FC<AIMilkdownMentionProps> = (props) => {
       useCapture: true,
     },
   )
-  // 点击弹层或编辑器本身不关闭；点其它区域才关
-  useClickAway(() => {
-    if (visible) onHide()
-  }, [ref, () => view.dom])
+  useEventListener(
+    'click',
+    (event) => {
+      const target = event.target
+      if (!(target instanceof Node) || ref.current?.contains(target) || view.dom.contains(target)) return
+      dismissedState.current = view.state
+      onHide(false)
+    },
+    { target: () => document, capture: true, enable: visible },
+  )
 
   useEffect(() => {
     const div = ref.current
@@ -163,7 +171,7 @@ export const AIMilkdownMention: React.FC<AIMilkdownMentionProps> = (props) => {
 
   useDebounceEffect(
     () => {
-      if (loading || !slashProvider.current || !ref.current) return
+      if (loading || !slashProvider.current || !ref.current || dismissedState.current === view.state) return
 
       const content = slashProvider.current.getContent(view)
       const keyword = extractMentionFilterKeyword(content)
@@ -199,6 +207,9 @@ export const AIMilkdownMention: React.FC<AIMilkdownMentionProps> = (props) => {
       mentionType: type,
       mentionId: value?.id || '0',
       mentionName: value?.name || '',
+      name: value?.originalName,
+      mentionSource: value?.mentionSource,
+      knowledgeIndex: value?.knowledgeIndex,
     }
     switch (type) {
       case 'focusMode':
@@ -214,22 +225,33 @@ export const AIMilkdownMention: React.FC<AIMilkdownMentionProps> = (props) => {
     onHide()
   })
 
-  const onHide = useMemoizedFn(() => {
+  const onHide = useMemoizedFn((restoreFocus = true) => {
     if (!visible && slashProvider.current?.element?.dataset?.show === 'false') return
     setFilterKeyword('')
     setVisible(false)
-    view.focus()
+    if (restoreFocus) view.focus()
     // 关闭窗口
     slashProvider.current?.hide()
     releaseMilkdownPopup('mention')
   })
 
   return createPortal(
-    <div aria-expanded="false" data-show="false" className={styles['ai-mention']} ref={ref}>
+    <div
+      aria-expanded="false"
+      data-show="false"
+      className={styles['ai-mention']}
+      ref={ref}
+      onKeyDown={(event) => {
+        if (event.key !== 'Escape') return
+        event.preventDefault()
+        event.stopPropagation()
+        onHide()
+      }}
+    >
       <AIChatMention
         onSelect={onSure}
         filterMode={filterMode}
-        keepEditorFocus
+        {...getMaterials?.()}
         filterKeyword={filterKeyword}
         keyboardTarget={() => view.dom}
         visible={visible}

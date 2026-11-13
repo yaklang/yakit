@@ -2600,7 +2600,7 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
   const [show, setShow] = useState<boolean>(false)
 
   /** 查询最新漏洞与风险信息节点 */
-  const fetchNode = useRef<number>(0)
+  const fetchNode = useRef<Risk['Id']>(0)
   const [risks, setRisks] = useState<RisksProps>({
     Data: [],
     Total: 0,

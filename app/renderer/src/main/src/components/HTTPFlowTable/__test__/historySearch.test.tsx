@@ -225,7 +225,7 @@ describe('HistorySearch type switch', () => {
     const nearby = getFullRange(12)
     const Harness = () => {
       const [viewAttachId, setViewAttachId] = useState(12)
-      const [includeId, setIncludeId] = useState<number[] | undefined>(nearby)
+      const [includeId, setIncludeId] = useState<(number | string)[] | undefined>(nearby)
       const [keywordIds, setKeywordIds] = useState('')
       const [searchType, setSearchType] = useState<'all' | 'request' | 'response' | 'id'>('id')
       const [searchVal, setSearchVal] = useState('')

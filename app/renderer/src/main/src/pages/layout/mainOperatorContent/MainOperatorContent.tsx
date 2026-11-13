@@ -141,6 +141,8 @@ import {
 import { safeParseFuzzerCache, sanitizeFuzzerCachePageParams } from '@/store/parseFuzzerCache'
 import { adoptOrphanCacheTabs } from './adoptOrphanCacheTabs'
 import { useOpenAIAgentPage } from './useOpenAIAgentPage'
+import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
+import { ReActChatEventEnum } from '@/pages/ai-agent/defaultConstant'
 import { mergeAIAgentPageTabs } from './mergeAIAgentPageTabs'
 import { RemoteAIAgentGV } from '@/enums/aiAgent'
 import cloneDeep from 'lodash/cloneDeep'
@@ -202,6 +204,7 @@ import { useHttpFlowStore } from '@/store/httpFlow'
 import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useProxy } from '@/hook/useProxy'
 import { JSONParseLog } from '@/utils/tool'
+import { restoreAIAgentTabCache } from '@/store/aiAgentTabCache'
 import { type SoftMode, useSoftMode, YakitModeEnum } from '@/store/softMode'
 import { useTheme } from '@/hook/useTheme'
 import { RemoteSoftModeGV } from '@/enums/softMode'
@@ -2619,6 +2622,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     const nextIndex = getAIAgentNextTabIndex(pageCache)
     const verbose = `${menuName}-${nextIndex}`
     const { tabId } = generateTabIdentity(routeConvertKey(YakitRoute.AI_Agent, ''))
+    const session = pageParams?.aiAgentPageInfo?.session
+    if (session?.isDraftSession) globalSessionEngine.registerDraftSession(session.SessionID, tabId)
     const node: MultipleNodeInfo = {
       id: tabId,
       verbose,
@@ -2647,11 +2652,51 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     setCurrentTabKey(tabId)
   })
 
+  const openAIAgentWelcomePage = useMemoizedFn((pageParams?: ComponentParams) => {
+    if (initializing) return
+    const route = YakitRoute.AI_Agent
+    const menuName = YakitRouteToPageInfo[route].label
+    const fixed = getPageCache().find((page) => page.route === route && page.routeKey === route)
+    if (fixed) {
+      const store = usePageInfo.getState()
+      const node = store.queryPagesDataById(route, route)
+      if (node) {
+        store.updatePagesDataCacheById(route, {
+          ...node,
+          pageName: menuName,
+          pageParamsInfo: { aiAgentPageInfo: pageParams?.aiAgentPageInfo },
+        })
+      }
+      setPageCache((pages) =>
+        pages.map((page) =>
+          page.route === route && page.routeKey === route
+            ? { ...page, verbose: menuName, pageParams: { ...pageParams, id: route, groupId: '0' } }
+            : page,
+        ),
+      )
+      setCurrentTabKey(route)
+    } else {
+      openMenuPage({ route }, { pageParams })
+    }
+    // 已挂载的固定页立即重置；未挂载时从已清空的页面缓存初始化。
+    emiter.emit('onReActChatEvent', JSON.stringify({ type: ReActChatEventEnum.NEW_CHAT, pageId: route }))
+  })
+
   const openAIAgentPage = useOpenAIAgentPage({
     getPageCache,
     setCurrentTabKey,
     openAIAgentExtraTab,
+    openAIAgentWelcomePage,
   })
+
+  useEffect(() => {
+    const openPageIds = new Set(
+      pageCache
+        .filter(({ route }) => route === YakitRoute.AI_Agent)
+        .map(({ routeKey, pageParams }) => pageParams?.id || routeKey),
+    )
+    globalSessionEngine.discardClosedPageDrafts(openPageIds)
+  }, [pageCache])
 
   /** @name 打开页面 */
   const extraOpenMenuPage = useMemoizedFn((routeInfo: RouteToPageProps) => {
@@ -3025,12 +3070,14 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     ) => {
       const raw = await getRemoteProjectValue(RemoteAIAgentGV.AIAgentTabs)
       if (isDisposed()) return
-      const cached: PageNodeItemProps[] = JSONParseLog(raw || '[]', {
-        page: 'MainOperatorContent',
-        fun: 'restoreAITabs',
-      })
-      if (!Array.isArray(cached)) throw new Error('Invalid AI Agent tab cache')
-      const nodes = new Map(cached.map((node) => [node.pageId, node]))
+      const cached = restoreAIAgentTabCache(
+        JSONParseLog(raw || '[]', { page: 'MainOperatorContent', fun: 'restoreAITabs' }),
+      )
+      const nodes = new Map(
+        cached
+          .filter((node) => !node.pageParamsInfo?.aiAgentPageInfo?.session?.isDraftSession)
+          .map((node) => [node.pageId, node]),
+      )
       const fixed = nodes.get(YakitRoute.AI_Agent)
       if (isMemfit() && fixed) {
         nodes.delete(YakitRoute.AI_Agent)

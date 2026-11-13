@@ -2,6 +2,7 @@ import { $ctx, $prose } from '@milkdown/kit/utils'
 import type { EditorState, Selection } from '@milkdown/kit/prose/state'
 import { Plugin, PluginKey } from '@milkdown/kit/prose/state'
 import type { Node } from '@milkdown/kit/prose/model'
+import type { EditorView } from '@milkdown/kit/prose/view'
 import { Decoration, DecorationSet } from '@milkdown/kit/prose/view'
 import { findParent } from '@milkdown/kit/prose'
 import type { Editor } from '@milkdown/kit/core'
@@ -22,7 +23,7 @@ const isDocEmpty = (doc: Node) => {
   return doc.childCount <= 1 && !doc.firstChild?.content.size
 }
 
-function createPlaceholderDecoration(state: EditorState, placeholderText: string): Decoration | null {
+const createPlaceholderDecoration = (state: EditorState, config: PlaceholderConfig): Decoration | null => {
   const { selection } = state
   if (!selection.empty) return null
 
@@ -33,17 +34,25 @@ function createPlaceholderDecoration(state: EditorState, placeholderText: string
   const inTable = findParent((node) => node.type.name === 'table')($pos)
   if (inTable) return null
 
+  const { render } = config
+  if (render) {
+    if (node.type.name !== 'paragraph') return null
+
+    return Decoration.widget($pos.pos, render, { side: -1 })
+  }
+
   const before = $pos.before()
 
   return Decoration.node(before, before + node.nodeSize, {
     class: 'crepe-placeholder',
-    'data-placeholder': placeholderText,
+    'data-placeholder': config.text ?? 'Please enter...',
   })
 }
 
 interface PlaceholderConfig {
   text: string
   mode: 'doc' | 'block'
+  render?: (view: EditorView) => HTMLElement
 }
 
 export type PlaceHolderFeatureConfig = Partial<PlaceholderConfig>
@@ -66,8 +75,7 @@ export const placeholderPlugin = $prose((ctx) => {
 
         if (isInCodeBlock(state.selection) || isInList(state.selection)) return null
 
-        const placeholderText = config.text ?? 'Please enter...'
-        const deco = createPlaceholderDecoration(state, placeholderText)
+        const deco = createPlaceholderDecoration(state, config)
         if (!deco) return null
 
         return DecorationSet.create(state.doc, [deco])

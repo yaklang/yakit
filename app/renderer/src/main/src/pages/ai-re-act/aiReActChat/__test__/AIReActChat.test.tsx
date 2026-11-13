@@ -2,6 +2,7 @@ import React from 'react'
 import get from 'lodash/get'
 import type * as AIReActChatModule from '../AIReActChat'
 import type { AIReActChatRefProps } from '../AIReActChatType'
+import type { AIHandleStartResProps } from '../AIReActChatType'
 import type { AIReactChatTextareaProps } from '../aiReactChatTextarea/type'
 import type { AIReActChatContentsRef } from '../../aiReActChatContents/AIReActChatContentsType'
 import { compileReactModule } from '@/utils/__test__/helpers/compileReactModule'
@@ -21,7 +22,9 @@ const { scrollToItemIndex, locale, formattedSetting, latestSetting } = vi.hoiste
   latestSetting: { value: {} as Record<string, unknown> },
 }))
 const chat = vi.hoisted(() => ({
-  activeChat: undefined as { SessionID: string } | undefined,
+  activeChat: undefined as { SessionID: string; isDraftSession?: boolean } | undefined,
+  setValue: vi.fn(),
+  prepare: vi.fn<() => { attachedResourceInfo: undefined } | undefined>(() => ({ attachedResourceInfo: undefined })),
   pendingChat: undefined as { status: 'connecting' | 'failed'; error?: string; retry?: () => void } | undefined,
   onStart: vi.fn(),
   onSend: vi.fn(),
@@ -50,6 +53,9 @@ beforeEach(() => {
   vi.clearAllMocks()
   chat.activeChat = undefined
   chat.pendingChat = undefined
+  chat.onStart.mockReturnValue('stream-token')
+  chat.onSend.mockReturnValue(true)
+  chat.prepare.mockReturnValue({ attachedResourceInfo: undefined })
   locale.language = 'zh'
   formattedSetting.value = {}
   latestSetting.value = {}
@@ -83,7 +89,7 @@ vi.mock('@/pages/ai-agent/useContext/useDispatcher', () => ({
 vi.mock('@/pages/ai-agent/utils', () => ({
   createActiveChatSessionId: () => 'client-session',
   formatAIAgentSetting: (setting: Record<string, unknown>) => ({ ...setting, ...formattedSetting.value }),
-  getAIReActRequestParams: () => ({ attachedResourceInfo: undefined }),
+  getAIReActRequestParams: chat.prepare,
 }))
 
 vi.mock('@/utils/notification', () => ({ yakitNotify: vi.fn() }))
@@ -155,12 +161,23 @@ vi.mock('../aiReActChatHeader/AIReActChatHeader', () => ({
 }))
 vi.mock('../aiReactChatTextarea/AIReactChatTextarea', () => ({
   AIReactChatTextarea: React.forwardRef<unknown, AIReactChatTextareaProps>(
-    ({ handleSubmit, handleStopCasualTask }, _ref) => (
-      <div data-testid="chat-textarea">
-        <button onClick={() => handleSubmit({ qs: 'question', sessionId: 'draft' })}>提交问题</button>
-        <button onClick={handleStopCasualTask}>停止任务</button>
-      </div>
-    ),
+    ({ handleSubmit, handleStopCasualTask }, ref) => {
+      const [value, setValue] = React.useState('question')
+      React.useImperativeHandle(ref, () => ({
+        setValue: (next: string) => {
+          chat.setValue(next)
+          setValue(next)
+        },
+        setMention: vi.fn(),
+      }))
+      return (
+        <div data-testid="chat-textarea">
+          <input aria-label="问题" value={value} onChange={(event) => setValue(event.target.value)} />
+          <button onClick={() => handleSubmit({ qs: value, sessionId: 'draft' })}>提交问题</button>
+          <button onClick={handleStopCasualTask}>停止任务</button>
+        </div>
+      )
+    },
   ),
 }))
 vi.mock('../aiToDoListWrapper/AIToDoListWrapper', () => ({
@@ -189,6 +206,87 @@ const baseProps = {
 }
 
 describe('AIReActChat', () => {
+  it('异步准备期间切换会话，迟到的受理结果不会清空新会话输入', async () => {
+    let finish!: () => void
+    const startRequest = vi.fn(
+      ({ params }: AIHandleStartResProps) =>
+        new Promise<AIHandleStartResProps>((resolve) => {
+          finish = () => resolve({ params })
+        }),
+    )
+    const onAfterSubmit = vi.fn()
+    chat.activeChat = { SessionID: 'draft', isDraftSession: true }
+    const view = render(
+      <AIReActChat {...baseProps} startRequest={startRequest} externalParameters={{ onAfterSubmit }} />,
+    )
+    await act(async () => {})
+    fireEvent.change(screen.getByRole('textbox', { name: '问题' }), { target: { value: 'first question' } })
+    fireEvent.click(screen.getByRole('button', { name: '提交问题' }))
+    expect(onAfterSubmit).not.toHaveBeenCalled()
+    expect(screen.getByRole('textbox', { name: '问题' })).toHaveValue('first question')
+    chat.activeChat = { SessionID: 'other-session' }
+    view.rerender(<AIReActChat {...baseProps} startRequest={startRequest} externalParameters={{ onAfterSubmit }} />)
+    await act(async () => {})
+    fireEvent.change(screen.getByRole('textbox', { name: '问题' }), { target: { value: 'new question' } })
+    await act(async () => finish())
+    expect(chat.onStart).toHaveBeenCalledOnce()
+    expect(onAfterSubmit).not.toHaveBeenCalled()
+    expect(screen.getByRole('textbox', { name: '问题' })).toHaveValue('new question')
+  })
+
+  it('草稿连接失败后编辑重发仍然新建，并复用原草稿 ID', async () => {
+    chat.activeChat = { SessionID: 'failed-draft', isDraftSession: true }
+    chat.pendingChat = { status: 'failed', error: 'connect failed', retry: vi.fn() }
+    const onAfterSubmit = vi.fn()
+    render(
+      <AIReActChat
+        {...baseProps}
+        startRequest={async ({ params }) => ({ params })}
+        sendRequest={async ({ params }) => ({ params })}
+        externalParameters={{ onAfterSubmit }}
+      />,
+    )
+    await act(async () => {})
+    fireEvent.change(screen.getByRole('textbox', { name: '问题' }), { target: { value: 'edited question' } })
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: '提交问题' })))
+    expect(chat.onStart).toHaveBeenCalledWith(
+      expect.objectContaining({
+        kind: 'new',
+        sessionId: 'failed-draft',
+        params: expect.objectContaining({
+          Params: expect.objectContaining({ UserQuery: 'edited question', Attach: false }),
+        }),
+      }),
+    )
+    expect(chat.pendingChat.retry).not.toHaveBeenCalled()
+    expect(onAfterSubmit).toHaveBeenCalledOnce()
+    expect(screen.getByRole('textbox', { name: '问题' })).toHaveValue('')
+  })
+
+  it.each([false, true])('提交明确拒绝时保留输入和资源选择 execute=%s', async (execute) => {
+    chat.activeChat = { SessionID: 'session', isDraftSession: !execute }
+    chatStore.setState({ execute })
+    chat.onStart.mockReturnValue(false)
+    chat.onSend.mockReturnValue(false)
+    const onAfterSubmit = vi.fn()
+    render(
+      <AIReActChat
+        {...baseProps}
+        startRequest={async ({ params }) => ({ params })}
+        sendRequest={async ({ params }) => ({ params })}
+        externalParameters={{ onAfterSubmit }}
+      />,
+    )
+    await act(async () => {})
+    chat.setValue.mockClear()
+    fireEvent.change(screen.getByRole('textbox', { name: '问题' }), { target: { value: 'keep question' } })
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: '提交问题' })))
+    expect(execute ? chat.onSend : chat.onStart).toHaveBeenCalledOnce()
+    expect(screen.getByRole('textbox', { name: '问题' })).toHaveValue('keep question')
+    expect(chat.setValue).not.toHaveBeenCalled()
+    expect(onAfterSubmit).not.toHaveBeenCalled()
+  })
+
   it.each([
     [undefined, undefined, 'new', 'client-session'],
     [undefined, 'image-session', 'new', 'image-session'],

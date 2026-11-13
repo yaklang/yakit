@@ -17,6 +17,7 @@ import { Badge, type CollapseProps, Descriptions, Divider, Form, Tooltip, Typogr
 import { type YakScript, genDefaultPagination } from '@/pages/invoker/schema'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import { AIResourceSelectionButton } from '@/components/AIResourceSelectionButton/AIResourceSelectionButton'
 import {
   useControllableValue,
   useCreation,
@@ -148,7 +149,7 @@ import {
   mergeRisksById,
   nextIncrementFromId,
   shouldSkipRiskCursorPage,
-  toRiskNumericId,
+  normalizeRiskId,
 } from './riskTableUtils'
 import locale from 'antd/es/date-picker/locale/zh_CN'
 import { RiskBatchOperationsMenu, type RiskBatchAction } from './RiskBatchOperationsMenu'
@@ -366,7 +367,16 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
   const [keywords, setKeywords] = useState<string>('')
   const [type, setType] = useState<'all' | 'unread'>('all')
   const [allCheck, setAllCheck] = useState<boolean>(false)
-  const [selectList, setSelectList] = useState<Risk[]>([])
+  const [localSelectList, setSelectList] = useState<Risk[]>([])
+  const { aiRiskSelection } = props
+  const aiSelectedIds = useMemo(() => new Set(aiRiskSelection?.ids), [aiRiskSelection?.ids])
+  const selectList = aiRiskSelection
+    ? response.Data.filter((risk) => aiSelectedIds.has(String(risk.Id)))
+    : localSelectList
+  const emptyAIQuery =
+    !!aiRiskSelection && (aiRiskSelection.selectedOnly ? !aiRiskSelection.ids.length : !!aiRiskSelection.emptyBase)
+  const tableData = aiRiskSelection?.selectedOnly ? selectList : response.Data
+  const aiQueryKey = aiRiskSelection?.selectedOnly ? aiRiskSelection.ids.join(',') : undefined
   const [currentSelectItem, setCurrentSelectItem, getCurrentSelectItem] = useGetSetState<Risk>()
   const [disposalRefreshKey, setDisposalRefreshKey] = useState(0)
   const [query, setQuery] = useControllableValue<QueryRisksRequest>(props, {
@@ -392,8 +402,8 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
   const [inViewport = true] = useInViewport(riskTableRef)
 
   const prePage = useRef<number>(0)
-  const afterId = useRef<number>(0)
-  const beforeId = useRef<number>(0)
+  const afterId = useRef<Risk['Id']>(0)
+  const beforeId = useRef<Risk['Id']>(0)
   const tableRef = useRef<any>(null)
   const defLimitRef = useRef<number>(defLimit)
   const limitRef = useRef<number>(defLimit)
@@ -401,6 +411,16 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
   const isInitRequestRef = useRef<boolean>(true)
   const listQueryEpochRef = useRef<number>(0)
   const incrementInFlightRef = useRef<boolean>(false)
+
+  useEffect(() => {
+    if (!aiRiskSelection) return
+    listQueryEpochRef.current += 1
+    setResponse((current) => ({
+      ...current,
+      Data: aiRiskSelection.selectedOnly ? current.Data.filter((risk) => aiSelectedIds.has(String(risk.Id))) : [],
+    }))
+    setCurrentSelectItem(undefined)
+  }, [aiQueryKey, aiRiskSelection?.emptyBase])
 
   // 选中插件的数量
   const selectNum = useMemo(() => {
@@ -424,7 +444,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         onRefRiskList()
       }
     },
-    [query, type],
+    [query, type, aiQueryKey, aiRiskSelection?.emptyBase],
     {
       wait: 200,
       leading: true,
@@ -473,12 +493,13 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
   })
   /**获取滚动条在顶部的数据 */
   const getIncrementInTop = useMemoizedFn(() => {
+    if (emptyAIQuery) return
     if (query.Pagination.Order === 'asc' || query.Pagination.OrderBy !== 'id') {
       // 升序时，顶部不实时刷新，避免数据混乱
       // 排序字段为Id才实时刷新数据
       return
     }
-    const fromId = toRiskNumericId(afterId.current)
+    const fromId = afterId.current
     if (!fromId) return
     const scrollTop = getScrollTop()
     if (inViewport && scrollTop < 10 && getOffsetDataInTop().length > 0) {
@@ -715,7 +736,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
       {
         title: t('YakitRiskTable.discovery_time'),
         dataKey: 'CreatedAt',
-        fixed: getDiscoveryTimeColumnFixed(excludeColumnsKey),
+        fixed: aiRiskSelection ? undefined : getDiscoveryTimeColumnFixed(excludeColumnsKey),
         filterProps: {
           filterKey: 'CreatedAt',
           filtersType: 'dateTime',
@@ -725,57 +746,70 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
       {
         title: t('YakitTable.action'),
         dataKey: 'action',
-        width: 140,
+        width: aiRiskSelection ? 70 : 140,
         fixed: 'right',
-        render: (text, record: Risk, index) => (
-          <>
-            <YakitButton
-              type="text"
-              danger
-              onClick={(e) => {
-                e.stopPropagation()
-                onRemoveSingle(record.Id)
+        render: (text, record: Risk, index) => {
+          const isSelected = aiSelectedIds.has(String(record.Id))
+          return aiRiskSelection ? (
+            <AIResourceSelectionButton
+              t={t}
+              selected={isSelected}
+              className={styles['ai-risk-toggle']}
+              onClick={(event) => {
+                event.stopPropagation()
+                aiRiskSelection.onChange([record], !isSelected)
               }}
-              icon={<TrashOutlined color="currentColor" />}
             />
-            <Divider type="vertical" />
-            <Tooltip
-              title={t('YakitRiskTable.retest')}
-              destroyOnHidden={true}
-              styles={{ root: { paddingBottom: 0 } }}
-              placement="top"
-            >
+          ) : (
+            <>
               <YakitButton
                 type="text"
+                danger
                 onClick={(e) => {
                   e.stopPropagation()
-                  onRetest(record)
+                  onRemoveSingle(record.Id)
                 }}
-                icon={<PlayOutlined color="currentColor" />}
+                icon={<TrashOutlined color="currentColor" />}
               />
-            </Tooltip>
-            <Divider type="vertical" />
-            <Tooltip
-              title={t('YakitRiskTable.false_positive_feedback')}
-              destroyOnHidden={true}
-              styles={{ root: { paddingBottom: 0 } }}
-              placement="top"
-            >
-              <UploadOutlined
-                className={styles['misstatement-icon']}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onClickRiskFeedbackToOnline(record)
-                }}
-                color="currentColor"
-              />
-            </Tooltip>
-          </>
-        ),
+              <Divider type="vertical" />
+              <Tooltip
+                title={t('YakitRiskTable.retest')}
+                destroyOnHidden={true}
+                styles={{ root: { paddingBottom: 0 } }}
+                placement="top"
+              >
+                <YakitButton
+                  type="text"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onRetest(record)
+                  }}
+                  icon={<PlayOutlined color="currentColor" />}
+                />
+              </Tooltip>
+              <Divider type="vertical" />
+              <Tooltip
+                title={t('YakitRiskTable.false_positive_feedback')}
+                destroyOnHidden={true}
+                styles={{ root: { paddingBottom: 0 } }}
+                placement="top"
+              >
+                <UploadOutlined
+                  className={styles['misstatement-icon']}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onClickRiskFeedbackToOnline(record)
+                  }}
+                  color="currentColor"
+                />
+              </Tooltip>
+            </>
+          )
+        },
       },
     ]
     return columnArr.filter((ele) => !excludeColumnsKey.includes(ele.dataKey))
-  }, [riskTypeVerbose, tag, excludeColumnsKey, i18nRefresh, isEnterprise])
+  }, [riskTypeVerbose, tag, excludeColumnsKey, i18nRefresh, isEnterprise, aiRiskSelection, aiSelectedIds])
 
   /**误报上传 start */
   const [misstatementVisible, setMisstatementVisible] = useState<boolean>(false)
@@ -1313,12 +1347,17 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
       AfterCreatedAt: query.CreatedAt ? query.CreatedAt[0] : undefined,
       BeforeCreatedAt: query.CreatedAt ? query.CreatedAt[1] : undefined,
     }
+    if (aiRiskSelection?.selectedOnly) {
+      finalParams.RuntimeId = undefined
+      finalParams.RuntimeIds = undefined
+      finalParams.Ids = aiRiskSelection.ids
+    }
     return finalParams
   })
   const getResData = useMemoizedFn((data: Risk[]) => {
     return (data || []).map((ele) => ({
       ...ele,
-      Id: toRiskNumericId(ele.Id),
+      Id: normalizeRiskId(ele.Id),
       cellClassName: ele.IsRead ? '' : styles['yakit-risk-table-cell-unread'],
     }))
   })
@@ -1338,9 +1377,9 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
       return
     }
     if (order === 'asc') {
-      finalParams.FromId = isInit ? 0 : toRiskNumericId(afterId.current)
+      finalParams.FromId = isInit ? 0 : afterId.current
     } else {
-      finalParams.UntilId = isInit ? 0 : toRiskNumericId(beforeId.current)
+      finalParams.UntilId = isInit ? 0 : beforeId.current
     }
     if (isInit) {
       listQueryEpochRef.current += 1
@@ -1351,7 +1390,10 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
     }
     const epoch = listQueryEpochRef.current
 
-    apiQueryRisks(finalParams)
+    const request = emptyAIQuery
+      ? Promise.resolve({ Data: [], Total: 0, Pagination: paginationProps } as QueryRisksResponse)
+      : apiQueryRisks(finalParams)
+    request
       .then((res) => {
         if (epoch !== listQueryEpochRef.current) return
         const resData = getResData(res.Data)
@@ -1359,6 +1401,8 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         prePage.current += 1
         setResponse({
           ...res,
+          // 已选列表沿用首屏无游标查询的总数，后续游标页的 Total 仅表示剩余数量。
+          Total: aiRiskSelection?.selectedOnly && !isInit ? getResponse().Total : res.Total,
           Data: d,
           Pagination: {
             ...res.Pagination,
@@ -1377,8 +1421,8 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         }
 
         limitRef.current = defLimit
-        const firstId = toRiskNumericId(resData[0]?.Id)
-        const lastId = toRiskNumericId(resData[resData.length - 1]?.Id)
+        const firstId = resData[0]?.Id ?? 0
+        const lastId = resData[resData.length - 1]?.Id ?? 0
         if (order === 'asc') {
           if (isInit) {
             beforeId.current = firstId
@@ -1409,6 +1453,15 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         Limit: 1,
       },
     }
+    if (aiRiskSelection?.selectedOnly) {
+      params.Ids = query.Ids
+      params.RuntimeId = query.RuntimeId
+      params.RuntimeIds = query.RuntimeIds
+    }
+    if (aiRiskSelection?.emptyBase) {
+      setAllTotal(0)
+      return
+    }
     apiQueryRisks(params).then((allRes) => {
       if (epoch !== listQueryEpochRef.current) return
       setAllTotal(+allRes.Total)
@@ -1425,6 +1478,10 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
     onSearch(keywords)
   })
   const onSelectAll = useMemoizedFn((newSelectedRowKeys: string[], selected: Risk[], checked: boolean) => {
+    if (aiRiskSelection) {
+      aiRiskSelection.onChange(tableData, checked)
+      return
+    }
     if (checked) {
       setAllCheck(true)
       setSelectList(response.Data)
@@ -1434,6 +1491,10 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
     }
   })
   const onChangeCheckboxSingle = useMemoizedFn((c: boolean, key: string, selectedRows: Risk) => {
+    if (aiRiskSelection) {
+      aiRiskSelection.onChange([selectedRows], c)
+      return
+    }
     if (c) {
       setSelectList((s) => [...s, selectedRows])
     } else {
@@ -1703,7 +1764,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
               )
             }
             renderKey="Id"
-            data={response.Data}
+            data={emptyAIQuery ? [] : tableData}
             rowSelection={{
               isAll: allCheck,
               type: 'checkbox',
@@ -1712,7 +1773,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
               onChangeCheckboxSingle,
             }}
             pagination={{
-              total: allTotal,
+              total: aiRiskSelection?.selectedOnly ? Number(response.Total) : allTotal,
               limit: response.Pagination.Limit,
               page: response.Pagination.Page,
               onChange: (page) => update(page),

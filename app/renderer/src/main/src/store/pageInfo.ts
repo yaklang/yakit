@@ -25,6 +25,7 @@ import i18n from '@/i18n/i18n'
 import type { YakExecutorParam } from '@/pages/invoker/YakExecutorParams'
 import type { CodecResponseProps, RightItemsProps } from '@/pages/codec/NewCodec'
 import type { AISession } from '@/pages/ai-agent/type/aiChat'
+import { serializeAIAgentTabCache } from './aiAgentTabCache'
 const tOriginal = i18n.getFixedT(null, 'store')
 
 /**
@@ -694,7 +695,9 @@ export const usePageInfo = createWithEqualityFn<PageInfoStoreProps>()(
 // 与 Web Fuzzer 一样，由路由数据订阅触发防抖保存。
 export const saveAIAgentCache = debounce(
   (page?: PageProps) => {
-    return setRemoteProjectValue(RemoteAIAgentGV.AIAgentTabs, JSON.stringify(page?.pageList || [])).catch((error) => {
+    const pageList =
+      page?.pageList.filter((node) => !node.pageParamsInfo?.aiAgentPageInfo?.session?.isDraftSession) ?? []
+    return setRemoteProjectValue(RemoteAIAgentGV.AIAgentTabs, serializeAIAgentTabCache(pageList)).catch((error) => {
       yakitNotify('error', tOriginal('pageInfo.aiAgentCacheFailed', { error: String(error) }))
     })
   },

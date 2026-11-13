@@ -6,9 +6,48 @@
   p {
     margin-bottom: 0;
   }
+  p:has(> .placeholder) {
+    position: relative;
+  }
   :global {
     .milkdown .editor {
       padding: 0;
     }
   }
+}
+
+.placeholder {
+  position: absolute;
+  inset-inline: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--Colors-Use-Neutral-Disable);
+  font-size: 14px;
+  line-height: 20px;
+  letter-spacing: 0.1px;
+  pointer-events: none;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.placeholder-mention {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  flex: 0 0 20px;
+  height: 20px;
+  border: 1px solid var(--Colors-Use-Neutral-Border);
+  border-radius: 8px;
+  color: var(--Colors-Use-Neutral-Text-2-Primary);
+  font-weight: 500;
+}
+
+.placeholder-hint {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

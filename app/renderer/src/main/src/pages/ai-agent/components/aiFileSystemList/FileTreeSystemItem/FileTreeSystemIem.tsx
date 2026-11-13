@@ -1,6 +1,13 @@
 import { KeyToIcon } from '@/pages/yakRunner/FileTree/icon'
-import { FolderOpenOutlined, FolderOutlined, SearchOutlined } from '@yakit-libs/yakit-ui-icons/outline'
-import { type FC, useEffect, useMemo, useRef, useState, type MouseEvent } from 'react'
+import {
+  CheckCheckOutlined,
+  XOutlined,
+  FolderOpenOutlined,
+  FolderOutlined,
+  SearchOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import type { FC, MouseEvent } from 'react'
 import styles from './FileTreeSystemItem.module.scss'
 import { onOpenLocalFileByPath } from '@/pages/notepadManage/notepadManage/utils'
 import { setClipboardText } from '@/utils/clipboard'
@@ -71,6 +78,8 @@ const FileTreeSystemItem: FC<FileTreeSystemItemProps> = ({
   selected,
   setSelected,
   onRootSearch,
+  addedFilePaths,
+  onRemoveAddedFile,
 }) => {
   const { t, i18nRefresh } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const inputRef = useRef<InputRef>(null)
@@ -383,6 +392,26 @@ const FileTreeSystemItem: FC<FileTreeSystemItemProps> = ({
           onClick={onClickRootSearch}
         />
       ) : null}
+      {!isInput && addedFilePaths?.includes(data.path) && (
+        <div className={styles['added-file-action']}>
+          <span className={styles['added-file-check']} data-testid="added-file-check">
+            <CheckCheckOutlined color="currentColor" size={16} />
+          </span>
+          <YakitButton
+            type="text"
+            colors="danger"
+            size="small"
+            className={styles['added-file-cancel']}
+            icon={<XOutlined color="currentColor" size={12} />}
+            onClick={(event) => {
+              event.stopPropagation()
+              onRemoveAddedFile?.(data.path)
+            }}
+          >
+            {t('YakitButton.cancel')}
+          </YakitButton>
+        </div>
+      )}
     </div>
   )
 }

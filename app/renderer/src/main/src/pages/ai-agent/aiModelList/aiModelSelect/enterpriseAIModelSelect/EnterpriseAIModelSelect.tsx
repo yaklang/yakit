@@ -10,20 +10,26 @@ import type {
 } from './EnterpriseAIModelSelectType'
 import type { AIModelSelectProps } from '../AIModelSelectType'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
-import { useCreation, useDebounceFn, useInViewport, useMemoizedFn, useUpdateEffect } from 'ahooks'
+import { useCreation, useDebounceFn, useInViewport, useMemoizedFn, useRequest, useUpdateEffect } from 'ahooks'
+import type { AIGlobalConfig, AIModelConfig, AIModelTypeFileName } from '../../utils'
 import {
-  type AIGlobalConfig,
-  type AIModelConfig,
-  type AIModelTypeFileName,
   getModelName,
   grpcListAiModel,
+  grpcProbeReasoningEffort,
   isForcedSetAIModal,
   isFreeEnd,
   isMemfitStart,
   sortMemfitNameFirst,
 } from '../../utils'
-import { normalizeReasoningEffort } from '../../aiModelForm/reasoningEffort'
+import {
+  buildReasoningEffortOptions,
+  effortProbeResultFromResponse,
+  normalizeReasoningEffort,
+} from '../../aiModelForm/reasoningEffort'
+import { AIReasoningEffortSelect } from '@/pages/ai-re-act/aiReasoningEffortSelect/AIReasoningEffortSelect'
+import { yakitNotify } from '@/utils/notification'
 import { providerToListAiModelConfig, YAK_SCRIPT_PROVIDER } from '../../aiModelForm/providerConfig'
+import modelSelectStyles from '../AIModelSelect.module.scss'
 import styles from './EnterpriseAIModelSelect.module.scss'
 import classNames from 'classnames'
 import { AIModelTypeEnum, AIModelTypeInterFileNameEnum, AIOnlineModelIconMap } from '../../../defaultConstant'
@@ -35,9 +41,13 @@ import {
   CogOutlined,
   InformationCircleOutlined,
   PencilAltOutlined,
+  PlusSmOutlined,
   RefreshOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
-import { cloneDeep, isEqual, isNil, omit } from 'lodash'
+import cloneDeep from 'lodash/cloneDeep'
+import isEqual from 'lodash/isEqual'
+import isNil from 'lodash/isNil'
+import omit from 'lodash/omit'
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { Tooltip } from 'antd'
@@ -105,7 +115,7 @@ const matchModelTargets = (
 }
 
 export const EnterpriseAIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) => {
-  const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
+  const { t } = useI18nNamespaces(['aiAgent', 'yakitUi', 'configNetwork'])
   const { isOpen = true, mountContainer, className } = props
   //#region AI model
 
@@ -131,7 +141,11 @@ export const EnterpriseAIModelSelect: React.FC<AIModelSelectProps> = React.memo(
       {
         fileName: AIModelTypeFileName
         target: ModelDraftTarget
-      } & ({ type: 'select' } | { type: 'rename'; modelName: string })
+      } & (
+        | { type: 'select' }
+        | { type: 'rename'; modelName: string }
+        | { type: 'effort'; modelName: string; mutate: (model: AIModelConfig) => AIModelConfig }
+      )
     >
   >([])
 
@@ -169,6 +183,8 @@ export const EnterpriseAIModelSelect: React.FC<AIModelSelectProps> = React.memo(
       if (edit.type === 'select') {
         list.splice(list.indexOf(model), 1)
         list.unshift(model)
+      } else if (edit.type === 'effort') {
+        if (model.ModelName === edit.modelName) Object.assign(model, edit.mutate(model))
       } else if (model.ModelName !== edit.modelName) {
         model.ModelName = edit.modelName
         delete model.EffortProbed
@@ -219,6 +235,7 @@ export const EnterpriseAIModelSelect: React.FC<AIModelSelectProps> = React.memo(
     setOnlineLoading(true)
     event.onRefresh(false)
     getAIModelListOption()
+    if (open && selectIntelligentItem?.ModelName) probeModelEffort(selectIntelligentItem)
   })
 
   const getAIModelListOption = useDebounceFn(
@@ -302,11 +319,12 @@ export const EnterpriseAIModelSelect: React.FC<AIModelSelectProps> = React.memo(
       <YakitSelect.Option
         value="select"
         label={
-          <div className={styles['select-option']}>
+          <div className={modelSelectStyles['select-option']}>
             {getIconByAI(selectIntelligentItem?.Provider.Type)}
-            <span className={styles['select-option-text']} title={`${modelName}`}>
+            <span className={modelSelectStyles['select-option-text']} title={`${modelName}`}>
               {modelName}
             </span>
+            <span className={modelSelectStyles['select-option-effort']}>{reasoningEffortLabel}</span>
           </div>
         }
       >
@@ -328,6 +346,77 @@ export const EnterpriseAIModelSelect: React.FC<AIModelSelectProps> = React.memo(
     const intelligentItem = intelligentModels[0]
     return intelligentItem
   }, [intelligentModels])
+  const getEffortModelKey = (model: AIModelConfig) =>
+    JSON.stringify([getModelKey(model), providerToListAiModelConfig(model.Provider), model.ModelName])
+  const effortModelKey = selectIntelligentItem ? getEffortModelKey(selectIntelligentItem) : undefined
+  const reasoningEffort = normalizeReasoningEffort(selectIntelligentItem?.Provider.ReasoningEffort)
+  const reasoningEffortLabel = String(
+    buildReasoningEffortOptions(t, selectIntelligentItem?.ProbedExtendedEfforts, reasoningEffort).find(
+      (option) => option.value === reasoningEffort,
+    )?.label || reasoningEffort,
+  ).replace(/（[^）]*）|\([^)]*\)/g, '')
+  const lastEffortModelKeyRef = useRef<string>()
+  const onUpdateReasoningEffort = useMemoizedFn((mutate: (model: AIModelConfig) => AIModelConfig) => {
+    const model = aiDraftConfig.IntelligentModels[0]
+    if (!model || mutate(model) === model) return
+    const target = draftTargetsRef.current.get(model)!
+    pendingEditsRef.current.push({
+      type: 'effort',
+      fileName: 'IntelligentModels',
+      target,
+      modelName: model.ModelName,
+      mutate,
+    })
+    setAIDraftConfig((old) => {
+      const [current, ...rest] = old.IntelligentModels
+      const next = mutate(current)
+      draftTargetsRef.current.set(next, target)
+      return { ...old, IntelligentModels: [next, ...rest] }
+    })
+  })
+  const {
+    run: probeModelEffort,
+    loading: effortProbing,
+    data: effortProbe,
+  } = useRequest(
+    (model: AIModelConfig) => {
+      const modelKey = getEffortModelKey(model)
+      return grpcProbeReasoningEffort({ Config: model.Provider, Model: model.ModelName }, true).then((response) => ({
+        modelKey,
+        response,
+      }))
+    },
+    {
+      manual: true,
+      onSuccess: ({ modelKey, response }) => {
+        if (modelKey !== effortModelKey) return
+        const { conclusive, efforts } = effortProbeResultFromResponse(response)
+        onUpdateReasoningEffort((current) =>
+          getEffortModelKey(current) === modelKey
+            ? { ...current, EffortProbed: conclusive, ProbedExtendedEfforts: efforts }
+            : current,
+        )
+      },
+      onError: (error, [model]) => {
+        if (getEffortModelKey(model) === effortModelKey) {
+          yakitNotify('error', 'grpcProbeReasoningEffort 失败:' + String(error))
+        }
+      },
+    },
+  )
+  const probeResponse = effortProbe?.modelKey === effortModelKey ? effortProbe?.response : undefined
+  useEffect(() => {
+    if (!open || !selectIntelligentItem?.ModelName) return
+    const previousKey = lastEffortModelKeyRef.current
+    if (previousKey === effortModelKey) {
+      if (!effortProbing && (probeResponse?.MaxSupported === false || probeResponse?.XhighSupported === false))
+        probeModelEffort(selectIntelligentItem)
+      return
+    }
+    lastEffortModelKeyRef.current = effortModelKey
+    if (previousKey !== undefined || (!selectIntelligentItem.EffortProbed && !selectIntelligentItem.IsOnline))
+      probeModelEffort(selectIntelligentItem)
+  }, [open, effortModelKey])
   const selectList = useCreation(() => {
     const lightweightItem = lightweightModels[0]
     const visionItem = visionModels[0]
@@ -412,6 +501,8 @@ export const EnterpriseAIModelSelect: React.FC<AIModelSelectProps> = React.memo(
     <div ref={refRef} className={className}>
       {isHaveData ? (
         <AIChatSelect
+          variant="borderless"
+          classNames={{ popup: { root: modelSelectStyles['model-select-popup'] } }}
           dropdownRender={() => {
             return (
               <div className={styles['drop-select-wrapper']} ref={dropdownRenderRef}>
@@ -429,6 +520,16 @@ export const EnterpriseAIModelSelect: React.FC<AIModelSelectProps> = React.memo(
                       >
                         {t('AIModelSelect.manageModels')}
                       </YakitButton>
+                    </Tooltip>
+                    <span className={styles['select-title-divider']} aria-hidden="true" />
+                    <Tooltip title={t('AIModelList.addModel')}>
+                      <YakitButton
+                        size="small"
+                        type="text2"
+                        aria-label={t('AIModelList.addModel')}
+                        icon={<PlusSmOutlined color="currentColor" />}
+                        onClick={onAddModel}
+                      />
                     </Tooltip>
                     <Tooltip title={t('YakitButton.refresh')}>
                       <YakitButton
@@ -473,9 +574,16 @@ export const EnterpriseAIModelSelect: React.FC<AIModelSelectProps> = React.memo(
                     />
                   )}
                 </div>
-                <YakitButton type="secondary2" onClick={onAddModel} className={styles['add-model-btn']}>
-                  {t('AIModelList.addModel')}
-                </YakitButton>
+                {open && (
+                  <AIReasoningEffortSelect
+                    key={effortModelKey}
+                    model={selectIntelligentItem}
+                    probing={effortProbing}
+                    probeResponse={probeResponse}
+                    disabled={onlineLoading || queryLoading}
+                    onChange={onUpdateReasoningEffort}
+                  />
+                )}
               </div>
             )
           }}
@@ -483,7 +591,7 @@ export const EnterpriseAIModelSelect: React.FC<AIModelSelectProps> = React.memo(
           setOpen={onSetOpen}
           optionLabelProp="label"
           value="select"
-          closestClassName={`.${styles['edit-content']}`}
+          closestClassName={`.${styles['edit-content']}, [data-ai-reasoning-effort-menu]`}
         >
           {renderContent()}
         </AIChatSelect>

@@ -4,7 +4,7 @@ export interface PacketHistory extends PacketOrigin, Omit<PacketPair, 'Request' 
 }
 
 interface PacketOrigin {
-  Id?: number
+  Id?: Risk['Id']
   Url?: string
 }
 interface PacketPair {
@@ -35,7 +35,7 @@ export interface Risk {
   WaitingVerified?: boolean
   ReverseToken?: string
 
-  Id: number
+  Id: number | string
   CreatedAt: number
   UpdatedAt?: number
 

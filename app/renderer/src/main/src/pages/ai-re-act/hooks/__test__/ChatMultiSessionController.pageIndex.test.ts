@@ -84,6 +84,19 @@ describe('ChatMultiSessionController page index / ensureSession', async () => {
     expect(ctrl.isActiveShowSession('s2')).toBe(false)
   })
 
+  it('retains draft materials and resets their update counter on session resume', async () => {
+    const data = ctrl.ensureSession('materials-resume')
+    const attachments = [{ path: '/tmp/context.txt', isFolder: false, size: 42 }]
+    ctrl.updateDraftMaterials('materials-resume', 'attachments', attachments)
+    expect(data.store.renderStore.getState().draftMaterialsUpdate).toBe(1)
+    expect(ctrl.handleStartSession(startParams('materials-resume'))).toEqual(expect.any(String))
+    await ctrl.ensureSession('materials-resume').meta.lifecycle.preparation
+    expect(data.rawData.draftMaterials.attachments).toEqual(attachments)
+    expect(data.store.renderStore.getState().draftMaterialsUpdate).toBe(0)
+    ctrl.updateDraftMaterials('materials-resume', 'attachments', [])
+    expect(data.store.renderStore.getState().draftMaterialsUpdate).toBe(1)
+  })
+
   it('A1/A4: start registers ready + rebind moves page', async () => {
     expect(ctrl.handleStartSession(startParams('s-rebind', 'page-a'))).toEqual(expect.any(String))
     await ctrl.ensureSession('s-rebind').meta.lifecycle.preparation
@@ -102,6 +115,8 @@ describe('ChatMultiSessionController page index / ensureSession', async () => {
   })
 
   it('A5/A6: updateSessionConfig ignores Source; removeContentsFromMemory is callable', async () => {
+    ctrl.handleStartSession(startParams('s-cfg'))
+    await ctrl.ensureSession('s-cfg').meta.lifecycle.preparation
     const { request, rawData } = ctrl.ensureSession('s-cfg')
     request.Source = 'ai'
     ctrl.updateSessionConfig('s-cfg', { ReviewPolicy: 'yolo', Source: 'im' } as any)

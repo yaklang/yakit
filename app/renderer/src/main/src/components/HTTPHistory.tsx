@@ -10,6 +10,7 @@ import React, {
 } from 'react'
 import 'react-resizable/css/styles.css'
 import { type HistoryTableTitleShow, type HTTPFlow, HTTPFlowTable } from './HTTPFlowTable/HTTPFlowTable'
+import type { HTTPFlowTableProp } from './HTTPFlowTable/HTTPFlowTable.constants'
 import { fetchHTTPFlowsFieldGroup } from '@/utils/httpFlowFieldGroupCache'
 import {
   useControllableValue,
@@ -73,7 +74,6 @@ import { YakitSpin } from './yakitUI/YakitSpin/YakitSpin'
 import { YakitButton } from './yakitUI/YakitButton/YakitButton'
 import { RefreshIcon } from '@yakit-libs/yakit-ui-icons/oldicon/RefreshIcon'
 import { Tooltip } from 'antd'
-import { AIInputFooterRightEnum } from '@/pages/ai-agent/template/type'
 import { YakitCheckbox } from './yakitUI/YakitCheckbox/YakitCheckbox'
 import ReactResizeDetector from 'react-resize-detector'
 import { RemoteHistoryGV } from '@/enums/history'
@@ -116,7 +116,7 @@ export interface HTTPPacketFuzzable {
 }
 
 export interface HTTPFlowBodyByIdRequest {
-  Id?: number
+  Id?: number | string
   IsRequest: boolean
   BufSize?: number
   RuntimeId?: string
@@ -162,7 +162,7 @@ export const HistoryTab: YakitTabsProps[] = [
   },
 ]
 const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
-  const { renderHistoryAIReActChat, setShowFreeChat, historyAIReActChatBridge, focusModeLoop } = useHistoryAIReActChat()
+  const { renderHistoryAIReActChat, setShowFreeChat, historyAIReActChatBridge } = useHistoryAIReActChat()
   const { pageType, ...historyProps } = props
   const { t, i18nRefresh } = useI18nNamespaces(['history'])
   // #region 左侧tab
@@ -228,11 +228,13 @@ const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
   const [rulesQueryparams, setRulesQueryparams] = useState<string>('')
   const [mitmAggregateFilterRows, setMitmAggregateFilterRows] = useState<MitmExtractAggregateFlowFilterRow[]>([])
   const [httpFlowTableDataLength, setHttpFlowTableDataLength] = useState<number>(0)
-  const { onSetSelectedHttpFlowIds, clearHttpFlowSelection, onHttpFlowRemove } = useHttpFlowSelection(
-    activeKey === 'ai',
-    historyAIReActChatBridge.activeID,
-    historyAIReActChatBridge,
-  )
+  const {
+    selectedHttpFlowIds,
+    onSetSelectedHttpFlowIds,
+    clearHttpFlowSelection,
+    onHttpFlowRemove,
+    onRegisterTableSelectApi,
+  } = useHttpFlowSelection(activeKey === 'ai', historyAIReActChatBridge.activeID)
   const onNewChat = useMemoizedFn(() => {
     clearHttpFlowSelection()
     historyAIReActChatBridge.onNewChat()
@@ -246,15 +248,6 @@ const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
   // 性能优化：提取 onSelectNodesKeys 为 useMemoizedFn
   const onSelectNodesKeys = useMemoizedFn((selectKeys: React.Key[]) => {
     setIncludeInUrl(selectKeys.map((i) => i + ''))
-  })
-
-  const onRegisterTableSelectApi = useMemoizedFn((api: { reset: () => void; deselectId: (id: string) => void }) => {
-    historyAIReActChatBridge.registerClearTableSelection(() => {
-      api.reset()
-    })
-    historyAIReActChatBridge.registerDeselectHttpFlowId((id) => {
-      api.deselectId(id)
-    })
   })
 
   const mitmContent = useContext(MITMContext)
@@ -404,18 +397,8 @@ const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
                       ),
                       taskDetails: true,
                     },
-                    footerRightTypes: [
-                      {
-                        type: AIInputFooterRightEnum.AIFocusMode,
-                        props: {
-                          value: focusModeLoop,
-                          onChange: () => {},
-                          disabled: true,
-                        },
-                      },
-                    ],
-                    filterMentionType: ['focusMode'],
-                    onHttpFlowRemove,
+                    selectedHttpFlowIds,
+                    onHttpFlowRemove: (id, isSummary) => onHttpFlowRemove(id, isSummary, true),
                     onAfterSubmit: clearHttpFlowSelection,
                   },
                 })}
@@ -490,6 +473,7 @@ interface HTTPFlowRealTimeTableAndEditorProps extends HistoryTableTitleShow {
   onSetHasNewData?: (f: boolean) => void
   onSetSelectedHttpFlowIds?: (ids: string[]) => void
   onRegisterTableSelectApi?: (api: { reset: () => void; deselectId: (id: string) => void }) => void
+  aiFlowSelection?: HTTPFlowTableProp['aiFlowSelection']
   setOnlyShowFirstNode?: (only: boolean) => void
   setSecondNodeVisible?: (show: boolean) => void
   /** 预设排除列，透传至 `HTTPFlowTable.defaultExcludeColumnsKey` */
@@ -522,6 +506,7 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
     onSetHasNewData,
     onSetSelectedHttpFlowIds,
     onRegisterTableSelectApi,
+    aiFlowSelection,
     noTableTitle = false,
     showSourceType = true,
     showAdvancedSearch = true,
@@ -709,6 +694,7 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
               onSetHasNewData={onSetHasNewData}
               onSetSelectedHttpFlowIds={onSetSelectedHttpFlowIds}
               onRegisterTableSelectApi={onRegisterTableSelectApi}
+              aiFlowSelection={aiFlowSelection}
               onRegisterFlowMarkPatch={onRegisterFlowMarkPatch}
               httpHistoryTableTitleStyle={httpHistoryTableTitleStyle}
               titleHeight={titleHeight}

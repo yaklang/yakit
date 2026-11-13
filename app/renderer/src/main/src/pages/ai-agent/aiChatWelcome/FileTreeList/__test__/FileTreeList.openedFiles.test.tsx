@@ -24,7 +24,10 @@ const { openDialog, invoke, translate, dragState } = vi.hoisted(() => {
   }
 })
 const taskStore = createStore(() => ({ grpcFolders: [] as HistoryItem[] }))
-vi.mock('@/pages/ai-re-act/hooks/useCurrentDataBySession', () => ({ useCurrentStore: () => taskStore }))
+vi.mock('@/pages/ai-re-act/hooks/useCurrentDataBySession', () => ({
+  useCurrentRawData: () => ({ draftMaterials: { files: [] } }),
+  useCurrentStore: () => taskStore,
+}))
 vi.mock('@/pages/ai-re-act/hooks/useCurrentSessionId', () => ({ default: () => 'session-1' }))
 vi.mock('@/i18n/useI18nNamespaces', () => ({ useI18nNamespaces: () => ({ t: translate }) }))
 vi.mock('@/utils/fileSystemDialog', () => ({ handleOpenFileSystemDialog: openDialog }))

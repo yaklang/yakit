@@ -5,7 +5,6 @@ import { Tooltip } from 'antd'
 import { PlusOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { useHistoryAIReActChat } from '@/components/historyAIReActChat'
-import { AIInputFooterRightEnum } from '@/pages/ai-agent/template/type'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import classNames from 'classnames'
 import styles from './AuditCodeRuleGenChat.module.scss'
@@ -22,7 +21,7 @@ export interface AuditCodeRuleGenChatProps {
  */
 export const AuditCodeRuleGenChat: React.FC<AuditCodeRuleGenChatProps> = ({ className }) => {
   const { t } = useI18nNamespaces(['history', 'yakRunner'])
-  const { renderHistoryAIReActChat, setShowFreeChat, historyAIReActChatBridge, focusModeLoop } = useHistoryAIReActChat()
+  const { renderHistoryAIReActChat, setShowFreeChat, historyAIReActChatBridge } = useHistoryAIReActChat()
 
   useEffect(() => {
     setShowFreeChat(true)
@@ -63,17 +62,6 @@ export const AuditCodeRuleGenChat: React.FC<AuditCodeRuleGenChatProps> = ({ clas
             ),
             taskDetails: true,
           },
-          footerRightTypes: [
-            {
-              type: AIInputFooterRightEnum.AIFocusMode,
-              props: {
-                value: focusModeLoop,
-                onChange: () => {},
-                disabled: true,
-              },
-            },
-          ],
-          filterMentionType: ['focusMode'],
         },
       })}
     </div>

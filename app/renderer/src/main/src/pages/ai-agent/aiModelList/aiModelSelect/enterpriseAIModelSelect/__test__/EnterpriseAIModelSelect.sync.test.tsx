@@ -19,6 +19,7 @@ vi.mock('../../../utils', () => ({
   grpcGetAIGlobalConfig: mocks.get,
   grpcSetAIGlobalConfig: mocks.save,
   grpcListAiModel: mocks.names,
+  grpcProbeReasoningEffort: () => new Promise(() => {}),
   getModelName: (name?: string) => name ?? '',
   isMemfitStart: () => false,
   isFreeEnd: () => false,

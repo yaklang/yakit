@@ -149,21 +149,21 @@ const AITriageChatContentEdit: React.FC<AITriageChatContentEditProps> = React.me
     if (!editorMilkdown.current || !activeChat) return
     const qs = getMarkdownValue()
     if (!qs) return
-    const { mentions, httpFlowList, codeBlockList } = extractDataWithMilkdown(editorMilkdown.current)
+    const { mentions, resourceReferences, codeBlockList } = extractDataWithMilkdown(editorMilkdown.current)
     const value: AIChatTextareaSubmit = {
       qs,
       mentionList: mentions,
-      httpFlowList,
+      resourceReferences,
       codeBlockList,
       showQS: qs,
       focusMode: '',
     }
-    const { attachedResourceInfo } = getAIReActRequestParams(value)
+    const request = getAIReActRequestParams(value)
 
     const chatMessage: AIInputEvent = {
       IsFreeInput: true,
       FreeInput: value.qs,
-      AttachedResourceInfo: attachedResourceInfo,
+      AttachedResourceInfo: request.attachedResourceInfo,
       FocusModeLoop: value.focusMode,
     }
     onSend({

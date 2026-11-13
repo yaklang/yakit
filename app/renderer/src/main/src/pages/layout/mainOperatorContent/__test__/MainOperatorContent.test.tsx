@@ -15,6 +15,7 @@ import FirstTabRouteMenu from '../FirstTabRouteMenu/FirstTabRouteMenu'
 import type { PublicRouteMenuProps } from '@/routes/newRoute'
 import emiter from '@/utils/eventBus/eventBus'
 import { useHttpFlowStore } from '@/store/httpFlow'
+import { restoreAIAgentTabCache, serializeAIAgentTabCache } from '@/store/aiAgentTabCache'
 
 const routeMenuI18n = vi.hoisted(() => ({ t: (key: string) => key }))
 const routeMenuSource = vi.hoisted(() => ({ getPublicRouteMenu: vi.fn<(mode?: unknown) => PublicRouteMenuProps[]>() }))
@@ -75,10 +76,10 @@ const attribute = (tag: string, name: string, bindings: Record<string, unknown>)
   if (!attr?.initializer || !ts.isJsxExpression(attr.initializer)) return undefined
   return execute(`return ${attr.initializer.expression!.getText(source)}`, bindings)
 }
-const deferred = () => {
-  let resolve!: (value: string) => void
+const deferred = <T = string,>() => {
+  let resolve!: (value: T) => void
   let reject!: (error: Error) => void
-  const promise = new Promise<string>((yes, no) => {
+  const promise = new Promise<T>((yes, no) => {
     resolve = yes
     reject = no
   })
@@ -1022,6 +1023,105 @@ describe('MainOperatorContent onUpdateSorting', () => {
   })
 })
 
+describe('MainOperatorContent 固定 AI 欢迎页', () => {
+  const setupWelcome = (hasFixed = true, initializing = false) => {
+    const fixed = {
+      route: 'ai',
+      routeKey: 'ai',
+      verbose: '旧会话',
+      pageParams: { aiAgentPageInfo: { session: { SessionID: 'old' } } },
+    }
+    const other = { route: 'ai', routeKey: 'ai-chat', verbose: '进行中的会话' }
+    let pages: { route: string; routeKey: string; verbose: string; pageParams?: unknown }[] = hasFixed
+      ? [fixed, other]
+      : [other]
+    const node = {
+      pageId: 'ai',
+      pageName: '旧会话',
+      pageParamsInfo: { aiAgentPageInfo: { session: { SessionID: 'old' } } },
+    }
+    const store = {
+      queryPagesDataById: vi.fn(() => node),
+      updatePagesDataCacheById: vi.fn(),
+    }
+    const bindings = {
+      initializing,
+      useMemoizedFn: (fn: unknown) => fn,
+      YakitRoute: { AI_Agent: 'ai' },
+      YakitRouteToPageInfo: { ai: { label: 'AI Agent' } },
+      ReActChatEventEnum: { NEW_CHAT: 'new-chat' },
+      usePageInfo: { getState: () => store },
+      getPageCache: () => pages,
+      setPageCache: vi.fn((update) => {
+        pages = update(pages)
+      }),
+      setCurrentTabKey: vi.fn(),
+      openMenuPage: vi.fn(),
+      emiter: { emit: vi.fn() },
+    }
+    const open = execute(`return ${declaration('openAIAgentWelcomePage')!.initializer!.getText(source)}`, bindings)
+    return { open, bindings, store, getPages: () => pages, other }
+  }
+
+  it('新建复用固定标签，先清空缓存再通知欢迎页重置', () => {
+    const { open, bindings, store, getPages, other } = setupWelcome()
+    open()
+    expect(store.updatePagesDataCacheById).toHaveBeenCalledExactlyOnceWith('ai', {
+      pageId: 'ai',
+      pageName: 'AI Agent',
+      pageParamsInfo: { aiAgentPageInfo: undefined },
+    })
+    expect(getPages()).toEqual([
+      {
+        route: 'ai',
+        routeKey: 'ai',
+        verbose: 'AI Agent',
+        pageParams: { id: 'ai', groupId: '0' },
+      },
+      other,
+    ])
+    expect(bindings.setCurrentTabKey).toHaveBeenCalledExactlyOnceWith('ai')
+    expect(bindings.emiter.emit).toHaveBeenCalledExactlyOnceWith(
+      'onReActChatEvent',
+      JSON.stringify({ type: 'new-chat', pageId: 'ai' }),
+    )
+    expect(store.updatePagesDataCacheById.mock.invocationCallOrder[0]).toBeLessThan(
+      bindings.emiter.emit.mock.invocationCallOrder[0],
+    )
+    expect(bindings.openMenuPage).not.toHaveBeenCalled()
+  })
+
+  it('固定标签未挂载时也更新缓存，保留这次传入的资料', () => {
+    const { open, store, getPages } = setupWelcome()
+    const params = { aiAgentPageInfo: { defualtAIMentionCommandParams: [{ mentionId: 'skill' }] } }
+    open(params)
+    expect(store.updatePagesDataCacheById.mock.calls[0][1].pageParamsInfo).toEqual({
+      aiAgentPageInfo: params.aiAgentPageInfo,
+    })
+    expect(getPages()[0].pageParams).toEqual({ ...params, id: 'ai', groupId: '0' })
+  })
+
+  it('不存在固定标签时创建菜单固定页，而非额外会话页', () => {
+    const { open, bindings } = setupWelcome(false)
+    open()
+    expect(bindings.openMenuPage).toHaveBeenCalledExactlyOnceWith({ route: 'ai' }, { pageParams: undefined })
+    expect(bindings.setPageCache).not.toHaveBeenCalled()
+    expect(bindings.emiter.emit).toHaveBeenCalledExactlyOnceWith(
+      'onReActChatEvent',
+      JSON.stringify({ type: 'new-chat', pageId: 'ai' }),
+    )
+  })
+
+  it('缓存初始化期间不创建或重置页面', () => {
+    const { open, bindings, store } = setupWelcome(true, true)
+    open()
+    expect(store.updatePagesDataCacheById).not.toHaveBeenCalled()
+    expect(bindings.setPageCache).not.toHaveBeenCalled()
+    expect(bindings.setCurrentTabKey).not.toHaveBeenCalled()
+    expect(bindings.emiter.emit).not.toHaveBeenCalled()
+  })
+})
+
 const setup = ({ mode = 'classic', savedKey = '', memfit = true, enterprise = false } = {}) => {
   const ai = deferred()
   const wf = deferred()
@@ -1079,7 +1179,9 @@ const setup = ({ mode = 'classic', savedKey = '', memfit = true, enterprise = fa
     saveAIAgentCache: Object.assign(vi.fn(), { cancel: vi.fn(), flush: vi.fn() }),
     saveFuzzerCache: Object.assign(vi.fn(), { cancel: vi.fn() }),
     getRemoteProjectValue: vi.fn(() => ai.promise),
+    grpcQueryAISession: vi.fn().mockResolvedValue({ Data: [] }),
     mergeAIAgentPageTabs: vi.fn((current) => current),
+    restoreAIAgentTabCache,
     RemoteAIAgentGV: { AIAgentTabs: 'ai-tabs' },
     RemoteGV: { SelectFirstMenuTabKey: 'selected' },
     JSONParseLog: JSON.parse,
@@ -1094,15 +1196,17 @@ const setup = ({ mode = 'classic', savedKey = '', memfit = true, enterprise = fa
     generateTabIdentity: () => ({ tabId: 'new-ai' }),
     routeConvertKey: () => 'ai',
     onSetPageInfoDataOfSingle: vi.fn(),
+    globalSessionEngine: { registerDraftSession: vi.fn(), discardClosedPageDrafts: vi.fn() },
     t: (key: string) => key,
   }
   const locked = () => attribute('Content', 'inert', { initializing }) === true
   const spinning = () => attribute('YakitSpin', 'spinning', { initializing, loading: false })
-  const open = () =>
-    execute(`return (${declaration('openAIAgentExtraTab')!.initializer!.getText(source)})()`, {
+  const open = (pageParams?: { aiAgentPageInfo: { session: { SessionID: string; isDraftSession: boolean } } }) =>
+    execute(`return (${declaration('openAIAgentExtraTab')!.initializer!.getText(source)})(pageParams)`, {
       ...bindings,
       pageCache: pages,
       initializing,
+      pageParams,
     })
   const mount = () => execute(`const ${declaration('onInitAIAgent')!.getText(source)};\n${effect}`, bindings)
   return { ai, wf, bindings, locked, spinning, open, mount, dispose: () => cleanup() }
@@ -1142,6 +1246,7 @@ describe('MainOperatorContent initial cache loading', () => {
     Object.assign(app.bindings, {
       saveAIAgentCache: execute(`return ${saver.initializer!.getText(cacheSource)}`, {
         debounce,
+        serializeAIAgentTabCache,
         setRemoteProjectValue: write,
         RemoteAIAgentGV: app.bindings.RemoteAIAgentGV,
         yakitNotify: app.bindings.yakitNotify,
@@ -1173,7 +1278,7 @@ describe('MainOperatorContent initial cache loading', () => {
     expect(projectCaches.get('original')).toBe('[]')
     await vi.advanceTimersByTimeAsync(100)
     expect(write).toHaveBeenCalledOnce()
-    expect(JSON.parse(projectCaches.get('original')!)).toEqual([removed])
+    expect(JSON.parse(projectCaches.get('original')!)).toEqual({ version: 1, pageList: [removed] })
 
     let switching: Promise<void> | undefined
     if (action === 'switch-project') {
@@ -1218,9 +1323,10 @@ describe('MainOperatorContent initial cache loading', () => {
     }
     await vi.advanceTimersByTimeAsync(100)
     await switching
-    if (action === 'switch-project') expect.soft(JSON.parse(cacheAtSwitch!)).toEqual([updated])
+    if (action === 'switch-project')
+      expect.soft(JSON.parse(cacheAtSwitch!)).toEqual({ version: 1, pageList: [updated] })
     expect(write).toHaveBeenCalledTimes(2)
-    expect.soft(JSON.parse(projectCaches.get('original')!)).toEqual([updated])
+    expect.soft(JSON.parse(projectCaches.get('original')!)).toEqual({ version: 1, pageList: [updated] })
     expect.soft(projectCaches.get('target')).toBe(targetCache)
 
     const restored = setup({ memfit: false })
@@ -1233,6 +1339,38 @@ describe('MainOperatorContent initial cache loading', () => {
       .toHaveBeenCalledExactlyOnceWith('ai', expect.objectContaining({ pageList: [updated] }))
     expect(write).toHaveBeenCalledTimes(2)
     restored.dispose()
+  })
+
+  it.each([false, true])('restores limits in KB (versioned cache=%s)', async (versioned) => {
+    const app = setup({ memfit: false })
+    const page = {
+      pageId: 'cached-ai',
+      sortFieId: 1,
+      pageParamsInfo: {
+        aiAgentPageInfo: {
+          session: {
+            SessionID: 'cached-session',
+            StartParams: {
+              RuntimeContextSizeLimit: versioned ? 300 : 307200,
+              AICallTokenLimit: versioned ? 40 : 40960,
+              EnablePlan: true,
+            },
+          },
+        },
+      },
+    }
+    const pageList = [page]
+    app.mount()
+    app.ai.resolve(JSON.stringify(versioned ? { version: 1, pageList } : pageList))
+    app.wf.resolve('[]')
+    await settle()
+
+    const restored = app.bindings.setPagesData.mock.calls[0][1].pageList[0]
+    expect(restored.pageParamsInfo.aiAgentPageInfo.session).toEqual({
+      SessionID: 'cached-session',
+      StartParams: { RuntimeContextSizeLimit: 300, AICallTokenLimit: 40, EnablePlan: true },
+    })
+    app.dispose()
   })
 
   it('locks the default Memfit page before the restore effect runs', () => {
@@ -1272,6 +1410,39 @@ describe('MainOperatorContent initial cache loading', () => {
     )
     app.open()
     expect(app.bindings.onSetPageInfoDataOfSingle).toHaveBeenCalledOnce()
+    app.dispose()
+  })
+
+  it('新标签在发布前接管首问草稿，并按仍打开的 AI Agent 标签清理草稿', async () => {
+    const app = setup()
+    app.mount()
+    app.ai.resolve('[]')
+    app.wf.resolve('[]')
+    await settle()
+    app.open({ aiAgentPageInfo: { session: { SessionID: 'draft', isDraftSession: true } } })
+
+    const { registerDraftSession, discardClosedPageDrafts } = app.bindings.globalSessionEngine
+    expect(registerDraftSession).toHaveBeenCalledExactlyOnceWith('draft', 'new-ai')
+    expect(registerDraftSession.mock.invocationCallOrder[0]).toBeLessThan(
+      app.bindings.onSetPageInfoDataOfSingle.mock.invocationCallOrder[0],
+    )
+
+    const cleanupEffect = find(
+      (node) =>
+        ts.isExpressionStatement(node) &&
+        node.getText(source).startsWith('useEffect(') &&
+        node.getText(source).includes('globalSessionEngine.discardClosedPageDrafts('),
+    )[0].getText(source)
+    execute(cleanupEffect, {
+      ...app.bindings,
+      pageCache: [
+        { route: 'ai', routeKey: 'ai' },
+        { route: 'ai', routeKey: 'other-ai', pageParams: { id: 'other-page' } },
+        { route: 'wf', routeKey: 'wf' },
+      ],
+      useEffect: (callback: () => void) => callback(),
+    })
+    expect(discardClosedPageDrafts).toHaveBeenCalledExactlyOnceWith(new Set(['ai', 'other-page']))
     app.dispose()
   })
 
@@ -1341,20 +1512,23 @@ describe('MainOperatorContent initial cache loading', () => {
     },
   )
 
-  it.each(['{', '{}'])('aborts restoration and opens recovery for invalid cache data: %s', async (raw) => {
-    const app = setup({ memfit: false })
-    app.mount()
-    app.ai.resolve(raw)
-    app.wf.resolve('[]')
-    await settle()
-    expect(app.bindings.setPagesData).not.toHaveBeenCalled()
-    expect(app.bindings.aiCacheLoaded.current).toBe(false)
-    expect(app.bindings.saveAIAgentCache).not.toHaveBeenCalled()
-    expect(app.bindings.showYakitModal).toHaveBeenCalledOnce()
-    expect(app.locked()).toBe(false)
-    expect(app.bindings.yakitNotify).toHaveBeenCalledOnce()
-    app.dispose()
-  })
+  it.each(['{', '{}', '{"version":2,"pageList":[]}'])(
+    'aborts restoration and opens recovery for invalid cache data: %s',
+    async (raw) => {
+      const app = setup({ memfit: false })
+      app.mount()
+      app.ai.resolve(raw)
+      app.wf.resolve('[]')
+      await settle()
+      expect(app.bindings.setPagesData).not.toHaveBeenCalled()
+      expect(app.bindings.aiCacheLoaded.current).toBe(false)
+      expect(app.bindings.saveAIAgentCache).not.toHaveBeenCalled()
+      expect(app.bindings.showYakitModal).toHaveBeenCalledOnce()
+      expect(app.locked()).toBe(false)
+      expect(app.bindings.yakitNotify).toHaveBeenCalledOnce()
+      app.dispose()
+    },
+  )
 
   it('retries AI recovery without losing local tabs or unlocking while WF is pending', async () => {
     const app = setup({ memfit: false })
@@ -1545,9 +1719,35 @@ describe('MainOperatorContent initial cache loading', () => {
         }),
       )
       expect(app.bindings.setCurrentTabKey).toHaveBeenLastCalledWith('ai')
+      expect(app.bindings.grpcQueryAISession).not.toHaveBeenCalled()
       app.dispose()
     },
   )
+
+  it('restores connected tabs from cache and skips stale drafts without querying sessions', async () => {
+    const app = setup()
+    const connected = {
+      pageId: 'connected',
+      pageName: 'Cached title',
+      sortFieId: 2,
+      pageParamsInfo: {
+        aiAgentPageInfo: { session: { SessionID: 'connected', Title: 'Cached title', isDraftSession: false } },
+      },
+    }
+    const draft = {
+      pageId: 'draft',
+      sortFieId: 1,
+      pageParamsInfo: { aiAgentPageInfo: { session: { SessionID: 'draft', isDraftSession: true } } },
+    }
+    app.mount()
+    app.ai.resolve(JSON.stringify([draft, connected]))
+    app.wf.resolve('[]')
+    await settle()
+    expect(app.bindings.setPagesData.mock.calls[0][1].pageList.slice(1)).toEqual([connected])
+    expect(app.bindings.grpcQueryAISession).not.toHaveBeenCalled()
+    expect(app.bindings.aiCacheLoaded.current).toBe(true)
+    app.dispose()
+  })
 
   it('sorts cached tabs and selects the final restored tab', async () => {
     const app = setup()
@@ -1565,6 +1765,7 @@ describe('MainOperatorContent initial cache loading', () => {
       cached[0],
     ])
     expect(app.bindings.setCurrentTabKey).toHaveBeenLastCalledWith('later')
+    expect(app.bindings.grpcQueryAISession).not.toHaveBeenCalled()
     app.dispose()
   })
 

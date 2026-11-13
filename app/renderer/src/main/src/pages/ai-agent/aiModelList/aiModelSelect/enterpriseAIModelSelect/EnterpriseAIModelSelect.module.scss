@@ -30,7 +30,13 @@
     .select-title-right {
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 2px;
+    }
+    .select-title-divider {
+      flex-shrink: 0;
+      width: 1px;
+      height: 12px;
+      background-color: var(--Colors-Use-Neutral-Border);
     }
   }
   .type-btn {
@@ -42,9 +48,6 @@
     flex-direction: column;
     gap: 4px;
   }
-  .add-model-btn {
-    width: 100%;
-  }
 }
 .icon-info {
   color: var(--Colors-Use-Neutral-Text-3-Secondary);
@@ -55,40 +58,6 @@
   svg {
     width: 12px;
     height: 12px;
-  }
-}
-
-.select-option {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  color: var(--Colors-Use-Neutral-Text-1-Title);
-
-  font-size: 12px;
-  font-style: normal;
-  font-weight: 400;
-  overflow: hidden;
-
-  .select-option-text {
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    overflow: hidden;
-    word-break: break-all;
-  }
-  svg {
-    width: 16px;
-    height: 16px;
-  }
-  .model-item {
-    width: 16px;
-    height: 16px;
-    border: 0;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: transparent;
   }
 }
 

@@ -1,11 +1,14 @@
-import { type Dispatch, type SetStateAction } from 'react'
-import { type AISession } from './type/aiChat'
-import { type AITabsEnum } from './defaultConstant'
-import { type AIStartParams } from '../ai-re-act/hooks/grpcApi'
+import type { Dispatch, SetStateAction } from 'react'
+import type { AISession } from './type/aiChat'
+import type { AITabsEnum } from './defaultConstant'
+import type { AIStartParams } from '../ai-re-act/hooks/grpcApi'
+import type { AIAgentContextDispatcher } from './useContext/AIAgentContext'
 export interface AIAgentProps {
   pageId: string
   initialSession?: AISession
 }
+
+export type ActiveChatAction = SetStateAction<AISession> | Parameters<AIAgentContextDispatcher['setActiveChat']>[0]
 
 // #region 页面全局变量
 // 全局配置信息

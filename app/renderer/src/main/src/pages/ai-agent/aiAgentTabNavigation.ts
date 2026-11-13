@@ -4,11 +4,14 @@ import { SwitchAIAgentTabEventEnum, type AIAgentTabListEnum } from './defaultCon
 
 let pendingTabSwitch = ''
 
+const sidebarTabPayload = (active: AIAgentTabListEnum) =>
+  JSON.stringify({ type: SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE, params: { active, show: true } })
+
+export const showAIAgentSidebarTab = (active: AIAgentTabListEnum) =>
+  emiter.emit('switchAIAgentTab', sidebarTabPayload(active))
+
 export const openAIAgentTab = (active: AIAgentTabListEnum) => {
-  const payload = JSON.stringify({
-    type: SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE,
-    params: { active, show: true },
-  })
+  const payload = sidebarTabPayload(active)
   pendingTabSwitch = payload
   emiter.emit('menuOpenPage', JSON.stringify({ route: YakitRoute.AI_Agent }))
   emiter.emit('switchAIAgentTab', payload)

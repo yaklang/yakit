@@ -204,7 +204,9 @@
     "allowUserPrompt": "允许 AI 主动提问",
     "allowUserPromptTip": "允许 AI 追问和展示交互表单，异步追问不暂停任务。修改对后续任务生效。",
     "singleModelModeGlobalTip": "全局配置已启用，当前会话无法关闭",
-    "singleModelModeSessionTip": "单模型模式只能在新会话启动前修改"
+    "singleModelModeSessionTip": "单模型模式只能在新会话启动前修改",
+    "advancedConfiguration": "高级配置",
+    "singleModelModeDescription": "开启后本会话只使用全局配置中的主模型"
   },
   "AIModelGlobalConfig": {
     "aiModelConfig": "AI模型配置",
@@ -230,7 +232,39 @@
     "basicCheck": "工具基础检测"
   },
   "AIChatTextarea": {
-    "dropToAddToChat": "松开以添加到对话"
+    "dropToAddToChat": "松开以添加到对话",
+    "addMaterials": "添加资料",
+    "otherMaterials": "其他资料"
+  },
+  "AIAddMaterialsPopover": {
+    "scenarioCapabilities": "能力",
+    "currentScenario": "当前选择",
+    "addedSkills": "已添加技能",
+    "addedKnowledgeBases": "已添加知识库",
+    "addedOtherMaterials": "其他已添加资料",
+    "goToAdd": "去添加",
+    "searchMaterials": "请输入关键字搜索",
+    "contextHint": "添加的资料会作为当前会话的上下文优先使用",
+    "attachment": "添加文件",
+    "addFolder": "添加文件夹",
+    "continueAdding": "继续添加",
+    "attachments": "附件",
+    "addedAttachments": "我添加的附件",
+    "attachmentHint": "从本地上传，单次最多 {{max}} 个",
+    "attachmentLimitExceeded": "已选择 {{count}} 个附件，单次最多添加 {{max}} 个",
+    "attachmentFailed": "打开文件选择器失败：{{error}}",
+    "risk": "漏洞与风险",
+    "riskHint": "勾选已记录的漏洞和风险进行分析生成报告",
+    "flow": "流量",
+    "flowHint": "勾选已捕获的HTTP流量进行分析处理",
+    "skillHint": "为当前会话添加技能",
+    "knowledgeHint": "引用知识库内容",
+    "toolHint": "AI 会优先调用已添加的工具来完成任务",
+    "fileSystemHint": "从文件系统添加，浏览并搜索你的文件",
+    "browserHint": "在 AI 中操作浏览器",
+    "addedBrowsers": "已添加的浏览器",
+    "sceneHint": "使用场景框架限定 AI 的思考范围",
+    "current": "当前:"
   },
   "AIToolDecision": {
     "decision": "决策"
@@ -429,6 +463,11 @@
     "browser": "浏览器实例"
   },
   "AIMentionTabs": {
+    "recent": "近期添加",
+    "search": "搜索你想引用的资源…",
+    "searchEmpty": "搜索为空",
+    "files": "文件",
+    "viewMore": "查看更多",
     "all": "全部",
     "skill": "技能",
     "tool": "工具",
@@ -835,10 +874,9 @@
     "reviewDecision": "Review 决策",
     "unknownAction": "未知操作"
   },
-  "AIFocusMode": {
-    "focusModeTooltip": "复杂场景限定使用框架，限制AI思考范围"
-  },
   "AIReasoningEffort": {
+    "probeUnsupported": "此模型不支持该档位",
+    "selectQuality": "思考质量选择",
     "tooltip": "关闭不进行思考；默认则跟随模型默认；极高 / 最高 为扩展档位，仅探测确认支持后展示",
     "probing": "探测中..."
   },
@@ -899,8 +937,10 @@
     "switchToSource": "切换源码模式"
   },
   "AIMilkdownInput": {
-    "placeholder": "向我提问，@使用技能、工具、文件和知识库，/选择模式",
+    "placeholderPrompt": "向我提问",
+    "placeholderHint": "使用技能、工具、文件和知识库...",
     "selectedHttpFlowSummary": "勾选了 {{count}} 条流量",
+    "selectedRiskSummary": "勾选了 {{count}} 条漏洞风险",
     "imagesNotSaved": "图片尚未保存完成，请稍后重试；若保存失败，请移除失败图片后重新上传"
   },
   "AIMilkdownModeSlash": {
@@ -928,7 +968,14 @@
   },
   "AIRunModeSelect": {
     "mode": "模式",
-    "multiMode": "多模式"
+    "multiMode": "多模式",
+    "configuration": "执行模式配置",
+    "configurationTip": "按任务需要组合使用 Plan、Multi-Agent 和 Goal 模式",
+    "goalHint": "请选择一种目标模式并设定参数",
+    "switchGoalModeContent": "切换后，当前选中项的值将恢复为默认值，是否继续？",
+    "durationHint": "设置“继续深入”时间来增加轮次",
+    "editAcceptance": "编辑验收条件",
+    "noAcceptance": "暂无"
   },
   "AITaskQuery": {
     "taskQueue": "任务队列",
@@ -1017,6 +1064,9 @@
     "networkDebugDesc": "模型 HTTP 请求、响应和耗时仅写入 aispace 文件，不存入流量数据库。会话导出日志附带网络记录；包含凭据和业务数据，排查后关闭。"
   },
   "AIChatWorkspace": {
+    "allItems": "全部",
+    "sessionItems": "当前会话产生",
+    "selectedItems": "已选中",
     "close": "关闭",
     "closeOthers": "关闭其他",
     "closeRight": "关闭右侧标签页",

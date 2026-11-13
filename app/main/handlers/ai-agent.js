@@ -6,6 +6,18 @@ const path = require('path')
 const { discardAIImageDraft } = require('./utils/aiImageDraft')
 
 module.exports = (win, getClient) => {
+  ipcMain.handle('GetAISessionCurrentResources', (e, params) => {
+    return new Promise((resolve, reject) => {
+      getClient().GetAISessionCurrentResources(params, (err, data) => {
+        if (err) {
+          reject(err)
+          return
+        }
+        resolve(data)
+      })
+    })
+  })
+
   // #region AI-Task
   let aiChatTaskPool = new Map()
   // 开始执行 AI Task
@@ -353,6 +365,18 @@ module.exports = (win, getClient) => {
   /**获取工具列表 */
   ipcMain.handle('GetAIToolList', async (e, param) => {
     return await asyncGetAIToolList(param)
+  })
+
+  ipcMain.handle('QueryAITool', (e, params) => {
+    return new Promise((resolve, reject) => {
+      getClient().QueryAITool(params, (err, data) => {
+        if (err) {
+          reject(err)
+          return
+        }
+        resolve(data)
+      })
+    })
   })
 
   const asyncDeleteAITool = (params) => {

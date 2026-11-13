@@ -1,16 +1,38 @@
 import type { ReactNode } from 'react'
 import type { TextAreaProps } from 'antd/lib/input'
 import type { AIMentionCommandParams } from '../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
-import type { AIHttpFlowCommandParams } from '../components/aiMilkdownInput/aiMilkdownHttpFlow/aiHttpFlowPlugin'
+import type { AIResourceReferenceParams } from '../components/aiMilkdownInput/aiMilkdownResourceReference/aiResourceReferencePlugin'
 import type { AICodeBlockCommandParams } from '../components/aiMilkdownInput/aiCodeBlock/aiCustomCodeBlockPlugin'
 import type { EditorMilkdownProps } from '@/components/MilkdownEditor/MilkdownEditorType'
 import type { AIChatMentionProps } from '../components/aiChatMention/type'
 import type { AIReviewRuleSelectProps } from '@/pages/ai-re-act/aiReviewRuleSelect/type'
-import type { AIModelSelectProps } from '../aiModelList/aiModelSelect/AIModelSelectType'
-import type { AIFocusModeProps } from '@/pages/ai-re-act/aiFocusMode/type'
 import type { AIEnabledCapability } from '@/pages/ai-re-act/hooks/grpcApi'
+import type { AIModelSelectProps } from '../aiModelList/aiModelSelect/AIModelSelectType'
+import type { WorkspaceAddedCounts } from './aiAddMaterialsPopover/workspaceAddedCounts'
 
 export interface QSInputTextareaProps extends Omit<TextAreaProps, 'bordered' | 'autoSize'> {}
+
+export type AIResourceIds = Record<AIResourceReferenceParams['type'], string[]>
+
+export interface AIChatDraftMaterials {
+  /** 正文引用的资源 ID，按资源类型分组 */
+  resourceIds: AIResourceIds
+  /** 从编辑器提取的正文提及和图片附件 */
+  mentions: AIMentionCommandParams[]
+  /** 通过资料面板添加、未插入正文的资料 */
+  selectedMaterials: AIMentionCommandParams[]
+  /** 在资料栏隐藏的正文提及键，对应的编辑器节点仍保留 */
+  hiddenInlineKeys: string[]
+}
+
+export interface AIChatInputDraft {
+  markdown: string
+  selectedMaterials: AIMentionCommandParams[]
+  hiddenInlineKeys: string[]
+  selectedResourceIds: AIResourceIds
+  focusMode?: string
+  enabledCapabilities?: AIEnabledCapability[]
+}
 
 export interface AIChatTextareaSubmit {
   /**传给后端的内容 */
@@ -20,8 +42,11 @@ export interface AIChatTextareaSubmit {
   mentionList?: AIMentionCommandParams[]
   /**图片 */
   imageList?: string[]
-  /** History、AI 欢迎页和会话页勾选的流量及正文中的流量引用 */
-  httpFlowList?: AIHttpFlowCommandParams[]
+  /** 表格勾选和正文中的资源引用 */
+  resourceReferences?: AIResourceReferenceParams[]
+  /** 兼容旧版提交数据 */
+  httpFlowList?: { flowIds?: string | string[]; flowId?: string; displayText?: string; isSummary?: boolean }[]
+  riskList?: { riskIds: string[]; displayText?: string; isSummary?: boolean }[]
   /** 编辑器选中的代码块 */
   codeBlockList?: AICodeBlockCommandParams[]
   focusMode?: string
@@ -33,29 +58,27 @@ export interface AIChatTextareaSubmit {
 export interface AIChatTextareaRefProps {
   setMention: (v: AIMentionCommandParams) => void
   setValue: (v: string) => void
-  setHttpFlow: (ids: string[]) => void
   getValue: () => void
   editorMilkdown?: EditorMilkdownProps
 }
 export enum AIInputInnerFeatureEnum {
   AIReviewRuleSelect = 'AIReviewRuleSelect',
-  AIModelSelect = 'AIModelSelect',
 }
 export enum AIInputFooterRightEnum {
-  AIFocusMode = 'AIFocusMode',
+  AIModelSelect = 'AIModelSelect',
+  Custom = 'Custom',
 }
 export type AIInputInnerFeature = `${AIInputInnerFeatureEnum}`
-export type AIInputFooterRight = `${AIInputFooterRightEnum}`
 interface FooterLeftTypesBase<T extends string, U> {
   type: T
   props?: U
   component?: ReactNode
 }
 type AIReviewRuleSelectType = FooterLeftTypesBase<AIInputInnerFeatureEnum.AIReviewRuleSelect, AIReviewRuleSelectProps>
-type AIModelSelectType = FooterLeftTypesBase<AIInputInnerFeatureEnum.AIModelSelect, AIModelSelectProps>
-type AIFocusModeType = FooterLeftTypesBase<'AIFocusMode', AIFocusModeProps>
-export type FooterLeftTypesComponentProps = AIReviewRuleSelectType | AIModelSelectType
-export type FooterRightTypesComponentProps = AIFocusModeType
+export type FooterLeftTypesComponentProps = AIReviewRuleSelectType
+export type FooterRightTypesComponentProps =
+  | FooterLeftTypesBase<AIInputFooterRightEnum.AIModelSelect, AIModelSelectProps>
+  | { type: AIInputFooterRightEnum.Custom; key: string; component: ReactNode }
 export interface AIChatTextareaProps {
   ref?: React.ForwardedRef<AIChatTextareaRefProps>
   /** 提交按钮的 loading 状态 */
@@ -67,6 +90,8 @@ export interface AIChatTextareaProps {
   /**底部 */
   footer?: ReactNode
   onSubmit?: (v: AIChatTextareaSubmit) => void
+  onSubmitWithDraft?: (v: AIChatTextareaSubmit, draft: AIChatInputDraft) => void
+  initialDraft?: AIChatInputDraft
   className?: string
   /** Milkdown 编辑器外层样式。 */
   milkdownClassName?: string
@@ -76,13 +101,23 @@ export interface AIChatTextareaProps {
   isOpen?: boolean
   filterMentionType?: AIChatMentionProps['filterMode']
   footerLeftTypes?: (AIInputInnerFeature | FooterLeftTypesComponentProps)[]
-  footerRightTypes?: (AIInputFooterRight | FooterRightTypesComponentProps)[]
+  /** 省略时展示默认模型选择，传空数组时隐藏右侧配置项。 */
+  footerRightTypes?: FooterRightTypesComponentProps[]
   /** 图片路径前缀 */
   chatDataStoreKey: string
+  /** 欢迎页在首次连接前展示的场景能力 */
+  showScenarioCapabilities?: boolean
+  selectedHttpFlowIds?: string[]
+  selectedRiskIds?: string[]
   onHttpFlowRemove?: (id: string, isSummary: boolean) => void
+  /** 当前会话已添加的漏洞、流量和文件系统数量，供欢迎页卡片展示。 */
+  onWorkspaceAddedChange?: (counts: WorkspaceAddedCounts) => void
 }
+
+export const MAX_ATTACHMENTS_PER_BATCH = 10
 
 export interface FileToChatQuestionList {
   path: string
   isFolder: boolean
+  mentionSource?: 'attachment'
 }

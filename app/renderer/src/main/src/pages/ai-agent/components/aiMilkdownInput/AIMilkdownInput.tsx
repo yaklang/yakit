@@ -9,7 +9,7 @@ import { listener, listenerCtx } from '@milkdown/kit/plugin/listener'
 import { useNodeViewFactory, usePluginViewFactory } from '@prosemirror-adapter/react'
 import { $view } from '@milkdown/kit/utils'
 import { type Ctx } from '@milkdown/kit/ctx'
-import { codeBlockSchema, commonmark, imageSchema, insertImageCommand } from '@milkdown/kit/preset/commonmark'
+import { codeBlockSchema, commonmark, imageSchema } from '@milkdown/kit/preset/commonmark'
 import { gfm } from '@milkdown/kit/preset/gfm'
 import classNames from 'classnames'
 import '@/components/MilkdownEditor/css/index.scss'
@@ -19,12 +19,9 @@ import { history } from '@milkdown/kit/plugin/history'
 import { clipboard } from '@milkdown/kit/plugin/clipboard'
 import { placeholderConfig, placeholderPlugin } from '@/components/MilkdownEditor/Placeholder'
 import { AICustomMention, aiMentionFactory, AIMilkdownMention } from './aiMilkdownMention/AIMilkdownMention'
-import {
-  aiMentionCommand,
-  type AIMentionCommandParams,
-  aiMentionCustomPlugin,
-  aiMentionCustomSchema,
-} from './aiMilkdownMention/aiMentionPlugin'
+import { aiMentionCustomPlugin, aiMentionCustomSchema } from './aiMilkdownMention/aiMentionPlugin'
+import type { AIMentionCommandParams } from './aiMilkdownMention/aiMentionPlugin'
+import { IMAGE_ATTACHMENT_TITLE, insertAIMention } from './utils'
 import { AIMilkdownModeSlash, aiModeSlashFactory } from './aiMilkdownModeSlash/AIMilkdownModeSlash'
 import directive from 'remark-directive'
 import { useMemoizedFn } from 'ahooks'
@@ -36,13 +33,15 @@ import { type Node } from '@milkdown/kit/prose/model'
 import { AICustomFile } from './aiCustomFile/AICustomFile'
 import { yakitNotify } from '@/utils/notification'
 import useSessionId from '@/pages/ai-re-act/hooks/useSessionId'
+import { MAX_ATTACHMENTS_PER_BATCH } from '../../template/type'
 
 import { AICustomCode } from './aiCustomCode/AICustomCode'
-import { handleOpenFileSystemDialog } from '@/utils/fileSystemDialog'
-import { getAIImageSuffix } from './utils'
 import { showByRightContext } from '@/components/yakitUI/YakitMenu/showByRightContext'
-import { AICustomHttpFlow } from './aiMilkdownHttpFlow/AICustomHttpFlow'
-import { aiHttpFlowCustomPlugin, aiHttpFlowCustomSchema } from './aiMilkdownHttpFlow/aiHttpFlowPlugin'
+import { AICustomResourceReference } from './aiMilkdownResourceReference/AICustomResourceReference'
+import {
+  aiResourceReferenceCustomPlugin,
+  aiResourceReferenceCustomSchema,
+} from './aiMilkdownResourceReference/aiResourceReferencePlugin'
 import { AICustomCodeRef } from './aiCodeBlock/AICodeBlock'
 import {
   aiCodeBlockCommand,
@@ -71,10 +70,9 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
 
     const { getSession } = useSessionId()
     const { activeChat } = useAIAgentStore()
-
-    const sessionIdRef = React.useRef<string>('') // 作为当前对话得文件路径
+    const sessionIdRef = React.useRef<string>(activeChat?.SessionID || '') // 作为当前对话得文件路径
     useEffect(() => {
-      sessionIdRef.current = ''
+      sessionIdRef.current = activeChat?.SessionID || ''
     }, [activeChat?.SessionID])
     const chatDataStoreKeyRef = React.useRef(chatDataStoreKey)
     chatDataStoreKeyRef.current = chatDataStoreKey
@@ -85,9 +83,6 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
         setMention: (v: AIMentionCommandParams) => {
           onSetMention(v)
         },
-        setImage: () => {
-          onSetImage()
-        },
         setCodeRef: (v: AICodeBlockCommandParams) => {
           onSetCodeRef(v)
         },
@@ -95,6 +90,8 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
       }),
       [],
     )
+    const getMaterials = useMemoizedFn(() => ({ materials: props.materials, focusMode: props.focusMode }))
+    const onModeChangeComplete = useMemoizedFn(() => props.onModeChangeComplete?.())
     const { get, loading } = useEditor(
       (root) => {
         const uploadPlugins = [
@@ -127,13 +124,24 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
                   images.push(file)
                 }
 
+                if (images.length > MAX_ATTACHMENTS_PER_BATCH) {
+                  yakitNotify(
+                    'warning',
+                    t('AIAddMaterialsPopover.attachmentLimitExceeded', {
+                      count: images.length,
+                      max: MAX_ATTACHMENTS_PER_BATCH,
+                    }),
+                  )
+                  return []
+                }
+
                 const nodes: Node[] = await Promise.all(
                   images.map((image) => {
                     const src = URL.createObjectURL(image)
                     return schema.nodes.image.createAndFill({
                       src,
                       alt: image.name,
-                      title: '',
+                      title: IMAGE_ATTACHMENT_TITLE,
                     }) as unknown as Node
                   }),
                 )
@@ -155,7 +163,13 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
           (ctx: Ctx) => () => {
             ctx.set(aiMentionFactory.key, {
               view: pluginViewFactory({
-                component: () => <AIMilkdownMention onMemfitExtra={onMemfitExtra} filterMode={filterMode} />,
+                component: () => (
+                  <AIMilkdownMention
+                    onMemfitExtra={onMemfitExtra}
+                    filterMode={filterMode}
+                    getMaterials={getMaterials}
+                  />
+                ),
               }),
             })
           },
@@ -167,7 +181,7 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
               (ctx: Ctx) => () => {
                 ctx.set(aiModeSlashFactory.key, {
                   view: pluginViewFactory({
-                    component: () => <AIMilkdownModeSlash />,
+                    component: () => <AIMilkdownModeSlash onModeChangeComplete={onModeChangeComplete} />,
                   }),
                 })
               },
@@ -180,13 +194,9 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
             }),
           ),
         ].flat()
-        const httpFlowPlugin = [
-          ...aiHttpFlowCustomPlugin(),
-          $view(aiHttpFlowCustomSchema.node, () =>
-            nodeViewFactory({
-              component: AICustomHttpFlow,
-            }),
-          ),
+        const resourceReferencePlugins = [
+          ...aiResourceReferenceCustomPlugin(),
+          $view(aiResourceReferenceCustomSchema.node, () => nodeViewFactory({ component: AICustomResourceReference })),
         ].flat()
         const codePlugin = [
           $view(codeBlockSchema.node, () => {
@@ -195,13 +205,33 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
             })
           }),
         ].flat()
+        const placeholderPrompt = t('AIMilkdownInput.placeholderPrompt')
+        const placeholderHint = t('AIMilkdownInput.placeholderHint')
         const placeholder = [
           placeholderConfig,
           placeholderPlugin,
           (ctx: Ctx) => () => {
             ctx.update(placeholderConfig.key, (prev) => ({
               ...prev,
-              text: t('AIMilkdownInput.placeholder'),
+              mode: 'doc' as const,
+              render: (view) => {
+                const { ownerDocument } = view.dom
+                const row = ownerDocument.createElement('span')
+                row.className = styles['placeholder']
+                row.setAttribute('aria-hidden', 'true')
+
+                const prompt = ownerDocument.createElement('span')
+                prompt.textContent = placeholderPrompt
+                const mention = ownerDocument.createElement('span')
+                mention.className = styles['placeholder-mention']
+                mention.textContent = '@'
+                const hint = ownerDocument.createElement('span')
+                hint.className = styles['placeholder-hint']
+                hint.textContent = placeholderHint
+
+                row.append(prompt, mention, hint)
+                return row
+              },
             }))
           },
         ]
@@ -215,6 +245,7 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
               // 配置为只读
               ctx.set(editorViewOptionsCtx, {
                 editable: () => !readonly,
+                attributes: { 'aria-placeholder': `${placeholderPrompt} @ ${placeholderHint}` },
               })
               ctx.set(defaultValueCtx, defaultValue || '')
 
@@ -227,7 +258,7 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
               })
             })
             .use(remarkDirective)
-            /** customShiftEnterPlugin 方法的注册顺序要先于commonmark，不然会失效，导致Shift-Enter尾部换行塌陷 */
+            /* customShiftEnterPlugin 方法的注册顺序要先于commonmark，不然会失效，导致Shift-Enter尾部换行塌陷 */
             .use(customShiftEnterPlugin)
             .use(commonmark)
             .use(gfm)
@@ -244,8 +275,8 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
             .use(mentionPlugin)
             // 模式选择 /
             .use(modeSlashPlugin)
-            // http flow 流量标签
-            .use(httpFlowPlugin)
+            // HTTP 流量与漏洞风险引用
+            .use(resourceReferencePlugins)
             // ```codePlugin```
             .use(codePlugin)
             // code block 代码块
@@ -271,33 +302,11 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
     }, [])
 
     const onSetMention = useMemoizedFn((params: AIMentionCommandParams) => {
-      get()?.action(callCommand<AIMentionCommandParams>(aiMentionCommand.key, params))
+      const editor = get()
+      if (editor) insertAIMention(editor, params)
     })
     const onSetCodeRef = useMemoizedFn((params: AICodeBlockCommandParams) => {
       get()?.action(callCommand<AICodeBlockCommandParams>(aiCodeBlockCommand.key, params))
-    })
-    const onSetImage = useMemoizedFn(() => {
-      handleOpenFileSystemDialog({
-        properties: ['openFile', 'multiSelections'],
-        filters: [
-          { name: '图片', extensions: getAIImageSuffix() }, // 关键：设置文件过滤器
-        ],
-      }).then((data) => {
-        if (data.filePaths.length > 8) {
-          yakitNotify('warning', '一次最多只能上传8张图片')
-        }
-        const filePaths = data.filePaths.slice(0, 8)
-        const filesLength = filePaths.length
-        for (let index = 0; index < filesLength; index++) {
-          const element = filePaths[index]
-          get()?.action(
-            callCommand(insertImageCommand.key, {
-              src: element,
-              alt: element,
-            }),
-          )
-        }
-      })
     })
     const onContextMenu = useMemoizedFn((e) => {
       e.stopPropagation()

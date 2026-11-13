@@ -1,4 +1,5 @@
 import type { PaginationSchema } from '@/pages/invoker/schema'
+import type { AIOutputI18n } from '@/pages/ai-re-act/hooks/grpcApi'
 
 export interface AITool {
   Name: string
@@ -9,6 +10,7 @@ export interface AITool {
   IsFavorite: boolean
   ID: number
   VerboseName: string
+  VerboseNameI18n?: AIOutputI18n
   UpdatedAt: number
   CreatedAt: number
   IsBuiltin: boolean
@@ -23,6 +25,22 @@ export interface GetAIToolListRequest {
 }
 export interface GetAIToolListResponse {
   Tools: AITool[]
+  Pagination: PaginationSchema
+  Total: number
+}
+export interface QueryAIToolRequest {
+  Filter?: {
+    ToolName?: string
+    ToolNames?: string[]
+    Keyword?: string
+    OnlyFavorites?: boolean
+    ID?: number
+    IDs?: number[]
+  }
+  Pagination: PaginationSchema
+}
+export interface QueryAIToolResponse {
+  Data: AITool[]
   Pagination: PaginationSchema
   Total: number
 }

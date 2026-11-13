@@ -204,7 +204,9 @@
     "allowUserPrompt": "Allow AI questions",
     "allowUserPromptTip": "Allow AI questions and interactive forms. Async questions do not pause the task. Changes apply to subsequent tasks.",
     "singleModelModeGlobalTip": "Enabled by the global configuration and cannot be disabled for this session",
-    "singleModelModeSessionTip": "Single-model mode can only be changed before starting a new session"
+    "singleModelModeSessionTip": "Single-model mode can only be changed before starting a new session",
+    "advancedConfiguration": "Advanced configuration",
+    "singleModelModeDescription": "Use only the globally configured primary model for this session when enabled"
   },
   "AIModelGlobalConfig": {
     "aiModelConfig": "AI model configuration",
@@ -230,7 +232,39 @@
     "basicCheck": "Tool Basic Check"
   },
   "AIChatTextarea": {
-    "dropToAddToChat": "Release to add to chat"
+    "dropToAddToChat": "Release to add to chat",
+    "addMaterials": "Add materials",
+    "otherMaterials": "Other materials"
+  },
+  "AIAddMaterialsPopover": {
+    "scenarioCapabilities": "Capabilities",
+    "currentScenario": "Current selection",
+    "addedSkills": "Added skills",
+    "addedKnowledgeBases": "Added knowledge bases",
+    "addedOtherMaterials": "Other added materials",
+    "goToAdd": "Add more",
+    "searchMaterials": "Enter a keyword to search",
+    "contextHint": "All added materials are used as context for the current conversation.",
+    "attachment": "Add files",
+    "addFolder": "Add folders",
+    "continueAdding": "Add more",
+    "attachments": "Attachments",
+    "addedAttachments": "My attachments",
+    "attachmentHint": "Upload up to {{max}} items at a time",
+    "attachmentLimitExceeded": "You selected {{count}} attachments. You can add up to {{max}} at a time.",
+    "attachmentFailed": "Unable to open the file picker: {{error}}",
+    "risk": "Vulnerabilities and risks",
+    "riskHint": "Select recorded vulnerabilities and risks to analyze and generate a report",
+    "flow": "Traffic",
+    "flowHint": "Select captured HTTP traffic to analyze and process",
+    "skillHint": "Add a skill to this conversation",
+    "knowledgeHint": "Reference a knowledge base",
+    "toolHint": "AI prioritizes added tools when completing tasks",
+    "fileSystemHint": "Browse and search your files",
+    "browserHint": "Operate a browser with AI",
+    "addedBrowsers": "Added browsers",
+    "sceneHint": "Use a framework to guide AI in complex scenarios",
+    "current": "Current:"
   },
   "AIToolDecision": {
     "decision": "Decision"
@@ -429,6 +463,11 @@
     "browser": "Browser Instance"
   },
   "AIMentionTabs": {
+    "recent": "Recently Added",
+    "search": "Search resources to reference…",
+    "searchEmpty": "No search results",
+    "files": "Files",
+    "viewMore": "View More",
     "all": "All",
     "skill": "Skill",
     "tool": "Tool",
@@ -835,10 +874,9 @@
     "reviewDecision": "Review Decision",
     "unknownAction": "Unknown Action"
   },
-  "AIFocusMode": {
-    "focusModeTooltip": "Use a framework for complex scenarios and limit the AI's thinking scope"
-  },
   "AIReasoningEffort": {
+    "probeUnsupported": "This model does not support this effort level",
+    "selectQuality": "Thinking quality",
     "tooltip": "Off disables thinking; default follows the model default; Very High / Maximum are extended tiers shown only after probe confirmation",
     "probing": "Probing..."
   },
@@ -899,8 +937,10 @@
     "switchToSource": "Switch to source mode"
   },
   "AIMilkdownInput": {
-    "placeholder": "Ask me anything, @ for skills/tools/files/knowledge, / for mode",
+    "placeholderPrompt": "Ask me anything",
+    "placeholderHint": "Use skills, tools, files, and knowledge bases...",
     "selectedHttpFlowSummary": "Selected {{count}} HTTP flows",
+    "selectedRiskSummary": "Selected {{count}} risks",
     "imagesNotSaved": "Images have not finished saving. Please try again shortly. If saving failed, remove the failed images and upload them again."
   },
   "AIMilkdownModeSlash": {
@@ -928,7 +968,14 @@
   },
   "AIRunModeSelect": {
     "mode": "Mode",
-    "multiMode": "Multi-mode"
+    "multiMode": "Multi-mode",
+    "configuration": "Execution modes",
+    "configurationTip": "Combine Plan, Multi-Agent and Goal modes for your task",
+    "goalHint": "Choose a goal mode and set its parameters",
+    "switchGoalModeContent": "Switching will reset the value of the currently selected option to its default. Continue?",
+    "durationHint": "Set a time window to continue exploring",
+    "editAcceptance": "Edit acceptance criteria",
+    "noAcceptance": "None"
   },
   "AITaskQuery": {
     "taskQueue": "Task Queue",
@@ -1017,6 +1064,9 @@
     "networkDebugDesc": "Writes model HTTP requests, responses and timing to aispace files only, never the traffic database. Session exports include captures. Contains credentials and business data; disable after diagnosis."
   },
   "AIChatWorkspace": {
+    "allItems": "All",
+    "sessionItems": "Current session",
+    "selectedItems": "Selected",
     "close": "Close",
     "closeOthers": "Close Others",
     "closeRight": "Close Tabs to the Right",

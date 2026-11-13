@@ -32,7 +32,8 @@ export interface YakQueryHTTPFlowRequest {
   IncludeSuffix?: string[]
   ExcludeSuffix?: string[]
   ExcludeId?: number[]
-  IncludeId?: number[]
+  /** int64 ID 可用十进制字符串无损传输。 */
+  IncludeId?: (number | string)[]
   Tags?: string[]
   ExcludeTags?: string[]
   HaveParamsTotal?: string

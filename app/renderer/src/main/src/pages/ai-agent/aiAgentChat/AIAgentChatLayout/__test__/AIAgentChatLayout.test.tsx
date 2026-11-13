@@ -1,4 +1,5 @@
-import React, { useRef } from 'react'
+import { useRef } from 'react'
+import type { ReactNode } from 'react'
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useStore } from 'zustand'
@@ -6,6 +7,8 @@ import { createStore } from 'zustand/vanilla'
 import type { AIChatContentProps, AIChatContentRefProps } from '../../../aiChatContent/type'
 import { AIAgentChatLayout } from '../AIAgentChatLayout'
 import type { AIAgentChatMode } from '../../type'
+import type { AIChatInputDraft } from '../../../template/type'
+import type { RiskSelectionProps } from '../../../aiChatContent/AIChatWorkspace/AIChatWorkspaceTabs/AIChatWorkspaceTabContent'
 
 let removeFlow: (id: string, isSummary: boolean) => void
 
@@ -20,14 +23,11 @@ const taskStore = createStore(() => ({
 const taskContents = new Map()
 const taskDetailsMap = new Map([['task-1', { uuid: 'snapshot-1', execution: { http_flow_count: 7 } }]])
 let workspaceProps: {
+  selectedHttpFlowIds: string[]
   onSetSelectedHttpFlowIds: (ids: string[]) => void
-  onRegisterTableSelectApi: (api: { reset: () => void; deselectId: (id: string) => void }) => void
+  riskSelection: RiskSelectionProps
 }
-const { welcomeFlow, chatFlow, submit } = vi.hoisted(() => ({
-  welcomeFlow: vi.fn(),
-  chatFlow: vi.fn(),
-  submit: vi.fn(),
-}))
+const { submit } = vi.hoisted(() => ({ submit: vi.fn() }))
 const { queryFlows, queryRisks } = vi.hoisted(() => ({
   queryFlows: vi.fn(async () => ({ Total: 123 })),
   queryRisks: vi.fn(async () => ({ RiskLevelGroup: [] })),
@@ -82,7 +82,7 @@ vi.mock('@/components/yakitUI/YakitDockablePane/YakitDockablePane', () => ({
   yakitDockablePaneSegmentedLabel: 'segmented-label',
 }))
 vi.mock('@/components/yakitUI/YakitResizeBox/YakitResizeBox', () => ({
-  YakitResizeBox: ({ firstNode, secondNode }: { firstNode: React.ReactNode; secondNode: React.ReactNode }) => (
+  YakitResizeBox: ({ firstNode, secondNode }: { firstNode: ReactNode; secondNode: ReactNode }) => (
     <>
       {firstNode}
       {secondNode}
@@ -96,41 +96,44 @@ vi.mock('../../../aiChatContent/AIChatWorkspace/AIChatWorkspace', () => ({
   },
 }))
 vi.mock('../../../aiChatWelcome/AIChatWelcome', () => ({
-  default: React.forwardRef(function Welcome(
-    props: {
-      onHttpFlowRemove: (id: string, isSummary: boolean) => void
-      onTriageSubmit: (data: object) => void
-    },
-    ref,
-  ) {
-    React.useImperativeHandle(ref, () => ({ setHttpFlow: welcomeFlow }))
+  default: (props: {
+    onHttpFlowRemove: (id: string, isSummary: boolean) => void
+    onTriageSubmit: (data: object) => void
+    selectedHttpFlowIds: string[]
+    selectedRiskIds: string[]
+  }) => {
     removeFlow = props.onHttpFlowRemove
     return (
       <div>
         欢迎页
+        <output data-testid="selected-flows">{props.selectedHttpFlowIds.join(',')}</output>
+        <output data-testid="selected-risks">{props.selectedRiskIds.join(',')}</output>
         <button onClick={() => props.onHttpFlowRemove('1,2,3', true)}>删除引用</button>
-        <button onClick={() => props.onTriageSubmit({ httpFlowList: [{ flowIds: ['1', '2'] }] })}>发送欢迎消息</button>
+        <button onClick={() => props.onTriageSubmit({ resourceReferences: [{ type: 'http', ids: ['1', '2'] }] })}>
+          发送欢迎消息
+        </button>
       </div>
     )
-  }),
+  },
 }))
 vi.mock('../../../aiChatContent/AIChatContent', () => ({
-  AIChatContent: React.forwardRef<HTMLDivElement, AIChatContentProps>(function Content(props, _ref) {
+  AIChatContent: (props: AIChatContentProps) => {
     removeFlow = props.onHttpFlowRemove!
-    React.useImperativeHandle(_ref, () => ({ setHttpFlow: chatFlow }) as unknown as HTMLDivElement)
     return (
       <div ref={props.rightPanelLayoutRef} data-testid="chat-content">
+        <output data-testid="selected-flows">{props.selectedHttpFlowIds?.join(',')}</output>
+        <output data-testid="selected-risks">{props.selectedRiskIds?.join(',')}</output>
         <button onClick={() => props.setShowFreeChat?.(!props.showFreeChat)}>切换自由对话</button>
         <button onClick={props.onAfterSubmit}>发送会话消息</button>
       </div>
     )
-  }),
+  },
 }))
 vi.mock('@/pages/ai-agent/historyChat/HistoryChat', () => ({
   default: () => <div data-testid="history-list" />,
 }))
 
-function Layout({ mode }: { mode?: AIAgentChatMode }) {
+const Layout = ({ mode, initialDraft }: { mode?: AIAgentChatMode; initialDraft?: AIChatInputDraft }) => {
   const activeChat = useStore(agentStore, (state) => state.activeChat)
   const chatRef = useRef<AIChatContentRefProps>(null)
   const welcomeRef = useRef<AIChatContentRefProps>(null)
@@ -139,6 +142,7 @@ function Layout({ mode }: { mode?: AIAgentChatMode }) {
     <div ref={wrapperRef}>
       <AIAgentChatLayout
         mode={mode ?? (activeChat ? 're-act' : 'welcome')}
+        initialDraft={initialDraft}
         onTriageSubmit={submit}
         onSetReAct={vi.fn()}
         onChat={vi.fn()}
@@ -154,6 +158,22 @@ function Layout({ mode }: { mode?: AIAgentChatMode }) {
   )
 }
 
+it('恢复草稿时同步风险和流量勾选，重新渲染不会覆盖用户取消的选择', async () => {
+  const initialDraft: AIChatInputDraft = {
+    markdown: 'first question',
+    selectedMaterials: [],
+    hiddenInlineKeys: [],
+    selectedResourceIds: { http: ['7'], risk: ['8'] },
+  }
+  const { rerender } = render(<Layout mode="welcome" initialDraft={initialDraft} />)
+  expect(await screen.findByTestId('selected-flows')).toHaveTextContent('7')
+  expect(screen.getByTestId('selected-risks')).toHaveTextContent('8')
+  act(() => workspaceProps.onSetSelectedHttpFlowIds([]))
+  rerender(<Layout mode="welcome" initialDraft={initialDraft} />)
+  expect(screen.getByTestId('selected-flows')).toBeEmptyDOMElement()
+  expect(screen.getByTestId('selected-risks')).toHaveTextContent('8')
+})
+
 let layoutWidth = 1400
 let chatTop = 120
 const observers = new Set<() => void>()
@@ -161,6 +181,7 @@ beforeEach(() => {
   viewport.visible = true
   agentStore.setState({ activeChat: undefined })
   vi.clearAllMocks()
+  submit.mockReturnValue(true)
   layoutWidth = 1400
   chatTop = 120
   vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
@@ -204,110 +225,135 @@ afterEach(() => {
 })
 
 describe('公共右侧面板', () => {
+  it('欢迎页提交被拒绝时保留流量和风险选择，重试成功后清理', async () => {
+    submit.mockReturnValueOnce(false)
+    render(<Layout />)
+    await screen.findByText('欢迎页')
+    act(() => {
+      workspaceProps.onSetSelectedHttpFlowIds(['1', '2'])
+      workspaceProps.riskSelection.onChange(
+        [{ Id: 21, Hash: 'hash-21', Title: '风险 A', IP: '', RiskType: '', CreatedAt: 0 }],
+        true,
+      )
+    })
+
+    fireEvent.click(screen.getByText('发送欢迎消息'))
+
+    expect(submit).toHaveBeenCalledOnce()
+    expect(screen.getByTestId('selected-flows')).toHaveTextContent('1,2')
+    expect(screen.getByTestId('selected-risks')).toHaveTextContent('21')
+    expect(workspaceProps.selectedHttpFlowIds).toEqual(['1', '2'])
+    expect(workspaceProps.riskSelection.ids).toEqual(['21'])
+
+    fireEvent.click(screen.getByText('发送欢迎消息'))
+
+    expect(submit).toHaveBeenCalledTimes(2)
+    expect(screen.getByTestId('selected-flows')).toBeEmptyDOMElement()
+    expect(screen.getByTestId('selected-risks')).toBeEmptyDOMElement()
+    expect(workspaceProps.selectedHttpFlowIds).toEqual([])
+    expect(workspaceProps.riskSelection.ids).toEqual([])
+  })
+
+  it('风险选择同步到当前输入框，取消、提交和切换会话后保持一致', async () => {
+    render(<Layout />)
+    await screen.findByText('欢迎页')
+    const first = { Id: 21, Hash: 'hash-21', Title: '风险 A', IP: '', RiskType: '', CreatedAt: 0 }
+    const second = { ...first, Id: 22, Title: '风险 B' }
+    const welcomeChange = workspaceProps.riskSelection.onChange
+    act(() => welcomeChange([first, second], true))
+    expect(workspaceProps.riskSelection.ids).toEqual(['21', '22'])
+    expect(screen.getByTestId('selected-risks')).toHaveTextContent('21,22')
+    act(() => welcomeChange([first], false))
+    expect(workspaceProps.riskSelection.ids).toEqual(['22'])
+    expect(screen.getByTestId('selected-risks')).toHaveTextContent('22')
+    fireEvent.click(screen.getByText('发送欢迎消息'))
+    expect(workspaceProps.riskSelection.ids).toEqual([])
+
+    act(() => agentStore.setState({ activeChat: { Id: 'chat-1', SessionID: 'session-1' } }))
+    act(() => welcomeChange([second], true))
+    expect(screen.getByTestId('selected-risks')).toBeEmptyDOMElement()
+    act(() => workspaceProps.riskSelection.onChange([first], true))
+    expect(screen.getByTestId('selected-risks')).toHaveTextContent('21')
+    fireEvent.click(screen.getByText('发送会话消息'))
+    expect(workspaceProps.riskSelection.ids).toEqual([])
+  })
+
   it.each([undefined, 'session-1'])('同一会话仅切换展示模式不清理勾选（SessionID：%s）', async (sessionId) => {
     if (sessionId) agentStore.setState({ activeChat: { Id: 'chat-1', SessionID: sessionId } })
     const { rerender } = render(<Layout mode="welcome" />)
     await screen.findByText('欢迎页')
-    const reset = vi.fn()
     const onSelection = workspaceProps.onSetSelectedHttpFlowIds
-    act(() => workspaceProps.onRegisterTableSelectApi({ reset, deselectId: vi.fn() }))
     act(() => onSelection(['1']))
-    welcomeFlow.mockClear()
-    chatFlow.mockClear()
 
     rerender(<Layout mode="re-act" />)
 
-    expect(reset).not.toHaveBeenCalled()
-    expect(welcomeFlow).not.toHaveBeenCalled()
-    expect(chatFlow).not.toHaveBeenCalled()
+    expect(screen.getByTestId('selected-flows')).toHaveTextContent('1')
     act(() => onSelection(['2']))
-    expect(chatFlow).toHaveBeenCalledExactlyOnceWith(['2'])
-    expect(welcomeFlow).not.toHaveBeenCalled()
+    expect(screen.getByTestId('selected-flows')).toHaveTextContent('2')
   })
 
   it.each(['welcome', 're-act'])('%s 单条关闭仅取消该流量，旧输入框的删除事件不影响新会话', async (mode) => {
     if (mode === 're-act') agentStore.setState({ activeChat: { Id: 'chat-1', SessionID: 'session-1' } })
     render(<Layout />)
     if (mode === 'welcome') await screen.findByText('欢迎页')
-    const reset = vi.fn()
-    const deselectId = vi.fn()
-    act(() => workspaceProps.onRegisterTableSelectApi({ reset, deselectId }))
+    act(() => workspaceProps.onSetSelectedHttpFlowIds(['1', '2']))
     act(() => removeFlow('1', false))
-    expect(deselectId).toHaveBeenCalledWith('1')
-    expect(reset).not.toHaveBeenCalled()
+    expect(workspaceProps.selectedHttpFlowIds).toEqual(['2'])
     const oldRemove = removeFlow
     act(() => agentStore.setState({ activeChat: { Id: 'chat-2', SessionID: 'session-2' } }))
-    const nextReset = vi.fn()
-    const nextDeselect = vi.fn()
-    act(() => workspaceProps.onRegisterTableSelectApi({ reset: nextReset, deselectId: nextDeselect }))
+    act(() => workspaceProps.onSetSelectedHttpFlowIds(['1', '2']))
     act(() => {
       oldRemove('1', false)
       oldRemove('1,2,3', true)
     })
-    expect(nextReset).not.toHaveBeenCalled()
-    expect(nextDeselect).not.toHaveBeenCalled()
+    expect(workspaceProps.selectedHttpFlowIds).toEqual(['1', '2'])
     act(() => removeFlow('2', false))
-    expect(nextDeselect).toHaveBeenCalledWith('2')
+    expect(workspaceProps.selectedHttpFlowIds).toEqual(['1'])
   })
   it('页面可见时勾选同步到当前会话，收起自由对话不清理，旧会话通知不污染新输入', async () => {
     const { rerender } = render(<Layout />)
     await screen.findByText('欢迎页')
     const welcomeSelection = workspaceProps.onSetSelectedHttpFlowIds
     act(() => welcomeSelection(['1']))
-    expect(welcomeFlow).toHaveBeenLastCalledWith(['1'])
-    expect(chatFlow).not.toHaveBeenCalled()
+    expect(screen.getByTestId('selected-flows')).toHaveTextContent('1')
     act(() => agentStore.setState({ activeChat: { Id: 'chat-1', SessionID: 'session-1' } }))
-    chatFlow.mockClear()
     act(() => welcomeSelection(['late-welcome']))
-    expect(chatFlow).not.toHaveBeenCalled()
+    expect(screen.getByTestId('selected-flows')).toBeEmptyDOMElement()
     const sessionSelection = workspaceProps.onSetSelectedHttpFlowIds
     act(() => sessionSelection(['2']))
-    expect(chatFlow).toHaveBeenLastCalledWith(['2'])
-    chatFlow.mockClear()
-    const reset = vi.fn()
-    act(() => workspaceProps.onRegisterTableSelectApi({ reset, deselectId: vi.fn() }))
+    expect(screen.getByTestId('selected-flows')).toHaveTextContent('2')
     fireEvent.click(screen.getByText('切换自由对话'))
-    expect(chatFlow).not.toHaveBeenCalled()
-    expect(reset).not.toHaveBeenCalled()
+    expect(workspaceProps.selectedHttpFlowIds).toEqual(['2'])
     act(() => workspaceProps.onSetSelectedHttpFlowIds(['collapsed']))
-    expect(chatFlow).toHaveBeenLastCalledWith(['collapsed'])
-    chatFlow.mockClear()
     fireEvent.click(screen.getByText('切换自由对话'))
-    expect(chatFlow).not.toHaveBeenCalled()
-    expect(reset).not.toHaveBeenCalled()
+    expect(screen.getByTestId('selected-flows')).toHaveTextContent('collapsed')
     viewport.visible = false
     rerender(<Layout />)
-    chatFlow.mockClear()
     act(() => workspaceProps.onSetSelectedHttpFlowIds(['hidden-page']))
-    expect(chatFlow).not.toHaveBeenCalled()
+    expect(workspaceProps.selectedHttpFlowIds).toEqual(['collapsed'])
     viewport.visible = true
     rerender(<Layout />)
     act(() => agentStore.setState({ activeChat: { Id: 'chat-2', SessionID: 'session-2' } }))
-    chatFlow.mockClear()
     act(() => sessionSelection(['late-session']))
-    expect(chatFlow).not.toHaveBeenCalled()
+    expect(screen.getByTestId('selected-flows')).toBeEmptyDOMElement()
     act(() => workspaceProps.onSetSelectedHttpFlowIds(['3']))
-    expect(chatFlow).toHaveBeenLastCalledWith(['3'])
+    expect(screen.getByTestId('selected-flows')).toHaveTextContent('3')
   })
 
   it('删除/提交重置关联表格，欢迎页提交仍携带已提取流量', async () => {
     render(<Layout />)
     await screen.findByText('欢迎页')
-    const reset = vi.fn()
-    act(() => workspaceProps.onRegisterTableSelectApi({ reset, deselectId: vi.fn() }))
+    act(() => workspaceProps.onSetSelectedHttpFlowIds(['1', '2']))
     fireEvent.click(screen.getByText('删除引用'))
-    expect(reset).toHaveBeenCalledTimes(1)
-    // 清空后会更换选择作用域，模拟工作区重新注册当前表格。
-    act(() => workspaceProps.onRegisterTableSelectApi({ reset, deselectId: vi.fn() }))
+    expect(workspaceProps.selectedHttpFlowIds).toEqual([])
+    act(() => workspaceProps.onSetSelectedHttpFlowIds(['1', '2']))
     fireEvent.click(screen.getByText('发送欢迎消息'))
-    expect(reset).toHaveBeenCalledTimes(2)
-    expect(submit).toHaveBeenCalledWith({ httpFlowList: [{ flowIds: ['1', '2'] }] })
+    expect(workspaceProps.selectedHttpFlowIds).toEqual([])
+    expect(submit).toHaveBeenCalledWith({ resourceReferences: [{ type: 'http', ids: ['1', '2'] }] }, undefined)
     act(() => agentStore.setState({ activeChat: { Id: 'chat-1', SessionID: 'session-1' } }))
-    const sessionReset = vi.fn()
-    act(() => workspaceProps.onRegisterTableSelectApi({ reset: sessionReset, deselectId: vi.fn() }))
+    act(() => workspaceProps.onSetSelectedHttpFlowIds(['3']))
     fireEvent.click(screen.getByText('发送会话消息'))
-    expect(sessionReset).toHaveBeenCalledOnce()
-    expect(reset).toHaveBeenCalledTimes(2)
+    expect(workspaceProps.selectedHttpFlowIds).toEqual([])
   })
   it.each(['welcome', 're-act'])('%s 大屏切走再切回保留浮层尺寸', async (mode) => {
     if (mode === 're-act') {

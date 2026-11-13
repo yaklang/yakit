@@ -606,6 +606,8 @@ export interface ChatStoreState {
   loadedSkillsUpdate: number
   /** aiChat.d.ts AIAgentChatData availableSkills */
   availableSkillsUpdate: number
+  /** aiChat.d.ts AIAgentChatData draftMaterials */
+  draftMaterialsUpdate: number
 
   /** 接口运行过程中的数据文件夹合集 */
   grpcFolders: AIFileSystemPin[]
@@ -719,6 +721,7 @@ export interface ChatStoreState {
       | 'timelineDumpUpdate'
       | 'loadedSkillsUpdate'
       | 'availableSkillsUpdate'
+      | 'draftMaterialsUpdate'
       | 'currentPlanReviewExtraUpdate'
       | 'chatTodoListUpdate'
       | 'taskDetailsUpdate',
@@ -752,6 +755,7 @@ export interface ChatStoreState {
         | 'timelineDumpUpdate'
         | 'loadedSkillsUpdate'
         | 'availableSkillsUpdate'
+        | 'draftMaterialsUpdate'
         | 'grpcFolders'
         | 'reActTimelines'
         | 'httpTabShow'

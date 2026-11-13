@@ -288,11 +288,12 @@ const subscribe = (listener: () => void) => {
 
 const getSnapshot = () => state
 
-export const useBrowserInstances = () => {
+export const useBrowserInstances = (enabled = true) => {
   const current = useSyncExternalStore(subscribe, getSnapshot, getSnapshot)
   useEffect(() => {
+    if (!enabled) return
     start()
     return stop
-  }, [])
+  }, [enabled])
   return current
 }

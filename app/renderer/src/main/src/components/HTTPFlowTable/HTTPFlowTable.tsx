@@ -45,9 +45,6 @@ import { YakitButton } from '../yakitUI/YakitButton/YakitButton'
 import { YakitPopover } from '../yakitUI/YakitPopover/YakitPopover'
 import { showYakitModal } from '../yakitUI/YakitModal/YakitModalConfirm'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
-const ShareModal = lazy(() =>
-  import('@/pages/fuzzer/components/ShareImportExportData').then((m) => ({ default: m.ShareModal })),
-)
 import { useSize } from 'ahooks'
 import { YakitTag } from '../yakitUI/YakitTag/YakitTag'
 import { CheckedSvgIcon } from '@yakit-libs/yakit-ui-icons/oldicon/CheckedSvgIcon'
@@ -126,6 +123,7 @@ import {
   HTTPFlowTableFormConsts,
 } from './HTTPFlowTableFormConfiguration/HTTPFlowTableFormConfiguration'
 import {
+  buildAISelectedHTTPFlowQuery,
   buildHTTPFlowProjectKey,
   buildHTTPFlowTableAdvancedQuery,
   buildLegacyHTTPFlowTableFilterConfig,
@@ -146,6 +144,7 @@ import {
   shouldRefreshOnDeleteUpdate,
   splitHTTPFlowTableShieldData,
 } from './HTTPFlowTable.utils'
+import { updateSelectedResourceIds } from '../useResourceSelection'
 import {
   AdvancedSet,
   ColorSearch,
@@ -213,6 +212,9 @@ import {
   type MITMLiveTriggerSource,
 } from './HTTPFlowTable.observability'
 import { unstable_batchedUpdates } from 'react-dom'
+const ShareModal = lazy(() =>
+  import('@/pages/fuzzer/components/ShareImportExportData').then((m) => ({ default: m.ShareModal })),
+)
 
 //导出给其他组件用
 export * from './HTTPFlowTable.constants'
@@ -271,6 +273,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     onSetHasNewData,
     onSetSelectedHttpFlowIds,
     onRegisterTableSelectApi,
+    aiFlowSelection,
     onRegisterFlowMarkPatch,
     showHistoryAnalysisBtn = false,
     onHistoryAnalysisClick,
@@ -336,9 +339,30 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   })
   const [currentIndex, setCurrentIndex] = useState<number>()
   const [scrollToIndex, setScrollToIndex] = useState<number | string>()
-  const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
-  const [selectedRows, setSelectedRows] = useState<HTTPFlow[]>([])
+  const [localSelectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
+  const [localSelectedRows, setSelectedRows] = useState<HTTPFlow[]>([])
   const [isAllSelect, setIsAllSelect] = useState<boolean>(false)
+  const aiSelectedIds = aiFlowSelection?.ids
+  const selectedOnly = aiFlowSelection?.selectedOnly ?? false
+  const aiSelectedIdsRef = useRef(aiSelectedIds)
+  useLayoutEffect(() => {
+    aiSelectedIdsRef.current = aiSelectedIds
+  }, [aiSelectedIds])
+  const isAiFlowSelected = useMemoizedFn((id: HTTPFlow['Id']) => {
+    return aiSelectedIdsRef.current?.includes(String(id)) ?? false
+  })
+  const changeAiFlowSelection = useMemoizedFn((ids: string[], checked: boolean) => {
+    const current = aiSelectedIdsRef.current
+    if (!current || !aiFlowSelection) return
+    const next = updateSelectedResourceIds(current, ids, checked)
+    if (current === next) return
+    // 拖选可能在一次事件中连续更新多个勾选，先保留最新结果供下一次回调读取。
+    aiSelectedIdsRef.current = next
+    aiFlowSelection.onChange(next)
+  })
+  const toggleAiFlowSelection = useMemoizedFn((id: HTTPFlow['Id']) => {
+    changeAiFlowSelection([String(id)], !isAiFlowSelected(id))
+  })
   // 性能优化：afterBodyLength/beforeBodyLength 值未在 JSX/memo 依赖中读取，仅通过 getter 和在 useDebounceFn 回调中使用，改为 ref
   const afterBodyLengthRef = useRef<number | undefined>(undefined)
   const getAfterBodyLength = useMemoizedFn(() => afterBodyLengthRef.current)
@@ -396,8 +420,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       return
     }
     selectionReconcilePendingRef.current = false
-    setSelectedRowKeys([])
-    setSelectedRows([])
+    if (!aiFlowSelection) {
+      setSelectedRowKeys([])
+      setSelectedRows([])
+    }
     if (!viewAttachIdFirstRef.current) {
       setScrollToIndex(0)
       setCurrentIndex(undefined)
@@ -413,6 +439,16 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   )
 
   const [total, setTotal] = useState(0)
+  const [aiBaseCount, setAiBaseCount] = useState<{ runtimeId: string; total: number }>()
+  const setQueryTotal = useMemoizedFn((count: number, filter: YakQueryHTTPFlowRequest) => {
+    setTotal(count)
+    if (aiFlowSelection && !selectedOnly) {
+      const runtimeId = filter.RuntimeIDs?.join(',') || filter.RuntimeId || ''
+      setAiBaseCount((current) =>
+        current?.runtimeId === runtimeId && current.total === count ? current : { runtimeId, total: count },
+      )
+    }
+  })
   const extraTimerRef = useRef<ReturnType<typeof setInterval>>()
   const getAddDataByGrpcRef = useRef<(query: YakQueryHTTPFlowRequest, queryEpoch?: number) => void>(() => {})
   const tableQueryEpochRef = useRef(0)
@@ -546,7 +582,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       const { AfterId, BeforeId, FixedLimit, ...paginationFields } = Pagination
       // 仅 update（无游标）时更新 total
       const isUpdateRequest = !AfterId && !BeforeId
-      const query: YakQueryHTTPFlowRequest = {
+      let query: YakQueryHTTPFlowRequest = {
         ...Filter,
         Pagination: { ...paginationFields },
         ...(AfterId ? { AfterId } : {}),
@@ -575,13 +611,19 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       if ('idFilter' in query) {
         delete query.idFilter
       }
-      //插件执行中流量数据必有runTimeId
-      if (pageType === 'Plugin' && !runTimeId) {
+      const scopedQuery = selectedOnly ? buildAISelectedHTTPFlowQuery(query, aiSelectedIds ?? []) : query
+      // 插件执行流量需要 runtimeId，已选流量则直接按 ID 查询。
+      if (!scopedQuery || (pageType === 'Plugin' && !runTimeId && !selectedOnly)) {
         if (isUpdateRequest) {
-          setTotal(0)
+          setQueryTotal(0, Filter)
+          if (extraTimerRef.current) {
+            clearInterval(extraTimerRef.current)
+            extraTimerRef.current = undefined
+          }
         }
         return { Data: [], Total: 0, Pagination: paginationFields }
       }
+      query = scopedQuery
       if (pageType === 'MITM' && query.AfterUpdatedAt === undefined && query.BeforeUpdatedAt === undefined) {
         const time = await getRemoteValue(MITMConsts.MITMStartTimeStamp)
         if (time) {
@@ -640,7 +682,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         throw error
       }
       if (isUpdateRequest) {
-        setTotal(rsp.Total)
+        setQueryTotal(rsp.Total, Filter)
         if (extraTimerRef.current) {
           clearInterval(extraTimerRef.current)
           extraTimerRef.current = undefined
@@ -828,6 +870,32 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     noResetRefreshT(reason)
   })
 
+  const aiQueryIds = selectedOnly ? aiSelectedIds?.join(',') : undefined // 查看已选
+  const previousAiQueryIdsRef = useRef(aiQueryIds)
+  useLayoutEffect(() => {
+    const previous = previousAiQueryIdsRef.current
+    previousAiQueryIdsRef.current = aiQueryIds
+    if (previous === aiQueryIds) return
+    if ((previous === undefined) !== (aiQueryIds === undefined)) {
+      resetTData()
+      setTotal(0)
+      setSelected(undefined)
+      setOnlyShowFirstNode?.(true)
+    }
+    updateData('query')
+  }, [aiQueryIds, resetTData, setOnlyShowFirstNode, setSelected, updateData])
+
+  const aiSelectedIdsSet = useMemo(() => (aiSelectedIds ? new Set(aiSelectedIds) : undefined), [aiSelectedIds])
+  const aiSelectedRows = useMemo(
+    () => (aiSelectedIdsSet?.size ? data.filter((row) => aiSelectedIdsSet.has(String(row.Id))) : []),
+    [aiSelectedIdsSet, data],
+  )
+  const selectedRowKeys = useMemo(
+    () => (aiSelectedIdsSet ? aiSelectedRows.map((row) => String(row.Id)) : localSelectedRowKeys),
+    [aiSelectedIdsSet, aiSelectedRows, localSelectedRowKeys],
+  )
+  const selectedRows = aiFlowSelection ? aiSelectedRows : localSelectedRows
+
   useEffect(() => {
     if (!isTableActive) {
       if (extraTimerRef.current) {
@@ -912,7 +980,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       .invoke('QueryHTTPFlows', copyQuery)
       .then((rsp: YakQueryHTTPFlowResponse) => {
         if (queryEpoch !== tableQueryEpochRef.current) return
-        setTotal(normalizeHTTPFlowTotal(rsp.Total))
+        setQueryTotal(normalizeHTTPFlowTotal(rsp.Total), copyQuery)
       })
       .catch(() => {
         if (queryEpoch !== tableQueryEpochRef.current) return
@@ -1307,7 +1375,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const same =
       next.length === 0 && (!prevIds || prevIds.length === 0)
         ? true
-        : !!prevIds && next.length === prevIds.length && next.every((id, i) => id === prevIds[i])
+        : !!prevIds && next.length === prevIds.length && next.every((id, i) => id === String(prevIds[i]))
     const nextIdFilter = !!(getIdSort() || ids.length)
     // 合并结果相同且附近数据包未开时，还要看序号列高亮有没有变化
     if (same && !viewAttachId && !!getParams().idFilter === nextIdFilter) return
@@ -1658,11 +1726,22 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   }, [data])
 
   const onSelectAll = useMemoizedFn((newSelectedRowKeys: string[], selected: HTTPFlow[], checked: boolean) => {
+    if (aiFlowSelection) {
+      changeAiFlowSelection(
+        (checked ? selected : data).map((row) => String(row.Id)),
+        checked,
+      )
+      return
+    }
     setIsAllSelect(checked)
     setSelectedRowKeys(newSelectedRowKeys)
     setSelectedRows(selected)
   })
   const onSelectChange = useMemoizedFn((c: boolean, keys: string, rows: HTTPFlow) => {
+    if (aiFlowSelection) {
+      changeAiFlowSelection([String(rows.Id)], c)
+      return
+    }
     if (c) {
       setSelectedRowKeys((prev) => [...prev, keys])
       setSelectedRows((prev) => [...prev, rows])
@@ -1673,11 +1752,19 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     }
   })
   const resetSelected = useMemoizedFn(() => {
+    if (aiFlowSelection) {
+      changeAiFlowSelection(aiSelectedIdsRef.current ?? [], false)
+      return
+    }
     setIsAllSelect(false)
     setSelectedRowKeys([])
     setSelectedRows([])
   })
   const deselectHttpFlowId = useMemoizedFn((id: string) => {
+    if (aiFlowSelection) {
+      changeAiFlowSelection([id], false)
+      return
+    }
     setIsAllSelect(false)
     setSelectedRowKeys((prev) => prev.filter((ele) => ele !== id))
     setSelectedRows((prev) => prev.filter((ele) => String(ele.Id) !== id))
@@ -1698,7 +1785,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   const compareSelectedRowKeys = useCampare(selectedRowKeys)
   useDebounceEffect(
     () => {
-      onSetSelectedHttpFlowIds?.(isAllSelect ? [] : selectedRowKeys)
+      if (!aiFlowSelection) onSetSelectedHttpFlowIds?.(isAllSelect ? [] : selectedRowKeys)
     },
     [isAllSelect, compareSelectedRowKeys],
     { wait: 200, leading: true },
@@ -1848,8 +1935,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
           styles: { body: { paddingTop: 5 } },
         })
       },
+      onToggleAiFlowSelection: aiSelectedIdsSet ? toggleAiFlowSelection : undefined,
+      isAiFlowSelected: aiSelectedIdsSet ? (id: HTTPFlow['Id']) => aiSelectedIdsSet.has(String(id)) : undefined,
     }),
-    [downstreamProxyStr, onlyFavorite, pageType, t],
+    [aiSelectedIdsSet, downstreamProxyStr, onlyFavorite, pageType, t, toggleAiFlowSelection],
   )
 
   const isEnterprise = isEnterpriseEdition()
@@ -3122,7 +3211,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     setUpdateCacheData((current) => current.filter((item) => !appliedIds.has(Number(item.id))))
   }, [data, patchTData, updateCacheData])
 
-  const realData = data
+  const realData = useMemo(() => {
+    return selectedOnly ? aiSelectedRows : data
+  }, [selectedOnly, aiSelectedRows, data])
 
   useLayoutEffect(() => {
     if (!selectionReconcilePendingRef.current) return
@@ -3178,6 +3269,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
   const renderTitle = useMemo(() => {
     if (noTableTitle) return
+    const shieldControls = shieldData?.data.length > 0 && (
+      <HTTPFlowShield shieldData={shieldData} cancleFilter={cancleFilter} cancleAllFilter={cancleAllFilter} />
+    )
     return (
       <div className={style['http-history-table-title']} style={{ ...props.httpHistoryTableTitleStyle }}>
         <div className={classNames(style['http-history-table-title-space-between'], style['http-history-table-row'])}>
@@ -3216,22 +3310,25 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             className={classNames(style['http-history-table-flex'], style['http-history-table-title-left-cluster'])}
             style={{ gap: 8 }}
           >
-            {shieldData?.data.length > 0 && (
-              <HTTPFlowShield shieldData={shieldData} cancleFilter={cancleFilter} cancleAllFilter={cancleAllFilter} />
+            {!aiFlowSelection && shieldControls}
+            {aiFlowSelection ? (
+              aiFlowSelection.renderCount(aiBaseCount?.runtimeId === (runTimeId || '') ? aiBaseCount.total : undefined)
+            ) : (
+              <div className={style['http-history-table-total']}>
+                <div className={style['http-history-table-total-item']}>
+                  <span className={style['http-history-table-total-item-text']}>Total</span>
+                  <span className={style['http-history-table-total-item-number']}>{total}</span>
+                </div>
+                <Divider type="vertical" />
+                <div className={style['http-history-table-total-item']}>
+                  <span className={style['http-history-table-total-item-text']}>Selected</span>
+                  <span className={style['http-history-table-total-item-number']}>
+                    {isAllSelect ? total : selectedRowKeys?.length}
+                  </span>
+                </div>
+              </div>
             )}
-            <div className={style['http-history-table-total']}>
-              <div className={style['http-history-table-total-item']}>
-                <span className={style['http-history-table-total-item-text']}>Total</span>
-                <span className={style['http-history-table-total-item-number']}>{total}</span>
-              </div>
-              <Divider type="vertical" />
-              <div className={style['http-history-table-total-item']}>
-                <span className={style['http-history-table-total-item-text']}>Selected</span>
-                <span className={style['http-history-table-total-item-number']}>
-                  {isAllSelect ? total : selectedRowKeys?.length}
-                </span>
-              </div>
-            </div>
+            {aiFlowSelection && shieldControls}
             <div className={style['http-history-table-filter-tag-wrap']}>
               {filterTagDom}
               {onlyFavoriteTag}
@@ -3524,6 +3621,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     )
   }, [
     noTableTitle,
+    aiFlowSelection,
+    aiBaseCount,
+    runTimeId,
     batchVisible,
     color,
     filterTagDom,
@@ -3567,11 +3667,11 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     () => ({
       isAll: isAllSelect,
       type: 'checkbox' as const,
-      selectedRowKeys,
+      selectedRowKeys: aiFlowSelection ? aiSelectedRows.map((row) => row.Id) : selectedRowKeys,
       onSelectAll,
       onChangeCheckboxSingle: onSelectChange,
     }),
-    [isAllSelect, selectedRowKeys, onSelectAll, onSelectChange],
+    [aiFlowSelection, aiSelectedRows, isAllSelect, selectedRowKeys, onSelectAll, onSelectChange],
   )
 
   // 性能优化：提取 pagination prop 为 useMemo，避免内联对象 + 内联空 onChange 每次渲染创建新引用

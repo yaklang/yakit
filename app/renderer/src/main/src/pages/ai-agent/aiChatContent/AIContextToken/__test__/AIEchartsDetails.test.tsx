@@ -7,9 +7,7 @@ const mocks = vi.hoisted(() => ({
   aitokensProps: [] as Array<Record<string, unknown>>,
   config: {} as Record<string, unknown>,
   settings: { RuntimeContextSizeLimit: 300 as number | undefined },
-  activeChat: undefined as
-    | { SessionID: string; StartParams?: { RuntimeContextSizeLimit?: number | string } }
-    | undefined,
+  activeChat: undefined as { SessionID: string; StartParams?: { RuntimeContextSizeLimit?: number } } | undefined,
 }))
 
 vi.mock('@/pages/ai-agent/useContext/useStore', () => ({
@@ -206,9 +204,9 @@ describe('AIEchartsDetails 辅助模型用量展示回退', () => {
     [undefined, '307200'],
     [0, '307200'],
     [-1, '307200'],
-    [120 * 1024, '122880'],
-    ['614400', '614400'],
-  ])('已有会话阈值为 %s 时显示会话阈值或服务端默认值，不使用全局设置', (limit, expected) => {
+    [120, '122880'],
+    [600, '614400'],
+  ])('已有会话阈值为 %s KB 时显示换算后的字节值或默认值，不使用全局设置', (limit, expected) => {
     mocks.settings = { RuntimeContextSizeLimit: 900 }
     mocks.activeChat = { SessionID: 'session-id', StartParams: { RuntimeContextSizeLimit: limit } }
     const pressure: NonNullable<AIEchartsDetailsProps['pressure']> = {

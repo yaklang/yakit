@@ -24,6 +24,7 @@ import type { YakitSelectProps } from '../yakitUI/YakitSelect/YakitSelectType'
 import {
   AIConfigAPIKeyFormItem,
   buildAIConfigHealthCheckConfig,
+  getAIModelFormEffortKey,
 } from '@/pages/ai-agent/aiModelList/aiModelForm/AIModelForm'
 import {
   providerToListAiModelConfig,
@@ -426,6 +427,8 @@ export interface AIThirdPartyApplicationConfig {
   _ProbedExtendedEfforts?: string[]
   /** 是否已对 xhigh/max 做过探测（表单内部字段） */
   _EffortProbed?: boolean
+  /** 探测结果对应的连接和模型（表单内部字段） */
+  _EffortProbeKey?: string
 }
 
 interface NewAIThirdPartyApplicationConfigBaseProps {
@@ -469,6 +472,8 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
     const execModelNameOption = useRef<boolean>(false)
     const enableEndpointWatch = Form.useWatch('enable_endpoint', form)
     const reasoningEffortWatch = Form.useWatch('ReasoningEffort', form)
+    const currentEffortProbeKey = Form.useWatch(getAIModelFormEffortKey, form)
+    const savedEffortProbeKey = Form.useWatch('_EffortProbeKey', form)
     const [effortProbing, setEffortProbing] = useState<boolean>(false)
     // 扩展思考强度探测结果：undefined=未探测；[]=探测过但不支持；非空=探测到支持的档位
     const [probedExtendedEfforts, setProbedExtendedEfforts] = useState<string[] | undefined>(undefined)
@@ -492,26 +497,33 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
 
     const reasoningEffortOptions = useCreation(() => {
       // 待重探时扩展档位对新模型未确认，下拉只展示基础档位（当前已选的扩展档仍随 currentValue 保留）
-      return buildReasoningEffortOptions(t, effortProbeDirty ? undefined : probedExtendedEfforts, reasoningEffortWatch)
-    }, [effortProbeDirty, probedExtendedEfforts, reasoningEffortWatch, i18nRefresh])
+      const needsProbe = effortProbeDirty || currentEffortProbeKey !== savedEffortProbeKey
+      return buildReasoningEffortOptions(t, needsProbe ? undefined : probedExtendedEfforts, reasoningEffortWatch)
+    }, [
+      effortProbeDirty,
+      currentEffortProbeKey,
+      savedEffortProbeKey,
+      probedExtendedEfforts,
+      reasoningEffortWatch,
+      i18nRefresh,
+    ])
 
-    /**懒探测：首次打开强度下拉框时探测模型是否支持 xhigh/max，model/Type 变化后再次打开会重新探测；失败不置已探测，下次打开可重试 */
+    /** 懒探测：首次打开或连接、模型变化后探测 xhigh/max，失败后下次打开可重试。 */
     const ensureEffortProbed = useDebounceFn(
       () => {
         if (readOnly || IsOnline || isScriptProvider) return
-        if (probedExtendedEfforts !== undefined && !effortProbeDirty) return
         if (effortProbing) return
         const values = form.getFieldsValue()
         if (!values?.Type || !values?.model) return
+        const probeKey = getAIModelFormEffortKey(values)
+        if (!effortProbeDirty && probeKey === values._EffortProbeKey) return
         setEffortProbing(true)
         grpcProbeReasoningEffort({
           Config: buildAIConfigHealthCheckConfig(values),
           Model: values.model,
         })
           .then((resp) => {
-            // 探测期间 model/Type 已变化，丢弃过期结果，下次打开按新模型重探
-            const current = form.getFieldsValue()
-            if (current?.Type !== values.Type || current?.model !== values.model) return
+            if (getAIModelFormEffortKey(form.getFieldsValue()) !== probeKey) return
             const { conclusive, efforts } = effortProbeResultFromResponse(resp)
             // 瞬时错误（限流/网络失败等）：不落库不置已探测，保持待重探，下次打开重试
             if (!conclusive) return
@@ -521,6 +533,7 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
             form.setFieldsValue({
               _ProbedExtendedEfforts: efforts,
               _EffortProbed: true,
+              _EffortProbeKey: probeKey,
             })
           })
           .catch(() => {})
@@ -547,6 +560,7 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
         FrequencyPenalty: undefined,
         _ProbedExtendedEfforts: undefined,
         _EffortProbed: undefined,
+        _EffortProbeKey: undefined,
       })
     })
 
@@ -789,6 +803,9 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
           copyFormValues[key] = false
         }
       })
+      if (copyFormValues._EffortProbed) {
+        copyFormValues._EffortProbeKey = getAIModelFormEffortKey(copyFormValues)
+      }
       return copyFormValues
     }, [formValues])
 
@@ -992,11 +1009,14 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
                     }}
                   />
                 </Form.Item>
-                {/* 隐藏字段：注册探测缓存，使 validateFields 能取到这两个值 */}
+                {/* 隐藏字段：注册探测缓存，使 validateFields 能取得对应的连接和结果。 */}
                 <Form.Item name="_ProbedExtendedEfforts" noStyle>
                   <HiddenFormField />
                 </Form.Item>
                 <Form.Item name="_EffortProbed" noStyle>
+                  <HiddenFormField />
+                </Form.Item>
+                <Form.Item name="_EffortProbeKey" noStyle>
                   <HiddenFormField />
                 </Form.Item>
                 {/* #endregion */}

@@ -75,6 +75,27 @@ const submit = async (name: string) => {
 }
 
 describe('FileTreeSystemItem（启用 React Compiler）', () => {
+  it('已添加项展示双勾和 hover 取消入口，取消不触发树节点选择', () => {
+    const onRemoveAddedFile = vi.fn()
+    const onSelect = vi.fn()
+    const { rerender } = render(
+      <div onClick={onSelect}>
+        <FileTreeSystemItem
+          watchToken="watch"
+          data={base}
+          setSelected={vi.fn()}
+          addedFilePaths={[base.path]}
+          onRemoveAddedFile={onRemoveAddedFile}
+        />
+      </div>,
+    )
+    expect(screen.getByTestId('added-file-check')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'YakitButton.cancel' }))
+    expect(onRemoveAddedFile).toHaveBeenCalledWith(base.path)
+    expect(onSelect).not.toHaveBeenCalled()
+    rerender(<FileTreeSystemItem watchToken="watch" data={base} setSelected={vi.fn()} addedFilePaths={[]} />)
+    expect(screen.queryByRole('button', { name: 'YakitButton.cancel' })).toBeNull()
+  })
   it('我打开的文件根文件夹展示搜索按钮并可回调路径', () => {
     const onRootSearch = vi.fn()
     render(
@@ -88,6 +109,23 @@ describe('FileTreeSystemItem（启用 React Compiler）', () => {
     )
     fireEvent.click(screen.getByTestId('file-tree-root-search'))
     expect(onRootSearch).toHaveBeenCalledWith('/tmp/qweq')
+  })
+
+  it('已添加根文件夹的取消按钮位于搜索之后，x 放在按钮 icon 中', () => {
+    render(
+      <FileTreeSystemItem
+        watchToken="watch"
+        isOpen
+        data={{ ...base, isFolder: true }}
+        setSelected={vi.fn()}
+        onRootSearch={vi.fn()}
+        addedFilePaths={[base.path]}
+      />,
+    )
+    const cancel = screen.getByRole('button', { name: 'YakitButton.cancel' })
+    const search = screen.getByTestId('file-tree-root-search')
+    expect(search.compareDocumentPosition(cancel) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(cancel.querySelector('.ant-btn-icon svg')).not.toBeNull()
   })
 
   it('非根或非打开列表不展示根搜索按钮', () => {

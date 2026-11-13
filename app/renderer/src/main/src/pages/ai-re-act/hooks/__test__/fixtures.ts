@@ -2,7 +2,12 @@ import { SessionLifecycle } from '../sessionLifecycle'
 import cloneDeep from 'lodash/cloneDeep'
 import type { AIAgentChatData, AIAgentChatMetaData } from '@/pages/ai-agent/type/aiChat'
 import { AIAgentSettingDefault, AIModelTypeEnum } from '@/pages/ai-agent/defaultConstant'
-import { DEFAULT_SKILL_PAGE_SIZE, DefaultMemoryList, DefaultTaskPlanEndGate } from '../defaultConstant'
+import {
+  DEFAULT_SKILL_PAGE_SIZE,
+  DefaultMemoryList,
+  DefaultDraftMaterials,
+  DefaultTaskPlanEndGate,
+} from '../defaultConstant'
 import { createChatStore } from '../chatStore'
 import type { AIMessageHandlerParams } from '../type'
 import type { AIOutputEvent, AIStartParams } from '../grpcApi'
@@ -17,6 +22,7 @@ const emptyTierConsumption = {
 /** 与 Controller 内 genAIAgentChatData 对齐的最小会话 rawData */
 export const createTestRawData = (): AIAgentChatData => {
   const defaultData: AIAgentChatData = {
+    draftMaterials: DefaultDraftMaterials,
     httpFuzzRequest: undefined,
     httpFlowFuzzStatus: undefined,
     sessionTitle: '',

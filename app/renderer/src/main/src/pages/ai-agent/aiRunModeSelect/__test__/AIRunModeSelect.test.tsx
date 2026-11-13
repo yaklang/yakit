@@ -1,120 +1,130 @@
-import { fireEvent, render, screen } from '@testing-library/react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
-import type { ComponentType, ReactNode } from 'react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import type { ButtonHTMLAttributes, ReactNode } from 'react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import type { ModeOptionKey } from '../aiRunModeConstants'
 
-const mocks = vi.hoisted(() => ({
-  selectedModes: [] as Array<{
-    key: string
-    label: string
-    icon: ComponentType<{ className?: string; color?: string }>
-  }>,
-}))
-
-vi.mock('../AIRunModeSelect.module.scss', () => ({
-  default: {
-    'run-mode-select': 'run-mode-select',
-    'select-option': 'select-option',
-    'select-option-text': 'select-option-text',
-    'icon-wrapper': 'icon-wrapper',
-    'mode-dropdown': 'mode-dropdown',
-  },
-}))
-
-vi.mock('../useAIRunMode', () => ({
-  useAIRunMode: () => ({ selectedModes: mocks.selectedModes }),
-}))
+const modeState = vi.hoisted(() => ({ selectedModes: [] as { key: ModeOptionKey }[] }))
+vi.mock('../useAIRunMode', () => ({ useAIRunMode: () => modeState }))
 
 vi.mock('@/i18n/useI18nNamespaces', () => ({
-  useI18nNamespaces: () => ({
-    t: (key: string) => key,
-    i18nRefresh: 0,
-  }),
+  useI18nNamespaces: () => ({ t: (key: string) => key }),
 }))
 
 vi.mock('../AIRunModeMenu', () => ({
   AIRunModeMenu: () => <div data-testid="run-mode-menu" />,
 }))
 
-vi.mock('@/pages/ai-re-act/aiReviewRuleSelect/AIReviewRuleSelect', () => ({
-  AIChatSelect: ({
+vi.mock('@/components/yakitUI/YakitButton/YakitButton', () => ({
+  YakitButton: ({
+    icon,
     children,
-    open,
-    setOpen,
-    dropdownRender,
-  }: {
-    children?: ReactNode
-    open?: boolean
-    setOpen?: (open: boolean) => void
-    dropdownRender?: () => ReactNode
+    type: _type,
+    isActive,
+    ...props
+  }: Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'type'> & {
+    icon?: ReactNode
+    type?: string
+    isActive?: boolean
   }) => (
-    <div data-testid="ai-chat-select" data-open={String(!!open)}>
-      <button type="button" data-testid="mode-trigger" onClick={() => setOpen?.(!open)}>
-        {children}
-      </button>
-      {open ? <div data-testid="mode-dropdown">{dropdownRender?.()}</div> : null}
+    <button {...props} data-active={String(isActive)}>
+      {icon}
+      {children}
+    </button>
+  ),
+}))
+
+vi.mock('@/components/yakitUI/YakitPopover/YakitPopover', () => ({
+  YakitPopover: ({
+    children,
+    content,
+    open,
+    onOpenChange,
+    arrow,
+    trigger,
+  }: {
+    children: ReactNode
+    content: ReactNode
+    open: boolean
+    onOpenChange: (open: boolean) => void
+    arrow: boolean
+    trigger: string
+  }) => (
+    <div data-testid="mode-popover" data-arrow={String(arrow)} data-trigger={trigger}>
+      <div onClickCapture={() => onOpenChange(!open)}>{children}</div>
+      {open && <div>{content}</div>}
     </div>
   ),
 }))
 
-vi.mock('@/components/yakitUI/YakitSelect/YakitSelect', () => {
-  const Option = ({ label, children }: { label?: ReactNode; children?: ReactNode }) => (
-    <div data-testid="mode-pill">{label ?? children}</div>
-  )
-  const Select = ({ children }: { children?: ReactNode }) => <>{children}</>
-  Select.Option = Option
-  return { YakitSelect: Select }
-})
-
 import AIRunModeSelect from '../AIRunModeSelect'
 
-const DummyIcon: ComponentType<{ className?: string; color?: string }> = (props) => (
-  <span data-testid="mode-icon" {...props} />
-)
+afterEach(cleanup)
+beforeEach(() => {
+  modeState.selectedModes = []
+})
 
 describe('AIRunModeSelect', () => {
-  beforeEach(() => {
-    mocks.selectedModes = []
+  it.each<ModeOptionKey>(['plan', 'multiAgent', 'goal'])(
+    'keeps the button active for %s with the menu closed or open',
+    (key) => {
+      modeState.selectedModes = [{ key }]
+      render(<AIRunModeSelect />)
+      const button = screen.getByRole('button')
+      expect(button).toHaveAttribute('data-active', 'true')
+      fireEvent.click(button)
+      expect(button).toHaveAttribute('data-active', 'true')
+      fireEvent.click(button)
+      expect(button).toHaveAttribute('data-active', 'true')
+    },
+  )
+
+  it('stays inactive when all modes are disabled even with the menu open', () => {
+    render(<AIRunModeSelect />)
+    const button = screen.getByRole('button')
+    expect(button).toHaveAttribute('data-active', 'false')
+    fireEvent.click(button)
+    expect(button).toHaveAttribute('data-active', 'false')
   })
 
-  it('未选模式时 pill 显示「模式」文案', () => {
-    render(<AIRunModeSelect />)
-    expect(screen.getByTestId('mode-pill')).toHaveTextContent('AIRunModeSelect.mode')
-    expect(screen.getByTitle('AIRunModeSelect.mode')).toBeInTheDocument()
+  it('updates when external mode settings change and clears only after the last mode is disabled', () => {
+    const { rerender } = render(<AIRunModeSelect />)
+    modeState.selectedModes = [{ key: 'plan' }, { key: 'goal' }]
+    rerender(<AIRunModeSelect />)
+    expect(screen.getByRole('button')).toHaveAttribute('data-active', 'true')
+    modeState.selectedModes = [{ key: 'goal' }]
+    rerender(<AIRunModeSelect />)
+    expect(screen.getByRole('button')).toHaveAttribute('data-active', 'true')
+    modeState.selectedModes = []
+    rerender(<AIRunModeSelect />)
+    expect(screen.getByRole('button')).toHaveAttribute('data-active', 'false')
   })
 
-  it('选中单个模式时 pill 显示该模式文案', () => {
-    mocks.selectedModes = [{ key: 'plan', label: 'Plan', icon: DummyIcon }]
+  it('renders an icon-only button with a click popover and no arrow', () => {
     render(<AIRunModeSelect />)
-    expect(screen.getByTestId('mode-pill')).toHaveTextContent('AIMilkdownModeSlash.plan')
-  })
-
-  it('选中多个模式时 pill 显示多模式文案', () => {
-    mocks.selectedModes = [
-      { key: 'plan', label: 'Plan', icon: DummyIcon },
-      { key: 'goal', label: 'Goal', icon: DummyIcon },
-    ]
-    render(<AIRunModeSelect />)
-    expect(screen.getByTestId('mode-pill')).toHaveTextContent('AIRunModeSelect.multiMode')
-  })
-
-  it('点击触发展开并渲染 AIRunModeMenu，再次点击收起', () => {
-    render(<AIRunModeSelect />)
-    expect(screen.getByTestId('ai-chat-select')).toHaveAttribute('data-open', 'false')
+    const button = screen.getByRole('button')
+    expect(button.textContent).toBe('')
+    expect(button.querySelector('svg')).not.toBeNull()
+    expect(screen.getByTestId('mode-popover')).toHaveAttribute('data-arrow', 'false')
+    expect(screen.getByTestId('mode-popover')).toHaveAttribute('data-trigger', 'click')
     expect(screen.queryByTestId('run-mode-menu')).not.toBeInTheDocument()
+  })
 
-    fireEvent.click(screen.getByTestId('mode-trigger'))
-    expect(screen.getByTestId('ai-chat-select')).toHaveAttribute('data-open', 'true')
+  it('opens and closes the mode menu through the trigger', () => {
+    render(<AIRunModeSelect />)
+    fireEvent.click(screen.getByRole('button'))
     expect(screen.getByTestId('run-mode-menu')).toBeInTheDocument()
-
-    fireEvent.click(screen.getByTestId('mode-trigger'))
-    expect(screen.getByTestId('ai-chat-select')).toHaveAttribute('data-open', 'false')
+    fireEvent.click(screen.getByRole('button'))
     expect(screen.queryByTestId('run-mode-menu')).not.toBeInTheDocument()
   })
 
-  it('pill 含 select-option-text，供窄容器（@container <300px）隐藏文案', () => {
-    render(<AIRunModeSelect />)
-    const text = screen.getByTestId('mode-pill').querySelector('.select-option-text')
-    expect(text).toBeTruthy()
-    expect(text).toHaveTextContent('AIRunModeSelect.mode')
+  it('opens from the input callback and reports manual closing to the input', () => {
+    const onOpenChange = vi.fn()
+    const { rerender } = render(<AIRunModeSelect open={false} onOpenChange={onOpenChange} />)
+    expect(screen.queryByTestId('run-mode-menu')).not.toBeInTheDocument()
+
+    rerender(<AIRunModeSelect open onOpenChange={onOpenChange} />)
+    expect(screen.getByTestId('run-mode-menu')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button'))
+    expect(onOpenChange).toHaveBeenCalledWith(false)
   })
 })

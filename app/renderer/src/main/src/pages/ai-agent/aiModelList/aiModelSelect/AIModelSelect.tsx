@@ -1,12 +1,12 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { AIModelEditContentItemProps, AIModelSelectProps, ModelNameOptionLabelProps } from './AIModelSelectType'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { useCreation, useDebounceFn, useInViewport, useMemoizedFn, useRequest } from 'ahooks'
+import type { AIGlobalConfig, AIModelConfig } from '../utils'
 import {
-  type AIGlobalConfig,
-  type AIModelConfig,
   getModelName,
   grpcListAiModel,
+  grpcProbeReasoningEffort,
   isForcedSetAIModal,
   isFreeEnd,
   isMemfitStart,
@@ -25,7 +25,8 @@ import { YakitModalConfirm } from '@/components/yakitUI/YakitModal/YakitModalCon
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { Tooltip } from 'antd'
 import { YakitRoute } from '@/enums/yakitRoute'
-import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import type { TFunction } from '@/i18n/useI18nNamespaces'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { providerToListAiModelConfig, YAK_SCRIPT_PROVIDER } from '../aiModelForm/providerConfig'
@@ -33,8 +34,17 @@ import { yakitNotify } from '@/utils/notification'
 import { getMainOperatorPageBodyContainer } from '@/utils/getMainOperatorPageBodyContainer'
 import { EnterpriseAIModelSelect } from './enterpriseAIModelSelect/EnterpriseAIModelSelect'
 import { isEnterpriseOrSimpleEdition } from '@/utils/envfile'
+import { AIReasoningEffortSelect } from '@/pages/ai-re-act/aiReasoningEffortSelect/AIReasoningEffortSelect'
+import {
+  buildReasoningEffortOptions,
+  effortProbeResultFromResponse,
+  normalizeReasoningEffort,
+} from '../aiModelForm/reasoningEffort'
 
 const getModelListConfig = (model?: AIModelConfig) => providerToListAiModelConfig(model?.Provider)
+// 按模型名称和连接生成思考档位的缓存键，用于探测去重和结果匹配。
+const getModelEffortKey = (model: AIModelConfig, name = model.ModelName) =>
+  JSON.stringify([model.ProviderId, getModelListConfig(model), name])
 
 export const onOpenConfigModal = (mountContainer, t: TFunction) => {
   const m = YakitModalConfirm({
@@ -68,13 +78,15 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
 })
 
 const CurrentAIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) => {
-  const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
+  const { t } = useI18nNamespaces(['aiAgent', 'yakitUi', 'configNetwork'])
   const { isOpen = true, className } = props
   const [aiDraftConfig, setAIDraftConfig] = useState<AIGlobalConfig>(() => cloneDeep(defaultAIGlobalConfig))
   const [open, setOpen] = useState(false)
   const [modelNames, setModelNames] = useState<string[]>([])
   const refRef = useRef<HTMLDivElement>(null)
   const savedConfigRef = useRef<AIGlobalConfig>()
+  const modelEffortsRef = useRef(new Map<string, AIModelConfig>())
+  const lastEffortModelKeyRef = useRef<string>()
   const [inViewport = true] = useInViewport(refRef)
   const [{ aiGlobalConfig }, event] = useAIGlobalConfig()
 
@@ -82,11 +94,24 @@ const CurrentAIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
   useEffect(() => {
     if (isEqual(savedConfigRef.current, aiGlobalConfig)) return
     const config = cloneDeep(aiGlobalConfig)
+    for (const model of config.IntelligentModels) {
+      const key = getModelEffortKey(model)
+      if (!modelEffortsRef.current.has(key)) continue
+      const savedModel = savedConfigRef.current?.IntelligentModels.find((item) => getModelEffortKey(item) === key)
+      if (!isEqual(savedModel, model)) modelEffortsRef.current.delete(key)
+    }
     savedConfigRef.current = config
     setAIDraftConfig(config)
   }, [aiGlobalConfig])
   // 与选择器显示值保持同源：当前选中的高质模型是配置中的首项。
   const selectIntelligentItem = aiDraftConfig.IntelligentModels[0]
+  const effortModelKey = selectIntelligentItem ? getModelEffortKey(selectIntelligentItem) : undefined
+  const reasoningEffort = normalizeReasoningEffort(selectIntelligentItem?.Provider.ReasoningEffort)
+  const reasoningEffortLabel = String(
+    buildReasoningEffortOptions(t, selectIntelligentItem?.ProbedExtendedEfforts, reasoningEffort).find(
+      (option) => option.value === reasoningEffort,
+    )?.label || reasoningEffort,
+  ).replace(/（[^）]*）|\([^)]*\)/g, '')
   const modelListConfig = useCreation(
     () => getModelListConfig(selectIntelligentItem),
     [selectIntelligentItem?.Provider],
@@ -130,10 +155,56 @@ const CurrentAIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
     return cancelModelNameList
   }, [open, modelListConfig, getModelNameList, cancelModelNameList])
 
-  const { run: onRefreshModelNameList } = useDebounceFn(
+  const {
+    run: probeModelEffort,
+    loading: effortProbing,
+    data: effortProbe,
+  } = useRequest(
+    (model: AIModelConfig) =>
+      grpcProbeReasoningEffort({ Config: model.Provider, Model: model.ModelName }, true).then((response) => ({
+        modelKey: getModelEffortKey(model),
+        response,
+      })),
+    {
+      manual: true,
+      onSuccess: ({ modelKey, response }) => {
+        const { conclusive, efforts } = effortProbeResultFromResponse(response)
+        onUpdateReasoningEffort((current) =>
+          getModelEffortKey(current) === modelKey
+            ? { ...current, EffortProbed: conclusive, ProbedExtendedEfforts: efforts }
+            : current,
+        )
+      },
+      onError: (error, [model]) => {
+        if (getModelEffortKey(model) === effortModelKey) {
+          yakitNotify('error', 'grpcProbeReasoningEffort 失败:' + String(error))
+        }
+      },
+    },
+  )
+
+  const probeResponse = effortProbe?.modelKey === effortModelKey ? effortProbe?.response : undefined
+
+  useEffect(() => {
+    if (!open || !selectIntelligentItem?.ModelName) return
+    const previousKey = lastEffortModelKeyRef.current
+    if (previousKey === effortModelKey) {
+      if (!effortProbing && (probeResponse?.MaxSupported === false || probeResponse?.XhighSupported === false)) {
+        probeModelEffort(selectIntelligentItem)
+      }
+      return
+    }
+    lastEffortModelKeyRef.current = effortModelKey
+    if (previousKey !== undefined || (!selectIntelligentItem.EffortProbed && !selectIntelligentItem.IsOnline)) {
+      probeModelEffort(selectIntelligentItem)
+    }
+  }, [open, effortModelKey])
+
+  const { run: onRefreshModels } = useDebounceFn(
     () => {
       if (!open || !modelListConfig || modelNamesLoading || resetLoading) return
-      return getModelNameList(modelListConfig)
+      getModelNameList(modelListConfig)
+      if (selectIntelligentItem?.ModelName) probeModelEffort(selectIntelligentItem)
     },
     { wait: 500, leading: true, trailing: false },
   )
@@ -148,7 +219,7 @@ const CurrentAIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
     event.setAIGlobalConfig(config).catch(() => undefined)
   })
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!open || !refRef.current) return
     let previousWidth: number | undefined
     const observer = new ResizeObserver(([entry]) => {
@@ -159,16 +230,39 @@ const CurrentAIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
     })
     observer.observe(refRef.current)
     return () => observer.disconnect()
-  }, [open])
+  }, [open, selectIntelligentItem?.ModelName, reasoningEffortLabel])
 
   const onSelectModelName = useMemoizedFn((ModelName: string) => {
+    if (!selectIntelligentItem || selectIntelligentItem.ModelName === ModelName) return
+    modelEffortsRef.current.set(getModelEffortKey(selectIntelligentItem), selectIntelligentItem)
+    const key = getModelEffortKey(selectIntelligentItem, ModelName)
+    const nextModel =
+      modelEffortsRef.current.get(key) ??
+      aiDraftConfig.IntelligentModels.find((model) => getModelEffortKey(model) === key)
     setAIDraftConfig((old) => {
       const [currentModel, ...rest] = old.IntelligentModels
       if (!currentModel || currentModel.ModelName === ModelName) return old
-      return {
-        ...old,
-        IntelligentModels: [{ ...currentModel, ModelName }, ...rest],
+      const model = {
+        ...currentModel,
+        ModelName,
+        Provider: { ...currentModel.Provider, ReasoningEffort: nextModel?.Provider.ReasoningEffort },
+        EffortProbed: nextModel?.EffortProbed,
+        ProbedExtendedEfforts: nextModel?.ProbedExtendedEfforts,
       }
+      if (model.Provider.ReasoningEffort === undefined) delete model.Provider.ReasoningEffort
+      if (model.EffortProbed === undefined) delete model.EffortProbed
+      if (model.ProbedExtendedEfforts === undefined) delete model.ProbedExtendedEfforts
+      return { ...old, IntelligentModels: [model, ...rest] }
+    })
+  })
+
+  const onUpdateReasoningEffort = useMemoizedFn((mutate: (model: AIModelConfig) => AIModelConfig) => {
+    setAIDraftConfig((old) => {
+      const [currentModel, ...rest] = old.IntelligentModels
+      if (!currentModel) return old
+      const nextModel = mutate(currentModel)
+      if (nextModel === currentModel) return old
+      return { ...old, IntelligentModels: [nextModel, ...rest] }
     })
   })
 
@@ -232,6 +326,9 @@ const CurrentAIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
     <div ref={refRef} className={className}>
       {isHaveData && (
         <AIChatSelect
+          variant="borderless"
+          classNames={{ popup: { root: styles['model-select-popup'] } }}
+          closestClassName="[data-ai-reasoning-effort-menu]"
           dropdownRender={() => (
             <div className={styles['drop-select-wrapper']} onClick={(e) => e.stopPropagation()}>
               <div className={styles['select-title']}>
@@ -269,7 +366,7 @@ const CurrentAIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                       icon={<RefreshOutlined color="currentColor" />}
                       loading={modelNamesLoading}
                       disabled={!modelListConfig || resetLoading || modelNamesLoading}
-                      onClick={onRefreshModelNameList}
+                      onClick={onRefreshModels}
                     />
                   </Tooltip>
                 </div>
@@ -289,7 +386,7 @@ const CurrentAIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                             size="small"
                             type="text"
                             disabled={!modelListConfig || resetLoading || modelNamesLoading}
-                            onClick={onRefreshModelNameList}
+                            onClick={onRefreshModels}
                           >
                             {t('YakitButton.refresh')}
                           </YakitButton>
@@ -299,6 +396,16 @@ const CurrentAIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                   />
                 </YakitSpin>
               </div>
+              {open && (
+                <AIReasoningEffortSelect
+                  key={selectIntelligentItem?.ModelName}
+                  model={selectIntelligentItem}
+                  probing={effortProbing}
+                  probeResponse={probeResponse}
+                  disabled={!selectIntelligentItem || resetLoading || modelNamesLoading}
+                  onChange={onUpdateReasoningEffort}
+                />
+              )}
             </div>
           )}
           open={open}
@@ -314,6 +421,9 @@ const CurrentAIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                 <span className={styles['select-option-text']} title={getModelName(selectIntelligentItem?.ModelName)}>
                   {getModelName(selectIntelligentItem?.ModelName)}
                 </span>
+                {selectIntelligentItem && (
+                  <span className={styles['select-option-effort']}>{reasoningEffortLabel}</span>
+                )}
               </div>
             }
           >

@@ -1,5 +1,6 @@
 import { memo, useState } from 'react'
 import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import AIReActChatFocusModeTag from '@/pages/ai-re-act/aiReActChat/aiReActChatFocusModeTag/AIReActChatFocusModeTag'
 import { HorizontalScrollCard } from '@/pages/plugins/operator/horizontalScrollCard/HorizontalScrollCard'
 import { useStore } from 'zustand'
 import classNames from 'classnames'
@@ -51,6 +52,7 @@ export const AIHorizontalScrollCard = memo(() => {
           <div className={styles['title']}>
             <ChatAlt2Solid className={styles['chat-alt-icon']} color="currentColor" />
             <div className={styles['chat-title']}>{activeChat?.Title || t('AIChatContent.newChatTitle')}</div>
+            <AIReActChatFocusModeTag />
           </div>
           <div className={styles['extra']}>
             {isMemfit() && MEMFIT_WHATS_NEW.enabled && MEMFIT_WHATS_NEW.items.length > 0 && (

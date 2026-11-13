@@ -993,6 +993,7 @@ service Yak {
   rpc GetToolSetList(Empty) returns(GetToolSetListResponse);
 
   rpc GetAIToolList(GetAIToolListRequest) returns(GetAIToolListResponse);
+  rpc QueryAITool(QueryAIToolRequest) returns(QueryAIToolResponse);
   rpc DeleteAITool(DeleteAIToolRequest) returns(DbOperateMessage);
   rpc SaveAITool(SaveAIToolRequest) returns(DbOperateMessage);
   rpc SaveAIToolV2(SaveAIToolRequest) returns(SaveAIToolV2Response);
@@ -1040,6 +1041,7 @@ service Yak {
   // Knowledge Base
   rpc GetKnowledgeBaseNameList(Empty) returns(GetKnowledgeBaseNameListResponse);
   rpc GetKnowledgeBase(GetKnowledgeBaseRequest) returns(GetKnowledgeBaseResponse);
+  rpc QueryKnowledgeBase(QueryKnowledgeBaseRequest) returns(QueryKnowledgeBaseResponse);
   rpc GetKnowledgeBaseTypeList(Empty) returns(GetKnowledgeBaseTypeListResponse);
   rpc DeleteKnowledgeBase(DeleteKnowledgeBaseRequest) returns(GeneralResponse);
   rpc CreateKnowledgeBase(CreateKnowledgeBaseRequest) returns(GeneralResponse);
@@ -1134,6 +1136,9 @@ service Yak {
   // filesystem. Returned paths are engine paths and can be used by file
   // Fuzztags in both local and remote-engine modes.
   rpc UploadToTemporaryFile(stream UploadToTemporaryFileRequest) returns (UploadToTemporaryFileResponse);
+
+  // AI session resource snapshot query.
+  rpc GetAISessionCurrentResources(GetAISessionCurrentResourcesRequest) returns (GetAISessionCurrentResourcesResponse);
 }
 
 // IMBotConfig 描述一个 IM 平台 bot 的配置凭证。
@@ -2069,6 +2074,7 @@ message AIToolFilter {
   string Keyword = 3;
   bool OnlyFavorites = 4;
   int64 ID = 5;
+  repeated int64 IDs = 6;
 }
 
 message AITool {
@@ -10645,4 +10651,58 @@ message HTTPPreviewResourceResponse {
   string URL = 1;
   string MimeType = 2;
   bytes Data = 3;
+}
+
+message AISessionTaskResourceInfo {
+  string Type = 1;
+  string Key = 2;
+  string Value = 3;
+  // turn: current task only; session: retained across tasks in the session.
+  string Scope = 4;
+  // attached_resource_info / attached_file_path / inherited
+  string Source = 5;
+}
+
+message GetAISessionCurrentResourcesRequest {
+  string SessionID = 1;
+}
+
+message GetAISessionCurrentResourcesResponse {
+  string SessionID = 1;
+  string TaskID = 2;
+  string UserInputUUID = 3;
+  // Resources explicitly attached to or inherited by the latest task.
+  repeated AISessionTaskResourceInfo TaskResources = 4;
+  // Session-scoped resources reconstructed from task input history.
+  repeated AISessionTaskResourceInfo SessionResources = 5;
+}
+
+message QueryAIToolRequest {
+  AIToolFilter Filter = 1;
+  Paging Pagination = 2;
+}
+
+message QueryAIToolResponse {
+  Paging Pagination = 1;
+  repeated AITool Data = 2;
+  int64 Total = 3;
+}
+
+message KnowledgeBaseFilter {
+  repeated int64 IDs = 1;
+  repeated string Names = 2;
+  string Keyword = 3;
+  repeated string Types = 4;
+  repeated string Tags = 5;
+}
+
+message QueryKnowledgeBaseRequest {
+  KnowledgeBaseFilter Filter = 1;
+  Paging Pagination = 2;
+}
+
+message QueryKnowledgeBaseResponse {
+  Paging Pagination = 1;
+  repeated KnowledgeBaseInfo Data = 2;
+  int64 Total = 3;
 }

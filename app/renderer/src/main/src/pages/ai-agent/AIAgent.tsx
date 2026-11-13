@@ -1,14 +1,21 @@
 import type React from 'react'
-import { useEffect, useMemo, useRef, useState } from 'react'
-import type { AIAgentProps, AIAgentSetting } from './aiAgentType'
+import type { Dispatch, SetStateAction } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import type { AIAgentProps, AIAgentSetting, ActiveChatAction } from './aiAgentType'
 import { AIAgentSideList } from './AIAgentSideList'
-import AIAgentContext, { type AIAgentContextDispatcher, type AIAgentContextStore } from './useContext/AIAgentContext'
+import AIAgentContext from './useContext/AIAgentContext'
+import type { AIAgentContextDispatcher, AIAgentContextStore } from './useContext/AIAgentContext'
 import { getRemoteValue } from '@/utils/kv'
 import { RemoteAIAgentGV } from '@/enums/aiAgent'
 import useGetSetState from '../pluginHub/hooks/useGetSetState'
 import type { AISession } from './type/aiChat'
 import { useDebounceFn, useInViewport, useMemoizedFn, useRequest, useUpdateEffect } from 'ahooks'
-import { AIAgentSettingDefault, SwitchAIAgentTabEventEnum, YakitAIAgentPageID } from './defaultConstant'
+import {
+  AIAgentSettingDefault,
+  createWelcomeChat,
+  SwitchAIAgentTabEventEnum,
+  YakitAIAgentPageID,
+} from './defaultConstant'
 import cloneDeep from 'lodash/cloneDeep'
 import omit from 'lodash/omit'
 import { grpcQueryAISession } from './grpc'
@@ -41,24 +48,33 @@ import { globalSessionEngine } from '../ai-re-act/hooks/ChatMultiSessionControll
 import { usePageInfo } from '@/store/pageInfo'
 import { YakitRouteToPageInfo } from '@/routes/newRoute'
 import { syncAIAgentPageInfo } from './utils/syncAIAgentPageInfo'
+import { isChatSession } from './utils/isChatSession'
 
 const { ipcRenderer } = window.require('electron')
 
 export const AIAgent: React.FC<AIAgentProps> = (props) => {
   const { t } = useI18nNamespaces(['aiAgent'])
   const pageId = props.pageId || YakitRoute.AI_Agent
+  // 当前展示对话
+  const [activeChat, updateActiveChat] = useState<AISession>(() => props.initialSession || createWelcomeChat())
+  const getInitialSetting = () => {
+    if (!activeChat.isDraftSession || !globalSessionEngine.sessionStores.getState().has(activeChat.SessionID)) return
+    return cloneDeep(globalSessionEngine.ensureSession(activeChat.SessionID).request)
+  }
+  // 本轮渲染读取的欢迎会话配置，用于页面初始化及跳过全局缓存覆盖。
+  const initialSetting = getInitialSetting()
   // #region ai-agent页面全局缓存
   // ai-agent-chat 全局配置
-  const [setting, setSetting, getSetting] = useGetSetState<AIAgentSetting>(cloneDeep(AIAgentSettingDefault))
-  const initializedSettingRef = useRef<AIAgentSetting>()
-  // 当前展示对话
-  const [activeChat, updateActiveChat] = useState<AISession | undefined>(props.initialSession)
+  const [setting, setSetting, getSetting] = useGetSetState<AIAgentSetting>(
+    initialSetting ?? cloneDeep(AIAgentSettingDefault),
+  )
+  const lastInitializedSettingRef = useRef<AIAgentSetting>()
   // 仅记录本页刚创建并绑定的会话，不使用缓存中可能残留的 isCreate 标记。
   const locallyCreatedSessionIdRef = useRef<string>()
 
   /**同步页面标签和历史列表的会话标题 */
   useEffect(() => {
-    if (!activeChat?.SessionID) return
+    if (!isChatSession(activeChat)) return
     const sessionId = activeChat.SessionID
     globalSessionEngine.ensureSession(sessionId)
     const bindTitle = () => {
@@ -87,7 +103,7 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
       unsubscribeStores()
       unsubscribeTitle?.()
     }
-  }, [activeChat?.SessionID])
+  }, [activeChat?.SessionID, activeChat?.isDraftSession])
 
   const [show, setShow] = useState<boolean>(false)
   const [sideRatio, setSideRatio] = useState('360px')
@@ -124,15 +140,16 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
   // 缓存全局配置数据
   useUpdateEffect(() => {
     // 初始化只恢复当前页面配置，不更新引擎或写回全局缓存。
-    if (setting === initializedSettingRef.current) return
+    if (setting === lastInitializedSettingRef.current) return
     // 只有配置变化了才更新，SessionID不管
-    if (activeChat?.SessionID) {
-      const { RuntimeContextSizeLimit: _defaultLimit, ...config } = getSetting()
+    if (activeChat.SessionID) {
+      const { RuntimeContextSizeLimit, ...config } = getSetting()
+      const sessionLimit = isChatSession(activeChat)
+        ? activeChat.StartParams?.RuntimeContextSizeLimit
+        : RuntimeContextSizeLimit
       globalSessionEngine.updateSessionConfig(activeChat.SessionID, {
         ...config,
-        ...(activeChat.StartParams?.RuntimeContextSizeLimit !== undefined
-          ? { RuntimeContextSizeLimit: activeChat.StartParams.RuntimeContextSizeLimit }
-          : {}),
+        ...(sessionLimit !== undefined ? { RuntimeContextSizeLimit: sessionLimit } : {}),
       })
     }
     persistAIAgentChatSetting(getSetting())
@@ -143,35 +160,55 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
     pageId,
     true,
   )
+  const draftSessionId = activeChat.isDraftSession ? activeChat.SessionID : undefined
+  const previousDraftId = useRef<string>()
+  // 取消建联后当前页可能用同一个 ID 重建草稿数据，需要重新登记归属。
+  useLayoutEffect(() => {
+    const previous = previousDraftId.current
+    if (previous && previous !== draftSessionId) globalSessionEngine.discardUnsentDraft(previous, pageId)
+    if (draftSessionId) globalSessionEngine.registerDraftSession(draftSessionId, pageId)
+    previousDraftId.current = draftSessionId
+  }, [draftSessionId, pageId, pendingChat?.streamToken])
 
-  const setActiveChat = useMemoizedFn<AIAgentContextDispatcher['setActiveChat']>((session) => {
+  const setActiveChatForContext = useMemoizedFn((session: ActiveChatAction) => {
+    if (!session) return
     if (typeof session === 'function') {
-      updateActiveChat(session)
+      updateActiveChat((current) => {
+        const next = session(current)
+        if (!next) return current
+        return next
+      })
       return
     }
     // 同步绑定，确保随后回放的首个标题事件可以按 SessionID 找到页面。
     const { pages, queryPagesDataById } = usePageInfo.getState()
     const node = queryPagesDataById(YakitRoute.AI_Agent, pageId)
-    const sameSession = !!session && node?.pageParamsInfo.aiAgentPageInfo?.session?.SessionID === session.SessionID
-    if (node && !sameSession) {
-      let title = session?.Title
-      // 返回欢迎页时，按当前 AI Tab 数量重置标签名称。
-      if (!session && activeChat) {
+    const cachedSession = node?.pageParamsInfo.aiAgentPageInfo?.session
+    const sameSession = cachedSession?.SessionID === session.SessionID
+    // 首次建联沿用草稿的 SessionID，标签缓存仍需同步会话状态。
+    const draftBound = cachedSession?.isDraftSession && !session.isDraftSession
+    if (node && (!sameSession || draftBound)) {
+      let title = session.Title
+      // 固定入口保留菜单名，额外标签按当前 AI Tab 数量重置名称。
+      if (session.isDraftSession) {
         const menuName = YakitRouteToPageInfo[YakitRoute.AI_Agent].label
         const nextIndex = pages.get(YakitRoute.AI_Agent)?.pageList.length ?? 1
-        title = `${menuName}-${nextIndex}`
+        title = pageId === YakitRoute.AI_Agent ? menuName : `${menuName}-${nextIndex}`
       }
       syncAIAgentPageInfo({
         pageId,
         title,
-        aiAgentPageInfo: { session },
+        aiAgentPageInfo: { session: session.isDraftSession ? undefined : session },
         emitSessionData: false,
       })
     }
     detachPendingChat()
-    locallyCreatedSessionIdRef.current = session?.isCreate ? session.SessionID : undefined
+    locallyCreatedSessionIdRef.current = session.isCreate ? session.SessionID : undefined
     updateActiveChat(session)
   })
+
+  // 本地调用禁止空值，共享 Context 仍兼容原有可空参数。
+  const setActiveChat: Dispatch<SetStateAction<AISession>> = setActiveChatForContext
 
   const store: AIAgentContextStore = useMemo(() => {
     return {
@@ -186,7 +223,7 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
     return {
       getSetting: getSetting,
       setSetting: setSetting,
-      setActiveChat: setActiveChat,
+      setActiveChat: setActiveChatForContext,
       onStart,
       onSend,
       onClose,
@@ -196,7 +233,10 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
   }, [])
 
   const initializeSetting = useMemoizedFn((value: AIAgentSetting) => {
-    initializedSettingRef.current = value
+    if (activeChat.SessionID) {
+      Object.assign(globalSessionEngine.ensureSession(activeChat.SessionID).request, cloneDeep(value))
+    }
+    lastInitializedSettingRef.current = value
     setSetting(value)
   })
 
@@ -223,7 +263,7 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
       if (isDisposed()) return
       const session = result.Data.find((item) => item.SessionID === sessionId)
       if (!session) {
-        setActiveChat(undefined)
+        setActiveChat(createWelcomeChat())
         return
       }
       // grpcQueryAISession长时间无响应： 查询期间配置已被修改时，保留当前配置。
@@ -232,13 +272,6 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
         initializeSetting({
           ...cloneDeep(AIAgentSettingDefault),
           ...omit(params, ['CoordinatorId', 'Sequence', 'McpServers', 'UserQuery', 'TimelineContentSizeLimit']),
-          // 启动参数使用字节，页面设置使用 KB。
-          RuntimeContextSizeLimit:
-            params?.RuntimeContextSizeLimit == null
-              ? AIAgentSettingDefault.RuntimeContextSizeLimit
-              : params.RuntimeContextSizeLimit / 1024,
-          AICallTokenLimit:
-            params?.AICallTokenLimit == null ? AIAgentSettingDefault.AICallTokenLimit : params.AICallTokenLimit / 1024,
           Strategy: { ...AIAgentSettingDefault.Strategy, ...params?.Strategy },
         })
         updateActiveChat((current) =>
@@ -264,7 +297,12 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
   })
 
   useEffect(() => {
-    const sessionId = activeChat?.SessionID
+    // 复用已有会话配置，避免全局缓存覆盖本次提交的设置。
+    if (initialSetting) {
+      initializeSetting(initialSetting)
+      return
+    }
+    const sessionId = isChatSession(activeChat) ? activeChat.SessionID : undefined
     // 本页新建会话已有配置和标题，跳过初始化查询。
     if (sessionId && sessionId === locallyCreatedSessionIdRef.current) return
     let disposed = false
@@ -373,7 +411,7 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
       {
         element: (
           <div className={styles['ai-agent-chat']} onClick={onSendSwitchAIAgentTab}>
-            <AIAgentChat />
+            <AIAgentChat key={activeChat.SessionID} />
           </div>
         ),
       },
@@ -386,7 +424,7 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
         ),
       },
     ],
-    [isShowAIBottomDetails, onSendSwitchAIAgentTab],
+    [isShowAIBottomDetails, onSendSwitchAIAgentTab, activeChat.SessionID],
   )
 
   return (

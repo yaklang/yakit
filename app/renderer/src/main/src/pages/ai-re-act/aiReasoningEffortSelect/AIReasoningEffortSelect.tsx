@@ -1,170 +1,174 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import type { FC } from 'react'
+import { useState } from 'react'
 import type { AIReasoningEffortSelectProps } from './type'
-import { BrainOutlined, QuestionMarkCircleOutlined } from '@yakit-libs/yakit-ui-icons/outline'
-import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
+import {
+  CheckOutlined,
+  ChevronRightOutlined,
+  ExclamationOutlined,
+  InformationCircleOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
+import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
+import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import YakitSolidLoading from '@/components/yakitUI/YakitSolidLoading/YakitSolidLoading'
-import { useDebounceFn, useMemoizedFn } from 'ahooks'
 import classNames from 'classnames'
 import { Tooltip } from 'antd'
-import { AIChatSelect } from '../aiReviewRuleSelect/AIReviewRuleSelect'
-import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
 import {
   buildReasoningEffortOptions,
-  effortProbeResultFromResponse,
   normalizeReasoningEffort,
 } from '@/pages/ai-agent/aiModelList/aiModelForm/reasoningEffort'
-import { type AIModelConfig, grpcProbeReasoningEffort } from '@/pages/ai-agent/aiModelList/utils'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { JSONParseLog } from '@/utils/tool'
 import styles from './AIReasoningEffortSelect.module.scss'
-import emiter from '@/utils/eventBus/eventBus'
 
-export const AIReasoningEffortSelect: React.FC<AIReasoningEffortSelectProps> = React.memo((props) => {
-  const { className } = props
+const getProbeErrorMessage = (message: string) => {
+  const result: { error?: { message?: unknown } } | undefined = JSONParseLog(message, {
+    page: 'AIReasoningEffortSelect',
+    fun: 'getProbeErrorMessage',
+    throwOnError: false,
+  })
+  const detail = result?.error?.message
+  return typeof detail === 'string' ? detail : message
+}
+
+export const AIReasoningEffortSelect: FC<AIReasoningEffortSelectProps> = ({
+  className,
+  model,
+  disabled: disabledProp,
+  probing,
+  probeResponse,
+  onChange,
+}) => {
   // configNetwork 命名空间：选项文案（ConfigNetworkPage.effortDefault/effortLow 等）与表单共用
-  const { t, i18nRefresh } = useI18nNamespaces(['aiAgent', 'configNetwork'])
+  const { t } = useI18nNamespaces(['aiAgent', 'configNetwork'])
+  const disabled = disabledProp || !model
+  const effortValue = normalizeReasoningEffort(model?.Provider.ReasoningEffort)
+  const effortOptions = buildReasoningEffortOptions(t, model?.ProbedExtendedEfforts, effortValue)
+  const effortLabel = String(effortOptions.find((item) => item.value === effortValue)?.label || effortValue).replace(
+    /（[^）]*）|\([^)]*\)/g,
+    '',
+  )
+  const menuOptions = model?.ProbedExtendedEfforts
+    ? buildReasoningEffortOptions(t, model.ProbedExtendedEfforts)
+    : effortOptions
+  const probeErrors =
+    !probing && probeResponse
+      ? [
+          {
+            label: t('ConfigNetworkPage.effortMax'),
+            supported: probeResponse.MaxSupported,
+            message: probeResponse.MaxErrorMessage,
+          },
+          {
+            label: t('ConfigNetworkPage.effortXhigh'),
+            supported: probeResponse.XhighSupported,
+            message: probeResponse.XhighErrorMessage,
+          },
+        ].filter(({ supported }) => supported === false)
+      : []
 
-  const [{ aiGlobalConfig }, event] = useAIGlobalConfig()
-  // 与 AIModelSelect 一致：IntelligentModels[0] 即当前选中模型，Provider 为完整连接配置
-  const currentModel = aiGlobalConfig?.IntelligentModels?.[0]
-  const effortValue = normalizeReasoningEffort(currentModel?.Provider?.ReasoningEffort)
+  const [requestedOpen, setOpen] = useState(false)
+  const open = requestedOpen && !disabled
 
-  const [open, setOpen] = useState<boolean>(false)
-  const [effortProbing, setEffortProbing] = useState<boolean>(false)
+  const onSetOpen = (value: boolean) => {
+    if (!value || !disabled) setOpen(value)
+  }
 
-  const reasoningEffortOptions = useMemo(() => {
-    return buildReasoningEffortOptions(t, currentModel?.ProbedExtendedEfforts, effortValue)
-  }, [currentModel?.ProbedExtendedEfforts, effortValue, i18nRefresh])
-
-  /** 更新当前模型条目并持久化到全局 AI 配置；聊天发送侧由引擎读取持久化配置，故选中即落库 */
-  const updateCurrentModel = useMemoizedFn((mutate: (m: AIModelConfig) => AIModelConfig) => {
-    const models = aiGlobalConfig?.IntelligentModels || []
-    if (!models.length) return
-    const nextModels = [mutate({ ...models[0] }), ...models.slice(1)]
-    event
-      .setAIGlobalConfig({ ...aiGlobalConfig, IntelligentModels: nextModels })
-      .then(() => {
-        emiter.emit('onRefreshAvailableAIModelList')
-      })
-      .catch(() => {})
-  })
-
-  /** 懒探测：当前模型未探测过时探测是否支持 xhigh/max；失败不置已探测，下次触发可重试 */
-  const ensureEffortProbed = useDebounceFn(
-    () => {
-      if (props.disabled || currentModel?.IsOnline) return
-      if (currentModel?.EffortProbed) return
-      if (effortProbing) return
-      if (!currentModel?.Provider || !currentModel?.ModelName) return
-      setEffortProbing(true)
-      const providerId = currentModel.ProviderId
-      const modelName = currentModel.ModelName
-      grpcProbeReasoningEffort({
-        Config: currentModel.Provider,
-        Model: currentModel.ModelName,
-      })
-        .then((resp) => {
-          const { conclusive, efforts } = effortProbeResultFromResponse(resp)
-          // 瞬时错误（限流/网络失败等）不落库已探测，下次触发可重试
-          if (!conclusive) return
-          updateCurrentModel((m) => {
-            if (m.ProviderId !== providerId || m.ModelName !== modelName) return m
-            return { ...m, EffortProbed: true, ProbedExtendedEfforts: efforts }
-          })
-        })
-        .catch(() => {})
-        .finally(() => {
-          setEffortProbing(false)
-        })
-    },
-    { wait: 300, leading: true },
-  ).run
-
-  // 挂载或切换到未探测的模型时主动探测，下拉打开时经 getList 再触发一次兜底重试
-  useEffect(() => {
-    ensureEffortProbed()
-  }, [currentModel?.ModelName, currentModel?.ProviderId, currentModel?.EffortProbed])
-
-  const onSetOpen = useMemoizedFn((v: boolean) => {
-    setOpen(v)
-  })
-
-  const onEffortSelect = useMemoizedFn((value: string) => {
+  const onEffortSelect = (value: string) => {
+    if (disabled) return
     setOpen(false)
-    const next = normalizeReasoningEffort(value)
     // no-set 不落库（undefined），与模型表单 formValueToAIConfigProvider 保存语义一致
-    updateCurrentModel((m) => ({
+    onChange((m) => ({
       ...m,
-      Provider: { ...m.Provider, ReasoningEffort: next === 'no-set' ? undefined : next },
+      Provider: { ...m.Provider, ReasoningEffort: value === 'no-set' ? undefined : value },
     }))
-  })
-
-  const pillText = useMemoizedFn((value: string) => {
-    // 与下拉列表同源文案，但去掉括号内的描述（如「低（快速）」展示为「低」、「默认（跟随模型默认）」展示为「默认」）
-    const option = reasoningEffortOptions.find((o) => o.value === value)
-    return String(option?.label || value).replace(/（[^）]*）|\([^)]*\)/g, '')
-  })
-
-  /** 收起态 pill 内容：探测中且下拉未打开时，脑图标位置替换为 loading */
-  const renderPill = useMemoizedFn((text: string) => (
-    <div className={styles['select-option']}>
-      {!open && effortProbing ? (
-        <div className={styles['icon-wrapper']}>
-          <YakitSolidLoading inline size={12} />
-        </div>
-      ) : (
-        <BrainOutlined className={styles['icon-wrapper']} color="currentColor" />
-      )}
-      <span className={styles['select-option-text']}>{text}</span>
-    </div>
-  ))
+  }
 
   return (
     <div
       className={classNames(styles['reasoning-effort-select'], className, {
-        [styles['reasoning-effort-select-off']]: effortValue === 'off',
+        [styles['reasoning-effort-select-open']]: open,
       })}
+      onClick={(event) => event.stopPropagation()}
     >
-      <AIChatSelect
-        getList={ensureEffortProbed}
-        dropdownRender={(menu) => {
-          return (
-            <div className={styles['drop-select-wrapper']}>
-              <div className={styles['select-title']}>
-                <div className={styles['select-title-left']}>
-                  <BrainOutlined color="currentColor" />
-                  {t('AiAgengt.reasoningEffort')}
-                  <Tooltip title={t('AIReasoningEffort.tooltip')}>
-                    <QuestionMarkCircleOutlined color="currentColor" />
-                  </Tooltip>
-                </div>
-                {effortProbing && (
-                  <div className={styles['select-title-probing']}>
-                    <YakitSolidLoading size={12} inline />
-                    {t('AIReasoningEffort.probing')}
-                  </div>
-                )}
-              </div>
-              {menu}
-            </div>
-          )
-        }}
-        value={effortValue}
-        onSelect={onEffortSelect}
-        optionLabelProp="label"
+      <YakitPopover
+        arrow={false}
+        placement="rightTop"
+        trigger="click"
         open={open}
-        setOpen={onSetOpen}
-        disabled={props.disabled || !currentModel}
-      >
-        {reasoningEffortOptions.map((item) => (
-          <YakitSelect.Option
-            key={item.value}
-            value={item.value as string}
-            label={renderPill(pillText(item.value as string))}
+        onOpenChange={onSetOpen}
+        getPopupContainer={(trigger) => trigger.ownerDocument.body}
+        classNames={{ root: styles['effort-popover'] }}
+        content={
+          <div
+            className={styles['effort-menu']}
+            data-ai-reasoning-effort-menu
+            role="menu"
+            aria-label={t('AIReasoningEffort.selectQuality')}
           >
-            <div className={styles['option-text']}>{item.label}</div>
-          </YakitSelect.Option>
-        ))}
-      </AIChatSelect>
+            {menuOptions.map((item) => (
+              <div
+                key={item.value}
+                className={styles['effort-option']}
+                role="menuitemradio"
+                aria-checked={effortValue === item.value}
+                onClick={() => onEffortSelect(String(item.value))}
+              >
+                <span>{item.label}</span>
+                {effortValue === item.value && <CheckOutlined size={16} color="currentColor" />}
+              </div>
+            ))}
+          </div>
+        }
+      >
+        <div
+          className={styles['effort-trigger']}
+          role="button"
+          aria-disabled={disabled}
+          aria-label={t('AIReasoningEffort.selectQuality')}
+          aria-haspopup="menu"
+          aria-expanded={open}
+        >
+          <span className={styles['effort-title']}>
+            {t('AIReasoningEffort.selectQuality')}
+            <Tooltip title={t('AIReasoningEffort.tooltip')}>
+              <InformationCircleOutlined size={12} color="currentColor" />
+            </Tooltip>
+          </span>
+          <span className={styles['effort-value']}>
+            {probing && <YakitSolidLoading inline size={12} />}
+            {probeErrors.length > 0 && (
+              <Tooltip
+                classNames={{ root: styles['effort-error-tooltip'] }}
+                title={
+                  <div className={styles['effort-error-details']}>
+                    {probeErrors.map(({ label, message }) => (
+                      <div key={label}>
+                        <strong>{label}</strong>
+                        <div>{message ? getProbeErrorMessage(message) : t('AIReasoningEffort.probeUnsupported')}</div>
+                      </div>
+                    ))}
+                  </div>
+                }
+                destroyOnHidden
+              >
+                <YakitTag
+                  className={styles['effort-error-tag']}
+                  size="small"
+                  color="serious"
+                  fullRadius
+                  border={false}
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  <ExclamationOutlined size={14} color="currentColor" />
+                  Error
+                </YakitTag>
+              </Tooltip>
+            )}
+            {effortLabel}
+            <ChevronRightOutlined size={12} color="currentColor" />
+          </span>
+        </div>
+      </YakitPopover>
     </div>
   )
-})
+}

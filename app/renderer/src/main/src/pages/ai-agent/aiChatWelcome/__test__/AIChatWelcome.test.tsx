@@ -2,13 +2,12 @@ import React, { createRef, useImperativeHandle, useState } from 'react'
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { AIReActChatRefProps } from '@/pages/ai-re-act/aiReActChat/AIReActChatType'
-import type { AIChatTextareaProps, AIChatTextareaRefProps } from '../../template/type'
+import type { AIChatInputDraft, AIChatTextareaProps, AIChatTextareaRefProps } from '../../template/type'
 import type * as WelcomeModule from '../AIChatWelcome'
 import welcomeStyles from '../AIChatWelcome.module.scss'
 import { compileReactModule } from '@/utils/__test__/helpers/compileReactModule'
 
 const createInputHandle = (value: string) => ({
-  setHttpFlow: vi.fn(),
   setValue: vi.fn(),
   setMention: vi.fn(),
   getValue: vi.fn(() => value),
@@ -42,35 +41,37 @@ const welcomeAnimationMocks = vi.hoisted(() => ({
   animationDisabled: false,
 }))
 
+const firstDraft: AIChatInputDraft = {
+  markdown: 'hello',
+  selectedMaterials: [],
+  hiddenInlineKeys: [],
+  selectedResourceIds: { http: ['101'], risk: ['8'] },
+}
+
 vi.mock('../../template/template', () => ({
   AIChatTextarea: React.forwardRef<AIChatTextareaRefProps, AIChatTextareaProps>(function Input(props, ref) {
     const [revision, setRevision] = useState(0)
     useImperativeHandle(ref, () => inputHandles[revision], [revision])
     return (
       <div>
+        <div data-testid="scenario-capabilities" data-enabled={props.showScenarioCapabilities} />
+        <div data-testid="mention-filter" data-filter={props.filterMentionType?.join(',')} />
         <button onClick={() => setRevision(1)}>更换输入框 ref</button>
         <button onClick={() => props.onHttpFlowRemove?.('101', false)}>删除单条流量</button>
         <button onClick={() => props.onHttpFlowRemove?.('101,102', true)}>删除聚合流量</button>
+        <button onClick={() => props.onSubmitWithDraft?.({ qs: 'hello', sessionId: 'stale-image-draft' }, firstDraft)}>
+          发送首问
+        </button>
+        <button onClick={() => props.onWorkspaceAddedChange?.({ risk: 3, traffic: 1, fileSystem: 1 })}>
+          同步已添加
+        </button>
       </div>
     )
   }),
 }))
-vi.mock('ahooks', async () => ({ ...(await vi.importActual('ahooks')), useInViewport: () => [false] }))
 vi.mock('@/i18n/useI18nNamespaces', () => ({
   useI18nNamespaces: () => ({ t: (key: string) => key, i18n: { language: 'zh' } }),
 }))
-vi.mock('../../grpc', () => ({
-  grpcGetAIReActRecommendedSkills: vi.fn().mockResolvedValue({ Data: [] }),
-  grpcUpdateAIReActRecommendedSkill: vi.fn(),
-  grpcResetAIReActRecommendedSkill: vi.fn(),
-}))
-vi.mock('@/components/yakitUI/YakitButton/YakitButton', () => ({ YakitButton: () => null }))
-vi.mock('@/components/yakitUI/YakitEditor/YakitEditor', () => ({ YakitEditor: () => null }))
-vi.mock('@/components/yakitUI/YakitModal/YakitModal', () => ({ YakitModal: () => null }))
-vi.mock('@/utils/getMainOperatorPageBodyContainer', () => ({
-  getMainOperatorPageBodyContainerOrBody: () => document.body,
-}))
-vi.mock('@/utils/notification', () => ({ yakitNotify: vi.fn() }))
 vi.mock('../AIChatWelcomeSideSetting', () => ({ SideSettingButton: () => null }))
 vi.mock('../AIWelcomeAsciiRipple', () => ({
   AIWelcomeAsciiRipple: () => <div data-testid="welcome-ascii-ripple" aria-hidden="true" />,
@@ -91,14 +92,24 @@ vi.mock('../WelcomeTipsCards/WelcomeTipsCards', () => {
   function MockWelcomeTipsCards({
     compact,
     onEmptyChange,
+    added,
   }: {
     compact?: boolean
     onEmptyChange?: (empty: boolean) => void
+    added?: { risk: number; traffic: number; fileSystem: number }
   }) {
     React.useEffect(() => {
       onEmptyChange?.(tipsMocks.empty)
     }, [onEmptyChange])
-    return <div data-testid="welcome-tips-cards" data-compact={compact ? 'true' : 'false'} />
+    return (
+      <div
+        data-testid="welcome-tips-cards"
+        data-compact={compact ? 'true' : 'false'}
+        data-added-risk={added?.risk ?? 0}
+        data-added-traffic={added?.traffic ?? 0}
+        data-added-file={added?.fileSystem ?? 0}
+      />
+    )
   }
   return { default: MockWelcomeTipsCards }
 })
@@ -139,6 +150,34 @@ afterEach(() => {
 const WELCOME_TITLE = 'Memfit AI Agent'
 
 describe('AIChatWelcome 输入框转发', () => {
+  it('在欢迎页开启场景能力入口', () => {
+    render(<AIChatWelcome onTriageSubmit={vi.fn()} onSetReAct={vi.fn()} />)
+    expect(screen.getByTestId('scenario-capabilities')).toHaveAttribute('data-enabled', 'true')
+  })
+
+  it('把输入框已选漏洞、流量和文件同步到欢迎卡片', () => {
+    render(<AIChatWelcome onTriageSubmit={vi.fn()} onSetReAct={vi.fn()} />)
+    const cards = screen.getByTestId('welcome-tips-cards')
+    expect(cards).toHaveAttribute('data-added-risk', '0')
+    expect(cards).toHaveAttribute('data-added-traffic', '0')
+    expect(cards).toHaveAttribute('data-added-file', '0')
+    fireEvent.click(screen.getByRole('button', { name: '同步已添加' }))
+    expect(cards).toHaveAttribute('data-added-risk', '3')
+    expect(cards).toHaveAttribute('data-added-traffic', '1')
+    expect(cards).toHaveAttribute('data-added-file', '1')
+  })
+
+  it('在欢迎页隐藏近期添加 Tab', () => {
+    render(<AIChatWelcome onTriageSubmit={vi.fn()} onSetReAct={vi.fn()} />)
+    expect(screen.getByTestId('mention-filter')).toHaveAttribute('data-filter', 'recent')
+  })
+
+  it('首次发送原样转发输入框提供的会话 ID 和草稿', () => {
+    const onTriageSubmit = vi.fn()
+    render(<AIChatWelcome onTriageSubmit={onTriageSubmit} onSetReAct={vi.fn()} />)
+    fireEvent.click(screen.getByRole('button', { name: '发送首问' }))
+    expect(onTriageSubmit).toHaveBeenCalledExactlyOnceWith({ qs: 'hello', sessionId: 'stale-image-draft' }, firstDraft)
+  })
   it('转发输入方法，并在子输入框 handle 更换后使用最新 ref', () => {
     const ref = createRef<AIReActChatRefProps>()
     render(<AIChatWelcome ref={ref} onTriageSubmit={vi.fn()} onSetReAct={vi.fn()} />)
@@ -149,21 +188,17 @@ describe('AIChatWelcome 输入框转发', () => {
       mentionType: 'tool',
     }
 
-    welcomeHandle.setHttpFlow(['101'])
     welcomeHandle.setValue('first question')
     welcomeHandle.setMention(mention)
     expect(welcomeHandle.getValue()).toBe('first draft')
-    expect(inputHandles[0].setHttpFlow).toHaveBeenCalledWith(['101'])
     expect(inputHandles[0].setValue).toHaveBeenCalledWith('first question')
     expect(inputHandles[0].setMention).toHaveBeenCalledWith(mention)
 
     fireEvent.click(screen.getByRole('button', { name: '更换输入框 ref' }))
     expect(ref.current).toBe(welcomeHandle)
-    welcomeHandle.setHttpFlow(['102', '103'])
     welcomeHandle.setValue('second question')
     welcomeHandle.setMention({ ...mention, mentionId: 'skill-2' })
     expect(welcomeHandle.getValue()).toBe('second draft')
-    expect(inputHandles[1].setHttpFlow).toHaveBeenCalledWith(['102', '103'])
     expect(inputHandles[1].setValue).toHaveBeenCalledWith('second question')
     expect(inputHandles[1].setMention).toHaveBeenCalledWith({ ...mention, mentionId: 'skill-2' })
     for (const method of Object.values(inputHandles[0])) expect(method).toHaveBeenCalledOnce()

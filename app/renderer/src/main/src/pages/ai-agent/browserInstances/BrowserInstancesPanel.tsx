@@ -10,6 +10,7 @@ import {
   PaperAirplaneOutlined,
   RefreshOutlined,
   PositionOutlined,
+  TrashOutlined,
   XOutlined,
   InformationCircleOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
@@ -226,8 +227,15 @@ const BrowserCardPreview: React.FC<{
   )
 }
 
-const BrowserInstanceCard: React.FC<{ instance: AIBrowserInstance }> = ({ instance }) => {
-  const { t } = useI18nNamespaces(['aiAgent'])
+export interface BrowserInstanceCardProps {
+  instance: AIBrowserInstance
+  removal?: { name: string; disabled?: boolean; onRemove: () => void }
+  variant?: 'material'
+}
+
+export const BrowserInstanceCard: React.FC<BrowserInstanceCardProps> = ({ instance, removal, variant }) => {
+  const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
+  const isMaterial = variant === 'material'
   const [focusing, setFocusing] = useState(false)
   const thumbnailKey = thumbnailCacheKey(instance)
   const thumbnailRequestId = useRef(0)
@@ -336,7 +344,10 @@ const BrowserInstanceCard: React.FC<{ instance: AIBrowserInstance }> = ({ instan
   )
 
   return (
-    <div className={styles['browser-card']} data-identity={instance.identity || undefined}>
+    <div
+      className={classNames(styles['browser-card'], { [styles['material-card']]: isMaterial })}
+      data-identity={instance.identity || undefined}
+    >
       <BrowserPreviewPopover instance={instance} thumbnail={thumbnail} refreshThumbnail={refreshThumbnail}>
         <span className={styles['preview-shell']}>
           <BrowserCardPreview instance={instance} thumbnail={thumbnail} />
@@ -353,21 +364,36 @@ const BrowserInstanceCard: React.FC<{ instance: AIBrowserInstance }> = ({ instan
             {instance.tab?.title || instance.name}
           </span>
           <div className={styles['card-actions']}>
-            <YakitButton
-              type="text2"
-              icon={<PaperAirplaneOutlined color="currentColor" />}
-              aria-label={t('BrowserInstances.reference')}
-              onClick={() => insertBrowserInstanceMention(instance)}
-            />
-            <YakitButton
-              type="text2"
-              icon={<PositionOutlined color="currentColor" />}
-              disabled={!canFocus}
-              loading={focusing}
-              aria-label={t('BrowserInstances.focus')}
-              onClick={focusBrowser}
-            />
-            {moreMenu}
+            {removal && (
+              <YakitButton
+                className={styles.remove}
+                type="text2"
+                size="small"
+                icon={<TrashOutlined size={16} color="currentColor" />}
+                aria-label={`${t('YakitButton.delete')} ${removal.name}`}
+                disabled={removal.disabled}
+                onClick={removal.onRemove}
+              />
+            )}
+            {!isMaterial && !removal && (
+              <>
+                <YakitButton
+                  type="text2"
+                  icon={<PaperAirplaneOutlined color="currentColor" />}
+                  aria-label={t('BrowserInstances.reference')}
+                  onClick={() => insertBrowserInstanceMention(instance)}
+                />
+                <YakitButton
+                  type="text2"
+                  icon={<PositionOutlined color="currentColor" />}
+                  disabled={!canFocus}
+                  loading={focusing}
+                  aria-label={t('BrowserInstances.focus')}
+                  onClick={focusBrowser}
+                />
+                {moreMenu}
+              </>
+            )}
           </div>
         </div>
         <div className={styles['instance-url-row']} title={instance.tab?.url || instance.origin}>

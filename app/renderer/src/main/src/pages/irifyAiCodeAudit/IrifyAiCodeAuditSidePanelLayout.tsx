@@ -13,8 +13,8 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import classNames from 'classnames'
 import styles from './IrifyAiCodeAuditSidePanelLayout.module.scss'
 import { resolveIrifyAuditDefaultChatSeed } from './irifyAiCodeAuditConstants'
-import emiter from '@/utils/eventBus/eventBus'
 import { IrifyAiAuditStyleToggle } from './IrifyAiAuditStyleToggle'
+import emiter from '@/utils/eventBus/eventBus'
 import type { IrifyAiCodeAuditStyle } from './irifyAiCodeAuditStyle'
 
 const defaultAiTabs: YakitTabsProps[] = [
@@ -32,25 +32,20 @@ export interface IrifyAiCodeAuditSidePanelLayoutProps {
   placement?: Placement
   rootClassName?: string
   sideTabs?: YakitTabsProps[]
-  /** 当前审计风格（code / skill），驱动右下角风格切换的当前值 */
+  /** 当前审计风格，用于填充聊天输入框。 */
   auditStyle?: IrifyAiCodeAuditStyle
-  /** 审计已开始后锁定，禁止切换风格 */
   auditStyleLocked?: boolean
-  /** 切换风格回调（仅在未锁定时可调用） */
   onAuditStyleChange?: (style: IrifyAiCodeAuditStyle) => void
 }
 
-const IrifyAiCodeAuditSidePanelLayoutInner: React.FC<{
-  placement: Placement
-  rootClassName?: string
-  children: React.ReactNode
-  sideTabs: YakitTabsProps[]
-  auditStyle?: IrifyAiCodeAuditStyle
-  auditStyleLocked?: boolean
-  onAuditStyleChange?: (style: IrifyAiCodeAuditStyle) => void
-}> = ({ placement, children, rootClassName, sideTabs, auditStyle, auditStyleLocked, onAuditStyleChange }) => {
+const IrifyAiCodeAuditSidePanelLayoutInner: React.FC<
+  IrifyAiCodeAuditSidePanelLayoutProps & {
+    placement: Placement
+    sideTabs: YakitTabsProps[]
+  }
+> = ({ placement, children, rootClassName, sideTabs, auditStyle, auditStyleLocked, onAuditStyleChange }) => {
   const { t, i18nRefresh } = useI18nNamespaces(['history', 'irifyAiCodeAudit'])
-  const { renderHistoryAIReActChat, setShowFreeChat, historyAIReActChatBridge, focusModeLoop } = useHistoryAIReActChat()
+  const { renderHistoryAIReActChat, setShowFreeChat, historyAIReActChatBridge } = useHistoryAIReActChat()
   const [activeKey, setActiveKey] = useState<string>('ai')
   const [openTabsFlag, setOpenTabsFlag] = useState<boolean>(true)
 
@@ -143,27 +138,19 @@ const IrifyAiCodeAuditSidePanelLayoutInner: React.FC<{
           taskDetails: true,
         },
         footerRightTypes: [
+          { type: AIInputFooterRightEnum.AIModelSelect, props: { isOpen: false } },
           {
-            type: AIInputFooterRightEnum.AIFocusMode,
+            type: AIInputFooterRightEnum.Custom,
+            key: 'audit-style',
             component: (
               <IrifyAiAuditStyleToggle
-                key="irify-audit-style-toggle"
                 value={auditStyle ?? 'unset'}
-                onChange={(style) => onAuditStyleChange?.(style)}
                 locked={auditStyleLocked}
-                className={styles.auditStyleToggle}
+                onChange={(style) => onAuditStyleChange?.(style)}
               />
             ),
-            // props 不再使用（由 component 直接渲染），保留以满足类型结构
-            props: {
-              value: focusModeLoop,
-              onChange: () => {},
-              disabled: true,
-            },
           },
         ],
-
-        filterMentionType: ['focusMode'],
       },
     })
 
@@ -235,24 +222,7 @@ const IrifyAiCodeAuditSidePanelLayoutInner: React.FC<{
 }
 
 export const IrifyAiCodeAuditSidePanelLayout: React.FC<IrifyAiCodeAuditSidePanelLayoutProps> = ({
-  children,
   placement = 'right',
-  rootClassName,
   sideTabs = defaultAiTabs,
-  auditStyle,
-  auditStyleLocked,
-  onAuditStyleChange,
-}) => {
-  return (
-    <IrifyAiCodeAuditSidePanelLayoutInner
-      placement={placement}
-      rootClassName={rootClassName}
-      sideTabs={sideTabs}
-      auditStyle={auditStyle}
-      auditStyleLocked={auditStyleLocked}
-      onAuditStyleChange={onAuditStyleChange}
-    >
-      {children}
-    </IrifyAiCodeAuditSidePanelLayoutInner>
-  )
-}
+  ...props
+}) => <IrifyAiCodeAuditSidePanelLayoutInner {...props} placement={placement} sideTabs={sideTabs} />

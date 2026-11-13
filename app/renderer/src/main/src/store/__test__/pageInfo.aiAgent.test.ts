@@ -59,7 +59,7 @@ afterEach(() => {
 })
 
 const savedPages = (): PageNodeItemProps[] =>
-  JSON.parse(kv.project.mock.calls.filter(([key]) => key === RemoteAIAgentGV.AIAgentTabs).at(-1)![1])
+  JSON.parse(kv.project.mock.calls.filter(([key]) => key === RemoteAIAgentGV.AIAgentTabs).at(-1)![1]).pageList
 
 describe('AI pageInfo route persistence through existing actions', () => {
   it('reports cache failures with the translated message and error details', async () => {
@@ -80,9 +80,34 @@ describe('AI pageInfo route persistence through existing actions', () => {
     api.usePageInfo.getState().addPagesDataCache(YakitRoute.AI_Agent, page)
 
     expect(api.usePageInfo.getState().queryPagesDataById(YakitRoute.AI_Agent, page.pageId)).toEqual(page)
-    expect(kv.project).toHaveBeenCalledExactlyOnceWith(RemoteAIAgentGV.AIAgentTabs, JSON.stringify([page]))
+    expect(kv.project).toHaveBeenCalledExactlyOnceWith(
+      RemoteAIAgentGV.AIAgentTabs,
+      JSON.stringify({ version: 1, pageList: [page] }),
+    )
     expect(savedPages()[0].pageParamsInfo.aiAgentPageInfo).toEqual(info)
     expect(kv.set).not.toHaveBeenCalled()
+  })
+
+  it('keeps a draft tab in memory and persists it only after the session connects', async () => {
+    const store = api.usePageInfo.getState()
+    const draft = {
+      ...node('new-ai'),
+      pageParamsInfo: { aiAgentPageInfo: { session: { ...session, isDraftSession: true } } },
+    }
+    store.addPagesDataCache(YakitRoute.AI_Agent, draft)
+    await vi.advanceTimersByTimeAsync(500)
+
+    expect(store.queryPagesDataById(YakitRoute.AI_Agent, draft.pageId)).toEqual(draft)
+    expect(savedPages()).toEqual([])
+
+    const connected = {
+      ...draft,
+      pageParamsInfo: { aiAgentPageInfo: { session: { ...session, isDraftSession: false } } },
+    }
+    store.updatePagesDataCacheById(YakitRoute.AI_Agent, connected)
+    await vi.advanceTimersByTimeAsync(500)
+
+    expect(savedPages()).toEqual([connected])
   })
 
   it('debounces title changes for 500ms and saves the latest page and session title', async () => {
