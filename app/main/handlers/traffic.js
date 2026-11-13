@@ -2,6 +2,32 @@ const { ipcMain } = require('electron')
 const handlerHelper = require('./handleStreamWithContext')
 
 module.exports = (win, getClient) => {
+  for (const method of ['QueryPCAPDatabase', 'ExportPCAPData', 'DeletePCAPDatabase']) {
+    ipcMain.handle(method, async (_event, params) => {
+      return await new Promise((resolve, reject) => {
+        const client = getClient()
+        if (typeof client[method] !== 'function') {
+          reject(new Error('当前引擎不支持 PCAP 数据库，请更新引擎'))
+          return
+        }
+        client[method](params, (err, data) => (err ? reject(err) : resolve(data)))
+      })
+    })
+  }
+
+  const imports = new Map()
+  handlerHelper.bindWindowLifecycle(win, imports)
+  ipcMain.handle('ImportPCAPFile', (event, params, token) => {
+    const { mapToken, eventToken } = handlerHelper.resolveRendererStreamToken(event, win, token)
+    if (imports.has(mapToken)) return
+    const stream = getClient().ImportPCAPFile(params)
+    handlerHelper.registerHandler(win, stream, imports, mapToken, eventToken)
+  })
+  ipcMain.handle('cancel-ImportPCAPFile', (event, token) => {
+    const { mapToken } = handlerHelper.resolveRendererStreamToken(event, win, token)
+    return handlerHelper.cancelHandler(imports)(event, mapToken)
+  })
+
   // asyncQueryTrafficSession wrapper
   const asyncQueryTrafficSession = (params) => {
     return new Promise((resolve, reject) => {
@@ -49,8 +75,6 @@ module.exports = (win, getClient) => {
   ipcMain.handle('GetPcapMetadata', async (e, params) => {
     return await asyncGetPcapMetadata(params)
   })
-
-  const handlerHelper = require('./handleStreamWithContext')
 
   const streamPcapXMap = new Map()
   ipcMain.handle('cancel-PcapX', handlerHelper.cancelHandler(streamPcapXMap))

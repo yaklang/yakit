@@ -133,7 +133,7 @@ import { type SoftMode, YakitModeEnum } from '@/store/softMode'
 const ShellReceiver = React.lazy(() =>
   import('../pages/reverseShellReceiver/shellReceiver').then((m) => ({ default: m.ShellReceiver })),
 )
-const PcapXDemo = React.lazy(() => import('@/components/playground/PcapXDemo').then((m) => ({ default: m.PcapXDemo })))
+const PCAPPacketViewer = React.lazy(() => import('@/components/pcap/PCAPPacketViewer'))
 const DataCompare = React.lazy(() => import('../pages/compare/DataCompare').then((m) => ({ default: m.DataCompare })))
 const PortAssetTable = React.lazy(() =>
   import('@/pages/assetViewer/PortAssetPage').then((m) => ({ default: m.PortAssetTable })),
@@ -1036,7 +1036,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
     case YakitRoute.DB_ChaosMaker:
       return <ChaosMakerPage />
     case YakitRoute.Beta_DebugTrafficAnalize:
-      return <PcapXDemo />
+      return <PCAPPacketViewer />
     case YakitRoute.Beta_DebugMonacoEditor:
       return <DebugMonacoEditorPage />
     case YakitRoute.Beta_VulinboxManager:
