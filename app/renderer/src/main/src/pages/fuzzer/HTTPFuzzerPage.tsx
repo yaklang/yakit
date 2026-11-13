@@ -934,6 +934,64 @@ const useLastValidSize = (currentSize?: Size) => {
 
 /*LINK - app\renderer\src\main\src\defaultConstants\HTTPFuzzerPage.ts*/
 /*为避免文件相互引用造成数据问题,请将 HTTPFuzzerPage 页面的常用变量放在 app\renderer\src\main\src\defaultConstants\HTTPFuzzerPage.ts */
+
+/** 拉历史时快捷键不发包。isbuttonIsSendReqStatus 已排除 loadingHistory，这里再挡一层。 */
+export const canTriggerSendShortcut = (
+  inViewport: boolean,
+  isbuttonIsSendReqStatus: boolean,
+  loadingHistory: boolean,
+) => inViewport && isbuttonIsSendReqStatus && !loadingHistory
+
+/** 左侧发送 / 继续 / 暂停停止。拉历史只禁用发送，不进入暂停停止。 */
+export const FuzzerRequestToolbar: React.FC<{
+  loading: boolean
+  loadingHistory: boolean
+  isPause: boolean
+  cachedTotal: number
+  sendShortcut: string | null
+  onSend: () => void
+  onResumeAndPause: () => void
+  onCancel: () => void
+  aiMenu?: React.ReactNode
+}> = (props) => {
+  const { t } = useI18nNamespaces(['yakitUi'])
+  const { loading, loadingHistory, isPause, cachedTotal, sendShortcut, onSend, onResumeAndPause, onCancel, aiMenu } =
+    props
+  if (loading && !loadingHistory) {
+    return (
+      <>
+        <YakitButton
+          disabled={cachedTotal <= 1}
+          onClick={onResumeAndPause}
+          icon={<PauseSolid color="currentColor" />}
+          type={'primary'}
+          size="large"
+        >
+          {t('YakitButton.pause')}
+        </YakitButton>
+        <YakitButton onClick={onCancel} icon={<StopSolid />} type={'primary'} colors="danger" size="large">
+          {t('YakitButton.stop')}
+        </YakitButton>
+      </>
+    )
+  }
+  if (!isPause && !loadingHistory) {
+    return (
+      <YakitButton onClick={onResumeAndPause} icon={<PlaySolid color="currentColor" />} type={'primary'} size="large">
+        {t('YakitButton.continue')}
+      </YakitButton>
+    )
+  }
+  return (
+    <>
+      <YakitButton disabled={loadingHistory} onClick={onSend} type={'primary'} size="large">
+        {t('YakitButton.sendRequest')} {sendShortcut}
+      </YakitButton>
+      {aiMenu}
+    </>
+  )
+}
+
 const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
   const { queryPagesDataById, updatePagesDataCacheById } = usePageInfo(
     (s) => ({
@@ -993,6 +1051,8 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
   const [droppedCount, setDroppedCount] = useState(0)
   // state
   const [loading, setLoading] = useState(false)
+  // 拉历史包（初次恢复 / 点历史）与发包共用 loading，但左侧不进入暂停/停止
+  const [loadingHistory, setLoadingHistory] = useState(false)
   const loadingRef = useRef(loading)
   const mcpExecutionSlotRef = useRef(createMcpWebFuzzerExecutionSlot())
   const startMcpExecutionRef = useRef<() => void>(() => {})
@@ -1399,36 +1459,50 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
 
   const loadHistory = useMemoizedFn((id: number) => {
     resetResponse()
+    const opGen = restoreOpRef.current
     loadingRef.current = true
-    setLoadingText('loading packets')
+    setLoadingHistory(true)
+    setLoadingText(t('HTTPFuzzerPage.loadingData'))
     setLoading(true)
     setDroppedCount(0)
     setFuzzerTableMaxData(advancedConfigValue.resNumlimit)
-    ipcRenderer.invoke('HTTPFuzzer', { HistoryWebFuzzerId: id }, tokenRef.current).then(() => {
-      ipcRenderer
-        .invoke('GetHistoryHTTPFuzzerTask', { Id: id })
-        .then((data: { OriginRequest: HistoryHTTPFuzzerTask }) => {
-          const { OriginRequest } = data
-          previewNetworkRef.current = OriginRequest
-          if (OriginRequest.Request === '') {
-            requestRef.current = Uint8ArrayToString(OriginRequest.RequestRaw, 'utf8')
-          } else {
-            requestRef.current = OriginRequest.Request
-          }
-          setBrowserTransformSelection(
-            OriginRequest.BrowserExtensionDeviceId && OriginRequest.BrowserTransformProfileId
-              ? {
-                  deviceId: OriginRequest.BrowserExtensionDeviceId,
-                  profileId: OriginRequest.BrowserTransformProfileId,
-                  profileName: '历史浏览器转换配置',
-                }
-              : undefined,
-          )
-          onSetFuzzerConfig(OriginRequest)
-          setCurrentSelectId(id)
-          refreshRequest()
-        })
-    })
+    ipcRenderer
+      .invoke('HTTPFuzzer', { HistoryWebFuzzerId: id }, tokenRef.current)
+      .then(() => {
+        if (restoreOpRef.current !== opGen) return
+        // 必须 return：内层查询失败要进下面的 catch，否则 reject 无人处理且 loading 一直为 true
+        return ipcRenderer
+          .invoke('GetHistoryHTTPFuzzerTask', { Id: id })
+          .then((data: { OriginRequest: HistoryHTTPFuzzerTask }) => {
+            if (restoreOpRef.current !== opGen) return
+            const { OriginRequest } = data
+            previewNetworkRef.current = OriginRequest
+            if (OriginRequest.Request === '') {
+              requestRef.current = Uint8ArrayToString(OriginRequest.RequestRaw, 'utf8')
+            } else {
+              requestRef.current = OriginRequest.Request
+            }
+            setBrowserTransformSelection(
+              OriginRequest.BrowserExtensionDeviceId && OriginRequest.BrowserTransformProfileId
+                ? {
+                    deviceId: OriginRequest.BrowserExtensionDeviceId,
+                    profileId: OriginRequest.BrowserTransformProfileId,
+                    profileName: '历史浏览器转换配置',
+                  }
+                : undefined,
+            )
+            onSetFuzzerConfig(OriginRequest)
+            setCurrentSelectId(id)
+            refreshRequest()
+          })
+      })
+      .catch(() => {
+        // 拉历史失败时没有停止按钮，必须自己退出禁用发送，且不能清掉用户已经发起的新任务
+        if (restoreOpRef.current !== opGen) return
+        loadingRef.current = false
+        setLoadingHistory(false)
+        setLoading(false)
+      })
   })
   const onSetFuzzerConfig = useMemoizedFn((historyData: HistoryHTTPFuzzerTask) => {
     const query: QueryFuzzerConfigRequest = {
@@ -1514,9 +1588,9 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
   })
 
   useEffect(() => {
-    loadingRef.current = loading
-    if (!loading) startMcpExecutionRef.current()
-  }, [loading])
+    loadingRef.current = loading || loadingHistory
+    if (!loading && !loadingHistory) startMcpExecutionRef.current()
+  }, [loading, loadingHistory])
 
   const previewNetworkRef = useRef<PreviewNetwork>()
   const getPreviewNetwork = useMemoizedFn(() => previewNetworkRef.current || getFuzzerRequestParams())
@@ -1557,6 +1631,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
 
     // 同步占 busy，避免 setLoading(true) 与 effect 同步 loadingRef 之间的窗口被 MCP 抢占同 token
     loadingRef.current = true
+    setLoadingHistory(false)
     setLoading(true)
     setDroppedCount(0)
 
@@ -1655,10 +1730,10 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
   const canPlayAgain = useMemo(() => {
     return !loading && !isPause
   }, [isPause, loading])
-  // 目前按钮处于发送请求状态
+  // 目前按钮处于发送请求状态。拉历史时不算可发送，避免文案被改回 sending packets
   const isbuttonIsSendReqStatus = useMemo(() => {
-    return !loading && isPause
-  }, [loading, isPause])
+    return !loading && !loadingHistory && isPause
+  }, [loading, loadingHistory, isPause])
   useEffect(() => {
     if (isbuttonIsSendReqStatus) {
       setLoadingText('sending packets')
@@ -1807,6 +1882,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
         retryRef.current = false
         matchRef.current = false
         setIsPause(true)
+        setLoadingHistory(false)
         setLoading(false)
         setLoadingText('sending packets')
         stop()
@@ -2139,6 +2215,8 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
   })
   /** 按历史序列位置 pageInt 加载单个历史数据包详情 */
   const getList = useMemoizedFn((pageInt: number) => {
+    setLoadingHistory(true)
+    setLoadingText(t('HTTPFuzzerPage.loadingData'))
     setLoading(true)
     const params = buildHistoryQueryParams(pageInt, 1, showAll)
     ipcRenderer
@@ -2147,12 +2225,16 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
         setTotal(Number(data.Total) || 0)
         if (data.Data.length > 0) {
           loadHistory(data.Data[0].BasicInfo.Id)
+        } else {
+          setLoadingHistory(false)
+          setLoading(false)
         }
       })
       .catch((err) => {
+        setLoading(false)
+        setLoadingHistory(false)
         failed(t('YakitNotification.loadFailed', { error: err + '' }))
       })
-      .finally(() => setTimeout(() => setLoading(false), 300))
   })
   /** 上一个数据包：到第一条时禁用 */
   const onPrePage = useMemoizedFn(() => {
@@ -2937,7 +3019,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
   useShortcutKeyTrigger(
     'sendRequest*httpFuzzer',
     useMemoizedFn(() => {
-      if (inViewport && isbuttonIsSendReqStatus) {
+      if (canTriggerSendShortcut(inViewport, isbuttonIsSendReqStatus, loadingHistory)) {
         sendRequest()
       }
     }),
@@ -3387,51 +3469,19 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
             <div className={styles['http-fuzzer-page']}>
               <div className={styles['fuzzer-heard']}>
                 <div className={styles['fuzzer-heard-left']}>
-                  {!loading ? (
-                    <>
-                      {!isPause ? (
-                        <YakitButton
-                          onClick={resumeAndPause}
-                          icon={<PlaySolid color="currentColor" />}
-                          type={'primary'}
-                          size="large"
-                        >
-                          {t('YakitButton.continue')}
-                        </YakitButton>
-                      ) : (
-                        <>
-                          <YakitButton onClick={sendRequest} type={'primary'} size="large">
-                            {t('YakitButton.sendRequest')}{' '}
-                            {convertKeyboardToUIKey(getHttpFuzzerShortcutKeyEvents()['sendRequest*httpFuzzer'].keys)}
-                          </YakitButton>
-                          <WebFuzzerAiTestMenu inViewport={inViewport} onSelect={onAiTest} />
-                        </>
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      <YakitButton
-                        disabled={cachedTotal <= 1}
-                        onClick={resumeAndPause}
-                        icon={<PauseSolid color="currentColor" />}
-                        type={'primary'}
-                        size="large"
-                      >
-                        {t('YakitButton.pause')}
-                      </YakitButton>
-                      <YakitButton
-                        onClick={() => {
-                          cancelCurrentHTTPFuzzer()
-                        }}
-                        icon={<StopSolid />}
-                        type={'primary'}
-                        colors="danger"
-                        size="large"
-                      >
-                        {t('YakitButton.stop')}
-                      </YakitButton>
-                    </>
-                  )}
+                  <FuzzerRequestToolbar
+                    loading={loading}
+                    loadingHistory={loadingHistory}
+                    isPause={isPause}
+                    cachedTotal={cachedTotal}
+                    sendShortcut={convertKeyboardToUIKey(
+                      getHttpFuzzerShortcutKeyEvents()['sendRequest*httpFuzzer'].keys,
+                    )}
+                    onSend={sendRequest}
+                    onResumeAndPause={resumeAndPause}
+                    onCancel={cancelCurrentHTTPFuzzer}
+                    aiMenu={<WebFuzzerAiTestMenu inViewport={inViewport} onSelect={onAiTest} />}
+                  />
                   <PacketScanButton
                     packetGetter={() => {
                       return {
@@ -3522,7 +3572,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                     {t('HTTPFuzzerPage.bruteForceExample')}
                     <QuestionMarkCircleOutlined size={16} />
                   </div>
-                  {loading && (
+                  {(loading || loadingHistory) && (
                     <div className={classNames(styles['spinning-text'], styles['display-flex'])}>
                       <YakitSpin size={'small'} style={{ width: 'auto' }} />
                       {loadingText}
