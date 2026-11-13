@@ -204,6 +204,7 @@ import { useHttpFlowStore } from '@/store/httpFlow'
 import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useProxy } from '@/hook/useProxy'
 import { JSONParseLog } from '@/utils/tool'
+import { restoreAIAgentTabCache } from '@/store/aiAgentTabCache'
 import { type SoftMode, useSoftMode, YakitModeEnum } from '@/store/softMode'
 import { useTheme } from '@/hook/useTheme'
 import { RemoteSoftModeGV } from '@/enums/softMode'
@@ -3069,11 +3070,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     ) => {
       const raw = await getRemoteProjectValue(RemoteAIAgentGV.AIAgentTabs)
       if (isDisposed()) return
-      const cached: PageNodeItemProps[] = JSONParseLog(raw || '[]', {
-        page: 'MainOperatorContent',
-        fun: 'restoreAITabs',
-      })
-      if (!Array.isArray(cached)) throw new Error('Invalid AI Agent tab cache')
+      const cached = restoreAIAgentTabCache(
+        JSONParseLog(raw || '[]', { page: 'MainOperatorContent', fun: 'restoreAITabs' }),
+      )
       const nodes = new Map(
         cached
           .filter((node) => !node.pageParamsInfo?.aiAgentPageInfo?.session?.isDraftSession)

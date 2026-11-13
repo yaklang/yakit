@@ -15,6 +15,7 @@ import FirstTabRouteMenu from '../FirstTabRouteMenu/FirstTabRouteMenu'
 import type { PublicRouteMenuProps } from '@/routes/newRoute'
 import emiter from '@/utils/eventBus/eventBus'
 import { useHttpFlowStore } from '@/store/httpFlow'
+import { restoreAIAgentTabCache, serializeAIAgentTabCache } from '@/store/aiAgentTabCache'
 
 const routeMenuI18n = vi.hoisted(() => ({ t: (key: string) => key }))
 const routeMenuSource = vi.hoisted(() => ({ getPublicRouteMenu: vi.fn<(mode?: unknown) => PublicRouteMenuProps[]>() }))
@@ -1180,6 +1181,7 @@ const setup = ({ mode = 'classic', savedKey = '', memfit = true, enterprise = fa
     getRemoteProjectValue: vi.fn(() => ai.promise),
     grpcQueryAISession: vi.fn().mockResolvedValue({ Data: [] }),
     mergeAIAgentPageTabs: vi.fn((current) => current),
+    restoreAIAgentTabCache,
     RemoteAIAgentGV: { AIAgentTabs: 'ai-tabs' },
     RemoteGV: { SelectFirstMenuTabKey: 'selected' },
     JSONParseLog: JSON.parse,
@@ -1244,6 +1246,7 @@ describe('MainOperatorContent initial cache loading', () => {
     Object.assign(app.bindings, {
       saveAIAgentCache: execute(`return ${saver.initializer!.getText(cacheSource)}`, {
         debounce,
+        serializeAIAgentTabCache,
         setRemoteProjectValue: write,
         RemoteAIAgentGV: app.bindings.RemoteAIAgentGV,
         yakitNotify: app.bindings.yakitNotify,
@@ -1275,7 +1278,7 @@ describe('MainOperatorContent initial cache loading', () => {
     expect(projectCaches.get('original')).toBe('[]')
     await vi.advanceTimersByTimeAsync(100)
     expect(write).toHaveBeenCalledOnce()
-    expect(JSON.parse(projectCaches.get('original')!)).toEqual([removed])
+    expect(JSON.parse(projectCaches.get('original')!)).toEqual({ version: 1, pageList: [removed] })
 
     let switching: Promise<void> | undefined
     if (action === 'switch-project') {
@@ -1320,9 +1323,10 @@ describe('MainOperatorContent initial cache loading', () => {
     }
     await vi.advanceTimersByTimeAsync(100)
     await switching
-    if (action === 'switch-project') expect.soft(JSON.parse(cacheAtSwitch!)).toEqual([updated])
+    if (action === 'switch-project')
+      expect.soft(JSON.parse(cacheAtSwitch!)).toEqual({ version: 1, pageList: [updated] })
     expect(write).toHaveBeenCalledTimes(2)
-    expect.soft(JSON.parse(projectCaches.get('original')!)).toEqual([updated])
+    expect.soft(JSON.parse(projectCaches.get('original')!)).toEqual({ version: 1, pageList: [updated] })
     expect.soft(projectCaches.get('target')).toBe(targetCache)
 
     const restored = setup({ memfit: false })
@@ -1335,6 +1339,38 @@ describe('MainOperatorContent initial cache loading', () => {
       .toHaveBeenCalledExactlyOnceWith('ai', expect.objectContaining({ pageList: [updated] }))
     expect(write).toHaveBeenCalledTimes(2)
     restored.dispose()
+  })
+
+  it.each([false, true])('restores limits in KB (versioned cache=%s)', async (versioned) => {
+    const app = setup({ memfit: false })
+    const page = {
+      pageId: 'cached-ai',
+      sortFieId: 1,
+      pageParamsInfo: {
+        aiAgentPageInfo: {
+          session: {
+            SessionID: 'cached-session',
+            StartParams: {
+              RuntimeContextSizeLimit: versioned ? 300 : 307200,
+              AICallTokenLimit: versioned ? 40 : 40960,
+              EnablePlan: true,
+            },
+          },
+        },
+      },
+    }
+    const pageList = [page]
+    app.mount()
+    app.ai.resolve(JSON.stringify(versioned ? { version: 1, pageList } : pageList))
+    app.wf.resolve('[]')
+    await settle()
+
+    const restored = app.bindings.setPagesData.mock.calls[0][1].pageList[0]
+    expect(restored.pageParamsInfo.aiAgentPageInfo.session).toEqual({
+      SessionID: 'cached-session',
+      StartParams: { RuntimeContextSizeLimit: 300, AICallTokenLimit: 40, EnablePlan: true },
+    })
+    app.dispose()
   })
 
   it('locks the default Memfit page before the restore effect runs', () => {
@@ -1476,20 +1512,23 @@ describe('MainOperatorContent initial cache loading', () => {
     },
   )
 
-  it.each(['{', '{}'])('aborts restoration and opens recovery for invalid cache data: %s', async (raw) => {
-    const app = setup({ memfit: false })
-    app.mount()
-    app.ai.resolve(raw)
-    app.wf.resolve('[]')
-    await settle()
-    expect(app.bindings.setPagesData).not.toHaveBeenCalled()
-    expect(app.bindings.aiCacheLoaded.current).toBe(false)
-    expect(app.bindings.saveAIAgentCache).not.toHaveBeenCalled()
-    expect(app.bindings.showYakitModal).toHaveBeenCalledOnce()
-    expect(app.locked()).toBe(false)
-    expect(app.bindings.yakitNotify).toHaveBeenCalledOnce()
-    app.dispose()
-  })
+  it.each(['{', '{}', '{"version":2,"pageList":[]}'])(
+    'aborts restoration and opens recovery for invalid cache data: %s',
+    async (raw) => {
+      const app = setup({ memfit: false })
+      app.mount()
+      app.ai.resolve(raw)
+      app.wf.resolve('[]')
+      await settle()
+      expect(app.bindings.setPagesData).not.toHaveBeenCalled()
+      expect(app.bindings.aiCacheLoaded.current).toBe(false)
+      expect(app.bindings.saveAIAgentCache).not.toHaveBeenCalled()
+      expect(app.bindings.showYakitModal).toHaveBeenCalledOnce()
+      expect(app.locked()).toBe(false)
+      expect(app.bindings.yakitNotify).toHaveBeenCalledOnce()
+      app.dispose()
+    },
+  )
 
   it('retries AI recovery without losing local tabs or unlocking while WF is pending', async () => {
     const app = setup({ memfit: false })

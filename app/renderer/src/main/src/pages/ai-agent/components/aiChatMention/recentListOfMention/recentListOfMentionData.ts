@@ -54,7 +54,6 @@ export const loadRecentMentionResources = async (
   if (!sessionID) return { ...resources, browserIDs: [] }
 
   const response = await grpcGetAISessionCurrentResources({ SessionID: sessionID }, true)
-  console.log('loadRecentMentionResources-response', sessionID, response)
   const references = parseRecentMentionResources(response.SessionResources ?? [])
   const pagination = genDefaultPagination(-1)
   const results = await Promise.allSettled([
@@ -66,7 +65,6 @@ export const loadRecentMentionResources = async (
     references.forgeNames.length
       ? grpcQueryAIForge({ Pagination: pagination, Filter: { ForgeNames: references.forgeNames } }, true).then(
           (result) => {
-            console.log('loadRecentMentionResources-grpcQueryAIForge', references.forgeNames, result)
             resources.skills = result.Data ?? []
           },
         )
@@ -74,7 +72,6 @@ export const loadRecentMentionResources = async (
     references.toolNames.length
       ? grpcQueryAITool({ Pagination: pagination, Filter: { ToolNames: references.toolNames } }, true).then(
           (result) => {
-            console.log('loadRecentMentionResources-grpcQueryAITool', references.toolNames, result)
             resources.tools = result.Data ?? []
           },
         )
@@ -87,7 +84,6 @@ export const loadRecentMentionResources = async (
           },
           true,
         ).then((result) => {
-          console.log('loadRecentMentionResources-grpcQueryKnowledgeBase', references.knowledgeBaseNames, result)
           resources.knowledgeBases = result.Data ?? []
         })
       : Promise.resolve(),

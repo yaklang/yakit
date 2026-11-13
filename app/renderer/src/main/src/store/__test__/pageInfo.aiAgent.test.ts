@@ -59,7 +59,7 @@ afterEach(() => {
 })
 
 const savedPages = (): PageNodeItemProps[] =>
-  JSON.parse(kv.project.mock.calls.filter(([key]) => key === RemoteAIAgentGV.AIAgentTabs).at(-1)![1])
+  JSON.parse(kv.project.mock.calls.filter(([key]) => key === RemoteAIAgentGV.AIAgentTabs).at(-1)![1]).pageList
 
 describe('AI pageInfo route persistence through existing actions', () => {
   it('reports cache failures with the translated message and error details', async () => {
@@ -80,7 +80,10 @@ describe('AI pageInfo route persistence through existing actions', () => {
     api.usePageInfo.getState().addPagesDataCache(YakitRoute.AI_Agent, page)
 
     expect(api.usePageInfo.getState().queryPagesDataById(YakitRoute.AI_Agent, page.pageId)).toEqual(page)
-    expect(kv.project).toHaveBeenCalledExactlyOnceWith(RemoteAIAgentGV.AIAgentTabs, JSON.stringify([page]))
+    expect(kv.project).toHaveBeenCalledExactlyOnceWith(
+      RemoteAIAgentGV.AIAgentTabs,
+      JSON.stringify({ version: 1, pageList: [page] }),
+    )
     expect(savedPages()[0].pageParamsInfo.aiAgentPageInfo).toEqual(info)
     expect(kv.set).not.toHaveBeenCalled()
   })
