@@ -8,6 +8,7 @@ export const messages: any[] = []
 export const store = createStore<ChatStoreState>()(
   (set) =>
     ({
+      execute: true,
       questionPanelTokens: [],
       questionPanelRevision: 0,
       updateState: (next: any) => set(next),
@@ -16,6 +17,7 @@ export const store = createStore<ChatStoreState>()(
 export const useCurrentStore = () => store
 export const useCurrentRawData = () => ({ contents })
 export const globalSessionEngine = {
+  canShowQuestionnaire: () => true,
   async sendUIInteraction(_sessionId: string, event: any) {
     messages.push(event)
     // Keep a real pending window to exercise rapid clicks and disabled controls.

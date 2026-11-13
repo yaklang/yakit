@@ -1,12 +1,36 @@
 .card {
   composes: card from '../../ui-shared/shell.module.scss';
 }
-.toolbar {
-  composes: toolbar from '../../ui-shared/shell.module.scss';
+.body {
+  display: flex;
+  align-items: flex-start;
   gap: 8px;
 }
+.content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.status {
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+}
+.answeredIcon {
+  flex: none;
+  color: var(--Colors-Use-Success-Primary);
+}
 .questionSummary {
-  margin-top: 4px;
+  margin: 0;
+  padding-left: 1.2em;
+  color: var(--Colors-Use-Neutral-Text-4-Help-text);
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 14px;
+  list-style: decimal;
   white-space: pre-wrap;
 }
 .secondary {

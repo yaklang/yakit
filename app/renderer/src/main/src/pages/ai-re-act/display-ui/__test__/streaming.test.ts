@@ -6,10 +6,12 @@ import type { AIMessageHandlerParams } from '../../hooks/type'
 import { aiInteractiveUIHandlers } from '../../hooks/grpcStreamHandler/aiInteractiveUI'
 import { clearAllUIDrafts, setUIDraft } from '../../hooks/persist/uiDraftStore'
 import { aiOtherDataHandlers } from '../../hooks/grpcStreamHandler/aiOther'
+import { deletePersistedContent, persistIndependentItem } from '../../hooks/persist/contentPersistHelper'
 
 vi.mock('../../hooks/persist/contentPersistHelper', () => ({
   persistGetSessionContent: vi.fn().mockResolvedValue(undefined),
   persistIndependentItem: vi.fn(),
+  deletePersistedContent: vi.fn(),
 }))
 const bytes = (text: string) => new TextEncoder().encode(text)
 let contents = new Map()
@@ -19,8 +21,28 @@ const resetState = () => {
   state = {
     questionPanelTokens: [],
     questionPanelRevision: 0,
-    dispatchStreamingNode: dispatch,
+    items: {},
+    chatElements: [] as { token: string }[],
+    dispatchStreamingNode: (payload: { chatType: string; node: { token: string; kind: string; type: string } }) => {
+      dispatch(payload)
+      const token = payload.node.token
+      if (!state.items[token]) {
+        state.items[token] = { kind: payload.node.kind, token, type: payload.node.type, chatType: payload.chatType }
+      }
+      if (!state.chatElements.some((element: { token: string }) => element.token === token)) {
+        state.chatElements.push({ token })
+      }
+    },
+    deleteElementNode: ({ token, onDelContent }: { token: string; onDelContent?: (token: string) => void }) => {
+      if (!state.items[token]) return
+      onDelContent?.(token)
+      delete state.items[token]
+      state.chatElements = state.chatElements.filter((element: { token: string }) => element.token !== token)
+    },
     incrementNodeVersion: vi.fn(),
+    replaceItemToken: vi.fn(),
+    updateStateCount: vi.fn(),
+    currentChatStatus: { questionID: '', coordinatorId: '', status: 'created' },
     updateState: (next: object) => Object.assign(state, next),
   }
 }
@@ -51,6 +73,8 @@ beforeEach(() => {
   contents = new Map()
   resetState()
   dispatch.mockClear()
+  vi.mocked(persistIndependentItem).mockClear()
+  vi.mocked(deletePersistedContent).mockClear()
   clearAllUIDrafts()
 })
 describe('UI event integration', () => {
@@ -150,8 +174,43 @@ describe('UI event integration', () => {
       }
       expect(contents.size).toBe(1)
       expect(contents.get('new-task').interactionMetadata).toEqual(metadata)
+      expect(state.items['new-task']).toBeUndefined()
+      expect(state.chatElements).toEqual([])
+      if (!messageFirst) expect(deletePersistedContent).toHaveBeenCalledWith('session', 'new-task', expect.anything())
     },
   )
+  it('deletes the idle questionnaire uuid on dequeue without persisting or dispatching a user bubble', async () => {
+    const metadata: UISubmission = { id: 'receipt', source: 'questionnaire', requestId: 'question', answers: [] }
+    contents.set('temp-uuid', {
+      id: 'temp-uuid',
+      type: AIChatQSDataTypeEnum.QUESTION,
+      interactionMetadata: metadata,
+      data: '对追问的回答：\n1. 目标：生产',
+    })
+    dispatch.mockClear()
+    vi.mocked(persistIndependentItem).mockClear()
+    await aiOtherDataHandlers.react_task_dequeue(
+      info({
+        Type: 'structured',
+        NodeId: 'react_task_dequeue',
+        IsSync: true,
+        TaskId: 'new-task',
+        Content: bytes(
+          JSON.stringify({
+            reason: 'normal',
+            react_task_id: 'new-task',
+            react_task_input: '对追问的回答：\n1. 目标：生产',
+            react_task_user_input_uuid: 'temp-uuid',
+          }),
+        ),
+      }),
+    )
+    expect(contents.has('temp-uuid')).toBe(false)
+    expect(contents.get('new-task').interactionMetadata).toEqual(metadata)
+    expect(persistIndependentItem).not.toHaveBeenCalled()
+    expect(dispatch).not.toHaveBeenCalled()
+    expect(state.replaceItemToken).not.toHaveBeenCalled()
+  })
   it('merges streaming and authoritative snapshots into one stable block and preserves view state', async () => {
     const request = info({ Type: 'stream_start', Content: bytes('{"event_writer_id":"stream"}') })
     await handleComponentStream(request)

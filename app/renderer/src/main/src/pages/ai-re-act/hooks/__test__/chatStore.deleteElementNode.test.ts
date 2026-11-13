@@ -19,6 +19,7 @@ describe('deleteElementNode', () => {
       onDelContent,
     })
     expect(onDelContent).toHaveBeenCalledWith('del-me')
+    expect(store.getState().items['del-me']).toBeUndefined()
     expect(store.getState().chatElements.some((e) => e.token === 'del-me')).toBe(false)
     expect(onRenderStructureChange).toHaveBeenCalledTimes(1)
   })

@@ -272,19 +272,30 @@ const handleReactTaskDequeue: AIMessageHandler = (requestInfo) => {
       scheduleTrigger: data.react_task_schedule_trigger || '',
     },
   }
+  const inputUUID = data.react_task_user_input_uuid
+  const uuidItem = inputUUID ? rawData.contents.get(inputUUID) : undefined
+  if (!chatData.interactionMetadata && uuidItem?.interactionMetadata) {
+    chatData.interactionMetadata = uuidItem.interactionMetadata
+  }
   rawData.contents.set(chatData.id, chatData)
-
-  persistIndependentItem(requestInfo.sessionId, chatData, requestInfo.meta.lifecycle)
-  if (data.react_task_user_input_uuid) {
-    const qsDetail = store.getState().items[data.react_task_user_input_uuid]
+  const questionnaireReply = chatData.interactionMetadata?.source === 'questionnaire'
+  if (inputUUID) {
+    const qsDetail = store.getState().items[inputUUID]
     if (qsDetail && qsDetail.type === AIChatQSDataTypeEnum.QUESTION) {
-      rawData.contents.delete(data.react_task_user_input_uuid)
+      persistIndependentItem(requestInfo.sessionId, chatData, requestInfo.meta.lifecycle)
+      rawData.contents.delete(inputUUID)
       // 清掉前端临时 uuid 对应的 IDB 孤儿行
-      deletePersistedContent(requestInfo.sessionId, data.react_task_user_input_uuid, requestInfo.meta.lifecycle)
-      store.getState().replaceItemToken(data.react_task_user_input_uuid, chatData.id)
+      deletePersistedContent(requestInfo.sessionId, inputUUID, requestInfo.meta.lifecycle)
+      store.getState().replaceItemToken(inputUUID, chatData.id)
+      return
+    }
+    if (questionnaireReply) {
+      rawData.contents.delete(inputUUID)
       return
     }
   }
+  if (questionnaireReply) return
+  persistIndependentItem(requestInfo.sessionId, chatData, requestInfo.meta.lifecycle)
 
   store.getState().dispatchStreamingNode({
     chatType: 'reAct',
