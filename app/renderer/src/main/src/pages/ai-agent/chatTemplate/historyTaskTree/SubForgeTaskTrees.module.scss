@@ -1,0 +1,61 @@
+.children {
+  margin-bottom: 12px;
+  padding-left: 12px;
+  border-left: 1px solid var(--Colors-Use-Neutral-Border);
+}
+.run {
+  margin: 8px 0;
+  padding: 8px 12px;
+  border: 1px solid var(--Colors-Use-Neutral-Border);
+  border-radius: 8px;
+  background: var(--Colors-Use-Basic-Background);
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  font-size: 12px;
+  summary {
+    cursor: pointer;
+  }
+}
+.title {
+  margin-right: 8px;
+  overflow-wrap: anywhere;
+}
+.tree,
+.tree ul {
+  list-style: none;
+  padding-left: 16px;
+}
+.tree {
+  padding-left: 0;
+  margin-bottom: 0;
+}
+.node {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 5px 0;
+}
+.name {
+  flex: 1;
+  overflow-wrap: anywhere;
+}
+.status {
+  flex-shrink: 0;
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  &[data-status='running'],
+  &[data-status='processing'] {
+    color: var(--Colors-Use-Main-Primary);
+  }
+  &[data-status='succeeded'],
+  &[data-status='completed'] {
+    color: var(--Colors-Use-Success-Primary);
+  }
+  &[data-status='failed'],
+  &[data-status='aborted'],
+  &[data-status='timed_out'] {
+    color: var(--Colors-Use-Error-Primary);
+  }
+}
+.empty {
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  margin-bottom: 0;
+}

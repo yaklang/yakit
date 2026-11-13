@@ -1,3 +1,4 @@
+import { SubForgeTaskTrees } from './SubForgeTaskTrees'
 import React, { memo, useRef, useState } from 'react'
 import styles from './HistoryTaskTree.module.scss'
 import type {
@@ -356,6 +357,9 @@ const HistoryTaskTreeItem: React.FC<HistoryTaskTreeItemProps> = memo((props) => 
         className={styles['tree-wrapper']}
         aiTreeTitleExtraNode={onAITreeTitleExtraNode}
         taskType={taskType}
+        renderTaskChildren={(task) => (
+          <SubForgeTaskTrees coordinatorId={item.coordinator_id} taskId={task.task_id} level={task.level} />
+        )}
       />
     </div>
   )

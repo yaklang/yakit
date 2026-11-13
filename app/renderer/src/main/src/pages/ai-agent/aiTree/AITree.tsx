@@ -31,7 +31,7 @@ function lineStyles(i: number, levelDiff: number, lineNum: number) {
 }
 
 export const AITree: React.FC<AITreeProps> = memo((props) => {
-  const { tasks, className, aiTreeTitleExtraNode, taskType } = props
+  const { tasks, className, aiTreeTitleExtraNode, taskType, renderTaskChildren } = props
   const [hoveredTaskId, setHoveredTaskId] = useState<string | null>(null)
 
   const onNodeHoverEnd = useCallback(() => setHoveredTaskId(null), [])
@@ -77,20 +77,22 @@ export const AITree: React.FC<AITreeProps> = memo((props) => {
           !(hoveredTask?.depends_on?.includes(item.task_id) ?? false)
         const isHovered = item.task_id === hoveredTaskId
         return (
-          <AITreeNode
-            key={item.task_id}
-            order={index}
-            position={meta.position}
-            data={item}
-            onClick={meta.onClick}
-            isDimmed={isDimmed}
-            isHovered={isHovered}
-            dependsOnTasks={meta.dependsOnTasks}
-            onNodeHover={setHoveredTaskId}
-            onNodeHoverEnd={onNodeHoverEnd}
-            aiTreeTitleExtraNode={aiTreeTitleExtraNode}
-            taskType={taskType}
-          />
+          <React.Fragment key={item.task_id}>
+            <AITreeNode
+              order={index}
+              position={meta.position}
+              data={item}
+              onClick={meta.onClick}
+              isDimmed={isDimmed}
+              isHovered={isHovered}
+              dependsOnTasks={meta.dependsOnTasks}
+              onNodeHover={setHoveredTaskId}
+              onNodeHoverEnd={onNodeHoverEnd}
+              aiTreeTitleExtraNode={aiTreeTitleExtraNode}
+              taskType={taskType}
+            />
+            {renderTaskChildren?.(item)}
+          </React.Fragment>
         )
       })}
       <div className={styles['ai-tree-node-end']}>
