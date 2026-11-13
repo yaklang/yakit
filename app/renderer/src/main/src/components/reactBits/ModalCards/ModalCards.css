@@ -29,6 +29,10 @@
   &:hover {
     background: var(--Colors-Use-Neutral-Bg-Hover);
   }
+  &:not(.modal-card-static):focus-visible {
+    outline: 2px solid var(--Colors-Use-Main-Focus);
+    outline-offset: 2px;
+  }
   &:first-child {
     background: var(--Colors-Use-Main-Bg);
     &:hover {
@@ -109,7 +113,7 @@
 }
 
 .modal-card-static:hover {
-  background: var(--Colors-Use-Neutral-Bg);
+  background: var(--Colors-Use-Neutral-Bg-Hover);
 }
 
 .modal-card-banner .modal-card-overlay,
@@ -158,6 +162,7 @@
   position: fixed;
   inset: 0;
   z-index: 999999;
+  background: rgba(0, 0, 0, 0.45);
 }
 
 .modal-backdrop-clickable {
@@ -182,7 +187,7 @@
   width: 100%;
   max-width: 48rem;
   max-height: 80vh;
-  padding: 20px;
+  padding: 24px;
   overflow: hidden;
   border-radius: 16px;
   background: var(--Colors-Use-Basic-Background);
@@ -192,6 +197,12 @@
 
 .modal-expanded-guide {
   max-width: 760px;
+}
+
+@media (min-width: 1500px) {
+  .modal-expanded-guide {
+    max-width: min(1280px, calc(760px + 100vw - 1500px));
+  }
 }
 
 .modal-description-hidden {

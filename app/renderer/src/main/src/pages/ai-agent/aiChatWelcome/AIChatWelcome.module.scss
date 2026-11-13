@@ -69,13 +69,13 @@
     justify-content: space-between;
     gap: 12px;
     flex-shrink: 0;
-    // 扣除面板预留宽度，内容最多宽 784px。
-    width: calc(100% - var(--ai-right-panel-slot-width, 325px));
+    // 欢迎页不渲染右侧面板。大屏最多 784px；小屏铺满容器，不再扣面板槽位。
+    width: 100%;
     max-width: 784px;
     min-width: 0;
     box-sizing: border-box;
     min-height: 100%;
-    padding: 56px 0 16px 0;
+    padding: 28px 16px 8px;
     height: 100%;
 
     .milkdown-input {
@@ -119,16 +119,12 @@
       }
     }
 
-    &-short {
-      padding: 26px 0 8px 0;
-    }
-
     &-compact {
       .milkdown-input {
         min-height: 64px;
         max-height: 100px;
       }
-      padding: 28px 16px 8px;
+      padding: 8px;
       gap: 10px;
 
       .input-heard {

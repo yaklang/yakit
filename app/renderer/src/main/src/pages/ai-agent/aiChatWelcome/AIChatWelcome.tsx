@@ -29,10 +29,23 @@ import { yakitNotify } from '@/utils/notification'
 import { AIWelcomeAsciiRipple } from './AIWelcomeAsciiRipple'
 import { useWelcomeAnimationDisabled } from '../store/welcomeAnimationStore'
 import { Flex } from 'antd'
-import WelcomeRecentSessions from './WelcomeRecentSessions/WelcomeRecentSessions'
+import WelcomeRecentSessions, { type WelcomeRecentSessionsDensity } from './WelcomeRecentSessions/WelcomeRecentSessions'
 import WelcomeTipsCards from './WelcomeTipsCards/WelcomeTipsCards'
 
 const WELCOME_TITLE = 'Memfit AI Agent'
+const WELCOME_NARROW_WIDTH = 720
+const WELCOME_TIGHT_HEIGHT = 680
+const WELCOME_SHORT_HEIGHT = 850
+
+interface WelcomeLayout {
+  compact: boolean
+  sessionDensity: WelcomeRecentSessionsDensity
+}
+
+const resolveWelcomeLayout = (width: number, height: number): WelcomeLayout => ({
+  compact: width < WELCOME_NARROW_WIDTH || height < WELCOME_TIGHT_HEIGHT,
+  sessionDensity: height < WELCOME_TIGHT_HEIGHT ? 'collapsed' : height <= WELCOME_SHORT_HEIGHT ? 'three' : 'full',
+})
 
 const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
   forwardRef((props, ref) => {
@@ -62,8 +75,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
 
     const welcomeRef = useRef<HTMLDivElement>(null)
     const animationDisabled = useWelcomeAnimationDisabled()
-    const [isCompact, setIsCompact] = useState(false)
-    const [isShortHeight, setIsShortHeight] = useState(false)
+    const [layout, setLayout] = useState<WelcomeLayout>({ compact: false, sessionDensity: 'full' })
     const [isEmptyStats, setIsEmptyStats] = useState(false)
     const handleEmptyStatsChange = useMemoizedFn((empty: boolean) => {
       setIsEmptyStats((prev) => (prev === empty ? prev : empty))
@@ -72,11 +84,10 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
       const el = welcomeRef.current
       if (!el || typeof ResizeObserver === 'undefined') return
       const update = (width: number, height: number) => {
-        const nextCompact = width < 720 || height < 680
-        // 中等高度：收紧边距、最近会话展示 3 条、头部区域可滚动（完整 compact 仍按上面阈值）
-        const nextShort = height <= 850
-        setIsCompact((prev) => (prev === nextCompact ? prev : nextCompact))
-        setIsShortHeight((prev) => (prev === nextShort ? prev : nextShort))
+        const next = resolveWelcomeLayout(width, height)
+        setLayout((prev) =>
+          prev.compact === next.compact && prev.sessionDensity === next.sessionDensity ? prev : next,
+        )
       }
       update(el.clientWidth, el.clientHeight)
       const observer = new ResizeObserver((entries) => {
@@ -104,8 +115,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
         <div className={styles['welcome-scroll']}>
           <div
             className={classNames(styles['input-wrapper'], {
-              [styles['input-wrapper-short']]: isShortHeight && !isCompact,
-              [styles['input-wrapper-compact']]: isCompact,
+              [styles['input-wrapper-compact']]: layout.compact,
             })}
           >
             <Flex className={styles['input-heard']} align="center" vertical gap={16}>
@@ -124,10 +134,8 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
               </div>
               <Flex vertical gap={12} className={styles['welcome-tips-block']}>
                 {!isEmptyStats && <div className={styles['subtitle']}>{t('AIChatWelcome.WelcomeHomeSubTitle')}</div>}
-                <WelcomeTipsCards compact={isCompact} onEmptyChange={handleEmptyStatsChange} />
-                {!isEmptyStats && (
-                  <WelcomeRecentSessions density={isCompact ? 'collapsed' : isShortHeight ? 'three' : 'full'} />
-                )}
+                <WelcomeTipsCards compact={layout.compact} onEmptyChange={handleEmptyStatsChange} />
+                {!isEmptyStats && <WelcomeRecentSessions density={layout.sessionDensity} />}
               </Flex>
             </Flex>
             <div className={styles['input-body-wrapper']}>

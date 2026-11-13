@@ -25,9 +25,9 @@ const WelcomeTipsCards: FC<WelcomeTipsCardsProps> = memo(({ compact = false, onE
   const { t, i18nRefresh } = useI18nNamespaces(['aiAgent'])
   const containerRef = useRef<HTMLDivElement>(null)
   const [inViewport = true] = useInViewport(containerRef)
-  const { riskTotal, trafficTotal } = useWelcomePanelStats(inViewport)
+  const { riskTotal, trafficTotal, riskCounts } = useWelcomePanelStats(inViewport)
   const customFolder = useCustomFolder()
-  const isEmpty = (trafficTotal ?? 0) === 0 && riskTotal === 0
+  const isEmpty = trafficTotal !== undefined && riskCounts !== undefined && trafficTotal === 0 && riskTotal === 0
   useEffect(() => {
     onEmptyChange?.(isEmpty)
   }, [isEmpty, onEmptyChange])

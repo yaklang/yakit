@@ -220,9 +220,17 @@ const ModalCards = ({
           return (
             <motion.div
               key={card.id}
+              role={!expandOnFooter ? 'button' : undefined}
+              tabIndex={!expandOnFooter ? 0 : undefined}
               onClick={() => {
                 if (expandOnFooter) return
                 setSelectedCard(card)
+              }}
+              onKeyDown={(event) => {
+                if (!expandOnFooter && (event.key === 'Enter' || event.key === ' ')) {
+                  event.preventDefault()
+                  setSelectedCard(card)
+                }
               }}
               className={`modal-card${card.variant === 'banner' ? ' modal-card-banner' : ''}${expandOnFooter ? ' modal-card-static' : ''}`}
               whileTap={isAnimationDisabled || expandOnFooter ? undefined : { scale: 0.98 }}
@@ -270,9 +278,9 @@ const ModalCards = ({
             {selectedCard && (
               <div key="scene-guide-modal">
                 <motion.div
-                  initial={isAnimationDisabled ? { opacity: 1 } : { opacity: 0, backdropFilter: 'blur(0px)' }}
-                  animate={isAnimationDisabled ? { opacity: 1 } : { opacity: 1, backdropFilter: 'blur(8px)' }}
-                  exit={isAnimationDisabled ? { opacity: 1 } : { opacity: 0, backdropFilter: 'blur(0px)' }}
+                  initial={isAnimationDisabled ? { opacity: 1 } : { opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={isAnimationDisabled ? { opacity: 1 } : { opacity: 0 }}
                   transition={
                     isAnimationDisabled
                       ? { duration: 0 }

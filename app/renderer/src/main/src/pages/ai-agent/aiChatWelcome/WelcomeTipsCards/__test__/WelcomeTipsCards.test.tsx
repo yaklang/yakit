@@ -126,9 +126,10 @@ describe('WelcomeTipsCards', () => {
     expect(emitSpy).toHaveBeenCalledWith('switchAIActTab', JSON.stringify({ key: AITabsEnum.Risk }))
   })
 
-  it('漏洞与流量都为 0 时渲染场景介绍卡', () => {
+  it('漏洞与流量都已返回且为 0 时渲染场景介绍卡', () => {
     statsMock.riskTotal = 0
     statsMock.trafficTotal = 0
+    statsMock.riskCounts = {}
     const onEmptyChange = vi.fn()
     render(<WelcomeTipsCards onEmptyChange={onEmptyChange} />)
     expect(screen.getByTestId('welcome-scene-cards')).toBeInTheDocument()
@@ -136,11 +137,15 @@ describe('WelcomeTipsCards', () => {
     expect(onEmptyChange).toHaveBeenCalledWith(true)
   })
 
-  it('流量尚未返回时按 0 处理，进入空态', () => {
+  it('统计尚未返回或请求失败时不进入空态', () => {
     statsMock.riskTotal = 0
     statsMock.trafficTotal = undefined
-    render(<WelcomeTipsCards />)
-    expect(screen.getByTestId('welcome-scene-cards')).toBeInTheDocument()
+    statsMock.riskCounts = undefined
+    const onEmptyChange = vi.fn()
+    render(<WelcomeTipsCards onEmptyChange={onEmptyChange} />)
+    expect(screen.queryByTestId('welcome-scene-cards')).not.toBeInTheDocument()
+    expect(screen.getByText('AIChatWelcome.tipRiskTitle')).toBeInTheDocument()
+    expect(onEmptyChange).toHaveBeenCalledWith(false)
   })
 
   it('compact 模式下整卡可点且使用 compact 样式', () => {

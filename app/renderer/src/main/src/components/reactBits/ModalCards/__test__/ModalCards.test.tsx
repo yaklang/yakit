@@ -193,6 +193,32 @@ describe('ModalCards', () => {
     expect(screen.getByText('第一步')).toBeInTheDocument()
   })
 
+  it('Enter 与 Space 可打开可展开卡片，页脚触发的卡片不可聚焦', async () => {
+    const mixedCards: CardData[] = [
+      cards[0],
+      {
+        id: 'idor',
+        imageUrl: 'a.png',
+        title: '多账号越权测试',
+        description: '简介',
+        variant: 'banner',
+        expandTrigger: 'footer',
+        footer: <button type="button">阅读文档</button>,
+      },
+    ]
+    render(<ModalCards cards={mixedCards} animationSpeed="none" />)
+    await flushMount()
+    const card = screen.getByRole('button', { name: /卡片甲/ })
+    expect(card).toHaveAttribute('tabindex', '0')
+    expect(screen.queryByRole('button', { name: /多账号越权测试/ })).not.toBeInTheDocument()
+    fireEvent.keyDown(card, { key: 'Enter' })
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    fireEvent.keyDown(document, { key: 'Escape' })
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    fireEvent.keyDown(screen.getByRole('button', { name: /卡片甲/ }), { key: ' ' })
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+  })
+
   it('Escape 与关闭按钮可收起', async () => {
     render(<ModalCards cards={cards} animationSpeed="none" closeLabel="关闭" />)
     await flushMount()
