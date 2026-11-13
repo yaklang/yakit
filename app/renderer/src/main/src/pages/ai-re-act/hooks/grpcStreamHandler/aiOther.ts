@@ -1,3 +1,4 @@
+import { parseSubForgeTaskTree, mergeSubForgeRun } from '../subForgeTaskTree'
 import type { AIMessageHandler } from '../type'
 import {
   AIInputEventSyncTypeEnum,
@@ -352,6 +353,14 @@ const handlePlanExecTasks: AIMessageHandler = (request) => {
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const list = JSON.parse(ipcContent) as AIAgentGrpcApi.PlanHistoryList
   try {
+    const runs = { ...store.getState().subForgeRuns }
+    for (const value of list.sub_forge_task_trees ?? []) {
+      const snapshot = parseSubForgeTaskTree(JSON.stringify(value))
+      if (snapshot)
+        runs[snapshot.child_coordinator_id] = mergeSubForgeRun(runs[snapshot.child_coordinator_id], snapshot, true)
+    }
+    store.getState().updateState({ subForgeRuns: runs })
+    const parentsWithChildren = new Set(Object.values(runs).map((run) => run.parent_coordinator_id))
     const arr = cloneDeep(list.records)
     if (!arr || arr.length === 0) {
       store.getState().updateState({ planHistoryList: { ...list } })
@@ -368,7 +377,7 @@ const handlePlanExecTasks: AIMessageHandler = (request) => {
         item.task_tree = genExecTasks(tree)
         return item
       })
-      .filter((item) => item.task_progress.phase !== 'Completed')
+      .filter((item) => item.task_progress.phase !== 'Completed' || parentsWithChildren.has(item.coordinator_id))
     store.getState().updateState({ planHistoryList: { ...list, records: newArr } })
   } catch (error) {}
 }

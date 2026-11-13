@@ -1,3 +1,4 @@
+import { aiOtherDataHandlers } from '../grpcStreamHandler/aiOther'
 import { describe, it, expect } from 'vitest'
 import { handleSubForgeTaskTree } from '../grpcStreamHandler/subForgeTaskTree'
 import { makeGrpcJsonRes, makeHandlerRequest } from './fixtures'
@@ -92,5 +93,38 @@ describe('sub-Forge snapshots', () => {
     })
     handleSubForgeTaskTree(req)
     expect(req.store.getState().subForgeRuns).toEqual({})
+  })
+})
+
+describe('sub-Forge plan history recovery', () => {
+  it('restores old child snapshots and retains only their completed parent plans', () => {
+    const parent = (id: string) => ({
+      coordinator_id: id,
+      task_tree: JSON.stringify({ task_id: 'task-1', name: 'Parent', subtasks: [] }),
+      task_progress: JSON.stringify({ phase: 'Completed' }),
+    })
+    const req = makeHandlerRequest({
+      res: makeGrpcJsonRes(
+        'structured',
+        {
+          session_id: 'session',
+          total: 2,
+          records: [parent('parent'), parent('unrelated')],
+          sub_forge_task_trees: [{ ...snapshot, revision: 3, status: 'succeeded' }],
+        },
+        { NodeId: 'plan_exec_tasks', IsSync: true },
+      ),
+    })
+    aiOtherDataHandlers.plan_exec_tasks(req)
+    expect(req.store.getState().planHistoryList.records.map((item) => item.coordinator_id)).toEqual(['parent'])
+    expect(req.store.getState().subForgeRuns['child-1']).toMatchObject({
+      revision: 3,
+      status: 'succeeded',
+      historical: true,
+    })
+    // Later chat pagination must not roll the restored terminal back.
+    req.res = makeGrpcJsonRes('sub_forge_task_tree', snapshot, { CoordinatorId: 'parent', IsSync: true })
+    handleSubForgeTaskTree(req)
+    expect(req.store.getState().subForgeRuns['child-1'].status).toBe('succeeded')
   })
 })
