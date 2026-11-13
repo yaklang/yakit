@@ -2,6 +2,6 @@ import type { AIMentionCommandParams } from '../../../components/aiMilkdownInput
 
 export interface MaterialAttachmentListProps {
   attachments: AIMentionCommandParams[]
-  onAdd: () => void
+  onAdd: (type: 'file' | 'folder') => void
   onRemove: (attachment: AIMentionCommandParams) => void
 }

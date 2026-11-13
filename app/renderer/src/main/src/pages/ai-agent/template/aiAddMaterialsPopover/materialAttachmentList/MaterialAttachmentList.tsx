@@ -2,9 +2,15 @@ import { useState } from 'react'
 import type { FC } from 'react'
 import { useDeepCompareEffect, useRequest } from 'ahooks'
 import numeral from 'numeral'
-import { PaperClipOutlined, PlusSmOutlined, TrashOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import {
+  FolderOpenOutlined,
+  PaperClipOutlined,
+  PlusSmOutlined,
+  TrashOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import { imgTypes } from '@/components/MilkdownEditor/utils/utils'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { getFileSuffixFromName, getPathBaseName } from '@/utils/str'
 import { FileExcelIcon, FilePdfIcon, FilePptIcon, FileUnknownIcon, FileWordIcon } from '../../fileIcon'
@@ -27,8 +33,11 @@ const fileIcons = new Map([
 const MaterialAttachmentList: FC<MaterialAttachmentListProps> = ({ attachments, onAdd, onRemove }) => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const [search, setSearch] = useState('')
+  const [addMenuOpen, setAddMenuOpen] = useState(false)
   const [failedImagePaths, setFailedImagePaths] = useState(() => new Set<string>())
-  const paths = attachments.map((attachment) => attachment.mentionId).filter((path) => !path.startsWith('blob:'))
+  const paths = attachments
+    .filter(({ mentionType, mentionId }) => mentionType === 'file' && !mentionId.startsWith('blob:'))
+    .map(({ mentionId }) => mentionId)
   const { data: sizes = {}, run: loadSizes } = useRequest(loadAttachmentSizes, { manual: true })
   useDeepCompareEffect(() => {
     loadSizes(paths)
@@ -50,26 +59,50 @@ const MaterialAttachmentList: FC<MaterialAttachmentListProps> = ({ attachments, 
       onSearchChange={setSearch}
       variant="attachments"
       headerAction={
-        <YakitButton
-          type="text"
-          className={styles.add}
-          icon={<PlusSmOutlined size={16} />}
-          iconPosition="end"
-          onClick={onAdd}
+        <YakitDropdownMenu
+          dropdown={{
+            trigger: ['click'],
+            placement: 'bottomRight',
+            open: addMenuOpen,
+            onOpenChange: setAddMenuOpen,
+            getPopupContainer: (trigger) => trigger.closest<HTMLElement>('.ant-popover') ?? document.body,
+          }}
+          menu={{
+            data: [
+              { key: 'file', label: t('AIAddMaterialsPopover.attachment') },
+              { key: 'folder', label: t('AIAddMaterialsPopover.addFolder') },
+            ],
+            onClick: ({ key }) => {
+              setAddMenuOpen(false)
+              onAdd(key === 'folder' ? 'folder' : 'file')
+            },
+          }}
         >
-          {t('YakitButton.add')}
-        </YakitButton>
+          <YakitButton
+            type="text"
+            className={styles.add}
+            icon={<PlusSmOutlined size={16} />}
+            iconPosition="end"
+            aria-haspopup="menu"
+            aria-expanded={addMenuOpen}
+          >
+            {t('AIAddMaterialsPopover.continueAdding')}
+          </YakitButton>
+        </YakitDropdownMenu>
       }
     >
       <div className={styles.list}>
         {visibleAttachments.map((attachment) => {
-          const { mentionId: path, mentionName: displayName } = attachment
+          const { mentionId: path, mentionName: displayName, mentionType } = attachment
+          const isFolder = mentionType === 'folder'
           const fileName = getPathBaseName(displayName)
-          const suffix = getFileSuffixFromName(fileName)
+          const suffix = isFolder ? '' : getFileSuffixFromName(fileName)
           const extension = suffix ? `.${suffix}` : ''
           const name = fileName.slice(0, fileName.length - extension.length)
           const fileType = suffix.toLowerCase()
-          const FileIcon = fileIcons.get(fileType) ?? FileUnknownIcon
+          const FileIcon = isFolder ? FolderOpenOutlined : (fileIcons.get(fileType) ?? FileUnknownIcon)
+          const size = sizes[path]
+          const sizeLabel = isFolder ? '-' : size === undefined ? '' : numeral(size).format('0.[0] b')
           const isPendingImage = path.startsWith('blob:')
           const showThumbnail = !failedImagePaths.has(path) && (isPendingImage || imgTypes.includes(`.${fileType}`))
           return (
@@ -90,9 +123,7 @@ const MaterialAttachmentList: FC<MaterialAttachmentListProps> = ({ attachments, 
                   <span className={styles.basename}>{name}</span>
                   <span>{extension}</span>
                 </div>
-                <div className={styles.size}>
-                  {sizes[path] === undefined ? '' : numeral(sizes[path]).format('0.[0] b')}
-                </div>
+                <div className={styles.size}>{sizeLabel}</div>
               </div>
               <YakitButton
                 type="text2"

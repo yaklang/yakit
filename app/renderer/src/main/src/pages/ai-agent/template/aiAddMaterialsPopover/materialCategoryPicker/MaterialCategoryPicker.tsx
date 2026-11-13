@@ -148,7 +148,6 @@ export const MaterialCatalogList: FC<MaterialCatalogListProps> = ({
       ? visibleOptions.map(
           (item): ResourceMentionRow => ({
             ...item,
-            name: item.id === ALL_KNOWLEDGE_BASES ? ALL_KNOWLEDGE_BASES : item.name,
             type: category,
             row: { kind: category },
           }),

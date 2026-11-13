@@ -4,6 +4,7 @@ import {
   BookOpenTextOutlined,
   BoxOutlined,
   ChromeOutlined,
+  FolderOpenOutlined,
   PaperClipOutlined,
   PuzzleOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
@@ -32,7 +33,7 @@ interface MaterialMenuOptions extends Pick<
   attachmentCount: number
   browserCount: number
   currentFocusMode?: string
-  addAttachments: () => void
+  addAttachments: (type: 'file' | 'folder') => void
   close: () => void
 }
 
@@ -83,7 +84,13 @@ export const getMaterialMenuItems = ({
       label: t('AIAddMaterialsPopover.attachment'),
       description: t('AIAddMaterialsPopover.attachmentHint', { max: MAX_ATTACHMENTS_PER_BATCH }),
       icon: <PaperClipOutlined size={16} />,
-      action: addAttachments,
+      action: () => addAttachments('file'),
+    },
+    addFolder: {
+      label: t('AIAddMaterialsPopover.addFolder'),
+      description: t('AIAddMaterialsPopover.attachmentHint', { max: MAX_ATTACHMENTS_PER_BATCH }),
+      icon: <FolderOpenOutlined size={16} />,
+      action: () => addAttachments('folder'),
     },
     risk: {
       label: t('AIAddMaterialsPopover.risk'),

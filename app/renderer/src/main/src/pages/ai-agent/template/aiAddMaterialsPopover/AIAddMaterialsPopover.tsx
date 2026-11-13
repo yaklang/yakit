@@ -53,7 +53,7 @@ const AIAddMaterialsPopover: FC<AIAddMaterialsPopoverProps> = ({
   const [selectedFocusLabel, setSelectedFocusLabel] = useState<SelectedFocusMode>()
   // 缓存技能、工具和知识库的简介，供资料摘要和「已添加」列表使用。
   const [descriptions, setDescriptions] = useState<Record<string, string>>({})
-  const attachments = mentions.filter((item) => item.mentionType === 'file' && item.mentionSource === 'attachment')
+  const attachments = mentions.filter((item) => item.mentionSource === 'attachment')
   const browsers = getAddedBrowsers(mentions)
 
   const getPopupContainer = (anchor: HTMLElement) => {
@@ -87,11 +87,12 @@ const AIAddMaterialsPopover: FC<AIAddMaterialsPopoverProps> = ({
     onAdd(material)
   })
 
-  const addAttachments = useMemoizedFn(async () => {
+  const addAttachments = useMemoizedFn(async (type: 'file' | 'folder') => {
     try {
+      const isFolder = type === 'folder'
       const { filePaths } = await handleOpenFileSystemDialog({
-        title: t('AIAddMaterialsPopover.attachment'),
-        properties: ['openFile', 'multiSelections'],
+        title: t(isFolder ? 'AIAddMaterialsPopover.addFolder' : 'AIAddMaterialsPopover.attachment'),
+        properties: [isFolder ? 'openDirectory' : 'openFile', 'multiSelections'],
       })
       if (filePaths.length > MAX_ATTACHMENTS_PER_BATCH) {
         yakitNotify(
@@ -104,7 +105,7 @@ const AIAddMaterialsPopover: FC<AIAddMaterialsPopoverProps> = ({
         return
       }
       for (const path of filePaths) {
-        onAdd({ mentionType: 'file', mentionId: path, mentionName: path, mentionSource: 'attachment' })
+        onAdd({ mentionType: type, mentionId: path, mentionName: path, mentionSource: 'attachment' })
       }
     } catch (error) {
       yakitNotify('error', t('AIAddMaterialsPopover.attachmentFailed', { error: String(error) }))

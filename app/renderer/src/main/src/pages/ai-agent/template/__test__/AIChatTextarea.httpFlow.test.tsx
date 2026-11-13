@@ -757,6 +757,74 @@ describe('输入框资料栏', () => {
     expect(within(summary).queryByText('AIAddMaterialsPopover.attachments')).toBeNull()
   })
 
+  it('文件和文件夹共用附件列表，从继续添加菜单选择后随草稿恢复和发送', async () => {
+    const { ref, send, onSubmit } = await setup('正文')
+    editors[0].action((ctx) => ctx.get(editorViewCtx).setProps({ handleScrollToSelection: () => true }))
+    const folder = '/tmp/resources.png'
+    const anotherFolder = '/tmp/notes'
+    const file = '/tmp/context.txt'
+    vi.mocked(handleOpenFileSystemDialog)
+      .mockResolvedValueOnce({ canceled: false, filePaths: [folder] })
+      .mockResolvedValueOnce({ canceled: false, filePaths: [anotherFolder] })
+      .mockResolvedValueOnce({ canceled: false, filePaths: [file] })
+
+    fireEvent.click(screen.getByRole('button', { name: 'AIChatTextarea.addMaterials' }))
+    const menu = await screen.findByRole('menu', { name: 'AIChatTextarea.addMaterials' })
+    const menuItems = within(menu).getAllByRole('menuitem')
+    expect(menuItems[0]).toHaveAccessibleName(/^AIAddMaterialsPopover\.attachment /)
+    expect(menuItems[1]).toHaveAccessibleName(/^AIAddMaterialsPopover\.addFolder /)
+    await act(async () => fireEvent.click(menuItems[1]))
+    expect(handleOpenFileSystemDialog).toHaveBeenCalledExactlyOnceWith({
+      title: 'AIAddMaterialsPopover.addFolder',
+      properties: ['openDirectory', 'multiSelections'],
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'AIChatTextarea.otherMaterials 1' }))
+    const summary = await screen.findByRole('dialog', { name: 'AIAddMaterialsPopover.addedOtherMaterials' })
+    expect(within(summary).getAllByRole('listitem')).toHaveLength(1)
+    fireEvent.click(within(summary).getByText('AIAddMaterialsPopover.attachments'))
+    const panel = await screen.findByRole('dialog', { name: 'AIChatTextarea.addMaterials' })
+    const addMore = within(panel).getByRole('button', { name: 'AIAddMaterialsPopover.continueAdding' })
+    fireEvent.click(addMore)
+    expect(handleOpenFileSystemDialog).toHaveBeenCalledTimes(1)
+    await act(async () =>
+      fireEvent.click(await screen.findByRole('menuitem', { name: 'AIAddMaterialsPopover.addFolder' })),
+    )
+    expect(handleOpenFileSystemDialog).toHaveBeenLastCalledWith({
+      title: 'AIAddMaterialsPopover.addFolder',
+      properties: ['openDirectory', 'multiSelections'],
+    })
+    fireEvent.click(addMore)
+    await act(async () =>
+      fireEvent.click(await screen.findByRole('menuitem', { name: 'AIAddMaterialsPopover.attachment' })),
+    )
+    expect(handleOpenFileSystemDialog).toHaveBeenLastCalledWith({
+      title: 'AIAddMaterialsPopover.attachment',
+      properties: ['openFile', 'multiSelections'],
+    })
+
+    const saved = ref.current?.getValue() ?? ''
+    act(() => ref.current?.setValue(saved))
+    expect(within(panel).getByText('(3)')).toBeInTheDocument()
+    for (const path of [folder, anotherFolder, file]) expect(within(panel).getByTitle(path)).toBeInTheDocument()
+    for (const path of [folder, anotherFolder]) {
+      expect(within(within(panel).getByTitle(path).parentElement!).getByText('-')).toBeInTheDocument()
+    }
+    expect(within(panel).queryByRole('img', { name: 'resources.png' })).toBeNull()
+    expect(getLocalFileLinkInfo).not.toHaveBeenCalledWith(folder, true)
+    fireEvent.click(send)
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        imageList: [],
+        mentionList: [
+          expect.objectContaining({ mentionType: 'folder', mentionId: folder, mentionSource: 'attachment' }),
+          expect.objectContaining({ mentionType: 'folder', mentionId: anotherFolder, mentionSource: 'attachment' }),
+          expect.objectContaining({ mentionType: 'file', mentionId: file, mentionSource: 'attachment' }),
+        ],
+      }),
+    )
+  })
+
   it('图片附件可随草稿恢复和发送，从附件列表删除时保留正文图片', async () => {
     const { ref, send, onSubmit } = await setup('正文')
     editors[0].action((ctx) => ctx.get(editorViewCtx).setProps({ handleScrollToSelection: () => true }))
@@ -917,7 +985,10 @@ describe('输入框资料栏', () => {
     expect(within(panel).queryByTitle(path)).toBeNull()
     expect(screen.getByRole('button', { name: 'AIChatTextarea.otherMaterials 2' })).toBeInTheDocument()
     vi.mocked(handleOpenFileSystemDialog).mockResolvedValueOnce({ canceled: false, filePaths: [path, '/tmp/new.txt'] })
-    await act(async () => fireEvent.click(within(panel).getByRole('button', { name: 'YakitButton.add' })))
+    fireEvent.click(within(panel).getByRole('button', { name: 'AIAddMaterialsPopover.continueAdding' }))
+    await act(async () =>
+      fireEvent.click(await screen.findByRole('menuitem', { name: 'AIAddMaterialsPopover.attachment' })),
+    )
     expect(panel).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'AIChatTextarea.otherMaterials 4' })).toBeInTheDocument()
     fireEvent.change(search, { target: { value: 'new' } })

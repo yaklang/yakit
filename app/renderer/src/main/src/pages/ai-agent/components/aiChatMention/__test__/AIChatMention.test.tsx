@@ -5,6 +5,8 @@ import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vites
 import { useKnowledgeBase } from '@/pages/KnowledgeBase/hooks/useKnowledgeBase'
 import type { KnowledgeBaseItem } from '@/pages/KnowledgeBase/hooks/useKnowledgeBase'
 import { HistoryAIReActChatContext } from '@/components/historyAIReActChat/context'
+import en from '@/locales/en/aiAgent.json'
+import zhTW from '@/locales/zh-TW/aiAgent.json'
 import { AIChatMention } from '../AIChatMention'
 import { selectBrowserInstance, useBrowserInstances } from '../../../browserInstances/browserInstanceStore'
 import type { AIBrowserInstance } from '../../../browserInstances/browserInstanceStore'
@@ -40,7 +42,13 @@ const i18n = vi.hoisted(() => ({ language: 'en' }))
 const session = vi.hoisted(() => ({ id: 'session-test' }))
 
 vi.mock('@/i18n/useI18nNamespaces', () => ({
-  useI18nNamespaces: () => ({ t: (key: string) => key, i18n }),
+  useI18nNamespaces: () => ({
+    t: (key: string) =>
+      key === 'AIMentionTabs.allKnowledgeBase'
+        ? (i18n.language === 'zh-TW' ? zhTW : en).AIMentionTabs.allKnowledgeBase
+        : key,
+    i18n,
+  }),
 }))
 vi.mock('@/pages/ai-re-act/hooks/useCurrentSessionId', () => ({ default: () => session.id }))
 vi.mock('@/pages/KnowledgeBase/utils', () => ({
@@ -677,6 +685,27 @@ describe('AIChatMention', () => {
     expect(grpcQueryAIForge).toHaveBeenCalledTimes(remoteCalls)
   })
 
+  it.each([
+    ['en', '@All Knowledge Bases'],
+    ['zh-TW', '@所有知識庫'],
+  ])('keeps the localized all-knowledge-bases name when selecting in %s', async (language, label) => {
+    i18n.language = language
+    const editor = document.createElement('div')
+    const onSelect = vi.fn()
+    render(<AIChatMention onSelect={onSelect} keyboardTarget={() => editor} />)
+    fireEvent.click(screen.getByRole('button', { name: 'AIMentionTabs.knowledgeBase' }))
+
+    const option = await screen.findByRole('option', { name: label })
+    expect(option).toHaveAttribute('aria-selected', 'true')
+    fireEvent.click(option)
+    fireEvent.keyDown(editor, { key: 'Enter', keyCode: 13 })
+
+    expect(onSelect.mock.calls).toEqual([
+      ['knowledgeBase', expect.objectContaining({ id: '@所有知识库', name: label })],
+      ['knowledgeBase', expect.objectContaining({ id: '@所有知识库', name: label })],
+    ])
+  })
+
   it('searches cached knowledge bases by name and keeps added knowledge bases separate', async () => {
     const candidates = ['FORGE_VECTOR_INDEX', 'AI_TOOL_VECTOR_INDEX'].map(
       (name, index) =>
@@ -695,7 +724,7 @@ describe('AIChatMention', () => {
 
     const search = screen.getByRole('textbox')
     fireEvent.change(search, { target: { value: 'p' } })
-    expect(await screen.findByText('AIMentionTabs.allKnowledgeBase')).toBeInTheDocument()
+    expect(await screen.findByText(en.AIMentionTabs.allKnowledgeBase)).toBeInTheDocument()
     expect(screen.queryByText('FORGE_VECTOR_INDEX')).not.toBeInTheDocument()
     expect(screen.queryByText('AI_TOOL_VECTOR_INDEX')).not.toBeInTheDocument()
 
