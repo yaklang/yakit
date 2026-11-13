@@ -6,7 +6,7 @@ export default function useRuntimeContextSizeLimit(): number {
   const { setting, activeChat } = useAIAgentStore()
   const limit = activeChat?.SessionID
     ? (activeChat.StartParams?.RuntimeContextSizeLimit ?? 0) / 1000
-    : setting.RuntimeContextSizeLimit ?? 0
+    : (setting.RuntimeContextSizeLimit ?? 0)
   // 非正数仅在 UI 中解析为默认阈值，不改写请求中“使用服务端默认值”的语义。
-  return limit > 0 ? limit : AIAgentSettingDefault.RuntimeContextSizeLimit ?? 500
+  return limit > 0 ? limit : (AIAgentSettingDefault.RuntimeContextSizeLimit ?? 500)
 }

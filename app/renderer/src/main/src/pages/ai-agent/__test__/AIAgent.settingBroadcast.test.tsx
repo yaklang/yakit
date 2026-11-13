@@ -445,8 +445,8 @@ describe('AIAgent 配置广播', () => {
         source === 'user'
           ? { EnablePlan: true }
           : source === 'context'
-          ? { RuntimeContextSizeLimit: 600 }
-          : { ReviewPolicy: 'yolo' },
+            ? { RuntimeContextSizeLimit: 600 }
+            : { ReviewPolicy: 'yolo' },
       )
       const { RuntimeContextSizeLimit: _defaultLimit, ...sessionConfig } = currentSetting
       expect(globalSessionEngine.updateSessionConfig).toHaveBeenCalledExactlyOnceWith('history', {
@@ -732,8 +732,8 @@ describe('AIAgent 配置广播', () => {
       pageParamsInfo: { aiAgentPageInfo: { session: { SessionID: 'other' } } },
     }
     ipc.pages.set(YakitRoute.AI_Agent, { pageList: [node, otherPage] })
-    ipc.queryPagesDataById.mockImplementation(
-      (route, id) => ipc.pages.get(route)?.pageList.find((page) => page.pageId === id),
+    ipc.queryPagesDataById.mockImplementation((route, id) =>
+      ipc.pages.get(route)?.pageList.find((page) => page.pageId === id),
     )
 
     render(<AIAgent pageId="test" initialSession={session} />)
@@ -1158,8 +1158,8 @@ describe('AIAgent 配置广播', () => {
       pageParamsInfo: { aiAgentPageInfo: { session: { SessionID: `other-${index}` } } },
     }))
     ipc.pages.set(YakitRoute.AI_Agent, { pageList: [node, ...otherPages] })
-    ipc.queryPagesDataById.mockImplementation(
-      (route, id) => ipc.pages.get(route)?.pageList.find((page) => page.pageId === id),
+    ipc.queryPagesDataById.mockImplementation((route, id) =>
+      ipc.pages.get(route)?.pageList.find((page) => page.pageId === id),
     )
     render(<AIAgent pageId="test" initialSession={session} />)
     await act(async () => {})
