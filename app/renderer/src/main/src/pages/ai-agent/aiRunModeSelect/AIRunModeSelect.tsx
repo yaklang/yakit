@@ -6,6 +6,7 @@ import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { AtomOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import styles from './AIRunModeSelect.module.scss'
 import { AIRunModeMenu } from './AIRunModeMenu'
+import { useAIRunMode } from './useAIRunMode'
 
 interface AIRunModeSelectProps {
   open?: boolean
@@ -14,6 +15,7 @@ interface AIRunModeSelectProps {
 
 const AIRunModeSelect: React.FC<AIRunModeSelectProps> = (props) => {
   const { t } = useI18nNamespaces(['aiAgent'])
+  const { selectedModes } = useAIRunMode()
   const [open, setOpen] = useControllableValue<boolean>(props, {
     defaultValue: false,
     valuePropName: 'open',
@@ -34,7 +36,7 @@ const AIRunModeSelect: React.FC<AIRunModeSelectProps> = (props) => {
       <YakitButton
         type="text2"
         className={styles['run-mode-select']}
-        isActive={open}
+        isActive={selectedModes.length > 0}
         title={t('AIRunModeSelect.configuration')}
         aria-label={t('AIRunModeSelect.configuration')}
         aria-haspopup="dialog"

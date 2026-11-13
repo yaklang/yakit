@@ -36,7 +36,7 @@ const MIN_CHAT_CONTENT_WIDTH = 400
 
 export interface AIAgentChatLayoutProps {
   mode: AIAgentChatMode
-  onTriageSubmit: (data: AIChatSubmitParams) => void
+  onTriageSubmit: (data: AIChatSubmitParams) => boolean
   onSetReAct: () => void
   aiChatWelcomeRef: RefObject<AIChatContentRefProps>
   aiReActChatRef: RefObject<AIChatContentRefProps>
@@ -206,8 +206,9 @@ export const AIAgentChatLayout: React.FC<AIAgentChatLayoutProps> = memo((props) 
                   <AIChatWelcome
                     key={activeChat?.SessionID}
                     onTriageSubmit={(data) => {
+                      if (!onTriageSubmit(data)) return false
                       clearDraftSelection()
-                      onTriageSubmit(data)
+                      return true
                     }}
                     onHttpFlowRemove={onHttpFlowRemove}
                     selectedHttpFlowIds={selectedHttpFlowIds}

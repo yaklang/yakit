@@ -252,9 +252,9 @@
     "attachmentLimitExceeded": "You selected {{count}} attachments. You can add up to {{max}} at a time.",
     "attachmentFailed": "Unable to open the file picker: {{error}}",
     "risk": "Vulnerabilities and risks",
-    "riskHint": "Browse recorded vulnerabilities and risks",
+    "riskHint": "Select recorded vulnerabilities and risks to analyze and generate a report",
     "flow": "Traffic",
-    "flowHint": "Browse captured HTTP traffic",
+    "flowHint": "Select captured HTTP traffic to analyze and process",
     "skillHint": "Add a skill to this conversation",
     "knowledgeHint": "Reference a knowledge base",
     "toolHint": "AI prioritizes added tools when completing tasks",
@@ -872,9 +872,6 @@
     "reviewDecision": "Review Decision",
     "unknownAction": "Unknown Action"
   },
-  "AIFocusMode": {
-    "focusModeTooltip": "Use a framework for complex scenarios and limit the AI's thinking scope"
-  },
   "AIReasoningEffort": {
     "probeUnsupported": "This model does not support this effort level",
     "selectQuality": "Thinking quality",
@@ -938,7 +935,8 @@
     "switchToSource": "Switch to source mode"
   },
   "AIMilkdownInput": {
-    "placeholder": "Ask me anything, @ for skills/tools/files/knowledge, / for mode",
+    "placeholderPrompt": "Ask me anything",
+    "placeholderHint": "Use skills, tools, files, and knowledge bases...",
     "selectedHttpFlowSummary": "Selected {{count}} HTTP flows",
     "selectedRiskSummary": "Selected {{count}} risks",
     "imagesNotSaved": "Images have not finished saving. Please try again shortly. If saving failed, remove the failed images and upload them again."

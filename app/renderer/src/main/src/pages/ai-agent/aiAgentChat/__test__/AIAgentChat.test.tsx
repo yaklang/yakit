@@ -15,6 +15,7 @@ import { syncAIAgentPageInfo } from '../../utils/syncAIAgentPageInfo'
 const mocks = vi.hoisted(() => ({
   activeChat: undefined as { SessionID: string; isDraftSession?: boolean } | undefined,
   startChat: vi.fn(),
+  onSubmitResult: vi.fn(),
   cancelPendingChat: vi.fn(),
   onClose: vi.fn(),
   setActiveChat: vi.fn(),
@@ -46,7 +47,10 @@ vi.mock('@/pages/KnowledgeBase/hooks/useMultipleHoldGRPCStream', () => ({ defaul
 vi.mock('@/pages/KnowledgeBase/hooks/useKnowledgeBase', () => ({ useKnowledgeBase: () => ({ clearAll: vi.fn() }) }))
 vi.mock('@/i18n/useI18nNamespaces', () => ({ useI18nNamespaces: () => ({ t: (key: string) => key }) }))
 vi.mock('../../aiModelList/utils', () => ({ isForcedSetAIModal: vi.fn() }))
-vi.mock('../../utils', () => ({ onReStart: vi.fn(), createActiveChatSessionId: () => 'client-session' }))
+vi.mock('../../utils', () => ({
+  onReStart: vi.fn(),
+  createActiveChatSessionId: () => 'client-session',
+}))
 vi.mock('../../utils/syncAIAgentPageInfo', () => ({ syncAIAgentPageInfo: vi.fn() }))
 vi.mock('../../grpc', () => ({ grpcGetAIForge: vi.fn() }))
 vi.mock('../../aiToolList/utils', () => ({ grpcGetAIToolById: vi.fn() }))
@@ -62,18 +66,19 @@ vi.mock('../AIAgentChatLayout/AIAgentChatLayout', () => ({
     onTriageSubmit,
   }: {
     mode: string
-    onTriageSubmit: (value: AIChatSubmitParams) => void
+    onTriageSubmit: (value: AIChatSubmitParams) => boolean
   }) => (
     <div>
       <span data-testid="mode">{mode}</span>
       <button onClick={() => onTriageSubmit({ qs: 'first question', sessionId: 'image-draft' })}>submit</button>
-      <button onClick={() => onTriageSubmit({ qs: 'first question' })}>submit-text</button>
+      <button onClick={() => mocks.onSubmitResult(onTriageSubmit({ qs: 'first question' }))}>submit-text</button>
     </div>
   ),
 }))
 
 beforeEach(() => {
   vi.clearAllMocks()
+  mocks.startChat.mockReturnValue(true)
   mocks.activeChat = undefined
   mocks.openChatInNewTab = false
   mocks.inViewPort = true
@@ -88,6 +93,16 @@ afterEach(() => {
 })
 
 describe('welcome submission', () => {
+  it.each([false, true])('欢迎页传递启动接纳结果 %s，仅接纳时切换模式', (accepted) => {
+    mocks.startChat.mockReturnValueOnce(accepted)
+    render(<AIAgentChat />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'submit-text' }))
+
+    expect(mocks.onSubmitResult).toHaveBeenCalledExactlyOnceWith(accepted)
+    expect(screen.getByTestId('mode')).toHaveTextContent(accepted ? 're-act' : 'welcome')
+  })
+
   it('固定欢迎页隐藏时仍响应仅发给自己的重置事件', () => {
     mocks.inViewPort = false
     mocks.openChatInNewTab = true

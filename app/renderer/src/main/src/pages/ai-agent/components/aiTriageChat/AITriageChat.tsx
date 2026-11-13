@@ -158,12 +158,12 @@ const AITriageChatContentEdit: React.FC<AITriageChatContentEditProps> = React.me
       showQS: qs,
       focusMode: '',
     }
-    const { attachedResourceInfo } = getAIReActRequestParams(value)
+    const request = getAIReActRequestParams(value)
 
     const chatMessage: AIInputEvent = {
       IsFreeInput: true,
       FreeInput: value.qs,
-      AttachedResourceInfo: attachedResourceInfo,
+      AttachedResourceInfo: request.attachedResourceInfo,
       FocusModeLoop: value.focusMode,
     }
     onSend({

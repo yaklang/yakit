@@ -14,6 +14,7 @@ import emiter from '@/utils/eventBus/eventBus'
  * 欢迎页和聊天组件共用的会话启动入口，负责组装请求及处理绑定后的 UI 更新。
  * 调用时固定目标和参数，后续异步准备、绑定回调不再根据当前选中会话决定请求归属。
  * 已建联会话的自由输入由调用方的发送逻辑处理，不经过这里。
+ * 返回值表示同步受理（异步准备尚未完成）；onAccepted 仅在底层接受启动后调用。
  */
 export function useStartAIChat({
   startRequest,
@@ -25,7 +26,7 @@ export function useStartAIChat({
   setMention?: AIChatTextareaRefProps['setMention']
 } = {}) {
   const { getSetting, onStart, setActiveChat } = useAIAgentDispatcher()
-  return useMemoizedFn((value: HandleStartParams) => {
+  return useMemoizedFn((value: HandleStartParams, onAccepted?: () => void) => {
     const { qs, target, enabledCapabilities } = value
     const { kind, sessionId: sessionID } = target
     const isNew = kind === 'new'
@@ -61,12 +62,7 @@ export function useStartAIChat({
       // token 标识本轮 IPC/gRPC 连接，不是后端 sessionId；绑定后也作为 UI 的稳定 viewKey。
       let streamToken = ''
       if (isNew) onChat?.()
-      setMention?.({
-        mentionId: params.FocusModeLoop || randomString(8),
-        mentionType: 'focusMode',
-        mentionName: params.FocusModeLoop || '',
-      })
-      onStart({
+      const accepted = onStart({
         kind,
         sessionId: sessionID,
         params,
@@ -111,6 +107,14 @@ export function useStartAIChat({
           )
         },
       })
+      if (accepted === false) return false
+      setMention?.({
+        mentionId: params.FocusModeLoop || randomString(8),
+        mentionType: 'focusMode',
+        mentionName: params.FocusModeLoop || '',
+      })
+      onAccepted?.()
+      return true
     }
     if (startRequest) {
       // 保留 Fuzzer、History 等入口的请求加工和绑定订阅；启动目标仍使用上面捕获的值。
@@ -126,8 +130,9 @@ export function useStartAIChat({
             params: aiInputEvent,
           })
         })
+      return true
     } else {
-      onStartChat({
+      return onStartChat({
         params: aiInputEvent,
       })
     }

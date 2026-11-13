@@ -541,11 +541,11 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   const handleSubmitQuery = useMemoizedFn((value: AIChatSubmitParams) => {
     const sessionID = activeChat?.SessionID
     if (store.getState().execute && sessionID) {
-      const { attachedResourceInfo } = getAIReActRequestParams(value)
+      const request = getAIReActRequestParams(value)
       const chatMessage: AIInputEvent = {
         IsFreeInput: true,
         FreeInput: value.qs,
-        AttachedResourceInfo: attachedResourceInfo,
+        AttachedResourceInfo: request.attachedResourceInfo,
         FocusModeLoop: value.focusMode ?? focusModeLoop,
       }
       const onSendChat = (res: AISendResProps) => {

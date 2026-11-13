@@ -70,7 +70,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo(() => {
   const startChat = useStartAIChat()
 
   const handleStartTriageChat = useMemoizedFn((data: AIChatSubmitParams) => {
-    handleStart(data, 'new')
+    return handleStart(data, 'new')
   })
 
   useEffect(() => {
@@ -131,8 +131,8 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo(() => {
         resetWelcome(true)
         return true
       }
+      if (!startChat({ ...value, target })) return false
       setMode('re-act')
-      startChat({ ...value, target })
       return true
     },
   )

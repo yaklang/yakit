@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useStore } from 'zustand'
 import { createStore } from 'zustand/vanilla'
 import type { AIChatTextareaProps } from '@/pages/ai-agent/template/type'
+import { AIInputFooterRightEnum } from '@/pages/ai-agent/template/type'
 import type { PendingAIChat } from '../../../hooks/ChatMultiSessionController'
 import { AITaskStatus } from '../../../hooks/grpcApi'
 import { AIReactChatTextarea } from '../AIReactChatTextarea'
@@ -23,7 +24,7 @@ vi.mock('../../../hooks/useCurrentDataBySession', () => ({ useCurrentStore: () =
 vi.mock('../../../hooks/useGetChatDataStoreKey', () => ({ default: () => 'ai-agent-chat' }))
 vi.mock('@/pages/ai-agent/template/template', () => ({
   AIChatTextarea: React.forwardRef(function Textarea(
-    { loading, onSubmit, inputFooterRight }: AIChatTextareaProps,
+    { loading, onSubmit, footerRightTypes, inputFooterRight }: AIChatTextareaProps,
     _ref,
   ) {
     return (
@@ -31,6 +32,7 @@ vi.mock('@/pages/ai-agent/template/template', () => ({
         <button disabled={loading} onClick={() => onSubmit?.({ qs: 'hello', sessionId: 'draft' })}>
           submit
         </button>
+        {footerRightTypes?.map((item) => item.component)}
         {inputFooterRight}
       </div>
     )
@@ -65,21 +67,37 @@ describe('AIReactChatTextarea pending state', () => {
     expect(handleSubmit).toHaveBeenCalledExactlyOnceWith({ qs: 'hello', sessionId: 'draft' })
   })
 
-  it('keeps follow-up input available in a running bound session and preserves stop loading', () => {
+  it('keeps the custom footer, follow-up input and stop button available during a session', () => {
     const handleStopCasualTask = vi.fn()
     chatStore.setState({ currentChatStatus: { status: AITaskStatus.inProgress } })
     render(
       <AIReactChatTextarea
         handleSubmit={vi.fn()}
         handleStopCasualTask={handleStopCasualTask}
-        externalParameters={{}}
+        externalParameters={{
+          footerRightTypes: [
+            {
+              type: AIInputFooterRightEnum.Custom,
+              key: 'audit-style',
+              component: (
+                <button key="audit-style" type="button">
+                  audit style
+                </button>
+              ),
+            },
+          ],
+        }}
       />,
     )
     expect(screen.getByRole('button', { name: 'submit' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'audit style' })).toBeEnabled()
     fireEvent.click(screen.getByRole('button', { name: 'stop' }))
     expect(handleStopCasualTask).toHaveBeenCalledTimes(1)
     act(() => chatStore.setState({ cancelChatLoading: true }))
     expect(screen.getByRole('button', { name: 'stop' })).toBeDisabled()
     expect(screen.getByRole('button', { name: 'submit' })).toBeEnabled()
+    act(() => chatStore.setState({ currentChatStatus: { status: AITaskStatus.created } }))
+    expect(screen.queryByRole('button', { name: 'stop' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'audit style' })).toBeEnabled()
   })
 })

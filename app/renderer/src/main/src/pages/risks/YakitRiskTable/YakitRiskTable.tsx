@@ -746,7 +746,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
       {
         title: t('YakitTable.action'),
         dataKey: 'action',
-        width: 140,
+        width: aiRiskSelection ? 70 : 140,
         fixed: 'right',
         render: (text, record: Risk, index) => {
           const isSelected = aiSelectedIds.has(String(record.Id))

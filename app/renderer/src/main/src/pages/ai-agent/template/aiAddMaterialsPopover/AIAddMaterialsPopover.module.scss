@@ -28,7 +28,7 @@
 }
 
 .header,
-.item:global(.yakit.ant-btn) {
+.menu .item:global(.yakit.ant-btn.ant-btn-default) {
   display: flex;
   flex-shrink: 0;
   align-items: center;
@@ -41,6 +41,12 @@
 
 .menu-header {
   padding-inline-end: 4px;
+}
+
+.menu {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .title,
@@ -62,7 +68,7 @@
   color: var(--Colors-Use-Neutral-Text-4-Help-text);
 }
 
-.item:global(.yakit.ant-btn) {
+.menu .item:global(.yakit.ant-btn.ant-btn-default) {
   justify-content: flex-start;
   height: 28px;
   padding: 0 8px;
@@ -75,9 +81,14 @@
   text-align: start;
   cursor: pointer;
 
-  &:hover,
-  &:focus-visible {
+  &:not(:disabled):hover,
+  &:not(:disabled):focus {
     background: var(--Colors-Use-Neutral-Bg-Hover);
+  }
+
+  &:not(:disabled):focus-visible {
+    outline: none;
+    box-shadow: none;
   }
 }
 

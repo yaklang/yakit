@@ -42,7 +42,7 @@ describe('pending chat lifecycle', () => {
     })
     expect(result.current.pendingChat?.streamToken).toBe('transport')
     act(() => {
-      result.current.onStart({ kind: 'new', sessionId: 'client-session', params: {} })
+      expect(result.current.onStart({ kind: 'new', sessionId: 'client-session', params: {} })).toBe(false)
     })
     expect(globalSessionEngine.handleStartSession).toHaveBeenCalledTimes(1)
     act(() => callbacks.onLinkSuccess('backend-id'))

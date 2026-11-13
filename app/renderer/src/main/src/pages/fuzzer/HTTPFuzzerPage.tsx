@@ -123,7 +123,6 @@ import {
   registerWebFuzzerPageOnAIFuzzStatus,
   type WebFuzzerCasualReplaceReviewPayload,
 } from './webFuzzerAiRequestApplyBridge'
-import { AIInputFooterRightEnum } from '@/pages/ai-agent/template/type'
 import { AISourceEnum } from '@/pages/ai-re-act/hooks/grpcApi'
 import { shallow } from 'zustand/shallow'
 import {
@@ -3411,16 +3410,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                           ),
                           taskDetails: true,
                         },
-                        footerRightTypes: [
-                          {
-                            type: AIInputFooterRightEnum.AIFocusMode,
-                            props: {
-                              value: focusModeLoop,
-                              onChange: () => {},
-                              disabled: true,
-                            },
-                          },
-                        ],
+                        footerRightTypes: [],
                         filterMentionType: ['focusMode'],
                       },
                     })}

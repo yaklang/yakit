@@ -209,6 +209,7 @@ export const AIMilkdownMention: React.FC<AIMilkdownMentionProps> = (props) => {
       mentionName: value?.name || '',
       name: value?.originalName,
       mentionSource: value?.mentionSource,
+      knowledgeIndex: value?.knowledgeIndex,
     }
     switch (type) {
       case 'focusMode':

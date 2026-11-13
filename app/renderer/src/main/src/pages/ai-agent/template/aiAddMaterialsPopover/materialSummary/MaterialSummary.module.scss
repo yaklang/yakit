@@ -1,10 +1,10 @@
-.badge:global(.yakit.ant-btn) {
+.badge:global(.yakit.ant-btn.ant-btn-default)[aria-haspopup='dialog'] {
   display: inline-flex;
   align-items: center;
   gap: 0;
   height: 30px;
   padding: 0 6px;
-  border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
+  border: 1px solid var(--Colors-Use-Neutral-Border);
   border-radius: 9999px;
   background: var(--Colors-Use-Basic-Background);
   color: var(--Colors-Use-Neutral-Text-1-Title);
@@ -19,9 +19,18 @@
     padding-left: 2px;
   }
 
-  &:hover,
-  &[aria-expanded='true'] {
-    background: var(--Colors-Use-Neutral-Bg-Hover);
+  &:not(:disabled) {
+    &:focus,
+    &:hover,
+    &:active,
+    &[aria-expanded='true'] {
+      border-color: var(--Colors-Use-Neutral-Border);
+    }
+
+    &:hover,
+    &[aria-expanded='true'] {
+      background: var(--Colors-Use-Neutral-Bg-Hover);
+    }
   }
 }
 
@@ -213,12 +222,4 @@
 
 .description {
   flex: 1;
-}
-.skill-popover {
-  --skill-preview-width: 400px;
-  --skill-preview-height: 240px;
-
-  :global(.ant-popover-inner) {
-    padding: 0;
-  }
 }

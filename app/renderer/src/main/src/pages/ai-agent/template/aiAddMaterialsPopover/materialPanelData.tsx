@@ -9,6 +9,7 @@ import {
 } from '@yakit-libs/yakit-ui-icons/outline'
 import type { TFunction } from '@/i18n/useI18nNamespaces'
 import emiter from '@/utils/eventBus/eventBus'
+import { targetIcon } from '@/pages/KnowledgeBase/utils'
 import {
   ColorsFileSystemIcon,
   ColorsFlowIcon,
@@ -192,20 +193,23 @@ export const getMaterialSummaryGroups = ({
         ),
         count: entryGroups.length,
         onAdd: tab && filterMode?.includes(tab) ? undefined : () => openCategory(category),
-        rows: entryGroups.map(([entry, ...duplicates], index) => ({
-          key: `${entry.mentionId}:${index}`,
-          name: entry.mentionName,
-          skillName: category === 'forge' ? forgeNames.get(entry.mentionId) || entry.mentionName : undefined,
-          icon: category === 'forge' ? <PuzzleOutlined size={16} /> : <BookOpenTextOutlined size={16} />,
-          description: descriptions[`${category}:${entry.mentionId}`],
-          onRemove:
-            entry.lock || duplicates.some((duplicate) => duplicate.lock)
-              ? undefined
-              : () => {
-                  onRemove(entry)
-                  duplicates.forEach(onRemove)
-                },
-        })),
+        rows: entryGroups.map(([entry, ...duplicates], index) => {
+          const KnowledgeIcon =
+            entry.knowledgeIndex === undefined ? BookOpenTextOutlined : targetIcon(entry.knowledgeIndex)
+          return {
+            key: `${entry.mentionId}:${index}`,
+            name: entry.mentionName,
+            icon: category === 'forge' ? <PuzzleOutlined size={16} /> : <KnowledgeIcon size={16} />,
+            description: descriptions[`${category}:${entry.mentionId}`],
+            onRemove:
+              entry.lock || duplicates.some((duplicate) => duplicate.lock)
+                ? undefined
+                : () => {
+                    onRemove(entry)
+                    duplicates.forEach(onRemove)
+                  },
+          }
+        }),
       },
     ]
   })

@@ -11,6 +11,7 @@ export interface AIChatMentionSelectItem {
   name: string
   originalName?: string
   mentionSource?: AIMentionCommandParams['mentionSource']
+  knowledgeIndex?: AIMentionCommandParams['knowledgeIndex']
 }
 
 export interface AIChatMentionProps {

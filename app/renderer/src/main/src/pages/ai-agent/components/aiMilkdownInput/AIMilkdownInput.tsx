@@ -205,13 +205,33 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
             })
           }),
         ].flat()
+        const placeholderPrompt = t('AIMilkdownInput.placeholderPrompt')
+        const placeholderHint = t('AIMilkdownInput.placeholderHint')
         const placeholder = [
           placeholderConfig,
           placeholderPlugin,
           (ctx: Ctx) => () => {
             ctx.update(placeholderConfig.key, (prev) => ({
               ...prev,
-              text: t('AIMilkdownInput.placeholder'),
+              mode: 'doc' as const,
+              render: (view) => {
+                const { ownerDocument } = view.dom
+                const row = ownerDocument.createElement('span')
+                row.className = styles['placeholder']
+                row.setAttribute('aria-hidden', 'true')
+
+                const prompt = ownerDocument.createElement('span')
+                prompt.textContent = placeholderPrompt
+                const mention = ownerDocument.createElement('span')
+                mention.className = styles['placeholder-mention']
+                mention.textContent = '@'
+                const hint = ownerDocument.createElement('span')
+                hint.className = styles['placeholder-hint']
+                hint.textContent = placeholderHint
+
+                row.append(prompt, mention, hint)
+                return row
+              },
             }))
           },
         ]
@@ -225,6 +245,7 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
               // 配置为只读
               ctx.set(editorViewOptionsCtx, {
                 editable: () => !readonly,
+                attributes: { 'aria-placeholder': `${placeholderPrompt} @ ${placeholderHint}` },
               })
               ctx.set(defaultValueCtx, defaultValue || '')
 

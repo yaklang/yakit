@@ -197,12 +197,3 @@
     margin-inline-start: 0;
   }
 }
-
-.skill-popover {
-  --skill-preview-width: 400px;
-  --skill-preview-height: 240px;
-
-  :global(.ant-popover-inner) {
-    padding: 0;
-  }
-}

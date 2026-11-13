@@ -25,6 +25,13 @@ describe('漏洞风险引用发送资源', () => {
     mentionName: `风险 ${id}`,
   })
 
+  it('超过一万个风险 ID 时完整组装请求', () => {
+    const ids = Array.from({ length: 10_001 }, (_, index) => String(index + 1))
+    const { attachedResourceInfo } = getAIReActRequestParams({ qs: '', riskList: [{ riskIds: ids }] })
+
+    expect(attachedResourceInfo).toContainEqual({ Type: 'risk', Key: 'ids', Value: `[${ids.join(',')}]` })
+  })
+
   it('与 HTTP 流量同时发送时，将去重后的风险 ID 聚合为一个 JSON 数组字符串', () => {
     const { attachedResourceInfo } = getAIReActRequestParams({
       qs: '',

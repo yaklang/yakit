@@ -9,6 +9,7 @@ import { AttachedResourceKeyEnum, AttachedResourceTypeEnum } from '@/pages/ai-ag
 const mocks = vi.hoisted(() => ({
   activeChat: undefined as AISession | undefined,
   onStart: vi.fn(),
+  prepare: vi.fn(),
   setActiveChat: vi.fn(),
   syncAIAgentPageInfo: vi.fn(),
   emit: vi.fn(),
@@ -21,7 +22,7 @@ vi.mock('@/pages/ai-agent/useContext/useDispatcher', () => ({
 vi.mock('@/pages/ai-agent/utils', () => ({
   createActiveChatSessionId: () => 'client-session',
   formatAIAgentSetting: (setting: unknown) => setting,
-  getAIReActRequestParams: (value: any) => ({ attachedResourceInfo: value.attachedResourceInfo }),
+  getAIReActRequestParams: mocks.prepare,
 }))
 vi.mock('@/utils/eventBus/eventBus', () => ({ default: { emit: mocks.emit } }))
 vi.mock('@/pages/ai-agent/utils/syncAIAgentPageInfo', () => ({
@@ -30,12 +31,44 @@ vi.mock('@/pages/ai-agent/utils/syncAIAgentPageInfo', () => ({
 
 beforeEach(() => {
   vi.clearAllMocks()
+  mocks.onStart.mockReturnValue('stream-token')
+  mocks.prepare.mockImplementation((value) => ({ attachedResourceInfo: value.attachedResourceInfo }))
   mocks.activeChat = undefined
   mocks.setting = { Source: 'ai', TimelineSessionID: 'stale-setting' }
 })
 afterEach(cleanup)
 
 describe('submission identity', () => {
+  it.each([false, 'stream-token'])(
+    'notifies acceptance only after asynchronous dispatch accepts: %s',
+    async (accepted) => {
+      mocks.onStart.mockReturnValue(accepted)
+      const onAccepted = vi.fn()
+      const startRequest = vi.fn(async ({ params }) => ({ params }))
+      const { result } = renderHook(() => useStartAIChat({ startRequest }))
+      expect(result.current({ qs: 'hello', target: { kind: 'new', sessionId: 'draft' } }, onAccepted)).toBe(true)
+      expect(onAccepted).not.toHaveBeenCalled()
+      await act(async () => {})
+      expect(mocks.onStart).toHaveBeenCalledOnce()
+      expect(onAccepted).toHaveBeenCalledTimes(accepted === false ? 0 : 1)
+    },
+  )
+
+  it('reports synchronous rejection without changing the selected focus mode', () => {
+    mocks.onStart.mockReturnValue(false)
+    const setMention = vi.fn()
+    const { result } = renderHook(() => useStartAIChat({ setMention }))
+    expect(result.current({ qs: 'keep', target: { kind: 'new', sessionId: 'draft' } })).toBe(false)
+    expect(setMention).not.toHaveBeenCalled()
+  })
+
+  it('reports admission synchronously while business preparation is pending', () => {
+    const startRequest = vi.fn(() => new Promise<AIHandleStartResProps>(() => {}))
+    const { result } = renderHook(() => useStartAIChat({ startRequest }))
+    expect(result.current({ qs: 'hello', target: { kind: 'new', sessionId: 'draft' } })).toBe(true)
+    expect(mocks.onStart).not.toHaveBeenCalled()
+  })
+
   it.each(['new', 'resume'] as const)(
     'preserves business preparation and only binds a new session: %s',
     async (kind) => {

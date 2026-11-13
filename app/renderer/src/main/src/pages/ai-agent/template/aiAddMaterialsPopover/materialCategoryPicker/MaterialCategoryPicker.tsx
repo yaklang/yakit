@@ -21,7 +21,6 @@ import type { MentionListControls, ResourceMentionRow } from '../../../component
 import type { AIMentionCommandParams } from '../../../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
 import MaterialListPanel from '../materialListPanel/MaterialListPanel'
 import type { MaterialCategory, MaterialOption, MaterialPanelHeader } from '../type'
-import ForgeItem from './forgeItem/ForgeItem'
 import { ALL_KNOWLEDGE_BASES, useMaterialCatalog } from './useMaterialCatalog'
 import styles from './MaterialCategoryPicker.module.scss'
 
@@ -81,7 +80,7 @@ const getAddedOptions = (
       name: item?.name ?? mention.mentionName,
       description: item?.description || descriptions[`${mention.mentionType}:${mention.mentionId}`],
       originalName: item?.originalName ?? mention.name,
-      knowledgeIndex: item?.knowledgeIndex,
+      knowledgeIndex: mention.knowledgeIndex ?? item?.knowledgeIndex,
     }
   })
 }
@@ -175,8 +174,9 @@ export const MaterialCatalogList: FC<MaterialCatalogListProps> = ({
       mentionId: item.id,
       mentionName: item.name,
       name: item.originalName,
+      knowledgeIndex,
     }
-    const row = (
+    return (
       <div
         key={item.id}
         className={styles.row}
@@ -226,13 +226,6 @@ export const MaterialCatalogList: FC<MaterialCatalogListProps> = ({
           </div>
         )}
       </div>
-    )
-    if (category !== 'forge' || keyboard) return row
-
-    return (
-      <ForgeItem key={item.id} skillName={item.originalName || item.name}>
-        {row}
-      </ForgeItem>
     )
   }
 

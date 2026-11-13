@@ -25,7 +25,7 @@ export function useChatIPC(route: YakitRouteType, pageId: string, independentSes
   const onStart = useMemoizedFn(({ onLinkStart, onLinkSuccess, ...input }: UseChatIPCStartParams) => {
     // Agent 的不同会话可以同时连接；其他入口保持原有单 pending 行为。
     if (!independentSessions || input.kind === 'new') {
-      if (pendingRef.current?.status === 'connecting') return
+      if (pendingRef.current?.status === 'connecting') return false
       if (pendingToken.current) {
         globalSessionEngine.cancelPendingConnection(pendingToken.current, {
           keepDraft: pendingRef.current?.data.request?.TimelineSessionID === input.sessionId,

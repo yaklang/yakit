@@ -1,5 +1,5 @@
 import type React from 'react'
-import { forwardRef, memo, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import { Fragment, forwardRef, memo, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import type { ReactNode, Ref, RefAttributes } from 'react'
 import { AIInputFooterRightEnum, AIInputInnerFeatureEnum } from './type'
 import type {
@@ -140,32 +140,9 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
       return [{ type: AIInputInnerFeatureEnum.AIReviewRuleSelect }]
     }, [props.footerLeftTypes, isOpen])
 
-    const footerRightTypes: FooterRightTypesComponentProps[] = useCreation(() => {
-      if (props.footerRightTypes?.length) {
-        const list = props.footerRightTypes
-          .map((item) => {
-            let node: FooterRightTypesComponentProps = {} as FooterRightTypesComponentProps
-            if (isString(item)) {
-              switch (item) {
-                case AIInputFooterRightEnum.AIFocusMode:
-                  node = { type: AIInputFooterRightEnum.AIFocusMode }
-                  break
-                default:
-                  break
-              }
-            } else {
-              node = item
-            }
-            return node
-          })
-          .filter((ele) => !!ele?.type)
-        return list
-      }
-      return [
-        { type: AIInputFooterRightEnum.AIFocusMode },
-        { type: AIInputFooterRightEnum.AIModelSelect, props: { isOpen } },
-      ]
-    }, [props.footerRightTypes, isOpen])
+    const footerRightTypes: FooterRightTypesComponentProps[] = props.footerRightTypes ?? [
+      { type: AIInputFooterRightEnum.AIModelSelect, props: { isOpen } },
+    ]
 
     const [disabled, setDisabled] = useState<boolean>(!defaultValue?.trim())
     const [draftMaterials, setDraftMaterials] = useState<AIChatDraftMaterials>({
@@ -512,21 +489,8 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
     })
     const renderFooterRightTypes = useMemoizedFn((types: FooterRightTypesComponentProps[]) => {
       const node: ReactNode[] = []
-      types?.forEach((item, index) => {
+      types?.forEach((item) => {
         switch (item.type) {
-          // case AIInputFooterRightEnum.AIFocusMode:
-          //   node.push(
-          //     item.component || (
-          //       <AIFocusMode
-          //         key={item.type}
-          //         value={focusMode}
-          //         onChange={setFocusMode}
-          //         {...item.props}
-          //         className={classNames(styles['focus-mode-self-adaptive'], item.props?.className)}
-          //       />
-          //     ),
-          //   )
-          //   break
           case AIInputFooterRightEnum.AIModelSelect:
             node.push(
               item.component || (
@@ -537,6 +501,9 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                 />
               ),
             )
+            break
+          case AIInputFooterRightEnum.Custom:
+            node.push(<Fragment key={item.key}>{item.component}</Fragment>)
             break
           default:
             break

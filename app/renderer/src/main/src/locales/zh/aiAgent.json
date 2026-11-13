@@ -252,9 +252,9 @@
     "attachmentLimitExceeded": "已选择 {{count}} 个附件，单次最多添加 {{max}} 个",
     "attachmentFailed": "打开文件选择器失败：{{error}}",
     "risk": "漏洞与风险",
-    "riskHint": "查看已记录的漏洞和风险",
+    "riskHint": "勾选已记录的漏洞和风险进行分析生成报告",
     "flow": "流量",
-    "flowHint": "查看已捕获的 HTTP 流量",
+    "flowHint": "勾选已捕获的HTTP流量进行分析处理",
     "skillHint": "为当前会话添加技能",
     "knowledgeHint": "引用知识库内容",
     "toolHint": "AI 会优先调用已添加的工具来完成任务",
@@ -872,9 +872,6 @@
     "reviewDecision": "Review 决策",
     "unknownAction": "未知操作"
   },
-  "AIFocusMode": {
-    "focusModeTooltip": "复杂场景限定使用框架，限制AI思考范围"
-  },
   "AIReasoningEffort": {
     "probeUnsupported": "此模型不支持该档位",
     "selectQuality": "思考质量选择",
@@ -938,7 +935,8 @@
     "switchToSource": "切换源码模式"
   },
   "AIMilkdownInput": {
-    "placeholder": "向我提问，@使用技能、工具、文件和知识库，/选择模式",
+    "placeholderPrompt": "向我提问",
+    "placeholderHint": "使用技能、工具、文件和知识库...",
     "selectedHttpFlowSummary": "勾选了 {{count}} 条流量",
     "selectedRiskSummary": "勾选了 {{count}} 条漏洞风险",
     "imagesNotSaved": "图片尚未保存完成，请稍后重试；若保存失败，请移除失败图片后重新上传"

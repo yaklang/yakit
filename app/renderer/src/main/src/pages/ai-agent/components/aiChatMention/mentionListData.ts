@@ -39,6 +39,7 @@ export const knowledgeMentionRow = (item: KnowledgeBaseItem, catalog: KnowledgeB
     type: 'knowledgeBase',
     id: String(item.ID),
     name: item.KnowledgeBaseName,
+    knowledgeIndex: knowledgeIndex < 0 ? undefined : knowledgeIndex,
     row: {
       kind: 'knowledgeBase',
       description: item.KnowledgeBaseDescription || item.Description,

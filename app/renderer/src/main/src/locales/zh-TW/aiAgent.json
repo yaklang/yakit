@@ -252,9 +252,9 @@
     "attachmentLimitExceeded": "已選擇 {{count}} 個附件，單次最多新增 {{max}} 個",
     "attachmentFailed": "無法開啟檔案選擇器：{{error}}",
     "risk": "漏洞與風險",
-    "riskHint": "查看已記錄的漏洞與風險",
+    "riskHint": "勾選已記錄的漏洞與風險進行分析並產生報告",
     "flow": "流量",
-    "flowHint": "查看已擷取的 HTTP 流量",
+    "flowHint": "勾選已擷取的 HTTP 流量進行分析處理",
     "skillHint": "為目前對話新增技能",
     "knowledgeHint": "引用知識庫內容",
     "toolHint": "AI 會優先呼叫已新增的工具來完成任務",
@@ -872,9 +872,6 @@
     "reviewDecision": "Review 決策",
     "unknownAction": "未知操作"
   },
-  "AIFocusMode": {
-    "focusModeTooltip": "複雜場景限定使用框架，限制AI思考範圍"
-  },
   "AIReasoningEffort": {
     "probeUnsupported": "此模型不支援該檔位",
     "selectQuality": "思考品質選擇",
@@ -938,7 +935,8 @@
     "switchToSource": "切換原始碼模式"
   },
   "AIMilkdownInput": {
-    "placeholder": "向我提問，@使用技能、工具、檔案和知識庫，/選擇模式",
+    "placeholderPrompt": "向我提問",
+    "placeholderHint": "使用技能、工具、檔案和知識庫...",
     "selectedHttpFlowSummary": "勾選了 {{count}} 條流量",
     "selectedRiskSummary": "勾選了 {{count}} 條漏洞風險",
     "imagesNotSaved": "圖片尚未儲存完成，請稍後重試；若儲存失敗，請移除失敗圖片後重新上傳"

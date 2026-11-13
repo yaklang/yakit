@@ -14,6 +14,7 @@ import { ipcRendererMock, resetIpcMocks } from '../../pages/ai-re-act/hooks/__te
 import { makeGrpcJsonRes } from '../../pages/ai-re-act/hooks/__test__/fixtures'
 import { applyHttpFuzzRequestChangeToWebFuzzerPage } from '@/pages/fuzzer/webFuzzerAiRequestApplyBridge'
 import { YakitRoute } from '@/enums/yakitRoute'
+import { yakitNotify } from '@/utils/notification'
 import type { AISession } from '@/pages/ai-agent/type/aiChat'
 
 vi.mock('lodash', async (importOriginal) => {
@@ -92,6 +93,16 @@ function Consumer() {
           {sessionId}
         </button>
       ))}
+      <button
+        onClick={() =>
+          bridge.handleStart({
+            qs: 'question with risks',
+            riskList: [{ riskIds: Array.from({ length: 10_001 }, (_, index) => String(index + 1)) }],
+          })
+        }
+      >
+        submit-too-many-risks
+      </button>
       <span data-testid="active-session">{bridge.activeID}</span>
       {renderHistoryAIReActChat({ externalParameters: {} })}
     </>
@@ -121,6 +132,32 @@ const emit = async (token: string, event: AIOutputEvent) => {
     for (let i = 0; i < 30; i++) await Promise.resolve()
   })
 }
+
+it('运行中的历史聊天入口拒绝超过协议上限的风险附件', async () => {
+  render(
+    <HistoryAIReActChatProvider
+      source={AISourceEnum.webFuzzer}
+      route={YakitRoute.HTTPFuzzer}
+      pageId="test-page"
+      focusModeLoop=""
+    >
+      <Consumer />
+    </HistoryAIReActChatProvider>,
+  )
+  fireEvent.click(screen.getByRole('button', { name: 'submit' }))
+  await waitFor(() => expect(starts()).toHaveLength(1))
+  await emit(starts()[0][1], makeGrpcJsonRes('pong', {}, { SessionId: 'client-session' }))
+  await waitFor(() => expect(screen.getByTestId('active-session')).toHaveTextContent('client-session'))
+  act(() => globalSessionEngine.ensureSession('client-session').store.getState().updateState({ execute: true }))
+  expect(questions()).toHaveLength(1)
+  vi.mocked(yakitNotify).mockClear()
+
+  fireEvent.click(screen.getByRole('button', { name: 'submit-too-many-risks' }))
+
+  await waitFor(() => expect(yakitNotify).toHaveBeenCalledExactlyOnceWith('error', expect.any(String)))
+  expect(starts()).toHaveLength(1)
+  expect(questions()).toHaveLength(1)
+})
 
 it.each([
   [YakitRoute.HTTPFuzzer, AISourceEnum.webFuzzer],

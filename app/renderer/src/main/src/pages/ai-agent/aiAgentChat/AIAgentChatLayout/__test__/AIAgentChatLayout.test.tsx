@@ -163,6 +163,7 @@ beforeEach(() => {
   viewport.visible = true
   agentStore.setState({ activeChat: undefined })
   vi.clearAllMocks()
+  submit.mockReturnValue(true)
   layoutWidth = 1400
   chatTop = 120
   vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
@@ -206,6 +207,35 @@ afterEach(() => {
 })
 
 describe('公共右侧面板', () => {
+  it('欢迎页提交被拒绝时保留流量和风险选择，重试成功后清理', async () => {
+    submit.mockReturnValueOnce(false)
+    render(<Layout />)
+    await screen.findByText('欢迎页')
+    act(() => {
+      workspaceProps.onSetSelectedHttpFlowIds(['1', '2'])
+      workspaceProps.riskSelection.onChange(
+        [{ Id: 21, Hash: 'hash-21', Title: '风险 A', IP: '', RiskType: '', CreatedAt: 0 }],
+        true,
+      )
+    })
+
+    fireEvent.click(screen.getByText('发送欢迎消息'))
+
+    expect(submit).toHaveBeenCalledOnce()
+    expect(screen.getByTestId('selected-flows')).toHaveTextContent('1,2')
+    expect(screen.getByTestId('selected-risks')).toHaveTextContent('21')
+    expect(workspaceProps.selectedHttpFlowIds).toEqual(['1', '2'])
+    expect(workspaceProps.riskSelection.ids).toEqual(['21'])
+
+    fireEvent.click(screen.getByText('发送欢迎消息'))
+
+    expect(submit).toHaveBeenCalledTimes(2)
+    expect(screen.getByTestId('selected-flows')).toBeEmptyDOMElement()
+    expect(screen.getByTestId('selected-risks')).toBeEmptyDOMElement()
+    expect(workspaceProps.selectedHttpFlowIds).toEqual([])
+    expect(workspaceProps.riskSelection.ids).toEqual([])
+  })
+
   it('风险选择同步到当前输入框，取消、提交和切换会话后保持一致', async () => {
     render(<Layout />)
     await screen.findByText('欢迎页')

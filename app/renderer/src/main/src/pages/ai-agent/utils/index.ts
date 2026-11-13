@@ -147,22 +147,23 @@ export const formatAIAgentSetting = (setting: AIAgentSetting): AIAgentSetting =>
   return data
 }
 
+const collectAIReActRiskIds = ({ riskList = [], mentionList = [], resourceReferences = [] }: AIChatSubmitParams) => {
+  const riskIds = [
+    ...riskList.flatMap((reference) => reference.riskIds),
+    ...mentionList.filter((item) => item.mentionType === 'risk').map((item) => item.mentionId),
+    ...resourceReferences.filter((item) => item.type === 'risk').flatMap((item) => item.ids),
+  ]
+  return new Set(riskIds.map((id) => String(id).trim()).filter((id) => /^[1-9]\d*$/.test(id)))
+}
+
 /** @name 将前端的结构转化为符合定义的结构 */
 export const getAIReActRequestParams = (value: AIChatSubmitParams) => {
-  const {
-    mentionList = [],
-    imageList = [],
-    resourceReferences = [],
-    httpFlowList = [],
-    riskList = [],
-    codeBlockList = [],
-  } = value
+  const validRiskIds = collectAIReActRiskIds(value)
+  const { mentionList = [], imageList = [], resourceReferences = [], httpFlowList = [], codeBlockList = [] } = value
 
   let attachedResourceInfo: AIInputEvent['AttachedResourceInfo'] = []
-  const riskIds = riskList.flatMap((reference) => reference.riskIds)
   for (const item of mentionList) {
     if (item.mentionType === 'risk') {
-      riskIds.push(item.mentionId)
       continue
     }
     const addItem = getResourceInfoByMention(item)
@@ -189,8 +190,7 @@ export const getAIReActRequestParams = (value: AIChatSubmitParams) => {
     ids.forEach((id) => httpFlowIdSet.add(id))
   }
   for (const { type, ids } of resourceReferences) {
-    if (type === 'risk') riskIds.push(...ids)
-    else parseResourceReferenceIds(ids).forEach((id) => httpFlowIdSet.add(id))
+    if (type !== 'risk') parseResourceReferenceIds(ids).forEach((id) => httpFlowIdSet.add(id))
   }
   attachedResourceInfo = [
     ...attachedResourceInfo,
@@ -201,7 +201,6 @@ export const getAIReActRequestParams = (value: AIChatSubmitParams) => {
     },
   ]
 
-  const validRiskIds = new Set(riskIds.map((id) => String(id).trim()).filter((id) => /^[1-9]\d*$/.test(id)))
   if (validRiskIds.size) {
     attachedResourceInfo.push({
       Type: AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_RISK,

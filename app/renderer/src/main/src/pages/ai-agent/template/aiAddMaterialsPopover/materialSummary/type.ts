@@ -5,7 +5,6 @@ export interface MaterialSummaryRow {
   name: string
   icon: ReactNode
   description?: string
-  skillName?: string
   count?: number
   hideCount?: boolean
   onOpen?: () => void

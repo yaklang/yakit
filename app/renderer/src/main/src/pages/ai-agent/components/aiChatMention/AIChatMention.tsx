@@ -1,20 +1,23 @@
-import { useRef, useState } from 'react'
+import { useContext, useRef, useState } from 'react'
 import type { FC } from 'react'
-import { useDebounce, useDebounceFn, useKeyPress, useMemoizedFn, useUpdateLayoutEffect } from 'ahooks'
+import { useDebounce, useDebounceFn, useKeyPress, useMemoizedFn, useRequest, useUpdateLayoutEffect } from 'ahooks'
 import { ChevronDownOutlined, SearchOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { HistoryAIReActChatContext } from '@/components/historyAIReActChat/context'
+import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
 import { AIMentionTabs, AIMentionTabsEnum } from '../../defaultConstant'
 import { RESOURCE_FILTER_OPTIONS } from '../../resourceFilter'
 import type { ResourceFilterValue } from '../../resourceFilter'
-import { selectBrowserInstance } from '../../browserInstances/browserInstanceStore'
+import { selectBrowserInstance, useBrowserInstances } from '../../browserInstances/browserInstanceStore'
 import { MaterialCatalogList } from '../../template/aiAddMaterialsPopover/materialCategoryPicker/MaterialCategoryPicker'
 import { FocusModeOptions } from '../../template/aiAddMaterialsPopover/materialFocusModeList/MaterialFocusModeList'
 import { AIChatMentionTabs } from './aiChatMentionTabs/AIChatMentionTabs'
 import { MentionBrowsers, MentionFileTree } from './MentionCategoryLists'
 import RecentListOfMention from './recentListOfMention/RecentListOfMention'
+import { loadRecentMentionResources } from './recentListOfMention/recentListOfMentionData'
 import type { AIChatMentionProps } from './type'
 import styles from './AIChatMention.module.scss'
 
@@ -30,6 +33,16 @@ export const AIChatMention: FC<AIChatMentionProps> = ({
   focusMode,
 }) => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
+  const sidebarChat = useContext(HistoryAIReActChatContext)
+  const sessionId = useCurrentSessionId()
+  const {
+    data: recentResult,
+    loading: recentLoading,
+    error: recentError,
+  } = useRequest(async () => ({ sessionId, resources: await loadRecentMentionResources(sessionId) }), {
+    ready: visible && !filterMode?.includes(AIMentionTabsEnum.Recent),
+    refreshDeps: [sessionId],
+  })
   const [activeKey, setActiveKey] = useState(defaultActiveTab)
   const [keyword, setKeyword] = useState(filterKeyword ?? '')
   const [filterValue, setFilterValue] = useState<ResourceFilterValue>('all')
@@ -44,12 +57,36 @@ export const AIChatMention: FC<AIChatMentionProps> = ({
     setKeyword(filterKeyword ?? '')
   }, [filterKeyword, visible])
 
-  const tabs = AIMentionTabs.filter((tab) => !filterMode?.includes(tab.value as AIMentionTabsEnum))
+  // 隐藏调用方通过 filterMode 指定的标签。侧栏隐藏文件系统，有预设专注模式的侧栏也隐藏场景选择。
+  const availableTabs = AIMentionTabs.filter(
+    ({ value }) =>
+      !filterMode?.includes(value as AIMentionTabsEnum) &&
+      !(sidebarChat && value === AIMentionTabsEnum.File_System) &&
+      !(sidebarChat?.focusModeLoop && value === AIMentionTabsEnum.FocusMode),
+  )
+  const recent =
+    !recentLoading && !recentError && recentResult?.sessionId === sessionId ? recentResult.resources : undefined
+  const { instances } = useBrowserInstances(
+    visible && !filterMode?.includes(AIMentionTabsEnum.Browser) && Boolean(recent?.browserIDs.length),
+  )
+  const recentBrowsers = recent ? instances.filter((item) => recent.browserIDs.includes(item.id)) : []
+  const recentCounts: Partial<Record<string, number>> = recent
+    ? {
+        [AIMentionTabsEnum.File_System]: recent.files.length + recent.attachments.length,
+        [AIMentionTabsEnum.Forge_Name]: recent.skills.length,
+        [AIMentionTabsEnum.KnowledgeBase]: recent.knowledgeBases.length,
+        [AIMentionTabsEnum.Tool]: recent.tools.length,
+        [AIMentionTabsEnum.Browser]: recentBrowsers.length,
+        [AIMentionTabsEnum.FocusMode]: recent.scenarios.length,
+      }
+    : {}
+  const hasRecent = availableTabs.some(({ value }) => recentCounts[value])
+  const tabs = hasRecent ? availableTabs : availableTabs.filter(({ value }) => value !== AIMentionTabsEnum.Recent)
   const active = tabs.some((tab) => tab.value === activeKey)
     ? activeKey
     : (tabs[0]?.value as AIMentionTabsEnum | undefined)
   const changeTab = (key: AIMentionTabsEnum) => {
-    if (key === active) return
+    if (key === activeKey) return
     setActiveKey(key)
     setFilterValue('all')
     setFilterOpen(false)
@@ -96,7 +133,16 @@ export const AIChatMention: FC<AIChatMentionProps> = ({
   const renderActiveList = () => {
     switch (active) {
       case AIMentionTabsEnum.Recent:
-        return <RecentListOfMention {...controls} query={query} tabs={tabs} />
+        return (
+          recent && (
+            <RecentListOfMention
+              {...controls}
+              query={query}
+              tabs={tabs}
+              data={{ ...recent, browsers: recentBrowsers }}
+            />
+          )
+        )
       case AIMentionTabsEnum.Forge_Name:
       case AIMentionTabsEnum.Tool:
       case AIMentionTabsEnum.KnowledgeBase:

@@ -1,9 +1,11 @@
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import type * as Ahooks from 'ahooks'
+import type { ContextType } from 'react'
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useKnowledgeBase } from '@/pages/KnowledgeBase/hooks/useKnowledgeBase'
 import type { KnowledgeBaseItem } from '@/pages/KnowledgeBase/hooks/useKnowledgeBase'
 import emiter from '@/utils/eventBus/eventBus'
+import { HistoryAIReActChatContext } from '@/components/historyAIReActChat/context'
 import { AIChatMention } from '../AIChatMention'
 import { selectBrowserInstance, useBrowserInstances } from '../../../browserInstances/browserInstanceStore'
 import type { AIBrowserInstance } from '../../../browserInstances/browserInstanceStore'
@@ -151,6 +153,32 @@ afterEach(() => {
 afterAll(() => vi.unstubAllGlobals())
 
 describe('AIChatMention', () => {
+  it('hides the scene tab when the sidebar already has a fixed scene', () => {
+    const sidebarContext = {
+      focusModeLoop: 'http_flow_analyze',
+    } as NonNullable<ContextType<typeof HistoryAIReActChatContext>>
+    render(
+      <HistoryAIReActChatContext.Provider value={sidebarContext}>
+        <AIChatMention onSelect={vi.fn()} />
+      </HistoryAIReActChatContext.Provider>,
+    )
+
+    expect(screen.queryByRole('button', { name: 'AiAgengt.focusMode' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'AIMentionTabs.skill' })).toBeInTheDocument()
+  })
+
+  it('omits the file-system tab in a sidebar chat and keeps other mention tabs', () => {
+    const sidebarContext = {} as NonNullable<ContextType<typeof HistoryAIReActChatContext>>
+    render(
+      <HistoryAIReActChatContext.Provider value={sidebarContext}>
+        <AIChatMention onSelect={vi.fn()} />
+      </HistoryAIReActChatContext.Provider>,
+    )
+
+    expect(screen.queryByRole('button', { name: 'AIMentionTabs.fileSystem' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'AIMentionTabs.skill' })).toBeInTheDocument()
+  })
+
   it('updates tool labels in recent results and the tool catalog when the language changes', async () => {
     const tool = {
       ID: 1,
@@ -341,6 +369,24 @@ describe('AIChatMention', () => {
     expect(loadRecentMentionResources).not.toHaveBeenCalled()
   })
 
+  it('hides recently added when there are no displayable records and opens the skills tab', async () => {
+    const recent = await loadRecentMentionResources('session-test')
+    vi.mocked(loadRecentMentionResources).mockResolvedValueOnce({
+      ...recent,
+      skills: [],
+      browserIDs: ['missing-browser'],
+    })
+
+    render(<AIChatMention onSelect={vi.fn()} />)
+
+    expect(await screen.findByText('catalog-summary')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'AIMentionTabs.recent' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'AIMentionTabs.skill' })).toHaveAttribute(
+      'data-mention-tab-active',
+      'true',
+    )
+  })
+
   it('moves the active scene row with arrow keys and selects it with Enter', async () => {
     vi.mocked(grpcQueryAIFocus).mockResolvedValue({
       Data: [
@@ -380,6 +426,10 @@ describe('AIChatMention', () => {
     fireEvent.change(screen.getByRole('textbox'), { target: { value: 'summary' } })
     expect(within(recentList).getByText('recent-summary')).toBeInTheDocument()
     expect(within(recentList).queryByText('recent-translate')).toBeNull()
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'no-matches' } })
+    expect(screen.getByRole('button', { name: 'AIMentionTabs.recent' })).toBeInTheDocument()
+    expect(within(recentList).getByText('AIMentionTabs.searchEmpty')).toBeInTheDocument()
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'summary' } })
     expect(loadRecentMentionResources).toHaveBeenCalledTimes(1)
 
     fireEvent.keyDown(editor, { key: 'ArrowRight', keyCode: 39 })
@@ -419,6 +469,7 @@ describe('AIChatMention', () => {
     try {
       const editor = document.createElement('div')
       render(<AIChatMention keyboardTarget={() => editor} onSelect={vi.fn()} />)
+      await act(async () => {})
       const skillTab = screen.getByRole('button', { name: 'AIMentionTabs.skill' })
       const knowledgeTab = screen.getByRole('button', { name: 'AIMentionTabs.knowledgeBase' })
 

@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from 'react'
+import { useState } from 'react'
 import type { FC } from 'react'
 import classNames from 'classnames'
 import {
@@ -10,19 +10,13 @@ import {
 } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import type { MaterialSummaryPanelProps, MaterialSummaryProps } from './type'
 import styles from './MaterialSummary.module.scss'
 
-const AISkillDetails = lazy(
-  () => import('@/pages/ai-re-act/aiRightPanel/AISkillLoadingPane/aiSkillList/AISkillDetails/AISkillDetails'),
-)
-
 export const MaterialSummaryPanel: FC<MaterialSummaryPanelProps> = ({ group, onClose }) => {
   const { title, count, icon, rows, onAdd, headerAction } = group
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
-  const [previewSkillKey, setPreviewSkillKey] = useState<string>()
   const navigate = (action: () => void) => {
     onClose()
     action()
@@ -66,7 +60,6 @@ export const MaterialSummaryPanel: FC<MaterialSummaryPanelProps> = ({ group, onC
             name,
             icon: rowIcon,
             description,
-            skillName,
             count: rowCount,
             hideCount,
             onOpen: onOpenRow,
@@ -76,7 +69,7 @@ export const MaterialSummaryPanel: FC<MaterialSummaryPanelProps> = ({ group, onC
           }) => {
             const checked = selection?.checked ?? !!onRemove
             const onToggle = selection?.onChange ?? onRemove
-            const row = (
+            return (
               <li
                 key={rowKey}
                 className={classNames(styles['row'], {
@@ -103,7 +96,6 @@ export const MaterialSummaryPanel: FC<MaterialSummaryPanelProps> = ({ group, onC
                     aria-pressed={selection?.checked}
                     icon={checked ? undefined : <PlusSmOutlined size={16} />}
                     onClick={() => {
-                      setPreviewSkillKey(undefined)
                       if (!selection && rows.length === 1) onClose()
                       onToggle()
                     }}
@@ -138,30 +130,6 @@ export const MaterialSummaryPanel: FC<MaterialSummaryPanelProps> = ({ group, onC
                   />
                 )}
               </li>
-            )
-            if (!skillName) return row
-            const previewKey = rowKey
-            const previewOpen = previewSkillKey === previewKey
-            return (
-              <YakitPopover
-                key={rowKey}
-                trigger="hover"
-                destroyOnHidden
-                fresh
-                open={previewOpen}
-                onOpenChange={(open) => {
-                  if (open) setPreviewSkillKey(previewKey)
-                  else setPreviewSkillKey((current) => (current === previewKey ? undefined : current))
-                }}
-                classNames={{ root: styles['skill-popover'] }}
-                content={
-                  <Suspense fallback={<YakitSpin spinning />}>
-                    {previewOpen && <AISkillDetails key={skillName} source="task-details" name={skillName} />}
-                  </Suspense>
-                }
-              >
-                {row}
-              </YakitPopover>
             )
           },
         )}

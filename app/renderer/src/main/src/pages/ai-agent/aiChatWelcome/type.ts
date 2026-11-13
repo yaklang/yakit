@@ -4,7 +4,7 @@ import type { AIReActChatRefProps } from '@/pages/ai-re-act/aiReActChat/AIReActC
 import type { AIMentionCommandParams } from '../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
 
 export interface AIChatWelcomeProps {
-  onTriageSubmit: (data: AIChatSubmitParams) => void
+  onTriageSubmit: (data: AIChatSubmitParams) => boolean
   onSetReAct: () => void
   selectedHttpFlowIds?: string[]
   selectedRiskIds?: string[]

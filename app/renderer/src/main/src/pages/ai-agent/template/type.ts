@@ -6,7 +6,6 @@ import type { AICodeBlockCommandParams } from '../components/aiMilkdownInput/aiC
 import type { EditorMilkdownProps } from '@/components/MilkdownEditor/MilkdownEditorType'
 import type { AIChatMentionProps } from '../components/aiChatMention/type'
 import type { AIReviewRuleSelectProps } from '@/pages/ai-re-act/aiReviewRuleSelect/type'
-import type { AIFocusModeProps } from '@/pages/ai-re-act/aiFocusMode/type'
 import type { AIEnabledCapability } from '@/pages/ai-re-act/hooks/grpcApi'
 import type { AIModelSelectProps } from '../aiModelList/aiModelSelect/AIModelSelectType'
 
@@ -56,21 +55,20 @@ export enum AIInputInnerFeatureEnum {
   AIReviewRuleSelect = 'AIReviewRuleSelect',
 }
 export enum AIInputFooterRightEnum {
-  AIFocusMode = 'AIFocusMode',
   AIModelSelect = 'AIModelSelect',
+  Custom = 'Custom',
 }
 export type AIInputInnerFeature = `${AIInputInnerFeatureEnum}`
-export type AIInputFooterRight = `${AIInputFooterRightEnum}`
 interface FooterLeftTypesBase<T extends string, U> {
   type: T
   props?: U
   component?: ReactNode
 }
 type AIReviewRuleSelectType = FooterLeftTypesBase<AIInputInnerFeatureEnum.AIReviewRuleSelect, AIReviewRuleSelectProps>
-type AIModelSelectType = FooterLeftTypesBase<AIInputFooterRightEnum.AIModelSelect, AIModelSelectProps>
-type AIFocusModeType = FooterLeftTypesBase<AIInputFooterRightEnum.AIFocusMode, AIFocusModeProps>
 export type FooterLeftTypesComponentProps = AIReviewRuleSelectType
-export type FooterRightTypesComponentProps = AIFocusModeType | AIModelSelectType
+export type FooterRightTypesComponentProps =
+  | FooterLeftTypesBase<AIInputFooterRightEnum.AIModelSelect, AIModelSelectProps>
+  | { type: AIInputFooterRightEnum.Custom; key: string; component: ReactNode }
 export interface AIChatTextareaProps {
   ref?: React.ForwardedRef<AIChatTextareaRefProps>
   /** 提交按钮的 loading 状态 */
@@ -91,7 +89,8 @@ export interface AIChatTextareaProps {
   isOpen?: boolean
   filterMentionType?: AIChatMentionProps['filterMode']
   footerLeftTypes?: (AIInputInnerFeature | FooterLeftTypesComponentProps)[]
-  footerRightTypes?: (AIInputFooterRight | FooterRightTypesComponentProps)[]
+  /** 省略时展示默认模型选择，传空数组时隐藏右侧配置项。 */
+  footerRightTypes?: FooterRightTypesComponentProps[]
   /** 图片路径前缀 */
   chatDataStoreKey: string
   /** 欢迎页在首次连接前展示的场景能力 */

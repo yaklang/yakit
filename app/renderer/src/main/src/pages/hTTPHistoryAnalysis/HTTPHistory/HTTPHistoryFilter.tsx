@@ -151,7 +151,6 @@ import {
   type FilterConfig,
   HTTPFlowTableFormConfiguration,
 } from '@/components/HTTPFlowTable/HTTPFlowTableFormConfiguration/HTTPFlowTableFormConfiguration'
-import { AIInputFooterRightEnum } from '@/pages/ai-agent/template/type'
 import { HistoryAIReActChatProvider, useHistoryAIReActChat } from '@/components/historyAIReActChat'
 import { useHttpFlowSelection } from '@/components/useHttpFlowSelection'
 import { HTTPFlowRuleDataFilter } from '@/components/HTTPFlowTable/HTTPFlowRuleDataFilter'
@@ -175,7 +174,7 @@ interface HTTPHistoryFilterProps {
   closable?: boolean
 }
 const HTTPHistoryFilterInner: React.FC<HTTPHistoryFilterProps> = React.memo((props) => {
-  const { renderHistoryAIReActChat, setShowFreeChat, historyAIReActChatBridge, focusModeLoop } = useHistoryAIReActChat()
+  const { renderHistoryAIReActChat, setShowFreeChat, historyAIReActChatBridge } = useHistoryAIReActChat()
   const {
     onSetClickedHttpFlow,
     onSetFirstHttpFlow,
@@ -369,16 +368,7 @@ const HTTPHistoryFilterInner: React.FC<HTTPHistoryFilterProps> = React.memo((pro
                       ),
                       taskDetails: true,
                     },
-                    footerRightTypes: [
-                      {
-                        type: AIInputFooterRightEnum.AIFocusMode,
-                        props: {
-                          value: focusModeLoop,
-                          onChange: () => {},
-                          disabled: true,
-                        },
-                      },
-                    ],
+                    footerRightTypes: [],
                     filterMentionType: ['focusMode'],
                     selectedHttpFlowIds,
                     onHttpFlowRemove: (id, isSummary) => onHttpFlowRemove(id, isSummary, true),

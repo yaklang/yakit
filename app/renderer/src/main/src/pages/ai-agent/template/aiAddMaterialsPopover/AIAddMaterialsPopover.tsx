@@ -1,11 +1,16 @@
-import { useState } from 'react'
+import { useContext, useState } from 'react'
 import type { FC } from 'react'
-import { useMemoizedFn, useUpdateEffect } from 'ahooks'
+import { useMemoizedFn, useRequest, useUpdateEffect } from 'ahooks'
 import classNames from 'classnames'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { HistoryAIReActChatContext } from '@/components/historyAIReActChat/context'
+import { isIRify } from '@/utils/envfile'
 import { handleOpenFileSystemDialog } from '@/utils/fileSystemDialog'
 import { yakitNotify } from '@/utils/notification'
+import { AIMentionTabsEnum } from '../../defaultConstant'
+import { grpcQueryAIFocus } from '../../grpc'
+import { sceneMentionRow } from '../../components/aiChatMention/mentionListData'
 import type { AIMentionCommandParams } from '../../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
 import { MAX_ATTACHMENTS_PER_BATCH } from '../type'
 import MaterialAttachmentList from './materialAttachmentList/MaterialAttachmentList'
@@ -17,7 +22,7 @@ import MaterialMenu from './materialMenu/MaterialMenu'
 import { getAddedBrowsers, getMaterialMenuItems, getMaterialSummaryGroups } from './materialPanelData'
 import MaterialSummary from './materialSummary/MaterialSummary'
 import type { MaterialSummaryGroup } from './materialSummary/type'
-import type { AIAddMaterialsPopoverProps, MaterialPanel, SelectedFocusMode } from './type'
+import type { AIAddMaterialsPopoverProps, MaterialMenuItem, MaterialPanel, SelectedFocusMode } from './type'
 import styles from './AIAddMaterialsPopover.module.scss'
 
 const AIAddMaterialsPopover: FC<AIAddMaterialsPopoverProps> = ({
@@ -31,9 +36,16 @@ const AIAddMaterialsPopover: FC<AIAddMaterialsPopoverProps> = ({
   selectedResourceIds,
   focusMode,
   onFocusModeChange,
-  filterMode,
+  filterMode: filteredTabs,
 }) => {
-  const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
+  const { t, i18n } = useI18nNamespaces(['aiAgent', 'yakitUi'])
+  const sidebarChat = useContext(HistoryAIReActChatContext)
+  const fixedFocusMode = sidebarChat?.focusModeLoop
+  const hideSceneInSummary = isIRify()
+  const filterMode = fixedFocusMode ? [...(filteredTabs ?? []), AIMentionTabsEnum.FocusMode] : filteredTabs
+  const { data: scenarios } = useRequest(() => grpcQueryAIFocus(undefined, true), {
+    ready: !!fixedFocusMode && !hideSceneInSummary,
+  })
   const [open, setOpen] = useState(false)
   const [picker, setPicker] = useState<{ category: MaterialPanel; fromMenu: boolean }>()
   const [selectedFocusLabel, setSelectedFocusLabel] = useState<SelectedFocusMode>()
@@ -87,6 +99,11 @@ const AIAddMaterialsPopover: FC<AIAddMaterialsPopoverProps> = ({
     }
   })
 
+  const fixedScene = scenarios?.Data?.find(({ Name }) => Name === fixedFocusMode)
+  const fixedSceneLabel = fixedScene
+    ? sceneMentionRow(fixedScene, ['zh', 'zh-TW'].includes(i18n.language)).row.name
+    : fixedFocusMode
+  const selectedSceneLabel = selectedFocusLabel?.id === focusMode ? selectedFocusLabel?.label : focusMode
   const menu = getMaterialMenuItems({
     t,
     mentions,
@@ -94,13 +111,20 @@ const AIAddMaterialsPopover: FC<AIAddMaterialsPopoverProps> = ({
     selectedResourceIds,
     attachmentCount: attachments.length,
     browserCount: browsers.length,
-    currentFocusMode: selectedFocusLabel?.id === focusMode ? selectedFocusLabel?.label : focusMode,
+    currentFocusMode: fixedSceneLabel || selectedSceneLabel,
     addAttachments,
     close,
   })
-  const items = Object.values(menu)
+  const workspaceItems: MaterialMenuItem[] = [menu.risk, menu.flow, menu.fileSystem]
+  const items: MaterialMenuItem[] = Object.values(menu)
+  const isWorkspaceOnly = (item: MaterialMenuItem) => !!sidebarChat && workspaceItems.includes(item)
+  const menuItems = items.filter((item) => item !== menu.browser && !isWorkspaceOnly(item))
+  const summaryItems = items.flatMap((item) => {
+    if (hideSceneInSummary && item === menu.focusMode) return []
+    return [isWorkspaceOnly(item) ? { ...item, action: undefined, summaryAction: undefined } : item]
+  })
   const summaryGroups = getMaterialSummaryGroups({
-    items,
+    items: summaryItems,
     t,
     mentions,
     descriptions,
@@ -116,7 +140,7 @@ const AIAddMaterialsPopover: FC<AIAddMaterialsPopoverProps> = ({
   }
 
   const renderPanel = () => {
-    const category = picker?.category
+    const category = fixedFocusMode && picker?.category === 'focusMode' ? undefined : picker?.category
     switch (category) {
       case 'forge':
       case 'tool':
@@ -151,7 +175,7 @@ const AIAddMaterialsPopover: FC<AIAddMaterialsPopoverProps> = ({
       default:
         return (
           <MaterialMenu
-            items={items}
+            items={menuItems}
             filterMode={filterMode}
             onOpenCategory={(category) => setPicker({ category, fromMenu: true })}
           />

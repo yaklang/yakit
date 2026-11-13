@@ -6,6 +6,12 @@ import { getMentionQueryDeleteRange, mentionTextBeforeCursor } from './mentionQu
 
 export const aiMentionCustomId = 'ai-mention-custom'
 
+const parseKnowledgeIndex = (value: unknown) => {
+  if (typeof value !== 'string' || !/^\d+$/.test(value)) return undefined
+  const index = Number(value)
+  return Number.isSafeInteger(index) ? index : undefined
+}
+
 const aiMentionCustomAttr = $nodeAttr(aiMentionCustomId, () => ({
   'data-type': aiMentionCustomId,
   'data-mention-type': '',
@@ -31,6 +37,7 @@ export const aiMentionCustomSchema = $nodeSchema(aiMentionCustomId, (ctx) => ({
           mentionType: dom.getAttribute('data-mention-type'),
           mentionName: dom.getAttribute('data-mention-name'),
           mentionSource: dom.getAttribute('data-mention-source') === 'attachment' ? 'attachment' : undefined,
+          knowledgeIndex: parseKnowledgeIndex(dom.getAttribute('data-knowledge-index')),
           name: dom.getAttribute('data-resource-name') ?? dom.getAttribute('data-forge-name') ?? undefined,
           lock: dom.getAttribute('data-lock') === 'true', // 新增 lock
         }
@@ -48,6 +55,7 @@ export const aiMentionCustomSchema = $nodeSchema(aiMentionCustomId, (ctx) => ({
         'data-mention-type': node.attrs.mentionType,
         'data-mention-name': node.attrs.mentionName,
         'data-mention-source': node.attrs.mentionSource,
+        'data-knowledge-index': node.attrs.knowledgeIndex,
         'data-resource-name': node.attrs.name,
         'data-lock': node.attrs.lock ? 'true' : 'false', // 新增 lock
       },
@@ -64,7 +72,11 @@ export const aiMentionCustomSchema = $nodeSchema(aiMentionCustomId, (ctx) => ({
       if (type.name === aiMentionCustomId) {
         const attrs = node.attributes as Attrs | undefined
         state
-          .openNode(type, { ...attrs, name: attrs?.name ?? attrs?.forgeName })
+          .openNode(type, {
+            ...attrs,
+            name: attrs?.name ?? attrs?.forgeName,
+            knowledgeIndex: parseKnowledgeIndex(attrs?.knowledgeIndex),
+          })
           .next(node.children)
           .closeNode()
       }
@@ -84,6 +96,7 @@ export const aiMentionCustomSchema = $nodeSchema(aiMentionCustomId, (ctx) => ({
             mentionType: node.attrs.mentionType,
             mentionName: node.attrs.mentionName,
             ...(node.attrs.mentionSource && { mentionSource: node.attrs.mentionSource }),
+            ...(node.attrs.knowledgeIndex !== undefined && { knowledgeIndex: String(node.attrs.knowledgeIndex) }),
             ...(node.attrs.name && { name: node.attrs.name }),
           },
         })
@@ -96,6 +109,7 @@ export const aiMentionCustomSchema = $nodeSchema(aiMentionCustomId, (ctx) => ({
     mentionType: { default: '' },
     mentionName: { default: '' },
     mentionSource: { default: undefined },
+    knowledgeIndex: { default: undefined },
     name: { default: undefined },
     lock: { default: false }, // 默认不可锁
   },
@@ -106,6 +120,7 @@ export interface AIMentionCommandParams {
   mentionType: iconMapType
   mentionName: string
   mentionSource?: 'attachment'
+  knowledgeIndex?: number
   /** 技能或工具发送给后端的原名。 */
   name?: string
   lock?: boolean // 新增 lock 属性

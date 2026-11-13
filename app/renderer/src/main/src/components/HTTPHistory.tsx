@@ -74,7 +74,6 @@ import { YakitSpin } from './yakitUI/YakitSpin/YakitSpin'
 import { YakitButton } from './yakitUI/YakitButton/YakitButton'
 import { RefreshIcon } from '@yakit-libs/yakit-ui-icons/oldicon/RefreshIcon'
 import { Tooltip } from 'antd'
-import { AIInputFooterRightEnum } from '@/pages/ai-agent/template/type'
 import { YakitCheckbox } from './yakitUI/YakitCheckbox/YakitCheckbox'
 import ReactResizeDetector from 'react-resize-detector'
 import { RemoteHistoryGV } from '@/enums/history'
@@ -163,7 +162,7 @@ export const HistoryTab: YakitTabsProps[] = [
   },
 ]
 const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
-  const { renderHistoryAIReActChat, setShowFreeChat, historyAIReActChatBridge, focusModeLoop } = useHistoryAIReActChat()
+  const { renderHistoryAIReActChat, setShowFreeChat, historyAIReActChatBridge } = useHistoryAIReActChat()
   const { pageType, ...historyProps } = props
   const { t, i18nRefresh } = useI18nNamespaces(['history'])
   // #region 左侧tab
@@ -398,16 +397,7 @@ const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
                       ),
                       taskDetails: true,
                     },
-                    footerRightTypes: [
-                      {
-                        type: AIInputFooterRightEnum.AIFocusMode,
-                        props: {
-                          value: focusModeLoop,
-                          onChange: () => {},
-                          disabled: true,
-                        },
-                      },
-                    ],
+                    footerRightTypes: [],
                     filterMentionType: ['focusMode'],
                     selectedHttpFlowIds,
                     onHttpFlowRemove: (id, isSummary) => onHttpFlowRemove(id, isSummary, true),

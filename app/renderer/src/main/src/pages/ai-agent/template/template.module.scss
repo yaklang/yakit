@@ -74,9 +74,6 @@ textarea.qs-input-textarea {
       @extend %self-adaptive;
       flex-shrink: 0;
     }
-    .focus-mode-self-adaptive {
-      @extend %self-adaptive;
-    }
     .footer-left {
       @extend %self-adaptive;
       align-items: center;
@@ -175,7 +172,7 @@ textarea.qs-input-textarea {
   border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
   background: var(--Colors-Use-Basic-Background);
   padding: 12px;
-  border-radius: 12px;
+  border-radius: 24px;
   min-height: 94px;
   flex-shrink: 0;
 
@@ -196,19 +193,45 @@ textarea.qs-input-textarea {
     overflow: hidden;
     min-height: 28px;
 
+    .footer-left,
+    .footer-right {
+      :global(.ant-select.ant-select-borderless) {
+        border-radius: 9999px;
+      }
+    }
+
     .footer-left {
       display: flex;
       align-items: center;
       gap: 4px;
       flex-shrink: 0;
       line-height: 16px;
+
+      :global(.ant-select.ant-select-borderless) {
+        height: 24px;
+      }
+
+      :global(.ant-btn.ant-btn-default.ant-btn-icon-only) {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        padding: 0;
+        border-radius: 50%;
+
+        :global(.ant-btn-icon) {
+          display: flex;
+          align-items: center;
+        }
+      }
     }
     .footer-right {
       display: flex;
       align-items: center;
       justify-content: flex-end;
       gap: 4px;
-      min-width: 0;
+      min-width: min(100%, var(--ai-chat-footer-right-min-width, 0px));
 
       &:has(.model-self-adaptive) {
         flex: 1 1 112px;
