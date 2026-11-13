@@ -305,8 +305,8 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
                     globalSingleModelMode
                       ? t('AIReActTaskChatContent.singleModelModeGlobalTip')
                       : singleModelModeLocked
-                      ? t('AIReActTaskChatContent.singleModelModeSessionTip')
-                      : t('AIReActTaskChatContent.singleModelModeTip')
+                        ? t('AIReActTaskChatContent.singleModelModeSessionTip')
+                        : t('AIReActTaskChatContent.singleModelModeTip')
                   }
                 >
                   <InformationCircleOutlined className={styles['info-icon']} color="currentColor" />

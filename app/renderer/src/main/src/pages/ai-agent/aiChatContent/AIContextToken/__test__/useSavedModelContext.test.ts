@@ -8,12 +8,10 @@ const context = (model: string, threshold = 200 * 1000) => ({
   provider: 'test',
   model,
   threshold_tokens: threshold,
-  context_tokens: 500 * 1000,
   minimum_threshold_tokens: 100 * 1000,
   prompt_tokens: 0,
   source: 'manual' as const,
   pending: false,
-  too_small: false,
 })
 const deferred = () => {
   let resolve!: (value: ReturnType<typeof context>) => void

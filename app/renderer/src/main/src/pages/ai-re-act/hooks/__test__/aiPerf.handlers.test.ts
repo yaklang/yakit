@@ -17,12 +17,10 @@ describe('aiPerf handlers', () => {
     const data = {
       provider: 'test',
       model: 'main',
-      context_tokens: 250 * 1000,
       threshold_tokens: 300 * 1000,
       prompt_tokens: 350 * 1000,
       source: 'learned',
       pending: true,
-      too_small: false,
       change: {
         id: 'retry-1',
         reason: 'overflow',
@@ -67,12 +65,10 @@ describe('aiPerf handlers', () => {
     const data = {
       provider: 'test',
       model: 'main',
-      context_tokens: 250 * 1000,
       threshold_tokens: 500 * 1000,
       prompt_tokens: 0,
       source: 'manual',
       pending: false,
-      too_small: false,
       change: { id: 'manual-1', reason: 'manual', previous_threshold_tokens: 200 * 1000, threshold_tokens: 500 * 1000 },
     }
     const req = makeHandlerRequest({ res: makeGrpcJsonRes('model_context', data) })
@@ -100,12 +96,10 @@ describe('aiPerf handlers', () => {
       res: makeGrpcJsonRes('model_context', {
         provider: 'test',
         model: 'small',
-        context_tokens: 64 * 1000,
         threshold_tokens: 51 * 1000,
         prompt_tokens: 60000,
         source: 'learned',
         pending: true,
-        too_small: true,
         change: {
           id: 'small-overflow',
           reason: 'overflow',
@@ -124,12 +118,10 @@ describe('aiPerf handlers', () => {
       provider: 'openai',
       model: 'main',
       context_key: 'service-a',
-      context_tokens: 128000,
       threshold_tokens: 102400,
       prompt_tokens: 90000,
       source: 'learned',
       pending: false,
-      too_small: false,
     }
     const req = makeHandlerRequest({ res: makeGrpcJsonRes('model_context', data) })
     aiPerfDataHandlers.model_context(req)
@@ -152,7 +144,6 @@ describe('aiPerf handlers', () => {
         provider: 'test',
         model: 'main',
         context_key: 'service-a',
-        context_tokens: 500000,
         threshold_tokens: 500000,
         error: 'settings rejected',
       }),

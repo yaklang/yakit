@@ -10567,13 +10567,12 @@ message SetAIModelContextRequest {
 }
 
 message AIModelContextResponse {
+  reserved 3, 7;
   string Provider = 1;
   string Model = 2;
-  int64 ContextTokens = 3;
   int64 ThresholdTokens = 4;
   string Source = 5;
   int64 MinimumThresholdTokens = 6;
-  bool TooSmall = 7;
   bool DisableAutoAdjust = 8;
   string ContextKey = 9;
 }

@@ -738,7 +738,6 @@
     "autoAdjustHelp": "預設開啟。開啟後，模型拒絕過長上下文時會自動降低閾值並重試；關閉後保留手動閾值，超限時停止任務。",
     "perModel": "按模型儲存",
     "thresholdUsageSummary": "上下文已用 {{used}} / 壓縮閾值 {{threshold}}（{{percent}}%）",
-    "contextTooSmall": "上下文過小（小於 100K tokens），建議切換至支援更長上下文的模型。",
     "compressionThreshold": "壓縮閾值",
     "pressure": "上下文壓力",
     "speed": "響應速度",
@@ -770,9 +769,6 @@
     "waitingContext": "正在等待目前對話的模型上下文…",
     "selectContextModel": "選擇模型後即可設定壓縮閾值。",
     "contextRequestFailed": "無法讀取或儲存模型上下文，請確認已連接支援此功能的引擎後重試。",
-    "contextChange": {
-      "confirmed": "目前上下文超出 {{model}} 可接受的範圍，壓縮閾值已從 {{previous}} 自動調整為 {{threshold}}，任務繼續執行。"
-    },
     "contextAdjusting": "自動調整中",
     "contextAdjusted": "自動調整",
     "contextAdjustmentPending": "正在根據模型回應壓縮上下文並重試，無需操作。",

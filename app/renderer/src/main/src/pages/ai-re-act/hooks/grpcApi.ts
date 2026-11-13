@@ -478,12 +478,10 @@ export declare namespace AIAgentGrpcApi {
     context_key?: string
     provider: string
     model: string
-    context_tokens: number
     threshold_tokens: number
     prompt_tokens: number
     source: 'default' | 'learned' | 'manual'
     pending: boolean
-    too_small: boolean
     minimum_threshold_tokens?: number
     disable_auto_adjust?: boolean
     error?: string

@@ -56,12 +56,10 @@ describe('ContextDetailPopover', () => {
       modelContext: {
         provider: 'openai',
         model: 'main',
-        context_tokens: 500 * 1024,
         threshold_tokens: 100 * 1024,
         prompt_tokens: 58000,
         source: 'manual',
         pending: false,
-        too_small: false,
       },
     }
     render(<ContextDetailPopover />)

@@ -30,12 +30,10 @@ export async function requestModelContext(
     provider: result.Provider,
     model: result.Model,
     context_key: result.ContextKey,
-    context_tokens: Number(result.ContextTokens),
     threshold_tokens: Number(result.ThresholdTokens),
     minimum_threshold_tokens: Number(result.MinimumThresholdTokens),
     source: result.Source,
     disable_auto_adjust: !!result.DisableAutoAdjust,
-    too_small: result.TooSmall,
     prompt_tokens: 0,
     pending: false,
   }
