@@ -11,7 +11,7 @@ export interface SlidePanelsProps {
   'data-testid'?: string
 }
 
-/** 双屏左右滑动：200% 轨 + translateX(-50%)，隐藏屏 aria-hidden 禁点击 */
+/** 双屏左右滑动：200% 轨 + translateX(-50%)。隐藏屏 inert，避免 Tab 聚焦后把溢出内容滚进视口 */
 export const SlidePanels: FC<SlidePanelsProps> = ({
   showSecond = false,
   first,
@@ -25,10 +25,10 @@ export const SlidePanels: FC<SlidePanelsProps> = ({
       data-testid={dataTestId}
       data-show-second={showSecond ? 'true' : 'false'}
     >
-      <div className={styles['panel']} aria-hidden={showSecond}>
+      <div className={styles['panel']} aria-hidden={showSecond} inert={showSecond || undefined}>
         {first}
       </div>
-      <div className={styles['panel']} aria-hidden={!showSecond}>
+      <div className={styles['panel']} aria-hidden={!showSecond} inert={!showSecond || undefined}>
         {second}
       </div>
     </div>

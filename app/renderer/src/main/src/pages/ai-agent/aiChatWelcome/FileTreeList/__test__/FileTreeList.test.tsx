@@ -208,8 +208,8 @@ describe('文件系统侧栏', () => {
     const sash = split.firstElementChild!.firstElementChild as HTMLElement
     await waitFor(() => expect(sash.style.top).toBe('160px'))
 
-    expect(searchView.closest('[aria-hidden="true"]')).toBeTruthy()
-    expect(split.closest('[aria-hidden="false"]')).toBeTruthy()
+    expect(searchView.closest('[aria-hidden="true"]')).toHaveAttribute('inert')
+    expect(split.closest('[aria-hidden="false"]')).not.toHaveAttribute('inert')
 
     fireEvent.mouseDown(sash, { clientX: 150, clientY: 160 })
     fireEvent.mouseMove(split, { clientX: 150, clientY: 220 })
@@ -223,8 +223,8 @@ describe('文件系统侧栏', () => {
     // 旧依赖 [elements] 会把 sash 重置为 defaultSizes(160px)，新依赖 [elements.length] 应保持 220px
     fireEvent.click(screen.getByTestId('file-tree-header-search'))
     expect(track).toHaveAttribute('data-show-second', 'true')
-    expect(searchView.closest('[aria-hidden="false"]')).toBeTruthy()
-    expect(split.closest('[aria-hidden="true"]')).toBeTruthy()
+    expect(searchView.closest('[aria-hidden="false"]')).not.toHaveAttribute('inert')
+    expect(split.closest('[aria-hidden="true"]')).toHaveAttribute('inert')
     expect(searchView).toHaveAttribute('data-scope', 'all')
     expect(screen.getByText('YakitInput.search')).toBeInTheDocument()
     expect(screen.queryByText('AITabs.fileSystem')).not.toBeInTheDocument()
@@ -241,8 +241,8 @@ describe('文件系统侧栏', () => {
       await new Promise((resolve) => setTimeout(resolve, 250))
     })
     expect(track).toHaveAttribute('data-show-second', 'false')
-    expect(searchView.closest('[aria-hidden="true"]')).toBeTruthy()
-    expect(split.closest('[aria-hidden="false"]')).toBeTruthy()
+    expect(searchView.closest('[aria-hidden="true"]')).toHaveAttribute('inert')
+    expect(split.closest('[aria-hidden="false"]')).not.toHaveAttribute('inert')
     expect(screen.getByText('AITabs.fileSystem')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'opened-file.txt' })).toBeInTheDocument()
     expect(sash.style.top).toBe('220px')
