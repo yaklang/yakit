@@ -3,6 +3,10 @@ import { afterEach, expect, it, vi } from 'vitest'
 import { IrifyAiAuditStyleToggle } from '../IrifyAiAuditStyleToggle'
 import styles from '../IrifyAiAuditStyleToggle.module.scss'
 
+vi.mock('../IrifyAiAuditStyleToggle.module.scss', () => ({
+  default: { 'toggle-item-active': 'toggle-item-active' },
+}))
+
 vi.mock('@/i18n/useI18nNamespaces', () => ({
   useI18nNamespaces: () => ({ t: (key: string) => key }),
 }))

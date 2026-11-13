@@ -1014,7 +1014,7 @@ describe('AI risk selection', () => {
     expect(mocks.columns.find((column) => column.dataKey === 'CreatedAt').fixed).toBeUndefined()
     const action = mocks.columns.find((column) => column.dataKey === 'action')
     expect(action.fixed).toBe('right')
-    expect(action.width).toBe(96)
+    expect(action.width).toBe(70)
     const view = render(action.render(null, rows[0], 0))
     const cancel = screen.getByRole('button', { name: 'YakitButton.cancel' })
     expect(cancel).toHaveAttribute('aria-pressed', 'true')

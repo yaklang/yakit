@@ -14,7 +14,6 @@ import { ipcRendererMock, resetIpcMocks } from '../../pages/ai-re-act/hooks/__te
 import { makeGrpcJsonRes } from '../../pages/ai-re-act/hooks/__test__/fixtures'
 import { applyHttpFuzzRequestChangeToWebFuzzerPage } from '@/pages/fuzzer/webFuzzerAiRequestApplyBridge'
 import { YakitRoute } from '@/enums/yakitRoute'
-import { yakitNotify } from '@/utils/notification'
 import type { AISession } from '@/pages/ai-agent/type/aiChat'
 
 vi.mock('lodash', async (importOriginal) => {
@@ -101,7 +100,7 @@ function Consumer() {
           })
         }
       >
-        submit-too-many-risks
+        submit-many-risks
       </button>
       <span data-testid="active-session">{bridge.activeID}</span>
       {renderHistoryAIReActChat({ externalParameters: {} })}
@@ -133,7 +132,7 @@ const emit = async (token: string, event: AIOutputEvent) => {
   })
 }
 
-it('运行中的历史聊天入口拒绝超过协议上限的风险附件', async () => {
+it('运行中的历史聊天入口完整发送超过一万个风险 ID', async () => {
   render(
     <HistoryAIReActChatProvider
       source={AISourceEnum.webFuzzer}
@@ -150,13 +149,18 @@ it('运行中的历史聊天入口拒绝超过协议上限的风险附件', asyn
   await waitFor(() => expect(screen.getByTestId('active-session')).toHaveTextContent('client-session'))
   act(() => globalSessionEngine.ensureSession('client-session').store.getState().updateState({ execute: true }))
   expect(questions()).toHaveLength(1)
-  vi.mocked(yakitNotify).mockClear()
+  fireEvent.click(screen.getByRole('button', { name: 'submit-many-risks' }))
 
-  fireEvent.click(screen.getByRole('button', { name: 'submit-too-many-risks' }))
-
-  await waitFor(() => expect(yakitNotify).toHaveBeenCalledExactlyOnceWith('error', expect.any(String)))
+  await waitFor(() => expect(questions()).toHaveLength(2))
+  const [, token, request] = questions()[1]
+  expect(token).toBe(starts()[0][1])
+  expect(request.FreeInput).toBe('question with risks')
+  expect(request.AttachedResourceInfo).toContainEqual({
+    Type: 'risk',
+    Key: 'ids',
+    Value: JSON.stringify(Array.from({ length: 10_001 }, (_, index) => index + 1)),
+  })
   expect(starts()).toHaveLength(1)
-  expect(questions()).toHaveLength(1)
 })
 
 it.each([
