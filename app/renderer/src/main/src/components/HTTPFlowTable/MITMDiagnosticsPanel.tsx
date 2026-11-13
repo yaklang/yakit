@@ -29,6 +29,7 @@ type TraceFocus = { filter: MITMTraceView; range?: TraceRange; scope?: MITMTraff
 type History = ReturnType<typeof useMITMDiagnosticsQuery>
 const count = (value: number) => value.toLocaleString('zh-CN')
 const rate = formatMITMPipelineRate
+const peakWindowMs = 5_000
 
 interface PanelProps {
   view: MITMPipelineViewState
@@ -459,10 +460,11 @@ const TrendCard: React.FC<{
   const peak = useMemo(
     () =>
       onPeak &&
-      points?.reduce<MITMStoragePoint | undefined>(
-        (max, point) => (!max || Number(point.PersistPending) >= Number(max.PersistPending) ? point : max),
-        undefined,
-      ),
+      points?.reduce<MITMStoragePoint | undefined>((max, point) => {
+        const at = Number(point.AtUnixMs)
+        if (!Number.isSafeInteger(at) || at <= peakWindowMs) return max
+        return !max || Number(point.PersistPending) >= Number(max.PersistPending) ? point : max
+      }, undefined),
     [onPeak, points],
   )
   const at = Number(peak?.AtUnixMs) || 0
@@ -490,7 +492,11 @@ const TrendCard: React.FC<{
           <span className={styles.note}>
             待写峰值 {count(pending)} 项 · {formatTraceClock(at)}
           </span>
-          <YakitButton type="text" size="small" onClick={() => onPeak({ from: at - 5000, to: at + 5000 })}>
+          <YakitButton
+            type="text"
+            size="small"
+            onClick={() => onPeak({ from: at - peakWindowMs, to: at + peakWindowMs })}
+          >
             查看该时段请求
           </YakitButton>
         </div>

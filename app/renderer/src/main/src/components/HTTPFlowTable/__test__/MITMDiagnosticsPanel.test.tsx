@@ -192,6 +192,49 @@ describe('MITM diagnostics', () => {
     }
   })
 
+  it('backs off failed trace polls up to 30 seconds and resumes the normal interval on success', async () => {
+    vi.useFakeTimers()
+    try {
+      let failing = true
+      const { invoke } = installIPC((query) => {
+        if (failing) throw new Error('DEADLINE_EXCEEDED')
+        return { SessionId: query.SessionId, Traces: [] }
+      })
+      const advance = (ms: number) =>
+        act(async () => {
+          await vi.advanceTimersByTimeAsync(ms)
+        })
+      const { unmount } = render(<MITMDiagnosticsPanel view={view()} onClose={vi.fn()} />)
+      await act(async () => {
+        fireEvent.click(screen.getByRole('tab', { name: '请求轨迹' }))
+      })
+      expect(screen.getByRole('status')).toHaveTextContent('暂时无法读取轨迹')
+
+      for (const delay of [6_000, 12_000, 24_000, 30_000, 30_000]) {
+        const calls = invoke.mock.calls.length
+        await advance(delay - 1)
+        expect(invoke).toHaveBeenCalledTimes(calls)
+        await advance(1)
+        expect(invoke).toHaveBeenCalledTimes(calls + 1)
+      }
+
+      failing = false
+      await advance(30_000)
+      expect(screen.queryByText('暂时无法读取轨迹')).not.toBeInTheDocument()
+      invoke.mockClear()
+      await advance(2_999)
+      expect(invoke).not.toHaveBeenCalled()
+      await advance(1)
+      expect(invoke).toHaveBeenCalledOnce()
+
+      unmount()
+      await advance(30_000)
+      expect(invoke).toHaveBeenCalledOnce()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('keeps excluded waits in the summary and only loads their paged samples on demand', async () => {
     vi.useFakeTimers()
     try {
@@ -310,6 +353,8 @@ describe('MITM diagnostics', () => {
             Storage: [
               { AtUnixMs: now - 2000, PersistPending: 3 },
               { AtUnixMs: now, PersistPending: 1 },
+              { AtUnixMs: 0, PersistPending: 40 },
+              { PersistPending: 50 },
             ],
           }
         : query.View === 'range'
@@ -353,6 +398,17 @@ describe('MITM diagnostics', () => {
       ),
     )
     expect(await screen.findByText('等待共享队列空位')).toBeVisible()
+  })
+
+  it('hides the peak jump when no pending write sample has a valid time range', async () => {
+    installIPC((query) => ({
+      SessionId: query.SessionId,
+      Storage: [{ AtUnixMs: 5_000, PersistPending: 4 }],
+    }))
+    render(<MITMDiagnosticsPanel view={view({ ...sample, Version: 4 })} onClose={vi.fn()} />)
+    fireEvent.click(screen.getByRole('button', { name: '查看入库压力' }))
+    expect(await screen.findByRole('img', { name: 'pending' })).toBeVisible()
+    expect(screen.queryByRole('button', { name: '查看该时段请求' })).not.toBeInTheDocument()
   })
 
   it('opens each request phase in the trace using its engine stage', async () => {

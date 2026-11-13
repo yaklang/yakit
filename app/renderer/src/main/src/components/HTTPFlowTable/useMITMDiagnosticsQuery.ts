@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react'
 import type { MITMDiagnosticsQuery, MITMDiagnosticsResponse } from './MITMDiagnostics.types'
 
+const refreshIntervalMs = 3_000
+const maxRetryDelayMs = 30_000
+
 interface QueryState {
   query: MITMDiagnosticsQuery
   result?: MITMDiagnosticsResponse
@@ -18,6 +21,7 @@ export const useMITMDiagnosticsQuery = (
     if (!query) return
     let active = true
     let timer: ReturnType<typeof setTimeout> | undefined
+    let delay = refreshIntervalMs
     const load = async () => {
       try {
         const { ipcRenderer } = window.require('electron')
@@ -29,11 +33,13 @@ export const useMITMDiagnosticsQuery = (
         }
         setState({ query, result })
         if (result.Ended || result.Unsupported || result.Missing) return
+        delay = refreshIntervalMs
       } catch {
         if (!active) return
         setState((prev) => ({ query, failed: true, result: prev?.query === query ? prev?.result : undefined }))
+        delay = Math.min(delay * 2, maxRetryDelayMs)
       }
-      if (refresh && active) timer = setTimeout(load, 3000)
+      if (refresh && active) timer = setTimeout(load, delay)
     }
     void load()
     return () => {
