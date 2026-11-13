@@ -10,12 +10,10 @@ vi.mock('@/i18n/useI18nNamespaces', () => ({
 const context = {
   provider: 'openai',
   model: 'model',
-  context_tokens: 500 * 1000,
   threshold_tokens: 100 * 1000,
   prompt_tokens: 91 * 1000,
   source: 'manual' as const,
   pending: false,
-  too_small: false,
 }
 afterEach(() => vi.unstubAllGlobals())
 const preparePointer = () => {
@@ -197,6 +195,21 @@ describe('model context slider', () => {
     fireEvent.pointerUp(slider)
     expect(onChange).toHaveBeenCalledExactlyOnceWith(820 * 1000)
   })
+  it('drops unfinished edits when a same-name model switches to another provider configuration', () => {
+    const onChange = vi.fn(() => true)
+    const view = render(<ModelContextControl context={{ ...context, context_key: 'owner-a' }} onChange={onChange} />)
+    fireEvent.change(screen.getByRole('spinbutton'), { target: { value: '400' } })
+    const slider = preparePointer()
+    fireEvent.pointerDown(slider, { button: 0, clientX: 7 })
+    fireEvent.pointerMove(slider, { clientX: 107 })
+    view.rerender(<ModelContextControl context={{ ...context, context_key: 'owner-b' }} onChange={onChange} />)
+    fireEvent.pointerUp(slider)
+    fireEvent.blur(screen.getByRole('spinbutton'))
+    expect(onChange).not.toHaveBeenCalled()
+    expect(screen.getByRole('spinbutton')).toHaveValue(100)
+    expect(slider).toHaveAttribute('aria-valuenow', '100000')
+  })
+
   it('cancels an unfinished drag when the server calibrates the threshold', () => {
     const onChange = vi.fn(() => true)
     const view = render(<ModelContextControl context={context} onChange={onChange} />)
@@ -208,7 +221,6 @@ describe('model context slider', () => {
         context={{
           ...context,
           threshold_tokens: 80 * 1000,
-          too_small: true,
           change: {
             id: 'overflow',
             reason: 'overflow',
@@ -222,7 +234,7 @@ describe('model context slider', () => {
     fireEvent.pointerUp(slider)
     expect(onChange).not.toHaveBeenCalled()
     expect(slider).toHaveAttribute('aria-valuenow', String(80 * 1000))
-    expect(screen.getByRole('alert')).toHaveTextContent('AIContextToken.contextTooSmall')
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
   it('keeps a new drag in progress when an acknowledgement confirms the already displayed threshold', () => {
     const onChange = vi.fn(() => true)
@@ -261,18 +273,13 @@ describe('model context slider', () => {
   })
   it('enforces the manual floor for keyboard and numeric input, including learned small models', () => {
     const onChange = vi.fn(() => true)
-    render(
-      <ModelContextControl
-        context={{ ...context, threshold_tokens: 51 * 1000, context_tokens: 64 * 1000, too_small: true }}
-        onChange={onChange}
-      />,
-    )
+    render(<ModelContextControl context={{ ...context, threshold_tokens: 51 * 1000 }} onChange={onChange} />)
     fireEvent.keyDown(screen.getByRole('slider'), { key: 'ArrowDown' })
     expect(onChange).toHaveBeenLastCalledWith(100 * 1000)
     fireEvent.change(screen.getByRole('spinbutton'), { target: { value: '20' } })
     fireEvent.blur(screen.getByRole('spinbutton'))
     expect(onChange).toHaveBeenLastCalledWith(100 * 1000)
-    expect(screen.getByRole('alert')).toHaveTextContent('AIContextToken.contextTooSmall')
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
   it.each(['Enter', 'blur'])('bounds numeric input to the displayed slider maximum on %s', (commitWith) => {
     const onChange = vi.fn(() => true)

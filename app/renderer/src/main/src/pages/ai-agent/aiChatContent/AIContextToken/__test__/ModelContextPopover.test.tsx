@@ -70,12 +70,10 @@ const runtime = {
   provider: 'openai',
   model: 'actual',
   context_key: 'service-a',
-  context_tokens: 500 * 1000,
   threshold_tokens: 100 * 1000,
   prompt_tokens: 91 * 1000,
   source: 'manual',
   pending: false,
-  too_small: false,
 }
 
 describe('composer model context popover', () => {
@@ -424,15 +422,15 @@ describe('composer model context popover', () => {
       ...(reason === 'error'
         ? { error: 'rejected' }
         : reason === 'switch'
-        ? { model: 'another' }
-        : {
-            change: {
-              id: 'overflow',
-              reason: 'overflow',
-              previous_threshold_tokens: 500 * 1000,
-              threshold_tokens: 200 * 1000,
-            },
-          }),
+          ? { model: 'another' }
+          : {
+              change: {
+                id: 'overflow',
+                reason: 'overflow',
+                previous_threshold_tokens: 500 * 1000,
+                threshold_tokens: 200 * 1000,
+              },
+            }),
     }
     act(() => mocks.perfListeners.forEach((listener) => listener()))
     expect(screen.getByRole('slider')).toHaveAttribute('aria-valuenow', String(200 * 1000))

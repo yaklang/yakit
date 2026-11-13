@@ -16,12 +16,10 @@ it('单独收到模型阈值更新也会刷新详情图，不依赖新的压力�
     modelContext: {
       provider: 'openai',
       model: 'main',
-      context_tokens: 500 * 1024,
       threshold_tokens: 500 * 1024,
       prompt_tokens: 58000,
       source: 'manual',
       pending: false,
-      too_small: false,
     },
   } as AIAgentChatData['aiPerfData']
   expect(isPerfDataChanged(previous, structuredClone(previous))).toBe(false)

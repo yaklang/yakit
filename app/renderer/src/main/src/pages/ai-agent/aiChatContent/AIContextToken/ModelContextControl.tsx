@@ -14,7 +14,7 @@ export const contextUsagePercent = (context: AIAgentGrpcApi.ModelContext) =>
   Math.round((Math.max(0, context.prompt_tokens) / context.threshold_tokens) * 100)
 const usageTone = (context: AIAgentGrpcApi.ModelContext) => {
   const percent = contextUsagePercent(context)
-  return percent >= 100 ? styles.danger : percent >= 80 || context.too_small ? styles.warning : ''
+  return percent >= 100 ? styles.danger : percent >= 80 ? styles.warning : ''
 }
 
 export function ContextUsageRing({ context }: { context?: AIAgentGrpcApi.ModelContext }) {
@@ -66,15 +66,15 @@ export default function ModelContextControl({
     drag.current = null
     setPreview(null)
     setDraft(null)
-  }, [context.provider, context.model, context.threshold_tokens])
+  }, [context.provider, context.model, context.context_key, context.threshold_tokens])
 
   const threshold = preview ?? context.threshold_tokens
   // The global manual floor must not inherit the old 102,400 value from runtime/history snapshots.
   const min = MIN_CONTEXT_THRESHOLD_TOKENS
-  // Keep the scale stable across ordinary edits, expanding only for larger models/budgets.
+  // Keep the scale stable across ordinary edits, expanding only for an existing larger threshold.
   const max = Math.max(
     1000 * 1000,
-    Math.ceil(Math.max(context.context_tokens, context.threshold_tokens, min + 1000) / (1000 * 1000)) * 1000 * 1000,
+    Math.ceil(Math.max(context.threshold_tokens, min + 1000) / (1000 * 1000)) * 1000 * 1000,
   )
   const clamp = (value: number) => Math.min(max, Math.max(min, Math.round(value)))
   const ratio = Math.max(0, Math.min(1, (threshold - min) / (max - min)))
@@ -107,20 +107,18 @@ export default function ModelContextControl({
       ? timeoutError
         ? 'contextUpdateTimeout'
         : 'contextRequestFailed'
-      : context.too_small
-      ? 'contextTooSmall'
       : warningThreshold > LARGE_THRESHOLD_WARNING
-      ? 'contextTooLarge'
-      : ''
-  const warn = ['contextTooSmall', 'contextTooLarge', 'contextRequestFailed', 'contextUpdateTimeout'].includes(notice)
+        ? 'contextTooLarge'
+        : ''
+  const warn = ['contextTooLarge', 'contextRequestFailed', 'contextUpdateTimeout'].includes(notice)
 
   const automaticAdjustment = !context.disable_auto_adjust && (context.source === 'learned' || context.pending)
   const adjustmentReason = t(
     context.pending
       ? 'AIContextToken.contextAdjustmentPending'
       : context.change?.reason === 'confirmed' && context.change.previous_threshold_tokens > context.threshold_tokens
-      ? 'AIContextToken.contextAdjustmentReason'
-      : 'AIContextToken.contextAdjustmentSaved',
+        ? 'AIContextToken.contextAdjustmentReason'
+        : 'AIContextToken.contextAdjustmentSaved',
     {
       previous: formatContextTokens(context.change?.previous_threshold_tokens ?? context.threshold_tokens),
       threshold: formatContextTokens(context.threshold_tokens),
