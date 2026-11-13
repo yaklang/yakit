@@ -142,6 +142,7 @@ export interface AIStartParams {
   RuntimeContextSizeLimit?: number
   /** Model-scoped hotpatch; omission preserves the saved preference. */
   DisableContextAutoAdjust?: boolean
+  ModelContextKey?: string
   /** 用户交互的最大次数限制,超过这个次数，AI 将不再被允许问用户问题 */
   UserInteractLimit?: number
   /** timeline sessionID  用于多轮对话保持上下文 */
@@ -474,6 +475,7 @@ export declare namespace AIAgentGrpcApi {
 
   /** 模型上下文容量及本次会话实际压缩阈值，单位 token。 */
   export interface ModelContext {
+    context_key?: string
     provider: string
     model: string
     context_tokens: number

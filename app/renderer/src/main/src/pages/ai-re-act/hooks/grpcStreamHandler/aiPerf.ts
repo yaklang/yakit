@@ -4,13 +4,8 @@ import type { AIContextStatsDetail } from '@/pages/ai-agent/type/aiChat'
 import { Uint8ArrayToString } from '@/utils/str'
 import { yakitNotify } from '@/utils/notification'
 import i18n from '@/i18n/i18n'
-import { formatContextTokens } from '@/pages/ai-agent/aiChatContent/AIContextToken/contextTokens'
 
 const tAgent = i18n.getFixedT(null, 'aiAgent')
-// Keep notification IDs separate from the displayed model: quality/lightweight
-// events may alternate. The WeakMap releases state with its owning session.
-const contextNotices = new WeakMap<object, Set<string>>()
-
 const handleConsumption: AIMessageHandler = (request) => {
   const { res, rawData } = request
   if (res.Type !== 'consumption') return
@@ -238,44 +233,17 @@ export const aiPerfDataHandlers = {
       return
     // A hotpatch has no new request: keep the last observed input size.
     const previous = rawData.aiPerfData.modelContext
-    let seen = contextNotices.get(rawData)
-    if (!seen) {
-      seen = new Set<string>()
-      contextNotices.set(rawData, seen)
-    }
-    if (data.too_small) {
-      const key = `small:${data.provider}:${data.model}:${data.context_tokens}`
-      if (!seen.has(key)) {
-        seen.add(key)
-        if (!res.IsSync) yakitNotify('warning', tAgent('AIContextToken.contextTooSmall'))
-      }
-    }
-    const change = data.change
+    // Automatic calibration is silent. Only an explicit setting failure needs a notice.
     if (!res.IsSync && data.error) yakitNotify('warning', data.error)
-    if (change?.id && !seen.has(change.id)) {
-      seen.add(change.id)
-      if (seen.size > 256) seen.delete(seen.values().next().value!)
-      if (!res.IsSync && !data.pending && change.reason === 'confirmed') {
-        yakitNotify(
-          'info',
-          tAgent(
-            change.previous_threshold_tokens > data.threshold_tokens
-              ? 'AIContextToken.contextChange.confirmed'
-              : 'AIContextToken.contextAdjustmentSaved',
-            {
-              model: data.model,
-              previous: formatContextTokens(change.previous_threshold_tokens),
-              threshold: formatContextTokens(data.threshold_tokens),
-            },
-          ),
-        )
-      }
-    }
     rawData.aiPerfData.modelContext = {
       ...data,
       prompt_tokens:
         data.prompt_tokens ||
-        (previous?.provider === data.provider && previous?.model === data.model ? previous.prompt_tokens : 0),
+        (previous?.provider === data.provider &&
+        previous?.model === data.model &&
+        previous?.context_key === data.context_key
+          ? previous.prompt_tokens
+          : 0),
     }
   }) satisfies AIMessageHandler,
   consumption: handleConsumption,

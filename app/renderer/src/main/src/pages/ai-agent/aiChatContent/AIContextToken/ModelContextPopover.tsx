@@ -40,11 +40,22 @@ export default memo(function ModelContextPopover() {
   })
   const selected = aiGlobalConfig.IntelligentModels?.[0]
   const identity = sessionId
-    ? { provider: runtimeContext?.provider ?? '', model: runtimeContext?.model ?? '' }
-    : { provider: selected?.Provider?.Type ?? '', model: selected?.ModelName ?? '' }
+    ? {
+        provider: runtimeContext?.provider ?? '',
+        model: runtimeContext?.model ?? '',
+        context_key: runtimeContext?.context_key,
+      }
+    : { provider: selected?.Provider?.Type ?? '', model: selected?.ModelName ?? '', config: selected }
   const saved = useSavedModelContext(identity, !execute)
-  const confirmedContext = execute ? runtimeContext : saved.context
-  const scope = JSON.stringify([sessionId, execute, identity.provider, identity.model])
+  const confirmedContext = execute ? (runtimeContext?.context_key ? runtimeContext : undefined) : saved.context
+  const scope = JSON.stringify([
+    sessionId,
+    execute,
+    identity.provider,
+    identity.model,
+    identity.context_key,
+    identity.config,
+  ])
   const [pendingChange, setPendingChange] = useState<{
     scope: string
     tokens?: number
@@ -129,7 +140,7 @@ export default memo(function ModelContextPopover() {
   const status = saved.error || (!pending && confirmedContext?.error) || timeoutError ? 'error' : undefined
 
   const onChange = useMemoizedFn((tokens: number, disabled?: boolean) => {
-    if (!confirmedContext?.model) return false
+    if (!confirmedContext?.model || !confirmedContext.context_key) return false
     if (disabled === undefined && tokens < MIN_CONTEXT_THRESHOLD_TOKENS) return false
     // A quick switch after a threshold edit must carry the still-unconfirmed value forward.
     const pendingTokens = disabled === undefined ? tokens : pending?.tokens
@@ -151,6 +162,7 @@ export default memo(function ModelContextPopover() {
               ...(requestedDisabled === undefined ? {} : { DisableContextAutoAdjust: requestedDisabled }),
               AIService: confirmedContext.provider,
               AIModelName: confirmedContext.model,
+              ModelContextKey: confirmedContext.context_key,
             },
           },
         })
