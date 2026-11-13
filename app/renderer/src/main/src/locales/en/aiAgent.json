@@ -1142,5 +1142,22 @@
     "stepDone": "Done",
     "stepError": "Failed",
     "invalidQuestion": "Invalid question format"
+  },
+  "SubForgeTaskTree": {
+    "title": "Sub-Forge · {{name}}",
+    "running": "Running",
+    "succeeded": "Completed",
+    "failed": "Failed",
+    "cancelled": "Cancelled",
+    "timed_out": "Timed out",
+    "unknown": "Unknown",
+    "pending": "Pending",
+    "processing": "Running",
+    "completed": "Completed",
+    "aborted": "Failed",
+    "skipped": "Skipped",
+    "planning": "Planning child tasks…",
+    "noPlan": "No child task plan",
+    "incompleteHistory": "No terminal status was received. This historical run may no longer be active."
   }
 }

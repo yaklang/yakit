@@ -1284,6 +1284,7 @@ export declare namespace AIAgentGrpcApi {
 
   /** 任务规划历史列表 */
   export interface PlanHistoryList {
+    sub_forge_task_trees?: unknown[]
     records: PlanHistory[]
     total: number
     session_id: string

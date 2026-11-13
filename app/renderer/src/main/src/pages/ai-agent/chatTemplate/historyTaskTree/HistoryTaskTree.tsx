@@ -1,3 +1,4 @@
+import { SubForgeTaskTrees } from './SubForgeTaskTrees'
 import React, { memo, useRef, useState } from 'react'
 import styles from './HistoryTaskTree.module.scss'
 import type {
@@ -336,7 +337,7 @@ export const AIHistorySkipTask: React.FC<{ taskId?: string | null; isTask?: bool
 )
 
 /**任务历史的单个树节点 */
-const HistoryTaskTreeItem: React.FC<HistoryTaskTreeItemProps> = memo((props) => {
+export const HistoryTaskTreeItem: React.FC<HistoryTaskTreeItemProps> = memo((props) => {
   const { item, currentCoordinatorId, taskType } = props
   const { t } = useI18nNamespaces(['aiAgent'])
   const time = useCreation(() => {
@@ -354,8 +355,13 @@ const HistoryTaskTreeItem: React.FC<HistoryTaskTreeItemProps> = memo((props) => 
       <AITree
         tasks={item.task_tree}
         className={styles['tree-wrapper']}
-        aiTreeTitleExtraNode={onAITreeTitleExtraNode}
+        aiTreeTitleExtraNode={
+          taskType === 'history' && item.task_progress.phase === 'Completed' ? undefined : onAITreeTitleExtraNode
+        }
         taskType={taskType}
+        renderTaskChildren={(task) => (
+          <SubForgeTaskTrees coordinatorId={item.coordinator_id} taskId={task.task_id} level={task.level} />
+        )}
       />
     </div>
   )
