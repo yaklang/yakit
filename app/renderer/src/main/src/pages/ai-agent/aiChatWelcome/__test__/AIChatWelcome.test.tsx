@@ -2,7 +2,7 @@ import React, { createRef, useImperativeHandle, useState } from 'react'
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { AIReActChatRefProps } from '@/pages/ai-re-act/aiReActChat/AIReActChatType'
-import type { AIChatTextareaProps, AIChatTextareaRefProps } from '../../template/type'
+import type { AIChatInputDraft, AIChatTextareaProps, AIChatTextareaRefProps } from '../../template/type'
 import type * as WelcomeModule from '../AIChatWelcome'
 import welcomeStyles from '../AIChatWelcome.module.scss'
 import { compileReactModule } from '@/utils/__test__/helpers/compileReactModule'
@@ -41,6 +41,13 @@ const welcomeAnimationMocks = vi.hoisted(() => ({
   animationDisabled: false,
 }))
 
+const firstDraft: AIChatInputDraft = {
+  markdown: 'hello',
+  selectedMaterials: [],
+  hiddenInlineKeys: [],
+  selectedResourceIds: { http: ['101'], risk: ['8'] },
+}
+
 vi.mock('../../template/template', () => ({
   AIChatTextarea: React.forwardRef<AIChatTextareaRefProps, AIChatTextareaProps>(function Input(props, ref) {
     const [revision, setRevision] = useState(0)
@@ -52,14 +59,7 @@ vi.mock('../../template/template', () => ({
         <button onClick={() => setRevision(1)}>更换输入框 ref</button>
         <button onClick={() => props.onHttpFlowRemove?.('101', false)}>删除单条流量</button>
         <button onClick={() => props.onHttpFlowRemove?.('101,102', true)}>删除聚合流量</button>
-        <button
-          onClick={() =>
-            props.onSubmit?.({
-              qs: 'hello',
-              sessionId: 'stale-image-draft',
-            })
-          }
-        >
+        <button onClick={() => props.onSubmitWithDraft?.({ qs: 'hello', sessionId: 'stale-image-draft' }, firstDraft)}>
           发送首问
         </button>
       </div>
@@ -147,13 +147,11 @@ describe('AIChatWelcome 输入框转发', () => {
     expect(screen.getByTestId('mention-filter')).toHaveAttribute('data-filter', 'recent')
   })
 
-  it('首次发送原样转发输入框提供的会话 ID', () => {
+  it('首次发送原样转发输入框提供的会话 ID 和草稿', () => {
     const onTriageSubmit = vi.fn()
     render(<AIChatWelcome onTriageSubmit={onTriageSubmit} onSetReAct={vi.fn()} />)
     fireEvent.click(screen.getByRole('button', { name: '发送首问' }))
-    expect(onTriageSubmit).toHaveBeenCalledWith(
-      expect.objectContaining({ qs: 'hello', sessionId: 'stale-image-draft' }),
-    )
+    expect(onTriageSubmit).toHaveBeenCalledExactlyOnceWith({ qs: 'hello', sessionId: 'stale-image-draft' }, firstDraft)
   })
   it('转发输入方法，并在子输入框 handle 更换后使用最新 ref', () => {
     const ref = createRef<AIReActChatRefProps>()

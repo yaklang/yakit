@@ -14,6 +14,9 @@ import { AIModelTypeEnum } from '@/pages/ai-agent/defaultConstant'
 import { AIOnlineModel } from '@/pages/ai-agent/aiModelList/AIModelList'
 import providerExample from '../yakProviderExample.yak?raw'
 
+// textarea 会将 Windows 检出的 CRLF 转为 LF。
+const providerExampleTextareaValue = providerExample.replace(/\r\n/g, '\n')
+
 const mocks = vi.hoisted(() => {
   const invoke = vi.fn()
   window.require = (() => ({ ipcRenderer: { invoke } })) as unknown as typeof window.require
@@ -130,7 +133,7 @@ describe('Yak script model configuration', () => {
     })
     expect(screen.getByRole('switch', { name: 'ConfigNetworkPage.nativeToolCalling' })).not.toBeChecked()
     const editor = await screen.findByLabelText('yak-model-script')
-    expect(editor).toHaveValue(providerExample)
+    expect(editor).toHaveValue(providerExampleTextareaValue)
     expect(screen.queryByText('ConfigNetworkPage.scriptTemplate')).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'ConfigNetworkPage.loadProviderExample' })).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'AIModelList.confirmAddBtn' }))
@@ -197,7 +200,7 @@ describe('Yak script model configuration', () => {
       />,
     )
     const editor = await screen.findByLabelText('yak-model-script')
-    expect(editor).toHaveValue(providerExample)
+    expect(editor).toHaveValue(providerExampleTextareaValue)
     const form = ref.current!.form
     expect(screen.queryByLabelText('ConfigNetworkPage.scriptParams')).not.toBeInTheDocument()
     await act(async () => {
@@ -296,7 +299,7 @@ describe('Yak script model configuration', () => {
     fireEvent.change(screen.getByRole('combobox', { name: 'ConfigNetworkPage.typeLabel' }), {
       target: { value: 'yak-script' },
     })
-    expect(await screen.findByLabelText('yak-model-script')).toHaveValue(providerExample)
+    expect(await screen.findByLabelText('yak-model-script')).toHaveValue(providerExampleTextareaValue)
     expect(screen.getByRole('switch', { name: 'ConfigNetworkPage.nativeToolCalling' })).not.toBeChecked()
     expect(formValueToAIConfigProvider(ref.current!.form.getFieldsValue())).toEqual({
       Type: 'yak-script',
