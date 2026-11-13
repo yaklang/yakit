@@ -293,8 +293,8 @@ const AIReActChatContentsList: React.FC<AIReActChatContentsPProps> = React.memo(
     const Header = useCallback(
       () =>
         grpcLoadMoreLoading ? (
-          <div style={{ height: 20, position: 'relative' }}>
-            <YakitSpin style={{ position: 'absolute', display: 'inline' }} spinning />
+          <div className={styles['load-more-header']} style={{ height: 20 }}>
+            <YakitSpin spinning />
           </div>
         ) : null,
       [grpcLoadMoreLoading],
