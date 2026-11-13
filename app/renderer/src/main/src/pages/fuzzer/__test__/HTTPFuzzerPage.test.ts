@@ -27,7 +27,14 @@ const findOne = (predicate: (node: ts.Node) => boolean) => {
   expect(matches).toHaveLength(1)
   return matches[0].getText(source)
 }
-const controls = ['resetResponse', 'cancelCurrentHTTPFuzzer', 'submitToHTTPFuzzer', 'resumeAndPause', 'loadHistory']
+const controls = [
+  'resetResponse',
+  'cancelCurrentHTTPFuzzer',
+  'submitToHTTPFuzzer',
+  'resumeAndPause',
+  'loadHistory',
+  'getList',
+]
 const declarations = controls.map((name) =>
   findOne(
     (node) =>
@@ -42,6 +49,13 @@ const streamEffect = findOne(
     node.expression.expression.getText(source) === 'useEffect' &&
     node.getText(source).includes('const dataToken = `${token}-data`'),
 )
+const buildHistoryQueryParamsDecl = findOne(
+  (node) =>
+    ts.isVariableStatement(node) &&
+    node.declarationList.declarations.some(
+      (declaration) => declaration.name.getText(source) === 'buildHistoryQueryParams',
+    ),
+)
 const addListResponseBytesDecl = findOne(
   (node) =>
     ts.isVariableStatement(node) &&
@@ -49,9 +63,12 @@ const addListResponseBytesDecl = findOne(
       (declaration) => declaration.name.getText(source) === 'addListResponseBytes',
     ),
 )
-const executable = ts.transpileModule([...declarations, addListResponseBytesDecl, streamEffect].join('\n'), {
-  compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None },
-}).outputText
+const executable = ts.transpileModule(
+  [buildHistoryQueryParamsDecl, ...declarations, addListResponseBytesDecl, streamEffect].join('\n'),
+  {
+    compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None },
+  },
+).outputText
 
 const setup = () => {
   const ipc = new EventEmitter()
@@ -131,6 +148,9 @@ const setup = () => {
     onSetFuzzerConfig: vi.fn(),
     refreshRequest: vi.fn(),
     Uint8ArrayToString: () => 'GET /history',
+    showAll: false,
+    setTotal: vi.fn(),
+    failed: vi.fn(),
   }
   const refs = {
     streamRunRef: null,
@@ -337,6 +357,105 @@ describe('HTTPFuzzerPage real IPC control paths', () => {
     expect(b.setLoading).not.toHaveBeenCalledWith(false)
     expect(b.loadingRef.current).toBe(true)
     expect(b.setCurrentSelectId).not.toHaveBeenCalledWith(7)
+    dispose()
+  })
+
+  it('resets history loading when GetHistoryHTTPFuzzerTask rejects and the operation is still current', async () => {
+    const { api, bindings: b, invoke, dispose } = setup()
+    invoke.mockImplementation(async (channel: string) => {
+      if (channel === 'GetHistoryHTTPFuzzerTask') throw new Error('record deleted')
+    })
+    api.loadHistory(7)
+    await vi.runAllTimersAsync()
+    expect(invoke).toHaveBeenCalledWith('HTTPFuzzer', { HistoryWebFuzzerId: 7 }, expect.any(String))
+    expect(invoke).toHaveBeenCalledWith('GetHistoryHTTPFuzzerTask', { Id: 7 })
+    expect(b.setLoadingHistory).toHaveBeenLastCalledWith(false)
+    expect(b.setLoading).toHaveBeenLastCalledWith(false)
+    expect(b.loadingRef.current).toBe(false)
+    expect(b.setCurrentSelectId).not.toHaveBeenCalledWith(7)
+    expect(b.onSetFuzzerConfig).not.toHaveBeenCalled()
+    dispose()
+  })
+
+  it('does not reset history loading when a newer operation supersedes a rejected history query', async () => {
+    const { api, bindings: b, invoke, dispose } = setup()
+    let rejectTask: (error: Error) => void = () => {}
+    invoke.mockImplementation((channel: string) => {
+      if (channel === 'GetHistoryHTTPFuzzerTask') {
+        return new Promise((_resolve, reject) => {
+          rejectTask = reject
+        })
+      }
+      return Promise.resolve(undefined)
+    })
+    api.loadHistory(7)
+    expect(b.setLoadingHistory).toHaveBeenLastCalledWith(true)
+    expect(b.setLoading).toHaveBeenLastCalledWith(true)
+    b.restoreOpRef.current += 1
+    rejectTask(new Error('record deleted'))
+    await vi.runAllTimersAsync()
+    expect(b.setLoadingHistory).toHaveBeenLastCalledWith(true)
+    expect(b.setLoading).not.toHaveBeenCalledWith(false)
+    expect(b.loadingRef.current).toBe(true)
+    expect(b.setCurrentSelectId).not.toHaveBeenCalledWith(7)
+    expect(b.onSetFuzzerConfig).not.toHaveBeenCalled()
+    dispose()
+  })
+
+  it('resets history loading immediately when the history page is empty', async () => {
+    const { api, bindings: b, invoke, dispose } = setup()
+    invoke.mockImplementation(async (channel: string) => {
+      if (channel === 'QueryHistoryHTTPFuzzerTaskEx') return { Data: [], Total: 0 }
+      if (channel === 'GetHistoryHTTPFuzzerTask') return { OriginRequest: { Request: 'GET /history' } }
+    })
+    api.getList(2)
+    await vi.runAllTimersAsync()
+    expect(invoke).toHaveBeenCalledWith('QueryHistoryHTTPFuzzerTaskEx', {
+      FuzzerTabIndex: 'page',
+      Pagination: { Page: 2, Limit: 1 },
+    })
+    expect(b.setTotal).toHaveBeenCalledWith(0)
+    expect(b.setLoading.mock.calls.map((call) => call[0])).toEqual([true, false])
+    expect(b.setLoadingHistory.mock.calls.map((call) => call[0])).toEqual([true, false])
+    expect(invoke).not.toHaveBeenCalledWith('HTTPFuzzer', expect.anything(), expect.anything())
+    expect(b.failed).not.toHaveBeenCalled()
+    dispose()
+  })
+
+  it('resets history loading and reports when the history page query fails', async () => {
+    const { api, bindings: b, invoke, dispose } = setup()
+    invoke.mockImplementation(async (channel: string) => {
+      if (channel === 'QueryHistoryHTTPFuzzerTaskEx') throw new Error('query failed')
+    })
+    api.getList(2)
+    await vi.runAllTimersAsync()
+    expect(b.setLoading).toHaveBeenLastCalledWith(false)
+    expect(b.setLoadingHistory).toHaveBeenLastCalledWith(false)
+    expect(b.failed).toHaveBeenCalledWith('YakitNotification.loadFailed')
+    expect(b.setTotal).not.toHaveBeenCalled()
+    expect(invoke).not.toHaveBeenCalledWith('HTTPFuzzer', expect.anything(), expect.anything())
+    dispose()
+  })
+
+  it('keeps history loading when the page has a record and hands off to loadHistory', async () => {
+    const { api, bindings: b, invoke, dispose } = setup()
+    invoke.mockImplementation(async (channel: string) => {
+      if (channel === 'QueryHistoryHTTPFuzzerTaskEx') return { Data: [{ BasicInfo: { Id: 5 } }], Total: 3 }
+      if (channel === 'GetHistoryHTTPFuzzerTask') return { OriginRequest: { Request: 'GET /history' } }
+    })
+    api.getList(2)
+    await vi.runAllTimersAsync()
+    expect(invoke).toHaveBeenCalledWith('QueryHistoryHTTPFuzzerTaskEx', {
+      FuzzerTabIndex: 'page',
+      Pagination: { Page: 2, Limit: 1 },
+    })
+    expect(b.setTotal).toHaveBeenCalledWith(3)
+    expect(invoke).toHaveBeenCalledWith('HTTPFuzzer', { HistoryWebFuzzerId: 5 }, expect.any(String))
+    expect(invoke).toHaveBeenCalledWith('GetHistoryHTTPFuzzerTask', { Id: 5 })
+    expect(b.setLoading.mock.calls.every((call) => call[0] === true)).toBe(true)
+    expect(b.setLoadingHistory.mock.calls.every((call) => call[0] === true)).toBe(true)
+    expect(b.setCurrentSelectId).toHaveBeenLastCalledWith(5)
+    expect(b.failed).not.toHaveBeenCalled()
     dispose()
   })
 

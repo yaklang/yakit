@@ -1470,7 +1470,8 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
       .invoke('HTTPFuzzer', { HistoryWebFuzzerId: id }, tokenRef.current)
       .then(() => {
         if (restoreOpRef.current !== opGen) return
-        ipcRenderer
+        // 必须 return：内层查询失败要进下面的 catch，否则 reject 无人处理且 loading 一直为 true
+        return ipcRenderer
           .invoke('GetHistoryHTTPFuzzerTask', { Id: id })
           .then((data: { OriginRequest: HistoryHTTPFuzzerTask }) => {
             if (restoreOpRef.current !== opGen) return
