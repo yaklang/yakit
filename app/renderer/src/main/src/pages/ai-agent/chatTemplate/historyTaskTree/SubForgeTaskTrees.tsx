@@ -1,4 +1,4 @@
-import React from 'react'
+import type React from 'react'
 import { useStore } from 'zustand'
 import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import type { SubForgeRun, SubForgeTaskNode } from '@/pages/ai-re-act/hooks/subForgeTaskTree'

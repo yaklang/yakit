@@ -1,9 +1,13 @@
-import React from 'react'
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { HistoryTaskTreeItem } from '../HistoryTaskTree'
 import type { HistoryTaskTreeItemProps } from '../HistoryTaskTreeType'
 
+vi.mock('../../../utils', () => ({ formatAIAgentSetting: vi.fn(), onReStart: vi.fn() }))
+vi.mock('../../../useContext/useDispatcher', () => ({ default: vi.fn() }))
+vi.mock('../../../useContext/useStore', () => ({ default: vi.fn() }))
+vi.mock('@/pages/ai-re-act/hooks/useCurrentDataBySession', () => ({ useCurrentStore: vi.fn() }))
+vi.mock('@/pages/ai-re-act/hooks/useCurrentSessionId', () => ({ default: vi.fn() }))
 vi.mock('../../../aiTree/AITree', () => ({
   AITree: ({ aiTreeTitleExtraNode, renderTaskChildren, tasks }: any) => (
     <div>
