@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from 'uuid'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
@@ -40,6 +41,7 @@ const fixEmptyNumber = (config: AIGlobalConfig): AIGlobalConfig => {
       return {
         ...model,
         ProviderId: model.ProviderId || '0',
+        ContextOwnerId: model.ContextOwnerId || uuidv4(),
         Provider: provider,
         ExtraParams: model.ExtraParams || [],
       }
@@ -196,7 +198,7 @@ function useAIGlobalConfig(params) {
           }
           const hit = serverModels.find(({ ModelName }) => ModelName === item.ModelName)
           if (hit) {
-            list.push(hit)
+            list.push({ ...hit, ContextOwnerId: item.ContextOwnerId })
           }
           return list
         }, [] as AIModelConfig[])

@@ -230,6 +230,7 @@ describe('useAIGlobalConfig', () => {
     expect(saved.GlobalWeight).toBe(0)
     expect(saved.IntelligentModels[0]).toEqual({
       ProviderId: '0',
+      ContextOwnerId: expect.any(String),
       Provider: { Type: 'openai' },
       ModelName: 'model-empty',
       ExtraParams: [],
@@ -237,11 +238,75 @@ describe('useAIGlobalConfig', () => {
     // 有效数字（含 0）原样保留
     expect(saved.IntelligentModels[1]).toEqual({
       ProviderId: '7',
+      ContextOwnerId: expect.any(String),
       Provider: { Type: 'openai', MaxTokens: 0, Temperature: 0.7, TopP: 0, TopK: 64, FrequencyPenalty: 0 },
       ModelName: 'model-valid',
       ExtraParams: [],
     })
     // store 收到的是清洗后的快照
     expect(useAIGlobalConfigStore.getState().aiGlobalConfig).toEqual(saved)
+  })
+  it('新增同名提供商各自绑定，切换模型保留绑定，删除后重建使用新绑定', async () => {
+    const model = {
+      ProviderId: '0',
+      ModelName: 'model-a',
+      Provider: { Type: 'openai', BaseURL: 'https://example.test/v1' },
+      ExtraParams: [],
+    }
+    const { result } = renderHook(() => useAIGlobalConfig())
+    await act(async () => {
+      await result.current[1].setAIGlobalConfig({ IntelligentModels: [{ ...model }, { ...model }] })
+    })
+    const added = setMock.mock.calls[0][0].IntelligentModels
+    expect(added[0].ContextOwnerId).toMatch(/^[0-9a-f-]{36}$/)
+    expect(added[0].ContextOwnerId).not.toBe(added[1].ContextOwnerId)
+    await act(async () => {
+      await result.current[1].setAIGlobalConfig({
+        IntelligentModels: [{ ...added[0], ModelName: 'model-b' }, added[1]],
+      })
+    })
+    expect(setMock.mock.calls[1][0].IntelligentModels[0].ContextOwnerId).toBe(added[0].ContextOwnerId)
+    await act(async () => {
+      await result.current[1].setAIGlobalConfig({ IntelligentModels: [added[1]] })
+      await result.current[1].setAIGlobalConfig({ IntelligentModels: [added[1], { ...model }] })
+    })
+    expect(setMock.mock.calls[2][0].IntelligentModels).toEqual([added[1]])
+    expect(setMock.mock.calls[3][0].IntelligentModels[0].ContextOwnerId).toBe(added[1].ContextOwnerId)
+    expect(setMock.mock.calls[3][0].IntelligentModels[1].ContextOwnerId).not.toBe(added[0].ContextOwnerId)
+  })
+
+  it('企业配置刷新保留已有提供商绑定', async () => {
+    const current = {
+      ...defaultAIGlobalConfig,
+      IntelligentModels: [
+        {
+          ProviderId: '0',
+          ModelName: 'model-a',
+          IsOnline: true,
+          ContextOwnerId: '00000000-0000-4000-8000-000000000001',
+          Provider: { Type: 'openai' },
+          ExtraParams: [],
+        },
+      ],
+    }
+    getMock.mockResolvedValue(current)
+    const { result } = renderHook(() => useAIGlobalConfig())
+    await act(async () => {
+      await result.current[1].getAIGlobalConfigAfterLogin([
+        {
+          id: 1,
+          created_at: 0,
+          updated_at: 0,
+          isOpen: true,
+          configName: 'AI',
+          content: JSON.stringify({
+            IntelligentModels: [{ ...current.IntelligentModels[0], ContextOwnerId: undefined }],
+          }),
+        },
+      ])
+    })
+    expect(setMock.mock.calls[0][0].IntelligentModels[0].ContextOwnerId).toBe(
+      current.IntelligentModels[0].ContextOwnerId,
+    )
   })
 })
