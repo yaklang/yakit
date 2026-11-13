@@ -2340,7 +2340,7 @@ export const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
   const isUpdateYakitIntranet =
     yakitLastIntranetVersion !== '' && removePrefixV(yakitLastIntranetVersion) !== removePrefixV(yakitVersion)
   const isUpdateYaklang = lowerYaklangLastVersion
-  const isUpdate = isUpdateYakitIntranet || isUpdateYakit || isUpdateYaklang
+  const isUpdate = isUpdateYakitIntranet || isUpdateYaklang
 
   const notice = useMemo(() => {
     return (
@@ -2380,7 +2380,7 @@ export const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                 />
               )}
 
-              <UIOpUpdateYakit
+              {/* <UIOpUpdateYakit
                 version={yakitVersion}
                 lastVersion={yakitLastVersion}
                 isUpdateWait={isYakitUpdateWait}
@@ -2390,7 +2390,7 @@ export const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                 onUpdateEdit={UpdateContentEdit}
                 isUpdate={isUpdateYakit}
                 onResetUpdateWait={() => setIsYakitUpdateWait(false)}
-              />
+              /> */}
               <UIOpUpdateYaklang
                 version={yaklangVersion}
                 lastVersion={yaklangLastVersion}
