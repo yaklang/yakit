@@ -95,6 +95,85 @@ describe('composer model context popover', () => {
       prompt_tokens: 0,
     }))
   })
+  it.each([
+    [false, 500000, 'default'],
+    [true, 500000, 'default'],
+    [false, 200000, 'learned'],
+    [true, 200000, 'learned'],
+  ])('loads the saved model without runtime events: executing=%s, threshold=%s', async (execute, threshold, source) => {
+    mocks.sessionId = 'session'
+    sessionStore.setState({ execute: execute as boolean })
+    mocks.request.mockImplementation(async (identity) => ({
+      ...runtime,
+      ...identity,
+      threshold_tokens: threshold,
+      source,
+    }))
+    render(<ModelContextPopover />)
+    expect(await screen.findByRole('slider')).toHaveAttribute('aria-valuenow', String(threshold))
+    expect(mocks.request).toHaveBeenCalledWith({
+      provider: 'openai',
+      model: 'selected',
+      config: { ModelName: 'selected', Provider: { Type: 'openai' } },
+    })
+    expect(screen.queryByText('AIContextToken.waitingContext')).not.toBeInTheDocument()
+    expect(mocks.onSend).not.toHaveBeenCalled()
+  })
+
+  it('loads the selected model when a history event has no concrete context identity', async () => {
+    mocks.sessionId = 'session'
+    mocks.perf = { ...runtime, model: 'selected', context_key: undefined }
+    render(<ModelContextPopover />)
+    expect(await screen.findByRole('slider')).toHaveAttribute('aria-valuenow', '200000')
+    expect(screen.getByRole('button', { name: '上下文 91K/200K 46%' })).toBeInTheDocument()
+  })
+
+  it('saves through the model API until a runtime identity is available', async () => {
+    mocks.sessionId = 'session'
+    sessionStore.setState({ execute: true })
+    render(<ModelContextPopover />)
+    const slider = await screen.findByRole('slider')
+    fireEvent.keyDown(slider, { key: 'ArrowUp' })
+    await waitFor(() => expect(slider).toHaveAttribute('aria-valuenow', '201000'))
+    expect(mocks.request).toHaveBeenLastCalledWith(
+      {
+        provider: 'openai',
+        model: 'selected',
+        config: { ModelName: 'selected', Provider: { Type: 'openai' } },
+      },
+      201000,
+    )
+    expect(mocks.onSend).not.toHaveBeenCalled()
+  })
+
+  it('uses the runtime identity as soon as it arrives and ignores an older model lookup', async () => {
+    mocks.sessionId = 'session'
+    sessionStore.setState({ execute: true })
+    let resolve!: (value: any) => void
+    mocks.request.mockReturnValue(
+      new Promise((done) => {
+        resolve = done
+      }),
+    )
+    mocks.onSend.mockReturnValue(true)
+    render(<ModelContextPopover />)
+    await waitFor(() => expect(mocks.request).toHaveBeenCalledTimes(1))
+    act(() => {
+      mocks.perf = runtime
+      mocks.perfListeners.forEach((listener) => listener())
+    })
+    await act(async () =>
+      resolve({ ...runtime, model: 'selected', context_key: 'selected-key', threshold_tokens: 500000 }),
+    )
+    expect(screen.getByRole('button', { name: '上下文 91K/100K 91%' })).toBeInTheDocument()
+    fireEvent.keyDown(screen.getByRole('slider'), { key: 'ArrowUp' })
+    expect(mocks.onSend).toHaveBeenCalledWith(
+      expect.objectContaining({
+        params: expect.objectContaining({ Params: expect.objectContaining({ ModelContextKey: 'service-a' }) }),
+      }),
+    )
+  })
+
   it.each([false, true])('submits exactly 100K despite a stale 102400 minimum: executing=%s', async (executing) => {
     const legacy = { ...runtime, threshold_tokens: 102400, minimum_threshold_tokens: 102400 }
     sessionStore.setState({ execute: executing })
