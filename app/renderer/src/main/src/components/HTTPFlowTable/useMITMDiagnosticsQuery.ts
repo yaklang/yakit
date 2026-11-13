@@ -23,7 +23,10 @@ export const useMITMDiagnosticsQuery = (
         const { ipcRenderer } = window.require('electron')
         const result: MITMDiagnosticsResponse = await ipcRenderer.invoke('mitmV2-get-diagnostics', query)
         if (!active) return
-        if (result.SessionId && result.SessionId !== query.SessionId) return
+        if (result.SessionId && result.SessionId !== query.SessionId) {
+          setState({ query, result: { Ended: true } })
+          return
+        }
         setState({ query, result })
         if (result.Ended || result.Unsupported || result.Missing) return
       } catch {

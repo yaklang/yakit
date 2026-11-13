@@ -159,6 +159,39 @@ describe('MITM diagnostics', () => {
     expect(invoke.mock.calls.filter(([, query]) => query.View === 'storage')).toHaveLength(1)
   })
 
+  it.each([false, true])('ends the trace query on a mismatched session (after first sample: %s)', async (hasSample) => {
+    vi.useFakeTimers()
+    try {
+      let replySession = hasSample ? sample.SessionId : 'other-session'
+      const { invoke } = installIPC((query) =>
+        query.View === 'detail'
+          ? { SessionId: query.SessionId, Detail: row }
+          : { SessionId: replySession, Traces: [row], Total: 1 },
+      )
+      render(<MITMDiagnosticsPanel view={view()} onClose={vi.fn()} />)
+      await act(async () => {
+        fireEvent.click(screen.getByRole('tab', { name: '请求轨迹' }))
+      })
+      if (hasSample) {
+        expect(screen.getByRole('heading', { name: 'GET example.invalid' })).toBeVisible()
+        replySession = 'other-session'
+        await act(async () => {
+          await vi.advanceTimersByTimeAsync(3_000)
+        })
+      }
+      expect(screen.getByRole('status')).toHaveTextContent('暂时无法读取轨迹')
+      expect(screen.queryByText('正在读取轨迹…')).not.toBeInTheDocument()
+      expect(screen.queryByText(/example\.invalid/)).not.toBeInTheDocument()
+      invoke.mockClear()
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(9_000)
+      })
+      expect(invoke).not.toHaveBeenCalled()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('keeps excluded waits in the summary and only loads their paged samples on demand', async () => {
     vi.useFakeTimers()
     try {
