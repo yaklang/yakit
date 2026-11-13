@@ -159,12 +159,12 @@ declare global {
   }
 
   interface QueryNewRiskRequest {
-    AfterId?: number
+    AfterId?: Risk['Id']
   }
 
   interface NewRiskReadRequest {
-    AfterId?: number
-    Ids?: number[]
+    AfterId?: Risk['Id']
+    Ids?: Risk['Id'][]
     Filter?: Partial<QueryRisksRequest>
   }
 

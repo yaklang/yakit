@@ -21,14 +21,12 @@ export const getWorkspaceAddedCounts = ({
   resourceIds,
   selectedResourceIds,
 }: WorkspaceAddedCountInput): WorkspaceAddedCounts => {
-  const attachmentCount = mentions.filter(
-    (item) => item.mentionType === 'file' && item.mentionSource === 'attachment',
-  ).length
-  const countMentions = (type: AIMentionCommandParams['mentionType']) =>
-    mentions.filter((item) => item.mentionType === type).length
   return {
     risk: parseResourceReferenceIds([...resourceIds.risk, ...selectedResourceIds.risk]).length,
     traffic: parseResourceReferenceIds([...resourceIds.http, ...selectedResourceIds.http]).length,
-    fileSystem: countMentions('file') + countMentions('folder') - attachmentCount,
+    fileSystem: mentions.filter(
+      ({ mentionType, mentionSource }) =>
+        (mentionType === 'file' || mentionType === 'folder') && mentionSource !== 'attachment',
+    ).length,
   }
 }

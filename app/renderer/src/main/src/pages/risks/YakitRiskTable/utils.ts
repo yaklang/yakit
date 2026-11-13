@@ -72,7 +72,7 @@ export interface NewRiskReadRequest {
   /**@deprecated */
   AfterId?: string
   /**传空数组代表全部已读 */
-  Ids?: number[]
+  Ids?: Risk['Id'][]
   Filter?: QueryRisksRequest
 }
 export const apiNewRiskRead: (query?: NewRiskReadRequest) => Promise<null> = (query) => {
@@ -88,10 +88,10 @@ export const apiNewRiskRead: (query?: NewRiskReadRequest) => Promise<null> = (qu
 }
 
 export interface DeleteRiskRequest {
-  Id?: number
+  Id?: Risk['Id']
   Hash?: string
   Filter?: QueryRisksRequest
-  Ids?: number[]
+  Ids?: Risk['Id'][]
   DeleteAll?: boolean
   DeleteRepetition?: boolean
 }
@@ -167,7 +167,7 @@ export const apiQueryAvailableRiskType: () => Promise<FieldName[]> = () => {
 }
 
 export interface SetTagForRiskRequest {
-  Id: number
+  Id: Risk['Id']
   Hash: string
   Tags: string[]
 }
@@ -190,7 +190,7 @@ export interface BatchSetRiskTagsRequest {
   VerifierUid?: string
   FixTime?: number
   FixSuggestion?: string
-  Ids?: number[]
+  Ids?: Risk['Id'][]
   Hashes?: string[]
   Token?: string
   RiskTypeVerbose?: string

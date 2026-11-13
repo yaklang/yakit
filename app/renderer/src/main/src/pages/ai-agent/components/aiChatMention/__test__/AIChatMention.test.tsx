@@ -486,13 +486,18 @@ describe('AIChatMention', () => {
   it('searches recent results locally and switches tabs and rows with the editor keyboard', async () => {
     const editor = document.createElement('div')
     const onSelect = vi.fn()
-    render(<AIChatMention keyboardTarget={() => editor} onSelect={onSelect} />)
-    await screen.findByText('recent-summary')
+    await act(async () => {
+      render(<AIChatMention keyboardTarget={() => editor} onSelect={onSelect} />)
+    })
+    const first = await screen.findByRole('option', { name: /^recent-summary\b/ })
+    const second = screen.getByRole('option', { name: /^recent-translate\b/ })
     const recentList = screen.getByRole('listbox')
     expect(within(recentList).getByText('recent-summary')).toBeInTheDocument()
     expect(loadRecentMentionResources).toHaveBeenCalledExactlyOnceWith('session-test')
 
+    expect(first).toHaveAttribute('aria-selected', 'true')
     fireEvent.keyDown(editor, { key: 'ArrowDown', keyCode: 40 })
+    expect(second).toHaveAttribute('aria-selected', 'true')
     fireEvent.keyDown(editor, { key: 'Enter', keyCode: 13 })
     expect(onSelect).toHaveBeenCalledWith('forge', expect.objectContaining({ name: 'recent-translate' }))
 

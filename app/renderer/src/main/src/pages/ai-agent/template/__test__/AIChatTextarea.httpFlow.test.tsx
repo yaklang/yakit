@@ -287,6 +287,7 @@ afterEach(async () => {
     deferEditor.value = false
     i18n.language = 'zh'
     vi.clearAllMocks()
+    vi.mocked(handleOpenFileSystemDialog).mockReset()
     vi.restoreAllMocks()
   }
 })

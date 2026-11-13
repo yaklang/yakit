@@ -16,6 +16,12 @@ describe('getWorkspaceAddedCounts', () => {
             mentionName: '/tmp/b.txt',
             mentionSource: 'attachment',
           },
+          {
+            mentionType: 'folder',
+            mentionId: '/tmp/attachment-dir',
+            mentionName: '/tmp/attachment-dir',
+            mentionSource: 'attachment',
+          },
         ],
       }),
     ).toEqual({ risk: 3, traffic: 2, fileSystem: 2 })

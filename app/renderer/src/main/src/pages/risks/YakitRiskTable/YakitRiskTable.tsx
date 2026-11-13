@@ -149,7 +149,7 @@ import {
   mergeRisksById,
   nextIncrementFromId,
   shouldSkipRiskCursorPage,
-  toRiskNumericId,
+  normalizeRiskId,
 } from './riskTableUtils'
 import locale from 'antd/es/date-picker/locale/zh_CN'
 import { RiskBatchOperationsMenu, type RiskBatchAction } from './RiskBatchOperationsMenu'
@@ -402,8 +402,8 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
   const [inViewport = true] = useInViewport(riskTableRef)
 
   const prePage = useRef<number>(0)
-  const afterId = useRef<number>(0)
-  const beforeId = useRef<number>(0)
+  const afterId = useRef<Risk['Id']>(0)
+  const beforeId = useRef<Risk['Id']>(0)
   const tableRef = useRef<any>(null)
   const defLimitRef = useRef<number>(defLimit)
   const limitRef = useRef<number>(defLimit)
@@ -499,7 +499,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
       // 排序字段为Id才实时刷新数据
       return
     }
-    const fromId = toRiskNumericId(afterId.current)
+    const fromId = afterId.current
     if (!fromId) return
     const scrollTop = getScrollTop()
     if (inViewport && scrollTop < 10 && getOffsetDataInTop().length > 0) {
@@ -1350,14 +1350,14 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
     if (aiRiskSelection?.selectedOnly) {
       finalParams.RuntimeId = undefined
       finalParams.RuntimeIds = undefined
-      finalParams.Ids = aiRiskSelection.ids.map(Number)
+      finalParams.Ids = aiRiskSelection.ids
     }
     return finalParams
   })
   const getResData = useMemoizedFn((data: Risk[]) => {
     return (data || []).map((ele) => ({
       ...ele,
-      Id: toRiskNumericId(ele.Id),
+      Id: normalizeRiskId(ele.Id),
       cellClassName: ele.IsRead ? '' : styles['yakit-risk-table-cell-unread'],
     }))
   })
@@ -1377,9 +1377,9 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
       return
     }
     if (order === 'asc') {
-      finalParams.FromId = isInit ? 0 : toRiskNumericId(afterId.current)
+      finalParams.FromId = isInit ? 0 : afterId.current
     } else {
-      finalParams.UntilId = isInit ? 0 : toRiskNumericId(beforeId.current)
+      finalParams.UntilId = isInit ? 0 : beforeId.current
     }
     if (isInit) {
       listQueryEpochRef.current += 1
@@ -1421,8 +1421,8 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         }
 
         limitRef.current = defLimit
-        const firstId = toRiskNumericId(resData[0]?.Id)
-        const lastId = toRiskNumericId(resData[resData.length - 1]?.Id)
+        const firstId = resData[0]?.Id ?? 0
+        const lastId = resData[resData.length - 1]?.Id ?? 0
         if (order === 'asc') {
           if (isInit) {
             beforeId.current = firstId

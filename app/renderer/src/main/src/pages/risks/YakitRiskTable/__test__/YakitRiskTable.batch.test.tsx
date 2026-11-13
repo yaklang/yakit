@@ -920,17 +920,18 @@ describe('AI risk selection', () => {
   it.each(['asc', 'desc'] as const)(
     'loads every selected risk using the initial filtered total (%s)',
     async (order) => {
+      const firstId = BigInt('9007199254740992')
       const risks = Array.from({ length: 120 }, (_, index) => ({
         ...rows[0],
-        Id: index + 1,
+        Id: String(firstId + BigInt(index)),
         Title: index < 100 ? 'matching risk' : 'other risk',
       }))
+      if (order === 'desc') risks.reverse()
       mocks.queryRisks.mockImplementation(async (params: QueryRisksRequest) => {
         const remaining = risks
           .filter((risk) => params.Ids.includes(risk.Id) && risk.Title === params.Search)
-          .filter((risk) => !params.FromId || risk.Id > params.FromId)
-          .filter((risk) => !params.UntilId || risk.Id < params.UntilId)
-          .sort((a, b) => (params.Pagination.Order === 'asc' ? a.Id - b.Id : b.Id - a.Id))
+          .filter((risk) => !params.FromId || BigInt(risk.Id) > BigInt(params.FromId))
+          .filter((risk) => !params.UntilId || BigInt(risk.Id) < BigInt(params.UntilId))
         return {
           Data: remaining.slice(0, params.Pagination.Limit),
           Total: remaining.length,
@@ -943,7 +944,7 @@ describe('AI risk selection', () => {
         setRiskLoading: vi.fn(),
         allTotal: 7,
         aiRiskSelection: {
-          ids: risks.map((risk) => String(risk.Id)),
+          ids: risks.map((risk) => risk.Id),
           selectedOnly: true,
           onChange: vi.fn(),
           renderCount: () => null,
@@ -960,7 +961,14 @@ describe('AI risk selection', () => {
       }
       expect(screen.getByTestId('table-total')).toHaveTextContent(/^100$/)
       expect(screen.getByRole('button', { name: 'load-next-page' })).toBeDisabled()
-      expect(mocks.rowSelection.selectedRowKeys).toHaveLength(100)
+      expect(mocks.rowSelection.selectedRowKeys).toEqual(
+        risks.filter((risk) => risk.Title === 'matching risk').map((risk) => risk.Id),
+      )
+      fireEvent.click(screen.getByRole('button', { name: 'select-all' }))
+      expect(props.aiRiskSelection.onChange).toHaveBeenLastCalledWith(
+        risks.filter((risk) => risk.Title === 'matching risk').map((risk) => expect.objectContaining({ Id: risk.Id })),
+        true,
+      )
 
       view.rerender(<YakitRiskTable {...props} query={{ ...props.query, Search: 'no matching risk' }} />)
       fireEvent.click(screen.getByRole('button', { name: 'load-table' }))
@@ -1053,7 +1061,11 @@ describe('AI risk selection', () => {
     )
     fireEvent.click(screen.getByRole('button', { name: 'load-table' }))
     await waitFor(() => expect(mocks.queryRisks).toHaveBeenCalled())
-    expect(mocks.queryRisks.mock.calls[0][0]).toMatchObject({ Ids: [11], RuntimeId: undefined, RuntimeIds: undefined })
+    expect(mocks.queryRisks.mock.calls[0][0]).toMatchObject({
+      Ids: ['11'],
+      RuntimeId: undefined,
+      RuntimeIds: undefined,
+    })
     await waitFor(() => expect(screen.getByTestId('loaded-count')).toHaveTextContent('1'))
   })
 })

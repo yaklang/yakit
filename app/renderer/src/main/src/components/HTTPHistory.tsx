@@ -116,7 +116,7 @@ export interface HTTPPacketFuzzable {
 }
 
 export interface HTTPFlowBodyByIdRequest {
-  Id?: number
+  Id?: number | string
   IsRequest: boolean
   BufSize?: number
   RuntimeId?: string
