@@ -34,7 +34,11 @@ vi.mock('../../../components/aiFileSystemList/store/useCustomFolder', () => ({
   useCustomFolder: () => [{ path: '/a' }, { path: '/b' }],
 }))
 vi.mock('react-countup', () => ({
-  default: ({ end }: { end: number }) => <span data-testid="count-up">{end}</span>,
+  default: ({ end, duration, start }: { end: number; duration?: number; start?: number }) => (
+    <span data-testid="count-up" data-duration={duration} data-start={start}>
+      {end}
+    </span>
+  ),
 }))
 vi.mock('../../icon', () => ({
   ColorsRiskIcon: () => <span>risk-icon</span>,
@@ -146,6 +150,21 @@ describe('WelcomeTipsCards', () => {
     expect(screen.queryByTestId('welcome-scene-cards')).not.toBeInTheDocument()
     expect(screen.getByText('AIChatWelcome.tipRiskTitle')).toBeInTheDocument()
     expect(onEmptyChange).toHaveBeenCalledWith(false)
+  })
+
+  it('同一数字切到 compact 时不再播放动画', () => {
+    const { rerender } = render(<WelcomeTipsCards />)
+    expect(screen.getAllByTestId('count-up').map((node) => node.getAttribute('data-duration'))).toEqual([
+      '1.2',
+      '1.2',
+      '1.2',
+    ])
+
+    rerender(<WelcomeTipsCards compact />)
+    const counts = screen.getAllByTestId('count-up')
+    expect(counts.map((node) => node.textContent)).toEqual(['12', '34', '2'])
+    expect(counts.map((node) => node.getAttribute('data-duration'))).toEqual(['0', '0', '0'])
+    expect(counts.map((node) => node.getAttribute('data-start'))).toEqual(['12', '34', '2'])
   })
 
   it('compact 模式下整卡可点且使用 compact 样式', () => {
