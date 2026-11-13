@@ -158,7 +158,6 @@ import {
   DefFuzzerTableMaxData,
   FuzzerResponseSizeWarnBytes,
   defaultAdvancedConfigShow,
-  defaultPostTemplate,
   emptyFuzzer,
   defaultWebFuzzerPageInfo,
   defaultLabel,
@@ -3410,8 +3409,6 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                           ),
                           taskDetails: true,
                         },
-                        footerRightTypes: [],
-                        filterMentionType: ['focusMode'],
                       },
                     })}
                     proxyListRef={proxyListRef}

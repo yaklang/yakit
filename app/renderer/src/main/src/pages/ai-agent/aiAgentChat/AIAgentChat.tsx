@@ -46,6 +46,7 @@ import { isEventForPage, openAIAgentChatTab, takePendingOpenForge } from '../his
 import { sessionStatusStore, SessionDeleteStatus } from '@/pages/ai-re-act/hooks/sessionStatus/sessionStatusStore'
 import { syncAIAgentPageInfo } from '../utils/syncAIAgentPageInfo'
 import { isChatSession } from '../utils/isChatSession'
+import type { AIChatInputDraft } from '../template/type'
 
 export const AIAgentChat: React.FC<AIAgentChatProps> = memo(() => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
@@ -69,8 +70,8 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo(() => {
 
   const startChat = useStartAIChat()
 
-  const handleStartTriageChat = useMemoizedFn((data: AIChatSubmitParams) => {
-    return handleStart(data, 'new')
+  const handleStartTriageChat = useMemoizedFn((data: AIChatSubmitParams, draft?: AIChatInputDraft) => {
+    return handleStart(data, 'new', false, draft)
   })
 
   useEffect(() => {
@@ -116,6 +117,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo(() => {
       input: AIChatSubmitParams,
       kind: 'new' | 'resume' = isChatSession(activeChat) ? 'resume' : 'new',
       startInCurrentTab = false,
+      draft?: AIChatInputDraft,
     ) => {
       if (!globalSessionEngine.canStartExecutingSession(kind === 'resume' ? sessionId : undefined, true)) return false
       const { sessionId: inputSessionId, ...value } = input
@@ -123,15 +125,17 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo(() => {
       if (kind === 'new' && (!activeChat?.isDraftSession || !sessionId)) {
         target.sessionId = inputSessionId || createActiveChatSessionId()
       }
-      if (kind === 'new' && openChatInNewTab && !startInCurrentTab) {
+      if (kind === 'new' && openChatInNewTab && !startInCurrentTab && meta.welcomeDraft?.status !== 'recovered') {
         const targetSession = globalSessionEngine.ensureSession(target.sessionId)
         globalSessionEngine.updateSessionConfig(target.sessionId, getSetting())
         targetSession.meta.pendingWelcomeInput = cloneDeep(input)
+        targetSession.meta.welcomeDraft = draft ? { status: 'pending', draft: cloneDeep(draft) } : undefined
         openAIAgentChatTab({ ...activeChat!, SessionID: target.sessionId, isDraftSession: true })
         resetWelcome(true)
         return true
       }
       if (!startChat({ ...value, target })) return false
+      meta.welcomeDraft = undefined
       setMode('re-act')
       return true
     },
@@ -143,7 +147,23 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo(() => {
     const timer = window.setTimeout(() => {
       const input = meta.pendingWelcomeInput
       if (!input) return
-      if (handleStart(input, 'new', true)) meta.pendingWelcomeInput = undefined
+      const draft = meta.welcomeDraft?.status === 'pending' ? meta.welcomeDraft.draft : undefined
+      meta.pendingWelcomeInput = undefined
+      meta.welcomeDraft = undefined
+      if (handleStart(input, 'new', true)) return
+
+      meta.welcomeDraft = {
+        status: 'recovered',
+        draft: draft ?? {
+          markdown: input.showQS ?? input.qs,
+          selectedMaterials: [],
+          hiddenInlineKeys: [],
+          selectedResourceIds: { http: [], risk: [] },
+          focusMode: input.focusMode,
+          enabledCapabilities: input.enabledCapabilities,
+        },
+      }
+      setMode('welcome')
     }, 0)
     return () => window.clearTimeout(timer)
   }, [sessionId])
@@ -613,6 +633,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo(() => {
     <div ref={wrapperRef} className={styles['ai-agent-chat']}>
       <AIAgentChatLayout
         mode={mode}
+        initialDraft={meta.welcomeDraft?.status === 'recovered' ? meta.welcomeDraft.draft : undefined}
         onTriageSubmit={handleStartTriageChat}
         onSetReAct={onSetReAct}
         aiChatWelcomeRef={aiChatWelcomeRef}

@@ -1,10 +1,12 @@
 import type { YakitButtonProp } from '@/components/yakitUI/YakitButton/YakitButton'
 import type { AIChatSubmitParams } from '../aiAgentChat/type'
+import type { AIChatInputDraft } from '../template/type'
 import type { AIReActChatRefProps } from '@/pages/ai-re-act/aiReActChat/AIReActChatType'
 import type { AIMentionCommandParams } from '../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
 
 export interface AIChatWelcomeProps {
-  onTriageSubmit: (data: AIChatSubmitParams) => boolean
+  onTriageSubmit: (data: AIChatSubmitParams, draft?: AIChatInputDraft) => boolean
+  initialDraft?: AIChatInputDraft
   onSetReAct: () => void
   selectedHttpFlowIds?: string[]
   selectedRiskIds?: string[]

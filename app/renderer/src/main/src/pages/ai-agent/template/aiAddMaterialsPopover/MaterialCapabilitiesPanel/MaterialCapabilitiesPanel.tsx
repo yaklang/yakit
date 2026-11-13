@@ -42,9 +42,15 @@ const getIconByName = (name: string) => {
   }
 }
 
-const MaterialCapabilitiesPanel: FC<MaterialCapabilitiesPanelProps> = ({ onEnabledCapabilitiesChange, children }) => {
+const MaterialCapabilitiesPanel: FC<MaterialCapabilitiesPanelProps> = ({
+  initialEnabledCapabilities,
+  onEnabledCapabilitiesChange,
+  children,
+}) => {
   const { t, i18n } = useI18nNamespaces(['aiAgent', 'yakitUi'])
-  const [selectedCapabilityKeys, setSelectedCapabilityKeys] = useState<string[]>()
+  const [selectedCapabilityKeys, setSelectedCapabilityKeys] = useState(() =>
+    initialEnabledCapabilities?.map(capabilityKey),
+  )
   const [editingSkill, setEditingSkill] = useState<AIReActRecommendedSkill>()
   const [editContent, setEditContent] = useState('')
   const [editLoading, setEditLoading] = useState(false)
@@ -60,11 +66,11 @@ const MaterialCapabilitiesPanel: FC<MaterialCapabilitiesPanelProps> = ({ onEnabl
   })
   const capabilities = recommendedSkills?.Data ?? emptyCapabilities
   useLayoutEffect(() => {
-    const selected = capabilities
+    const selected = (recommendedSkills ? capabilities : (initialEnabledCapabilities ?? emptyCapabilities))
       .filter((item) => selectedCapabilityKeys?.includes(capabilityKey(item)))
       .map(({ Name, Type }) => ({ Name, Type }))
     onEnabledCapabilitiesChange?.(selected)
-  }, [capabilities, onEnabledCapabilitiesChange, selectedCapabilityKeys])
+  }, [capabilities, initialEnabledCapabilities, onEnabledCapabilitiesChange, recommendedSkills, selectedCapabilityKeys])
 
   const toggleCapability = (key: string) => {
     setSelectedCapabilityKeys((current = []) =>

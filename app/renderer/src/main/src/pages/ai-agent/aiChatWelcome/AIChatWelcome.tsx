@@ -107,7 +107,8 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
               <div className={styles['input-panel']} data-ai-ripple-disabled>
                 <AIChatTextarea
                   ref={aiChatTextareaRef}
-                  onSubmit={onTriageSubmit}
+                  onSubmitWithDraft={onTriageSubmit}
+                  initialDraft={props.initialDraft}
                   showScenarioCapabilities
                   filterMentionType={['recent']}
                   selectedHttpFlowIds={props.selectedHttpFlowIds}

@@ -28,6 +28,7 @@ import styles from './AIAddMaterialsPopover.module.scss'
 const AIAddMaterialsPopover: FC<AIAddMaterialsPopoverProps> = ({
   children,
   showScenarioCapabilities,
+  initialEnabledCapabilities,
   onEnabledCapabilitiesChange,
   onAdd,
   onRemove,
@@ -115,10 +116,10 @@ const AIAddMaterialsPopover: FC<AIAddMaterialsPopoverProps> = ({
     addAttachments,
     close,
   })
-  const workspaceItems: MaterialMenuItem[] = [menu.risk, menu.flow, menu.fileSystem]
+  const workspaceItems: MaterialMenuItem[] = [menu.risk, menu.flow, menu.fileSystem, menu.browser]
   const items: MaterialMenuItem[] = Object.values(menu)
   const isWorkspaceOnly = (item: MaterialMenuItem) => !!sidebarChat && workspaceItems.includes(item)
-  const menuItems = items.filter((item) => item !== menu.browser && !isWorkspaceOnly(item))
+  const menuItems = items.filter((item) => !isWorkspaceOnly(item))
   const summaryItems = items.flatMap((item) => {
     if (hideSceneInSummary && item === menu.focusMode) return []
     return [isWorkspaceOnly(item) ? { ...item, action: undefined, summaryAction: undefined } : item]
@@ -224,7 +225,10 @@ const AIAddMaterialsPopover: FC<AIAddMaterialsPopoverProps> = ({
   if (!showScenarioCapabilities) return renderPopover()
 
   return (
-    <MaterialCapabilitiesPanel onEnabledCapabilitiesChange={onEnabledCapabilitiesChange}>
+    <MaterialCapabilitiesPanel
+      initialEnabledCapabilities={initialEnabledCapabilities}
+      onEnabledCapabilitiesChange={onEnabledCapabilitiesChange}
+    >
       {renderPopover}
     </MaterialCapabilitiesPanel>
   )

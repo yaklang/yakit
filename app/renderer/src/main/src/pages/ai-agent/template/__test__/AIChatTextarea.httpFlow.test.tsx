@@ -21,7 +21,7 @@ import {
   aiMentionCustomId,
   aiMentionCustomPlugin,
 } from '../../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
-import type { AIChatTextareaRefProps, AIChatTextareaSubmit } from '../type'
+import type { AIChatInputDraft, AIChatTextareaRefProps, AIChatTextareaSubmit } from '../type'
 import { AIInputFooterRightEnum } from '../type'
 import type * as TemplateModule from '../template'
 import { compileReactModule } from '@/utils/__test__/helpers/compileReactModule'
@@ -43,10 +43,11 @@ import { grpcGetAIToolList } from '../../aiToolList/utils'
 import { useKnowledgeBase } from '@/pages/KnowledgeBase/hooks/useKnowledgeBase'
 import type { KnowledgeBaseItem } from '@/pages/KnowledgeBase/hooks/useKnowledgeBase'
 import { getLocalFileLinkInfo } from '@/components/MilkdownEditor/CustomFile/utils'
+import { useBrowserInstances } from '../../browserInstances/browserInstanceStore'
 import type { AIBrowserInstance } from '../../browserInstances/browserInstanceStore'
 
 vi.mock('../../browserInstances/browserInstanceStore', () => ({
-  useBrowserInstances: () => ({
+  useBrowserInstances: vi.fn(() => ({
     instances: ['A', 'B'].map(
       (identity): AIBrowserInstance => ({
         id: `browser-${identity}`,
@@ -62,7 +63,7 @@ vi.mock('../../browserInstances/browserInstanceStore', () => ({
         running: true,
       }),
     ),
-  }),
+  })),
   readBrowserThumbnail: vi.fn(),
   browserInstanceMentionName: (instance: AIBrowserInstance) => instance.identity || instance.name,
   selectBrowserInstance: vi.fn(),
@@ -339,6 +340,58 @@ const codeReview = {
 }
 
 describe('输入框资料栏', () => {
+  it('恢复正文、独立资料和场景能力后，可完整重新发送', async () => {
+    const draft: AIChatInputDraft = {
+      markdown: 'original question',
+      selectedMaterials: [
+        {
+          mentionType: 'file',
+          mentionId: '/tmp/report.txt',
+          mentionName: '/tmp/report.txt',
+          mentionSource: 'attachment',
+        },
+      ],
+      hiddenInlineKeys: [],
+      selectedResourceIds: { http: ['7'], risk: ['8'] },
+      focusMode: 'scene',
+      enabledCapabilities: [{ Name: 'other-skill', Type: 'skill' }],
+    }
+    vi.mocked(grpcGetAIReActRecommendedSkills).mockResolvedValueOnce({
+      Data: [codeReview, { ...codeReview, Name: 'other-skill' }],
+    })
+    const onSubmitWithDraft = vi.fn()
+    render(
+      <AIChatTextarea
+        chatDataStoreKey="test"
+        initialDraft={draft}
+        selectedHttpFlowIds={draft.selectedResourceIds.http}
+        selectedRiskIds={draft.selectedResourceIds.risk}
+        showScenarioCapabilities
+        onSubmitWithDraft={onSubmitWithDraft}
+      />,
+    )
+    await screen.findByRole('button', { name: '能力 1' })
+    await waitFor(() =>
+      expect(screen.getByTestId('editor').querySelector('.ProseMirror')).toHaveTextContent(draft.markdown),
+    )
+    await act(async () => {})
+    fireEvent.click(screen.getByRole('button', { name: 'YakitButton.send' }))
+
+    expect(onSubmitWithDraft).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({
+        qs: expect.stringContaining(draft.markdown),
+        mentionList: draft.selectedMaterials,
+        resourceReferences: [
+          expect.objectContaining({ type: 'http', ids: ['7'] }),
+          expect.objectContaining({ type: 'risk', ids: ['8'] }),
+        ],
+        focusMode: draft.focusMode,
+        enabledCapabilities: draft.enabledCapabilities,
+      }),
+      draft,
+    )
+  })
+
   it('默认显示模型选择，显式清空右侧配置后保留发送按钮', () => {
     const { rerender } = render(<AIChatTextarea chatDataStoreKey="test" />)
 
@@ -516,13 +569,28 @@ describe('输入框资料栏', () => {
     }
   })
 
-  it('添加资料菜单不显示浏览器入口', async () => {
-    await setup()
-    fireEvent.click(screen.getByRole('button', { name: 'AIChatTextarea.addMaterials' }))
+  it('没有浏览器实例时，添加资料菜单仍可打开浏览器侧边栏', async () => {
+    const browserStore = vi.mocked(useBrowserInstances)
+    const browserState = browserStore()
+    browserStore.mockReturnValue({ ...browserState, instances: [] })
+    const onSwitchTab = vi.fn()
+    emiter.on('switchAIAgentTab', onSwitchTab)
+    try {
+      await setup()
+      fireEvent.click(screen.getByRole('button', { name: 'AIChatTextarea.addMaterials' }))
 
-    const menu = await screen.findByRole('menu')
-    expect(within(menu).getByText('AIMentionTabs.tool')).toBeInTheDocument()
-    expect(within(menu).queryByText('AIMentionTabs.browser')).not.toBeInTheDocument()
+      const menu = await screen.findByRole('menu')
+      fireEvent.click(within(menu).getByText('AIMentionTabs.browser'))
+      expect(onSwitchTab).toHaveBeenCalledExactlyOnceWith(
+        JSON.stringify({
+          type: SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE,
+          params: { active: AIAgentTabListEnum.Browser, show: true },
+        }),
+      )
+    } finally {
+      browserStore.mockReturnValue(browserState)
+      emiter.off('switchAIAgentTab', onSwitchTab)
+    }
   })
 
   it('侧栏资料菜单只隐藏独立 AI 页面专用入口', async () => {
@@ -538,6 +606,7 @@ describe('输入框资料栏', () => {
     expect(within(menu).queryByText('AIAddMaterialsPopover.risk')).not.toBeInTheDocument()
     expect(within(menu).queryByText('AIAddMaterialsPopover.flow')).not.toBeInTheDocument()
     expect(within(menu).queryByText('AIMentionTabs.fileSystem')).not.toBeInTheDocument()
+    expect(within(menu).queryByText('AIMentionTabs.browser')).not.toBeInTheDocument()
     expect(within(menu).getByText('AIAddMaterialsPopover.attachment')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'AIChatTextarea.otherMaterials 1' })).toBeInTheDocument()
   })

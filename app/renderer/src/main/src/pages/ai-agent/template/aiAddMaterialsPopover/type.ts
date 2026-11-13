@@ -50,6 +50,7 @@ export interface MaterialMenuItem {
 export interface AIAddMaterialsPopoverProps {
   children: (open: boolean, toggle: () => void, summary: ReactElement | null, menuOpen: boolean) => ReactElement
   showScenarioCapabilities?: boolean
+  initialEnabledCapabilities?: AIEnabledCapability[]
   onEnabledCapabilitiesChange?: (items: AIEnabledCapability[]) => void
   onAdd: (material: AIMentionCommandParams) => void
   onRemove: (material: AIMentionCommandParams) => void

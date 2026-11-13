@@ -151,8 +151,6 @@ const IrifyAiCodeAuditSidePanelLayoutInner: React.FC<
             ),
           },
         ],
-
-        filterMentionType: ['focusMode'],
       },
     })
 

@@ -27,6 +27,14 @@ const findOne = (predicate: (node: ts.Node) => boolean) => {
   expect(matches).toHaveLength(1)
   return matches[0].getText(source)
 }
+
+it('lets the AI sidebar use the default model selector', () => {
+  const chat = findOne(
+    (node) => ts.isCallExpression(node) && node.expression.getText(source) === 'renderHistoryAIReActChat',
+  )
+  expect(chat).not.toContain('footerRightTypes')
+})
+
 const controls = [
   'resetResponse',
   'cancelCurrentHTTPFuzzer',

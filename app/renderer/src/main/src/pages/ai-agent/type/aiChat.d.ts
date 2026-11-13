@@ -9,6 +9,7 @@ import type { KnowledgeBaseItem } from '@/pages/KnowledgeBase/hooks/useKnowledge
 import type { AIBrowserInstance } from '../browserInstances/browserInstanceStore'
 import type { FileNodeProps } from '@/pages/yakRunner/FileTree/FileTreeType'
 import type { AIChatSubmitParams } from '../aiAgentChat/type'
+import type { AIChatInputDraft } from '../template/type'
 
 export interface AIFileMaterialData {
   path: string
@@ -225,6 +226,8 @@ export interface AIAgentChatData {
 export interface AIAgentChatMetaData {
   /** 等待新标签领取的首问，领取后清空以避免重复发送。 */
   pendingWelcomeInput?: AIChatSubmitParams
+  /** 新标签领取首问前的草稿，或启动被拒绝后用于回填的草稿。 */
+  welcomeDraft?: { status: 'pending' | 'recovered'; draft: AIChatInputDraft }
   /** 当前连接的身份、写入权限和异步收尾状态。 */
   lifecycle: SessionLifecycle
   // TODO: 历史预查询消费方案待定，字段与 loadSessionHistoryBeforeStart 一并启用。

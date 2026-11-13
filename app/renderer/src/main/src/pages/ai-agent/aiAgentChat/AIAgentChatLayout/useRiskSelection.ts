@@ -15,5 +15,10 @@ export const useRiskSelection = (inViewPort: boolean, sessionId?: string) => {
     [onChangeSelectedIds],
   )
 
-  return { selectedRiskIds: selectedIds ?? EMPTY_SELECTION, onRiskSelectionChange, clearRiskSelection: clearSelection }
+  return {
+    selectedRiskIds: selectedIds ?? EMPTY_SELECTION,
+    setSelectedRiskIds: onChangeSelectedIds,
+    onRiskSelectionChange,
+    clearRiskSelection: clearSelection,
+  }
 }

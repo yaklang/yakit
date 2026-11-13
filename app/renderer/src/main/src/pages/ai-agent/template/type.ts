@@ -24,6 +24,15 @@ export interface AIChatDraftMaterials {
   hiddenInlineKeys: string[]
 }
 
+export interface AIChatInputDraft {
+  markdown: string
+  selectedMaterials: AIMentionCommandParams[]
+  hiddenInlineKeys: string[]
+  selectedResourceIds: AIResourceIds
+  focusMode?: string
+  enabledCapabilities?: AIEnabledCapability[]
+}
+
 export interface AIChatTextareaSubmit {
   /**传给后端的内容 */
   qs: string
@@ -80,6 +89,8 @@ export interface AIChatTextareaProps {
   /**底部 */
   footer?: ReactNode
   onSubmit?: (v: AIChatTextareaSubmit) => void
+  onSubmitWithDraft?: (v: AIChatTextareaSubmit, draft: AIChatInputDraft) => void
+  initialDraft?: AIChatInputDraft
   className?: string
   /** Milkdown 编辑器外层样式。 */
   milkdownClassName?: string

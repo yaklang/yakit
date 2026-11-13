@@ -7,6 +7,7 @@ import { createStore } from 'zustand/vanilla'
 import type { AIChatContentProps, AIChatContentRefProps } from '../../../aiChatContent/type'
 import { AIAgentChatLayout } from '../AIAgentChatLayout'
 import type { AIAgentChatMode } from '../../type'
+import type { AIChatInputDraft } from '../../../template/type'
 import type { RiskSelectionProps } from '../../../aiChatContent/AIChatWorkspace/AIChatWorkspaceTabs/AIChatWorkspaceTabContent'
 
 let removeFlow: (id: string, isSummary: boolean) => void
@@ -132,7 +133,7 @@ vi.mock('@/pages/ai-agent/historyChat/HistoryChat', () => ({
   default: () => <div data-testid="history-list" />,
 }))
 
-function Layout({ mode }: { mode?: AIAgentChatMode }) {
+const Layout = ({ mode, initialDraft }: { mode?: AIAgentChatMode; initialDraft?: AIChatInputDraft }) => {
   const activeChat = useStore(agentStore, (state) => state.activeChat)
   const chatRef = useRef<AIChatContentRefProps>(null)
   const welcomeRef = useRef<AIChatContentRefProps>(null)
@@ -141,6 +142,7 @@ function Layout({ mode }: { mode?: AIAgentChatMode }) {
     <div ref={wrapperRef}>
       <AIAgentChatLayout
         mode={mode ?? (activeChat ? 're-act' : 'welcome')}
+        initialDraft={initialDraft}
         onTriageSubmit={submit}
         onSetReAct={vi.fn()}
         onChat={vi.fn()}
@@ -155,6 +157,22 @@ function Layout({ mode }: { mode?: AIAgentChatMode }) {
     </div>
   )
 }
+
+it('恢复草稿时同步风险和流量勾选，重新渲染不会覆盖用户取消的选择', async () => {
+  const initialDraft: AIChatInputDraft = {
+    markdown: 'first question',
+    selectedMaterials: [],
+    hiddenInlineKeys: [],
+    selectedResourceIds: { http: ['7'], risk: ['8'] },
+  }
+  const { rerender } = render(<Layout mode="welcome" initialDraft={initialDraft} />)
+  expect(await screen.findByTestId('selected-flows')).toHaveTextContent('7')
+  expect(screen.getByTestId('selected-risks')).toHaveTextContent('8')
+  act(() => workspaceProps.onSetSelectedHttpFlowIds([]))
+  rerender(<Layout mode="welcome" initialDraft={initialDraft} />)
+  expect(screen.getByTestId('selected-flows')).toBeEmptyDOMElement()
+  expect(screen.getByTestId('selected-risks')).toHaveTextContent('8')
+})
 
 let layoutWidth = 1400
 let chatTop = 120
@@ -331,7 +349,7 @@ describe('公共右侧面板', () => {
     act(() => workspaceProps.onSetSelectedHttpFlowIds(['1', '2']))
     fireEvent.click(screen.getByText('发送欢迎消息'))
     expect(workspaceProps.selectedHttpFlowIds).toEqual([])
-    expect(submit).toHaveBeenCalledWith({ resourceReferences: [{ type: 'http', ids: ['1', '2'] }] })
+    expect(submit).toHaveBeenCalledWith({ resourceReferences: [{ type: 'http', ids: ['1', '2'] }] }, undefined)
     act(() => agentStore.setState({ activeChat: { Id: 'chat-1', SessionID: 'session-1' } }))
     act(() => workspaceProps.onSetSelectedHttpFlowIds(['3']))
     fireEvent.click(screen.getByText('发送会话消息'))

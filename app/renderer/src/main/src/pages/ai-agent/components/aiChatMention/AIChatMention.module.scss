@@ -45,8 +45,16 @@
   overflow: auto;
 }
 
-.sidebar-empty {
+.recent-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
   margin: auto;
+  padding: 16px;
+  overflow: auto;
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  overflow-wrap: anywhere;
 }
 
 .search-empty {

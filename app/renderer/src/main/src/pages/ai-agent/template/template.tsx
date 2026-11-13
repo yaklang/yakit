@@ -101,15 +101,17 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
       inputFooterRight,
       footer,
       onSubmit,
+      onSubmitWithDraft,
       className,
       milkdownClassName,
       children,
-      defaultValue,
+      initialDraft,
       isOpen,
       filterMentionType,
       chatDataStoreKey,
       showScenarioCapabilities,
     } = props
+    const defaultValue = initialDraft?.markdown ?? props.defaultValue
     const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
 
     const sessionId = useCurrentSessionId()
@@ -148,8 +150,8 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
     const [draftMaterials, setDraftMaterials] = useState<AIChatDraftMaterials>({
       resourceIds: { http: [], risk: [] },
       mentions: [],
-      selectedMaterials: [],
-      hiddenInlineKeys: [],
+      selectedMaterials: initialDraft?.selectedMaterials ?? [],
+      hiddenInlineKeys: initialDraft?.hiddenInlineKeys ?? [],
     })
 
     const { selectedMaterials } = draftMaterials
@@ -206,7 +208,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
     })
 
     const aiMilkdownInputRef = useRef<AIMilkdownInputRef>(null)
-    const enabledCapabilitiesRef = useRef<AIChatTextareaSubmit['enabledCapabilities']>()
+    const enabledCapabilitiesRef = useRef(initialDraft?.enabledCapabilities)
     const onEnabledCapabilitiesChange = useMemoizedFn(
       (items: NonNullable<AIChatTextareaSubmit['enabledCapabilities']>) => {
         enabledCapabilitiesRef.current = items
@@ -220,7 +222,8 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
         yakitNotify('warning', t('AIMilkdownInput.imagesNotSaved'))
         return
       }
-      let qs = getMarkdownValue()
+      const markdown = getMarkdownValue()
+      let qs = markdown
       const additionalMentions = selectedMaterials.filter(
         (material) => !mentions.some((mention) => isSameMaterial(mention, material)),
       )
@@ -268,7 +271,18 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
         focusMode,
         sessionId: aiMilkdownInputRef.current?.getSessionId(),
       }
-      onSubmit && onSubmit(value)
+      if (!onSubmitWithDraft) {
+        onSubmit?.(value)
+        return
+      }
+      onSubmitWithDraft(value, {
+        markdown,
+        selectedMaterials,
+        hiddenInlineKeys: draftMaterials.hiddenInlineKeys,
+        selectedResourceIds,
+        focusMode,
+        enabledCapabilities: value.enabledCapabilities,
+      })
     })
     // #endregion
 
@@ -322,7 +336,10 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
           ),
           hiddenInlineKeys: current.hiddenInlineKeys.filter((key) => {
             const occurrences = inlineKeys.filter((item) => item === key).length
-            return occurrences > 0 && occurrences <= previousKeys.filter((item) => item === key).length
+            return (
+              occurrences > 0 &&
+              (occurrences <= previousKeys.filter((item) => item === key).length || !previousKeys.length)
+            )
           }),
         }
       })
@@ -458,7 +475,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
         handleSubmit()
       }
     })
-    const [focusMode, setFocusMode] = useState<string>()
+    const [focusMode, setFocusMode] = useState(initialDraft?.focusMode)
 
     const onMemfitExtra = useMemoizedFn(({ mentionName }: AIMentionCommandParams) => {
       setFocusMode(mentionName)
@@ -532,6 +549,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
         {isHovering && <div className={styles['drag-hint']}>{t('AIChatTextarea.dropToAddToChat')}</div>}
         <AIAddMaterialsPopover
           showScenarioCapabilities={showScenarioCapabilities}
+          initialEnabledCapabilities={initialDraft?.enabledCapabilities}
           onEnabledCapabilitiesChange={onEnabledCapabilitiesChange}
           onAdd={onAddMaterial}
           onRemove={onRemoveMaterial}

@@ -2,13 +2,21 @@ import React, { type ReactElement, type ReactNode, useEffect, useState } from 'r
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type * as HistoryFilterModule from '../HTTPHistoryFilter'
-import type { AIReActChatProps } from '@/pages/ai-re-act/aiReActChat/AIReActChatType'
+import type { HistoryAIReActChatSlotOptions } from '@/components/historyAIReActChat'
 import type { HttpFlowSelectionApi } from '@/components/useHttpFlowSelection'
 import { compileReactModule } from '@/utils/__test__/helpers/compileReactModule'
 
 const bridge = vi.hoisted(() => ({
   mountFlowTable: false,
 }))
+const renderHistoryAIReActChat = vi.fn(({ externalParameters }: HistoryAIReActChatSlotOptions) => (
+  <>
+    <output aria-label="聊天流量勾选">{externalParameters?.selectedHttpFlowIds?.join(',')}</output>
+    <button onClick={() => externalParameters?.onHttpFlowRemove?.('2', false)}>删除单条引用</button>
+    <button onClick={() => externalParameters?.onHttpFlowRemove?.('1,2,3', true)}>清空引用</button>
+    <button onClick={externalParameters?.onAfterSubmit}>发送完成</button>
+  </>
+))
 
 vi.hoisted(() => {
   Object.defineProperty(window, 'require', {
@@ -22,14 +30,7 @@ vi.mock('@/components/historyAIReActChat', () => ({
   useHistoryAIReActChat: () => ({
     historyAIReActChatBridge: { activeID: 'session-1' },
     setShowFreeChat: vi.fn(),
-    renderHistoryAIReActChat: ({ externalParameters }: Pick<AIReActChatProps, 'externalParameters'>) => (
-      <>
-        <output aria-label="聊天流量勾选">{externalParameters?.selectedHttpFlowIds?.join(',')}</output>
-        <button onClick={() => externalParameters?.onHttpFlowRemove?.('2', false)}>删除单条引用</button>
-        <button onClick={() => externalParameters?.onHttpFlowRemove?.('1,2,3', true)}>清空引用</button>
-        <button onClick={externalParameters?.onAfterSubmit}>发送完成</button>
-      </>
-    ),
+    renderHistoryAIReActChat,
   }),
 }))
 vi.mock('lodash', async () => {
@@ -264,6 +265,13 @@ describe('HTTPHistoryFilter 序号合并', () => {
     fireEvent.click(screen.getByRole('button', { name: '离开ID' }))
     expect(screen.getByLabelText('查询序号')).toHaveTextContent('1,2')
   })
+})
+
+it('流量分析侧栏沿用输入框默认的模型选择', () => {
+  setup()
+
+  expect(renderHistoryAIReActChat).toHaveBeenCalled()
+  expect(renderHistoryAIReActChat.mock.lastCall?.[0].externalParameters).not.toHaveProperty('footerRightTypes')
 })
 
 describe('HTTPHistoryFilter 流量引用删除', () => {

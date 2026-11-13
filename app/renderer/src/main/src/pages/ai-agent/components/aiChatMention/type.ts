@@ -17,7 +17,6 @@ export interface AIChatMentionSelectItem {
 export interface AIChatMentionProps {
   defaultActiveTab?: AIMentionTabsEnum
   onSelect: (type: AIMentionTypeItem, value?: AIChatMentionSelectItem) => void
-  onClose?: () => void
   filterMode?: `${AIMentionTabsEnum}`[]
   filterKeyword?: string
   keyboardTarget?: () => HTMLElement | null

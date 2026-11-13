@@ -397,8 +397,6 @@ const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
                       ),
                       taskDetails: true,
                     },
-                    footerRightTypes: [],
-                    filterMentionType: ['focusMode'],
                     selectedHttpFlowIds,
                     onHttpFlowRemove: (id, isSummary) => onHttpFlowRemove(id, isSummary, true),
                     onAfterSubmit: clearHttpFlowSelection,

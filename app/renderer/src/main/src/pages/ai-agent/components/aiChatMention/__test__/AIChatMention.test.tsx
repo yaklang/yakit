@@ -4,7 +4,6 @@ import type { ContextType } from 'react'
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useKnowledgeBase } from '@/pages/KnowledgeBase/hooks/useKnowledgeBase'
 import type { KnowledgeBaseItem } from '@/pages/KnowledgeBase/hooks/useKnowledgeBase'
-import emiter from '@/utils/eventBus/eventBus'
 import { HistoryAIReActChatContext } from '@/components/historyAIReActChat/context'
 import { AIChatMention } from '../AIChatMention'
 import { selectBrowserInstance, useBrowserInstances } from '../../../browserInstances/browserInstanceStore'
@@ -13,7 +12,6 @@ import type { AIFocus, AIForge } from '../../../type/forge'
 import type { AITool } from '../../../type/aiTool'
 import { grpcQueryAIFocus, grpcQueryAIForge, grpcQueryKnowledgeBase } from '../../../grpc'
 import { grpcGetAIToolList } from '../../../aiToolList/utils'
-import { SwitchAIAgentTabEventEnum } from '../../../defaultConstant'
 import { loadRecentMentionResources } from '../recentListOfMention/recentListOfMentionData'
 import { defaultFolder, useCustomFolder } from '../../aiFileSystemList/store/useCustomFolder'
 
@@ -39,11 +37,12 @@ vi.mock('ahooks', async (importOriginal) => ({
 }))
 
 const i18n = vi.hoisted(() => ({ language: 'en' }))
+const session = vi.hoisted(() => ({ id: 'session-test' }))
 
 vi.mock('@/i18n/useI18nNamespaces', () => ({
   useI18nNamespaces: () => ({ t: (key: string) => key, i18n }),
 }))
-vi.mock('@/pages/ai-re-act/hooks/useCurrentSessionId', () => ({ default: () => 'session-test' }))
+vi.mock('@/pages/ai-re-act/hooks/useCurrentSessionId', () => ({ default: () => session.id }))
 vi.mock('@/pages/KnowledgeBase/utils', () => ({
   targetIcon: (index: number) => () => <span data-testid={`knowledge-icon-${index}`} />,
 }))
@@ -116,6 +115,7 @@ const emptyBrowserState: ReturnType<typeof useBrowserInstances> = {
 }
 
 beforeEach(() => {
+  session.id = 'session-test'
   i18n.language = 'en'
   vi.clearAllMocks()
   useKnowledgeBase.setState({ knowledgeBases: [] })
@@ -153,6 +153,60 @@ afterEach(() => {
 afterAll(() => vi.unstubAllGlobals())
 
 describe('AIChatMention', () => {
+  it('keeps the recent tab after failure and retries to show resources', async () => {
+    vi.mocked(loadRecentMentionResources).mockRejectedValueOnce(new Error('Engine unavailable'))
+    render(<AIChatMention onSelect={vi.fn()} />)
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Engine unavailable')
+    expect(screen.getByRole('button', { name: 'AIMentionTabs.recent' })).toHaveAttribute(
+      'data-mention-tab-active',
+      'true',
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'YakitButton.retry' }))
+    expect(await screen.findByText('recent-summary')).toBeInTheDocument()
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    expect(loadRecentMentionResources).toHaveBeenCalledTimes(2)
+  })
+
+  it('keeps the recent tab while retrying and hides it only after successful empty results', async () => {
+    const empty = { ...(await loadRecentMentionResources('session-test')), skills: [] }
+    let resolveRetry!: (value: typeof empty) => void
+    vi.mocked(loadRecentMentionResources)
+      .mockRejectedValueOnce('Request timed out')
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            resolveRetry = resolve
+          }),
+      )
+    render(<AIChatMention onSelect={vi.fn()} />)
+    expect(await screen.findByRole('alert')).toHaveTextContent('Request timed out')
+    fireEvent.click(screen.getByRole('button', { name: 'YakitButton.retry' }))
+    expect(screen.getByRole('button', { name: 'AIMentionTabs.recent' })).toBeInTheDocument()
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    await act(async () => resolveRetry(empty))
+    expect(await screen.findByText('catalog-summary')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'AIMentionTabs.recent' })).not.toBeInTheDocument()
+  })
+
+  it('ignores a previous session failure after loading the current session', async () => {
+    let rejectPrevious!: (reason: Error) => void
+    vi.mocked(loadRecentMentionResources).mockImplementationOnce(
+      () =>
+        new Promise((_resolve, reject) => {
+          rejectPrevious = reject
+        }),
+    )
+    const { rerender } = render(<AIChatMention onSelect={vi.fn()} />)
+    session.id = 'session-next'
+    rerender(<AIChatMention onSelect={vi.fn()} />)
+    expect(await screen.findByText('recent-summary')).toBeInTheDocument()
+    await act(async () => rejectPrevious(new Error('Previous session failed')))
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    expect(screen.getByText('recent-summary')).toBeInTheDocument()
+    expect(loadRecentMentionResources).toHaveBeenLastCalledWith('session-next')
+  })
+
   it('hides the scene tab when the sidebar already has a fixed scene', () => {
     const sidebarContext = {
       focusModeLoop: 'http_flow_analyze',
@@ -167,7 +221,8 @@ describe('AIChatMention', () => {
     expect(screen.getByRole('button', { name: 'AIMentionTabs.skill' })).toBeInTheDocument()
   })
 
-  it('omits the file-system tab in a sidebar chat and keeps other mention tabs', () => {
+  it('shows the file-system tab in a sidebar chat once the default path is available', async () => {
+    vi.mocked(defaultFolder).mockResolvedValue({ path: '/default/code', isFolder: true })
     const sidebarContext = {} as NonNullable<ContextType<typeof HistoryAIReActChatContext>>
     render(
       <HistoryAIReActChatContext.Provider value={sidebarContext}>
@@ -177,6 +232,8 @@ describe('AIChatMention', () => {
 
     expect(screen.queryByRole('button', { name: 'AIMentionTabs.fileSystem' })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'AIMentionTabs.skill' })).toBeInTheDocument()
+    fireEvent.click(await screen.findByRole('button', { name: 'AIMentionTabs.fileSystem' }))
+    expect(screen.getByRole('tree', { name: '/default/code' })).toBeInTheDocument()
   })
 
   it('updates tool labels in recent results and the tool catalog when the language changes', async () => {
@@ -206,27 +263,29 @@ describe('AIChatMention', () => {
     expect(onSelect).toHaveBeenCalledWith('tool', expect.objectContaining({ originalName: 'query-tool' }))
   })
 
-  it.each([
-    ['fileSystem', 'file'],
-    ['browser', 'browser'],
-  ])('opens the %s sidebar from its empty state and shows only text for an empty search', async (tab, active) => {
-    const label = 'AIAddMaterialsPopover.goToAdd'
-    const emit = vi.spyOn(emiter, 'emit')
-    const onClose = vi.fn()
-    render(<AIChatMention onSelect={vi.fn()} onClose={onClose} />)
-    fireEvent.click(screen.getByRole('button', { name: `AIMentionTabs.${tab}` }))
-    expect(await screen.findByText('YakitEmpty.noData')).toBeInTheDocument()
+  it('hides filesystem and browser tabs without opened paths or online browsers', async () => {
+    const offline = browser('offline', 'Offline browser', false)
+    const online = browser('online', 'Online browser', true)
+    vi.mocked(useBrowserInstances).mockReturnValue({ ...emptyBrowserState, instances: [offline] })
+    const onSelect = vi.fn()
+    const { rerender } = render(<AIChatMention onSelect={onSelect} />)
 
-    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'missing' } })
-    expect(screen.getByRole('status')).toHaveTextContent('AIMentionTabs.searchEmpty')
-    expect(screen.queryByRole('button', { name: label })).not.toBeInTheDocument()
+    await screen.findByText('recent-summary')
+    expect(screen.queryByRole('button', { name: 'AIMentionTabs.fileSystem' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'AIMentionTabs.browser' })).not.toBeInTheDocument()
 
-    fireEvent.change(screen.getByRole('textbox'), { target: { value: '' } })
-    fireEvent.click(screen.getByRole('button', { name: label }))
-    expect(onClose).toHaveBeenCalledOnce()
-    expect(emit).toHaveBeenCalledWith(
-      'switchAIAgentTab',
-      JSON.stringify({ type: SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE, params: { active, show: true } }),
+    vi.mocked(useBrowserInstances).mockReturnValue({ ...emptyBrowserState, instances: [online, offline] })
+    rerender(<AIChatMention onSelect={onSelect} />)
+    fireEvent.click(screen.getByRole('button', { name: 'AIMentionTabs.browser' }))
+    expect(screen.getByRole('option', { name: 'Online browser' })).toBeInTheDocument()
+
+    vi.mocked(useBrowserInstances).mockReturnValue({ ...emptyBrowserState, instances: [offline] })
+    rerender(<AIChatMention onSelect={onSelect} />)
+    expect(screen.queryByRole('button', { name: 'AIMentionTabs.browser' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'AIAddMaterialsPopover.goToAdd' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'AIMentionTabs.recent' })).toHaveAttribute(
+      'data-mention-tab-active',
+      'true',
     )
   })
 
@@ -248,6 +307,7 @@ describe('AIChatMention', () => {
     fireEvent.change(search, { target: { value: 'A' } })
     expect(screen.queryByRole('option')).not.toBeInTheDocument()
     expect(screen.getByRole('status')).toHaveTextContent('AIMentionTabs.searchEmpty')
+    expect(screen.getByRole('button', { name: 'AIMentionTabs.browser' })).toBeInTheDocument()
 
     fireEvent.change(search, { target: { value: 'B' } })
     expect(screen.getByRole('option', { name: '浏览器 B' })).toBeInTheDocument()
@@ -341,6 +401,11 @@ describe('AIChatMention', () => {
     fireEvent.change(screen.getByRole('textbox'), { target: { value: 'NOTES' } })
     expect(screen.getByRole('tree')).toHaveAccessibleName('/docs/notes.md')
 
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'missing' } })
+    expect(screen.queryByRole('tree')).not.toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent('AIMentionTabs.searchEmpty')
+    expect(screen.getByRole('button', { name: 'AIMentionTabs.fileSystem' })).toBeInTheDocument()
+
     fireEvent.change(screen.getByRole('textbox'), { target: { value: '' } })
     expect(screen.getAllByRole('tree')).toHaveLength(2)
   })
@@ -352,7 +417,7 @@ describe('AIChatMention', () => {
     fireEvent.click(screen.getByRole('button', { name: 'AiAgengt.focusMode' }))
     const search = screen.getByRole('textbox')
     fireEvent.change(search, { target: { value: 'S' } })
-    fireEvent.click(screen.getByRole('button', { name: 'AIMentionTabs.fileSystem' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'AIMentionTabs.fileSystem' }))
     expect(search).toHaveValue('S')
     expect(await screen.findByRole('tree', { name: '/default/code' })).toHaveAttribute('data-search-query', 's')
   })
@@ -445,6 +510,10 @@ describe('AIChatMention', () => {
   })
 
   it('moves focus from the clicked scene tab when switching tabs with the keyboard', () => {
+    vi.mocked(useBrowserInstances).mockReturnValue({
+      ...emptyBrowserState,
+      instances: [browser('online', 'Online browser', true)],
+    })
     render(<AIChatMention onSelect={vi.fn()} />)
     const sceneTab = screen.getByRole('button', { name: 'AiAgengt.focusMode' })
     const browserTab = screen.getByRole('button', { name: 'AIMentionTabs.browser' })

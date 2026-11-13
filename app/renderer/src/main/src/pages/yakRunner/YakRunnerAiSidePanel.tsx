@@ -106,8 +106,6 @@ export const YakRunnerAiSidePanel: React.FC<YakRunnerAiSidePanelProps> = ({ chil
           ),
           taskDetails: true,
         },
-        footerRightTypes: [],
-        filterMentionType: ['focusMode'],
       },
     })
 

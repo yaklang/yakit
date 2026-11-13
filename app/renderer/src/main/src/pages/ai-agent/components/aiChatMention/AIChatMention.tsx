@@ -4,6 +4,7 @@ import { useDebounce, useDebounceFn, useKeyPress, useMemoizedFn, useRequest, use
 import { ChevronDownOutlined, SearchOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { HistoryAIReActChatContext } from '@/components/historyAIReActChat/context'
@@ -16,6 +17,7 @@ import { MaterialCatalogList } from '../../template/aiAddMaterialsPopover/materi
 import { FocusModeOptions } from '../../template/aiAddMaterialsPopover/materialFocusModeList/MaterialFocusModeList'
 import { AIChatMentionTabs } from './aiChatMentionTabs/AIChatMentionTabs'
 import { MentionBrowsers, MentionFileTree } from './MentionCategoryLists'
+import { defaultFolder, useCustomFolder } from '../aiFileSystemList/store/useCustomFolder'
 import RecentListOfMention from './recentListOfMention/RecentListOfMention'
 import { loadRecentMentionResources } from './recentListOfMention/recentListOfMentionData'
 import type { AIChatMentionProps } from './type'
@@ -27,7 +29,6 @@ export const AIChatMention: FC<AIChatMentionProps> = ({
   filterKeyword,
   keyboardTarget,
   onSelect,
-  onClose,
   visible = true,
   materials = [],
   focusMode,
@@ -38,11 +39,20 @@ export const AIChatMention: FC<AIChatMentionProps> = ({
   const {
     data: recentResult,
     loading: recentLoading,
-    error: recentError,
-  } = useRequest(async () => ({ sessionId, resources: await loadRecentMentionResources(sessionId) }), {
-    ready: visible && !filterMode?.includes(AIMentionTabsEnum.Recent),
-    refreshDeps: [sessionId],
-  })
+    refresh: retryRecent,
+  } = useRequest(
+    async () => {
+      try {
+        return { sessionId, resources: await loadRecentMentionResources(sessionId) }
+      } catch (error) {
+        return { sessionId, error: error instanceof Error ? error.message : String(error) }
+      }
+    },
+    {
+      ready: visible && !filterMode?.includes(AIMentionTabsEnum.Recent),
+      refreshDeps: [sessionId],
+    },
+  )
   const [activeKey, setActiveKey] = useState(defaultActiveTab)
   const [keyword, setKeyword] = useState(filterKeyword ?? '')
   const [filterValue, setFilterValue] = useState<ResourceFilterValue>('all')
@@ -57,18 +67,26 @@ export const AIChatMention: FC<AIChatMentionProps> = ({
     setKeyword(filterKeyword ?? '')
   }, [filterKeyword, visible])
 
-  // 隐藏调用方通过 filterMode 指定的标签。侧栏隐藏文件系统，有预设专注模式的侧栏也隐藏场景选择。
+  // 隐藏调用方通过 filterMode 指定的标签，有预设专注模式的侧栏也隐藏场景选择。
   const availableTabs = AIMentionTabs.filter(
     ({ value }) =>
       !filterMode?.includes(value as AIMentionTabsEnum) &&
-      !(sidebarChat && value === AIMentionTabsEnum.File_System) &&
       !(sidebarChat?.focusModeLoop && value === AIMentionTabsEnum.FocusMode),
   )
-  const recent =
-    !recentLoading && !recentError && recentResult?.sessionId === sessionId ? recentResult.resources : undefined
+  const currentRecentResult = !recentLoading && recentResult?.sessionId === sessionId ? recentResult : undefined
+  const recent = currentRecentResult?.resources
+  const customFolder = useCustomFolder()
+  const { data: fallbackFolder } = useRequest(defaultFolder, {
+    ready:
+      visible &&
+      customFolder.length === 0 &&
+      availableTabs.some(({ value }) => value === AIMentionTabsEnum.File_System),
+  })
+  const openedPaths = customFolder.length ? customFolder : fallbackFolder ? [fallbackFolder] : []
   const { instances } = useBrowserInstances(
-    visible && !filterMode?.includes(AIMentionTabsEnum.Browser) && Boolean(recent?.browserIDs.length),
+    visible && availableTabs.some(({ value }) => value === AIMentionTabsEnum.Browser),
   )
+  const onlineBrowsers = instances.filter((item) => item.online)
   const recentBrowsers = recent ? instances.filter((item) => recent.browserIDs.includes(item.id)) : []
   const recentCounts: Partial<Record<string, number>> = recent
     ? {
@@ -81,7 +99,12 @@ export const AIChatMention: FC<AIChatMentionProps> = ({
       }
     : {}
   const hasRecent = availableTabs.some(({ value }) => recentCounts[value])
-  const tabs = hasRecent ? availableTabs : availableTabs.filter(({ value }) => value !== AIMentionTabsEnum.Recent)
+  const tabs = availableTabs.filter(({ value }) => {
+    if (value === AIMentionTabsEnum.Recent) return !recent || hasRecent
+    if (value === AIMentionTabsEnum.File_System) return openedPaths.length > 0
+    if (value === AIMentionTabsEnum.Browser) return onlineBrowsers.length > 0
+    return true
+  })
   const active = tabs.some((tab) => tab.value === activeKey)
     ? activeKey
     : (tabs[0]?.value as AIMentionTabsEnum | undefined)
@@ -133,12 +156,23 @@ export const AIChatMention: FC<AIChatMentionProps> = ({
   const renderActiveList = () => {
     switch (active) {
       case AIMentionTabsEnum.Recent:
+        if (!currentRecentResult) return <YakitSpin />
+        if ('error' in currentRecentResult) {
+          return (
+            <div className={styles['recent-error']} role="alert">
+              <span>{currentRecentResult.error}</span>
+              <YakitButton type="text" onClick={retryRecent}>
+                {t('YakitButton.retry')}
+              </YakitButton>
+            </div>
+          )
+        }
         return (
           recent && (
             <RecentListOfMention
               {...controls}
               query={query}
-              tabs={tabs}
+              tabs={availableTabs}
               data={{ ...recent, browsers: recentBrowsers }}
             />
           )
@@ -158,7 +192,7 @@ export const AIChatMention: FC<AIChatMentionProps> = ({
           />
         )
       case AIMentionTabsEnum.File_System:
-        return <MentionFileTree {...controls} query={query} onClose={onClose} />
+        return <MentionFileTree onSelect={pick} query={query} openedPaths={openedPaths} />
       case AIMentionTabsEnum.FocusMode:
         return (
           <FocusModeOptions
@@ -172,7 +206,7 @@ export const AIChatMention: FC<AIChatMentionProps> = ({
           />
         )
       case AIMentionTabsEnum.Browser:
-        return <MentionBrowsers {...controls} query={query} onClose={onClose} />
+        return <MentionBrowsers {...controls} query={query} instances={onlineBrowsers} />
       default:
         return null
     }

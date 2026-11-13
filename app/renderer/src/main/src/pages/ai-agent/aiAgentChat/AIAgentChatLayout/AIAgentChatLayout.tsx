@@ -24,6 +24,7 @@ import TimelineCard from '../../chatTemplate/TimelineCard/TimelineCard'
 import { YakitAIAgentPageID } from '../../defaultConstant'
 import { useMultiFuncPaneStore } from '../useMultiFuncPaneStore'
 import type { AIAgentChatMode, AIChatSubmitParams } from '../type'
+import type { AIChatInputDraft } from '../../template/type'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { AIRightPanel } from '@/pages/ai-re-act/aiRightPanel/AIRightPanel'
 import { useRiskSelection } from './useRiskSelection'
@@ -36,7 +37,8 @@ const MIN_CHAT_CONTENT_WIDTH = 400
 
 export interface AIAgentChatLayoutProps {
   mode: AIAgentChatMode
-  onTriageSubmit: (data: AIChatSubmitParams) => boolean
+  onTriageSubmit: (data: AIChatSubmitParams, draft?: AIChatInputDraft) => boolean
+  initialDraft?: AIChatInputDraft
   onSetReAct: () => void
   aiChatWelcomeRef: RefObject<AIChatContentRefProps>
   aiReActChatRef: RefObject<AIChatContentRefProps>
@@ -54,6 +56,7 @@ export const AIAgentChatLayout: React.FC<AIAgentChatLayoutProps> = memo((props) 
   const {
     mode,
     onTriageSubmit,
+    initialDraft,
     onSetReAct,
     aiChatWelcomeRef,
     aiReActChatRef,
@@ -90,10 +93,17 @@ export const AIAgentChatLayout: React.FC<AIAgentChatLayoutProps> = memo((props) 
   const { activeChat } = useAIAgentStore()
   const { selectionScope, selectedHttpFlowIds, onSetSelectedHttpFlowIds, clearHttpFlowSelection, onHttpFlowRemove } =
     useHttpFlowSelection(inViewPort, activeChat?.SessionID)
-  const { selectedRiskIds, onRiskSelectionChange, clearRiskSelection } = useRiskSelection(
+  const { selectedRiskIds, onRiskSelectionChange, clearRiskSelection, setSelectedRiskIds } = useRiskSelection(
     inViewPort,
     activeChat?.SessionID,
   )
+  const restoredDraft = useRef<AIChatInputDraft>()
+  useLayoutEffect(() => {
+    if (!initialDraft || !inViewPort || restoredDraft.current === initialDraft) return
+    restoredDraft.current = initialDraft
+    onSetSelectedHttpFlowIds(initialDraft.selectedResourceIds.http)
+    setSelectedRiskIds(initialDraft.selectedResourceIds.risk)
+  }, [initialDraft, inViewPort, onSetSelectedHttpFlowIds, setSelectedRiskIds])
 
   const clearDraftSelection = () => {
     clearHttpFlowSelection()
@@ -204,9 +214,10 @@ export const AIAgentChatLayout: React.FC<AIAgentChatLayoutProps> = memo((props) 
               {mode === 'welcome' ? (
                 <React.Suspense fallback={<div>loading...</div>}>
                   <AIChatWelcome
-                    key={activeChat?.SessionID}
-                    onTriageSubmit={(data) => {
-                      if (!onTriageSubmit(data)) return false
+                    key={`${activeChat?.SessionID ?? ''}:${initialDraft ? 'recovered' : 'welcome'}`}
+                    initialDraft={initialDraft}
+                    onTriageSubmit={(data, draft) => {
+                      if (!onTriageSubmit(data, draft)) return false
                       clearDraftSelection()
                       return true
                     }}

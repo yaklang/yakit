@@ -4,12 +4,21 @@ import type { ReactNode } from 'react'
 import { HTTPFlowRealTimeTableAndEditor, HTTPHistory } from '../HTTPHistory'
 import type { HTTPFlowTableProp } from '../HTTPFlowTable/HTTPFlowTable.constants'
 import type { HTTPFlowDetailProp } from '../HTTPFlowDetail'
+import type { HistoryAIReActChatSlotOptions } from '../historyAIReActChat'
 
 const bridge = vi.hoisted(() => ({
   activeID: 'session-1',
   onNewChat: vi.fn(),
 }))
 const tableSelection = vi.hoisted(() => ({ reset: vi.fn(), deselectId: vi.fn() }))
+const renderHistoryAIReActChat = vi.fn(({ externalParameters }: HistoryAIReActChatSlotOptions) => (
+  <>
+    <output aria-label="聊天流量勾选">{externalParameters?.selectedHttpFlowIds?.join(',')}</output>
+    <button onClick={() => externalParameters?.onHttpFlowRemove?.('1', false)}>删除单条引用</button>
+    <button onClick={() => externalParameters?.onHttpFlowRemove?.('1,2', true)}>清空引用</button>
+    <button onClick={externalParameters?.onAfterSubmit}>发送完成</button>
+  </>
+))
 
 const flowMark = vi.hoisted(() => ({
   handlers: new Map<string, ReturnType<typeof vi.fn>>(),
@@ -27,22 +36,7 @@ vi.mock('../historyAIReActChat', () => ({
   HistoryAIReActChatProvider: ({ children }: { children: ReactNode }) => children,
   useHistoryAIReActChat: () => ({
     historyAIReActChatBridge: bridge,
-    renderHistoryAIReActChat: ({
-      externalParameters,
-    }: {
-      externalParameters: {
-        selectedHttpFlowIds?: string[]
-        onHttpFlowRemove?: (id: string, isSummary: boolean) => void
-        onAfterSubmit?: () => void
-      }
-    }) => (
-      <>
-        <output aria-label="聊天流量勾选">{externalParameters.selectedHttpFlowIds?.join(',')}</output>
-        <button onClick={() => externalParameters.onHttpFlowRemove?.('1', false)}>删除单条引用</button>
-        <button onClick={() => externalParameters.onHttpFlowRemove?.('1,2', true)}>清空引用</button>
-        <button onClick={externalParameters.onAfterSubmit}>发送完成</button>
-      </>
-    ),
+    renderHistoryAIReActChat,
     setShowFreeChat: vi.fn(),
   }),
 }))
@@ -137,6 +131,14 @@ beforeEach(() => {
   flowMark.handlers.clear()
 })
 afterEach(cleanup)
+
+it('History 侧栏沿用输入框默认的模型选择', () => {
+  render(<HTTPHistory pageType="History" />)
+  fireEvent.click(screen.getByText('AI 页签'))
+
+  expect(renderHistoryAIReActChat).toHaveBeenCalled()
+  expect(renderHistoryAIReActChat.mock.lastCall?.[0].externalParameters).not.toHaveProperty('footerRightTypes')
+})
 
 describe('HTTPHistory 流量选择同步', () => {
   it('单条删除与清空引用分别调用表格取消勾选和清空操作', () => {

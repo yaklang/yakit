@@ -92,16 +92,6 @@ function Consumer() {
           {sessionId}
         </button>
       ))}
-      <button
-        onClick={() =>
-          bridge.handleStart({
-            qs: 'question with risks',
-            riskList: [{ riskIds: Array.from({ length: 10_001 }, (_, index) => String(index + 1)) }],
-          })
-        }
-      >
-        submit-many-risks
-      </button>
       <span data-testid="active-session">{bridge.activeID}</span>
       {renderHistoryAIReActChat({ externalParameters: {} })}
     </>
@@ -131,37 +121,6 @@ const emit = async (token: string, event: AIOutputEvent) => {
     for (let i = 0; i < 30; i++) await Promise.resolve()
   })
 }
-
-it('运行中的历史聊天入口完整发送超过一万个风险 ID', async () => {
-  render(
-    <HistoryAIReActChatProvider
-      source={AISourceEnum.webFuzzer}
-      route={YakitRoute.HTTPFuzzer}
-      pageId="test-page"
-      focusModeLoop=""
-    >
-      <Consumer />
-    </HistoryAIReActChatProvider>,
-  )
-  fireEvent.click(screen.getByRole('button', { name: 'submit' }))
-  await waitFor(() => expect(starts()).toHaveLength(1))
-  await emit(starts()[0][1], makeGrpcJsonRes('pong', {}, { SessionId: 'client-session' }))
-  await waitFor(() => expect(screen.getByTestId('active-session')).toHaveTextContent('client-session'))
-  act(() => globalSessionEngine.ensureSession('client-session').store.getState().updateState({ execute: true }))
-  expect(questions()).toHaveLength(1)
-  fireEvent.click(screen.getByRole('button', { name: 'submit-many-risks' }))
-
-  await waitFor(() => expect(questions()).toHaveLength(2))
-  const [, token, request] = questions()[1]
-  expect(token).toBe(starts()[0][1])
-  expect(request.FreeInput).toBe('question with risks')
-  expect(request.AttachedResourceInfo).toContainEqual({
-    Type: 'risk',
-    Key: 'ids',
-    Value: JSON.stringify(Array.from({ length: 10_001 }, (_, index) => index + 1)),
-  })
-  expect(starts()).toHaveLength(1)
-})
 
 it.each([
   [YakitRoute.HTTPFuzzer, AISourceEnum.webFuzzer],

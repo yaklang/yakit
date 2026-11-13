@@ -62,8 +62,6 @@ export const AuditCodeRuleGenChat: React.FC<AuditCodeRuleGenChatProps> = ({ clas
             ),
             taskDetails: true,
           },
-          footerRightTypes: [],
-          filterMentionType: ['focusMode'],
         },
       })}
     </div>

@@ -250,7 +250,6 @@ export const AIMilkdownMention: React.FC<AIMilkdownMentionProps> = (props) => {
     >
       <AIChatMention
         onSelect={onSure}
-        onClose={() => onHide(false)}
         filterMode={filterMode}
         {...getMaterials?.()}
         filterKeyword={filterKeyword}

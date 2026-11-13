@@ -3,6 +3,7 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import cloneDeep from 'lodash/cloneDeep'
 import type { AIChatSubmitParams } from '../type'
+import type { AIChatInputDraft } from '../../template/type'
 import { AIAgentChat } from '../AIAgentChat'
 import emiter from '@/utils/eventBus/eventBus'
 import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
@@ -64,14 +65,35 @@ vi.mock('../AIAgentChatLayout/AIAgentChatLayout', () => ({
   AIAgentChatLayout: ({
     mode,
     onTriageSubmit,
+    initialDraft,
   }: {
     mode: string
-    onTriageSubmit: (value: AIChatSubmitParams) => boolean
+    onTriageSubmit: (value: AIChatSubmitParams, draft?: AIChatInputDraft) => boolean
+    initialDraft?: AIChatInputDraft
   }) => (
     <div>
       <span data-testid="mode">{mode}</span>
-      <button onClick={() => onTriageSubmit({ qs: 'first question', sessionId: 'image-draft' })}>submit</button>
+      <button
+        onClick={() =>
+          onTriageSubmit(
+            { qs: 'first question', sessionId: 'image-draft' },
+            {
+              markdown: 'first question',
+              selectedMaterials: [],
+              hiddenInlineKeys: [],
+              selectedResourceIds: { http: ['7'], risk: ['8'] },
+            },
+          )
+        }
+      >
+        submit
+      </button>
       <button onClick={() => mocks.onSubmitResult(onTriageSubmit({ qs: 'first question' }))}>submit-text</button>
+      {initialDraft && (
+        <button onClick={() => onTriageSubmit({ qs: initialDraft.markdown, focusMode: initialDraft.focusMode })}>
+          retry-draft
+        </button>
+      )}
     </div>
   ),
 }))
@@ -149,6 +171,13 @@ describe('welcome submission', () => {
         qs: 'first question',
         sessionId: 'image-draft',
       })
+      expect(meta.welcomeDraft).toMatchObject({
+        status: 'pending',
+        draft: {
+          markdown: 'first question',
+          selectedResourceIds: { http: ['7'], risk: ['8'] },
+        },
+      })
       expect(screen.getByTestId('mode')).toHaveTextContent('welcome')
       await act(async () => vi.runOnlyPendingTimersAsync())
       expect(mocks.startChat).not.toHaveBeenCalled()
@@ -165,6 +194,7 @@ describe('welcome submission', () => {
         target: { kind: 'new', sessionId: 'welcome-session' },
       })
       expect(meta.pendingWelcomeInput).toBeUndefined()
+      expect(meta.welcomeDraft).toBeUndefined()
       expect(request).toEqual(setting)
       expect(opened).toHaveBeenCalledOnce()
       expect(screen.getByTestId('mode')).toHaveTextContent('re-act')
@@ -215,14 +245,21 @@ describe('welcome submission', () => {
     expect(request).toEqual(AIAgentSettingDefault)
   })
 
-  it('新标签启动被拒绝时保留首问和配置，不自动反复重试', async () => {
+  it('新标签启动被拒绝时恢复完整草稿，并可在同一标签重新提交', async () => {
     mocks.openChatInNewTab = true
     mocks.activeChat = { SessionID: 'welcome-session', isDraftSession: true }
     const input = { qs: 'first question' }
+    const draft: AIChatInputDraft = {
+      markdown: 'original first question',
+      selectedMaterials: [{ mentionType: 'file', mentionId: 'report.txt', mentionName: 'report.txt' }],
+      hiddenInlineKeys: ['browser:one'],
+      selectedResourceIds: { http: ['7'], risk: ['8'] },
+      focusMode: 'scene',
+      enabledCapabilities: [{ Name: 'review', Type: 'skill' }],
+    }
     const { meta, request } = globalSessionEngine.ensureSession('welcome-session')
-    Object.assign(meta, {
-      pendingWelcomeInput: input,
-    })
+    meta.pendingWelcomeInput = input
+    meta.welcomeDraft = { status: 'pending', draft }
     Object.assign(request, cloneDeep(AIAgentSettingDefault))
     const guard = vi.spyOn(globalSessionEngine, 'canStartExecutingSession').mockReturnValue(false)
     try {
@@ -232,8 +269,25 @@ describe('welcome submission', () => {
 
       expect(mocks.startChat).not.toHaveBeenCalled()
       expect(guard).toHaveBeenCalledTimes(1)
-      expect(meta.pendingWelcomeInput).toEqual(input)
+      expect(meta.pendingWelcomeInput).toBeUndefined()
+      expect(meta.welcomeDraft).toEqual({ status: 'recovered', draft })
+      expect(screen.getByTestId('mode')).toHaveTextContent('welcome')
       expect(request).toEqual(AIAgentSettingDefault)
+
+      fireEvent.click(screen.getByRole('button', { name: 'retry-draft' }))
+      expect(meta.welcomeDraft).toEqual({ status: 'recovered', draft })
+      expect(mocks.startChat).not.toHaveBeenCalled()
+
+      guard.mockReturnValue(true)
+      fireEvent.click(screen.getByRole('button', { name: 'retry-draft' }))
+      expect(mocks.startChat).toHaveBeenCalledExactlyOnceWith({
+        qs: draft.markdown,
+        focusMode: draft.focusMode,
+        target: { kind: 'new', sessionId: 'welcome-session' },
+      })
+      expect(meta.welcomeDraft).toBeUndefined()
+      expect(mocks.setActiveChat).not.toHaveBeenCalled()
+      expect(screen.getByTestId('mode')).toHaveTextContent('re-act')
     } finally {
       guard.mockRestore()
     }
