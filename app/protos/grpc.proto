@@ -143,6 +143,7 @@ service Yak {
 
   rpc WatchProcessConnection(stream WatchProcessRequest) returns (stream WatchProcessResponse);
   rpc MITMV2(stream MITMV2Request) returns (stream MITMV2Response);
+  rpc GetMITMDiagnostics(GetMITMDiagnosticsRequest) returns (GetMITMDiagnosticsResponse);
 
   // 开启端口
   rpc OpenPort(stream Input) returns (stream Output);
@@ -10416,6 +10417,112 @@ message MITMPipelineStats {
 
   int64 DatabaseWriteQueueDepth = 25;
   int64 DatabaseWriteQueueCapacity = 26;
+  MITMPipelineDiagnostics Diagnostics = 27;
+}
+
+message MITMPipelineDiagnostics {
+  repeated MITMStageStats HTTPStages = 1;
+  int64 WebSocketHandshaking = 2;
+  int64 WebSocketOnline = 3;
+  uint64 WebSocketHandshakeFailedLastMinute = 4;
+  int64 PersistBlocked = 5;
+  int64 OldestPersistBlockedAgeMs = 6;
+  int64 DatabaseWriteTakenUnfinished = 7;
+  int64 PersistSubmitToStartP95Ms = 8;
+  uint64 PersistSubmitToStartSamples = 9;
+  int64 PersistWriteP95Ms = 10;
+  uint64 PersistWriteSamples = 11;
+  int64 OldestWebSocketHandshakeAgeMs = 12;
+  // Queue wait is measured for tasks whose accepted event precedes write start.
+  int64 PersistQueueWaitP95Ms = 13;
+  uint64 PersistQueueWaitSamples = 14;
+  int64 InScopeWebSocketHandshaking = 15;
+  int64 OldestInScopeWebSocketHandshakeAgeMs = 16;
+}
+
+message MITMStageStats {
+  string Stage = 1;
+  int64 Count = 2;
+  int64 OldestAgeMs = 3;
+  int64 BrowserBackgroundCount = 4;
+  int64 OldestBrowserBackgroundAgeMs = 5;
+  int64 OldestOtherAgeMs = 6;
+  int64 FilteredCount = 7;
+  // Includes traffic still awaiting a filter decision. Excludes browser background traffic.
+  int64 InScopeOtherCount = 8;
+  int64 OldestInScopeOtherAgeMs = 9;
+}
+
+message GetMITMDiagnosticsRequest {
+  string SessionId = 1;
+  // storage, active, slow, failed, websocket, range, or detail.
+  string View = 2;
+  int32 Offset = 3;
+  int32 Limit = 4;
+  int64 FromUnixMs = 5;
+  int64 ToUnixMs = 6;
+  uint64 TraceId = 7;
+  string ConnectionId = 8;
+  // capture includes undecided traffic and excludes requests rejected by the MITM filters.
+  // Empty or all includes every retained sample. focus and browser are legacy scopes.
+  string TrafficScope = 9;
+  // For the active view, select HTTP requests currently in this stage.
+  string Stage = 10;
+}
+
+message GetMITMDiagnosticsResponse {
+  string SessionId = 1;
+  int64 GeneratedAtUnixMs = 2;
+  repeated MITMStorageSample Storage = 3;
+  repeated MITMTraceEntry Traces = 4;
+  int32 Total = 5;
+  MITMTraceEntry Detail = 6;
+  int32 BrowserBackgroundTotal = 7;
+}
+
+message MITMStorageSample {
+  int64 AtUnixMs = 1;
+  int64 PersistPending = 2;
+  uint64 RequestTotal = 3;
+  uint64 DispatchTotal = 4;
+  uint64 UpstreamCompletedTotal = 5;
+  uint64 PersistEnqueuedTotal = 6;
+  uint64 PersistedTotal = 7;
+  uint64 PersistFailedTotal = 8;
+  int64 PersistBlocked = 9;
+}
+
+message MITMTraceEntry {
+  uint64 TraceId = 1;
+  string Host = 2;
+  string Method = 3;
+  string Protocol = 4;
+  // Client-side connection identity within the MITM engine.
+  string ConnectionId = 5;
+  string Stage = 6;
+  string Outcome = 7;
+  int32 StatusCode = 8;
+  int64 StartedAtUnixMs = 9;
+  int64 StageAtUnixMs = 10;
+  int64 FinishedAtUnixMs = 11;
+  uint64 FlowId = 12;
+  uint32 Attempts = 13;
+  // A bounded error category derived from the actual operation.
+  string ErrorCode = 14;
+  repeated MITMTraceSpan Spans = 15;
+  bool SpansTruncated = 16;
+  // Known browser service inferred from the destination hostname.
+  string BrowserService = 17;
+  // pending, passed, request_excluded, response_excluded, static_js_excluded, or websocket_excluded.
+  string FilterDecision = 18;
+}
+
+message MITMTraceSpan {
+  string Stage = 1;
+  int64 StartedAtUnixMs = 2;
+  int64 FinishedAtUnixMs = 3;
+  uint32 Attempt = 4;
+  string Protocol = 5;
 }
 
 message QueryContextMenuActionsRequest {

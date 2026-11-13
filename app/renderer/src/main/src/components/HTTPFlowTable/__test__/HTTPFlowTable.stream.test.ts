@@ -182,6 +182,65 @@ describe('HTTPFlow live stream controller', () => {
     expect(reset).toHaveBeenCalledTimes(1)
   })
 
+  it.each(['scan', 'mitm,scan', 'mitm,basic-crawler', ''])(
+    'leaves source selection "%s" on the query path',
+    (SourceType) => {
+      const transport = new FakeTransport()
+      const controller = createHTTPFlowLiveStreamController({
+        transport,
+        createToken: () => 'test',
+        getMode: () => 'canary',
+      })
+      controller.observeQuery(queryResponse('db-a', 7, [1]), { SourceType: 'mitm' })
+      expect(controller.snapshot().active).toBe(true)
+
+      controller.observeQuery(queryResponse('db-a', 7, [1]), { SourceType })
+      expect(controller.snapshot().active).toBe(false)
+      expect(transport.cancels).toEqual(['test'])
+
+      controller.observeQuery(queryResponse('db-a', 7, [2]), { SourceType: 'mitm' })
+      expect(controller.snapshot().active).toBe(true)
+      expect(transport.starts).toHaveLength(2)
+      expect(transport.starts[1].request.LastSeenId).toBe(2)
+    },
+  )
+
+  it('resumes an empty MITM page from its last query after switching sources', () => {
+    const transport = new FakeTransport()
+    const committed = vi.fn()
+    let tokenIndex = 0
+    const controller = createHTTPFlowLiveStreamController({
+      transport,
+      createToken: () => `source-${++tokenIndex}`,
+      getMode: () => 'canary',
+      onCommitted: committed,
+    })
+    controller.observeQuery(queryResponse('db-a', 7, [10]), { SourceType: 'mitm' })
+    transport.emitData(event('source-1', 5, 11))
+    controller.observeQuery(queryResponse('db-a', 7, [90]), { SourceType: 'scan' })
+    expect(transport.cancels).toEqual(['source-1'])
+
+    controller.observeQuery(queryResponse('db-a', 7, [], 99), { SourceType: 'mitm' })
+    expect(transport.starts[1].request).toMatchObject({ LastSeenSequence: 0, LastSeenId: 10 })
+    // The source change may cancel rendering of an event already received.
+    transport.emitData(event('source-2', 5, 11))
+    expect(committed).toHaveBeenCalledTimes(2)
+  })
+
+  it('discards the paused MITM cursor when the flow table generation changes', () => {
+    const transport = new FakeTransport()
+    const controller = createHTTPFlowLiveStreamController({
+      transport,
+      createToken: () => 'generation',
+      getMode: () => 'canary',
+    })
+    controller.observeQuery(queryResponse('db-a', 7, [10]), { SourceType: 'mitm' })
+    controller.observeQuery(queryResponse('db-a', 7, [90]), { SourceType: 'scan' })
+    controller.observeQuery(queryResponse('db-a', 8, []), { SourceType: 'mitm' })
+
+    expect(transport.starts[1].request).toMatchObject({ ProjectGeneration: 8, LastSeenId: 0 })
+  })
+
   it('clears pending consumer state before switching projects', () => {
     const transport = new FakeTransport()
     const reset = vi.fn()

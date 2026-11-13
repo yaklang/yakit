@@ -1,6 +1,9 @@
+import type { MITMDiagnosticsSummary, RawMITMDiagnostics } from './MITMDiagnostics.types'
+
 export type MITMPipelineMetricValue = number | string | undefined | null
 
 export interface RawMITMPipelineStats {
+  Diagnostics?: RawMITMDiagnostics | null
   Version?: MITMPipelineMetricValue
   SessionId?: string
   SessionStartedAtUnixMs?: MITMPipelineMetricValue
@@ -30,6 +33,7 @@ export interface RawMITMPipelineStats {
 }
 
 export interface MITMPipelineStats {
+  Diagnostics?: MITMDiagnosticsSummary
   Version: number
   SessionId: string
   SessionStartedAtUnixMs: number
@@ -66,9 +70,11 @@ export interface MITMPipelineRates {
   flowBuilt: number
   persistEnqueued: number
   persisted: number
+  persistFailed: number
+  pendingDelta?: number
 }
 
-const numericFields: Array<Exclude<keyof MITMPipelineStats, 'SessionId'>> = [
+const numericFields: Array<Exclude<keyof MITMPipelineStats, 'SessionId' | 'Diagnostics'>> = [
   'Version',
   'SessionStartedAtUnixMs',
   'GeneratedAtUnixMs',
@@ -107,6 +113,51 @@ export const normalizeMITMPipelineStats = (raw: RawMITMPipelineStats): MITMPipel
   numericFields.forEach((field) => {
     normalized[field] = toNonNegativeNumber(raw[field])
   })
+  const d = raw.Diagnostics
+  if (d) {
+    const filterAware = normalized.Version >= 4
+    const wsHandshaking = toNonNegativeNumber(d.WebSocketHandshaking)
+    const oldestWSHandshake = toNonNegativeNumber(d.OldestWebSocketHandshakeAgeMs)
+    normalized.Diagnostics = {
+      stages: (d.HTTPStages ?? []).map((stage) => {
+        const count = toNonNegativeNumber(stage.Count)
+        const oldest = toNonNegativeNumber(stage.OldestAgeMs)
+        const browserCount = Math.min(count, toNonNegativeNumber(stage.BrowserBackgroundCount))
+        const otherOldest = browserCount ? toNonNegativeNumber(stage.OldestOtherAgeMs) : oldest
+        return {
+          stage: stage.Stage,
+          count,
+          oldest,
+          browserCount,
+          browserOldest: toNonNegativeNumber(stage.OldestBrowserBackgroundAgeMs),
+          otherOldest,
+          filteredCount: Math.min(count, toNonNegativeNumber(stage.FilteredCount)),
+          inScopeOtherCount: filterAware
+            ? Math.min(count - browserCount, toNonNegativeNumber(stage.InScopeOtherCount))
+            : count - browserCount,
+          inScopeOtherOldest: filterAware ? toNonNegativeNumber(stage.OldestInScopeOtherAgeMs) : otherOldest,
+        }
+      }),
+      wsHandshaking,
+      wsOnline: toNonNegativeNumber(d.WebSocketOnline),
+      oldestWSHandshake,
+      inScopeWSHandshaking: filterAware ? toNonNegativeNumber(d.InScopeWebSocketHandshaking) : wsHandshaking,
+      oldestInScopeWSHandshake: filterAware
+        ? toNonNegativeNumber(d.OldestInScopeWebSocketHandshakeAgeMs)
+        : oldestWSHandshake,
+      wsFailed: toNonNegativeNumber(d.WebSocketHandshakeFailedLastMinute),
+      persistBlocked: toNonNegativeNumber(d.PersistBlocked),
+      oldestBlocked: toNonNegativeNumber(d.OldestPersistBlockedAgeMs),
+      databaseTaken: toNonNegativeNumber(d.DatabaseWriteTakenUnfinished),
+      submitToStartP95: toNonNegativeNumber(d.PersistSubmitToStartSamples)
+        ? toNonNegativeNumber(d.PersistSubmitToStartP95Ms)
+        : undefined,
+      writeP95: toNonNegativeNumber(d.PersistWriteSamples) ? toNonNegativeNumber(d.PersistWriteP95Ms) : undefined,
+      queueWaitP95: toNonNegativeNumber(d.PersistQueueWaitSamples)
+        ? toNonNegativeNumber(d.PersistQueueWaitP95Ms)
+        : undefined,
+    }
+  }
   return normalized
 }
 
@@ -118,6 +169,7 @@ const emptyRates = (): MITMPipelineRates => ({
   flowBuilt: 0,
   persistEnqueued: 0,
   persisted: 0,
+  persistFailed: 0,
 })
 
 const counterRate = (previous: number, current: number, elapsedSeconds: number): number => {
@@ -140,6 +192,8 @@ export const deriveMITMPipelineRates = (
     flowBuilt: counterRate(previous.FlowBuiltTotal, current.FlowBuiltTotal, elapsedSeconds),
     persistEnqueued: counterRate(previous.PersistEnqueuedTotal, current.PersistEnqueuedTotal, elapsedSeconds),
     persisted: counterRate(previous.PersistedTotal, current.PersistedTotal, elapsedSeconds),
+    persistFailed: counterRate(previous.PersistFailedTotal, current.PersistFailedTotal, elapsedSeconds),
+    pendingDelta: current.PersistActive - previous.PersistActive,
   }
 }
 

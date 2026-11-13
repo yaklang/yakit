@@ -137,6 +137,15 @@ export const waitForMainWindow = async ({ timeout = 15_000 } = {}) => {
 export const enterDefaultProjectThroughUI = async () => {
   await browser.switchToYakitWindow(MAIN_WINDOW_URL)
   const homeEntry = await $('[data-testid="home-open-mitm-v2"]')
+  const waitForInteractiveHome = (timeoutMsg) =>
+    browser.waitUntil(
+      async () => {
+        const guideClose = await $('.ant-tour-close')
+        if ((await guideClose.isExisting()) && (await guideClose.isClickable())) await guideClose.click()
+        return homeEntry.isClickable()
+      },
+      { timeout: 30_000, timeoutMsg },
+    )
   // A saved/default project can finish opening after the initial Main handoff.
   await browser.waitUntil(
     async () => (await homeEntry.isDisplayed()) || (await $('[data-testid="project-manage"]').isDisplayed()),
@@ -146,7 +155,7 @@ export const enterDefaultProjectThroughUI = async () => {
     },
   )
   if (await homeEntry.isDisplayed()) {
-    await homeEntry.waitForClickable()
+    await waitForInteractiveHome('Main home did not become interactive')
     return
   }
 
@@ -170,10 +179,7 @@ export const enterDefaultProjectThroughUI = async () => {
   )
 
   await defaultProject.click()
-  await homeEntry.waitForClickable({
-    timeout: 30_000,
-    timeoutMsg: 'Main home did not become interactive after selecting [default]',
-  })
+  await waitForInteractiveHome('Main home did not become interactive after selecting [default]')
 }
 
 export const echoFromMainWindow = async () => {

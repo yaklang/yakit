@@ -563,6 +563,50 @@ describe('MITMFlowObservability', () => {
     })
   })
 
+  it('uses recent display commits and can omit legacy timings from the pipeline status', () => {
+    let now = 100_000
+    const observer = new MITMFlowObservability(
+      () => now,
+      () => now,
+    )
+    observer.recordHTTPFlowLiveStreamSubscription('project-a', 1)
+    const markFlowVisible = (id: number, displayMs: number, writeMs: number, queueMs: number) => {
+      const persistedAt = now - displayMs
+      const persistStartedAt = persistedAt - writeMs
+      const enqueuedAt = persistStartedAt - queueMs
+      observer.recordHTTPFlowLiveStreamEvent({
+        Type: 'HTTP_FLOW_LIVE_EVENT_TYPE_COMMITTED',
+        Sequence: id,
+        ProjectGeneration: 1,
+        DatabaseIdentity: 'project-a',
+        HighWaterId: id,
+        CommittedAtUnixMs: persistedAt,
+        ResponseMirrorAtUnixMs: enqueuedAt - 5,
+        PersistEnqueuedAtUnixMs: enqueuedAt,
+        PersistStartedAtUnixMs: persistStartedAt,
+        Flow: { Id: id },
+      })
+      observer.markVisible([flow(id)])
+    }
+    markFlowVisible(1, 900, 400, 100)
+    now = 180_020
+    markFlowVisible(2, 30, 10, 5)
+
+    expect(observer.pipelineStatusSnapshot().flow.persistToReactCommitP95).toBe(900)
+    expect(observer.pipelineStatusSnapshot(now).flow).toEqual({
+      persistQueueWaitP95: 5,
+      persistWriteP95: 10,
+      persistToReactCommitP95: 30,
+      responseToReactCommitP95: 50,
+    })
+    expect(observer.pipelineStatusSnapshot(now, false).flow).toStrictEqual({
+      persistQueueWaitP95: undefined,
+      persistWriteP95: undefined,
+      persistToReactCommitP95: 30,
+      responseToReactCommitP95: undefined,
+    })
+  })
+
   it('preserves end-to-end timings when a stream summary bypasses QueryHTTPFlows', () => {
     let now = 2_000
     const observer = new MITMFlowObservability(
