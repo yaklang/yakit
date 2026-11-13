@@ -340,6 +340,26 @@ const codeReview = {
 }
 
 describe('输入框资料栏', () => {
+  it('将添加资料弹窗挂在页面根节点并跟随输入框宽度', async () => {
+    const { container } = await setup()
+    container.style.overflowY = 'auto'
+    const anchor = container.querySelector<HTMLElement>('[data-ai-input-card] > div:last-child')!
+    const getAnchorBounds = vi.spyOn(anchor, 'getBoundingClientRect').mockReturnValue(new DOMRect(0, 360, 480, 80))
+
+    fireEvent.click(screen.getByRole('button', { name: 'AIChatTextarea.addMaterials' }))
+
+    const popup = (await screen.findByRole('dialog', { name: 'AIChatTextarea.addMaterials' })).closest<HTMLElement>(
+      '.ant-popover',
+    )!
+    expect(popup.parentElement).toBe(document.body)
+    await waitFor(() => expect(popup.style.width).toBe('480px'))
+
+    vi.spyOn(popup, 'getBoundingClientRect').mockReturnValue(new DOMRect(0, 100, 480, 256))
+    getAnchorBounds.mockReturnValue(new DOMRect(0, 360, 400, 80))
+    fireEvent.resize(window)
+    await waitFor(() => expect(popup.style.width).toBe('400px'))
+  })
+
   it('恢复正文、独立资料和场景能力后，可完整重新发送', async () => {
     const draft: AIChatInputDraft = {
       markdown: 'original question',

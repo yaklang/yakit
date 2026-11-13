@@ -1,8 +1,6 @@
 @use '../../resourcePickerDimensions' as resourcePicker;
 
 .popover:global(.ant-popover) {
-  width: 100cqw;
-
   .body {
     padding: 8px;
     border: 1px solid var(--Colors-Use-Neutral-Border);

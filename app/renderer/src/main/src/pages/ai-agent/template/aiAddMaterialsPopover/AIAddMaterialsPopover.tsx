@@ -1,4 +1,4 @@
-import { useContext, useState } from 'react'
+import { useContext, useRef, useState } from 'react'
 import type { FC } from 'react'
 import { useMemoizedFn, useRequest, useUpdateEffect } from 'ahooks'
 import classNames from 'classnames'
@@ -48,12 +48,23 @@ const AIAddMaterialsPopover: FC<AIAddMaterialsPopoverProps> = ({
     ready: !!fixedFocusMode && !hideSceneInSummary,
   })
   const [open, setOpen] = useState(false)
+  const anchorRef = useRef<HTMLElement>(null)
   const [picker, setPicker] = useState<{ category: MaterialPanel; fromMenu: boolean }>()
   const [selectedFocusLabel, setSelectedFocusLabel] = useState<SelectedFocusMode>()
   // 缓存技能、工具和知识库的简介，供资料摘要和「已添加」列表使用。
   const [descriptions, setDescriptions] = useState<Record<string, string>>({})
   const attachments = mentions.filter((item) => item.mentionType === 'file' && item.mentionSource === 'attachment')
   const browsers = getAddedBrowsers(mentions)
+
+  const getPopupContainer = (anchor: HTMLElement) => {
+    anchorRef.current = anchor
+    return anchor.ownerDocument.body
+  }
+
+  const syncPopupWidth = (popup: HTMLElement) => {
+    const anchor = anchorRef.current
+    if (anchor) popup.style.width = `${anchor.getBoundingClientRect().width}px`
+  }
 
   useUpdateEffect(() => {
     setSelectedFocusLabel((current) => (current?.id === focusMode ? current : undefined))
@@ -197,7 +208,8 @@ const AIAddMaterialsPopover: FC<AIAddMaterialsPopoverProps> = ({
         }}
         destroyOnHidden
         classNames={{ root: styles.popover, body: styles.body }}
-        getPopupContainer={(anchor) => anchor.parentElement ?? document.body}
+        getPopupContainer={getPopupContainer}
+        onPopupAlign={syncPopupWidth}
         content={
           <section
             aria-label={t('AIChatTextarea.addMaterials')}

@@ -175,6 +175,8 @@ textarea.qs-input-textarea {
   border-radius: 24px;
   min-height: 94px;
   flex-shrink: 0;
+  /* Shadows/xl24 */
+  box-shadow: 0 2px 24px 0 var(--Colors-Use-Basic-Shadow);
 
   &:focus-within {
     min-height: 94px;
