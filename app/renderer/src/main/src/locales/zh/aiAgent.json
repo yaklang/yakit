@@ -1142,5 +1142,22 @@
     "stepDone": "完成",
     "stepError": "失败",
     "invalidQuestion": "提问格式无效"
+  },
+  "SubForgeTaskTree": {
+    "title": "子 Forge · {{name}}",
+    "running": "执行中",
+    "succeeded": "已完成",
+    "failed": "失败",
+    "cancelled": "已取消",
+    "timed_out": "已超时",
+    "unknown": "状态未知",
+    "pending": "待执行",
+    "processing": "执行中",
+    "completed": "已完成",
+    "aborted": "失败",
+    "skipped": "已跳过",
+    "planning": "正在规划子任务…",
+    "noPlan": "没有子任务计划",
+    "incompleteHistory": "未收到结束状态，此历史记录不代表仍在执行。"
   }
 }

@@ -1,3 +1,4 @@
+import type { SubForgeRun } from './subForgeTaskTree'
 import type { StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
 import type { AIAgentGrpcApi, AIOutputEvent, AITaskStatusType, AIOutputI18n } from './grpcApi'
 import type { CustomPluginExecuteFormValue } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
@@ -678,6 +679,7 @@ export interface ChatStoreState {
   /** 任务详情 Map 写入后触发的更新计数 */
   taskDetailsUpdate: number
   currentPlan: CurrentExecTaskTree
+  subForgeRuns: Record<string, SubForgeRun>
 
   /**
    * 虚拟列表卡片展开态（纯 UI，不落库）

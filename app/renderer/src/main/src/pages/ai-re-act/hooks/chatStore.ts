@@ -76,6 +76,7 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
       chatTodoListUpdate: 0,
       taskDetailsUpdate: 0,
       currentPlan: cloneDeep(DefaultCurrentExecTaskTree),
+      subForgeRuns: {},
       uiExpandMap: {},
 
       card: [],
