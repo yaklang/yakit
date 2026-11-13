@@ -39,15 +39,19 @@ export default memo(function ModelContextPopover() {
     clone: (data) => cloneDeep(data),
   })
   const selected = aiGlobalConfig.IntelligentModels?.[0]
-  const identity = sessionId
+  // A session can exist before its first event, or be restored from history without
+  // model identity. Read the selected quality model's saved settings in that case.
+  const boundRuntime = sessionId && runtimeContext?.context_key ? runtimeContext : undefined
+  const useModelSettings = !execute || !boundRuntime
+  const identity = boundRuntime
     ? {
-        provider: runtimeContext?.provider ?? '',
-        model: runtimeContext?.model ?? '',
-        context_key: runtimeContext?.context_key,
+        provider: boundRuntime.provider,
+        model: boundRuntime.model,
+        context_key: boundRuntime.context_key,
       }
     : { provider: selected?.Provider?.Type ?? '', model: selected?.ModelName ?? '', config: selected }
-  const saved = useSavedModelContext(identity, !execute)
-  const confirmedContext = execute ? (runtimeContext?.context_key ? runtimeContext : undefined) : saved.context
+  const saved = useSavedModelContext(identity, useModelSettings)
+  const confirmedContext = useModelSettings ? saved.context : boundRuntime
   const scope = JSON.stringify([
     sessionId,
     execute,
@@ -131,7 +135,13 @@ export default memo(function ModelContextPopover() {
     source: pending ? ('manual' as const) : confirmedContext.source,
     pending: pending ? false : confirmedContext.pending,
     change: pending ? undefined : confirmedContext.change,
-    prompt_tokens: execute ? confirmedContext.prompt_tokens : sessionId ? runtimeContext?.prompt_tokens ?? 0 : 0,
+    prompt_tokens:
+      sessionId &&
+      runtimeContext?.provider === confirmedContext.provider &&
+      runtimeContext?.model === confirmedContext.model &&
+      (!runtimeContext.context_key || runtimeContext.context_key === confirmedContext.context_key)
+        ? runtimeContext.prompt_tokens
+        : 0,
   }
   const timeoutError =
     timedOut?.scope === scope &&
@@ -146,26 +156,27 @@ export default memo(function ModelContextPopover() {
     const pendingTokens = disabled === undefined ? tokens : pending?.tokens
     const requestedTokens = pendingTokens ?? 0
     const requestedDisabled = disabled ?? pending?.disabled
-    const accepted = !store.getState().execute
-      ? requestedDisabled === undefined
-        ? saved.save(requestedTokens)
-        : saved.save(requestedTokens, requestedDisabled)
-      : !!sessionId &&
-        onSend({
-          token: sessionId,
-          type: 'casual',
-          params: {
-            IsConfigHotpatch: true,
-            HotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_RuntimeContextSizeLimit,
-            Params: {
-              RuntimeContextSizeLimit: requestedTokens,
-              ...(requestedDisabled === undefined ? {} : { DisableContextAutoAdjust: requestedDisabled }),
-              AIService: confirmedContext.provider,
-              AIModelName: confirmedContext.model,
-              ModelContextKey: confirmedContext.context_key,
+    const accepted =
+      !store.getState().execute || !boundRuntime
+        ? requestedDisabled === undefined
+          ? saved.save(requestedTokens)
+          : saved.save(requestedTokens, requestedDisabled)
+        : !!sessionId &&
+          onSend({
+            token: sessionId,
+            type: 'casual',
+            params: {
+              IsConfigHotpatch: true,
+              HotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_RuntimeContextSizeLimit,
+              Params: {
+                RuntimeContextSizeLimit: requestedTokens,
+                ...(requestedDisabled === undefined ? {} : { DisableContextAutoAdjust: requestedDisabled }),
+                AIService: confirmedContext.provider,
+                AIModelName: confirmedContext.model,
+                ModelContextKey: confirmedContext.context_key,
+              },
             },
-          },
-        })
+          })
     if (!accepted) return false
     setTimedOut(undefined)
     setPendingChange({
@@ -190,7 +201,7 @@ export default memo(function ModelContextPopover() {
       open={visible}
       onOpenChange={(open) => {
         setVisible(open)
-        if (open && !execute) saved.refresh()
+        if (open && useModelSettings) saved.refresh()
       }}
       trigger="click"
       placement="top"
