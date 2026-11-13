@@ -69,6 +69,7 @@ vi.mock('@/i18n/useI18nNamespaces', () => ({
 const runtime = {
   provider: 'openai',
   model: 'actual',
+  context_key: 'service-a',
   context_tokens: 500 * 1000,
   threshold_tokens: 100 * 1000,
   prompt_tokens: 91 * 1000,
@@ -121,7 +122,10 @@ describe('composer model context popover', () => {
       )
     } else {
       await waitFor(() =>
-        expect(mocks.request).toHaveBeenLastCalledWith({ provider: 'openai', model: 'selected' }, 100000),
+        expect(mocks.request).toHaveBeenLastCalledWith(
+          { provider: 'openai', model: 'selected', config: { ModelName: 'selected', Provider: { Type: 'openai' } } },
+          100000,
+        ),
       )
     }
     await waitFor(() => expect(slider).toHaveAttribute('aria-valuenow', '100000'))
@@ -138,7 +142,11 @@ describe('composer model context popover', () => {
     expect(toggle).toBeChecked()
     fireEvent.click(toggle)
     await waitFor(() =>
-      expect(mocks.request).toHaveBeenLastCalledWith({ provider: 'openai', model: 'selected' }, 0, true),
+      expect(mocks.request).toHaveBeenLastCalledWith(
+        { provider: 'openai', model: 'selected', config: { ModelName: 'selected', Provider: { Type: 'openai' } } },
+        0,
+        true,
+      ),
     )
     await waitFor(() => expect(toggle).toBeEnabled())
     expect(toggle).not.toBeChecked()
@@ -169,6 +177,7 @@ describe('composer model context popover', () => {
             DisableContextAutoAdjust: true,
             AIService: 'openai',
             AIModelName: 'actual',
+            ModelContextKey: 'service-a',
           },
         }),
       }),
@@ -277,7 +286,10 @@ describe('composer model context popover', () => {
     await user.clear(input)
     await user.type(input, '650{Enter}')
     await waitFor(() =>
-      expect(mocks.request).toHaveBeenLastCalledWith({ provider: 'openai', model: 'selected' }, 650 * 1000),
+      expect(mocks.request).toHaveBeenLastCalledWith(
+        { provider: 'openai', model: 'selected', config: { ModelName: 'selected', Provider: { Type: 'openai' } } },
+        650 * 1000,
+      ),
     )
     expect(screen.getByRole('slider')).toHaveAttribute('aria-valuenow', String(650 * 1000))
     expect(composerKeyDown).not.toHaveBeenCalled()
@@ -297,7 +309,10 @@ describe('composer model context popover', () => {
     expect(container.querySelectorAll('button[aria-expanded]')).toHaveLength(1)
     fireEvent.keyDown(line, { key: 'ArrowUp' })
     await waitFor(() => expect(line).toHaveAttribute('aria-valuenow', String(201 * 1000)))
-    expect(mocks.request).toHaveBeenLastCalledWith({ provider: 'openai', model: 'selected' }, 201 * 1000)
+    expect(mocks.request).toHaveBeenLastCalledWith(
+      { provider: 'openai', model: 'selected', config: { ModelName: 'selected', Provider: { Type: 'openai' } } },
+      201 * 1000,
+    )
     expect(mocks.onSend).not.toHaveBeenCalled()
     expect(mocks.setActiveChat).not.toHaveBeenCalled()
   })
@@ -315,7 +330,12 @@ describe('composer model context popover', () => {
       params: {
         IsConfigHotpatch: true,
         HotpatchType: 'RuntimeContextSizeLimit',
-        Params: { RuntimeContextSizeLimit: 101 * 1000, AIService: 'openai', AIModelName: 'actual' },
+        Params: {
+          RuntimeContextSizeLimit: 101 * 1000,
+          AIService: 'openai',
+          AIModelName: 'actual',
+          ModelContextKey: 'service-a',
+        },
       },
     })
     expect(mocks.setActiveChat).not.toHaveBeenCalled()
@@ -467,7 +487,10 @@ describe('composer model context popover', () => {
     mocks.request.mockClear()
     await user.click(screen.getByRole('button', { name: 'AIContextToken.resetContextThreshold' }))
     await waitFor(() => expect(screen.getByRole('slider')).toHaveAttribute('aria-valuenow', String(500 * 1000)))
-    expect(mocks.request).toHaveBeenCalledExactlyOnceWith({ provider: 'openai', model: 'selected' }, 500 * 1000)
+    expect(mocks.request).toHaveBeenCalledExactlyOnceWith(
+      { provider: 'openai', model: 'selected', config: { ModelName: 'selected', Provider: { Type: 'openai' } } },
+      500 * 1000,
+    )
     expect(screen.getByRole('spinbutton')).toHaveValue(500)
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
@@ -478,7 +501,10 @@ describe('composer model context popover', () => {
     const slider = await screen.findByRole('slider')
     fireEvent.keyDown(slider, { key: 'ArrowUp' })
     await waitFor(() =>
-      expect(mocks.request).toHaveBeenLastCalledWith({ provider: 'openai', model: 'actual' }, 201 * 1000),
+      expect(mocks.request).toHaveBeenLastCalledWith(
+        { provider: 'openai', model: 'actual', context_key: 'service-a' },
+        201 * 1000,
+      ),
     )
     expect(mocks.onSend).not.toHaveBeenCalled()
   })

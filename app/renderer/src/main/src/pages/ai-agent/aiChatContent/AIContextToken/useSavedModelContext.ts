@@ -11,14 +11,14 @@ export function useSavedModelContext(identity: ModelContextIdentity, enabled: bo
   const [revision, setRevision] = useState(0)
   const generation = useRef(0)
   const savingRef = useRef(false)
-  const key = JSON.stringify([identity.provider, identity.model])
+  const key = JSON.stringify([identity.provider, identity.model, identity.context_key, identity.config])
 
   useEffect(() => {
     const version = ++generation.current
     setError('')
     setSaving(false)
     savingRef.current = false
-    if (!enabled || !identity.provider || !identity.model) {
+    if (!enabled || !identity.provider || !identity.model || (!identity.context_key && !identity.config)) {
       setLoading(false)
       return
     }

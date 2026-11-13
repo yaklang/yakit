@@ -1,8 +1,11 @@
+import type { AIModelConfig } from '@/pages/ai-agent/aiModelList/utils'
 import type { AIAgentGrpcApi } from '@/pages/ai-re-act/hooks/grpcApi'
 
 export interface ModelContextIdentity {
   provider: string
   model: string
+  context_key?: string
+  config?: AIModelConfig
 }
 
 const { ipcRenderer } = window.require('electron')
@@ -17,6 +20,8 @@ export async function requestModelContext(
     {
       Provider: identity.provider,
       Model: identity.model,
+      ...(identity.context_key ? { ContextKey: identity.context_key } : {}),
+      ...(identity.config ? { Config: identity.config } : {}),
       ...(threshold === undefined ? {} : { ThresholdTokens: threshold }),
       ...(disableAutoAdjust === undefined ? {} : { DisableAutoAdjust: disableAutoAdjust }),
     },
@@ -24,6 +29,7 @@ export async function requestModelContext(
   return {
     provider: result.Provider,
     model: result.Model,
+    context_key: result.ContextKey,
     context_tokens: Number(result.ContextTokens),
     threshold_tokens: Number(result.ThresholdTokens),
     minimum_threshold_tokens: Number(result.MinimumThresholdTokens),
