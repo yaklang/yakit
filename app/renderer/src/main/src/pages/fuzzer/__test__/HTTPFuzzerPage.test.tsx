@@ -3,7 +3,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { consumeMcpWebFuzzerExecution, queueMcpWebFuzzerExecution } from '../../../utils/eventBus/events/webFuzzer'
 import { createMcpWebFuzzerExecutionSlot } from '../mcpWebFuzzerExecutionSlot'
-import { SecondNodeExtra, type FuzzerResponse } from '../HTTPFuzzerPage'
+import { canTriggerSendShortcut, FuzzerRequestToolbar, SecondNodeExtra, type FuzzerResponse } from '../HTTPFuzzerPage'
 
 // 依赖链会拉到 lottie-web / xterm，模块加载期探测 canvas，jsdom 不支持
 vi.mock('lottie-web', () => ({ default: { loadAnimation: vi.fn(), destroy: vi.fn() } }))
@@ -142,6 +142,55 @@ describe('HTTPFuzzerPage MCP execution lifecycle', () => {
     expect(slot.tryStart(pageId, busy)).toBeUndefined()
     expect(slot.isInFlight()).toBe(false)
     expect(consumeMcpWebFuzzerExecution(pageId)?.executionId).toBe('race-mcp')
+  })
+})
+
+describe('FuzzerRequestToolbar while loading history', () => {
+  const renderToolbar = (props: Partial<React.ComponentProps<typeof FuzzerRequestToolbar>> = {}) =>
+    render(
+      <FuzzerRequestToolbar
+        loading={false}
+        loadingHistory={false}
+        isPause
+        cachedTotal={0}
+        sendShortcut="Ctrl+Enter"
+        onSend={() => {}}
+        onResumeAndPause={() => {}}
+        onCancel={() => {}}
+        {...props}
+      />,
+    )
+
+  it('disables send and hides pause/stop while history is loading', () => {
+    const onSend = vi.fn()
+    renderToolbar({ loading: true, loadingHistory: true, onSend })
+    const send = screen.getByRole('button', { name: /YakitButton.sendRequest/ })
+    expect(send).toBeDisabled()
+    expect(screen.queryByRole('button', { name: 'YakitButton.pause' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'YakitButton.stop' })).toBeNull()
+    fireEvent.click(send)
+    expect(onSend).not.toHaveBeenCalled()
+  })
+
+  it('shows pause and stop while a request is in flight', () => {
+    renderToolbar({ loading: true, loadingHistory: false, cachedTotal: 2 })
+    expect(screen.getByRole('button', { name: 'YakitButton.pause' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'YakitButton.stop' })).toBeEnabled()
+    expect(screen.queryByRole('button', { name: /YakitButton.sendRequest/ })).toBeNull()
+  })
+
+  it('shows continue instead of send when the task is paused', () => {
+    renderToolbar({ loading: false, loadingHistory: false, isPause: false })
+    expect(screen.getByRole('button', { name: 'YakitButton.continue' })).toBeEnabled()
+    expect(screen.queryByRole('button', { name: 'YakitButton.pause' })).toBeNull()
+    expect(screen.queryByRole('button', { name: /YakitButton.sendRequest/ })).toBeNull()
+  })
+
+  it('blocks the send shortcut while history is loading and allows it when idle', () => {
+    expect(canTriggerSendShortcut(true, true, true)).toBe(false)
+    expect(canTriggerSendShortcut(true, true, false)).toBe(true)
+    expect(canTriggerSendShortcut(false, true, false)).toBe(false)
+    expect(canTriggerSendShortcut(true, false, false)).toBe(false)
   })
 })
 

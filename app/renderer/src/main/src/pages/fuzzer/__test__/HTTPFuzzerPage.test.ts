@@ -300,6 +300,46 @@ describe('HTTPFuzzerPage real IPC control paths', () => {
     dispose()
   })
 
+  it('resets history loading when HTTPFuzzer rejects and the operation is still current', async () => {
+    const { api, bindings: b, invoke, dispose } = setup()
+    invoke.mockImplementation(async (channel: string) => {
+      if (channel === 'HTTPFuzzer') throw new Error('history failed')
+      if (channel === 'GetHistoryHTTPFuzzerTask') return { OriginRequest: { Request: 'GET /history' } }
+    })
+    api.loadHistory(7)
+    await vi.runAllTimersAsync()
+    expect(b.setLoadingHistory).toHaveBeenLastCalledWith(false)
+    expect(b.setLoading).toHaveBeenLastCalledWith(false)
+    expect(b.loadingRef.current).toBe(false)
+    expect(b.setCurrentSelectId).not.toHaveBeenCalledWith(7)
+    expect(b.onSetFuzzerConfig).not.toHaveBeenCalled()
+    dispose()
+  })
+
+  it('does not reset history loading when a newer operation supersedes a rejected load', async () => {
+    const { api, bindings: b, invoke, dispose } = setup()
+    let rejectHttp: (error: Error) => void = () => {}
+    invoke.mockImplementation((channel: string) => {
+      if (channel === 'HTTPFuzzer') {
+        return new Promise((_resolve, reject) => {
+          rejectHttp = reject
+        })
+      }
+      return Promise.resolve(undefined)
+    })
+    api.loadHistory(7)
+    expect(b.setLoadingHistory).toHaveBeenLastCalledWith(true)
+    expect(b.setLoading).toHaveBeenLastCalledWith(true)
+    b.restoreOpRef.current += 1
+    rejectHttp(new Error('stale'))
+    await vi.runAllTimersAsync()
+    expect(b.setLoadingHistory).toHaveBeenLastCalledWith(true)
+    expect(b.setLoading).not.toHaveBeenCalledWith(false)
+    expect(b.loadingRef.current).toBe(true)
+    expect(b.setCurrentSelectId).not.toHaveBeenCalledWith(7)
+    dispose()
+  })
+
   it('restores the gateway from history and clears it when loading ordinary history', async () => {
     const { api, bindings: b, invoke, dispose } = setup()
     invoke.mockImplementation(async (channel) =>

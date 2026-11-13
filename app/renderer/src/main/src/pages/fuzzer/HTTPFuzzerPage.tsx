@@ -934,6 +934,64 @@ const useLastValidSize = (currentSize?: Size) => {
 
 /*LINK - app\renderer\src\main\src\defaultConstants\HTTPFuzzerPage.ts*/
 /*为避免文件相互引用造成数据问题,请将 HTTPFuzzerPage 页面的常用变量放在 app\renderer\src\main\src\defaultConstants\HTTPFuzzerPage.ts */
+
+/** 拉历史时快捷键不发包。isbuttonIsSendReqStatus 已排除 loadingHistory，这里再挡一层。 */
+export const canTriggerSendShortcut = (
+  inViewport: boolean,
+  isbuttonIsSendReqStatus: boolean,
+  loadingHistory: boolean,
+) => inViewport && isbuttonIsSendReqStatus && !loadingHistory
+
+/** 左侧发送 / 继续 / 暂停停止。拉历史只禁用发送，不进入暂停停止。 */
+export const FuzzerRequestToolbar: React.FC<{
+  loading: boolean
+  loadingHistory: boolean
+  isPause: boolean
+  cachedTotal: number
+  sendShortcut: string | null
+  onSend: () => void
+  onResumeAndPause: () => void
+  onCancel: () => void
+  aiMenu?: React.ReactNode
+}> = (props) => {
+  const { t } = useI18nNamespaces(['yakitUi'])
+  const { loading, loadingHistory, isPause, cachedTotal, sendShortcut, onSend, onResumeAndPause, onCancel, aiMenu } =
+    props
+  if (loading && !loadingHistory) {
+    return (
+      <>
+        <YakitButton
+          disabled={cachedTotal <= 1}
+          onClick={onResumeAndPause}
+          icon={<PauseSolid color="currentColor" />}
+          type={'primary'}
+          size="large"
+        >
+          {t('YakitButton.pause')}
+        </YakitButton>
+        <YakitButton onClick={onCancel} icon={<StopSolid />} type={'primary'} colors="danger" size="large">
+          {t('YakitButton.stop')}
+        </YakitButton>
+      </>
+    )
+  }
+  if (!isPause && !loadingHistory) {
+    return (
+      <YakitButton onClick={onResumeAndPause} icon={<PlaySolid color="currentColor" />} type={'primary'} size="large">
+        {t('YakitButton.continue')}
+      </YakitButton>
+    )
+  }
+  return (
+    <>
+      <YakitButton disabled={loadingHistory} onClick={onSend} type={'primary'} size="large">
+        {t('YakitButton.sendRequest')} {sendShortcut}
+      </YakitButton>
+      {aiMenu}
+    </>
+  )
+}
+
 const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
   const { queryPagesDataById, updatePagesDataCacheById } = usePageInfo(
     (s) => ({
@@ -2960,7 +3018,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
   useShortcutKeyTrigger(
     'sendRequest*httpFuzzer',
     useMemoizedFn(() => {
-      if (inViewport && isbuttonIsSendReqStatus && !loadingHistory) {
+      if (canTriggerSendShortcut(inViewport, isbuttonIsSendReqStatus, loadingHistory)) {
         sendRequest()
       }
     }),
@@ -3410,47 +3468,19 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
             <div className={styles['http-fuzzer-page']}>
               <div className={styles['fuzzer-heard']}>
                 <div className={styles['fuzzer-heard-left']}>
-                  {loading && !loadingHistory ? (
-                    <>
-                      <YakitButton
-                        disabled={cachedTotal <= 1}
-                        onClick={resumeAndPause}
-                        icon={<PauseSolid color="currentColor" />}
-                        type={'primary'}
-                        size="large"
-                      >
-                        {t('YakitButton.pause')}
-                      </YakitButton>
-                      <YakitButton
-                        onClick={() => {
-                          cancelCurrentHTTPFuzzer()
-                        }}
-                        icon={<StopSolid />}
-                        type={'primary'}
-                        colors="danger"
-                        size="large"
-                      >
-                        {t('YakitButton.stop')}
-                      </YakitButton>
-                    </>
-                  ) : !isPause && !loadingHistory ? (
-                    <YakitButton
-                      onClick={resumeAndPause}
-                      icon={<PlaySolid color="currentColor" />}
-                      type={'primary'}
-                      size="large"
-                    >
-                      {t('YakitButton.continue')}
-                    </YakitButton>
-                  ) : (
-                    <>
-                      <YakitButton disabled={loadingHistory} onClick={sendRequest} type={'primary'} size="large">
-                        {t('YakitButton.sendRequest')}{' '}
-                        {convertKeyboardToUIKey(getHttpFuzzerShortcutKeyEvents()['sendRequest*httpFuzzer'].keys)}
-                      </YakitButton>
-                      <WebFuzzerAiTestMenu inViewport={inViewport} onSelect={onAiTest} />
-                    </>
-                  )}
+                  <FuzzerRequestToolbar
+                    loading={loading}
+                    loadingHistory={loadingHistory}
+                    isPause={isPause}
+                    cachedTotal={cachedTotal}
+                    sendShortcut={convertKeyboardToUIKey(
+                      getHttpFuzzerShortcutKeyEvents()['sendRequest*httpFuzzer'].keys,
+                    )}
+                    onSend={sendRequest}
+                    onResumeAndPause={resumeAndPause}
+                    onCancel={cancelCurrentHTTPFuzzer}
+                    aiMenu={<WebFuzzerAiTestMenu inViewport={inViewport} onSelect={onAiTest} />}
+                  />
                   <PacketScanButton
                     packetGetter={() => {
                       return {
