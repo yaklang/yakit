@@ -12,4 +12,3 @@ export default function useRuntimeContextSizeLimit(): number {
   return limit > 0 ? limit : AIAgentSettingDefault.RuntimeContextSizeLimit ?? 500
 }
 
-export default useRuntimeContextSizeLimit
