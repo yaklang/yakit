@@ -756,7 +756,6 @@ const GetScreenAndScreenshotMenuItems = (
 const MEMFIT_ONLY_EXPERIMENTAL_MENU_KEYS = new Set([
   'bas-chaosmaker',
   'debug-monaco-editor',
-  'debug-traffic-analize',
   'ai-agent',
   'ai-repository',
   'memory-base',

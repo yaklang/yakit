@@ -21,6 +21,7 @@ import type * as Grpc from '@/apiUtils/grpc'
 import type * as EditorMarkers from '@/utils/editorMarkers'
 import type * as HTTPFlowTableConstants from '@/components/HTTPFlowTable/HTTPFlowTable.constants'
 import type * as TrafficModels from '@/models/Traffic'
+import type * as PCAPModels from '@/components/pcap/pcapTypes'
 import type * as NewApp from '@/newApp/NewApp'
 import type * as SwaggerResponseType from '@/services/swagger/resposeType'
 
@@ -1065,6 +1066,19 @@ declare global {
       onOpen: (callback: () => void) => BridgeCleanup
       onClose: (callback: () => void) => BridgeCleanup
       onError: (callback: (payload: unknown) => void) => BridgeCleanup
+    }
+    traffic: {
+      queryPackets: (params: PCAPModels.PacketQuery) => Promise<PCAPModels.PacketPage>
+      queryDatabases: (params: { Pagination: { Limit: number; AfterId?: string } }) => Promise<PCAPModels.DatabasePage>
+      importFile: (params: { InputFile: string }, token: string) => Promise<unknown>
+      exportData: (params: {
+        DatasetID: string
+        TargetPath: string
+        PacketID?: string
+      }) => Promise<{ Path: string; Bytes: string; SHA256: string }>
+      deleteDatabase: (params: {
+        DatasetID: string
+      }) => Promise<{ Deleted: boolean; CleanupPending: boolean; CleanupError: string }>
     }
     stream: {
       onData: (token: string, callback: (payload: any) => void) => BridgeCleanup

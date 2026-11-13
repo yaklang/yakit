@@ -485,12 +485,12 @@ describe('FuncDomain 设置菜单（UIOpSetting）', () => {
   const memfitOnlyExperimentalLabels = [
     'FuncDomain.basChaosmaker',
     'FuncDomain.debugMonacoEditor',
-    'FuncDomain.debugTrafficAnalize',
     'AI Agent',
     'FuncDomain.aiRepository',
     'FuncDomain.memoryBase',
   ]
   const sharedExperimentalLabels = [
+    'FuncDomain.debugTrafficAnalize',
     'FuncDomain.vulinboxManager',
     'FuncDomain.runNode',
     'FuncDomain.webshellManager',

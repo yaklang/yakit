@@ -750,6 +750,10 @@ service Yak {
   rpc QueryTrafficPacket(QueryTrafficPacketRequest) returns (QueryTrafficPacketResponse);
   rpc QueryTrafficTCPReassembled(QueryTrafficTCPReassembledRequest) returns (QueryTrafficTCPReassembledResponse);
   rpc ParseTraffic(ParseTrafficRequest) returns (ParseTrafficResponse);
+  rpc ImportPCAPFile(ImportPCAPFileRequest) returns (stream ImportPCAPFileResponse);
+  rpc QueryPCAPDatabase(QueryPCAPDatabaseRequest) returns (QueryPCAPDatabaseResponse);
+  rpc ExportPCAPData(ExportPCAPDataRequest) returns (ExportPCAPDataResponse);
+  rpc DeletePCAPDatabase(DeletePCAPDatabaseRequest) returns (DeletePCAPDatabaseResponse);
 
   // 与前端交互的双工长连接，用于通知某些消息
   rpc DuplexConnection(stream DuplexConnectionRequest) returns (stream DuplexConnectionResponse);
@@ -3082,6 +3086,13 @@ message QueryTrafficPacketRequest {
   string DstPort = 11;
 
   int64 FromId = 12;
+  // Omitted: legacy project database. Present: packets in this PCAP dataset.
+  string DatasetID = 13;
+  bool Full = 14; // PCAP mode: include Raw and Details; list mode reads no BLOBs.
+  int64 Id = 15; // PCAP mode: exact original packet ID, using the same response model.
+  optional int64 StartTimestampNS = 16;
+  optional int64 EndTimestampNS = 17; // Capture-time interval [start,end), not insertion time.
+  string Keyword = 18; // PCAP mode: literal substring of endpoints or saved message summaries.
 }
 
 message QueryTrafficTCPReassembledRequest {
@@ -3152,12 +3163,26 @@ message TrafficPacket {
   int64 Id = 16;
   string Protocol = 17;
   string Info = 18;
+  optional int64 TimestampNS = 19;
+  int64 CapturedLength = 20;
+  int64 OriginalLength = 21;
+  int64 LinkType = 22;
+  int64 Section = 23;
+  int64 Interface = 24;
+  string DecodeError = 25;
+  // Full PCAP detail JSON: Result uses the existing ParseTraffic tree format;
+  // Messages contains saved protocol messages, each with its own RAW and Result.
+  // A tree's scope is in bits, relative to its own byte source, never another frame.
+  string Details = 26;
 }
 
 message QueryTrafficPacketResponse {
   repeated TrafficPacket Data = 1;
   Paging Pagination = 2;
   int64 Total = 3;
+  int64 NextCursor = 4;
+  bool HasMore = 5;
+  bool Truncated = 6;
 }
 
 message TrafficTCPReassembled {
@@ -8252,6 +8277,7 @@ message YakVersionAtLeastRequest{
 message ParseTrafficRequest{
   int64 Id = 1;
   string Type = 2;
+  string DatasetID = 3; // Optional PCAP dataset; omitted preserves legacy behavior.
 }
 message ParseTrafficResponse{
   bool OK = 1;
@@ -10538,4 +10564,123 @@ message HTTPPreviewResourceResponse {
   string URL = 1;
   string MimeType = 2;
   bytes Data = 3;
+}
+
+message PCAPDatabase {
+  int64 Id = 1; // Catalog row ID. Use DatasetID for subsequent operations.
+  string DatasetID = 2;
+  string SourcePath = 3;
+  int64 SourceSize = 4;
+  string Format = 5;
+  string State = 6;
+  int64 PacketCount = 7;
+  string LastError = 8;
+  bool PreviewTruncated = 9;
+  bool ProtocolsIndexed = 10;
+}
+
+message ImportPCAPFileRequest {
+  string InputFile = 1; // Path on the engine; indexes original packets and protocol messages, not streams.
+}
+
+message ImportPCAPFileResponse {
+  string DatasetID = 1;
+  string State = 2;
+  int64 BytesIndexed = 3;
+  int64 TotalBytes = 4;
+  int64 PacketCount = 5;
+  bool Finished = 6; // Final successful event, also sent when reusing an existing dataset.
+  PCAPDatabase Database = 7;
+}
+
+message PCAPDatabaseFilter {
+  string DatasetID = 1; // Exact canonical ID. Empty lists all registered datasets.
+}
+
+message QueryPCAPDatabaseRequest {
+  PCAPDatabaseFilter Filter = 1;
+  Paging Pagination = 2; // Limit and AfterId, ID ascending. Page is omitted or 1.
+}
+
+message QueryPCAPDatabaseResponse {
+  Paging Pagination = 1;
+  repeated PCAPDatabase Data = 2;
+  int64 Total = 3; // Matching catalog entries before applying AfterId.
+  int64 NextCursor = 4;
+  bool HasMore = 5;
+  bool Truncated = 6; // Page shortened by the result byte budget.
+}
+
+message PCAPPacketFilter {
+  int64 Id = 1; // Exact packet ID within DatasetID; zero means no ID filter.
+  string Transport = 2;
+  string SourceIP = 3;
+  string DestinationIP = 4;
+  optional int32 SourcePort = 5; // Port zero is distinct from an unset filter.
+  optional int32 DestinationPort = 6;
+  PCAPPacketTimeRange TimeRange = 7;
+}
+
+message PCAPPacketTimeRange {
+  int64 StartNS = 1;
+  int64 EndNS = 2; // Exclusive: [StartNS, EndNS).
+}
+
+message PCAPPacket {
+  int64 Id = 1;
+  optional int64 TimestampNS = 2; // An absent capture timestamp is distinct from zero.
+  int64 CapturedLength = 3;
+  int64 OriginalLength = 4;
+  int64 LinkType = 5;
+  int64 Section = 6;
+  int64 Interface = 7;
+  string SourceMAC = 8;
+  string DestinationMAC = 9;
+  string VLANStack = 10;
+  string SourceIP = 11;
+  string DestinationIP = 12;
+  int32 SourcePort = 13;
+  int32 DestinationPort = 14;
+  string Transport = 15;
+  string DecodeError = 16;
+  bytes Raw = 17; // Complete captured bytes, populated only when Full=true.
+}
+
+message QueryPCAPPacketRequest {
+  string DatasetID = 1;
+  PCAPPacketFilter Filter = 2;
+  Paging Pagination = 3; // Limit and AfterId, ID ascending. Page is omitted or 1.
+  bool Full = 4; // Same filter/model as list mode; also load complete raw bytes.
+}
+
+message QueryPCAPPacketResponse {
+  Paging Pagination = 1;
+  repeated PCAPPacket Data = 2;
+  optional int64 Total = 3; // Known for unfiltered queries or an exact ID without a cursor.
+  int64 NextCursor = 4;
+  bool HasMore = 5;
+  bool Truncated = 6; // Page shortened by byte budget; individual Raw values remain complete.
+}
+
+message ExportPCAPDataRequest {
+  string DatasetID = 1;
+  string TargetPath = 2; // Path on the engine; an existing file is never overwritten.
+  int64 PacketID = 3; // Zero: original PCAP/PCAPNG; positive: one packet's raw captured bytes.
+}
+
+message ExportPCAPDataResponse {
+  string Path = 1;
+  int64 Bytes = 2;
+  string SHA256 = 3;
+}
+
+message DeletePCAPDatabaseRequest {
+  string DatasetID = 1; // Exact canonical ID; never accepts a path or catalog row ID.
+}
+
+message DeletePCAPDatabaseResponse {
+  DbOperateMessage Message = 1;
+  bool Deleted = 2;
+  bool CleanupPending = 3;
+  string CleanupError = 4; // Deletion was committed but file cleanup needs retry.
 }

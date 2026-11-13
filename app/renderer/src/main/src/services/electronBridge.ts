@@ -42,6 +42,7 @@ export const yakitMcp = getBridge().mcp
 export const yakitDuplex = getBridge().duplex
 export const yakitSocket = getBridge().socket
 export const yakitStream = getBridge().stream
+export const yakitTraffic = getBridge().traffic
 export const yakitUILayout = getBridge().uiLayout
 export const yakitProject = getBridge().project
 export const yakitCodec = getBridge().codec
