@@ -9609,6 +9609,8 @@ message AIModelConfig {
   // 是否已对 xhigh/max 做过探测。false=未探测（首次操作下拉框时触发）；
   // true=已探测（ProbedExtendedEfforts 即最终结果，不再重复探测）。
   bool EffortProbed = 7;
+  // Stable owner for this configured provider entry, independent of the selected model.
+  string ContextOwnerId = 8;
 }
 
 message AIGlobalConfig {
