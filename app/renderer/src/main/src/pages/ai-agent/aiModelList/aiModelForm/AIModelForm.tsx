@@ -388,6 +388,8 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
               },
             }
 
+      newUpdateItem.ContextOwnerId = oldUpdateItem.ContextOwnerId
+
       if (aiModelType !== modelType) {
         const isHave = newConfig[fileName].find((i) => isEqualAIModel(i, newUpdateItem))
         if (isHave) {

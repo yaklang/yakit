@@ -171,6 +171,7 @@ export interface AIAgentChatData {
   riskRunTimeIDs: string[]
   /** 性能相关数据 */
   aiPerfData: {
+    modelContext?: AIAgentGrpcApi.ModelContext
     /** 消耗Token */
     consumption: AIAgentGrpcApi.Consumption
     /** 上下文压力 */

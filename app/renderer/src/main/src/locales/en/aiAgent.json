@@ -774,6 +774,12 @@
     "editHint": ", please click Edit in the upper right corner to fix it"
   },
   "AIContextToken": {
+    "autoAdjust": "Auto-adjust",
+    "autoAdjustHelpLabel": "About auto-adjust",
+    "autoAdjustHelp": "Enabled by default. When enabled, reduce the threshold and retry if the model rejects an oversized context. When disabled, keep the manual threshold and stop the task on overflow.",
+    "perModel": "Saved per model",
+    "thresholdUsageSummary": "Context used {{used}} / compression threshold {{threshold}} ({{percent}}%)",
+    "compressionThreshold": "Compression threshold",
     "pressure": "Context Pressure",
     "speed": "Response Speed",
     "peak": "Peak",
@@ -797,7 +803,22 @@
     },
     "noCallRecords": "No call records",
     "unknownModel": "Unknown model",
-    "switchChartMetric": "Switch between Token and Byte"
+    "switchChartMetric": "Switch between Token and Byte",
+    "contextTooLarge": "An overly large context may reduce model performance and increase latency and cost.",
+    "adjustContextThreshold": "Adjust compression threshold for this model",
+    "loadingContext": "Loading model context…",
+    "waitingContext": "Waiting for this conversation’s model context…",
+    "selectContextModel": "Select a model to set its compression threshold.",
+    "contextRequestFailed": "Could not read or save model context. Connect to an engine that supports this feature and retry.",
+    "contextAdjusting": "Adjusting",
+    "contextAdjusted": "Auto-adjusted",
+    "contextAdjustmentPending": "Compressing context and retrying based on the model response. No action is needed.",
+    "contextAdjustmentReason": "The model rejected the longer context. The compression threshold was adjusted from {{previous}} to {{threshold}} and saved for this model.",
+    "contextAdjustmentSaved": "The compression threshold was automatically adjusted to {{threshold}} based on the model response. Future chats will use this setting.",
+    "contextLabel": "Context",
+    "usageOverThreshold": "Context used / compression threshold",
+    "resetContextThreshold": "Reset to default 500K",
+    "contextUpdateTimeout": "No confirmation received for the threshold update. Please retry."
   },
   "InstallLlamaServerModelPrompt": {
     "installing": "Installing model environment",

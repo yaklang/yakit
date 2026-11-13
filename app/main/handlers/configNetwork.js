@@ -126,6 +126,19 @@ module.exports = (win, getClient) => {
     return await asyncGetAIGlobalConfig(params)
   })
 
+  for (const method of ['GetAIModelContext', 'SetAIModelContext']) {
+    ipcMain.handle(
+      method,
+      async (_event, params) =>
+        new Promise((resolve, reject) => {
+          getClient()[method](params, (err, data) => {
+            if (err) reject(err)
+            else resolve(data)
+          })
+        }),
+    )
+  }
+
   const asyncSetAIGlobalConfig = (params) => {
     return new Promise((resolve, reject) => {
       getClient().SetAIGlobalConfig(params, (err, data) => {

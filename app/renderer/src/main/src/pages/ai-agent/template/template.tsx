@@ -44,6 +44,7 @@ import { editorViewCtx, serializerCtx } from '@milkdown/kit/core'
 import { convertKeyEventToKeyCombination } from '@/utils/globalShortcutKey/utils'
 import { YakitKeyBoard } from '@/utils/globalShortcutKey/keyboard'
 import { AIModelSelect } from '../aiModelList/aiModelSelect/AIModelSelect'
+import ModelContextPopover from '../aiChatContent/AIContextToken/ModelContextPopover'
 import AIReviewRuleSelect from '@/pages/ai-re-act/aiReviewRuleSelect/AIReviewRuleSelect'
 import { AIFocusMode } from '@/pages/ai-re-act/aiFocusMode/AIFocusMode'
 import { AIReasoningEffortSelect } from '@/pages/ai-re-act/aiReasoningEffortSelect/AIReasoningEffortSelect'
@@ -368,6 +369,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                 />
               ),
             )
+            node.push(<ModelContextPopover key="model-context" />)
             break
 
           default:

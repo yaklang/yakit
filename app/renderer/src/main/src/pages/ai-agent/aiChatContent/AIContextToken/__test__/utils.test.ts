@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { AIAgentGrpcApi } from '@/pages/ai-re-act/hooks/grpcApi'
-import { isConsumptionPerfChanged, isTierModelConsumptionChanged } from '../utils'
+import type { AIAgentChatData } from '../../../type/aiChat'
+import { isConsumptionPerfChanged, isPerfDataChanged, isTierModelConsumptionChanged } from '../utils'
 
 const createConsumption = (): AIAgentGrpcApi.Consumption => ({
   input_consumption: 10,
@@ -8,6 +9,26 @@ const createConsumption = (): AIAgentGrpcApi.Consumption => ({
   cache_hit_token: 2,
   consumption_uuid: 'consumption-id',
   tier_consumption: {},
+})
+
+it('单独收到模型阈值更新也会刷新详情图，不依赖新的压力采样', () => {
+  const previous = {
+    modelContext: {
+      provider: 'openai',
+      model: 'main',
+      threshold_tokens: 500 * 1024,
+      prompt_tokens: 58000,
+      source: 'manual',
+      pending: false,
+    },
+  } as AIAgentChatData['aiPerfData']
+  expect(isPerfDataChanged(previous, structuredClone(previous))).toBe(false)
+  expect(
+    isPerfDataChanged(previous, {
+      ...previous,
+      modelContext: { ...previous.modelContext!, threshold_tokens: 100 * 1024 },
+    }),
+  ).toBe(true)
 })
 
 describe('isConsumptionPerfChanged', () => {

@@ -38,6 +38,9 @@ vi.mock('@/components/MilkdownEditor/utils/utils', () => ({ imgTypes: [] }))
 vi.mock('@/utils/notification', () => ({ success: vi.fn(), yakitNotify: vi.fn() }))
 vi.mock('@/utils/clipboard', () => ({ setClipboardText: vi.fn() }))
 vi.mock('../../aiModelList/aiModelSelect/AIModelSelect', () => ({ AIModelSelect: () => null }))
+vi.mock('../../aiChatContent/AIContextToken/ModelContextPopover', () => ({
+  default: () => <button aria-label="调整上下文阈值" />,
+}))
 vi.mock('@/pages/ai-re-act/aiReviewRuleSelect/AIReviewRuleSelect', () => ({ default: () => null }))
 vi.mock('@/pages/ai-re-act/aiFocusMode/AIFocusMode', () => ({ AIFocusMode: () => null }))
 vi.mock('@/pages/ai-re-act/aiReasoningEffortSelect/AIReasoningEffortSelect', () => ({
@@ -111,6 +114,11 @@ vi.mock('../../components/aiMilkdownInput/AIMilkdownInput', () => ({
 }))
 
 const { AIChatTextarea } = await compileReactModule<typeof TemplateModule>(import.meta.url, '../template.tsx')
+
+it('shows the context threshold entry beside the model selector before starting a chat', async () => {
+  render(<AIChatTextarea chatDataStoreKey="context-entry-test" inputFooterLeft={<span />} />)
+  expect(screen.getByRole('button', { name: '调整上下文阈值' })).toBeVisible()
+})
 
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'], shouldAdvanceTime: true })

@@ -2,6 +2,7 @@ import type { AIMessageHandler } from '../type'
 import type { AIAgentGrpcApi } from '../grpcApi'
 import type { AIContextStatsDetail } from '@/pages/ai-agent/type/aiChat'
 import { Uint8ArrayToString } from '@/utils/str'
+import { yakitNotify } from '@/utils/notification'
 
 const handleConsumption: AIMessageHandler = (request) => {
   const { res, rawData } = request
@@ -219,6 +220,24 @@ const handlePromptProfile: AIMessageHandler = (request) => {
 }
 
 export const aiPerfDataHandlers = {
+  model_context: (({ res, rawData }) => {
+    const data = JSON.parse(Uint8ArrayToString(res.Content)) as AIAgentGrpcApi.ModelContext
+    if (!Number.isFinite(data.threshold_tokens) || data.threshold_tokens <= 0) return
+    // A hotpatch has no new request: keep the last observed input size.
+    const previous = rawData.aiPerfData.modelContext
+    // Automatic calibration is silent. Only an explicit setting failure needs a notice.
+    if (!res.IsSync && data.error) yakitNotify('warning', data.error)
+    rawData.aiPerfData.modelContext = {
+      ...data,
+      prompt_tokens:
+        data.prompt_tokens ||
+        (previous?.provider === data.provider &&
+        previous?.model === data.model &&
+        previous?.context_key === data.context_key
+          ? previous.prompt_tokens
+          : 0),
+    }
+  }) satisfies AIMessageHandler,
   consumption: handleConsumption,
   pressure: handlePressure,
   ai_first_byte_cost_ms: handleAIFirstByteCostMS,

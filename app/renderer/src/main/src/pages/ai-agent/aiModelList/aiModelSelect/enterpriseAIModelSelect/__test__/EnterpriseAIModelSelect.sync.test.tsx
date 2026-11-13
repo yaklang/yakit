@@ -65,7 +65,8 @@ vi.mock('@/components/yakitUI/YakitSelect/YakitSelect', () => ({
 
 const configA = (): AIGlobalConfig => ({
   ...defaultAIGlobalConfig,
-  IntelligentModels: ['model-a', 'model-b', 'model-c'].map((ModelName) => ({
+  IntelligentModels: ['model-a', 'model-b', 'model-c'].map((ModelName, index) => ({
+    ContextOwnerId: `00000000-0000-4000-8000-00000000000${index}`,
     ModelName,
     ProviderId: ModelName,
     ExtraParams: [],
@@ -169,7 +170,11 @@ describe('EnterpriseAIModelSelect real config hook/store synchronization', () =>
     await act(async () => recovery.resolve(initial))
     await flush()
     const latest = structuredClone(initial)
-    latest.IntelligentModels.push({ ...initial.IntelligentModels[0], ModelName: 'model-renamed' })
+    latest.IntelligentModels.push({
+      ...initial.IntelligentModels[0],
+      ContextOwnerId: '00000000-0000-4000-8000-000000000009',
+      ModelName: 'model-renamed',
+    })
     act(() => useAIGlobalConfigStore.getState().setAIGlobalConfig(latest))
     toggle('close')
     await flush()

@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 import '../../../ai-re-act/hooks/__test__/setupElectron'
 // 导入链会经过 aiGlobalLoading → lottie-web，模块加载期探测 canvas，jsdom 不支持
 vi.mock('lottie-web', () => ({ default: vi.fn() }))
-import { formatAIAgentSetting } from '..'
+import { formatAIAgentSetting, formatNumberUnits } from '..'
 import { AIAgentSettingDefault } from '../../defaultConstant'
 
 describe('formatAIAgentSetting', () => {
@@ -78,15 +78,15 @@ describe('formatAIAgentSetting', () => {
     expect(result.Strategy?.GoalAcceptanceCriteria).toBe('接口 200')
   })
 
-  it('不再下发已废弃的 TimelineContentSizeLimit，运行时上下文走新字段', () => {
+  it('新会话忽略旧的全局上下文默认值，交由后端恢复模型阈值', () => {
     const result = formatAIAgentSetting({
       ...AIAgentSettingDefault,
       TimelineContentSizeLimit: 60,
       RuntimeContextSizeLimit: 300,
     })
     expect(result).not.toHaveProperty('TimelineContentSizeLimit')
-    // 设置里单位是KB，下发时换算成字节
-    expect(result.RuntimeContextSizeLimit).toBe(300 * 1024)
+    // 0 表示恢复模型记录，不把旧的全局 300K 写给每个会话
+    expect(result.RuntimeContextSizeLimit).toBe(0)
   })
 
   it('运行时上下文留空时不覆盖服务端默认阈值', () => {
@@ -95,5 +95,27 @@ describe('formatAIAgentSetting', () => {
     expect(formatAIAgentSetting({ ...AIAgentSettingDefault, RuntimeContextSizeLimit: 0 }).RuntimeContextSizeLimit).toBe(
       0,
     )
+  })
+})
+
+// The same formatter feeds token totals, pressure labels and chart tooltips.
+describe('decimal token display', () => {
+  it.each([
+    [999, '999'],
+    [1000, '1.0K'],
+    [1024, '1.0K'],
+    [100000, '100.0K'],
+    [512000, '512.0K'],
+    [999999, '1.0M'],
+    [1000000, '1.0M'],
+    [1500000, '1.5M'],
+  ])('formats %i tokens as %s', (tokens, label) => {
+    expect(formatNumberUnits(tokens)).toBe(label)
+  })
+
+  it('keeps byte statistics on their existing binary scale', () => {
+    expect(formatNumberUnits(1000, 1024)).toBe('1000')
+    expect(formatNumberUnits(102400, 1024)).toBe('100.0K')
+    expect(formatNumberUnits(1048576, 1024)).toBe('1.0M')
   })
 })

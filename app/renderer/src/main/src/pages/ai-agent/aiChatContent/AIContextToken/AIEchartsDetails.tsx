@@ -39,6 +39,7 @@ export interface AIEchartsDetailsProps {
   overallToken: [number | string, number | string, number | string]
   consumption?: AIAgentGrpcApi.Consumption
   pressure?: AIAgentChatData['aiPerfData']['pressure']
+  modelContext?: AIAgentGrpcApi.ModelContext
   firstCost?: AIAgentChatData['aiPerfData']['firstCost']
   contextStats?: AIAgentChatData['aiPerfData']['contextStats']
   contextSections?: AIAgentChatData['aiPerfData']['contextSections']
@@ -50,6 +51,7 @@ const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = ({
   overallToken,
   consumption,
   pressure,
+  modelContext,
   firstCost,
   contextStats,
   contextSections,
@@ -87,7 +89,7 @@ const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = ({
     return getCostData(firstCost)
   }, [renderNumber, firstCost?.intelligent, firstCost?.lightweight])
 
-  const threshold = useCreation(() => runtimeContextSizeLimit * 1024, [runtimeContextSizeLimit])
+  const threshold = modelContext?.threshold_tokens ?? Math.round(runtimeContextSizeLimit * 1000)
 
   const contextStatsData = useCreation(() => {
     return getContextStatsData(contextStats?.data)
@@ -97,7 +99,7 @@ const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = ({
     if (contextStatsMetric === 'tokens') {
       return formatNumberUnits(contextStats?.prompt_tokens ?? 0)
     }
-    return formatNumberUnits(contextStats?.prompt_bytes ?? 0)
+    return formatNumberUnits(contextStats?.prompt_bytes ?? 0, 1024)
   }, [contextStatsMetric, contextStats?.prompt_bytes, contextStats?.prompt_tokens])
 
   const contextSectionsData = useCreation(() => {
@@ -118,11 +120,6 @@ const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = ({
       <div className={styles['echarts-heard']}>
         <div className={styles['echarts-heard-left']}>
           <div className={styles['title']}>{title}</div>
-          {title === t('AIContextToken.pressure') && (
-            <div className={styles['threshold']}>
-              {t('AIContextToken.limit')}:{formatNumberUnits(threshold)}
-            </div>
-          )}
         </div>
         <div className={styles['extra']}>
           <div className={styles['intelligent']}>

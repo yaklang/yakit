@@ -81,6 +81,13 @@ export const isTierModelConsumptionChanged = (
 
 /** 比较 aiPerfData 是否发生了需要触发更新的变化 */
 export const isPerfDataChanged = (prev: PerfData, next: PerfData): boolean => {
+  if (
+    prev.modelContext?.provider !== next.modelContext?.provider ||
+    prev.modelContext?.model !== next.modelContext?.model ||
+    prev.modelContext?.threshold_tokens !== next.modelContext?.threshold_tokens
+  )
+    return true
+
   const prevConsumption = prev.consumption
   const nextConsumption = next.consumption
   if (

@@ -68,12 +68,12 @@ export const reviewListToTrees = (items: AITaskInfoProps[]): AIAgentGrpcApi.Plan
 }
 
 // #region chat相关工具
-/** @name 将Token转换为K/M等带单位字符 */
-export const formatNumberUnits = (num: number) => {
-  if (num >= 1048576) {
-    return (num / 1048576).toFixed(1) + 'M'
-  } else if (num >= 1024) {
-    return (num / 1024).toFixed(1) + 'K'
+/** @name Token 默认按十进制显示；字节统计显式传入 1024。 */
+export const formatNumberUnits = (num: number, base: 1000 | 1024 = 1000) => {
+  if (num >= base * base || (base === 1000 && Number((num / base).toFixed(1)) >= base)) {
+    return (num / (base * base)).toFixed(1) + 'M'
+  } else if (num >= base) {
+    return (num / base).toFixed(1) + 'K'
   } else {
     return num.toString()
   }
@@ -136,8 +136,8 @@ export const formatAIAgentSetting = (setting: AIAgentSetting): AIAgentSetting =>
     if (!isNil(setting?.ReActMaxIteration)) {
       data.ReActMaxIteration = setting.ReActMaxIteration || AIAgentSettingDefault.ReActMaxIteration
     }
-    // RuntimeContextSizeLimit 单位是KB，但传到后端需要转换为字节；<=0 表示用服务端默认阈值
-    data.RuntimeContextSizeLimit = (setting.RuntimeContextSizeLimit ?? 0) * 1024
+    // 新会话按模型恢复阈值，不再把旧的全局/会话设置应用到所有模型。
+    data.RuntimeContextSizeLimit = 0
 
     // AICallTokenLimit 单位是KB，但传到后端需要转换为字节
     data.AICallTokenLimit = ((setting.AICallTokenLimit ?? AIAgentSettingDefault.AICallTokenLimit) as number) * 1024
@@ -278,6 +278,7 @@ export const onReStart = (props: ReStartParams) => {
     const request: AIStartParams = setting ?? {
       ...AIAgentSettingDefault,
       ...activeChat.StartParams,
+      RuntimeContextSizeLimit: activeChat.StartParams?.RuntimeContextSizeLimit ?? 0,
       PreferSessionCachedConfig: true,
       UserQuery: '',
     }

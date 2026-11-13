@@ -774,6 +774,12 @@
     "editHint": ",请点击右上角编辑进行处理"
   },
   "AIContextToken": {
+    "autoAdjust": "自动调整",
+    "autoAdjustHelpLabel": "自动调整说明",
+    "autoAdjustHelp": "默认开启。开启后，模型拒绝过长上下文时会自动降低阈值并重试；关闭后保留手动阈值，超限时停止任务。",
+    "perModel": "按模型保存",
+    "thresholdUsageSummary": "上下文已用 {{used}} / 压缩阈值 {{threshold}}（{{percent}}%）",
+    "compressionThreshold": "压缩阈值",
     "pressure": "上下文压力",
     "speed": "响应速度",
     "peak": "峰值",
@@ -797,7 +803,22 @@
     },
     "noCallRecords": "暂无调用记录",
     "unknownModel": "未知模型",
-    "switchChartMetric": "切换 Token / Byte"
+    "switchChartMetric": "切换 Token / Byte",
+    "contextTooLarge": "过大的上下文可能降低模型表现，并增加延迟和费用。",
+    "adjustContextThreshold": "调整当前模型的压缩阈值",
+    "loadingContext": "正在读取模型上下文…",
+    "waitingContext": "正在等待当前会话的模型上下文…",
+    "selectContextModel": "选择模型后即可设置压缩阈值。",
+    "contextRequestFailed": "无法读取或保存模型上下文，请确认已连接支持此功能的引擎后重试。",
+    "contextAdjusting": "自动调整中",
+    "contextAdjusted": "自动调整",
+    "contextAdjustmentPending": "正在根据模型响应压缩上下文并重试，无需操作。",
+    "contextAdjustmentReason": "模型未接受过长的上下文，压缩阈值已从 {{previous}} 调整为 {{threshold}}。此设置按模型保存。",
+    "contextAdjustmentSaved": "已根据模型响应将压缩阈值调整为 {{threshold}}，后续会话将沿用。",
+    "contextLabel": "上下文",
+    "usageOverThreshold": "已用上下文 / 压缩阈值",
+    "resetContextThreshold": "恢复默认 500K",
+    "contextUpdateTimeout": "未收到阈值更新确认，请重试。"
   },
   "InstallLlamaServerModelPrompt": {
     "installing": "正在安装模型环境",

@@ -381,6 +381,8 @@ export const canEnableSingleModelMode = (config: Pick<AIGlobalConfig, 'Intellige
 }
 export type AIModelTypeFileName = keyof Pick<AIGlobalConfig, 'IntelligentModels' | 'LightweightModels' | 'VisionModels'>
 export interface AIModelConfig {
+  /** Stable ownership of saved context settings; preserved when editing or switching models. */
+  ContextOwnerId?: string
   ProviderId: string
   Provider: ThirdPartyApplicationConfig
   ModelName: string
