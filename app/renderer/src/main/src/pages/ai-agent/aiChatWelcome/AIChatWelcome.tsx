@@ -1,11 +1,5 @@
-import { MemfitLogoColorful } from '@yakit-libs/yakit-ui-icons/colorful'
-import React, { type FC, forwardRef, memo, useEffect, useImperativeHandle, useRef, useState } from 'react'
-import type {
-  AIChatWelcomeIntroTipsProps,
-  AIChatWelcomeProps,
-  AIChatWelcomeSettingCardProps,
-  AIChatWelcomeSettingCardRef,
-} from './type'
+import React, { forwardRef, memo, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import type { AIChatWelcomeProps, AIChatWelcomeSettingCardProps, AIChatWelcomeSettingCardRef } from './type'
 import styles from './AIChatWelcome.module.scss'
 import { AIChatTextarea } from '../template/template'
 import { useCreation, useInViewport, useMemoizedFn } from 'ahooks'
@@ -13,7 +7,6 @@ import type { AIChatTextareaRefProps, AIChatTextareaSubmit } from '../template/t
 
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
-  ChatOutlined,
   CheckOutlined,
   PencilAltOutlined,
   ShieldExclamationOutlined,
@@ -23,7 +16,7 @@ import {
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import classNames from 'classnames'
 import type { AIEnabledCapability, AIReActRecommendedSkill } from '@/pages/ai-re-act/hooks/grpcApi'
-import { ColorsChatIcon, ColorsPreViewMDIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
+import { ColorsPreViewMDIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
 import {
   grpcGetAIReActRecommendedSkills,
   grpcUpdateAIReActRecommendedSkill,
@@ -34,6 +27,25 @@ import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { getMainOperatorPageBodyContainerOrBody } from '@/utils/getMainOperatorPageBodyContainer'
 import { yakitNotify } from '@/utils/notification'
 import { AIWelcomeAsciiRipple } from './AIWelcomeAsciiRipple'
+import { useWelcomeAnimationDisabled } from '../store/welcomeAnimationStore'
+import { Flex } from 'antd'
+import WelcomeRecentSessions, { type WelcomeRecentSessionsDensity } from './WelcomeRecentSessions/WelcomeRecentSessions'
+import WelcomeTipsCards from './WelcomeTipsCards/WelcomeTipsCards'
+
+const WELCOME_TITLE = 'Memfit AI Agent'
+const WELCOME_NARROW_WIDTH = 720
+const WELCOME_TIGHT_HEIGHT = 680
+const WELCOME_SHORT_HEIGHT = 850
+
+interface WelcomeLayout {
+  compact: boolean
+  sessionDensity: WelcomeRecentSessionsDensity
+}
+
+const resolveWelcomeLayout = (width: number, height: number): WelcomeLayout => ({
+  compact: width < WELCOME_NARROW_WIDTH || height < WELCOME_TIGHT_HEIGHT,
+  sessionDensity: height < WELCOME_TIGHT_HEIGHT ? 'collapsed' : height <= WELCOME_SHORT_HEIGHT ? 'three' : 'full',
+})
 
 const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
   forwardRef((props, ref) => {
@@ -62,13 +74,20 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
     const settingCardRef = useRef<AIChatWelcomeSettingCardRef>(null)
 
     const welcomeRef = useRef<HTMLDivElement>(null)
-    const [isCompact, setIsCompact] = useState(false)
+    const animationDisabled = useWelcomeAnimationDisabled()
+    const [layout, setLayout] = useState<WelcomeLayout>({ compact: false, sessionDensity: 'full' })
+    const [isEmptyStats, setIsEmptyStats] = useState(false)
+    const handleEmptyStatsChange = useMemoizedFn((empty: boolean) => {
+      setIsEmptyStats((prev) => (prev === empty ? prev : empty))
+    })
     useEffect(() => {
       const el = welcomeRef.current
       if (!el || typeof ResizeObserver === 'undefined') return
       const update = (width: number, height: number) => {
-        const next = width < 720 || height < 680
-        setIsCompact((prev) => (prev === next ? prev : next))
+        const next = resolveWelcomeLayout(width, height)
+        setLayout((prev) =>
+          prev.compact === next.compact && prev.sessionDensity === next.sessionDensity ? prev : next,
+        )
       }
       update(el.clientWidth, el.clientHeight)
       const observer = new ResizeObserver((entries) => {
@@ -89,25 +108,37 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
         enabledCapabilities: select,
       })
     })
-    const onSetInputValue = useMemoizedFn((v: string) => {
-      aiChatTextareaRef.current?.setValue(v)
-    })
+
     return (
       <div className={styles['ai-chat-welcome-wrapper']} ref={welcomeRef}>
         <AIWelcomeAsciiRipple targetRef={welcomeRef} />
         <div className={styles['welcome-scroll']}>
           <div
             className={classNames(styles['input-wrapper'], {
-              [styles['input-wrapper-compact']]: isCompact,
+              [styles['input-wrapper-compact']]: layout.compact,
             })}
           >
-            <div className={styles['input-heard']}>
-              <MemfitLogoColorful className={styles['memfit-icon']} />
-              <div className={styles['title']}>Memfit AI Agent</div>
-              <div className={styles['subtitle']}>{t('AIChatWelcome.WelcomeHomeSubTitle')}</div>
-            </div>
+            <Flex className={styles['input-heard']} align="center" vertical gap={16}>
+              <div className={styles['title']}>
+                {animationDisabled
+                  ? WELCOME_TITLE
+                  : WELCOME_TITLE.split('').map((ch, index) => (
+                      <span
+                        key={`${ch}-${index}`}
+                        className={styles['title-char']}
+                        style={{ animationDelay: `${index * 36}ms` }}
+                      >
+                        {ch === ' ' ? '\u00A0' : ch}
+                      </span>
+                    ))}
+              </div>
+              <Flex vertical gap={12} className={styles['welcome-tips-block']}>
+                {!isEmptyStats && <div className={styles['subtitle']}>{t('AIChatWelcome.WelcomeHomeSubTitle')}</div>}
+                <WelcomeTipsCards compact={layout.compact} onEmptyChange={handleEmptyStatsChange} />
+                {!isEmptyStats && <WelcomeRecentSessions density={layout.sessionDensity} />}
+              </Flex>
+            </Flex>
             <div className={styles['input-body-wrapper']}>
-              <AIChatWelcomeIntroTips onSetInputValue={onSetInputValue} compact={isCompact} />
               <div className={styles['input-panel']} data-ai-ripple-disabled>
                 <AIChatWelcomeSettingCard ref={settingCardRef} />
                 <AIChatTextarea
@@ -128,64 +159,6 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
 )
 
 export default AIChatWelcome
-
-const welcomeTips = [
-  { text: '收集目标 example.com 的开放端口与服务指纹信息' },
-  { text: '枚举 target.com 的子域名并整理有效 Web 资产' },
-  { text: '对当前目标执行常见漏洞扫描' },
-  { text: '对当前目标执行 SQL 注入测试并验证利用点' },
-  { text: '解读这份扫描报告，标记高危项并给出复现思路' },
-  { text: '审计这段代码，识别 SQL 注入、XSS 等常见 Web 漏洞' },
-  { text: '审计当前代码库中硬编码密钥、Token 等敏感信息泄露' },
-  { text: '识别目标登录入口，分析可尝试的认证绕过或弱口令风险' },
-  { text: '验证目标是否存在未授权访问、越权访问' },
-  { text: '规划从入口到域控的完整攻击链路' },
-]
-
-const pickRandomWelcomeTips = (list: typeof welcomeTips) => {
-  const copied = [...list]
-  for (let i = copied.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[copied[i], copied[j]] = [copied[j], copied[i]]
-  }
-  const count = 5 + Math.floor(Math.random() * 2)
-  return copied.slice(0, Math.min(count, copied.length))
-}
-
-const AIChatWelcomeIntroTips: FC<AIChatWelcomeIntroTipsProps> = memo(({ onSetInputValue, compact }) => {
-  const introTipsRef = useRef<HTMLDivElement>(null)
-  const [inViewport = true] = useInViewport(introTipsRef)
-  const [randomWelcomeTips, setRandomWelcomeTips] = useState(() => pickRandomWelcomeTips(welcomeTips))
-
-  useEffect(() => {
-    if (inViewport) {
-      setRandomWelcomeTips(pickRandomWelcomeTips(welcomeTips))
-    }
-  }, [inViewport])
-
-  const visibleTips = compact ? randomWelcomeTips.slice(0, 3) : randomWelcomeTips
-
-  return (
-    <div className={styles['intro-tips']} ref={introTipsRef}>
-      {visibleTips.map((item) => {
-        return (
-          <div
-            key={item.text}
-            className={classNames(styles['intro-tip-item'])}
-            data-ai-ripple-disabled
-            onClick={() => onSetInputValue(item.text)}
-          >
-            <div className={styles['intro-tip-content']}>
-              <ChatOutlined className={styles['intro-tip-icon']} color="currentColor" />
-              <ColorsChatIcon className={styles['intro-tip-color-icon']} />
-              <span className={styles['intro-tip-text']}>{item.text}</span>
-            </div>
-          </div>
-        )
-      })}
-    </div>
-  )
-})
 
 const getIconByName = (name: string) => {
   switch (name) {

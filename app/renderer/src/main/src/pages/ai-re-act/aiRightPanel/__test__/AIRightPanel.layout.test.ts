@@ -92,6 +92,8 @@ describe('AIRightPanel layout contract', () => {
     // （原 .end 已合并进 .footer-loading）
     const footerLoadingBlock = contentsSource.match(/\.footer-loading\s*\{([\s\S]*?)\n\s*\}/)?.[1] ?? ''
     expect(footerLoadingBlock).toContain('@include mixin.ai-right-panel-content-track')
+    const loadMoreHeaderBlock = contentsSource.match(/\.load-more-header\s*\{([\s\S]*?)\n\s*\}/)?.[1] ?? ''
+    expect(loadMoreHeaderBlock).toContain('@include mixin.ai-right-panel-content-track')
 
     // 待办卡片与消息列表共用同一条内容轨道
     const todoListBlock = todoWrapperSource.match(/\.to-do-list\s*\{([\s\S]*?)\n\s*\}/)?.[1] ?? ''

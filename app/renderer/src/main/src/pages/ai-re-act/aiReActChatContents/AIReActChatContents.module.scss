@@ -59,6 +59,19 @@
       font-size: 12px;
     }
   }
+  // 向上加载的转圈跟消息同一条内容轨道，避免按整屏居中。
+  .load-more-header {
+    @include mixin.ai-right-panel-content-track;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    :global(.ant-spin) {
+      position: static;
+      width: auto;
+      height: auto;
+    }
+  }
   .footer-loading {
     @include mixin.ai-right-panel-content-track;
     padding-bottom: 24px;
