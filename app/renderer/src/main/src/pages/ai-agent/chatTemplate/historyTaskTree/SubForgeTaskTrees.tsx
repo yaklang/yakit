@@ -39,9 +39,11 @@ export function SubForgeRunTree({ run }: { run: SubForgeRun }) {
       <li key={node.task_id || index}>
         <div className={styles.node}>
           <span className={styles.name}>{node.name}</span>
-          <span className={styles.status} data-status={progress}>
-            {t(`SubForgeTaskTree.${progress}`)}
-          </span>
+          {(!node.subtasks?.length || node.progress) && (
+            <span className={styles.status} data-status={progress}>
+              {t(`SubForgeTaskTree.${progress}`)}
+            </span>
+          )}
         </div>
         {!!node.subtasks?.length && <ul>{node.subtasks.map(renderNode)}</ul>}
       </li>
