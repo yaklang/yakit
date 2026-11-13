@@ -917,7 +917,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
     const riskType = info.RiskTypeVerbose || info.RiskType || ''
     const disposalList = getDisposalStatusFromTags(info.Tags)
     const disposalStatus = disposalList.join('|')
-    const { severity } = cvssToSeverityLevel(cvss)
+    const severity = cvss === 0 && info.Severity ? info.Severity : cvssToSeverityLevel(cvss).severity
     const isRepaired = disposalList.includes(DISPOSAL_STATUS_REPAIRED)
     const params: BatchSetRiskTagsRequest = {
       ...(scope || { Filter: getQuery(), Ids: [info.Id] }),
@@ -1846,6 +1846,7 @@ export const YakitRiskEditForm: React.FC<YakitRiskEditFormProps> = React.memo((p
   const submittingRef = useRef(false)
   const initRiskType = info.RiskTypeVerbose || info.RiskType || undefined
   const initCvss = typeof info.SeverityScore === 'number' ? info.SeverityScore : undefined
+  const cvssChangedRef = useRef(false)
   const initDisposal = getDisposalStatusFromTags(info.Tags)
   const [typeSearch, setTypeSearch] = useState('')
   const verifierChangedRef = useRef(false)
@@ -1907,8 +1908,12 @@ export const YakitRiskEditForm: React.FC<YakitRiskEditFormProps> = React.memo((p
   const cvssWatch = Form.useWatch('cvss', form)
   const severityLabel = useCreation(() => {
     if (cvssWatch === undefined || cvssWatch === null || Number.isNaN(Number(cvssWatch))) return '-'
-    const { severity } = cvssToSeverityLevel(Number(cvssWatch))
-    return t(`YakitTag.${severity}`)
+    const severity =
+      !cvssChangedRef.current && initCvss === 0 && info.Severity
+        ? info.Severity
+        : cvssToSeverityLevel(Number(cvssWatch)).severity
+    const severityTag = SeverityMapTag.find((item) => item.key.includes(severity.toLowerCase()))
+    return severityTag ? t(severityTag.nameUi) : severity
   }, [cvssWatch, i18nRefresh])
   const isRepairedSelected = useCreation(() => {
     return Array.isArray(disposalStatus) && disposalStatus.includes(DISPOSAL_STATUS_REPAIRED)
@@ -1977,7 +1982,8 @@ export const YakitRiskEditForm: React.FC<YakitRiskEditFormProps> = React.memo((p
       }
       const disposalList = (value.disposal_status || []).map((item) => String(item).trim()).filter(Boolean)
       const disposal = disposalList.join('|')
-      const { severity } = cvssToSeverityLevel(cvss)
+      const severity =
+        !cvssChangedRef.current && initCvss === 0 && info.Severity ? info.Severity : cvssToSeverityLevel(cvss).severity
       const isRepaired = disposalList.includes(DISPOSAL_STATUS_REPAIRED)
       const verifierUid = isRepaired ? value.verifier : undefined
       const verifierName = verifierUid
@@ -2110,6 +2116,11 @@ export const YakitRiskEditForm: React.FC<YakitRiskEditFormProps> = React.memo((p
                   step={0.1}
                   precision={1}
                   placeholder="0.0-10.0"
+                  onChange={(value) => {
+                    if (value === null || value === '' || Number(value) !== initCvss) {
+                      cvssChangedRef.current = true
+                    }
+                  }}
                   style={{ width: '100%' }}
                 />
               </Form.Item>
