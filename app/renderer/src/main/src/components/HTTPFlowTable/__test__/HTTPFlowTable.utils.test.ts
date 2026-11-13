@@ -43,7 +43,16 @@ describe('AI HTTP flow selection', () => {
         { RuntimeId: 'one', RuntimeIDs: ['two'], SourceType: 'mitm', IncludeId: [3, 8], Keyword: 'text' },
         ['3', '7', '3'],
       ),
-    ).toEqual({ IncludeId: [3], Keyword: 'text' })
+    ).toEqual({ IncludeId: ['3'], Keyword: 'text' })
+  })
+
+  it('keeps distinct int64 IDs and intersects with the exact ID filter', () => {
+    const ids = ['9007199254740992', '9007199254740993']
+    expect(buildAISelectedHTTPFlowQuery({}, [...ids, ids[0]])).toEqual({ IncludeId: ids })
+    const filter = withIncludeId({}, parseIncludeIds('9007199254740993'))
+    expect(buildAISelectedHTTPFlowQuery(filter, ids)).toEqual({ IncludeId: [ids[1]] })
+    expect(buildAISelectedHTTPFlowQuery(filter, [ids[0]])).toBeUndefined()
+    expect(buildAISelectedHTTPFlowQuery({ IncludeId: [Number(ids[1])] }, ids)).toBeUndefined()
   })
 
   it('does not produce an unrestricted query for an empty selection or intersection', () => {
@@ -152,9 +161,9 @@ describe('shouldClearHistorySearchInput', () => {
 
 describe('withIncludeId', () => {
   it('writes ids and deletes the field when the list is empty', () => {
-    expect(withIncludeId({ Keyword: 'login', IncludeId: [1] }, [2, 3])).toEqual({
+    expect(withIncludeId({ Keyword: 'login', IncludeId: [1] }, ['2', '3'])).toEqual({
       Keyword: 'login',
-      IncludeId: [2, 3],
+      IncludeId: ['2', '3'],
     })
     expect(withIncludeId({ Keyword: 'login', IncludeId: [1] }, [])).toEqual({
       Keyword: 'login',
@@ -193,23 +202,31 @@ describe('view attach search transitions', () => {
 
 describe('mergeIncludeIds', () => {
   it('unions column ids and keyword ids and keeps the first occurrence', () => {
-    expect(mergeIncludeIds([1, 2], [2, 3])).toEqual([1, 2, 3])
-    expect(mergeIncludeIds([4], [])).toEqual([4])
-    expect(mergeIncludeIds([], [5, 5])).toEqual([5])
+    expect(mergeIncludeIds(['1', '2'], ['2', '3'])).toEqual(['1', '2', '3'])
+    expect(mergeIncludeIds(['4'], [])).toEqual(['4'])
+    expect(mergeIncludeIds([], ['5', '5'])).toEqual(['5'])
     expect(mergeIncludeIds()).toEqual([])
   })
 })
 
 describe('parseIncludeIds', () => {
-  it('parses single and comma-separated numbers into an id array', () => {
-    expect(parseIncludeIds('12')).toEqual([12])
-    expect(parseIncludeIds('1,2,10')).toEqual([1, 2, 10])
-    expect(parseIncludeIds('0')).toEqual([0])
+  it('parses single and comma-separated decimal IDs as strings', () => {
+    expect(parseIncludeIds('12')).toEqual(['12'])
+    expect(parseIncludeIds('1,2,10')).toEqual(['1', '2', '10'])
+    expect(parseIncludeIds('0')).toEqual(['0'])
   })
 
   it('drops empty segments, non-integers, negatives and duplicates', () => {
     expect(parseIncludeIds('')).toEqual([])
-    expect(parseIncludeIds('1,,2,abc,-3,1.5,2')).toEqual([1, 2])
+    expect(parseIncludeIds('1,,2,abc,-3,1.5,2')).toEqual(['1', '2'])
+  })
+
+  it('normalizes leading zeros and rejects non-decimal or out-of-range values', () => {
+    expect(parseIncludeIds(' 0007,7,000,0x10,1e2,9223372036854775807,9223372036854775808')).toEqual([
+      '7',
+      '0',
+      '9223372036854775807',
+    ])
   })
 })
 

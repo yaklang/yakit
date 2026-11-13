@@ -810,7 +810,9 @@ describe('输入框资料栏', () => {
     expect(within(panel).getByText('(3)')).toBeInTheDocument()
     for (const path of [folder, anotherFolder, file]) expect(within(panel).getByTitle(path)).toBeInTheDocument()
     for (const path of [folder, anotherFolder]) {
-      expect(within(within(panel).getByTitle(path).parentElement!).getByText('-')).toBeInTheDocument()
+      const row = within(panel).getByTitle(path).parentElement!.parentElement!
+      expect(within(row).getByText('-')).toBeInTheDocument()
+      expect(row.querySelector('img')).toHaveAttribute('src', './icons/folders/default.svg')
     }
     expect(within(panel).queryByRole('img', { name: 'resources.png' })).toBeNull()
     expect(getLocalFileLinkInfo).not.toHaveBeenCalledWith(folder, true)

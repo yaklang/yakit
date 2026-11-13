@@ -1372,7 +1372,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const same =
       next.length === 0 && (!prevIds || prevIds.length === 0)
         ? true
-        : !!prevIds && next.length === prevIds.length && next.every((id, i) => id === prevIds[i])
+        : !!prevIds && next.length === prevIds.length && next.every((id, i) => id === String(prevIds[i]))
     const nextIdFilter = !!(getIdSort() || ids.length)
     // 合并结果相同且附近数据包未开时，还要看序号列高亮有没有变化
     if (same && !viewAttachId && !!getParams().idFilter === nextIdFilter) return

@@ -2,17 +2,13 @@ import { useState } from 'react'
 import type { FC } from 'react'
 import { useDeepCompareEffect, useRequest } from 'ahooks'
 import numeral from 'numeral'
-import {
-  FolderOpenOutlined,
-  PaperClipOutlined,
-  PlusSmOutlined,
-  TrashOutlined,
-} from '@yakit-libs/yakit-ui-icons/outline'
+import { PaperClipOutlined, PlusSmOutlined, TrashOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { imgTypes } from '@/components/MilkdownEditor/utils/utils'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { getFileSuffixFromName, getPathBaseName } from '@/utils/str'
+import { FolderDefault, KeyToIcon } from '@/pages/yakRunner/FileTree/icon'
 import { FileExcelIcon, FilePdfIcon, FilePptIcon, FileUnknownIcon, FileWordIcon } from '../../fileIcon'
 import { MAX_ATTACHMENTS_PER_BATCH } from '../../type'
 import MaterialListPanel from '../materialListPanel/MaterialListPanel'
@@ -100,16 +96,18 @@ const MaterialAttachmentList: FC<MaterialAttachmentListProps> = ({ attachments, 
           const extension = suffix ? `.${suffix}` : ''
           const name = fileName.slice(0, fileName.length - extension.length)
           const fileType = suffix.toLowerCase()
-          const FileIcon = isFolder ? FolderOpenOutlined : (fileIcons.get(fileType) ?? FileUnknownIcon)
+          const FileIcon = fileIcons.get(fileType) ?? FileUnknownIcon
           const size = sizes[path]
           const sizeLabel = isFolder ? '-' : size === undefined ? '' : numeral(size).format('0.[0] b')
           const isPendingImage = path.startsWith('blob:')
           const showThumbnail = !failedImagePaths.has(path) && (isPendingImage || imgTypes.includes(`.${fileType}`))
           return (
             <div className={styles.item} key={path}>
-              {showThumbnail ? (
+              {isFolder ? (
+                <img className={styles['file-icon']} src={KeyToIcon[FolderDefault].iconPath} alt="" />
+              ) : showThumbnail ? (
                 <img
-                  className={styles['file-icon']}
+                  className={`${styles['file-icon']} ${styles.thumbnail}`}
                   src={isPendingImage ? path : `atom://${path}`}
                   alt={fileName}
                   loading="lazy"

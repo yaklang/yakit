@@ -73,7 +73,7 @@ vi.mock('@/components/HTTPFlowTable/HTTPFlowTableFormConfiguration/HTTPFlowTable
 vi.mock('@/components/TableVirtualResize/TableVirtualResize', () => ({
   TableVirtualResize: (props: {
     renderTitle?: ReactNode
-    query?: { IncludeId?: number[] }
+    query?: { IncludeId?: (number | string)[] }
     columns?: {
       dataKey: string
       filterProps?: { filterRender?: (closePopover: () => void) => ReactNode }
