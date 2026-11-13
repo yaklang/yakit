@@ -29,6 +29,7 @@ describe('nested Forge display', () => {
     const { container } = render(<SubForgeRunTree run={run} />)
     expect(screen.getByText('Read evidence')).toBeInTheDocument()
     expect(screen.getByText('Verify evidence')).toBeInTheDocument()
+    expect(screen.getByText('Inventory').parentElement?.querySelector('[data-status]')).toBeNull()
     expect(container.querySelector('[data-status="completed"]')).toBeInTheDocument()
     expect(container.querySelector('[data-status="processing"]')).toBeInTheDocument()
     expect(screen.queryByRole('button')).not.toBeInTheDocument()
