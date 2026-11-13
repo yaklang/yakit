@@ -1,4 +1,4 @@
-import type { FC } from 'react'
+import type { FC, RefObject } from 'react'
 import { memo, useEffect, useRef } from 'react'
 import { useCreation, useInViewport, useMemoizedFn } from 'ahooks'
 import classNames from 'classnames'
@@ -21,9 +21,28 @@ interface WelcomeTipsCardsProps {
   onEmptyChange?: (empty: boolean) => void
 }
 
+/** 同一数字只滚动一次。布局切换会卸掉 CountUp，再次挂载时直接显示终值。 */
+const WelcomeCount: FC<{
+  tipKey: WelcomeTipKey
+  end: number
+  playedCountRef: RefObject<Partial<Record<WelcomeTipKey, number>>>
+}> = ({ tipKey, end, playedCountRef }) => {
+  const animateRef = useRef<boolean | null>(null)
+  if (animateRef.current === null) {
+    animateRef.current = playedCountRef.current[tipKey] !== end
+  }
+  useEffect(() => {
+    playedCountRef.current[tipKey] = end
+  }, [playedCountRef, tipKey, end])
+
+  const animate = animateRef.current
+  return <CountUp start={animate ? 0 : end} end={end} duration={animate ? 1.2 : 0} separator="," />
+}
+
 const WelcomeTipsCards: FC<WelcomeTipsCardsProps> = memo(({ compact = false, onEmptyChange }) => {
   const { t, i18nRefresh } = useI18nNamespaces(['aiAgent'])
   const containerRef = useRef<HTMLDivElement>(null)
+  const playedCountRef = useRef<Partial<Record<WelcomeTipKey, number>>>({})
   const [inViewport = true] = useInViewport(containerRef)
   const { riskTotal, trafficTotal, riskCounts } = useWelcomePanelStats(inViewport)
   const customFolder = useCustomFolder()
@@ -119,7 +138,7 @@ const WelcomeTipsCards: FC<WelcomeTipsCardsProps> = memo(({ compact = false, onE
             </div>
             <div className={styles['welcome-tip-compact-right']}>
               <div className={styles['welcome-tip-number']}>
-                <CountUp key={item.number} end={item.number} duration={1.2} separator="," />
+                <WelcomeCount tipKey={item.key} end={item.number} playedCountRef={playedCountRef} />
               </div>
               <ChevronRightOutlined className={styles['welcome-tip-footer-icon']} color="currentColor" />
             </div>
@@ -138,7 +157,7 @@ const WelcomeTipsCards: FC<WelcomeTipsCardsProps> = memo(({ compact = false, onE
                   </span>
                 </div>
                 <div className={styles['welcome-tip-number']}>
-                  <CountUp key={item.number} end={item.number} duration={1.2} separator="," />
+                  <WelcomeCount tipKey={item.key} end={item.number} playedCountRef={playedCountRef} />
                 </div>
               </div>
               <div className={styles['welcome-tip-add']}>
