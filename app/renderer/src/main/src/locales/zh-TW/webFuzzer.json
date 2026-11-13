@@ -110,6 +110,7 @@
     "responseLimitExceeded": "響應數量超過前端限制請確認開啟",
     "saveHttpTrafficSettings": "儲存HTTP流量設定",
     "matchingInProgress": "匹配中",
+    "loadingData": "加載數據中",
     "waitCurrentTaskFinish": "當前請求尚未結束，請稍候",
     "retryNoFailedTask": "當前沒有需要重試的請求",
     "run_function_start": "執行函式-開始：",

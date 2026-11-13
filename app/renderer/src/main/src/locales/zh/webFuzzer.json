@@ -110,6 +110,7 @@
     "responseLimitExceeded": "响应数量超过前端限制请确认开启",
     "saveHttpTrafficSettings": "保存HTTP流量设置",
     "matchingInProgress": "匹配中",
+    "loadingData": "加载数据中",
     "waitCurrentTaskFinish": "当前请求尚未结束，请稍候",
     "retryNoFailedTask": "当前没有需要重试的请求",
     "run_function_start": "运行函数-开始：",

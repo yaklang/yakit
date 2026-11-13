@@ -92,6 +92,7 @@ const setup = () => {
     getFirstResponse: () => firstResponse,
     setLoading: vi.fn(),
     setIsPause: vi.fn(),
+    setLoadingHistory: vi.fn(),
     setLoadingText: vi.fn(),
     setSuccessCount: vi.fn(),
     setFailedCount: vi.fn(),
@@ -290,6 +291,8 @@ describe('HTTPFuzzerPage real IPC control paths', () => {
     await api.cancelCurrentHTTPFuzzer()
     api.loadHistory(7)
     await vi.runAllTimersAsync()
+    expect(b.setLoadingHistory).toHaveBeenLastCalledWith(true)
+    expect(b.setLoadingText).toHaveBeenCalledWith('HTTPFuzzerPage.loadingData')
     expect(invoke).toHaveBeenCalledWith('HTTPFuzzer', { HistoryWebFuzzerId: 7 }, token())
     expect(b.setCurrentSelectId).toHaveBeenLastCalledWith(7)
     expect(b.setBrowserTransformSelection).toHaveBeenLastCalledWith(undefined)
@@ -810,6 +813,7 @@ const setupRestoreFlow = (
     emptyFuzzer: { RequestRaw: [] },
     setFirstResponse: vi.fn(),
     setLoading: vi.fn(),
+    setLoadingHistory: vi.fn(),
     setLoadingText: vi.fn(),
     setSuccessCount: vi.fn(),
     setFailedCount: vi.fn(),
