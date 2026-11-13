@@ -47,7 +47,7 @@ export function QuestionQueue({
   children: ReactNode
 }) {
   const { t } = useI18nNamespaces(['aiAgent'])
-  if (!items.length) return <>{children}</>
+  if (!items.length && !onRefresh) return <>{children}</>
   return (
     <YakitPopover
       trigger={['hover', 'click']}

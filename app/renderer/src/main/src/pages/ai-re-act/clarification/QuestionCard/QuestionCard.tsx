@@ -301,7 +301,7 @@ export function QuestionCard({
               {t('InteractiveUI.countdown', { seconds: Math.max(0, Math.ceil((request.deadline - now) / 1000)) })}
             </span>
           ) : null}
-          {floating && queueCount > 0 ? (
+          {floating && (queueCount > 0 || onRefreshQueue) ? (
             <QuestionQueue items={queueItems} currentId={item.id} onSelect={onSelectQueue} onRefresh={onRefreshQueue}>
               <YakitButton type="text" size="small">
                 {t('InteractiveUI.questionQueue')}

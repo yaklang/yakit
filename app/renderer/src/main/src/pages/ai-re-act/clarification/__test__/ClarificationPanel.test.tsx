@@ -143,6 +143,19 @@ it('renders submitted form values as a numbered summary without the form title p
   expect(screen.queryByText(/参数表单 form/)).toBeNull()
   expect(screen.getAllByRole('listitem').map((node) => node.textContent)).toEqual(['目标名称：授权演示系统'])
 })
+it('keeps a multiline free-text answer inside one summary item', () => {
+  const data = item('目标受众')
+  data.data.request.questions![0].title = '目标受众'
+  data.data.request.questions![0].prompt = '最终说明面向谁？'
+  data.data.request.questions![0].options[0].label = '开发者'
+  data.data.request.state = 'submitted'
+  data.data.request.answers = [{ questionId: 'q', selected: ['a'], text: '第一行\n第二行' }]
+  const summary = '目标受众（最终说明面向谁？）：开发者；第一行\n第二行'
+  expect(questionSummaryLines(data.data.request, data.data.request.answers)).toEqual([summary])
+  render(<QuestionSummary item={data} />)
+  expect(screen.getAllByRole('listitem')).toHaveLength(1)
+  expect(screen.getByRole('listitem').textContent).toBe(summary)
+})
 it('keeps history read-only and opens the composer panel explicitly', () => {
   const data = item('first')
   render(<QuestionSummary item={data} />)
@@ -252,6 +265,7 @@ it('refresh restores missing pending tokens without changing the current item', 
   })
   render(<ClarificationPanel />)
   expect(screen.getByText('选择 first')).toBeTruthy()
+  expect(screen.getByRole('button', { name: /问卷队列/ }).textContent?.replace(/\s/g, '')).toBe('问卷队列1')
   fireEvent.mouseEnter(screen.getByRole('button', { name: /问卷队列/ }))
   const revision = context.store.getState().questionPanelRevision
   fireEvent.click(await screen.findByRole('button', { name: '刷新' }))
@@ -260,6 +274,46 @@ it('refresh restores missing pending tokens without changing the current item', 
   expect(screen.getByText('选择 first')).toBeTruthy()
   expect(await screen.findByText('阻塞·参数表单')).toBeInTheDocument()
   expect(screen.getByText('异步·选择问卷')).toBeInTheDocument()
+})
+it('refreshes when the queue only contains submitted tokens and recovers pending questions', async () => {
+  const stale = item('done')
+  stale.data.request.state = 'submitted'
+  const extra = item('extra')
+  context.contents.set(stale.id, stale)
+  context.contents.set(extra.id, extra)
+  act(() => {
+    context.store.getState().updateState({
+      questionPanelTokens: [stale.id],
+      questionPanelRevision: 1,
+    })
+  })
+  render(<ClarificationPanel />)
+  expect(screen.getByRole('button', { name: /问卷队列/ }).textContent?.replace(/\s/g, '')).toBe('问卷队列0')
+  fireEvent.mouseEnter(screen.getByRole('button', { name: /问卷队列/ }))
+  fireEvent.click(await screen.findByRole('button', { name: '刷新' }))
+  expect(context.store.getState().questionPanelTokens).toEqual([extra.id])
+  expect(screen.getByText('选择 extra')).toBeTruthy()
+})
+it('refreshes when the head token is no longer a questionnaire and recovers pending questions', async () => {
+  const noise = {
+    id: 'ui-component:noise',
+    type: AIChatQSDataTypeEnum.UI_COMPONENT,
+  }
+  const extra = item('extra')
+  context.contents.set(noise.id, noise)
+  context.contents.set(extra.id, extra)
+  act(() => {
+    context.store.getState().updateState({
+      questionPanelTokens: [noise.id],
+      questionPanelRevision: 1,
+    })
+  })
+  render(<ClarificationPanel />)
+  expect(screen.queryByText('选择 extra')).toBeNull()
+  fireEvent.mouseEnter(screen.getByRole('button', { name: /问卷队列/ }))
+  fireEvent.click(await screen.findByRole('button', { name: '刷新' }))
+  expect(context.store.getState().questionPanelTokens).toEqual([extra.id])
+  expect(screen.getByText('选择 extra')).toBeTruthy()
 })
 it('shows the queue overlay on hover and jumps to a pending item', async () => {
   const first = item('first')
