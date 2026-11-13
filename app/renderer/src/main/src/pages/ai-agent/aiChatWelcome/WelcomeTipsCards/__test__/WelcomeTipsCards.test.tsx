@@ -56,6 +56,8 @@ vi.mock('../WelcomeTipsCards.module.scss', () => ({
     'welcome-tip-title': 'welcome-tip-title',
     'welcome-tip-title-text': 'welcome-tip-title-text',
     'welcome-tip-compact-title': 'welcome-tip-compact-title',
+    'welcome-tip-add': 'welcome-tip-add',
+    'welcome-tip-compact-add': 'welcome-tip-compact-add',
   },
 }))
 
@@ -71,6 +73,24 @@ afterEach(() => {
 })
 
 describe('WelcomeTipsCards', () => {
+  it('已添加数量展示当前选中的漏洞、流量和文件', () => {
+    const { container } = render(<WelcomeTipsCards added={{ risk: 3, traffic: 1, fileSystem: 1 }} />)
+    expect([...container.querySelectorAll('.welcome-tip-add span')].map((node) => node.textContent)).toEqual([
+      '3',
+      '1',
+      '1',
+    ])
+  })
+
+  it('compact 模式同样展示已添加数量', () => {
+    const { container } = render(<WelcomeTipsCards compact added={{ risk: 3, traffic: 1, fileSystem: 1 }} />)
+    expect([...container.querySelectorAll('.welcome-tip-compact-add span')].map((node) => node.textContent)).toEqual([
+      '3',
+      '1',
+      '1',
+    ])
+  })
+
   it('渲染三张卡片及统计数字', () => {
     render(<WelcomeTipsCards />)
     expect(screen.getByText('AIChatWelcome.tipRiskTitle')).toBeInTheDocument()

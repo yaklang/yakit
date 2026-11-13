@@ -62,6 +62,9 @@ vi.mock('../../template/template', () => ({
         <button onClick={() => props.onSubmitWithDraft?.({ qs: 'hello', sessionId: 'stale-image-draft' }, firstDraft)}>
           发送首问
         </button>
+        <button onClick={() => props.onWorkspaceAddedChange?.({ risk: 3, traffic: 1, fileSystem: 1 })}>
+          同步已添加
+        </button>
       </div>
     )
   }),
@@ -89,14 +92,24 @@ vi.mock('../WelcomeTipsCards/WelcomeTipsCards', () => {
   function MockWelcomeTipsCards({
     compact,
     onEmptyChange,
+    added,
   }: {
     compact?: boolean
     onEmptyChange?: (empty: boolean) => void
+    added?: { risk: number; traffic: number; fileSystem: number }
   }) {
     React.useEffect(() => {
       onEmptyChange?.(tipsMocks.empty)
     }, [onEmptyChange])
-    return <div data-testid="welcome-tips-cards" data-compact={compact ? 'true' : 'false'} />
+    return (
+      <div
+        data-testid="welcome-tips-cards"
+        data-compact={compact ? 'true' : 'false'}
+        data-added-risk={added?.risk ?? 0}
+        data-added-traffic={added?.traffic ?? 0}
+        data-added-file={added?.fileSystem ?? 0}
+      />
+    )
   }
   return { default: MockWelcomeTipsCards }
 })
@@ -140,6 +153,18 @@ describe('AIChatWelcome 输入框转发', () => {
   it('在欢迎页开启场景能力入口', () => {
     render(<AIChatWelcome onTriageSubmit={vi.fn()} onSetReAct={vi.fn()} />)
     expect(screen.getByTestId('scenario-capabilities')).toHaveAttribute('data-enabled', 'true')
+  })
+
+  it('把输入框已选漏洞、流量和文件同步到欢迎卡片', () => {
+    render(<AIChatWelcome onTriageSubmit={vi.fn()} onSetReAct={vi.fn()} />)
+    const cards = screen.getByTestId('welcome-tips-cards')
+    expect(cards).toHaveAttribute('data-added-risk', '0')
+    expect(cards).toHaveAttribute('data-added-traffic', '0')
+    expect(cards).toHaveAttribute('data-added-file', '0')
+    fireEvent.click(screen.getByRole('button', { name: '同步已添加' }))
+    expect(cards).toHaveAttribute('data-added-risk', '3')
+    expect(cards).toHaveAttribute('data-added-traffic', '1')
+    expect(cards).toHaveAttribute('data-added-file', '1')
   })
 
   it('在欢迎页隐藏近期添加 Tab', () => {

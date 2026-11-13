@@ -57,6 +57,7 @@ import { parseResourceReferenceIds } from '../components/aiMilkdownInput/aiMilkd
 import { AI_RESOURCE_REFERENCE_SUMMARY_THRESHOLD } from '../components/aiMilkdownInput/constants'
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
 import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
+import { getWorkspaceAddedCounts, type WorkspaceAddedCounts } from './aiAddMaterialsPopover/workspaceAddedCounts'
 
 const isSameMaterial = (first: AIMentionCommandParams, second: AIMentionCommandParams) =>
   first.mentionType === second.mentionType && first.mentionId === second.mentionId
@@ -110,6 +111,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
       filterMentionType,
       chatDataStoreKey,
       showScenarioCapabilities,
+      onWorkspaceAddedChange,
     } = props
     const defaultValue = initialDraft?.markdown ?? props.defaultValue
     const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
@@ -532,6 +534,36 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
     const visibleInlineMaterials = draftMaterials.mentions.filter(
       (mention) => !draftMaterials.hiddenInlineKeys.includes(getMaterialKey(mention)),
     )
+    const workspaceAdded = useCreation(
+      () =>
+        getWorkspaceAddedCounts({
+          mentions: [...selectedMaterials, ...visibleInlineMaterials],
+          resourceIds: draftMaterials.resourceIds,
+          selectedResourceIds,
+        }),
+      [
+        selectedMaterials,
+        draftMaterials.mentions,
+        draftMaterials.hiddenInlineKeys,
+        draftMaterials.resourceIds,
+        props.selectedHttpFlowIds,
+        props.selectedRiskIds,
+      ],
+    )
+    const reportedAddedRef = useRef<WorkspaceAddedCounts>()
+    useEffect(() => {
+      const previous = reportedAddedRef.current
+      if (
+        previous &&
+        previous.risk === workspaceAdded.risk &&
+        previous.traffic === workspaceAdded.traffic &&
+        previous.fileSystem === workspaceAdded.fileSystem
+      ) {
+        return
+      }
+      reportedAddedRef.current = workspaceAdded
+      onWorkspaceAddedChange?.(workspaceAdded)
+    }, [workspaceAdded, onWorkspaceAddedChange])
 
     return (
       <div

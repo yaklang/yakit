@@ -1,4 +1,3 @@
-import { parseResourceReferenceIds } from '../../components/aiMilkdownInput/aiMilkdownResourceReference/resourceReferenceIds'
 import groupBy from 'lodash/groupBy'
 import {
   BookOpenTextOutlined,
@@ -24,13 +23,13 @@ import { showAIAgentSidebarTab } from '../../aiAgentTabNavigation'
 import { MAX_ATTACHMENTS_PER_BATCH } from '../type'
 import type { MaterialSummaryGroup, MaterialSummaryRow } from './materialSummary/type'
 import type { AIAddMaterialsPopoverProps, MaterialMenuItem, MaterialPanel } from './type'
+import { getWorkspaceAddedCounts } from './workspaceAddedCounts'
 
 interface MaterialMenuOptions extends Pick<
   AIAddMaterialsPopoverProps,
   'mentions' | 'resourceIds' | 'selectedResourceIds'
 > {
   t: TFunction
-  attachmentCount: number
   browserCount: number
   currentFocusMode?: string
   addAttachments: (type: 'file' | 'folder') => void
@@ -43,13 +42,13 @@ export const getMaterialMenuItems = ({
   resourceIds,
   selectedResourceIds,
   t,
-  attachmentCount,
   browserCount,
   currentFocusMode,
   addAttachments,
   close,
 }: MaterialMenuOptions) => {
   const countMentions = (type: string) => mentions.filter((item) => item.mentionType === type).length
+  const added = getWorkspaceAddedCounts({ mentions, resourceIds, selectedResourceIds })
 
   const openWorkspaceTab = (key: AITabsEnum) => {
     close()
@@ -70,7 +69,7 @@ export const getMaterialMenuItems = ({
           }
         : undefined,
       external: true,
-      count: parseResourceReferenceIds([...resourceIds[type], ...selected]).length,
+      count: isHttp ? added.traffic : added.risk,
     }
   }
 
@@ -133,7 +132,7 @@ export const getMaterialMenuItems = ({
       tab: AIMentionTabsEnum.File_System,
       action: () => openSidebarTab(AIAgentTabListEnum.File),
       external: true,
-      count: countMentions('file') + countMentions('folder') - attachmentCount,
+      count: added.fileSystem,
     },
     browser: {
       label: t('AIMentionTabs.browser'),

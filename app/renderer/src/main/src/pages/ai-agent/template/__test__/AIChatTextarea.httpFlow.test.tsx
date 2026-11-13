@@ -295,6 +295,7 @@ async function setup(defaultValue = '', showScenarioCapabilities = false) {
   const ref = createRef<AIChatTextareaRefProps & { setHttpFlow: (ids: string[]) => void }>()
   const onSubmit = vi.fn<(value: AIChatTextareaSubmit) => void>()
   const onHttpFlowRemove = vi.fn()
+  const onWorkspaceAddedChange = vi.fn()
   function SelectionHarness() {
     const inputRef = useRef<AIChatTextareaRefProps>(null)
     const selection = useHttpFlowSelection(true, 'test')
@@ -315,6 +316,7 @@ async function setup(defaultValue = '', showScenarioCapabilities = false) {
           onHttpFlowRemove(id, isSummary)
           selection.onHttpFlowRemove(id, isSummary)
         }}
+        onWorkspaceAddedChange={onWorkspaceAddedChange}
         chatDataStoreKey="test"
         inputFooterLeft={<span />}
         footer={<span />}
@@ -327,7 +329,7 @@ async function setup(defaultValue = '', showScenarioCapabilities = false) {
   // 等待编辑器的初始化回调将实例传到公共输入组件。
   await act(async () => {})
   const send = within(view.container).getByRole('button', { name: 'YakitButton.send' })
-  return { ...view, ref, onSubmit, onHttpFlowRemove, send }
+  return { ...view, ref, onSubmit, onHttpFlowRemove, onWorkspaceAddedChange, send }
 }
 
 const codeReview = {
@@ -823,6 +825,22 @@ describe('输入框资料栏', () => {
         ],
       }),
     )
+  })
+
+  it('已选流量和文件系统资料同步给欢迎页，附件不计入文件', async () => {
+    const { ref, onWorkspaceAddedChange } = await setup()
+    editors[0].action((ctx) => ctx.get(editorViewCtx).setProps({ handleScrollToSelection: () => true }))
+    act(() => {
+      ref.current?.setHttpFlow(['11'])
+      ref.current?.setMention({ mentionType: 'file', mentionId: '/tmp/a.txt', mentionName: '/tmp/a.txt' })
+      ref.current?.setMention({
+        mentionType: 'file',
+        mentionId: '/tmp/b.txt',
+        mentionName: '/tmp/b.txt',
+        mentionSource: 'attachment',
+      })
+    })
+    await waitFor(() => expect(onWorkspaceAddedChange).toHaveBeenLastCalledWith({ risk: 0, traffic: 1, fileSystem: 1 }))
   })
 
   it('图片附件可随草稿恢复和发送，从附件列表删除时保留正文图片', async () => {
@@ -1788,10 +1806,23 @@ describe('流量勾选引用逻辑', () => {
     { type: 'risk', ids: ['21', '22', '23'], displayText: '勾选了 3 条漏洞风险', isSummary: true },
   ])('风险勾选以一个引用发送和回显（摘要：$isSummary）', async (reference) => {
     const onSubmit = vi.fn()
+    const onWorkspaceAddedChange = vi.fn()
     const emit = vi.spyOn(emiter, 'emit')
-    const view = render(<AIChatTextarea chatDataStoreKey="test" selectedRiskIds={reference.ids} onSubmit={onSubmit} />)
+    const view = render(
+      <AIChatTextarea
+        chatDataStoreKey="test"
+        selectedRiskIds={reference.ids}
+        onSubmit={onSubmit}
+        onWorkspaceAddedChange={onWorkspaceAddedChange}
+      />,
+    )
     await waitFor(() => expect(screen.getByTestId('editor').querySelector('.ProseMirror')).not.toBeNull())
     await act(async () => {})
+    expect(onWorkspaceAddedChange).toHaveBeenCalledWith({
+      risk: reference.ids.length,
+      traffic: 0,
+      fileSystem: 0,
+    })
     const materialsName = `AIChatTextarea.otherMaterials ${reference.ids.length}`
     fireEvent.click(screen.getByRole('button', { name: materialsName }))
     fireEvent.click(screen.getByText('AIAddMaterialsPopover.risk'))

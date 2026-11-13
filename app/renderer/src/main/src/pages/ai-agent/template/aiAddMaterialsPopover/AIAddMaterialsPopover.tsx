@@ -122,7 +122,6 @@ const AIAddMaterialsPopover: FC<AIAddMaterialsPopoverProps> = ({
     mentions,
     resourceIds,
     selectedResourceIds,
-    attachmentCount: attachments.length,
     browserCount: browsers.length,
     currentFocusMode: fixedSceneLabel || selectedSceneLabel,
     addAttachments,

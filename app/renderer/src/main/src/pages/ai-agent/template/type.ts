@@ -8,6 +8,7 @@ import type { AIChatMentionProps } from '../components/aiChatMention/type'
 import type { AIReviewRuleSelectProps } from '@/pages/ai-re-act/aiReviewRuleSelect/type'
 import type { AIEnabledCapability } from '@/pages/ai-re-act/hooks/grpcApi'
 import type { AIModelSelectProps } from '../aiModelList/aiModelSelect/AIModelSelectType'
+import type { WorkspaceAddedCounts } from './aiAddMaterialsPopover/workspaceAddedCounts'
 
 export interface QSInputTextareaProps extends Omit<TextAreaProps, 'bordered' | 'autoSize'> {}
 
@@ -109,6 +110,8 @@ export interface AIChatTextareaProps {
   selectedHttpFlowIds?: string[]
   selectedRiskIds?: string[]
   onHttpFlowRemove?: (id: string, isSummary: boolean) => void
+  /** 当前会话已添加的漏洞、流量和文件系统数量，供欢迎页卡片展示。 */
+  onWorkspaceAddedChange?: (counts: WorkspaceAddedCounts) => void
 }
 
 export const MAX_ATTACHMENTS_PER_BATCH = 10

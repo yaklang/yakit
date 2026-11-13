@@ -12,6 +12,7 @@ import { Flex } from 'antd'
 import { useMemoizedFn } from 'ahooks'
 import WelcomeRecentSessions, { type WelcomeRecentSessionsDensity } from './WelcomeRecentSessions/WelcomeRecentSessions'
 import WelcomeTipsCards from './WelcomeTipsCards/WelcomeTipsCards'
+import type { WorkspaceAddedCounts } from '../template/aiAddMaterialsPopover/workspaceAddedCounts'
 
 const WELCOME_TITLE = 'Memfit AI Agent'
 const WELCOME_NARROW_WIDTH = 720
@@ -51,6 +52,14 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
     const animationDisabled = useWelcomeAnimationDisabled()
     const [layout, setLayout] = useState<WelcomeLayout>({ compact: false, sessionDensity: 'full' })
     const [isEmptyStats, setIsEmptyStats] = useState(false)
+    const [added, setAdded] = useState<WorkspaceAddedCounts>({ risk: 0, traffic: 0, fileSystem: 0 })
+    const handleWorkspaceAddedChange = useMemoizedFn((next: WorkspaceAddedCounts) => {
+      setAdded((current) =>
+        current.risk === next.risk && current.traffic === next.traffic && current.fileSystem === next.fileSystem
+          ? current
+          : next,
+      )
+    })
     const handleEmptyStatsChange = useMemoizedFn((empty: boolean) => {
       setIsEmptyStats((prev) => (prev === empty ? prev : empty))
     })
@@ -99,7 +108,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
               </div>
               <Flex vertical gap={12} className={styles['welcome-tips-block']}>
                 {!isEmptyStats && <div className={styles['subtitle']}>{t('AIChatWelcome.WelcomeHomeSubTitle')}</div>}
-                <WelcomeTipsCards compact={layout.compact} onEmptyChange={handleEmptyStatsChange} />
+                <WelcomeTipsCards compact={layout.compact} onEmptyChange={handleEmptyStatsChange} added={added} />
                 {!isEmptyStats && <WelcomeRecentSessions density={layout.sessionDensity} />}
               </Flex>
             </Flex>
@@ -114,6 +123,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
                   selectedHttpFlowIds={props.selectedHttpFlowIds}
                   selectedRiskIds={props.selectedRiskIds}
                   onHttpFlowRemove={props.onHttpFlowRemove}
+                  onWorkspaceAddedChange={handleWorkspaceAddedChange}
                   chatDataStoreKey="aiChatDataStore"
                   className={styles['ai-text-wrapper']}
                   milkdownClassName={styles['milkdown-input']}
