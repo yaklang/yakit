@@ -120,6 +120,17 @@ message VerifySystemCertificateResponse {
 }
 
 service Yak {
+  rpc CreateAICodingWorkspace(CreateAICodingWorkspaceRequest) returns (AICodingWorkspace);
+  rpc UpdateAICodingWorkspace(UpdateAICodingWorkspaceRequest) returns (AICodingWorkspace);
+  rpc GetAICodingWorkspace(AICodingWorkspaceRequest) returns (AICodingWorkspace);
+  rpc QueryAICodingWorkspaces(Empty) returns (QueryAICodingWorkspacesResponse);
+  rpc ListAICodingWorktrees(AICodingWorkspaceRequest) returns (ListAICodingWorktreesResponse);
+  rpc GetAICodingWorktree(GetAICodingWorktreeRequest) returns (AICodingWorktree);
+  rpc ListAICodingBranches(AICodingWorkspaceRequest) returns (ListAICodingBranchesResponse);
+  rpc ListAICodingSessions(AICodingWorkspaceRequest) returns (ListAICodingSessionsResponse);
+  // Worktrees are now created atomically with session binding at session startup.
+  rpc CreateAICodingWorktree(AICodingWorkspaceRequest) returns (AICodingWorktree) { option deprecated = true; }
+
   // version
   rpc Version(Empty) returns (VersionResponse);
   rpc YakVersionAtLeast(YakVersionAtLeastRequest) returns (GeneralResponse);
@@ -2369,6 +2380,15 @@ message AIStartParams {
   optional bool NetworkDebug = 52;
   // Connection-local, build-generated component catalog and interaction capabilities.
   string ClientUI = 53;
+  bool CodingMode = 54;
+  string CodingWorkspaceID = 55;
+  string CodingWorkingDirectory = 56;
+  // Only primary RootPaths[0]'s repository is isolated. Secondary roots stay original.
+  bool CodingCreateWorktree = 57;
+  string CodingWorktreeBaseRef = 58; // Defaults to HEAD; resolved once at first start.
+  string CodingWorktreeID = 59; // Reuse a managed worktree in the same workspace.
+  repeated string CodingWorkspaceRoots = 60; // Server-resolved effective directories.
+  repeated string CodingSourceRoots = 61; // Server-resolved original directories.
 }
 
 message AIExecutionStrategy {
@@ -10705,4 +10725,74 @@ message QueryKnowledgeBaseResponse {
   Paging Pagination = 1;
   repeated KnowledgeBaseInfo Data = 2;
   int64 Total = 3;
+}
+
+// Coding workspaces are stored on the engine host, including in remote mode.
+message AICodingWorkspace {
+  string ID = 1;
+  string Name = 2;
+  string RootPath = 3;
+  bool IsGit = 4;
+  repeated string RootPaths = 5; // Ordered absolute engine-host paths; first is primary.
+}
+message CreateAICodingWorkspaceRequest {
+  string Name = 1;
+  string RootPath = 2;
+  repeated string RootPaths = 3; // Preferred over legacy RootPath.
+}
+message UpdateAICodingWorkspaceRequest {
+  string WorkspaceID = 1;
+  string Name = 2;
+  repeated string RootPaths = 3;
+}
+message QueryAICodingWorkspacesResponse { repeated AICodingWorkspace Data = 1; }
+message AICodingWorkspaceRequest { string WorkspaceID = 1; }
+message AICodingWorktree {
+  string Path = 1;
+  string Head = 2;
+  string Branch = 3;
+  bool Detached = 4;
+  bool Locked = 5;
+  bool Prunable = 6;
+  bool Bare = 7;
+  string ID = 8;
+  string WorkspaceID = 9;
+  string OwnerSessionID = 10;
+  string SourceDirectory = 11;
+  string RepositoryRoot = 12;
+  string GitCommonDir = 13;
+  string WorkingDirectory = 14;
+  string BaseRef = 15;
+  string BaseCommit = 16;
+  string State = 17; // creating, ready, failed; query may report unavailable.
+  string LastError = 18;
+  repeated string SessionIDs = 19;
+}
+message ListAICodingWorktreesResponse { repeated AICodingWorktree Data = 1; }
+message GetAICodingWorktreeRequest {
+  string WorktreeID = 1;
+  string Path = 2; // Alternatively resolve a managed checkout or a directory within it.
+}
+message AICodingSession {
+  string SessionID = 1;
+  string WorkspaceID = 2;
+  string WorktreeID = 3;
+  string WorkingDirectory = 4;
+  repeated string SourceRoots = 5;
+  repeated string WorkspaceRoots = 6;
+}
+message ListAICodingSessionsResponse { repeated AICodingSession Data = 1; }
+
+message AICodingBranch {
+  string Name = 1;
+  string Ref = 2;
+  string Commit = 3;
+  bool Remote = 4;
+}
+message ListAICodingBranchesResponse {
+  repeated AICodingBranch Data = 1;
+  string CurrentBranch = 2;
+  string CurrentCommit = 3;
+  string DefaultRef = 4;
+  bool HasLocalChanges = 5;
 }

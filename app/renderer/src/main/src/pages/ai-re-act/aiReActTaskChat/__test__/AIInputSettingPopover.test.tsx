@@ -194,7 +194,7 @@ describe('AIInputSettingPopover', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'YakitButton.reset' }))
 
-    expect(screen.getAllByRole('switch')[0]).not.toBeChecked()
+    expect(screen.getByRole('switch', { name: 'AIReActTaskChatContent.singleModelMode' })).not.toBeChecked()
     expect(screen.getByRole('switch', { name: 'AIReActTaskChatContent.syncPerceptionTrigger' })).not.toBeChecked()
     expect(screen.getByLabelText('AIChatSetting.runtimeContextSize')).toHaveValue('300')
     expect(mocks.setting).toEqual({
@@ -218,8 +218,8 @@ describe('AIInputSettingPopover', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'YakitButton.reset' }))
 
-    expect(screen.getAllByRole('switch')[0]).toBeChecked()
-    expect(screen.getAllByRole('switch')[0]).toBeDisabled()
+    expect(screen.getByRole('switch', { name: 'AIReActTaskChatContent.singleModelMode' })).toBeChecked()
+    expect(screen.getByRole('switch', { name: 'AIReActTaskChatContent.singleModelMode' })).toBeDisabled()
     expect(mocks.setting.SingleModelMode).toBe(lock === 'session')
     expect(mocks.setSetting).toHaveBeenCalledTimes(2)
   })
@@ -251,7 +251,7 @@ describe('AIInputSettingPopover', () => {
       SyncPerceptionTrigger: false,
       EnablePlan: true,
     })
-    expect(screen.getAllByRole('switch')[0]).toBeChecked()
+    expect(screen.getByRole('switch', { name: 'AIReActTaskChatContent.singleModelMode' })).toBeChecked()
     expect(mocks.setSetting).toHaveBeenCalledTimes(2)
   })
 
@@ -319,7 +319,7 @@ describe('AIInputSettingPopover', () => {
       </AIInputSettingPopover>,
     )
 
-    const singleModelSwitch = screen.getAllByRole('switch')[0]
+    const singleModelSwitch = screen.getByRole('switch', { name: 'AIReActTaskChatContent.singleModelMode' })
     expect(singleModelSwitch).not.toBeDisabled()
     fireEvent.click(singleModelSwitch)
 
@@ -334,15 +334,15 @@ describe('AIInputSettingPopover', () => {
     render(<AIInputSettingPopover visible />)
 
     expect(screen.getByText('AIReActTaskChatContent.singleModelMode')).toBeInTheDocument()
-    expect(screen.getAllByRole('switch')[0]).toBeChecked()
-    expect(screen.getAllByRole('switch')[0]).toBeDisabled()
+    expect(screen.getByRole('switch', { name: 'AIReActTaskChatContent.singleModelMode' })).toBeChecked()
+    expect(screen.getByRole('switch', { name: 'AIReActTaskChatContent.singleModelMode' })).toBeDisabled()
   })
 
   it.each([false, undefined])('已有会话禁用单模型开关（isDraftSession=%s）', (isDraftSession) => {
     mocks.activeChat = { SessionID: 'existing-session', isDraftSession }
     render(<AIInputSettingPopover visible />)
 
-    expect(screen.getAllByRole('switch')[0]).toBeDisabled()
+    expect(screen.getByRole('switch', { name: 'AIReActTaskChatContent.singleModelMode' })).toBeDisabled()
   })
 
   it('运行时上下文位于同步意图识别和全局指令之间，按 KB 更新配置', () => {

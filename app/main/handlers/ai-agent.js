@@ -18,6 +18,24 @@ module.exports = (win, getClient) => {
     })
   })
 
+  for (const method of [
+    'CreateAICodingWorkspace',
+    'QueryAICodingWorkspaces',
+    'ListAICodingWorktrees',
+    'GetAICodingWorkspace',
+    'UpdateAICodingWorkspace',
+    'GetAICodingWorktree',
+    'ListAICodingSessions',
+    'ListAICodingBranches',
+  ]) {
+    ipcMain.handle(
+      method,
+      async (_event, params) =>
+        new Promise((resolve, reject) => {
+          getClient()[method](params, (err, data) => (err ? reject(err) : resolve(data)))
+        }),
+    )
+  }
   // #region AI-Task
   let aiChatTaskPool = new Map()
   // 开始执行 AI Task

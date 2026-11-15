@@ -28,6 +28,7 @@ import type { AIChatInputDraft } from '../../template/type'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { AIRightPanel } from '@/pages/ai-re-act/aiRightPanel/AIRightPanel'
 import { useRiskSelection } from './useRiskSelection'
+import { CodingAgentControls } from '../../coding/CodingAgentControls'
 import styles from './AIAgentChatLayout.module.scss'
 
 const AIChatWelcome = React.lazy(() => import('../../aiChatWelcome/AIChatWelcome'))
@@ -179,119 +180,122 @@ export const AIAgentChatLayout: React.FC<AIAgentChatLayoutProps> = memo((props) 
 
   return (
     <div ref={chatWrapperRef} className={styles['chat-wrapper']}>
-      <div className={styles['chat-content-wrapper']}>
-        <YakitResizeBox
-          freeze={workspaceVisible}
-          lineSize={1}
-          firstRatio={workspaceVisible ? '70%' : '0px'}
-          firstMinSize={workspaceVisible ? 280 : 0}
-          secondRatio={workspaceVisible ? '30%' : '100%'}
-          secondMinSize={MIN_CHAT_CONTENT_WIDTH}
-          firstNodeStyle={workspaceVisible ? undefined : { display: 'none', padding: 0 }}
-          secondNodeStyle={workspaceVisible ? { padding: 0 } : { padding: 0, flex: 1, width: '100%', minWidth: 0 }}
-          lineStyle={workspaceVisible ? undefined : { display: 'none' }}
-          lineDirection="right"
-          firstNode={
-            <div className={styles['chat-workspace']}>
-              <AIChatWorkspace
-                inViewPort={inViewPort}
-                welcome={mode === 'welcome'}
-                filePreviewData={filePreviewData}
-                setFilePreviewData={setFilePreviewData}
-                onTabsChange={onTabsChange}
-                selectionScope={selectionScope}
-                selectedHttpFlowIds={selectedHttpFlowIds}
-                onSetSelectedHttpFlowIds={onSetSelectedHttpFlowIds}
-                riskSelection={{
-                  ids: selectedRiskIds,
-                  onChange: onRiskSelectionChange,
-                }}
-              />
-            </div>
-          }
-          secondNode={
-            <div ref={chatContentRef} className={styles['chat-content']} data-ai-shared-right-panel={panelVisible}>
-              {mode === 'welcome' ? (
-                <React.Suspense fallback={<div>loading...</div>}>
-                  <AIChatWelcome
-                    key={`${activeChat?.SessionID ?? ''}:${initialDraft ? 'recovered' : 'welcome'}`}
-                    initialDraft={initialDraft}
-                    onTriageSubmit={(data, draft) => {
-                      if (!onTriageSubmit(data, draft)) return false
-                      clearDraftSelection()
-                      return true
-                    }}
+      <CodingAgentControls />
+      <div className={styles['chat-body']}>
+        <div className={styles['chat-content-wrapper']}>
+          <YakitResizeBox
+            freeze={workspaceVisible}
+            lineSize={1}
+            firstRatio={workspaceVisible ? '70%' : '0px'}
+            firstMinSize={workspaceVisible ? 280 : 0}
+            secondRatio={workspaceVisible ? '30%' : '100%'}
+            secondMinSize={MIN_CHAT_CONTENT_WIDTH}
+            firstNodeStyle={workspaceVisible ? undefined : { display: 'none', padding: 0 }}
+            secondNodeStyle={workspaceVisible ? { padding: 0 } : { padding: 0, flex: 1, width: '100%', minWidth: 0 }}
+            lineStyle={workspaceVisible ? undefined : { display: 'none' }}
+            lineDirection="right"
+            firstNode={
+              <div className={styles['chat-workspace']}>
+                <AIChatWorkspace
+                  inViewPort={inViewPort}
+                  welcome={mode === 'welcome'}
+                  filePreviewData={filePreviewData}
+                  setFilePreviewData={setFilePreviewData}
+                  onTabsChange={onTabsChange}
+                  selectionScope={selectionScope}
+                  selectedHttpFlowIds={selectedHttpFlowIds}
+                  onSetSelectedHttpFlowIds={onSetSelectedHttpFlowIds}
+                  riskSelection={{
+                    ids: selectedRiskIds,
+                    onChange: onRiskSelectionChange,
+                  }}
+                />
+              </div>
+            }
+            secondNode={
+              <div ref={chatContentRef} className={styles['chat-content']} data-ai-shared-right-panel={panelVisible}>
+                {mode === 'welcome' ? (
+                  <React.Suspense fallback={<div>loading...</div>}>
+                    <AIChatWelcome
+                      key={`${activeChat?.SessionID ?? ''}:${initialDraft ? 'recovered' : 'welcome'}`}
+                      initialDraft={initialDraft}
+                      onTriageSubmit={(data, draft) => {
+                        if (!onTriageSubmit(data, draft)) return false
+                        clearDraftSelection()
+                        return true
+                      }}
+                      onHttpFlowRemove={onHttpFlowRemove}
+                      selectedHttpFlowIds={selectedHttpFlowIds}
+                      selectedRiskIds={selectedRiskIds}
+                      onSetReAct={onSetReAct}
+                      ref={aiChatWelcomeRef}
+                    />
+                  </React.Suspense>
+                ) : (
+                  <AIChatContent
+                    ref={aiReActChatRef}
+                    onChat={onChat}
+                    showFreeChat={showFreeChat}
+                    setShowFreeChat={setShowFreeChat}
+                    rightPanelLayoutRef={setChatLayoutElement}
                     onHttpFlowRemove={onHttpFlowRemove}
                     selectedHttpFlowIds={selectedHttpFlowIds}
                     selectedRiskIds={selectedRiskIds}
-                    onSetReAct={onSetReAct}
-                    ref={aiChatWelcomeRef}
+                    onAfterSubmit={clearDraftSelection}
                   />
-                </React.Suspense>
-              ) : (
-                <AIChatContent
-                  ref={aiReActChatRef}
-                  onChat={onChat}
-                  showFreeChat={showFreeChat}
-                  setShowFreeChat={setShowFreeChat}
-                  rightPanelLayoutRef={setChatLayoutElement}
-                  onHttpFlowRemove={onHttpFlowRemove}
-                  selectedHttpFlowIds={selectedHttpFlowIds}
-                  selectedRiskIds={selectedRiskIds}
-                  onAfterSubmit={clearDraftSelection}
-                />
-              )}
-              <div
-                ref={panelLayoutRef}
-                className={styles['right-panel-frame']}
-                style={panelFrame}
-                hidden={!panelVisible}
-              >
-                <AIRightPanel welcome={welcome} layoutRef={panelLayoutRef} />
+                )}
+                <div
+                  ref={panelLayoutRef}
+                  className={styles['right-panel-frame']}
+                  style={panelFrame}
+                  hidden={!panelVisible}
+                >
+                  <AIRightPanel welcome={welcome} layoutRef={panelLayoutRef} />
+                </div>
               </div>
-            </div>
-          }
-        />
-      </div>
-      <YakitDockablePane
-        open={multiFuncVisible}
-        onClose={() => setMultiFuncVisible(false)}
-        width={MULTI_FUNC_PANE_WIDTH}
-        dockDisabled={dockDisabled}
-        dockDisabledTip={t('AIAgentChatLayout.dockDisabledTip')}
-        getContainer={() => document.getElementById(YakitAIAgentPageID)}
-        style={{ height: '100%' }}
-        overlayStyle={{ top: 8, bottom: 35, right: 10, left: 'auto' }}
-        header={
-          <YakitSegmented
-            value={multiFuncTab}
-            onChange={(v) => setMultiFuncTab(v as 'task-list' | 'timeline')}
-            options={[
-              {
-                label: (
-                  <span className={yakitDockablePaneSegmentedLabel}>
-                    <FlagOutlined color="currentColor" />
-                    {t('AIAgentChatTemplate.tasklist')}
-                  </span>
-                ),
-                value: 'task-list',
-                disabled: !hasTaskTree,
-              },
-              {
-                label: (
-                  <span className={yakitDockablePaneSegmentedLabel}>
-                    <ViewListOutlined color="currentColor" />
-                    {t('AIAgentChatTemplate.timeline')}
-                  </span>
-                ),
-                value: 'timeline',
-              },
-            ]}
+            }
           />
-        }
-      >
-        {multiFuncTab === 'task-list' ? <TaskListPane /> : <TimelineCard />}
-      </YakitDockablePane>
+        </div>
+        <YakitDockablePane
+          open={multiFuncVisible}
+          onClose={() => setMultiFuncVisible(false)}
+          width={MULTI_FUNC_PANE_WIDTH}
+          dockDisabled={dockDisabled}
+          dockDisabledTip={t('AIAgentChatLayout.dockDisabledTip')}
+          getContainer={() => document.getElementById(YakitAIAgentPageID)}
+          style={{ height: '100%' }}
+          overlayStyle={{ top: 8, bottom: 35, right: 10, left: 'auto' }}
+          header={
+            <YakitSegmented
+              value={multiFuncTab}
+              onChange={(v) => setMultiFuncTab(v as 'task-list' | 'timeline')}
+              options={[
+                {
+                  label: (
+                    <span className={yakitDockablePaneSegmentedLabel}>
+                      <FlagOutlined color="currentColor" />
+                      {t('AIAgentChatTemplate.tasklist')}
+                    </span>
+                  ),
+                  value: 'task-list',
+                  disabled: !hasTaskTree,
+                },
+                {
+                  label: (
+                    <span className={yakitDockablePaneSegmentedLabel}>
+                      <ViewListOutlined color="currentColor" />
+                      {t('AIAgentChatTemplate.timeline')}
+                    </span>
+                  ),
+                  value: 'timeline',
+                },
+              ]}
+            />
+          }
+        >
+          {multiFuncTab === 'task-list' ? <TaskListPane /> : <TimelineCard />}
+        </YakitDockablePane>
+      </div>
       <div className={styles['footer-forge-form']}>
         {activeForge && (
           <AIForgeForm

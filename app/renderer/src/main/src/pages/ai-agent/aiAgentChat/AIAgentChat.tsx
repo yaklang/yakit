@@ -1,3 +1,4 @@
+import { newCodingSessionDraft } from '../coding/binding'
 import React, { memo, useEffect, useRef, useState } from 'react'
 import type { AIAgentChatMode, AIAgentChatProps, AIReActTaskChatReviewProps, AIChatSubmitParams } from './type'
 import { useCreation, useDebounceFn, useInViewport, useMemoizedFn, useSafeState } from 'ahooks'
@@ -178,6 +179,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo(() => {
     }
     setSetting?.((old) => ({
       ...old,
+      ...newCodingSessionDraft(old),
       SyncPerceptionTrigger: AIAgentSettingDefault.SyncPerceptionTrigger,
       EnablePlan: AIAgentSettingDefault.EnablePlan,
       SingleModelMode: AIAgentSettingDefault.SingleModelMode,

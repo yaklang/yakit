@@ -1,13 +1,24 @@
 .chat-wrapper {
   display: flex;
+  flex-direction: column;
   width: 100%;
   height: 100%;
   position: relative;
   overflow: hidden;
-  .chat-content-wrapper {
+  // The dock slot reserves horizontal space even while collapsed. Keep it
+  // beside the chat so its full height cannot consume the vertical flex space.
+  .chat-body {
+    display: flex;
     flex: 1;
     min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .chat-content-wrapper {
     height: 100%;
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
     overflow: hidden;
   }
   .footer-forge-form {

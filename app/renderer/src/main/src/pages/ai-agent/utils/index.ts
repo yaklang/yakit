@@ -143,6 +143,14 @@ export const formatAIAgentSetting = (setting: AIAgentSetting): AIAgentSetting =>
       setting.DisableToolIntervalReview ?? AIAgentSettingDefault.DisableToolIntervalReview
     data.DisableMemoryTriage = setting.DisableMemoryTriage ?? AIAgentSettingDefault.DisableMemoryTriage
     data.SingleModelMode = setting.SingleModelMode ?? AIAgentSettingDefault.SingleModelMode
+    data.CodingMode = !!setting.CodingMode
+    data.CodingWorkspaceID = setting.CodingMode ? setting.CodingWorkspaceID || '' : ''
+    data.CodingWorkingDirectory = setting.CodingMode ? setting.CodingWorkingDirectory || '' : ''
+    data.CodingCreateWorktree = !!setting.CodingMode && !!setting.CodingCreateWorktree
+    data.CodingWorktreeBaseRef = data.CodingCreateWorktree ? setting.CodingWorktreeBaseRef?.trim() || '' : ''
+    data.CodingWorktreeID = setting.CodingMode && !data.CodingCreateWorktree ? setting.CodingWorktreeID || '' : ''
+    data.CodingWorkspaceRoots = setting.CodingMode ? [...(setting.CodingWorkspaceRoots || [])] : []
+    data.CodingSourceRoots = setting.CodingMode ? [...(setting.CodingSourceRoots || [])] : []
   } catch (error) {}
   return data
 }

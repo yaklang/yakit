@@ -578,6 +578,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
         onClick={handleSetTextareaFocus}
         ref={dropRef}
       >
+        {props.inputHeader}
         {isHovering && <div className={styles['drag-hint']}>{t('AIChatTextarea.dropToAddToChat')}</div>}
         <AIAddMaterialsPopover
           showScenarioCapabilities={showScenarioCapabilities}

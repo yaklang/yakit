@@ -2,6 +2,7 @@ import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
 import React, { forwardRef } from 'react'
 import type { AIReactChatTextareaProps } from './type'
 import { AIChatTextarea } from '@/pages/ai-agent/template/template'
+import { CodingSessionControls } from '@/pages/ai-agent/coding/CodingAgentControls'
 import styles from '../AIReActChat.module.scss'
 import { RoundedStopButton } from '../AIReActComponent'
 import omit from 'lodash/omit'
@@ -22,6 +23,7 @@ export const AIReactChatTextarea: React.FC<AIReactChatTextareaProps> = React.mem
     const chatDataStoreKey = useGetChatDataStoreKey()
     return (
       <AIChatTextarea
+        inputHeader={<CodingSessionControls />}
         ref={ref}
         milkdownClassName={styles['milkdown-input']}
         loading={pendingChat?.status === 'connecting'}

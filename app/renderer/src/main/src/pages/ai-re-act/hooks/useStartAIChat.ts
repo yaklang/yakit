@@ -1,3 +1,6 @@
+import { isExperimentalCodingEnabled } from '@/pages/ai-agent/coding/experimentalCodingStore'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { yakitNotify } from '@/utils/notification'
 import { useMemoizedFn } from 'ahooks'
 import type { HandleStartParams } from '@/pages/ai-agent/aiAgentChat/type'
 import type { AISession } from '@/pages/ai-agent/type/aiChat'
@@ -26,6 +29,7 @@ export function useStartAIChat({
   setMention?: AIChatTextareaRefProps['setMention']
 } = {}) {
   const { getSetting, onStart, setActiveChat } = useAIAgentDispatcher()
+  const { t } = useI18nNamespaces(['aiAgent'])
   return useMemoizedFn((value: HandleStartParams, onAccepted?: () => void) => {
     const { qs, target, enabledCapabilities } = value
     const { kind, sessionId: sessionID } = target
@@ -34,6 +38,16 @@ export function useStartAIChat({
     // 提交时读取最新配置并组装本次请求，避免后续切换页面改变请求参数的取值来源。
     const source = getSetting().Source ?? AISourceEnum.aiAgent
     const formattedSetting = formatAIAgentSetting(getSetting())
+    if (isNew && formattedSetting.CodingMode) {
+      if (!isExperimentalCodingEnabled()) {
+        yakitNotify('info', t('CodingAgent.disabled'))
+        return false
+      }
+      if (!formattedSetting.CodingWorkspaceID) {
+        yakitNotify('info', t('CodingAgent.selectRequired'))
+        return false
+      }
+    }
     const request: AIStartParams = {
       ...formattedSetting,
       UserQuery: qs,
@@ -46,7 +60,19 @@ export function useStartAIChat({
 
     request.TimelineSessionID = sessionID
     request.PreferSessionCachedConfig = !isNew
-    if (isNew) request.Attach = false
+    if (isNew) {
+      request.Attach = false
+      if (request.CodingMode) {
+        // The engine resolves directories at startup. Draft paths are display-only.
+        request.CodingWorkingDirectory = ''
+        request.CodingWorkspaceRoots = []
+        request.CodingSourceRoots = []
+      }
+    } else {
+      // Creation is one-shot; resuming always uses the persisted server binding.
+      request.CodingCreateWorktree = false
+      request.CodingWorktreeBaseRef = ''
+    }
     const { attachedResourceInfo } = getAIReActRequestParams(value)
     // 这里只构造启动事件；Controller 在完成新会话绑定后负责发送首问。
     const aiInputEvent: AIInputEvent = {

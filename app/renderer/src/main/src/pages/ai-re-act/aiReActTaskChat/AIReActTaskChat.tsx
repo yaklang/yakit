@@ -1,3 +1,4 @@
+import { ExperimentalCodingSetting } from '@/pages/ai-agent/coding/CodingAgentControls'
 import React, { useEffect, useRef, useState } from 'react'
 import type {
   AIInputSettingFormProps,
@@ -343,6 +344,7 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
             }}
           >
             <div className={styles['settings-options']}>
+              <ExperimentalCodingSetting />
               <Form.Item
                 label={
                   <div className={styles['setting-label']}>

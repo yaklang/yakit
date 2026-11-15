@@ -101,3 +101,38 @@ describe('formatAIAgentSetting', () => {
     )
   })
 })
+
+it('normalizes coding startup intent without carrying a conflicting selected checkout', () => {
+  expect(
+    formatAIAgentSetting({
+      ...AIAgentSettingDefault,
+      CodingMode: true,
+      CodingWorkspaceID: 'workspace',
+      CodingCreateWorktree: true,
+      CodingWorktreeBaseRef: ' release ',
+      CodingWorktreeID: 'old-tree',
+    }),
+  ).toMatchObject({
+    CodingWorkspaceID: 'workspace',
+    CodingCreateWorktree: true,
+    CodingWorktreeBaseRef: 'release',
+    CodingWorktreeID: '',
+  })
+  expect(
+    formatAIAgentSetting({
+      ...AIAgentSettingDefault,
+      CodingMode: false,
+      CodingWorkspaceID: 'workspace',
+      CodingCreateWorktree: true,
+      CodingWorktreeBaseRef: 'main',
+      CodingWorktreeID: 'old-tree',
+      CodingWorkspaceRoots: ['/old'],
+    }),
+  ).toMatchObject({
+    CodingWorkspaceID: '',
+    CodingCreateWorktree: false,
+    CodingWorktreeBaseRef: '',
+    CodingWorktreeID: '',
+    CodingWorkspaceRoots: [],
+  })
+})
