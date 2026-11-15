@@ -1,4 +1,4 @@
-import '@/pages/ai-re-act/hooks/__test__/setupElectron'
+import { ipcRendererMock } from '@/pages/ai-re-act/hooks/__test__/setupElectron'
 import React from 'react'
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -102,6 +102,7 @@ const one = { ID: 'one', Name: 'Project One', RootPath: '/front', RootPaths: ['/
 const two = { ID: 'two', Name: 'Project Two', RootPath: '/two', RootPaths: ['/two'], IsGit: true }
 beforeEach(() => {
   vi.clearAllMocks()
+  ipcRendererMock.invoke.mockReset().mockResolvedValue(undefined)
   mocks.setting = {}
   mocks.activeChat = undefined
   SystemInfo.mode = 'remote'
@@ -418,6 +419,98 @@ describe('session environment', () => {
 })
 
 describe('project creation', () => {
+  const dropData = (...paths: string[]) => ({
+    dataTransfer: {
+      types: ['Files'],
+      files: paths.map((path) => Object.assign(new File([], path.split('/').pop() || 'folder'), { path })),
+    },
+  })
+
+  it('accepts dropped folders in order, deduplicates additions and rejects ordinary files', async () => {
+    ipcRendererMock.invoke.mockImplementation(async (channel, path) => {
+      expect(channel).toBe('fetch-file-is-dir-by-path')
+      return ['/front.end', '/backend', '/docs'].includes(path)
+    })
+    mocks.create.mockResolvedValue(one)
+    const parentDrop = vi.fn()
+    render(
+      <div onDrop={parentDrop}>
+        <CodingWorkspaceCreate onClose={() => {}} onCreated={() => {}} />
+      </div>,
+    )
+    fireEvent.change(screen.getByLabelText('CodingAgent.name'), { target: { value: 'Dropped project' } })
+    const zone = screen.getByRole('group', { name: 'CodingAgent.sourceFolder' })
+    expect(fireEvent.drop(zone, dropData('/front.end', '/backend', '/front.end', '/LICENSE'))).toBe(false)
+    await screen.findByText('/front.end')
+    expect(screen.getByText('/backend')).toBeInTheDocument()
+    expect(screen.queryByText('/LICENSE')).not.toBeInTheDocument()
+    expect(screen.getByText('CodingAgent.dropFoldersOnly')).toBeInTheDocument()
+    expect(ipcRendererMock.invoke).toHaveBeenCalledTimes(3)
+    expect(parentDrop).not.toHaveBeenCalled()
+
+    fireEvent.drop(zone, dropData('/backend', '/docs'))
+    await screen.findByText('/docs')
+    expect(screen.getAllByText('/backend')).toHaveLength(1)
+    expect(screen.queryByText('CodingAgent.dropFoldersOnly')).not.toBeInTheDocument()
+    fireEvent.click(screen.getByText('Save workspace'))
+    await waitFor(() =>
+      expect(mocks.create).toHaveBeenCalledWith('Dropped project', ['/front.end', '/backend', '/docs']),
+    )
+  })
+
+  it('keeps the drop highlight across child elements and clears it when leaving', () => {
+    render(<CodingWorkspaceCreate onClose={() => {}} onCreated={() => {}} />)
+    const zone = screen.getByRole('group', { name: 'CodingAgent.sourceFolder' })
+    const button = screen.getByText('CodingAgent.chooseFolder')
+    fireEvent.dragEnter(zone, dropData('/frontend'))
+    expect(screen.getByText('CodingAgent.dropFolders')).toBeInTheDocument()
+    fireEvent.dragEnter(button, dropData('/frontend'))
+    fireEvent.dragLeave(button)
+    expect(screen.getByText('CodingAgent.dropFolders')).toBeInTheDocument()
+    fireEvent.dragLeave(zone)
+    expect(screen.getByText('CodingAgent.localFolderTip')).toBeInTheDocument()
+    fireEvent.dragEnter(zone, { dataTransfer: { types: ['text/plain'], files: [] } })
+    expect(screen.queryByText('CodingAgent.dropFolders')).not.toBeInTheDocument()
+  })
+
+  it('rejects files without a native path and ignores text drops', async () => {
+    render(<CodingWorkspaceCreate onClose={() => {}} onCreated={() => {}} />)
+    const zone = screen.getByRole('group', { name: 'CodingAgent.sourceFolder' })
+    fireEvent.drop(zone, { dataTransfer: { types: ['text/plain'], files: [] } })
+    expect(screen.queryByText('CodingAgent.dropFoldersOnly')).not.toBeInTheDocument()
+    fireEvent.drop(zone, { dataTransfer: { types: ['Files'], files: [new File([], 'folder')] } })
+    await screen.findByText('CodingAgent.dropFoldersOnly')
+    expect(ipcRendererMock.invoke).not.toHaveBeenCalled()
+    expect(screen.getByText('Save workspace')).toBeDisabled()
+  })
+
+  it('blocks creation and additional drops while checking folders', async () => {
+    let finishCheck!: (isDirectory: boolean) => void
+    ipcRendererMock.invoke.mockImplementation(
+      () =>
+        new Promise<boolean>((resolve) => {
+          finishCheck = resolve
+        }),
+    )
+    mocks.chooseFolders.mockResolvedValue({ filePaths: ['/existing'] })
+    mocks.create.mockResolvedValue(one)
+    render(<CodingWorkspaceCreate onClose={() => {}} onCreated={() => {}} />)
+    fireEvent.change(screen.getByLabelText('CodingAgent.name'), { target: { value: 'Pending project' } })
+    fireEvent.click(screen.getByText('CodingAgent.chooseFolder'))
+    await screen.findByText('/existing')
+    const zone = screen.getByRole('group', { name: 'CodingAgent.sourceFolder' })
+    fireEvent.drop(zone, dropData('/new'))
+    expect(zone).toHaveAttribute('aria-busy', 'true')
+    expect(screen.getByText('Save workspace')).toBeDisabled()
+    expect(screen.getByText('CodingAgent.addDirectory')).toBeDisabled()
+    fireEvent.drop(zone, dropData('/ignored'))
+    expect(ipcRendererMock.invoke).toHaveBeenCalledTimes(1)
+    await act(async () => finishCheck(true))
+    expect(screen.getByText('Save workspace')).not.toBeDisabled()
+    fireEvent.click(screen.getByText('Save workspace'))
+    await waitFor(() => expect(mocks.create).toHaveBeenCalledWith('Pending project', ['/existing', '/new']))
+  })
+
   it('creates an ordered multi-directory workspace with the selected primary first', async () => {
     mocks.create.mockResolvedValue({ ...one, ID: 'created' })
     mocks.chooseFolders

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Alert } from 'antd'
+import classNames from 'classnames'
 import { handleOpenFileSystemDialog } from '@/utils/fileSystemDialog'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
@@ -9,6 +10,8 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { getMainOperatorPageBodyContainerOrBody } from '@/utils/getMainOperatorPageBodyContainer'
 import { createCodingWorkspace, type CodingWorkspace } from './api'
 import styles from './CodingAgentControls.module.scss'
+
+const { ipcRenderer } = window.require('electron')
 
 export const CodingWorkspaceCreate = ({
   onClose,
@@ -22,6 +25,9 @@ export const CodingWorkspaceCreate = ({
   const [error, setError] = useState('')
   const [name, setName] = useState('')
   const [paths, setPaths] = useState<string[]>([])
+  const [readingFolders, setReadingFolders] = useState(false)
+  const [dragging, setDragging] = useState(false)
+  const dragDepth = useRef(0)
   const alive = useRef(true)
   useEffect(() => {
     alive.current = true
@@ -29,9 +35,11 @@ export const CodingWorkspaceCreate = ({
       alive.current = false
     }
   }, [])
+  const busy = saving || readingFolders
   const validPaths = paths.length > 0
+  const appendPaths = (next: string[]) => setPaths((old) => [...new Set([...old, ...next])])
   const addWorkspace = async () => {
-    if (saving || !name.trim() || !validPaths) return
+    if (busy || !name.trim() || !validPaths) return
     setSaving(true)
     setError('')
     try {
@@ -44,13 +52,45 @@ export const CodingWorkspaceCreate = ({
     }
   }
   const chooseFolders = async () => {
+    if (busy) return
+    setReadingFolders(true)
+    setError('')
     try {
       const result = await handleOpenFileSystemDialog({ properties: ['openDirectory', 'multiSelections'] })
       if (alive.current && result.filePaths.length) {
-        setPaths((old) => [...new Set([...old, ...result.filePaths])])
+        appendPaths(result.filePaths)
       }
     } catch (err) {
       if (alive.current) setError(String(err))
+    } finally {
+      if (alive.current) setReadingFolders(false)
+    }
+  }
+  const dropFolders = async (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    event.stopPropagation()
+    dragDepth.current = 0
+    setDragging(false)
+    if (busy) return
+    // Read native paths during the drop event, before the drag data store is cleared.
+    const files = Array.from(event.dataTransfer.files)
+    if (!files.length) return
+    const droppedPaths = [...new Set(files.map((file) => (file as File & { path?: string }).path || ''))]
+    setReadingFolders(true)
+    setError('')
+    try {
+      const directories = await Promise.all(
+        droppedPaths.map(async (path) =>
+          path && (await ipcRenderer.invoke('fetch-file-is-dir-by-path', path)) ? path : '',
+        ),
+      )
+      if (!alive.current) return
+      appendPaths(directories.filter(Boolean))
+      if (directories.some((path) => !path)) setError(t('CodingAgent.dropFoldersOnly'))
+    } catch (err) {
+      if (alive.current) setError(String(err))
+    } finally {
+      if (alive.current) setReadingFolders(false)
     }
   }
   return (
@@ -70,7 +110,7 @@ export const CodingWorkspaceCreate = ({
       }}
       onOk={addWorkspace}
       confirmLoading={saving}
-      okButtonProps={{ disabled: !name.trim() || !validPaths, className: styles.createSubmit }}
+      okButtonProps={{ disabled: busy || !name.trim() || !validPaths, className: styles.createSubmit }}
       cancelButtonProps={{ type: 'text2' }}
       getContainer={getMainOperatorPageBodyContainerOrBody()}
     >
@@ -92,49 +132,79 @@ export const CodingWorkspaceCreate = ({
         <div className={styles.field}>
           <span className={styles.fieldLabel}>{t('CodingAgent.sourceFolder')}</span>
 
-          {!paths.length ? (
-            <div className={styles.emptyFolders}>
-              <span>{t('CodingAgent.localFolderTip')}</span>
-              <YakitButton type="text2" icon={<PlusOutlined />} onClick={chooseFolders} disabled={saving}>
-                {t('CodingAgent.chooseFolder')}
-              </YakitButton>
-            </div>
-          ) : (
-            paths.map((path, index) => (
-              <div className={styles.directoryInput} key={index}>
-                <div className={styles.directoryLabel}>
-                  <span>{t(index === 0 ? 'CodingAgent.primary' : 'CodingAgent.secondary')}</span>
-                  <YakitButton
-                    type="text2"
-                    icon={<TrashOutlined />}
-                    aria-label={t('CodingAgent.removeDirectory', { index: index + 1 })}
-                    disabled={saving}
-                    onClick={() => setPaths((old) => old.filter((_, i) => i !== index))}
-                  />
-                  {index > 0 && (
+          <div
+            role="group"
+            aria-label={t('CodingAgent.sourceFolder')}
+            aria-busy={readingFolders}
+            className={classNames(styles.folderDropZone, { [styles.folderDropActive]: dragging })}
+            onDragEnter={(event) => {
+              event.preventDefault()
+              event.stopPropagation()
+              if (busy || !Array.from(event.dataTransfer.types).includes('Files')) return
+              dragDepth.current += 1
+              setDragging(true)
+            }}
+            onDragOver={(event) => {
+              event.preventDefault()
+              event.stopPropagation()
+              event.dataTransfer.dropEffect =
+                !busy && Array.from(event.dataTransfer.types).includes('Files') ? 'copy' : 'none'
+            }}
+            onDragLeave={(event) => {
+              event.preventDefault()
+              event.stopPropagation()
+              dragDepth.current = Math.max(0, dragDepth.current - 1)
+              if (!dragDepth.current) setDragging(false)
+            }}
+            onDrop={dropFolders}
+          >
+            {!paths.length ? (
+              <div className={styles.emptyFolders}>
+                <span>{t(dragging ? 'CodingAgent.dropFolders' : 'CodingAgent.localFolderTip')}</span>
+                <YakitButton type="text2" icon={<PlusOutlined />} onClick={chooseFolders} disabled={busy}>
+                  {t('CodingAgent.chooseFolder')}
+                </YakitButton>
+              </div>
+            ) : (
+              paths.map((path, index) => (
+                <div className={styles.directoryInput} key={path}>
+                  <div className={styles.directoryLabel}>
+                    <span>{t(index === 0 ? 'CodingAgent.primary' : 'CodingAgent.secondary')}</span>
                     <YakitButton
                       type="text2"
-                      size="small"
-                      disabled={saving}
-                      onClick={() => setPaths((old) => [old[index], ...old.filter((_, i) => i !== index)])}
-                    >
-                      {t('CodingAgent.makePrimary')}
-                    </YakitButton>
-                  )}
+                      icon={<TrashOutlined />}
+                      aria-label={t('CodingAgent.removeDirectory', { index: index + 1 })}
+                      disabled={busy}
+                      onClick={() => setPaths((old) => old.filter((_, i) => i !== index))}
+                    />
+                    {index > 0 && (
+                      <YakitButton
+                        type="text2"
+                        size="small"
+                        disabled={busy}
+                        onClick={() => setPaths((old) => [old[index], ...old.filter((_, i) => i !== index)])}
+                      >
+                        {t('CodingAgent.makePrimary')}
+                      </YakitButton>
+                    )}
+                  </div>
+                  <div className={styles.directoryPath} title={path}>
+                    {path}
+                  </div>
                 </div>
-                <div className={styles.directoryPath} title={path}>
-                  {path}
-                </div>
+              ))
+            )}
+            {paths.length > 0 && (
+              <div className={styles.addDirectories}>
+                <YakitButton type="outline2" icon={<PlusOutlined />} disabled={busy} onClick={chooseFolders}>
+                  {t('CodingAgent.addDirectory')}
+                </YakitButton>
+                <span className={styles.hint}>
+                  {t(dragging ? 'CodingAgent.dropFolders' : 'CodingAgent.dropMoreFolders')}
+                </span>
               </div>
-            ))
-          )}
-          {paths.length > 0 && (
-            <div className={styles.addDirectories}>
-              <YakitButton type="outline2" icon={<PlusOutlined />} disabled={saving} onClick={chooseFolders}>
-                {t('CodingAgent.addDirectory')}
-              </YakitButton>
-            </div>
-          )}
+            )}
+          </div>
         </div>
         {paths.length > 0 && <p className={styles.hint}>{t('CodingAgent.primaryRule')}</p>}
         {error && <Alert type="error" showIcon message={error} />}

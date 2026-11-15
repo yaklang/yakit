@@ -501,6 +501,21 @@ button.environmentRow,
     line-height: 20px;
   }
 }
+.folderDropZone {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border: 1px dashed var(--Colors-Use-Neutral-Border);
+  border-radius: 8px;
+  transition:
+    background-color 0.15s,
+    border-color 0.15s;
+}
+.folderDropActive {
+  border-color: var(--Colors-Use-Main-Primary);
+  background: var(--Colors-Use-Main-Bg);
+}
 .emptyFolders {
   display: flex;
   flex-direction: column;
@@ -508,8 +523,6 @@ button.environmentRow,
   justify-content: center;
   gap: 12px;
   min-height: 112px;
-  border: 1px dashed var(--Colors-Use-Neutral-Border);
-  border-radius: 8px;
   color: var(--Colors-Use-Neutral-Text-3-Secondary);
   font-size: 12px;
 }
