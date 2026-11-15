@@ -6,6 +6,7 @@ import { ReActChatEventEnum } from '../../defaultConstant'
 import type { AISession } from '../../type/aiChat'
 import type { AISource } from '@/pages/ai-re-act/hooks/grpcApi'
 import { YakitRoute } from '@/enums/yakitRoute'
+import { setExperimentalCoding } from '../../coding/experimentalCodingStore'
 
 const mocks = vi.hoisted(() => ({
   dispatcher: {
@@ -18,6 +19,7 @@ const mocks = vi.hoisted(() => ({
   pages: new Map(),
   updatePagesDataCacheById: vi.fn(),
   ctx: {
+    setting: { CodingMode: false },
     activeChat: undefined as { SessionID: string } | undefined,
     sessions: [] as { SessionID: string; UpdatedAt: number }[],
   },
@@ -25,7 +27,10 @@ const mocks = vi.hoisted(() => ({
 }))
 
 vi.mock('ahooks', async () => ({ ...(await vi.importActual('ahooks')), useInViewport: () => [mocks.viewport.visible] }))
-vi.mock('../../useContext/useStore', () => ({ default: () => ({ activeChat: mocks.ctx.activeChat }) }))
+vi.mock('../../useContext/useStore', () => ({
+  default: () => ({ activeChat: mocks.ctx.activeChat, setting: mocks.ctx.setting }),
+}))
+vi.mock('../../coding/CodingProjects', () => ({ CodingProjects: () => <div>编程项目列表</div> }))
 vi.mock('../../useContext/useDispatcher', () => ({
   default: () => ({ getSetting: () => ({ Source: 'ai' }), setActiveChat: mocks.setActiveChat }),
 }))
@@ -62,6 +67,8 @@ beforeEach(() => {
   vi.clearAllMocks()
   mocks.dispatcher.setSessions.mockReset()
   mocks.setActiveChat.mockReset()
+  mocks.ctx.setting = { CodingMode: false }
+  setExperimentalCoding(false)
   mocks.ctx.activeChat = undefined
   mocks.ctx.sessions = []
   mocks.viewport.visible = true
@@ -70,6 +77,23 @@ beforeEach(() => {
 })
 
 describe('HistoryChat 会话参数增量更新', () => {
+  it('仅 coding 模式显示项目分组，安全模式即使开启实验功能仍保留原历史布局', () => {
+    setExperimentalCoding(true)
+    const { rerender } = render(<HistoryChat aiSource={['ai', '', 'im']} />)
+    expect(screen.getByText('历史会话内容')).toBeInTheDocument()
+    expect(screen.queryByText('编程项目列表')).toBeNull()
+    expect(screen.queryByText('CodingAgent.recentSessions')).toBeNull()
+    mocks.ctx.setting.CodingMode = true
+    rerender(<HistoryChat aiSource={['ai', '', 'im']} />)
+    expect(screen.getByText('编程项目列表')).toBeInTheDocument()
+    expect(screen.getByText('CodingAgent.recentSessions')).toBeInTheDocument()
+    mocks.ctx.setting.CodingMode = false
+    rerender(<HistoryChat aiSource={['ai', '', 'im']} />)
+    expect(screen.getByText('历史会话内容')).toBeInTheDocument()
+    expect(screen.queryByText('编程项目列表')).toBeNull()
+    expect(screen.queryByText('CodingAgent.recentSessions')).toBeNull()
+  })
+
   it('coding 新标签保留项目并回到源目录，不复用已有工作树或再次创建', () => {
     const open = vi.fn()
     emiter.on('openPage', open)

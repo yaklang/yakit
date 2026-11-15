@@ -7,10 +7,12 @@ import { setExperimentalCoding } from '../experimentalCodingStore'
 import { SystemInfo } from '@/constants/hardware'
 import { CodingWorkspaceCreate } from '../CodingWorkspaceCreate'
 import emiter from '@/utils/eventBus/eventBus'
+import { emptyCodingBinding } from '../binding'
 
 const mocks = vi.hoisted(() => ({
   setting: {} as Record<string, unknown>,
   activeChat: undefined as undefined | { SessionID: string; isDraftSession?: boolean },
+  pendingChat: undefined as undefined | { status: string },
   setSetting: vi.fn(),
   setActiveChat: vi.fn(),
   query: vi.fn(),
@@ -27,7 +29,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock('../navigation', () => ({ openCodingWorktrees: mocks.openWorktrees }))
 vi.mock('@/utils/fileSystemDialog', () => ({ handleOpenFileSystemDialog: mocks.chooseFolders }))
 vi.mock('../../useContext/useStore', () => ({
-  default: () => ({ setting: mocks.setting, activeChat: mocks.activeChat }),
+  default: () => ({ setting: mocks.setting, activeChat: mocks.activeChat, pendingChat: mocks.pendingChat }),
 }))
 vi.mock('../../useContext/useDispatcher', () => ({
   default: () => ({ setSetting: mocks.setSetting, setActiveChat: mocks.setActiveChat }),
@@ -110,6 +112,7 @@ beforeEach(() => {
   ipcRendererMock.invoke.mockReset().mockResolvedValue(undefined)
   mocks.setting = {}
   mocks.activeChat = undefined
+  mocks.pendingChat = undefined
   SystemInfo.mode = 'remote'
   setExperimentalCoding(false)
   mocks.query.mockResolvedValue({ Data: [one, two] })
@@ -286,13 +289,59 @@ describe('session environment', () => {
     expect(container.textContent).toBe('')
     act(() => setExperimentalCoding(true))
     fireEvent.click(screen.getByText('coding'))
-    expect(mocks.setSetting.mock.calls[0][0]({ CodingWorktreeID: 'stale', CodingCreateWorktree: true })).toMatchObject({
+    expect(mocks.setSetting.mock.calls[0][0]).toMatchObject({
       CodingMode: true,
       CodingWorkspaceID: '',
       CodingWorktreeID: '',
       CodingCreateWorktree: false,
     })
   })
+  it.each(['started', 'connecting', 'failed'])(
+    'switches away from a %s coding session into an unbound draft',
+    (status) => {
+      setExperimentalCoding(true)
+      mocks.activeChat = { SessionID: 'coding-session', isDraftSession: status !== 'started' }
+      if (status !== 'started') mocks.pendingChat = { status }
+      const original = {
+        CodingMode: true,
+        CodingWorkspaceID: 'one',
+        CodingWorktreeID: 'tree-one',
+        CodingWorkingDirectory: '/trees/one',
+        CodingSourceRoots: ['/front', '/back'],
+        CodingWorkspaceRoots: ['/trees/one', '/back'],
+        CodingCreateWorktree: true,
+        ReviewPolicy: 'manual',
+      }
+      mocks.setting = original
+      render(<CodingAgentControls />)
+      fireEvent.click(screen.getByRole('button', { name: 'security' }))
+      const next = mocks.openChat.mock.calls[0][0]
+      expect(next.SessionID).not.toBe('coding-session')
+      expect(next).toMatchObject({
+        isDraftSession: true,
+        StartParams: { ...emptyCodingBinding, ReviewPolicy: 'manual' },
+      })
+      expect(mocks.setSetting).not.toHaveBeenCalled()
+      expect(mocks.setActiveChat).not.toHaveBeenCalled()
+      expect(original).toMatchObject({ CodingMode: true, CodingWorktreeID: 'tree-one', CodingCreateWorktree: true })
+    },
+  )
+
+  it('switches a started security session to a coding draft and ignores choosing the current mode', () => {
+    setExperimentalCoding(true)
+    mocks.activeChat = { SessionID: 'security-session' }
+    render(<CodingAgentControls />)
+    fireEvent.click(screen.getByRole('button', { name: 'security' }))
+    expect(mocks.openChat).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: 'coding' }))
+    expect(mocks.openChat).toHaveBeenCalledWith(
+      expect.objectContaining({
+        isDraftSession: true,
+        StartParams: { ...emptyCodingBinding, CodingMode: true },
+      }),
+    )
+  })
+
   it('configures creation without calling a worktree creation RPC', async () => {
     setExperimentalCoding(true)
     mocks.setting = { CodingMode: true, CodingWorkspaceID: 'one', CodingWorktreeID: 'previous' }
@@ -412,7 +461,7 @@ describe('session environment', () => {
         <CodingSessionControls />
       </>,
     )
-    expect(screen.getByText('security')).toBeDisabled()
+    expect(screen.getByText('security')).not.toBeDisabled()
     await waitFor(() => expect(mocks.setSetting).toHaveBeenCalled())
     expect(mocks.setSetting.mock.calls[0][0](mocks.setting)).toMatchObject({
       CodingWorktreeID: 'resolved',

@@ -19,6 +19,8 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import useAIAgentStore from '../useContext/useStore'
 import useAIAgentDispatcher from '../useContext/useDispatcher'
 import { isChatSession } from '../utils/isChatSession'
+import { createWelcomeChat } from '../defaultConstant'
+import { openAIAgentChatTab } from '../historyChat/HistoryChat'
 import { setExperimentalCoding, useExperimentalCoding } from './experimentalCodingStore'
 import { listCodingSessions, queryCodingWorkspaces } from './api'
 import type { CodingWorkspace } from './api'
@@ -48,6 +50,7 @@ export const CodingAgentControls = () => {
   const enabled = useExperimentalCoding()
   const { setting, activeChat, pendingChat } = useAIAgentStore()
   const { setSetting } = useAIAgentDispatcher()
+  const [menuOpen, setMenuOpen] = useState(false)
   const locked = isChatSession(activeChat) || !!pendingChat
   const coding = !!setting.CodingMode
   useEffect(() => {
@@ -58,57 +61,60 @@ export const CodingAgentControls = () => {
   return (
     <div className={styles.controls}>
       <div className={styles.bar}>
-        <Tooltip title={locked ? t('CodingAgent.sessionLocked') : undefined}>
-          <span>
-            <YakitDropdownMenu
-              menu={{
-                width: 248,
-                type: 'grey',
-                menuWrapperClassName: styles.modeMenu,
-                data: [
-                  {
-                    key: 'security',
-                    noStyle: true,
-                    label: (
-                      <div className={styles.modeOption}>
-                        <div>
-                          <strong>{t('CodingAgent.security')}</strong>
-                          <span>{t('CodingAgent.securityDescription')}</span>
-                        </div>
-                        {!coding && <CheckOutlined />}
-                      </div>
-                    ),
-                  },
-                  {
-                    key: 'coding',
-                    noStyle: true,
-                    label: (
-                      <div className={styles.modeOption}>
-                        <div>
-                          <strong>
-                            Coding Agent <small>{t('CodingAgent.preview')}</small>
-                          </strong>
-                          <span>{t('CodingAgent.codingDescription')}</span>
-                        </div>
-                        {coding && <CheckOutlined />}
-                      </div>
-                    ),
-                    disabled: !enabled,
-                  },
-                ],
-                onClick: ({ key }) => {
-                  if (locked || (key === 'coding' && !enabled) || (key === 'coding') === coding) return
-                  setSetting((old) => ({ ...old, ...emptyCodingBinding, CodingMode: key === 'coding' }))
-                },
-              }}
-              dropdown={{ trigger: ['click'], disabled: locked }}
-            >
-              <YakitButton className={styles.modeTrigger} type="text2" disabled={locked}>
-                {coding ? 'Coding Agent' : t('CodingAgent.security')} <ChevronDownOutlined />
-              </YakitButton>
-            </YakitDropdownMenu>
-          </span>
-        </Tooltip>
+        <YakitDropdownMenu
+          menu={{
+            width: 248,
+            type: 'grey',
+            menuWrapperClassName: styles.modeMenu,
+            data: [
+              {
+                key: 'security',
+                noStyle: true,
+                label: (
+                  <div className={styles.modeOption}>
+                    <div>
+                      <strong>{t('CodingAgent.security')}</strong>
+                      <span>{t('CodingAgent.securityDescription')}</span>
+                    </div>
+                    {!coding && <CheckOutlined />}
+                  </div>
+                ),
+              },
+              {
+                key: 'coding',
+                noStyle: true,
+                label: (
+                  <div className={styles.modeOption}>
+                    <div>
+                      <strong>
+                        Coding Agent <small>{t('CodingAgent.preview')}</small>
+                      </strong>
+                      <span>{t('CodingAgent.codingDescription')}</span>
+                    </div>
+                    {coding && <CheckOutlined />}
+                  </div>
+                ),
+                disabled: !enabled,
+              },
+            ],
+            onClick: ({ key }) => {
+              setMenuOpen(false)
+              if ((key === 'coding' && !enabled) || (key === 'coding') === coding) return
+              const nextSetting = { ...setting, ...emptyCodingBinding, CodingMode: key === 'coding' }
+              if (locked) {
+                // 保留原会话标签和建联归属，切换后的模式使用独立草稿，原任务继续在后台执行。
+                openAIAgentChatTab({ ...createWelcomeChat(), StartParams: nextSetting })
+                return
+              }
+              setSetting(nextSetting)
+            },
+          }}
+          dropdown={{ trigger: ['click'], open: menuOpen, onOpenChange: setMenuOpen }}
+        >
+          <YakitButton className={styles.modeTrigger} type="text2">
+            {coding ? 'Coding Agent' : t('CodingAgent.security')} <ChevronDownOutlined />
+          </YakitButton>
+        </YakitDropdownMenu>
       </div>
     </div>
   )
@@ -139,8 +145,8 @@ export const CodingSessionControls = ({
     (locked || setting.CodingWorktreeID) && setting.CodingSourceRoots?.length
       ? setting.CodingSourceRoots
       : workspace
-      ? workspaceRoots(workspace)
-      : setting.CodingSourceRoots || []
+        ? workspaceRoots(workspace)
+        : setting.CodingSourceRoots || []
   useEffect(() => {
     const refreshProjects = () => setRefresh((value) => value + 1)
     emiter.on('sessionData', refreshProjects)

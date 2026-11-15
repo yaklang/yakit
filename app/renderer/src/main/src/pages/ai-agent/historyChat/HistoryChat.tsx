@@ -50,7 +50,6 @@ import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { syncAIAgentPageInfo } from '../utils/syncAIAgentPageInfo'
 import { mergeAISessionUpdate } from './mergeAISessionUpdate'
 import { CodingProjects } from '../coding/CodingProjects'
-import { useExperimentalCoding } from '../coding/experimentalCodingStore'
 import { newCodingSessionDraft } from '../coding/binding'
 import type { AIAgentSetting } from '../aiAgentType'
 
@@ -175,9 +174,7 @@ const HistoryChat = memo(({ aiSource, embedded, title, className }: HistoryChatP
   }, [enableHistorySourceFilter, historySourceFilter])
   const [{ sessions }, dispatcher] = useSessionList(historyQuerySources, historyQueryPlatform)
   const { openChatInNewTab, activeChat, pageId, setting } = useAIAgentStore()
-  const codingEnabled = useExperimentalCoding()
-  const showProjects =
-    !embedded && isGlobalAIAgentHistory && historySourceFilter === 'local' && (codingEnabled || setting?.CodingMode)
+  const showProjects = !embedded && isGlobalAIAgentHistory && historySourceFilter === 'local' && setting?.CodingMode
 
   const currentRouteKey = usePageInfo((state) => state.getCurrentPageTabRouteKey(), shallow)
 
