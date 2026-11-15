@@ -15,7 +15,14 @@ vi.mock('@/components/layout/whatsNew/memfitWhatsNewConfig', () => ({
   MEMFIT_WHATS_NEW: { enabled: true, targetVersion: '1.4.9-1023', items: [{ title: 't', description: 'd' }] },
 }))
 vi.mock('@/pages/ai-re-act/hooks/useCurrentDataBySession', () => ({ useCurrentStore: () => store }))
-vi.mock('../../../useContext/useStore', () => ({ default: () => ({ activeChat: { Title: '当前会话' } }) }))
+vi.mock('../../../useContext/useStore', () => ({
+  default: () => ({
+    activeChat: { Title: '当前会话' },
+    openChatInNewTab: true,
+    pageId: 'coding-tab',
+    setting: { CodingMode: true, CodingWorkspaceID: 'project' },
+  }),
+}))
 vi.mock('../../../historyChat/HistoryChat', () => ({ onNewChat: newChat }))
 vi.mock('../../AIContextToken/ContextDetailPopover', () => ({ default: () => <button>上下文详情</button> }))
 vi.mock('@/pages/plugins/operator/horizontalScrollCard/HorizontalScrollCard', () => ({
@@ -47,7 +54,10 @@ describe('AIHorizontalScrollCard', () => {
     const buttons = screen.getAllByRole('button')
     expect(buttons).toHaveLength(2)
     fireEvent.click(buttons[1])
-    expect(newChat).toHaveBeenCalledTimes(1)
+    expect(newChat).toHaveBeenCalledExactlyOnceWith(true, 'coding-tab', {
+      CodingMode: true,
+      CodingWorkspaceID: 'project',
+    })
     expect(screen.queryByText('执行结果')).not.toBeInTheDocument()
   })
 

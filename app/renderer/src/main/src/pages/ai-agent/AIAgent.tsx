@@ -58,8 +58,12 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
   // 当前展示对话
   const [activeChat, updateActiveChat] = useState<AISession>(() => props.initialSession || createWelcomeChat())
   const getInitialSetting = () => {
-    if (!activeChat.isDraftSession || !globalSessionEngine.sessionStores.getState().has(activeChat.SessionID)) return
-    return cloneDeep(globalSessionEngine.ensureSession(activeChat.SessionID).request)
+    if (!activeChat.isDraftSession) return
+    if (globalSessionEngine.sessionStores.getState().has(activeChat.SessionID)) {
+      return cloneDeep(globalSessionEngine.ensureSession(activeChat.SessionID).request)
+    }
+    // 跨标签的项目草稿通过路由携带配置，不依赖页面挂载前的临时内存池。
+    if (activeChat.StartParams) return cloneDeep(activeChat.StartParams)
   }
   // 本轮渲染读取的欢迎会话配置，用于页面初始化及跳过全局缓存覆盖。
   const initialSetting = getInitialSetting()

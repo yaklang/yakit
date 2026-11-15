@@ -2,7 +2,7 @@ import { memo, useEffect, useMemo, useRef, useState, type ReactNode } from 'reac
 import useAIAgentStore from '../useContext/useStore'
 import useAIAgentDispatcher from '../useContext/useDispatcher'
 import { yakitNotify } from '@/utils/notification'
-import { ReActChatEventEnum } from '../defaultConstant'
+import { createWelcomeChat, ReActChatEventEnum } from '../defaultConstant'
 import {
   DesktopComputerOutlined,
   MessageCirclePlusOutlined,
@@ -51,6 +51,8 @@ import { syncAIAgentPageInfo } from '../utils/syncAIAgentPageInfo'
 import { mergeAISessionUpdate } from './mergeAISessionUpdate'
 import { CodingProjects } from '../coding/CodingProjects'
 import { useExperimentalCoding } from '../coding/experimentalCodingStore'
+import { newCodingSessionDraft } from '../coding/binding'
+import type { AIAgentSetting } from '../aiAgentType'
 
 const HISTORY_SOURCE_FILTER_OPTIONS: {
   key: HistorySourceFilter
@@ -129,9 +131,13 @@ export const takePendingOpenForge = () => {
   return next
 }
 
-export const onNewChat = (openNewTab?: boolean, pageId?: string) => {
+export const onNewChat = (openNewTab?: boolean, pageId?: string, setting?: AIAgentSetting) => {
   if (openNewTab) {
-    openAIAgentChatTab()
+    openAIAgentChatTab(
+      setting?.CodingMode
+        ? { ...createWelcomeChat(), StartParams: { ...setting, ...newCodingSessionDraft(setting) } }
+        : undefined,
+    )
     return
   }
   emiter.emit('onReActChatEvent', JSON.stringify({ type: ReActChatEventEnum.NEW_CHAT, pageId }))
@@ -569,7 +575,7 @@ const HistoryChat = memo(({ aiSource, embedded, title, className }: HistoryChatP
               <YakitButton
                 type="text2"
                 icon={<MessageCirclePlusOutlined color="currentColor" size={16} />}
-                onClick={() => onNewChat(openChatInNewTab, pageId)}
+                onClick={() => onNewChat(openChatInNewTab, pageId, getSetting())}
               />
             </Tooltip>
           )}

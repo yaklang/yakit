@@ -348,6 +348,30 @@ describe('AIAgent 配置广播', () => {
     expect(getRemoteValueMock).not.toHaveBeenCalledWith(RemoteAIAgentGV.AIAgentChatSetting)
   })
 
+  it.each([false, true])(
+    '项目草稿从路由恢复 coding 配置，不被安全助手缓存覆盖（StrictMode=%s）',
+    async (reactStrictMode) => {
+      ipc.prepareWelcomeStore = true
+      const setting = {
+        ...AIAgentSettingDefault,
+        CodingMode: true,
+        CodingWorkspaceID: 'project',
+        CodingWorkingDirectory: '/frontend',
+        CodingSourceRoots: ['/frontend', '/backend'],
+        CodingWorkspaceRoots: ['/frontend', '/backend'],
+        CodingCreateWorktree: false,
+      }
+      const draft = { ...createWelcomeChat(), StartParams: setting }
+      render(<AIAgent pageId="project-tab" initialSession={draft} />, { reactStrictMode })
+
+      await waitFor(() => expect(JSON.parse(screen.getByTestId('setting').textContent!)).toEqual(setting))
+      expect(globalSessionEngine.ensureSession(draft.SessionID).request).toEqual(setting)
+      expect(getRemoteValueMock).not.toHaveBeenCalledWith(RemoteAIAgentGV.AIAgentChatSetting)
+      expect(querySessionMock).not.toHaveBeenCalled()
+      expect(screen.getByTestId('welcome-session')).toHaveTextContent(draft.SessionID)
+    },
+  )
+
   it.each([false, true])('子组件创建默认会话后欢迎页仍读取缓存（StrictMode=%s）', async (reactStrictMode) => {
     ipc.prepareWelcomeStore = true
     const session = createWelcomeChat()

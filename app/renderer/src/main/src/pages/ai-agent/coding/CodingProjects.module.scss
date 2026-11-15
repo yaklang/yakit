@@ -98,6 +98,7 @@
   opacity: 0;
 }
 .projectRow:hover .addSession,
+.projectRow[data-menu-open='true'] .addSession,
 .projectRow:focus-within .addSession {
   opacity: 1;
 }
@@ -120,6 +121,113 @@
 .session[aria-current='page'] {
   background: var(--Colors-Use-Main-Bg);
   color: var(--Colors-Use-Main-Primary);
+}
+.session {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  > span:first-child {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+.unreadDot {
+  width: 6px;
+  height: 6px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--Colors-Use-Main-Primary);
+}
+.pinned {
+  width: 12px !important;
+  height: 12px !important;
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+}
+.projectPreview {
+  width: 310px;
+  max-width: calc(100vw - 40px);
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  font-size: 12px;
+  line-height: 20px;
+  svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+  }
+  button {
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    border-radius: 6px;
+    cursor: pointer;
+    &:hover {
+      background: var(--Colors-Use-Neutral-Bg-Hover);
+    }
+    &:focus-visible {
+      outline: 2px solid var(--Colors-Use-Main-Primary);
+    }
+    &:disabled {
+      color: var(--Colors-Use-Neutral-Disable);
+      cursor: default;
+    }
+  }
+}
+.previewHeading,
+.previewCount {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px;
+}
+.previewHeading {
+  strong {
+    font-size: 14px;
+    font-weight: 600;
+    flex: 1;
+    overflow-wrap: anywhere;
+  }
+  button {
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+  }
+}
+.previewCount {
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  padding-bottom: 10px;
+}
+.previewDirectories {
+  border-block: 1px solid var(--Colors-Use-Neutral-Border);
+  padding: 8px 0;
+  max-height: 210px;
+  overflow: auto;
+  button {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    text-align: left;
+    width: 100%;
+    padding: 6px 4px;
+  }
+  svg {
+    margin-top: 2px;
+  }
+  span {
+    overflow-wrap: anywhere;
+    min-width: 0;
+  }
+}
+.previewEdit {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 6px;
+  padding: 7px 4px;
+  text-align: left;
 }
 .emptySession,
 .more,

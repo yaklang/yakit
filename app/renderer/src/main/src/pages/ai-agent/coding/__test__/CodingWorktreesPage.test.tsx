@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import CodingWorktreesPage from '../CodingWorktreesPage'
 import { CodingProjects } from '../CodingProjects'
 import emiter from '@/utils/eventBus/eventBus'
+import { setCodingProjectHidden, setCodingProjectPinned } from '../projectPreferences'
 
 const mocks = vi.hoisted(() => ({
   query: vi.fn(),
@@ -82,6 +83,8 @@ const bindings = [
 ]
 beforeEach(() => {
   vi.clearAllMocks()
+  setCodingProjectHidden('project', false)
+  setCodingProjectPinned('project', false)
   mocks.query.mockResolvedValue({ Data: [workspace] })
   mocks.trees.mockResolvedValue({ Data: [tree] })
   mocks.sessions.mockResolvedValue({ Data: bindings })
@@ -167,5 +170,33 @@ describe('project sidebar', () => {
     await screen.findByRole('button', { name: live.Title })
     rerender(<CodingProjects search="missing" />)
     expect(screen.queryByRole('button', { name: 'Yakit' })).toBeNull()
+  })
+})
+
+describe('project list management', () => {
+  it('pins a project ahead of others', async () => {
+    mocks.query.mockResolvedValue({ Data: [{ ...workspace, ID: 'second', Name: 'Second' }, workspace] })
+    render(<CodingProjects />)
+    await screen.findByRole('button', { name: 'Yakit' })
+    fireEvent.contextMenu(screen.getByRole('button', { name: 'Yakit' }))
+    fireEvent.click(await screen.findByRole('menuitem', { name: 'CodingAgent.pinProject' }))
+    const names = screen
+      .getAllByRole('button')
+      .filter((button) => ['Second', 'Yakit'].includes(button.textContent || ''))
+    expect(names.map((button) => button.textContent)).toEqual(['Yakit', 'Second'])
+  })
+
+  it('removes a project after confirmation and restores its chat group', async () => {
+    render(<CodingProjects />)
+    await screen.findByRole('button', { name: live.Title })
+    fireEvent.contextMenu(screen.getByRole('button', { name: 'Yakit' }))
+    fireEvent.click(await screen.findByRole('menuitem', { name: 'CodingAgent.removeProject' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'CodingAgent.removeProject' }))
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'Yakit' })).toBeNull())
+    expect(screen.queryByRole('button', { name: live.Title })).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: 'CodingAgent.restoreProject' }))
+    fireEvent.click(await screen.findByRole('menuitem', { name: 'Yakit' }))
+    expect(await screen.findByRole('button', { name: live.Title })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Yakit' })).toBeInTheDocument()
   })
 })

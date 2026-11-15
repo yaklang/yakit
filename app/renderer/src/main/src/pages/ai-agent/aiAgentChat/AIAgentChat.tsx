@@ -126,7 +126,19 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo(() => {
       if (kind === 'new' && (!activeChat?.isDraftSession || !sessionId)) {
         target.sessionId = inputSessionId || createActiveChatSessionId()
       }
-      if (kind === 'new' && openChatInNewTab && !startInCurrentTab && meta.welcomeDraft?.status !== 'recovered') {
+      const boundSession = pageId
+        ? usePageInfo.getState().queryPagesDataById(YakitRoute.AI_Agent, pageId)?.pageParamsInfo.aiAgentPageInfo
+            ?.session
+        : undefined
+      // 项目草稿已有独立标签；再次打开同一会话会命中当前页，随后重置会丢失首问和项目绑定。
+      const isBoundDraft = activeChat?.isDraftSession && boundSession?.SessionID === target.sessionId
+      if (
+        kind === 'new' &&
+        openChatInNewTab &&
+        !startInCurrentTab &&
+        !isBoundDraft &&
+        meta.welcomeDraft?.status !== 'recovered'
+      ) {
         const targetSession = globalSessionEngine.ensureSession(target.sessionId)
         globalSessionEngine.updateSessionConfig(target.sessionId, getSetting())
         targetSession.meta.pendingWelcomeInput = cloneDeep(input)

@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import HistoryChat from '../HistoryChat'
+import HistoryChat, { onNewChat } from '../HistoryChat'
 import emiter from '@/utils/eventBus/eventBus'
 import { ReActChatEventEnum } from '../../defaultConstant'
 import type { AISession } from '../../type/aiChat'
@@ -70,6 +70,37 @@ beforeEach(() => {
 })
 
 describe('HistoryChat 会话参数增量更新', () => {
+  it('coding 新标签保留项目并回到源目录，不复用已有工作树或再次创建', () => {
+    const open = vi.fn()
+    emiter.on('openPage', open)
+    try {
+      onNewChat(true, 'coding-tab', {
+        CodingMode: true,
+        CodingWorkspaceID: 'project',
+        CodingSourceRoots: ['/front', '/back'],
+        CodingWorkspaceRoots: ['/worktrees/front', '/back'],
+        CodingWorkingDirectory: '/worktrees/front',
+        CodingWorktreeID: 'old-tree',
+        CodingCreateWorktree: true,
+        CodingWorktreeBaseRef: 'main',
+      })
+      expect(JSON.parse(open.mock.calls[0][0]).params.aiAgentPageInfo.session).toMatchObject({
+        isDraftSession: true,
+        StartParams: {
+          CodingMode: true,
+          CodingWorkspaceID: 'project',
+          CodingWorkingDirectory: '/front',
+          CodingWorkspaceRoots: ['/front', '/back'],
+          CodingCreateWorktree: false,
+          CodingWorktreeID: '',
+          CodingWorktreeBaseRef: '',
+        },
+      })
+    } finally {
+      emiter.off('openPage', open)
+    }
+  })
+
   const original = {
     SessionID: 'current',
     Title: 'original',

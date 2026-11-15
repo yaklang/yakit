@@ -24,21 +24,19 @@ describe('coding navigation', () => {
     }
   })
 
-  it('seeds a workspace draft before opening its tab without creating a worktree', () => {
+  it('carries the workspace binding in the draft route without creating a worktree', () => {
     openCodingProject({ ID: 'workspace', Name: 'App', RootPath: '/front', RootPaths: ['/front', '/back'], IsGit: true })
     const draft = mocks.openChat.mock.calls[0][0]
     expect(draft.isDraftSession).toBe(true)
-    expect(mocks.update).toHaveBeenCalledWith(
-      draft.SessionID,
-      expect.objectContaining({
-        CodingMode: true,
-        CodingWorkspaceID: 'workspace',
-        CodingWorkingDirectory: '/front',
-        CodingWorkspaceRoots: ['/front', '/back'],
-        CodingCreateWorktree: false,
-        CodingWorktreeID: '',
-      }),
-    )
-    expect(mocks.update.mock.invocationCallOrder[0]).toBeLessThan(mocks.openChat.mock.invocationCallOrder[0])
+    expect(draft.StartParams).toMatchObject({
+      CodingMode: true,
+      CodingWorkspaceID: 'workspace',
+      CodingWorkingDirectory: '/front',
+      CodingWorkspaceRoots: ['/front', '/back'],
+      CodingCreateWorktree: false,
+      CodingWorktreeID: '',
+    })
+    expect(mocks.ensure).not.toHaveBeenCalled()
+    expect(mocks.update).not.toHaveBeenCalled()
   })
 })

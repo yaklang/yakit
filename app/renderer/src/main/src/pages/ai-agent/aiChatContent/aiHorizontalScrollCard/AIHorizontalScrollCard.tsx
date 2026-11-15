@@ -24,7 +24,7 @@ export const AIHorizontalScrollCard = memo(() => {
 
   const [isExpand, setIsExpand] = useState<boolean>(true)
 
-  const { activeChat, openChatInNewTab } = useAIAgentStore()
+  const { activeChat, openChatInNewTab, pageId, setting } = useAIAgentStore()
 
   const store = useCurrentStore()
   const yakExecResultCard = useStore(store, (state) => state.card)
@@ -69,7 +69,7 @@ export const AIHorizontalScrollCard = memo(() => {
               <YakitButton
                 type="text2"
                 icon={<MessageCirclePlusOutlined color="currentColor" />}
-                onClick={() => onNewChat(openChatInNewTab)}
+                onClick={() => onNewChat(openChatInNewTab, pageId, setting)}
               />
             </Tooltip>
           </div>

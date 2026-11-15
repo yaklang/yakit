@@ -26,6 +26,8 @@ import { codingSessionBinding, emptyCodingBinding, selectCodingWorkspace, worksp
 import { openCodingWorktrees } from './navigation'
 import { CodingWorkspaceCreate } from './CodingWorkspaceCreate'
 import { CodingEnvironmentPopover } from './CodingEnvironmentPopover'
+import emiter from '@/utils/eventBus/eventBus'
+import { useCodingProjectPreferences } from './projectPreferences'
 import styles from './CodingAgentControls.module.scss'
 
 export const ExperimentalCodingSetting = () => {
@@ -131,8 +133,26 @@ export const CodingSessionControls = ({
   const [workspaces, setWorkspaces] = useState<CodingWorkspace[]>([])
   const [error, setError] = useState('')
   const [refresh, setRefresh] = useState(0)
+  const preferences = useCodingProjectPreferences()
   const workspace = workspaces.find((item) => item.ID === setting.CodingWorkspaceID)
-  const roots = workspace ? workspaceRoots(workspace) : setting.CodingSourceRoots || []
+  const roots =
+    (locked || setting.CodingWorktreeID) && setting.CodingSourceRoots?.length
+      ? setting.CodingSourceRoots
+      : workspace
+      ? workspaceRoots(workspace)
+      : setting.CodingSourceRoots || []
+  useEffect(() => {
+    const refreshProjects = () => setRefresh((value) => value + 1)
+    emiter.on('sessionData', refreshProjects)
+    return () => {
+      emiter.off('sessionData', refreshProjects)
+    }
+  }, [])
+  useEffect(() => {
+    if (!workspace || locked || setting.CodingWorktreeID) return
+    if (JSON.stringify(workspaceRoots(workspace)) === JSON.stringify(setting.CodingSourceRoots || [])) return
+    setSetting((old) => ({ ...old, ...selectCodingWorkspace(workspace) }))
+  }, [workspace, locked, setting.CodingWorktreeID, setSetting])
   useEffect(() => {
     onWorkspaceChange?.(workspace)
   }, [workspace, onWorkspaceChange])
@@ -232,6 +252,7 @@ export const CodingSessionControls = ({
                   </div>
                 )}
                 {workspaces
+                  .filter((item) => !preferences.hidden.includes(item.ID))
                   .filter((item) => item.Name.toLowerCase().includes(search.trim().toLowerCase()))
                   .map((item) => (
                     <button
@@ -250,7 +271,11 @@ export const CodingSessionControls = ({
                     </button>
                   ))}
                 {!loading &&
-                  !workspaces.some((item) => item.Name.toLowerCase().includes(search.trim().toLowerCase())) && (
+                  !workspaces.some(
+                    (item) =>
+                      !preferences.hidden.includes(item.ID) &&
+                      item.Name.toLowerCase().includes(search.trim().toLowerCase()),
+                  ) && (
                     <div className={styles.pickerEmpty}>
                       {t(search ? 'CodingAgent.noProjects' : 'CodingAgent.emptyProjects')}
                     </div>
@@ -333,6 +358,7 @@ export const CodingSessionControls = ({
             setWorkspaces((old) => [item, ...old])
             selectWorkspace(item)
             setCreating(false)
+            emiter.emit('sessionData', JSON.stringify({ type: 'refresh' }))
           }}
         />
       )}

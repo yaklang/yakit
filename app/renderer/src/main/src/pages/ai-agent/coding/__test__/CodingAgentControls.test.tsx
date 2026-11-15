@@ -6,6 +6,7 @@ import { CodingAgentControls, CodingSessionControls } from '../CodingAgentContro
 import { setExperimentalCoding } from '../experimentalCodingStore'
 import { SystemInfo } from '@/constants/hardware'
 import { CodingWorkspaceCreate } from '../CodingWorkspaceCreate'
+import emiter from '@/utils/eventBus/eventBus'
 
 const mocks = vi.hoisted(() => ({
   setting: {} as Record<string, unknown>,
@@ -18,6 +19,7 @@ const mocks = vi.hoisted(() => ({
   sessions: vi.fn(),
   details: vi.fn(),
   create: vi.fn(),
+  update: vi.fn(),
   openChat: vi.fn(),
   openWorktrees: vi.fn(),
   chooseFolders: vi.fn(),
@@ -38,6 +40,7 @@ vi.mock('../api', () => ({
   listCodingSessions: mocks.sessions,
   queryCodingSessionDetails: mocks.details,
   createCodingWorkspace: mocks.create,
+  updateCodingWorkspace: mocks.update,
 }))
 vi.mock('@/i18n/useI18nNamespaces', () => ({
   useI18nNamespaces: () => ({ t: (key: string, args?: any) => (args?.index ? `${key} ${args.index}` : key) }),
@@ -69,10 +72,12 @@ vi.mock('@/components/yakitUI/YakitPopover/YakitPopover', () => ({
   ),
 }))
 vi.mock('@/components/yakitUI/YakitModal/YakitModal', () => ({
-  YakitModal: ({ open, children, onOk, okButtonProps }: any) =>
+  YakitModal: ({ open, children, onOk, onCancel, footerExtra, okButtonProps }: any) =>
     open ? (
       <div>
         {children}
+        {footerExtra}
+        <button onClick={onCancel}>Cancel workspace</button>
         {onOk && (
           <button onClick={onOk} disabled={okButtonProps?.disabled}>
             Save workspace
@@ -426,6 +431,41 @@ describe('project creation', () => {
     },
   })
 
+  it.each([
+    ['/work/frontend/', 'frontend', ''],
+    ['C:\\work\\my.app\\', 'my.app', '   '],
+    ['/', '/', ''],
+    [`/work/${'项目'.repeat(60)}`, '项目'.repeat(50), ''],
+  ])('defaults an empty name to the selected folder %s', async (path, expected, input) => {
+    mocks.chooseFolders.mockResolvedValue({ filePaths: [path] })
+    mocks.create.mockResolvedValue(one)
+    render(<CodingWorkspaceCreate onClose={() => {}} onCreated={() => {}} />)
+    fireEvent.change(screen.getByLabelText('CodingAgent.name'), { target: { value: input } })
+    expect(screen.getByText('Save workspace')).toBeDisabled()
+    fireEvent.click(screen.getByText('CodingAgent.chooseFolder'))
+    await screen.findByText(path)
+    expect(screen.getByLabelText('CodingAgent.name')).toHaveAttribute('placeholder', expected)
+    expect(screen.getByText('Save workspace')).not.toBeDisabled()
+    fireEvent.click(screen.getByText('Save workspace'))
+    await waitFor(() => expect(mocks.create).toHaveBeenCalledWith(expected, [path]))
+  })
+
+  it('updates the default name when the primary dropped folder changes', async () => {
+    ipcRendererMock.invoke.mockResolvedValue(true)
+    mocks.create.mockResolvedValue(one)
+    render(<CodingWorkspaceCreate onClose={() => {}} onCreated={() => {}} />)
+    fireEvent.drop(screen.getByRole('group', { name: 'CodingAgent.sourceFolder' }), dropData('/frontend', '/backend'))
+    await screen.findByText('/frontend')
+    const input = screen.getByLabelText('CodingAgent.name')
+    expect(input).toHaveAttribute('placeholder', 'frontend')
+    fireEvent.click(screen.getByText('CodingAgent.makePrimary'))
+    expect(input).toHaveAttribute('placeholder', 'backend')
+    fireEvent.click(screen.getByRole('button', { name: 'CodingAgent.removeDirectory 1' }))
+    expect(input).toHaveAttribute('placeholder', 'frontend')
+    fireEvent.click(screen.getByText('Save workspace'))
+    await waitFor(() => expect(mocks.create).toHaveBeenCalledWith('frontend', ['/frontend']))
+  })
+
   it('accepts dropped folders in order, deduplicates additions and rejects ordinary files', async () => {
     ipcRendererMock.invoke.mockImplementation(async (channel, path) => {
       expect(channel).toBe('fetch-file-is-dir-by-path')
@@ -526,4 +566,105 @@ describe('project creation', () => {
     fireEvent.click(screen.getByText('Save workspace'))
     await waitFor(() => expect(mocks.create).toHaveBeenCalledWith('Full stack', ['/backend', '/frontend']))
   })
+})
+
+describe('project editing', () => {
+  it('loads existing fields, updates ordered directories and preserves the workspace ID', async () => {
+    const saved = { ...one, Name: 'Renamed', RootPath: '/back', RootPaths: ['/back', '/docs'] }
+    mocks.update.mockResolvedValue(saved)
+    mocks.chooseFolders.mockResolvedValue({ filePaths: ['/docs'] })
+    const onSaved = vi.fn()
+    render(<CodingWorkspaceCreate workspace={one} onClose={() => {}} onCreated={onSaved} />)
+    expect(screen.getByLabelText('CodingAgent.name')).toHaveValue('Project One')
+    expect(screen.getByText('/front')).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText('CodingAgent.name'), { target: { value: 'Renamed' } })
+    fireEvent.click(screen.getByRole('button', { name: 'CodingAgent.makePrimary' }))
+    fireEvent.click(screen.getByRole('button', { name: 'CodingAgent.removeDirectory 2' }))
+    fireEvent.click(screen.getByRole('button', { name: 'CodingAgent.addDirectory' }))
+    await screen.findByText('/docs')
+    fireEvent.click(screen.getByText('Save workspace'))
+    await waitFor(() => expect(mocks.update).toHaveBeenCalledWith('one', 'Renamed', ['/back', '/docs']))
+    expect(onSaved).toHaveBeenCalledWith(saved)
+    expect(mocks.create).not.toHaveBeenCalled()
+    expect(one.RootPaths).toEqual(['/front', '/back'])
+  })
+
+  it('discards unsaved edits on cancel and keeps errors available for retry', async () => {
+    const onClose = vi.fn()
+    const onSaved = vi.fn()
+    render(<CodingWorkspaceCreate workspace={one} onClose={onClose} onCreated={onSaved} />)
+    fireEvent.change(screen.getByLabelText('CodingAgent.name'), { target: { value: 'Retry name' } })
+    fireEvent.click(screen.getByText('Cancel workspace'))
+    expect(onClose).toHaveBeenCalledOnce()
+    expect(mocks.update).not.toHaveBeenCalled()
+    mocks.update.mockRejectedValueOnce(new Error('Engine unavailable')).mockResolvedValueOnce(one)
+    fireEvent.click(screen.getByText('Save workspace'))
+    await screen.findByText('Error: Engine unavailable')
+    expect(onSaved).not.toHaveBeenCalled()
+    expect(screen.getByLabelText('CodingAgent.name')).toHaveValue('Retry name')
+    fireEvent.click(screen.getByText('Save workspace'))
+    await waitFor(() => expect(onSaved).toHaveBeenCalledWith(one))
+  })
+})
+
+describe('edited project bindings', () => {
+  it('refreshes draft roots after a project edit and clears a stale branch selection', async () => {
+    setExperimentalCoding(true)
+    mocks.setting = {
+      CodingMode: true,
+      CodingWorkspaceID: 'one',
+      CodingSourceRoots: one.RootPaths,
+      CodingCreateWorktree: true,
+      CodingWorktreeBaseRef: 'refs/heads/front-only',
+    }
+    render(<CodingSessionControls />)
+    await screen.findByRole('button', { name: 'Project One' })
+    expect(mocks.setSetting).not.toHaveBeenCalled()
+    mocks.query.mockResolvedValue({
+      Data: [{ ...one, Name: 'Edited', RootPath: '/back', RootPaths: ['/back', '/front'] }],
+    })
+    act(() => emiter.emit('sessionData', JSON.stringify({ type: 'refresh' })))
+    await screen.findByRole('button', { name: 'Edited' })
+    await waitFor(() => expect(mocks.setSetting).toHaveBeenCalled())
+    expect(mocks.setSetting.mock.calls.at(-1)![0](mocks.setting)).toMatchObject({
+      CodingSourceRoots: ['/back', '/front'],
+      CodingCreateWorktree: false,
+      CodingWorktreeBaseRef: '',
+    })
+  })
+
+  it('preserves source roots for an existing session when the project changes', async () => {
+    setExperimentalCoding(true)
+    mocks.activeChat = { SessionID: 'started' }
+    mocks.setting = {
+      CodingMode: true,
+      CodingWorkspaceID: 'one',
+      CodingSourceRoots: ['/old/root'],
+      CodingWorktreeID: 'existing-tree',
+    }
+    render(<CodingSessionControls />)
+    await screen.findByRole('button', { name: 'Project One' })
+    expect(screen.getByTitle('/old/root')).toBeInTheDocument()
+    mocks.query.mockResolvedValue({
+      Data: [{ ...one, Name: 'Edited', RootPath: '/different', RootPaths: ['/different'] }],
+    })
+    act(() => emiter.emit('sessionData', JSON.stringify({ type: 'refresh' })))
+    await screen.findByRole('button', { name: 'Edited' })
+    expect(screen.getByTitle('/old/root')).toBeInTheDocument()
+    expect(mocks.setSetting).not.toHaveBeenCalled()
+  })
+})
+
+it('shows the original source directory when starting a chat in an existing worktree', async () => {
+  setExperimentalCoding(true)
+  mocks.setting = {
+    CodingMode: true,
+    CodingWorkspaceID: 'one',
+    CodingWorktreeID: 'tree',
+    CodingSourceRoots: ['/original/root'],
+  }
+  render(<CodingSessionControls />)
+  await screen.findByRole('button', { name: 'Project One' })
+  expect(screen.getByTitle('/original/root')).toBeInTheDocument()
+  expect(mocks.setSetting).not.toHaveBeenCalled()
 })

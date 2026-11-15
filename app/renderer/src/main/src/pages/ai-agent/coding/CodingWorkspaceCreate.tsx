@@ -8,7 +8,9 @@ import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { FolderOutlined, PlusOutlined, TrashOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { getMainOperatorPageBodyContainerOrBody } from '@/utils/getMainOperatorPageBodyContainer'
-import { createCodingWorkspace, type CodingWorkspace } from './api'
+import { getPathBaseName } from '@/utils/str'
+import { createCodingWorkspace, updateCodingWorkspace, type CodingWorkspace } from './api'
+import { workspaceRoots } from './binding'
 import styles from './CodingAgentControls.module.scss'
 
 const { ipcRenderer } = window.require('electron')
@@ -16,15 +18,19 @@ const { ipcRenderer } = window.require('electron')
 export const CodingWorkspaceCreate = ({
   onClose,
   onCreated,
+  workspace,
+  onRemove,
 }: {
   onClose: () => void
   onCreated: (workspace: CodingWorkspace) => void
+  workspace?: CodingWorkspace
+  onRemove?: () => void
 }) => {
   const { t } = useI18nNamespaces(['aiAgent'])
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
-  const [name, setName] = useState('')
-  const [paths, setPaths] = useState<string[]>([])
+  const [name, setName] = useState(workspace?.Name || '')
+  const [paths, setPaths] = useState<string[]>(workspace ? [...workspaceRoots(workspace)] : [])
   const [readingFolders, setReadingFolders] = useState(false)
   const [dragging, setDragging] = useState(false)
   const dragDepth = useRef(0)
@@ -37,14 +43,20 @@ export const CodingWorkspaceCreate = ({
   }, [])
   const busy = saving || readingFolders
   const validPaths = paths.length > 0
+  const primaryPath = paths[0] || ''
+  const defaultName = Array.from(getPathBaseName(primaryPath.replace(/[\\/]+$/, '')) || primaryPath)
+    .slice(0, 100)
+    .join('')
   const appendPaths = (next: string[]) => setPaths((old) => [...new Set([...old, ...next])])
   const addWorkspace = async () => {
-    if (busy || !name.trim() || !validPaths) return
+    if (busy || !validPaths) return
     setSaving(true)
     setError('')
     try {
-      const workspace = await createCodingWorkspace(name.trim(), paths)
-      if (alive.current) onCreated(workspace)
+      const saved = workspace
+        ? await updateCodingWorkspace(workspace.ID, name.trim() || defaultName, paths)
+        : await createCodingWorkspace(name.trim() || defaultName, paths)
+      if (alive.current) onCreated(saved)
     } catch (err) {
       if (alive.current) setError(String(err))
     } finally {
@@ -96,7 +108,11 @@ export const CodingWorkspaceCreate = ({
   return (
     <YakitModal
       open
-      title={<span className={styles.createTitle}>{t('CodingAgent.createWorkspace')}</span>}
+      title={
+        <span className={styles.createTitle}>
+          {t(workspace ? 'CodingAgent.editProject' : 'CodingAgent.createWorkspace')}
+        </span>
+      }
       width={480}
       type="white"
       size="large"
@@ -104,13 +120,20 @@ export const CodingWorkspaceCreate = ({
       headerStyle={{ padding: '20px 24px 4px' }}
       bodyStyle={{ padding: 0 }}
       footerStyle={{ padding: '12px 24px 20px' }}
-      okText={t('CodingAgent.createWorkspace')}
+      okText={t(workspace ? 'CodingAgent.saveProject' : 'CodingAgent.createWorkspace')}
+      footerExtra={
+        workspace && onRemove ? (
+          <YakitButton type="text2" colors="danger" disabled={busy} onClick={onRemove}>
+            {t('CodingAgent.removeProject')}
+          </YakitButton>
+        ) : undefined
+      }
       onCancel={() => {
         if (!saving) onClose()
       }}
       onOk={addWorkspace}
       confirmLoading={saving}
-      okButtonProps={{ disabled: busy || !name.trim() || !validPaths, className: styles.createSubmit }}
+      okButtonProps={{ disabled: busy || !validPaths, className: styles.createSubmit }}
       cancelButtonProps={{ type: 'text2' }}
       getContainer={getMainOperatorPageBodyContainerOrBody()}
     >
@@ -119,7 +142,7 @@ export const CodingWorkspaceCreate = ({
           <span className={styles.fieldLabel}>{t('CodingAgent.name')}</span>
           <YakitInput
             aria-label={t('CodingAgent.name')}
-            placeholder={t('CodingAgent.name')}
+            placeholder={defaultName || t('CodingAgent.namePlaceholder')}
             prefix={<FolderOutlined />}
             autoFocus
             wrapperClassName={styles.projectNameInput}
@@ -207,6 +230,7 @@ export const CodingWorkspaceCreate = ({
           </div>
         </div>
         {paths.length > 0 && <p className={styles.hint}>{t('CodingAgent.primaryRule')}</p>}
+        {workspace && <p className={styles.hint}>{t('CodingAgent.editProjectHint')}</p>}
         {error && <Alert type="error" showIcon message={error} />}
       </div>
     </YakitModal>

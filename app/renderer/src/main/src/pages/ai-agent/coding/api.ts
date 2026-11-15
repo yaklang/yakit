@@ -43,6 +43,11 @@ export const queryCodingWorkspaces = (): Promise<{ Data: CodingWorkspace[] }> =>
   ipcRenderer.invoke('QueryAICodingWorkspaces', {})
 export const createCodingWorkspace = (Name: string, RootPaths: string[]): Promise<CodingWorkspace> =>
   ipcRenderer.invoke('CreateAICodingWorkspace', { Name, RootPaths })
+export const updateCodingWorkspace = (
+  WorkspaceID: string,
+  Name: string,
+  RootPaths: string[],
+): Promise<CodingWorkspace> => ipcRenderer.invoke('UpdateAICodingWorkspace', { WorkspaceID, Name, RootPaths })
 export const listCodingWorktrees = (WorkspaceID: string): Promise<{ Data: CodingWorktree[] }> =>
   ipcRenderer.invoke('ListAICodingWorktrees', { WorkspaceID })
 export const listCodingSessions = (WorkspaceID: string): Promise<{ Data: CodingSession[] }> =>
