@@ -66,91 +66,10 @@
   border-radius: 4px;
   padding: 2px 6px;
 }
-.manager {
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
 .hint {
   margin: 0;
   font-size: 12px;
   color: var(--Colors-Use-Neutral-Text-3-Secondary);
-}
-.columns {
-  display: flex;
-  min-height: 300px;
-  max-height: 60vh;
-}
-.projects {
-  width: 220px;
-  flex-shrink: 0;
-  overflow: auto;
-  padding-right: 16px;
-  border-right: 1px solid var(--Colors-Use-Neutral-Border);
-}
-.project {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  width: 100%;
-  margin-top: 12px;
-  padding: 12px;
-  text-align: left;
-  border: 1px solid var(--Colors-Use-Neutral-Border);
-  border-radius: 6px;
-  background: var(--Colors-Use-Neutral-Bg);
-  color: var(--Colors-Use-Neutral-Text-1-Title);
-  cursor: pointer;
-  &[aria-pressed='true'] {
-    border-color: var(--Colors-Use-Main-Primary);
-    background: var(--Colors-Use-Main-Bg);
-  }
-  > span {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    width: 100%;
-    font-size: 12px;
-  }
-}
-.worktrees {
-  flex: 1;
-  min-width: 0;
-  padding-left: 16px;
-  overflow: auto;
-}
-.heading {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
-  strong {
-    flex: 1;
-  }
-}
-.tree {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 0;
-  border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
-}
-.treeDetails {
-  overflow-wrap: anywhere;
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  code {
-    overflow-wrap: anywhere;
-    font-size: 12px;
-  }
-  span {
-    font-size: 12px;
-    color: var(--Colors-Use-Neutral-Text-3-Secondary);
-  }
 }
 .createForm {
   padding: 20px;
@@ -163,11 +82,7 @@
     gap: 8px;
   }
 }
-@media (max-width: 760px) {
-  .projects {
-    width: 160px;
-  }
-}
+
 .controls {
   flex-shrink: 0;
   min-width: 0;
@@ -175,84 +90,6 @@
 .muted {
   color: var(--Colors-Use-Neutral-Text-3-Secondary);
   font-size: 12px;
-}
-.heading > div {
-  flex: 1;
-  min-width: 0;
-  strong {
-    display: block;
-    margin-bottom: 5px;
-    font-size: 16px;
-  }
-}
-.project strong {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.sourceList {
-  margin: 16px 0 24px;
-  border: 1px solid var(--Colors-Use-Neutral-Border);
-  border-radius: 8px;
-}
-.sourceRow {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 14px;
-  &:not(:last-child) {
-    border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
-  }
-  code {
-    flex: 1;
-    min-width: 0;
-    overflow-wrap: anywhere;
-    font-size: 12px;
-  }
-  > svg {
-    flex-shrink: 0;
-  }
-}
-.sourceSessions {
-  display: flex;
-  align-items: flex-start;
-  flex-direction: column;
-  gap: 12px;
-}
-.treeTitle {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-  strong {
-    font-size: 14px;
-  }
-  .ready {
-    white-space: nowrap;
-    color: var(--Colors-Use-Success-Primary);
-    font-size: 12px;
-  }
-}
-.treeError {
-  font-size: 12px;
-  color: var(--Colors-Use-Error-Primary);
-  margin: 0;
-}
-.sessionLinks {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-.sessionTitle {
-  display: block;
-  max-width: 260px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.treeDetails .sessionTitle {
-  color: var(--Colors-Use-Main-Primary);
 }
 .directoryInput {
   padding: 12px;
@@ -277,23 +114,14 @@
   max-height: 65vh;
   overflow: auto;
 }
-@media (max-width: 760px) {
-  .columns {
-    max-height: 65vh;
-  }
-  .tree {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-}
 
 .composerBar {
   display: flex;
   align-items: center;
   gap: 10px;
   min-height: 40px;
-  padding: 5px 10px;
-  border-radius: 13px 13px 0 0;
+  padding: 5px 14px;
+  border-radius: 23px 23px 0 0;
   background: color-mix(in srgb, var(--Colors-Use-Neutral-Bg) 65%, var(--Colors-Use-Basic-Background));
   border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
   .path {

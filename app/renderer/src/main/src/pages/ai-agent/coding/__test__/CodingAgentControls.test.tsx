@@ -2,9 +2,10 @@ import '@/pages/ai-re-act/hooks/__test__/setupElectron'
 import React from 'react'
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { CodingAgentControls, CodingSessionControls, CodingWorkspaceManager } from '../CodingAgentControls'
+import { CodingAgentControls, CodingSessionControls } from '../CodingAgentControls'
 import { setExperimentalCoding } from '../experimentalCodingStore'
 import { SystemInfo } from '@/constants/hardware'
+import { CodingWorkspaceCreate } from '../CodingWorkspaceCreate'
 
 const mocks = vi.hoisted(() => ({
   setting: {} as Record<string, unknown>,
@@ -18,8 +19,10 @@ const mocks = vi.hoisted(() => ({
   details: vi.fn(),
   create: vi.fn(),
   openChat: vi.fn(),
+  openWorktrees: vi.fn(),
   chooseFolders: vi.fn(),
 }))
+vi.mock('../navigation', () => ({ openCodingWorktrees: mocks.openWorktrees }))
 vi.mock('@/utils/fileSystemDialog', () => ({ handleOpenFileSystemDialog: mocks.chooseFolders }))
 vi.mock('../../useContext/useStore', () => ({
   default: () => ({ setting: mocks.setting, activeChat: mocks.activeChat }),
@@ -97,17 +100,6 @@ vi.mock('@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu', () => ({
 
 const one = { ID: 'one', Name: 'Project One', RootPath: '/front', RootPaths: ['/front', '/back'], IsGit: true }
 const two = { ID: 'two', Name: 'Project Two', RootPath: '/two', RootPaths: ['/two'], IsGit: true }
-const tree = {
-  ID: 'tree-one',
-  WorkspaceID: 'one',
-  OwnerSessionID: 'owner',
-  State: 'ready',
-  Path: '/trees/one',
-  WorkingDirectory: '/trees/one/app',
-  SourceDirectory: '/front',
-  BaseRef: 'main',
-  SessionIDs: ['owner'],
-}
 beforeEach(() => {
   vi.clearAllMocks()
   mocks.setting = {}
@@ -267,7 +259,7 @@ describe('session environment', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Project One' }))
     expect(screen.getByRole('menuitemradio', { name: 'Project Two' })).toBeDisabled()
     expect(screen.getByRole('button', { name: 'CodingAgent.createWorkspace' })).toBeDisabled()
-    expect(screen.getByRole('button', { name: 'CodingAgent.workspaces' })).not.toBeDisabled()
+    expect(screen.getByRole('button', { name: 'CodingAgent.managedWorktrees' })).not.toBeDisabled()
     expect(screen.queryByRole('button', { name: 'CodingAgent.clearProject' })).toBeNull()
     expect(mocks.setSetting).not.toHaveBeenCalled()
   })
@@ -418,75 +410,13 @@ describe('session environment', () => {
   })
 })
 
-describe('workspace-owned worktrees', () => {
-  it('uses source directories without any worktree and has no independent create-worktree action', async () => {
-    render(<CodingWorkspaceManager locked={false} onClose={() => {}} />)
-    await waitFor(() => expect(screen.getByText('CodingAgent.useWorkspace')).not.toBeDisabled())
-    fireEvent.click(screen.getByText('CodingAgent.useWorkspace'))
-    expect(mocks.setSetting.mock.calls[0][0]({})).toMatchObject({
-      CodingWorkspaceID: 'one',
-      CodingCreateWorktree: false,
-      CodingWorktreeID: '',
-      CodingSourceRoots: ['/front', '/back'],
-    })
-    expect(screen.queryByText('CodingAgent.newWorktree')).toBeNull()
-  })
-  it('ignores stale worktree responses after selecting a different workspace', async () => {
-    let resolveFirst!: (value: any) => void
-    mocks.list.mockImplementation((id) =>
-      id === 'one'
-        ? new Promise((resolve) => {
-            resolveFirst = resolve
-          })
-        : Promise.resolve({
-            Data: [
-              {
-                ...tree,
-                ID: 'two-tree',
-                WorkspaceID: 'two',
-                Path: '/two/tree',
-                WorkingDirectory: '/two/tree',
-                SourceDirectory: '/two',
-              },
-            ],
-          }),
-    )
-    const onClose = vi.fn()
-    render(<CodingWorkspaceManager locked={false} onClose={onClose} initialTab="worktrees" />)
-    await waitFor(() => expect(mocks.list).toHaveBeenCalledWith('one'))
-    fireEvent.click(screen.getByText('Project Two'))
-    await screen.findByText('/two/tree')
-    await act(async () => resolveFirst({ Data: [{ ...tree, WorkingDirectory: '/stale' }] }))
-    expect(screen.queryByText('/stale')).toBeNull()
-    fireEvent.click(screen.getByText('CodingAgent.reuseWorktree'))
-    expect(mocks.setSetting.mock.calls[0][0]({})).toMatchObject({
-      CodingWorkspaceID: 'two',
-      CodingWorktreeID: 'two-tree',
-      CodingCreateWorktree: false,
-      CodingWorkingDirectory: '/two/tree',
-    })
-    expect(onClose).toHaveBeenCalledOnce()
-  })
-  it('shows linked sessions and prevents selection of unavailable trees', async () => {
-    mocks.list.mockResolvedValue({ Data: [{ ...tree, State: 'unavailable' }] })
-    mocks.sessions.mockResolvedValue({ Data: [{ SessionID: 'owner', WorktreeID: tree.ID, WorkspaceID: 'one' }] })
-    const owner = { SessionID: 'owner', Title: 'Implement workspace startup' }
-    mocks.details.mockResolvedValue({ Data: [owner] })
-    render(<CodingWorkspaceManager locked={false} onClose={() => {}} initialTab="worktrees" />)
-    await screen.findByText('CodingAgent.state_unavailable')
-    await waitFor(() => expect(screen.getByRole('button', { name: owner.Title })).not.toBeDisabled())
-    expect(screen.getByText('CodingAgent.reuseWorktree')).toBeDisabled()
-    fireEvent.click(screen.getByRole('button', { name: owner.Title }))
-    expect(mocks.openChat).toHaveBeenCalledWith(owner)
-  })
+describe('project creation', () => {
   it('creates an ordered multi-directory workspace with the selected primary first', async () => {
     mocks.create.mockResolvedValue({ ...one, ID: 'created' })
     mocks.chooseFolders
       .mockResolvedValueOnce({ filePaths: ['/frontend'] })
       .mockResolvedValueOnce({ filePaths: ['/frontend', '/backend'] })
-    render(<CodingWorkspaceManager locked={false} onClose={() => {}} />)
-    await waitFor(() => expect(screen.getByText('CodingAgent.createWorkspace')).not.toBeDisabled())
-    fireEvent.click(screen.getByText('CodingAgent.createWorkspace'))
+    render(<CodingWorkspaceCreate onClose={() => {}} onCreated={() => {}} />)
     fireEvent.change(screen.getByLabelText('CodingAgent.name'), { target: { value: 'Full stack' } })
     fireEvent.click(screen.getByText('CodingAgent.chooseFolder'))
     await screen.findByText('/frontend')
@@ -495,11 +425,5 @@ describe('workspace-owned worktrees', () => {
     fireEvent.click(screen.getByText('CodingAgent.makePrimary'))
     fireEvent.click(screen.getByText('Save workspace'))
     await waitFor(() => expect(mocks.create).toHaveBeenCalledWith('Full stack', ['/backend', '/frontend']))
-  })
-  it('shows errors and does not leave stale checkouts selectable', async () => {
-    mocks.list.mockRejectedValue(new Error('engine unavailable'))
-    render(<CodingWorkspaceManager locked={false} onClose={() => {}} initialTab="worktrees" />)
-    await screen.findByText('Error: engine unavailable')
-    expect(screen.queryByText('CodingAgent.reuseWorktree')).toBeNull()
   })
 })

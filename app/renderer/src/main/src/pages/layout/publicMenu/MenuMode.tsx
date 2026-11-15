@@ -1,4 +1,6 @@
 import React from 'react'
+import { GitMergeOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { useExperimentalCoding } from '@/pages/ai-agent/coding/experimentalCodingStore'
 import { PublicAIAgentIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicAIAgentIcon'
 import { PublicAuditCodeIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicAuditCodeIcon'
 import { PublicAuditHoleIcon } from '@yakit-libs/yakit-ui-icons/oldicon/PublicAuditHoleIcon'
@@ -59,6 +61,7 @@ interface MenuModeProps {
 
 export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
   const { mode, pluginToId, onMenuSelect } = props
+  const codingEnabled = useExperimentalCoding()
   const { t, i18n } = useI18nNamespaces(['yakitRoute', 'layout'])
   /** 转换成菜单组件统一处理的数据格式，插件是否下载的验证由菜单组件处理，这里不处理 */
   const onMenu = useMemoizedFn((page: YakitRoute, pluginId?: number, pluginName?: string) => {
@@ -540,6 +543,16 @@ export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
               </div>
               <div className={styles['title-style']}>{t('YakitRoute.ai-forge')}</div>
             </div>
+            {codingEnabled && (
+              <div className={styles['vertical-menu-wrapper']} onClick={() => onMenu(YakitRoute.AI_Worktrees)}>
+                <div className={styles['menu-icon-wrapper']}>
+                  <div className={styles['icon-wrapper']}>
+                    <GitMergeOutlined size={32} color="var(--Colors-Use-Main-Primary)" />
+                  </div>
+                </div>
+                <div className={styles['title-style']}>{t('YakitRoute.ai-worktrees')}</div>
+              </div>
+            )}
           </div>
         </>
       )}

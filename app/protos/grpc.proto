@@ -10780,6 +10780,8 @@ message AICodingSession {
   string WorkingDirectory = 4;
   repeated string SourceRoots = 5;
   repeated string WorkspaceRoots = 6;
+  int64 SessionDeletedAt = 7; // Unix timestamp; explicit deletion, not a missing query result.
+  string SessionTitle = 8; // Retained title for deleted sessions.
 }
 message ListAICodingSessionsResponse { repeated AICodingSession Data = 1; }
 

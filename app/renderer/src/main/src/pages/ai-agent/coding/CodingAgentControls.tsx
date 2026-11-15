@@ -23,12 +23,10 @@ import { setExperimentalCoding, useExperimentalCoding } from './experimentalCodi
 import { listCodingSessions, queryCodingWorkspaces } from './api'
 import type { CodingWorkspace } from './api'
 import { codingSessionBinding, emptyCodingBinding, selectCodingWorkspace, workspaceRoots } from './binding'
-import { CodingWorkspaceManager } from './CodingWorkspaceManager'
+import { openCodingWorktrees } from './navigation'
 import { CodingWorkspaceCreate } from './CodingWorkspaceCreate'
 import { CodingEnvironmentPopover } from './CodingEnvironmentPopover'
 import styles from './CodingAgentControls.module.scss'
-
-export { CodingWorkspaceManager } from './CodingWorkspaceManager'
 
 export const ExperimentalCodingSetting = () => {
   const enabled = useExperimentalCoding()
@@ -126,7 +124,6 @@ export const CodingSessionControls = ({
   const { setSetting, setActiveChat } = useAIAgentDispatcher()
   const locked = isChatSession(activeChat) || !!pendingChat
   const coding = !!setting.CodingMode
-  const [manager, setManager] = useState(false)
   const [pickerOpen, setPickerOpen] = useState(false)
   const [creating, setCreating] = useState(false)
   const [search, setSearch] = useState('')
@@ -273,11 +270,11 @@ export const CodingSessionControls = ({
                   className={styles.pickerRow}
                   onClick={() => {
                     setPickerOpen(false)
-                    setManager(true)
+                    openCodingWorktrees()
                   }}
                 >
                   <GitMergeOutlined />
-                  <span>{t('CodingAgent.workspaces')}</span>
+                  <span>{t('CodingAgent.managedWorktrees')}</span>
                 </button>
                 {setting.CodingWorkspaceID && !locked && enabled && (
                   <button
@@ -332,16 +329,6 @@ export const CodingSessionControls = ({
             setWorkspaces((old) => [item, ...old])
             selectWorkspace(item)
             setCreating(false)
-          }}
-        />
-      )}
-      {manager && (
-        <CodingWorkspaceManager
-          locked={locked || !enabled}
-          initialTab="worktrees"
-          onClose={() => {
-            setManager(false)
-            setRefresh((v) => v + 1)
           }}
         />
       )}

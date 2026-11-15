@@ -291,6 +291,7 @@ const MemoryBase = React.lazy(() => import('@/pages/memoryBase/MemoryBase'))
 const ConfigManagement = React.lazy(() => import('@/pages/configManagement/ConfigManagement'))
 const AITool = React.lazy(() => import('@/pages/aiTool/AITool'))
 const AIForge = React.lazy(() => import('@/pages/aiForge/AIForge'))
+const CodingWorktreesPage = React.lazy(() => import('@/pages/ai-agent/coding/CodingWorktreesPage'))
 const HTTPHistory = React.lazy(() => import('../components/HTTPHistory').then((m) => ({ default: m.HTTPHistory })))
 const HTTPHistoryAnalysis = React.lazy(() =>
   import('@/pages/hTTPHistoryAnalysis/HTTPHistoryAnalysis').then((m) => ({ default: m.HTTPHistoryAnalysis })),
@@ -513,6 +514,7 @@ export const YakitRouteToPageInfo: Record<
   'ai-memory': { label: '记忆库', labelUi: 'YakitRoute.ai-memory' },
   'ai-tool': { label: '工具库', labelUi: 'YakitRoute.ai-tool' },
   'ai-forge': { label: '技能库', labelUi: 'YakitRoute.ai-forge' },
+  'ai-worktrees': { label: '工作树', labelUi: 'YakitRoute.ai-worktrees' },
   'manage-right-click-plugins': { label: '右键插件设置', labelUi: 'YakitRoute.manageRightClickPlugins' },
   'context-menu-result': { label: '右键插件结果', labelUi: 'YakitRoute.contextMenuResult' },
   settings: { label: '设置', labelUi: 'YakitRoute.settings' },
@@ -572,6 +574,7 @@ export const SingletonPageRoute: YakitRoute[] = [
   YakitRoute.AI_Memory,
   YakitRoute.AI_Tool,
   YakitRoute.AI_Forge,
+  YakitRoute.AI_Worktrees,
   YakitRoute.MCP_History,
   YakitRoute.C_Headers,
   YakitRoute.ManageRightClickPlugins,
@@ -633,6 +636,7 @@ export const NoPaddingRoute: YakitRoute[] = [
   YakitRoute.AI_Memory,
   YakitRoute.AI_Tool,
   YakitRoute.AI_Forge,
+  YakitRoute.AI_Worktrees,
   YakitRoute.MCP_History,
   YakitRoute.C_Headers,
   YakitRoute.ManageRightClickPlugins,
@@ -1108,6 +1112,8 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
       return <MemoryBase pageId={params?.id || ''} />
     case YakitRoute.AI_Tool:
       return <AITool pageId={params?.id || ''} />
+    case YakitRoute.AI_Worktrees:
+      return <CodingWorktreesPage />
     case YakitRoute.AI_Forge:
       return <AIForge pageId={params?.id || ''} />
     case YakitRoute.ManageRightClickPlugins:
@@ -1308,6 +1314,7 @@ export const getPublicRouteMenu = (softMode: SoftMode) => {
           { page: YakitRoute.AI_Memory, ...YakitRouteToPageInfo[YakitRoute.AI_Memory] },
           { page: YakitRoute.AI_Tool, ...YakitRouteToPageInfo[YakitRoute.AI_Tool] },
           { page: YakitRoute.AI_Forge, ...YakitRouteToPageInfo[YakitRoute.AI_Forge] },
+          { page: YakitRoute.AI_Worktrees, ...YakitRouteToPageInfo[YakitRoute.AI_Worktrees] },
         ],
       },
       {

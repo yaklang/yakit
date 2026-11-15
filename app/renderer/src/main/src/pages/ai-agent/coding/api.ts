@@ -29,6 +29,8 @@ export interface CodingWorktree {
   Bare: boolean
 }
 export interface CodingSession {
+  SessionDeletedAt?: number | string
+  SessionTitle?: string
   SessionID: string
   WorkspaceID: string
   WorktreeID: string
@@ -66,3 +68,8 @@ export interface CodingBranches {
 }
 export const listCodingBranches = (WorkspaceID: string): Promise<CodingBranches> =>
   ipcRenderer.invoke('ListAICodingBranches', { WorkspaceID })
+
+export const openCodingDirectory = async (path: string): Promise<void> => {
+  const error = await ipcRenderer.invoke('shell-open-abs-file', path)
+  if (error) throw new Error(error)
+}

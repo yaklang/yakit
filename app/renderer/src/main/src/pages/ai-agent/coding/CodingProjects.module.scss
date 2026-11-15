@@ -1,0 +1,128 @@
+.projects {
+  flex: 0 1 auto;
+  min-height: 48px;
+  max-height: 48%;
+  display: flex;
+  flex-direction: column;
+  padding: 0 12px 12px;
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  button {
+    border: 0;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    border-radius: 4px;
+    font: inherit;
+    &:hover {
+      background: var(--Colors-Use-Neutral-Bg-Hover);
+    }
+    &:focus-visible {
+      outline: 2px solid var(--Colors-Use-Main-Primary);
+      outline-offset: -2px;
+    }
+    &:disabled {
+      color: var(--Colors-Use-Neutral-Disable);
+      cursor: default;
+    }
+  }
+  svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+  }
+}
+.heading {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 4px 4px 8px;
+  min-height: 28px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  > span {
+    flex: 1;
+  }
+  button {
+    width: 24px;
+    height: 24px;
+    display: grid;
+    place-items: center;
+  }
+}
+.list {
+  overflow: auto;
+  min-height: 0;
+  scrollbar-width: thin;
+}
+.project {
+  margin-bottom: 6px;
+}
+.projectRow {
+  display: flex;
+  align-items: center;
+  border-radius: 4px;
+  &:hover {
+    background: var(--Colors-Use-Neutral-Bg-Hover);
+  }
+  &[data-selected='true'] > .projectName {
+    color: var(--Colors-Use-Main-Primary);
+  }
+}
+.projectName {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  flex: 1;
+  height: 32px;
+  padding: 0 6px;
+  text-align: left;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  span {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  > :first-child {
+    width: 12px;
+    height: 12px;
+  }
+}
+.addSession {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  opacity: 0;
+}
+.projectRow:hover .addSession,
+.projectRow:focus-within .addSession {
+  opacity: 1;
+}
+.sessions {
+  padding-left: 26px;
+}
+.session,
+.emptySession,
+.more {
+  display: block;
+  width: 100%;
+  padding: 7px 10px;
+  text-align: left;
+  font-size: 12px !important;
+  line-height: 18px !important;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+.session[aria-current='page'] {
+  background: var(--Colors-Use-Main-Bg);
+  color: var(--Colors-Use-Main-Primary);
+}
+.emptySession,
+.more,
+.empty {
+  color: var(--Colors-Use-Neutral-Text-3-Secondary) !important;
+}

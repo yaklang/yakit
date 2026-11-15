@@ -337,12 +337,10 @@ textarea.qs-input-textarea {
 // The project header, editor, and model controls share one card in coding sessions.
 .ai-chat-textarea:has(> [data-coding-session-controls]) {
   background: var(--Colors-Use-Basic-Background);
-  border: 1px solid var(--Colors-Use-Neutral-Border);
-  border-radius: 14px;
+  border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
+  border-radius: 24px;
   gap: 0;
-  box-shadow:
-    0 2px 8px #00000004,
-    0 8px 24px #00000003;
+  box-shadow: 0 2px 24px 0 var(--Colors-Use-Basic-Shadow);
   transition:
     border-color 0.15s,
     box-shadow 0.15s;
@@ -352,21 +350,13 @@ textarea.qs-input-textarea {
   }
   .textarea-wrapper {
     border: 0;
-    border-radius: 0;
-    padding: 14px 14px 8px;
-    gap: 10px;
-    .footer {
-      height: 30px;
-    }
-    .footer-right .round-btn {
-      width: 28px;
-      height: 28px;
-    }
+    border-radius: 0 0 23px 23px;
+    box-shadow: none;
   }
   .ai-chat-textarea-footer {
     padding: 6px 12px 8px;
     border-top: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
-    border-radius: 0 0 14px 14px;
+    border-radius: 0 0 23px 23px;
     min-height: 36px;
   }
 }
