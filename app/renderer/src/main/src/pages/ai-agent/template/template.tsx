@@ -578,7 +578,6 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
         onClick={handleSetTextareaFocus}
         ref={dropRef}
       >
-        {props.inputHeader}
         {isHovering && <div className={styles['drag-hint']}>{t('AIChatTextarea.dropToAddToChat')}</div>}
         <AIAddMaterialsPopover
           showScenarioCapabilities={showScenarioCapabilities}
@@ -595,6 +594,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
         >
           {(materialsOpen, toggleMaterials, summary, materialsMenuOpen) => (
             <div className={classNames(styles['textarea-wrapper'])} onKeyDown={handleTextareaKeyDown}>
+              {props.inputHeader}
               <div className={styles['materials-row']}>
                 <YakitButton
                   type="text2"

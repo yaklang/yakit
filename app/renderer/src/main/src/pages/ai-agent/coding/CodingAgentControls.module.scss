@@ -119,10 +119,8 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  min-height: 40px;
-  padding: 5px 14px;
-  border-radius: 23px 23px 0 0;
-  background: color-mix(in srgb, var(--Colors-Use-Neutral-Bg) 65%, var(--Colors-Use-Basic-Background));
+  min-height: 36px;
+  padding-bottom: 8px;
   border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
   .path {
     max-width: min(280px, 38vw);
@@ -540,7 +538,6 @@ button.environmentRow,
   }
   .composerBar {
     gap: 4px;
-    padding: 5px 8px;
   }
   .projectTrigger {
     gap: 5px;

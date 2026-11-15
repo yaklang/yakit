@@ -170,11 +170,18 @@ describe('session environment', () => {
   it('searches and selects a project directly without opening worktree management', async () => {
     setExperimentalCoding(true)
     mocks.setting = { CodingMode: true, CodingWorkspaceID: 'one', CodingWorktreeID: 'old-tree' }
-    render(<CodingSessionControls />)
+    const composerKeyDown = vi.fn()
+    render(
+      <div onKeyDown={composerKeyDown}>
+        <CodingSessionControls />
+      </div>,
+    )
     fireEvent.click(await screen.findByRole('button', { name: 'Project One' }))
     fireEvent.change(screen.getByRole('textbox', { name: 'CodingAgent.searchProjects' }), {
       target: { value: 'Two' },
     })
+    fireEvent.keyDown(screen.getByRole('textbox', { name: 'CodingAgent.searchProjects' }), { key: 'Enter' })
+    expect(composerKeyDown).not.toHaveBeenCalled()
     expect(screen.queryByRole('menuitemradio', { name: 'Project One' })).toBeNull()
     fireEvent.click(screen.getByRole('menuitemradio', { name: 'Project Two' }))
     expect(mocks.setSetting.mock.calls.at(-1)![0](mocks.setting)).toMatchObject({

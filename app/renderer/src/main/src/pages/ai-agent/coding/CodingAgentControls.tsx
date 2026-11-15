@@ -198,7 +198,11 @@ export const CodingSessionControls = ({
 
   if (!coding) return null
   return (
-    <div data-coding-session-controls onClick={(event) => event.stopPropagation()}>
+    <div
+      data-coding-session-controls
+      onClick={(event) => event.stopPropagation()}
+      onKeyDown={(event) => event.stopPropagation()}
+    >
       <div className={styles.composerBar}>
         <YakitPopover
           trigger="click"

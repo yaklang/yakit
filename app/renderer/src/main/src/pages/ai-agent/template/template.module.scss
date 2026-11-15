@@ -333,30 +333,3 @@ textarea.qs-input-textarea {
     color: var(--Colors-Use-Main-Primary);
   }
 }
-
-// The project header, editor, and model controls share one card in coding sessions.
-.ai-chat-textarea:has(> [data-coding-session-controls]) {
-  background: var(--Colors-Use-Basic-Background);
-  border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
-  border-radius: 24px;
-  gap: 0;
-  box-shadow: 0 2px 24px 0 var(--Colors-Use-Basic-Shadow);
-  transition:
-    border-color 0.15s,
-    box-shadow 0.15s;
-  &:focus-within {
-    border-color: color-mix(in srgb, var(--Colors-Use-Main-Primary) 50%, var(--Colors-Use-Neutral-Border));
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--Colors-Use-Main-Primary) 7%, transparent);
-  }
-  .textarea-wrapper {
-    border: 0;
-    border-radius: 0 0 23px 23px;
-    box-shadow: none;
-  }
-  .ai-chat-textarea-footer {
-    padding: 6px 12px 8px;
-    border-top: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
-    border-radius: 0 0 23px 23px;
-    min-height: 36px;
-  }
-}

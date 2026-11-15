@@ -90,47 +90,42 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
     }, [])
 
     return (
-      <div
-        className={classNames(styles['ai-chat-welcome-wrapper'], { [styles['coding-welcome']]: coding })}
-        ref={welcomeRef}
-      >
-        {!coding && <AIWelcomeAsciiRipple targetRef={welcomeRef} />}
+      <div className={styles['ai-chat-welcome-wrapper']} ref={welcomeRef}>
+        <AIWelcomeAsciiRipple targetRef={welcomeRef} />
         <div className={styles['welcome-scroll']}>
           <div
             className={classNames(styles['input-wrapper'], {
               [styles['input-wrapper-compact']]: layout.compact,
             })}
           >
-            {coding ? (
-              <div className={styles['input-heard']}>
-                <div className={styles['title']}>
+            <Flex className={styles['input-heard']} align="center" vertical gap={16}>
+              <div className={styles['title']}>
+                {animationDisabled
+                  ? WELCOME_TITLE
+                  : WELCOME_TITLE.split('').map((ch, index) => (
+                      <span
+                        key={`${ch}-${index}`}
+                        className={styles['title-char']}
+                        style={{ animationDelay: `${index * 36}ms` }}
+                      >
+                        {ch === ' ' ? '\u00A0' : ch}
+                      </span>
+                    ))}
+              </div>
+              {coding ? (
+                <div className={styles['subtitle']}>
                   {codingWorkspace
                     ? t('CodingAgent.welcomeProject', { name: codingWorkspace.Name })
                     : t('CodingAgent.welcome')}
                 </div>
-              </div>
-            ) : (
-              <Flex className={styles['input-heard']} align="center" vertical gap={16}>
-                <div className={styles['title']}>
-                  {animationDisabled
-                    ? WELCOME_TITLE
-                    : WELCOME_TITLE.split('').map((ch, index) => (
-                        <span
-                          key={`${ch}-${index}`}
-                          className={styles['title-char']}
-                          style={{ animationDelay: `${index * 36}ms` }}
-                        >
-                          {ch === ' ' ? '\u00A0' : ch}
-                        </span>
-                      ))}
-                </div>
+              ) : (
                 <Flex vertical gap={12} className={styles['welcome-tips-block']}>
                   {!isEmptyStats && <div className={styles['subtitle']}>{t('AIChatWelcome.WelcomeHomeSubTitle')}</div>}
                   <WelcomeTipsCards compact={layout.compact} onEmptyChange={handleEmptyStatsChange} added={added} />
                   {!isEmptyStats && <WelcomeRecentSessions density={layout.sessionDensity} />}
                 </Flex>
-              </Flex>
-            )}
+              )}
+            </Flex>
             <div className={styles['input-body-wrapper']}>
               <div className={styles['input-panel']} data-ai-ripple-disabled>
                 <AIChatTextarea

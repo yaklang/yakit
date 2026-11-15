@@ -157,14 +157,15 @@ afterEach(() => {
 const WELCOME_TITLE = 'Memfit AI Agent'
 
 describe('AIChatWelcome 输入框转发', () => {
-  it('编程模式保留输入区并隐藏安全助手欢迎内容', () => {
+  it('编程模式复用欢迎页标题、背景和输入区，只替换安全场景内容', () => {
     welcomeAnimationMocks.coding = true
-    render(<AIChatWelcome onTriageSubmit={vi.fn()} onSetReAct={vi.fn()} />)
+    const { container } = render(<AIChatWelcome onTriageSubmit={vi.fn()} onSetReAct={vi.fn()} />)
+    expect(container.querySelector('.title')).toHaveTextContent(WELCOME_TITLE)
     expect(screen.getByText('CodingAgent.welcome')).toBeInTheDocument()
     expect(screen.getByTestId('scenario-capabilities')).toHaveAttribute('data-enabled', 'false')
     expect(screen.queryByTestId('welcome-tips-cards')).toBeNull()
     expect(screen.queryByTestId('welcome-recent-sessions')).toBeNull()
-    expect(screen.queryByTestId('welcome-ascii-ripple')).toBeNull()
+    expect(screen.getByTestId('welcome-ascii-ripple')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '发送首问' })).toBeInTheDocument()
   })
 
