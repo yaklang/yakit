@@ -12,9 +12,18 @@ import { Flex } from 'antd'
 import { useMemoizedFn } from 'ahooks'
 import WelcomeRecentSessions, { type WelcomeRecentSessionsDensity } from './WelcomeRecentSessions/WelcomeRecentSessions'
 import WelcomeTipsCards from './WelcomeTipsCards/WelcomeTipsCards'
+import WelcomeSceneCards from './WelcomeSceneCards/WelcomeSceneCards'
 import type { WorkspaceAddedCounts } from '../template/aiAddMaterialsPopover/workspaceAddedCounts'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import { BookOpenOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
 
 const WELCOME_TITLE = 'Memfit AI Agent'
+const GUIDE_SCENES = [
+  { key: 'pentest', labelKey: 'AIChatWelcome.scenePentestTitle' },
+  { key: 'traffic', labelKey: 'AIChatWelcome.sceneTrafficTitle' },
+  { key: 'idor', labelKey: 'AIChatWelcome.sceneIdorTitle' },
+] as const
 const WELCOME_NARROW_WIDTH = 720
 const WELCOME_TIGHT_HEIGHT = 680
 const WELCOME_SHORT_HEIGHT = 850
@@ -53,6 +62,13 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
     const [layout, setLayout] = useState<WelcomeLayout>({ compact: false, sessionDensity: 'full' })
     const [isEmptyStats, setIsEmptyStats] = useState(false)
     const [added, setAdded] = useState<WorkspaceAddedCounts>({ risk: 0, traffic: 0, fileSystem: 0 })
+    const [guideMenuOpen, setGuideMenuOpen] = useState(false)
+    const [guideSceneId, setGuideSceneId] = useState<string | null>(null)
+    const handleGuideMenuClick = useMemoizedFn((info: { key: string | number }) => {
+      const sceneId = GUIDE_SCENES.find((item) => item.key === String(info.key))?.key ?? null
+      setGuideMenuOpen(false)
+      if (sceneId) setGuideSceneId(sceneId)
+    })
     const handleWorkspaceAddedChange = useMemoizedFn((next: WorkspaceAddedCounts) => {
       setAdded((current) =>
         current.risk === next.risk && current.traffic === next.traffic && current.fileSystem === next.fileSystem
@@ -93,6 +109,19 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
             })}
           >
             <Flex className={styles['input-heard']} align="center" vertical gap={16}>
+              {!isEmptyStats && (
+                <YakitDropdownMenu
+                  dropdown={{ open: guideMenuOpen, onOpenChange: setGuideMenuOpen }}
+                  menu={{
+                    data: GUIDE_SCENES.map((item) => ({ label: t(item.labelKey), key: item.key })),
+                    onClick: handleGuideMenuClick,
+                  }}
+                >
+                  <YakitButton type="outline2" radius={50} size="middle" icon={<BookOpenOutlined />}>
+                    {t('AIChatWelcome.guideMenu')}
+                  </YakitButton>
+                </YakitDropdownMenu>
+              )}
               <div className={styles['title']}>
                 {animationDisabled
                   ? WELCOME_TITLE
@@ -108,7 +137,18 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
               </div>
               <Flex vertical gap={12} className={styles['welcome-tips-block']}>
                 {!isEmptyStats && <div className={styles['subtitle']}>{t('AIChatWelcome.WelcomeHomeSubTitle')}</div>}
-                <WelcomeTipsCards compact={layout.compact} onEmptyChange={handleEmptyStatsChange} added={added} />
+                <WelcomeTipsCards
+                  compact={layout.compact}
+                  onEmptyChange={handleEmptyStatsChange}
+                  added={added}
+                  scene={
+                    <WelcomeSceneCards
+                      openId={guideSceneId}
+                      onOpenIdChange={setGuideSceneId}
+                      modalOnly={!isEmptyStats}
+                    />
+                  }
+                />
                 {!isEmptyStats && <WelcomeRecentSessions density={layout.sessionDensity} />}
               </Flex>
             </Flex>

@@ -67,6 +67,10 @@ export interface ModalCardsProps {
   nextLabel?: string
   /** Accessible label for the close control */
   closeLabel?: string
+  /** Controlled id of the expanded card. `null` keeps the guide closed. */
+  selectedId?: string | null
+  /** Fired when the expanded card opens, switches, or closes. */
+  onSelectedIdChange?: (id: string | null) => void
 }
 
 const ANIMATION_SPEEDS = {
@@ -92,11 +96,21 @@ const ModalCards = ({
   prevLabel = '',
   nextLabel = '',
   closeLabel = '',
+  selectedId,
+  onSelectedIdChange,
 }: ModalCardsProps) => {
-  const [selectedCard, setSelectedCard] = useState<CardData | null>(null)
+  const [uncontrolledId, setUncontrolledId] = useState<string | null>(null)
+  const activeId = selectedId !== undefined ? selectedId : uncontrolledId
+  const selectedCard = activeId ? (cards.find((card) => card.id === activeId) ?? null) : null
   const [mounted, setMounted] = useState(false)
   const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set())
   const guideBodyRef = useRef<HTMLDivElement>(null)
+
+  const selectCard = (card: CardData | null) => {
+    const nextId = card?.id ?? null
+    if (selectedId === undefined) setUncontrolledId(nextId)
+    onSelectedIdChange?.(nextId)
+  }
 
   const speedConfig = ANIMATION_SPEEDS[animationSpeed]
   const finalStiffness = springStiffness ?? speedConfig.springStiffness
@@ -137,7 +151,7 @@ const ModalCards = ({
 
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        setSelectedCard(null)
+        selectCard(null)
       }
     }
 
@@ -147,7 +161,7 @@ const ModalCards = ({
 
   const handleClose = () => {
     if (closeOnBackdropClick) {
-      setSelectedCard(null)
+      selectCard(null)
     }
   }
 
@@ -224,12 +238,12 @@ const ModalCards = ({
               tabIndex={!expandOnFooter ? 0 : undefined}
               onClick={() => {
                 if (expandOnFooter) return
-                setSelectedCard(card)
+                selectCard(card)
               }}
               onKeyDown={(event) => {
                 if (!expandOnFooter && (event.key === 'Enter' || event.key === ' ')) {
                   event.preventDefault()
-                  setSelectedCard(card)
+                  selectCard(card)
                 }
               }}
               className={`modal-card${card.variant === 'banner' ? ' modal-card-banner' : ''}${expandOnFooter ? ' modal-card-static' : ''}`}
@@ -249,7 +263,7 @@ const ModalCards = ({
                   className="modal-card-footer"
                   onClick={(e) => {
                     e.stopPropagation()
-                    if (expandOnFooter) setSelectedCard(card)
+                    if (expandOnFooter) selectCard(card)
                   }}
                 >
                   {card.footer}
@@ -324,7 +338,7 @@ const ModalCards = ({
                             aria-label={closeLabel || undefined}
                             onClick={(e) => {
                               e.stopPropagation()
-                              setSelectedCard(null)
+                              selectCard(null)
                             }}
                           />
                         )}
@@ -373,7 +387,7 @@ const ModalCards = ({
                                   type="outline2"
                                   disabled={!canGoPrev}
                                   onClick={() => {
-                                    if (canGoPrev) setSelectedCard(cards[selectedIndex - 1])
+                                    if (canGoPrev) selectCard(cards[selectedIndex - 1])
                                   }}
                                 >
                                   {prevLabel}
@@ -382,7 +396,7 @@ const ModalCards = ({
                                   type="outline2"
                                   disabled={!canGoNext}
                                   onClick={() => {
-                                    if (canGoNext) setSelectedCard(cards[selectedIndex + 1])
+                                    if (canGoNext) selectCard(cards[selectedIndex + 1])
                                   }}
                                 >
                                   {nextLabel}
@@ -390,7 +404,7 @@ const ModalCards = ({
                               </div>
                             ) : null}
                             {selectedCard.confirmLabel ? (
-                              <YakitButton type="primary" onClick={() => setSelectedCard(null)}>
+                              <YakitButton type="primary" onClick={() => selectCard(null)}>
                                 {selectedCard.confirmLabel}
                               </YakitButton>
                             ) : null}

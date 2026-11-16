@@ -40,6 +40,7 @@
     "toolBase": "工具库",
     "expandResources": "扩展资源",
     "WelcomeHomeSubTitle": "资料库数据，可添加到当前会话中引用",
+    "guideMenu": "新手引导",
     "WelcomeSceneSubTitle": "通过经典应用场景介绍，了解我们能做什么",
     "scenePentestTitle": "基础渗透测试",
     "scenePentestDesc": "输入目标，AI 自动拆解任务执行渗透，发现网站漏洞。",

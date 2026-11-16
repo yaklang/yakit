@@ -10,7 +10,15 @@ import { useWelcomeAnimationDisabled } from '../../store/welcomeAnimationStore'
 import { pentestGuideImages, trafficGuideImages, idorGuideImages } from './assets/guide/guideImages'
 import styles from './WelcomeSceneCards.module.scss'
 
-const WelcomeSceneCards: FC = memo(() => {
+interface WelcomeSceneCardsProps {
+  /** 打开对应场景手册。`null` 表示保持收起。 */
+  openId?: string | null
+  onOpenIdChange?: (id: string | null) => void
+  /** 只弹出手册，不展示场景卡片列表。 */
+  modalOnly?: boolean
+}
+
+const WelcomeSceneCards: FC<WelcomeSceneCardsProps> = memo(({ openId, onOpenIdChange, modalOnly = false }) => {
   const { t, i18nRefresh } = useI18nNamespaces(['aiAgent'])
   const animationDisabled = useWelcomeAnimationDisabled()
 
@@ -117,8 +125,8 @@ const WelcomeSceneCards: FC = memo(() => {
   )
 
   return (
-    <div className={styles['welcome-scene']} data-testid="welcome-scene-cards">
-      <div className={styles['subtitle']}>{t('AIChatWelcome.WelcomeSceneSubTitle')}</div>
+    <div className={styles['welcome-scene']} data-testid="welcome-scene-cards" hidden={modalOnly}>
+      {modalOnly ? null : <div className={styles['subtitle']}>{t('AIChatWelcome.WelcomeSceneSubTitle')}</div>}
       <ModalCards
         cards={cards}
         className={styles['scene-list']}
@@ -127,6 +135,8 @@ const WelcomeSceneCards: FC = memo(() => {
         prevLabel={t('AIChatWelcome.scenePrev')}
         nextLabel={t('AIChatWelcome.sceneNext')}
         closeLabel={t('AIChatWelcome.sceneClose')}
+        selectedId={openId}
+        onSelectedIdChange={onOpenIdChange}
       />
     </div>
   )

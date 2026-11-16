@@ -40,6 +40,7 @@
     "toolBase": "Tool",
     "expandResources": "Expand Resources",
     "WelcomeHomeSubTitle": "Library data that can be added to the current session for reference",
+    "guideMenu": "Getting started",
     "WelcomeSceneSubTitle": "Explore classic scenarios to see what we can do",
     "scenePentestTitle": "Basic penetration testing",
     "scenePentestDesc": "Enter a target and the AI will break down the task, run the test, and find site vulnerabilities.",

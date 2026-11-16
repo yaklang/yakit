@@ -88,19 +88,44 @@ vi.mock('../WelcomeRecentSessions/WelcomeRecentSessions', () => ({
 }))
 const tipsMocks = vi.hoisted(() => ({ empty: false }))
 
+vi.mock('@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu', () => ({
+  YakitDropdownMenu: ({
+    menu,
+    children,
+  }: {
+    menu: { data?: Array<{ label: string; key: string }>; onClick?: (info: { key: string }) => void }
+    children?: React.ReactNode
+  }) => (
+    <div>
+      {children}
+      {menu.data?.map((item) => (
+        <button key={item.key} type="button" onClick={() => menu.onClick?.({ key: item.key })}>
+          {item.label}
+        </button>
+      ))}
+    </div>
+  ),
+}))
+vi.mock('../WelcomeSceneCards/WelcomeSceneCards', () => ({
+  default: ({ openId, modalOnly }: { openId?: string | null; modalOnly?: boolean }) => (
+    <div data-testid="welcome-scene-cards" data-open-id={openId ?? ''} data-modal-only={modalOnly ? 'true' : 'false'} />
+  ),
+}))
 vi.mock('../WelcomeTipsCards/WelcomeTipsCards', () => {
   function MockWelcomeTipsCards({
     compact,
     onEmptyChange,
     added,
+    scene,
   }: {
     compact?: boolean
     onEmptyChange?: (empty: boolean) => void
     added?: { risk: number; traffic: number; fileSystem: number }
+    scene?: React.ReactNode
   }) {
     React.useEffect(() => {
       onEmptyChange?.(tipsMocks.empty)
-    }, [onEmptyChange])
+    })
     return (
       <div
         data-testid="welcome-tips-cards"
@@ -108,7 +133,9 @@ vi.mock('../WelcomeTipsCards/WelcomeTipsCards', () => {
         data-added-risk={added?.risk ?? 0}
         data-added-traffic={added?.traffic ?? 0}
         data-added-file={added?.fileSystem ?? 0}
-      />
+      >
+        {scene}
+      </div>
     )
   }
   return { default: MockWelcomeTipsCards }
@@ -165,6 +192,21 @@ describe('AIChatWelcome 输入框转发', () => {
     expect(cards).toHaveAttribute('data-added-risk', '3')
     expect(cards).toHaveAttribute('data-added-traffic', '1')
     expect(cards).toHaveAttribute('data-added-file', '1')
+  })
+
+  it('新手引导打开的是页面上唯一的场景手册', () => {
+    render(<AIChatWelcome onTriageSubmit={vi.fn()} onSetReAct={vi.fn()} />)
+    const scene = screen.getByTestId('welcome-scene-cards')
+    expect(screen.getAllByTestId('welcome-scene-cards')).toHaveLength(1)
+    expect(scene).toHaveAttribute('data-open-id', '')
+    expect(scene).toHaveAttribute('data-modal-only', 'true')
+    fireEvent.click(screen.getByRole('button', { name: 'AIChatWelcome.scenePentestTitle' }))
+    expect(scene).toHaveAttribute('data-open-id', 'pentest')
+    fireEvent.click(screen.getByRole('button', { name: 'AIChatWelcome.sceneTrafficTitle' }))
+    expect(scene).toHaveAttribute('data-open-id', 'traffic')
+    fireEvent.click(screen.getByRole('button', { name: 'AIChatWelcome.sceneIdorTitle' }))
+    expect(scene).toHaveAttribute('data-open-id', 'idor')
+    expect(screen.getAllByTestId('welcome-scene-cards')).toHaveLength(1)
   })
 
   it('在欢迎页隐藏近期添加 Tab', () => {
@@ -311,6 +353,8 @@ describe('AIChatWelcome 空态', () => {
     })
     expect(screen.queryByTestId('welcome-recent-sessions')).not.toBeInTheDocument()
     expect(screen.getByTestId('welcome-tips-cards')).toBeInTheDocument()
+    expect(screen.getAllByTestId('welcome-scene-cards')).toHaveLength(1)
+    expect(screen.getByTestId('welcome-scene-cards')).toHaveAttribute('data-modal-only', 'false')
   })
 })
 

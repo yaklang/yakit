@@ -19,10 +19,12 @@ vi.mock('@/components/yakitUI/YakitButton/YakitButton', () => ({
 vi.mock('@/components/reactBits/ModalCards/ModalCards', () => ({
   default: ({
     cards,
+    selectedId,
   }: {
     cards: Array<{ id: string; title: string; footer?: ReactNode; steps?: unknown[]; expandTrigger?: string }>
+    selectedId?: string | null
   }) => (
-    <div data-testid="modal-cards">
+    <div data-testid="modal-cards" data-selected-id={selectedId ?? ''}>
       {cards.map((card) => (
         <div
           key={card.id}
@@ -77,5 +79,13 @@ describe('WelcomeSceneCards', () => {
     expect(screen.getByTestId('scene-card-idor').getAttribute('data-steps')).toBe('4')
     expect(screen.getByTestId('scene-card-idor').getAttribute('data-expand')).toBe('footer')
     expect(screen.getByRole('button', { name: 'AIChatWelcome.sceneReadDocs' })).toBeInTheDocument()
+    expect(screen.getByTestId('modal-cards')).toHaveAttribute('data-selected-id', '')
+  })
+
+  it('openId 打开对应场景手册，modalOnly 时不展示卡片列表', () => {
+    render(<WelcomeSceneCards openId="traffic" modalOnly />)
+    expect(screen.getByTestId('modal-cards')).toHaveAttribute('data-selected-id', 'traffic')
+    expect(screen.getByTestId('welcome-scene-cards')).toHaveAttribute('hidden')
+    expect(screen.queryByText('AIChatWelcome.WelcomeSceneSubTitle')).not.toBeInTheDocument()
   })
 })

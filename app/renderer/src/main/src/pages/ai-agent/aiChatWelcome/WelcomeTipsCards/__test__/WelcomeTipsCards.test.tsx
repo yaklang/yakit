@@ -25,11 +25,6 @@ vi.mock('../../hooks/useWelcomePanelStats', () => ({
     riskCounts: statsMock.riskCounts,
   }),
 }))
-vi.mock('../../WelcomeSceneCards/WelcomeSceneCards', () => ({
-  default: ({ compact }: { compact?: boolean }) => (
-    <div data-testid="welcome-scene-cards" data-compact={compact ? 'true' : 'false'} />
-  ),
-}))
 vi.mock('../../../components/aiFileSystemList/store/useCustomFolder', () => ({
   useCustomFolder: () => [{ path: '/a' }, { path: '/b' }],
 }))
@@ -150,12 +145,21 @@ describe('WelcomeTipsCards', () => {
     expect(emitSpy).toHaveBeenCalledWith('switchAIActTab', JSON.stringify({ key: AITabsEnum.Risk }))
   })
 
-  it('漏洞与流量都已返回且为 0 时渲染场景介绍卡', () => {
+  it('非空态在资料卡列表之后渲染共用场景手册', () => {
+    const { container } = render(<WelcomeTipsCards scene={<div data-testid="welcome-scene-cards" />} />)
+    const list = container.querySelector('.welcome-tips-list')
+    const scene = screen.getByTestId('welcome-scene-cards')
+    expect(list).toBeTruthy()
+    expect(screen.getByText('AIChatWelcome.tipRiskTitle')).toBeInTheDocument()
+    expect(list!.compareDocumentPosition(scene) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('漏洞与流量都已返回且为 0 时只保留共用场景手册', () => {
     statsMock.riskTotal = 0
     statsMock.trafficTotal = 0
     statsMock.riskCounts = {}
     const onEmptyChange = vi.fn()
-    render(<WelcomeTipsCards onEmptyChange={onEmptyChange} />)
+    render(<WelcomeTipsCards onEmptyChange={onEmptyChange} scene={<div data-testid="welcome-scene-cards" />} />)
     expect(screen.getByTestId('welcome-scene-cards')).toBeInTheDocument()
     expect(screen.queryByText('AIChatWelcome.tipRiskTitle')).not.toBeInTheDocument()
     expect(onEmptyChange).toHaveBeenCalledWith(true)

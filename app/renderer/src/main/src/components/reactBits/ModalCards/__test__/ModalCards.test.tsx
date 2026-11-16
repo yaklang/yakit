@@ -219,6 +219,16 @@ describe('ModalCards', () => {
     expect(screen.getByRole('dialog')).toBeInTheDocument()
   })
 
+  it('selectedId 受控打开对应手册，关闭时回传 null', async () => {
+    const onSelectedIdChange = vi.fn()
+    render(<ModalCards cards={cards} animationSpeed="none" selectedId="b" onSelectedIdChange={onSelectedIdChange} />)
+    await flushMount()
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    expect(screen.getAllByText('卡片乙').length).toBeGreaterThan(1)
+    fireEvent.click(screen.getByRole('dialog').querySelector('button') as HTMLButtonElement)
+    expect(onSelectedIdChange).toHaveBeenCalledWith(null)
+  })
+
   it('Escape 与关闭按钮可收起', async () => {
     render(<ModalCards cards={cards} animationSpeed="none" closeLabel="关闭" />)
     await flushMount()
