@@ -2983,7 +2983,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     const syncAI = (page?: PageProps) => {
       if (disposed) return
       setPageCache((current) => mergeAIAgentPageTabs(current, page || { ...defPage, routeKey: YakitRoute.AI_Agent }))
-      // 恢复成功前只同步界面，避免用不完整的标签列表覆盖缓存。
+      // 恢复成功或主动跳过前只同步界面，避免用不完整的标签列表覆盖缓存。
       if (aiCacheLoaded.current) saveAIAgentCache(page)
     }
     const unsubscribeAI = usePageInfo.subscribe((state) => state.pages.get(YakitRoute.AI_Agent), syncAI)
@@ -3012,11 +3012,22 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
       } catch (error) {
         if (disposed) return
         yakitNotify('error', t('MainOperatorContent.restoreAIAgentTabsFailed', { error: error + '' }))
+        let decided = false
         recoveryModal = showYakitModal({
+          type: 'white',
           title: (modalT) => modalT('MainOperatorContent.restoreTab'),
           content: (modalT) => modalT('MainOperatorContent.retryRestoreAIAgentTabs'),
+          bodyStyle: { padding: '0px 16px' },
+          onOkText: (modalT) => modalT('MainOperatorContent.restoreAIAgentTabsConfirm'),
+          onCancelText: (modalT) => modalT('MainOperatorContent.restoreAIAgentTabsCancel'),
+          onCancel: () => {
+            if (disposed || decided) return
+            decided = true
+            aiCacheLoaded.current = true
+          },
           onOk: async () => {
-            if (disposed || retryingAI) return
+            if (disposed || decided || retryingAI) return
+            decided = true
             retryingAI = true
             recoveryModal?.destroy()
             setInitializing(true)
