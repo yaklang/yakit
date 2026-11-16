@@ -109,31 +109,33 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
             })}
           >
             <Flex className={styles['input-heard']} align="center" vertical gap={16}>
-              {!isEmptyStats && (
-                <YakitDropdownMenu
-                  dropdown={{ open: guideMenuOpen, onOpenChange: setGuideMenuOpen }}
-                  menu={{
-                    data: GUIDE_SCENES.map((item) => ({ label: t(item.labelKey), key: item.key })),
-                    onClick: handleGuideMenuClick,
-                  }}
-                >
-                  <YakitButton type="outline2" radius={50} size="middle" icon={<BookOpenOutlined />}>
-                    {t('AIChatWelcome.guideMenu')}
-                  </YakitButton>
-                </YakitDropdownMenu>
-              )}
               <div className={styles['title']}>
-                {animationDisabled
-                  ? WELCOME_TITLE
-                  : WELCOME_TITLE.split('').map((ch, index) => (
-                      <span
-                        key={`${ch}-${index}`}
-                        className={styles['title-char']}
-                        style={{ animationDelay: `${index * 36}ms` }}
-                      >
-                        {ch === ' ' ? '\u00A0' : ch}
-                      </span>
-                    ))}
+                {!isEmptyStats && (
+                  <YakitDropdownMenu
+                    dropdown={{ open: guideMenuOpen, onOpenChange: setGuideMenuOpen }}
+                    menu={{
+                      data: GUIDE_SCENES.map((item) => ({ label: t(item.labelKey), key: item.key })),
+                      onClick: handleGuideMenuClick,
+                    }}
+                  >
+                    <YakitButton type="outline2" radius={50} size="middle" icon={<BookOpenOutlined />}>
+                      {t('AIChatWelcome.guideMenu')}
+                    </YakitButton>
+                  </YakitDropdownMenu>
+                )}
+                <div>
+                  {animationDisabled
+                    ? WELCOME_TITLE
+                    : WELCOME_TITLE.split('').map((ch, index) => (
+                        <span
+                          key={`${ch}-${index}`}
+                          className={styles['title-char']}
+                          style={{ animationDelay: `${index * 36}ms` }}
+                        >
+                          {ch === ' ' ? '\u00A0' : ch}
+                        </span>
+                      ))}
+                </div>
               </div>
               <Flex vertical gap={12} className={styles['welcome-tips-block']}>
                 {!isEmptyStats && <div className={styles['subtitle']}>{t('AIChatWelcome.WelcomeHomeSubTitle')}</div>}
