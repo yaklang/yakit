@@ -235,9 +235,7 @@ describe('AIInputSettingPopover', () => {
     fireEvent.click(screen.getByRole('button', { name: 'YakitButton.reset' }))
 
     expect(mocks.onSend).toHaveBeenCalledTimes(1)
-    for (const [HotpatchType, Params] of [
-      ['SyncPerceptionTrigger', { SyncPerceptionTrigger: false }],
-    ]) {
+    for (const [HotpatchType, Params] of [['SyncPerceptionTrigger', { SyncPerceptionTrigger: false }]]) {
       expect(mocks.onSend).toHaveBeenCalledWith({
         token: 'session-id',
         type: 'casual',

@@ -135,7 +135,7 @@ export interface AIStartParams {
    */
   TimelineContentSizeLimit?: number
   /**
-   * 运行时上下文（普通历史、Skill 正文、Evidence 等）压缩阈值，单位 token。
+   * 运行时上下文压缩阈值；旧会话内存配置单位 KB，携带 ModelContextKey 的模型设置单位 token。
    * >0 覆盖服务端默认；<=0 或不传时使用服务端默认值。
    * 下发前将 gRPC 数字字符串规范化为安全整数。
    */
@@ -225,7 +225,7 @@ export interface AIEnabledCapability {
 /**
  * 丢掉已废弃的 TimelineContentSizeLimit，并规范化运行时上下文阈值：
  * 合法正整数覆盖服务端默认阈值；其他值表示不覆盖，由服务端决定。
- * 入参已是字节，兼容 gRPC int64 字符串，输出安全整数，不进行单位换算。
+ * 入参已是后端 token 数，兼容 gRPC int64 字符串，输出安全整数，不进行单位换算。
  */
 export const withServerRuntimeContextLimit = <
   T extends Omit<AIStartParams, 'RuntimeContextSizeLimit'> & { RuntimeContextSizeLimit?: number | string },
@@ -240,11 +240,15 @@ export const withServerRuntimeContextLimit = <
   }
 }
 
-/** 内存使用 KB，仅在传输边界转换；保留缺省字段及服务端默认值 0。 */
+/** 旧会话内存使用 KB；带模型标识的上下文设置已是 token，不重复换算。 */
 export const toServerAIStartParams = <T extends AIStartParams>(params: T): T => ({
   ...params,
   ...(params.RuntimeContextSizeLimit !== undefined
-    ? { RuntimeContextSizeLimit: params.RuntimeContextSizeLimit * 1024 }
+    ? {
+        RuntimeContextSizeLimit: params.ModelContextKey
+          ? params.RuntimeContextSizeLimit
+          : params.RuntimeContextSizeLimit * 1024,
+      }
     : {}),
   ...(params.AICallTokenLimit !== undefined ? { AICallTokenLimit: params.AICallTokenLimit * 1024 } : {}),
 })
@@ -252,7 +256,11 @@ export const toServerAIStartParams = <T extends AIStartParams>(params: T): T => 
 export const fromServerAIStartParams = <T extends AIStartParams>(params: T): T => ({
   ...params,
   ...(params.RuntimeContextSizeLimit !== undefined
-    ? { RuntimeContextSizeLimit: params.RuntimeContextSizeLimit / 1024 }
+    ? {
+        RuntimeContextSizeLimit: params.ModelContextKey
+          ? params.RuntimeContextSizeLimit
+          : params.RuntimeContextSizeLimit / 1024,
+      }
     : {}),
   ...(params.AICallTokenLimit !== undefined ? { AICallTokenLimit: params.AICallTokenLimit / 1024 } : {}),
 })

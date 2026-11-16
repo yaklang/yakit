@@ -85,3 +85,18 @@ describe('AI start parameter units', () => {
     expect(fromServerAIStartParams({ EnablePlan: true })).toEqual({ EnablePlan: true })
   })
 })
+
+// Model controls already use exact decimal token counts at the call site.
+describe('model context transport', () => {
+  it.each([0, 100000, 500000, 1000000])('preserves a model-scoped threshold of %s tokens', (tokens) => {
+    const input = Object.freeze({
+      RuntimeContextSizeLimit: tokens,
+      ModelContextKey: 'owner:model',
+      AICallTokenLimit: 40,
+    })
+    const wire = toServerAIStartParams(input)
+    expect(wire.RuntimeContextSizeLimit).toBe(tokens)
+    expect(wire.AICallTokenLimit).toBe(40960)
+    expect(fromServerAIStartParams(wire)).toEqual(input)
+  })
+})

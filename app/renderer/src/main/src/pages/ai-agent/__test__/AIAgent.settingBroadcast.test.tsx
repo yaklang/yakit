@@ -561,9 +561,11 @@ describe('AIAgent 配置广播', () => {
     await act(async () => {})
 
     const setting = JSON.parse(screen.getByTestId('setting').textContent!)
-    expect(setting).toMatchObject({ RuntimeContextSizeLimit: (runtimeKB * 1024) / 1000, AICallTokenLimit: tokenKB })
+    expect(setting).toMatchObject({ RuntimeContextSizeLimit: runtimeKB, AICallTokenLimit: tokenKB })
     expect(setting).not.toHaveProperty('TimelineContentSizeLimit')
-    expect(screen.getByTestId('runtime-limit')).toHaveTextContent(String(runtimeKB > 0 ? runtimeKB : 500))
+    expect(screen.getByTestId('runtime-limit')).toHaveTextContent(
+      String(runtimeKB > 0 ? (runtimeKB * 1024) / 1000 : 500),
+    )
     expect(screen.getByTestId('raw-limit')).toHaveTextContent(String(runtimeKB))
     expect(globalSessionEngine.updateSessionConfig).not.toHaveBeenCalled()
     expect(setRemoteValueMock).not.toHaveBeenCalled()
@@ -583,7 +585,7 @@ describe('AIAgent 配置广播', () => {
     } as AISession
     querySessionMock.mockResolvedValueOnce(sessionResponse([session]))
     render(<AIAgent pageId="test" initialSession={session} />)
-    await waitFor(() => expect(screen.getByTestId('default-limit')).toHaveTextContent(/^307\.2$/))
+    await waitFor(() => expect(screen.getByTestId('default-limit')).toHaveTextContent(/^300$/))
     await act(async () => {})
     expect(globalSessionEngine.updateSessionConfig).not.toHaveBeenCalled()
     // 初始化恢复不写引擎；用户修改设置后进入正常配置同步路径。
@@ -610,9 +612,9 @@ describe('AIAgent 配置广播', () => {
         Strategy: { EnableGoalMode: true, MaxSubAgents: 0 },
       },
     })
-    expect(screen.getByTestId('runtime-limit')).toHaveTextContent(/^600$/)
+    expect(screen.getByTestId('runtime-limit')).toHaveTextContent(/^614\.4$/)
     expect(screen.getByTestId('raw-limit')).toHaveTextContent(/^600$/)
-    expect(screen.getByTestId('default-limit')).toHaveTextContent(/^500$/)
+    expect(screen.getByTestId('default-limit')).toHaveTextContent(/^300$/)
     expect(globalSessionEngine.updateSessionConfig).toHaveBeenCalledExactlyOnceWith(
       'history',
       expect.objectContaining({ RuntimeContextSizeLimit: 600 }),
@@ -859,7 +861,7 @@ describe('AIAgent 配置广播', () => {
     expect(screen.getByTestId('enable-plan')).toHaveTextContent('false')
     expect(globalSessionEngine.updateSessionConfig).toHaveBeenCalledWith(
       expect.any(String),
-      expect.objectContaining({ EnablePlan: true, RuntimeContextSizeLimit: 300 }),
+      expect.objectContaining({ EnablePlan: true, RuntimeContextSizeLimit: 500 }),
     )
   })
 

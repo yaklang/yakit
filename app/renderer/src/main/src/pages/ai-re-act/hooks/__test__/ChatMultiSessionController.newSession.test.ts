@@ -195,6 +195,22 @@ describe('frontend allocated session identity', () => {
     await controller.handleSessionEnd('unit-session')
   })
 
+  it.each([100000, 500000, 1000000])('sends a model context hotpatch as exactly %s tokens', async (tokens) => {
+    const token = await start()
+    await emit(token, 'pong', 'client-session')
+    const Params = {
+      RuntimeContextSizeLimit: tokens,
+      ModelContextKey: 'owner:model',
+      AIService: 'openai',
+      AIModelName: 'quality',
+    }
+    const patch = { IsConfigHotpatch: true, HotpatchType: 'RuntimeContextSizeLimit' as const, Params }
+    expect(controller.handleSendMessage({ token: 'client-session', type: 'casual', params: patch })).toBe(true)
+    expect(ipcRendererMock.invoke).toHaveBeenCalledWith('send-ai-re-act', token, expect.objectContaining({ Params }))
+    expect(patch.Params.RuntimeContextSizeLimit).toBe(tokens)
+    await controller.handleSessionEnd('client-session')
+  })
+
   it('retrying a failed start converts the original KB input only once', async () => {
     const input: AIChatIPCStartParams = {
       kind: 'new',
