@@ -432,3 +432,54 @@
     transform: scale(1);
   }
 }
+
+// Sidebar plans share one quiet surface; status lives on the timeline marker.
+.ai-tree-compact {
+  height: auto;
+  overflow: visible;
+  padding-bottom: 0;
+  .ai-tree-node {
+    max-height: none;
+    .node-icon {
+      flex-shrink: 0;
+    }
+    .node-wrapper {
+      background: transparent;
+      border-color: transparent;
+      padding: 0;
+      margin-bottom: 8px;
+      &::before {
+        display: none;
+      }
+      &:hover {
+        background: var(--Colors-Use-Neutral-Bg-Hover);
+      }
+      .node-title {
+        align-items: flex-start;
+        padding: 4px 6px;
+        gap: 4px;
+        p {
+          white-space: normal;
+          overflow-wrap: anywhere;
+          font-weight: 500;
+          line-height: 20px;
+        }
+      }
+      .node-content {
+        background: transparent;
+        padding-top: 0;
+        &-text {
+          color: var(--Colors-Use-Neutral-Text-3-Secondary);
+          font-size: 12px;
+          line-height: 18px;
+        }
+        &-tag:empty {
+          display: none;
+        }
+      }
+    }
+  }
+  .ai-tree-node-end {
+    display: none;
+  }
+}

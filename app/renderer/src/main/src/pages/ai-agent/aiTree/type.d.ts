@@ -1,6 +1,7 @@
 import type { AITaskInfoProps } from '@/pages/ai-re-act/hooks/aiRender'
 export interface AITreeProps {
   tasks: AITaskInfoProps[]
+  compact?: boolean
   renderTaskChildren?: (value: AITaskInfoProps) => React.ReactNode
   onNodeClick?: AITreeNodeProps['onClick']
   className?: string

@@ -353,6 +353,7 @@ export const HistoryTaskTreeItem: React.FC<HistoryTaskTreeItemProps> = memo((pro
       )}
 
       <AITree
+        compact
         tasks={item.task_tree}
         className={styles['tree-wrapper']}
         aiTreeTitleExtraNode={

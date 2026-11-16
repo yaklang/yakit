@@ -31,7 +31,7 @@ function lineStyles(i: number, levelDiff: number, lineNum: number) {
 }
 
 export const AITree: React.FC<AITreeProps> = memo((props) => {
-  const { tasks, className, aiTreeTitleExtraNode, taskType, renderTaskChildren } = props
+  const { tasks, className, aiTreeTitleExtraNode, taskType, renderTaskChildren, compact } = props
   const [hoveredTaskId, setHoveredTaskId] = useState<string | null>(null)
 
   const onNodeHoverEnd = useCallback(() => setHoveredTaskId(null), [])
@@ -67,6 +67,7 @@ export const AITree: React.FC<AITreeProps> = memo((props) => {
     <div
       className={classNames(styles['ai-tree'], className || '', {
         [styles['ai-tree-hovering']]: hoveredTaskId !== null,
+        [styles['ai-tree-compact']]: compact,
       })}
     >
       {tasks.map((item, index) => {
