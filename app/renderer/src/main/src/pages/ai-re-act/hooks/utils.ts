@@ -90,7 +90,18 @@ export const handleTaskPlanEnd: (
     if (item.progress === AITaskStatus.inProgress) item.progress = AITaskStatus.error
     return item
   })
-  store.getState().updateState({ currentPlan: newPlanTree })
+  // A resumed parent reuses its coordinator ID; its previous child calls do not.
+  // Freeze incomplete snapshots before that ID can become active again.
+  const { subForgeRuns, currentChatStatus } = store.getState()
+  const frozenRuns = Object.fromEntries(
+    Object.entries(subForgeRuns).map(([id, run]) => [
+      id,
+      run.status === 'running' && (isChatEnd || run.parent_coordinator_id === currentChatStatus.coordinatorId)
+        ? { ...run, historical: true }
+        : run,
+    ]),
+  )
+  store.getState().updateState({ currentPlan: newPlanTree, subForgeRuns: frozenRuns })
 
   // end 只清展示文案，保留 taskID / coordinatorId / status（status 由 settle 写）
   store.getState().updateCurrentLoadingTitle({ planTitle: '已结束' })
