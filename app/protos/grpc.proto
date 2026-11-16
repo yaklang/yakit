@@ -2380,7 +2380,8 @@ message AIStartParams {
   optional bool NetworkDebug = 52;
   // Connection-local, build-generated component catalog and interaction capabilities.
   string ClientUI = 53;
-  bool CodingMode = 54;
+  // Deprecated: use AgentMode. Read only as a fallback when AgentMode is empty.
+  bool CodingMode = 54 [deprecated = true];
   string CodingWorkspaceID = 55;
   string CodingWorkingDirectory = 56;
   // Only primary RootPaths[0]'s repository is isolated. Secondary roots stay original.
@@ -2389,6 +2390,8 @@ message AIStartParams {
   string CodingWorktreeID = 59; // Reuse a managed worktree in the same workspace.
   repeated string CodingWorkspaceRoots = 60; // Server-resolved effective directories.
   repeated string CodingSourceRoots = 61; // Server-resolved original directories.
+  // Agent persona: security (default) or coding. Explicit value overrides CodingMode.
+  string AgentMode = 62;
 }
 
 message AIExecutionStrategy {

@@ -238,7 +238,7 @@ describe('persistAIAgentChatSetting', () => {
 
 it('does not broadcast or persist coding source bindings as global chat defaults', () => {
   const binding = {
-    CodingMode: true,
+    AgentMode: 'coding',
     CodingWorkspaceID: 'workspace',
     CodingWorkingDirectory: '/source',
     CodingCreateWorktree: true,
@@ -248,7 +248,7 @@ it('does not broadcast or persist coding source bindings as global chat defaults
     CodingSourceRoots: ['/front', '/back'],
   }
   const persisted = stripAIAgentChatSettingForPersist({ ...AIAgentSettingDefault, ...binding })
-  expect(persisted.CodingMode).toBeUndefined()
+  expect(persisted.AgentMode).toBeUndefined()
   expect(persisted.CodingWorkspaceID).toBeUndefined()
   expect(persisted.CodingWorkingDirectory).toBeUndefined()
   for (const key of Object.keys(binding)) expect(persisted[key]).toBeUndefined()

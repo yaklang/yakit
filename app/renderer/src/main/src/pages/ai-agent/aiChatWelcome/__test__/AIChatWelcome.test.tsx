@@ -50,7 +50,7 @@ const firstDraft: AIChatInputDraft = {
 }
 
 vi.mock('../../useContext/useStore', () => ({
-  default: () => ({ setting: { CodingMode: welcomeAnimationMocks.coding } }),
+  default: () => ({ setting: { AgentMode: welcomeAnimationMocks.coding ? 'coding' : 'security' } }),
 }))
 vi.mock('../../coding/CodingAgentControls', () => ({ CodingSessionControls: () => null }))
 

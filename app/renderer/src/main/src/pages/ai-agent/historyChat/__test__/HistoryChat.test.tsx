@@ -19,7 +19,7 @@ const mocks = vi.hoisted(() => ({
   pages: new Map(),
   updatePagesDataCacheById: vi.fn(),
   ctx: {
-    setting: { CodingMode: false },
+    setting: { AgentMode: 'security' },
     activeChat: undefined as { SessionID: string } | undefined,
     sessions: [] as { SessionID: string; UpdatedAt: number }[],
   },
@@ -67,7 +67,7 @@ beforeEach(() => {
   vi.clearAllMocks()
   mocks.dispatcher.setSessions.mockReset()
   mocks.setActiveChat.mockReset()
-  mocks.ctx.setting = { CodingMode: false }
+  mocks.ctx.setting = { AgentMode: 'security' }
   setExperimentalCoding(false)
   mocks.ctx.activeChat = undefined
   mocks.ctx.sessions = []
@@ -83,11 +83,11 @@ describe('HistoryChat 会话参数增量更新', () => {
     expect(screen.getByText('历史会话内容')).toBeInTheDocument()
     expect(screen.queryByText('编程项目列表')).toBeNull()
     expect(screen.queryByText('CodingAgent.recentSessions')).toBeNull()
-    mocks.ctx.setting.CodingMode = true
+    mocks.ctx.setting.AgentMode = 'coding'
     rerender(<HistoryChat aiSource={['ai', '', 'im']} />)
     expect(screen.getByText('编程项目列表')).toBeInTheDocument()
     expect(screen.getByText('CodingAgent.recentSessions')).toBeInTheDocument()
-    mocks.ctx.setting.CodingMode = false
+    mocks.ctx.setting.AgentMode = 'security'
     rerender(<HistoryChat aiSource={['ai', '', 'im']} />)
     expect(screen.getByText('历史会话内容')).toBeInTheDocument()
     expect(screen.queryByText('编程项目列表')).toBeNull()
@@ -99,7 +99,7 @@ describe('HistoryChat 会话参数增量更新', () => {
     emiter.on('openPage', open)
     try {
       onNewChat(true, 'coding-tab', {
-        CodingMode: true,
+        AgentMode: 'coding',
         CodingWorkspaceID: 'project',
         CodingSourceRoots: ['/front', '/back'],
         CodingWorkspaceRoots: ['/worktrees/front', '/back'],
@@ -111,7 +111,7 @@ describe('HistoryChat 会话参数增量更新', () => {
       expect(JSON.parse(open.mock.calls[0][0]).params.aiAgentPageInfo.session).toMatchObject({
         isDraftSession: true,
         StartParams: {
-          CodingMode: true,
+          AgentMode: 'coding',
           CodingWorkspaceID: 'project',
           CodingWorkingDirectory: '/front',
           CodingWorkspaceRoots: ['/front', '/back'],

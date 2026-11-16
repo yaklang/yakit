@@ -364,7 +364,7 @@ describe('AIAgent 配置广播', () => {
       ipc.prepareWelcomeStore = true
       const setting = {
         ...AIAgentSettingDefault,
-        CodingMode: true,
+        AgentMode: 'coding',
         CodingWorkspaceID: 'project',
         CodingWorkingDirectory: '/frontend',
         CodingSourceRoots: ['/frontend', '/backend'],
@@ -381,6 +381,29 @@ describe('AIAgent 配置广播', () => {
       expect(screen.getByTestId('welcome-session')).toHaveTextContent(draft.SessionID)
     },
   )
+
+  it.each([true, false])('恢复旧 Coding 会话时先迁移模式再应用安全默认值，草稿：%s', async (draft) => {
+    const legacy = {
+      CodingMode: true,
+      CodingWorkspaceID: 'legacy-project',
+      CodingWorkingDirectory: '/legacy',
+    }
+    const session = {
+      ...createWelcomeChat(),
+      SessionID: 'legacy-coding',
+      isDraftSession: draft,
+      ...(draft ? { StartParams: legacy } : {}),
+    }
+    querySessionMock.mockResolvedValue(sessionResponse([{ ...session, StartParams: legacy }]))
+    render(<AIAgent pageId="legacy-tab" initialSession={session} />)
+    await waitFor(() =>
+      expect(JSON.parse(screen.getByTestId('setting').textContent!)).toMatchObject({
+        AgentMode: 'coding',
+        CodingWorkspaceID: 'legacy-project',
+      }),
+    )
+    expect(legacy).not.toHaveProperty('AgentMode')
+  })
 
   it.each([false, true])('子组件创建默认会话后欢迎页仍读取缓存（StrictMode=%s）', async (reactStrictMode) => {
     ipc.prepareWelcomeStore = true
@@ -1418,7 +1441,7 @@ describe('AIAgent 配置广播', () => {
     if (pending) ipc.pendingChat = { status: 'connecting', streamToken: 'coding-stream' }
     const original = {
       ...AIAgentSettingDefault,
-      CodingMode: true,
+      AgentMode: 'coding',
       CodingWorkspaceID: 'project',
       CodingWorktreeID: 'worktree',
       CodingWorkingDirectory: '/trees/project',
@@ -1431,7 +1454,7 @@ describe('AIAgent 配置广播', () => {
     data.request = cloneDeep(original)
     data.store.setState({ execute: true })
     render(<AIAgent pageId="test" initialSession={session} />)
-    await waitFor(() => expect(JSON.parse(screen.getByTestId('setting').textContent!).CodingMode).toBe(true))
+    await waitFor(() => expect(JSON.parse(screen.getByTestId('setting').textContent!).AgentMode).toBe('coding'))
     vi.mocked(globalSessionEngine.updateSessionConfig).mockClear()
     const open = vi.fn()
     emiter.on('openPage', open)

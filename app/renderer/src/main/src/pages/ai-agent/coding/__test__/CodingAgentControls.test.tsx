@@ -140,7 +140,7 @@ describe('session environment', () => {
   it.each(['local', 'remote'] as const)('uses local folders even with the %s connection mode', async (mode) => {
     setExperimentalCoding(true)
     SystemInfo.mode = mode
-    mocks.setting = { CodingMode: true }
+    mocks.setting = { AgentMode: 'coding' }
     mocks.chooseFolders.mockResolvedValue({ filePaths: ['/frontend', '/backend'] })
     mocks.create.mockResolvedValue(one)
     render(<CodingSessionControls />)
@@ -157,7 +157,7 @@ describe('session environment', () => {
   })
   it('keeps canceled folder selection empty and lets the last folder be removed', async () => {
     setExperimentalCoding(true)
-    mocks.setting = { CodingMode: true }
+    mocks.setting = { AgentMode: 'coding' }
     mocks.chooseFolders
       .mockResolvedValueOnce({ canceled: true, filePaths: [] })
       .mockResolvedValueOnce({ canceled: false, filePaths: ['/frontend'] })
@@ -178,7 +178,7 @@ describe('session environment', () => {
   })
   it('searches and selects a project directly without opening worktree management', async () => {
     setExperimentalCoding(true)
-    mocks.setting = { CodingMode: true, CodingWorkspaceID: 'one', CodingWorktreeID: 'old-tree' }
+    mocks.setting = { AgentMode: 'coding', CodingWorkspaceID: 'one', CodingWorktreeID: 'old-tree' }
     const composerKeyDown = vi.fn()
     render(
       <div onKeyDown={composerKeyDown}>
@@ -204,7 +204,7 @@ describe('session environment', () => {
   })
   it('creates a project from the picker and selects it for the draft', async () => {
     setExperimentalCoding(true)
-    mocks.setting = { CodingMode: true }
+    mocks.setting = { AgentMode: 'coding' }
     mocks.create.mockResolvedValue(one)
     mocks.chooseFolders.mockResolvedValue({ filePaths: ['/front'] })
     render(<CodingSessionControls />)
@@ -223,7 +223,7 @@ describe('session environment', () => {
   it('allows a draft with a reserved session ID to choose its mode, project and new worktree', async () => {
     setExperimentalCoding(true)
     mocks.activeChat = { SessionID: 'draft', isDraftSession: true }
-    mocks.setting = { CodingMode: true, CodingWorkspaceID: 'one' }
+    mocks.setting = { AgentMode: 'coding', CodingWorkspaceID: 'one' }
     render(
       <>
         <CodingAgentControls />
@@ -242,7 +242,7 @@ describe('session environment', () => {
   it('loads the server binding when a reserved draft becomes a started session with the same ID', async () => {
     setExperimentalCoding(true)
     mocks.activeChat = { SessionID: 'draft', isDraftSession: true }
-    mocks.setting = { CodingMode: true, CodingWorkspaceID: 'one' }
+    mocks.setting = { AgentMode: 'coding', CodingWorkspaceID: 'one' }
     mocks.sessions.mockResolvedValue({
       Data: [
         {
@@ -269,7 +269,7 @@ describe('session environment', () => {
   })
   it('keeps project management accessible but prevents rebinding a started session', async () => {
     setExperimentalCoding(true)
-    mocks.setting = { CodingMode: true, CodingWorkspaceID: 'one' }
+    mocks.setting = { AgentMode: 'coding', CodingWorkspaceID: 'one' }
     mocks.activeChat = { SessionID: 'started' }
     render(<CodingSessionControls />)
     fireEvent.click(await screen.findByRole('button', { name: 'Project One' }))
@@ -290,7 +290,7 @@ describe('session environment', () => {
     act(() => setExperimentalCoding(true))
     fireEvent.click(screen.getByText('coding'))
     expect(mocks.setSetting.mock.calls[0][0]).toMatchObject({
-      CodingMode: true,
+      AgentMode: 'coding',
       CodingWorkspaceID: '',
       CodingWorktreeID: '',
       CodingCreateWorktree: false,
@@ -303,7 +303,7 @@ describe('session environment', () => {
       mocks.activeChat = { SessionID: 'coding-session', isDraftSession: status !== 'started' }
       if (status !== 'started') mocks.pendingChat = { status }
       const original = {
-        CodingMode: true,
+        AgentMode: 'coding',
         CodingWorkspaceID: 'one',
         CodingWorktreeID: 'tree-one',
         CodingWorkingDirectory: '/trees/one',
@@ -323,7 +323,7 @@ describe('session environment', () => {
       })
       expect(mocks.setSetting).not.toHaveBeenCalled()
       expect(mocks.setActiveChat).not.toHaveBeenCalled()
-      expect(original).toMatchObject({ CodingMode: true, CodingWorktreeID: 'tree-one', CodingCreateWorktree: true })
+      expect(original).toMatchObject({ AgentMode: 'coding', CodingWorktreeID: 'tree-one', CodingCreateWorktree: true })
     },
   )
 
@@ -337,14 +337,14 @@ describe('session environment', () => {
     expect(mocks.openChat).toHaveBeenCalledWith(
       expect.objectContaining({
         isDraftSession: true,
-        StartParams: { ...emptyCodingBinding, CodingMode: true },
+        StartParams: { ...emptyCodingBinding, AgentMode: 'coding' },
       }),
     )
   })
 
   it('configures creation without calling a worktree creation RPC', async () => {
     setExperimentalCoding(true)
-    mocks.setting = { CodingMode: true, CodingWorkspaceID: 'one', CodingWorktreeID: 'previous' }
+    mocks.setting = { AgentMode: 'coding', CodingWorkspaceID: 'one', CodingWorktreeID: 'previous' }
     render(
       <>
         <CodingAgentControls />
@@ -367,7 +367,7 @@ describe('session environment', () => {
   it('disables isolation for a non-Git primary even if a secondary root is Git', async () => {
     setExperimentalCoding(true)
     mocks.query.mockResolvedValue({ Data: [{ ...one, IsGit: false }] })
-    mocks.setting = { CodingMode: true, CodingWorkspaceID: 'one' }
+    mocks.setting = { AgentMode: 'coding', CodingWorkspaceID: 'one' }
     render(
       <>
         <CodingAgentControls />
@@ -381,7 +381,7 @@ describe('session environment', () => {
 
   it('opens a searchable second panel, selects a real ref, and returns to the environment', async () => {
     setExperimentalCoding(true)
-    mocks.setting = { CodingMode: true, CodingWorkspaceID: 'one', CodingCreateWorktree: true }
+    mocks.setting = { AgentMode: 'coding', CodingWorkspaceID: 'one', CodingCreateWorktree: true }
     const { rerender } = render(<CodingSessionControls />)
     await screen.findByText('Project One')
     fireEvent.click(screen.getByRole('button', { name: 'CodingAgent.configureEnvironment' }))
@@ -410,7 +410,7 @@ describe('session environment', () => {
   })
   it('displays branch query errors and permits retry', async () => {
     setExperimentalCoding(true)
-    mocks.setting = { CodingMode: true, CodingWorkspaceID: 'one' }
+    mocks.setting = { AgentMode: 'coding', CodingWorkspaceID: 'one' }
     mocks.branches.mockRejectedValueOnce(new Error('Engine unavailable'))
     render(<CodingSessionControls />)
     await screen.findByText('Project One')
@@ -422,7 +422,7 @@ describe('session environment', () => {
   })
   it('does not show a late branch response from the previous workspace', async () => {
     setExperimentalCoding(true)
-    mocks.setting = { CodingMode: true, CodingWorkspaceID: 'one', CodingCreateWorktree: true }
+    mocks.setting = { AgentMode: 'coding', CodingWorkspaceID: 'one', CodingCreateWorktree: true }
     let resolve!: (value: any) => void
     mocks.branches.mockImplementationOnce(
       () =>
@@ -441,7 +441,7 @@ describe('session environment', () => {
     expect(screen.queryByRole('checkbox', { name: 'CodingAgent.newWorktree' })).toBeNull()
   })
   it('keeps history visible after opt-out and hydrates the resolved server binding', async () => {
-    mocks.setting = { CodingMode: true, CodingWorkspaceID: 'one', CodingCreateWorktree: true }
+    mocks.setting = { AgentMode: 'coding', CodingWorkspaceID: 'one', CodingCreateWorktree: true }
     mocks.activeChat = { SessionID: 'history' }
     mocks.sessions.mockResolvedValue({
       Data: [
@@ -660,7 +660,7 @@ describe('edited project bindings', () => {
   it('refreshes draft roots after a project edit and clears a stale branch selection', async () => {
     setExperimentalCoding(true)
     mocks.setting = {
-      CodingMode: true,
+      AgentMode: 'coding',
       CodingWorkspaceID: 'one',
       CodingSourceRoots: one.RootPaths,
       CodingCreateWorktree: true,
@@ -686,7 +686,7 @@ describe('edited project bindings', () => {
     setExperimentalCoding(true)
     mocks.activeChat = { SessionID: 'started' }
     mocks.setting = {
-      CodingMode: true,
+      AgentMode: 'coding',
       CodingWorkspaceID: 'one',
       CodingSourceRoots: ['/old/root'],
       CodingWorktreeID: 'existing-tree',
@@ -707,7 +707,7 @@ describe('edited project bindings', () => {
 it('shows the original source directory when starting a chat in an existing worktree', async () => {
   setExperimentalCoding(true)
   mocks.setting = {
-    CodingMode: true,
+    AgentMode: 'coding',
     CodingWorkspaceID: 'one',
     CodingWorktreeID: 'tree',
     CodingSourceRoots: ['/original/root'],

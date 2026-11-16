@@ -1,7 +1,9 @@
+import { getAgentMode } from '../agentMode'
 import type { AIStartParams } from '@/pages/ai-re-act/hooks/grpcApi'
 import type { CodingSession, CodingWorkspace, CodingWorktree } from './api'
 
 export const codingBindingKeys = [
+  'AgentMode',
   'CodingMode',
   'CodingWorkspaceID',
   'CodingWorkingDirectory',
@@ -13,6 +15,8 @@ export const codingBindingKeys = [
 ] as const
 
 export const emptyCodingBinding = {
+  AgentMode: 'security',
+  // Clear a legacy flag when resetting a draft; AgentMode remains authoritative.
   CodingMode: false,
   CodingWorkspaceID: '',
   CodingWorkingDirectory: '',
@@ -31,7 +35,7 @@ export const selectCodingWorkspace = (workspace: CodingWorkspace, worktree?: Cod
   if (worktree) roots[0] = worktree.SourceDirectory
   return {
     ...emptyCodingBinding,
-    CodingMode: true,
+    AgentMode: 'coding',
     CodingWorkspaceID: workspace.ID,
     CodingWorktreeID: worktree?.ID || '',
     CodingWorkingDirectory: worktree?.WorkingDirectory || roots[0],
@@ -42,7 +46,7 @@ export const selectCodingWorkspace = (workspace: CodingWorkspace, worktree?: Cod
 
 export const codingSessionBinding = (session: CodingSession) => ({
   ...emptyCodingBinding,
-  CodingMode: true,
+  AgentMode: 'coding',
   CodingWorkspaceID: session.WorkspaceID,
   CodingWorktreeID: session.WorktreeID,
   CodingWorkingDirectory: session.WorkingDirectory,
@@ -54,7 +58,7 @@ export const codingSessionBinding = (session: CodingSession) => ({
 // the previous session's checkout or its one-shot creation request.
 export const newCodingSessionDraft = (setting: AIStartParams) => ({
   ...emptyCodingBinding,
-  CodingMode: !!setting.CodingMode,
+  AgentMode: getAgentMode(setting),
   CodingWorkspaceID: setting.CodingWorkspaceID || '',
   CodingWorkingDirectory: setting.CodingSourceRoots?.[0] || '',
   CodingSourceRoots: [...(setting.CodingSourceRoots || [])],
@@ -63,7 +67,7 @@ export const newCodingSessionDraft = (setting: AIStartParams) => ({
 
 export const restoreCodingSession = (params?: AIStartParams) => ({
   ...emptyCodingBinding,
-  CodingMode: !!params?.CodingMode,
+  AgentMode: getAgentMode(params),
   CodingWorkspaceID: params?.CodingWorkspaceID || '',
   CodingWorkingDirectory: params?.CodingWorkingDirectory || '',
   CodingWorktreeID: params?.CodingWorktreeID || '',

@@ -1,3 +1,4 @@
+import { isCodingAgent } from '@/pages/ai-agent/agentMode'
 import { memo, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import useAIAgentStore from '../useContext/useStore'
 import useAIAgentDispatcher from '../useContext/useDispatcher'
@@ -133,7 +134,7 @@ export const takePendingOpenForge = () => {
 export const onNewChat = (openNewTab?: boolean, pageId?: string, setting?: AIAgentSetting) => {
   if (openNewTab) {
     openAIAgentChatTab(
-      setting?.CodingMode
+      setting && isCodingAgent(setting)
         ? { ...createWelcomeChat(), StartParams: { ...setting, ...newCodingSessionDraft(setting) } }
         : undefined,
     )
@@ -174,7 +175,7 @@ const HistoryChat = memo(({ aiSource, embedded, title, className }: HistoryChatP
   }, [enableHistorySourceFilter, historySourceFilter])
   const [{ sessions }, dispatcher] = useSessionList(historyQuerySources, historyQueryPlatform)
   const { openChatInNewTab, activeChat, pageId, setting } = useAIAgentStore()
-  const showProjects = !embedded && isGlobalAIAgentHistory && historySourceFilter === 'local' && setting?.CodingMode
+  const showProjects = !embedded && isGlobalAIAgentHistory && historySourceFilter === 'local' && isCodingAgent(setting)
 
   const currentRouteKey = usePageInfo((state) => state.getCurrentPageTabRouteKey(), shallow)
 

@@ -1,3 +1,4 @@
+import { isCodingAgent } from '@/pages/ai-agent/agentMode'
 import React, { useEffect, useState } from 'react'
 import { Alert, Form, Spin, Tooltip } from 'antd'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
@@ -52,7 +53,7 @@ export const CodingAgentControls = () => {
   const { setSetting } = useAIAgentDispatcher()
   const [menuOpen, setMenuOpen] = useState(false)
   const locked = isChatSession(activeChat) || !!pendingChat
-  const coding = !!setting.CodingMode
+  const coding = isCodingAgent(setting)
   useEffect(() => {
     if (!enabled && !locked && coding) setSetting((old) => ({ ...old, ...emptyCodingBinding }))
   }, [enabled, locked, coding, setSetting])
@@ -100,7 +101,11 @@ export const CodingAgentControls = () => {
             onClick: ({ key }) => {
               setMenuOpen(false)
               if ((key === 'coding' && !enabled) || (key === 'coding') === coding) return
-              const nextSetting = { ...setting, ...emptyCodingBinding, CodingMode: key === 'coding' }
+              const nextSetting = {
+                ...setting,
+                ...emptyCodingBinding,
+                AgentMode: key === 'coding' ? 'coding' : 'security',
+              }
               if (locked) {
                 // 保留原会话标签和建联归属，切换后的模式使用独立草稿，原任务继续在后台执行。
                 openAIAgentChatTab({ ...createWelcomeChat(), StartParams: nextSetting })
@@ -131,7 +136,7 @@ export const CodingSessionControls = ({
   const { setting, activeChat, pendingChat } = useAIAgentStore()
   const { setSetting, setActiveChat } = useAIAgentDispatcher()
   const locked = isChatSession(activeChat) || !!pendingChat
-  const coding = !!setting.CodingMode
+  const coding = isCodingAgent(setting)
   const [pickerOpen, setPickerOpen] = useState(false)
   const [creating, setCreating] = useState(false)
   const [search, setSearch] = useState('')
@@ -316,7 +321,7 @@ export const CodingSessionControls = ({
                     type="button"
                     className={styles.pickerRow}
                     onClick={() => {
-                      setSetting((old) => ({ ...old, ...emptyCodingBinding, CodingMode: true }))
+                      setSetting((old) => ({ ...old, ...emptyCodingBinding, AgentMode: 'coding' }))
                       setPickerOpen(false)
                     }}
                   >

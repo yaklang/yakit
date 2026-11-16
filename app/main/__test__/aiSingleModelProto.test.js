@@ -85,9 +85,22 @@ describe('script providers and global controls gRPC contract', () => {
 })
 
 describe('experimental coding gRPC contract', () => {
+  it('keeps the old boolean wire field separate from the extensible mode', () => {
+    const start = ypb.Yak.service.StartAIReAct
+    for (const params of [
+      { AgentMode: 'security', CodingMode: true },
+      { AgentMode: 'coding', CodingMode: false },
+      { CodingMode: true },
+    ]) {
+      expect(start.requestDeserialize(start.requestSerialize({ IsStart: true, Params: params })).Params).toMatchObject(
+        params,
+      )
+    }
+  })
+
   it('round-trips mode and workspace binding in starts and history', () => {
     const binding = {
-      CodingMode: true,
+      AgentMode: 'coding',
       CodingWorkspaceID: 'workspace-one',
       CodingWorkingDirectory: '/source/tree',
       CodingCreateWorktree: true,

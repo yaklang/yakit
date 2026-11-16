@@ -1,3 +1,4 @@
+import { isCodingAgent } from '@/pages/ai-agent/agentMode'
 import { isExperimentalCodingEnabled } from '@/pages/ai-agent/coding/experimentalCodingStore'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { yakitNotify } from '@/utils/notification'
@@ -38,7 +39,7 @@ export function useStartAIChat({
     // 提交时读取最新配置并组装本次请求，避免后续切换页面改变请求参数的取值来源。
     const source = getSetting().Source ?? AISourceEnum.aiAgent
     const formattedSetting = formatAIAgentSetting(getSetting())
-    if (isNew && formattedSetting.CodingMode) {
+    if (isNew && isCodingAgent(formattedSetting)) {
       if (!isExperimentalCodingEnabled()) {
         yakitNotify('info', t('CodingAgent.disabled'))
         return false
@@ -62,7 +63,7 @@ export function useStartAIChat({
     request.PreferSessionCachedConfig = !isNew
     if (isNew) {
       request.Attach = false
-      if (request.CodingMode) {
+      if (isCodingAgent(request)) {
         // The engine resolves directories at startup. Draft paths are display-only.
         request.CodingWorkingDirectory = ''
         request.CodingWorkspaceRoots = []

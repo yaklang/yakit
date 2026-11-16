@@ -29,7 +29,7 @@ describe('coding navigation', () => {
     const draft = mocks.openChat.mock.calls[0][0]
     expect(draft.isDraftSession).toBe(true)
     expect(draft.StartParams).toMatchObject({
-      CodingMode: true,
+      AgentMode: 'coding',
       CodingWorkspaceID: 'workspace',
       CodingWorkingDirectory: '/front',
       CodingWorkspaceRoots: ['/front', '/back'],

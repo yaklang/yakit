@@ -1,3 +1,4 @@
+import { isCodingAgent } from '@/pages/ai-agent/agentMode'
 import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import type { AIChatWelcomeProps } from './type'
 import styles from './AIChatWelcome.module.scss'
@@ -37,7 +38,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
     const { t } = useI18nNamespaces(['aiAgent'])
     const { onTriageSubmit } = props
     const { setting } = useAIAgentStore()
-    const coding = !!setting.CodingMode
+    const coding = isCodingAgent(setting)
     const [codingWorkspace, setCodingWorkspace] = useState<CodingWorkspace>()
     const aiChatTextareaRef = useRef<AIChatTextareaRefProps>({
       setMention: () => {},

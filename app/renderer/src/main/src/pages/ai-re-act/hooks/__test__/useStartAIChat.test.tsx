@@ -219,7 +219,7 @@ describe('submission identity', () => {
 
 describe('coding startup gate', () => {
   it('rejects new coding sessions when the experiment is off or the workspace is missing', () => {
-    Object.assign(mocks.setting, { CodingMode: true })
+    Object.assign(mocks.setting, { AgentMode: 'coding' })
     const { result } = renderHook(() => useStartAIChat())
     expect(result.current({ qs: 'implement', target: { kind: 'new', sessionId: 'coding-new' } })).toBe(false)
     act(() => setExperimentalCoding(true))
@@ -227,7 +227,7 @@ describe('coding startup gate', () => {
     expect(mocks.onStart).not.toHaveBeenCalled()
   })
   it('sends the selected binding and resumes existing coding sessions after opt-out', () => {
-    const binding = { CodingMode: true, CodingWorkspaceID: 'workspace-one', CodingWorkingDirectory: '/source/tree' }
+    const binding = { AgentMode: 'coding', CodingWorkspaceID: 'workspace-one', CodingWorkingDirectory: '/source/tree' }
     Object.assign(mocks.setting, binding)
     const { result } = renderHook(() => useStartAIChat())
     act(() => setExperimentalCoding(true))
@@ -246,7 +246,7 @@ describe('coding startup gate', () => {
 it('passes the worktree creation intent only on first startup and leaves effective roots to the engine', () => {
   setExperimentalCoding(true)
   Object.assign(mocks.setting, {
-    CodingMode: true,
+    AgentMode: 'coding',
     CodingWorkspaceID: 'workspace-one',
     CodingCreateWorktree: true,
     CodingWorktreeBaseRef: 'release',
