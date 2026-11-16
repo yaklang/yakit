@@ -172,6 +172,15 @@ describe('FuzzerRequestToolbar while loading history', () => {
     expect(onSend).not.toHaveBeenCalled()
   })
 
+  it('allows cancelling history loading without enabling send or pause', () => {
+    const onCancel = vi.fn()
+    renderToolbar({ loading: true, loadingHistory: true, onCancel })
+    fireEvent.click(screen.getByRole('button', { name: 'HTTPFuzzerPage.cancelLoading' }))
+    expect(onCancel).toHaveBeenCalledOnce()
+    expect(screen.getByRole('button', { name: /YakitButton.sendRequest/ })).toBeDisabled()
+    expect(screen.queryByRole('button', { name: 'YakitButton.pause' })).toBeNull()
+  })
+
   it('shows pause and stop while a request is in flight', () => {
     renderToolbar({ loading: true, loadingHistory: false, cachedTotal: 2 })
     expect(screen.getByRole('button', { name: 'YakitButton.pause' })).toBeEnabled()

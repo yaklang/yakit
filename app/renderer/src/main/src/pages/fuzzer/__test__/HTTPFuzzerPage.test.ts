@@ -55,7 +55,14 @@ const streamEffect = findOne(
     ts.isExpressionStatement(node) &&
     ts.isCallExpression(node.expression) &&
     node.expression.expression.getText(source) === 'useEffect' &&
-    node.getText(source).includes('const dataToken = `${token}-data`'),
+    node.getText(source).includes('streamCleanupRef.current = undefined'),
+)
+const streamRegistration = findOne(
+  (node) =>
+    ts.isVariableStatement(node) &&
+    node.declarationList.declarations.some(
+      (declaration) => declaration.name.getText(source) === 'registerHTTPFuzzerStream',
+    ),
 )
 const buildHistoryQueryParamsDecl = findOne(
   (node) =>
@@ -72,13 +79,13 @@ const addListResponseBytesDecl = findOne(
     ),
 )
 const executable = ts.transpileModule(
-  [buildHistoryQueryParamsDecl, ...declarations, addListResponseBytesDecl, streamEffect].join('\n'),
+  [buildHistoryQueryParamsDecl, ...declarations, addListResponseBytesDecl, streamRegistration, streamEffect].join('\n'),
   {
     compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None },
   },
 ).outputText
 
-const setup = () => {
+const setup = (deferStreamEffect = false) => {
   const ipc = new EventEmitter()
   const invoke = vi.fn(async (channel: string): Promise<any> => {
     if (channel === 'GetHistoryHTTPFuzzerTask') return { OriginRequest: { Request: 'GET /history' } }
@@ -87,7 +94,7 @@ const setup = () => {
   let tokenSequence = 0
   let firstResponse: any = { RequestRaw: [] }
   let cleanup: () => void = () => {}
-  let streamEffectFn: () => () => void = () => () => {}
+  let pendingStreamEffect: (() => void) | undefined
   const bindings: Record<string, any> = {
     _,
     createHTTPFuzzerRun,
@@ -98,17 +105,12 @@ const setup = () => {
     props: { id: 'page' },
     useMemoizedFn: (fn: unknown) => fn,
     useEffect: (fn: () => () => void) => {
-      streamEffectFn = fn
-      cleanup = fn()
+      const commitEffect = () => {
+        cleanup = fn()
+      }
+      if (deferStreamEffect) pendingStreamEffect = commitEffect
+      else commitEffect()
     },
-    // 模拟 token 变化驱动 effect 重挂：先走旧清理（摘旧监听/cancel 旧流/dispose 旧 run），再按新 token 重挂
-    setStreamToken: (value: string) => {
-      tokenRef.current = value
-      cleanup()
-      cleanup = streamEffectFn()
-    },
-    // effect 依赖数组的自由变量，值本身不被使用
-    streamToken: 'test-token',
     ipcRenderer: Object.assign(ipc, { invoke }),
     emptyFuzzer: { RequestRaw: [] },
     setFirstResponse: vi.fn((value) => {
@@ -162,6 +164,7 @@ const setup = () => {
   }
   const refs = {
     streamRunRef: null,
+    streamCleanupRef: undefined,
     tokenRef,
     taskIDRef: '',
     runtimeIdRef: '',
@@ -208,7 +211,21 @@ const setup = () => {
     )
   const emitError = (details = 'stream failed') => ipc.emit(`${token()}-error`, {}, details)
   const emitEnd = () => ipc.emit(`${token()}-end`)
-  return { api, bindings, ipc, invoke, send, emitError, emitEnd, token, dispose: () => cleanup() }
+  return {
+    api,
+    bindings,
+    ipc,
+    invoke,
+    send,
+    emitError,
+    emitEnd,
+    token,
+    flushStreamEffect: () => {
+      pendingStreamEffect?.()
+      pendingStreamEffect = undefined
+    },
+    dispose: () => cleanup(),
+  }
 }
 
 describe('HTTPFuzzerPage real IPC control paths', () => {
@@ -216,6 +233,116 @@ describe('HTTPFuzzerPage real IPC control paths', () => {
   afterEach(() => {
     vi.clearAllTimers()
     vi.useRealTimers()
+  })
+
+  it.each(['end', 'error'])('finishes a fast history %s before React runs effects', async (terminal) => {
+    const { api, bindings: b, invoke, ipc, token, flushStreamEffect, dispose } = setup(true)
+    invoke.mockImplementation(async (channel: string) => {
+      if (channel === 'QueryHistoryHTTPFuzzerTaskEx') return { Data: [{ BasicInfo: { Id: 7 } }], Total: 1 }
+      if (channel === 'GetHistoryHTTPFuzzerTask') return { OriginRequest: { Request: 'GET /history' } }
+      if (channel === 'HTTPFuzzer') {
+        // 主进程可以在新 token 的 passive effect 提交之前结束本地历史回放。
+        void Promise.resolve().then(() => ipc.emit(`${token()}-${terminal}`, {}, 'history failed'))
+      }
+    })
+    api.getList(1)
+    await Promise.resolve()
+    await Promise.resolve()
+    flushStreamEffect()
+    await vi.runAllTimersAsync()
+    expect(b.setLoadingHistory).toHaveBeenLastCalledWith(false)
+    expect(b.setLoading).toHaveBeenLastCalledWith(false)
+    expect(b.setIsPause).toHaveBeenLastCalledWith(true)
+    dispose()
+  })
+
+  it('keeps a fast failed history response before React runs effects', async () => {
+    const { api, bindings: b, invoke, send, emitEnd, flushStreamEffect, dispose } = setup(true)
+    invoke.mockImplementation(async (channel: string) => {
+      if (channel === 'GetHistoryHTTPFuzzerTask') return { OriginRequest: { Request: 'GET /history' } }
+      if (channel === 'HTTPFuzzer') {
+        void Promise.resolve().then(() => {
+          send('failed-history', false)
+          emitEnd()
+        })
+      }
+    })
+    api.loadHistory(7)
+    await Promise.resolve()
+    flushStreamEffect()
+    await vi.runAllTimersAsync()
+    expect(b.failedFuzzerRef.current.map((row: any) => row.UUID)).toEqual(['failed-history'])
+    expect(b.setLoadingHistory).toHaveBeenLastCalledWith(false)
+    dispose()
+  })
+
+  it('cancels a pending history list query and ignores its late result after a fresh send', async () => {
+    const { api, bindings: b, invoke, emitEnd, dispose } = setup()
+    // 上一个 run 已结束，finish(cancel) 本身不会再次调用 onEnd。
+    api.submitToHTTPFuzzer()
+    emitEnd()
+    await vi.runAllTimersAsync()
+    let resolveList: (value: unknown) => void = () => {}
+    invoke.mockImplementation((channel: string) =>
+      channel === 'QueryHistoryHTTPFuzzerTaskEx'
+        ? new Promise((resolve) => {
+            resolveList = resolve
+          })
+        : Promise.resolve(undefined),
+    )
+    api.getList(1)
+    await api.cancelCurrentHTTPFuzzer()
+    expect(b.setLoadingHistory).toHaveBeenLastCalledWith(false)
+    expect(b.setLoading).toHaveBeenLastCalledWith(false)
+    api.submitToHTTPFuzzer()
+    resolveList({ Data: [{ BasicInfo: { Id: 7 } }], Total: 1 })
+    await vi.runAllTimersAsync()
+    expect(invoke).not.toHaveBeenCalledWith('HTTPFuzzer', { HistoryWebFuzzerId: 7 }, expect.any(String))
+    expect(b.setLoading).toHaveBeenLastCalledWith(true)
+    dispose()
+  })
+
+  it('does not unlock a newer history load when a cancelled list query rejects late', async () => {
+    const { api, bindings: b, invoke, dispose } = setup()
+    let rejectList: (error: Error) => void = () => {}
+    invoke.mockImplementation((channel: string) =>
+      channel === 'QueryHistoryHTTPFuzzerTaskEx'
+        ? new Promise((_resolve, reject) => {
+            rejectList = reject
+          })
+        : Promise.resolve({ OriginRequest: { Request: 'GET /new-history' } }),
+    )
+    api.getList(1)
+    await api.cancelCurrentHTTPFuzzer()
+    api.loadHistory(8)
+    rejectList(new Error('late query failure'))
+    await vi.runAllTimersAsync()
+    expect(b.setLoadingHistory).toHaveBeenLastCalledWith(true)
+    expect(b.setLoading).toHaveBeenLastCalledWith(true)
+    expect(b.failed).not.toHaveBeenCalled()
+    dispose()
+  })
+
+  it('ignores pending history details and releases stream listeners after unmount', async () => {
+    const { api, bindings: b, invoke, ipc, token, dispose } = setup()
+    let resolveDetails: (value: unknown) => void = () => {}
+    invoke.mockImplementation((channel: string) =>
+      channel === 'GetHistoryHTTPFuzzerTask'
+        ? new Promise((resolve) => {
+            resolveDetails = resolve
+          })
+        : Promise.resolve(undefined),
+    )
+    api.loadHistory(7)
+    await Promise.resolve()
+    const activeToken = token()
+    dispose()
+    resolveDetails({ OriginRequest: { Request: 'GET /late-history' } })
+    await vi.runAllTimersAsync()
+    expect(b.refreshRequest).not.toHaveBeenCalled()
+    expect(b.setCurrentSelectId).not.toHaveBeenCalledWith(7)
+    expect(invoke).toHaveBeenCalledWith('cancel-HTTPFuzzer', activeToken)
+    for (const event of ['data', 'error', 'end']) expect(ipc.listenerCount(`${activeToken}-${event}`)).toBe(0)
   })
 
   it('publishes gateway selection and removal to the shared cache immediately', () => {
@@ -974,9 +1101,8 @@ const setupRestoreFlow = (
     },
     ipcRenderer: { invoke },
     randomString: () => `token-${++tokenSequence}`,
-    setStreamToken: (value: string) => {
-      tokenRef.current = value
-    },
+    registerHTTPFuzzerStream: vi.fn(() => () => {}),
+    streamCleanupRef: { current: undefined },
     emptyFuzzer: { RequestRaw: [] },
     setFirstResponse: vi.fn(),
     setLoading: vi.fn(),
