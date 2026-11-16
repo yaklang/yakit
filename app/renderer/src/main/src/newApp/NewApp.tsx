@@ -7,7 +7,14 @@ import type { API } from '@/services/swagger/resposeType'
 import { useGoogleChromePluginPath, useStore, useYakitDynamicStatus } from '@/store'
 import { refreshToken } from '@/utils/login'
 import UILayout from '@/components/layout/UILayout'
-import { getReleaseEditionName, getRemoteHttpSettingGV, isCommunityEdition, isIRify, isMemfit } from '@/utils/envfile'
+import {
+  getReleaseEditionName,
+  getRemoteHttpSettingGV,
+  isCommunityEdition,
+  isEnpriTrace,
+  isIRify,
+  isMemfit,
+} from '@/utils/envfile'
 import { RemoteGV } from '@/yakitGV'
 import { coordinate, setChartsColorList } from '@/pages/globalVariable'
 import { remoteOperation } from '@/pages/dynamicControl/remoteOperation'
@@ -21,6 +28,7 @@ import { useUploadInfoByEnpriTrace } from '@/components/layout/utils'
 import emiter from '@/utils/eventBus/eventBus'
 import { JSONParseLog } from '@/utils/tool'
 import { debugToPrintLogs } from '@/utils/logCollection'
+import { clearOnlineAIGlobalConfig } from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
 import { yakitApp, yakitProfile, yakitSocket } from '@/services/electronBridge'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
@@ -138,6 +146,9 @@ function NewApp() {
 
   /** yaklang引擎 连接成功后的配置事件 */
   const linkSuccess = () => {
+    if (isEnpriTrace() && !useStore.getState().userInfo.isLogin) {
+      void clearOnlineAIGlobalConfig().catch((error) => failed(String(error)))
+    }
     testYak()
   }
 

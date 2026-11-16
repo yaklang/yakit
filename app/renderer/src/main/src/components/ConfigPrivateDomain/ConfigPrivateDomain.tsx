@@ -20,7 +20,6 @@ import { useUploadInfoByEnpriTrace } from '../layout/utils'
 import { JSONParseLog } from '@/utils/tool'
 import { yakitAuth, yakitCodec, yakitProfile, yakitUILayout } from '@/services/electronBridge'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
 
 import { InformationCircleOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { ENTERPRISE_DEFAULT_PRIVATE_DOMAIN, resolvePrivateDomainDefault } from './privateDomainDefault'
@@ -78,7 +77,6 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
   }
   // 企业登录
   const [uploadProjectEvent] = useUploadInfoByEnpriTrace()
-  const [, aiGlobalConfigEvent] = useAIGlobalConfig()
   const loginUser = useMemoizedFn(async () => {
     const { user_name, pwd } = getFormValue()
     try {
@@ -101,8 +99,8 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
         wechatHeadImg: res.from_platform === 'wechat' ? res.head_img : null,
         qqName: res.from_platform === 'qq' ? res.name : null,
         qqHeadImg: res.from_platform === 'qq' ? res.head_img : null,
-        companyName: res.from_platform === 'company' ? res.name : null,
-        companyHeadImg: res.from_platform === 'company' ? res.head_img : null,
+        companyName: ['company', 'ccb'].includes(res.from_platform) ? res.name : null,
+        companyHeadImg: ['company', 'ccb'].includes(res.from_platform) ? res.head_img : null,
         role: res.role,
         user_id: res.user_id,
         token: res.token,
@@ -118,9 +116,6 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
           isUploadSyncData: true,
           isUpdateGlobalConfig: enterpriseLogin,
         })
-      }
-      if (systemConfig?.length) {
-        await aiGlobalConfigEvent.getAIGlobalConfigAfterLogin(systemConfig)
       }
       // 首次登录强制修改密码
       if (!res.loginTime) {
@@ -183,16 +178,10 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
           setRemoteValue(getRemoteHttpSettingGV(), JSON.stringify(values))
         }
 
-        uploadProjectEvent
-          .startUpload({
-            isAutoUploadProject: true,
-            isUpdateGlobalConfig: enterpriseLogin,
-          })
-          .then(async (systemConfig) => {
-            if (systemConfig?.length) {
-              await aiGlobalConfigEvent.getAIGlobalConfigAfterLogin(systemConfig)
-            }
-          })
+        uploadProjectEvent.startUpload({
+          isAutoUploadProject: true,
+          isUpdateGlobalConfig: enterpriseLogin,
+        })
       })
       .catch((e: any) => {
         // !enterpriseLogin && setTimeout(() => setLoading(false), 300)

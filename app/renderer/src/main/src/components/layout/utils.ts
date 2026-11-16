@@ -13,6 +13,7 @@ import { useMemoizedFn } from 'ahooks'
 import omit from 'lodash/omit'
 import { yakitProject, yakitUpload } from '@/services/electronBridge'
 import i18n from '@/i18n/i18n'
+import { syncOnlineAIGlobalConfig } from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
 const tOriginal = i18n.getFixedT(null, 'layout')
 
 /** @name 处理进度条数据(防止异常数据) */
@@ -40,11 +41,12 @@ export const safeFormatDownloadProcessState = (state: DownloadingState) => {
   }
 }
 
-export const apiSystemConfig: APINoRequestFunc<API.SystemConfigResponse> = (hiddenError) => {
+export const apiSystemConfig = (hiddenError?: boolean, forClient = false): Promise<API.SystemConfigResponse> => {
   return new Promise((resolve, reject) => {
-    NetWorkApi<null, API.SystemConfigResponse>({
+    NetWorkApi<{ forClient: boolean }, API.SystemConfigResponse>({
       method: 'get',
       url: 'system/config',
+      ...(forClient ? { params: { forClient: true } } : {}),
     })
       .then(resolve)
       .catch((e) => {
@@ -145,8 +147,14 @@ export const useUploadInfoByEnpriTrace = () => {
       // 退出登录不需要去中止正在上传的项目；线上接口会抛错；因为循环跑接口，所以抛错信息很能很多(已告知产品)
       if (isLogin) {
         try {
-          const config = await apiSystemConfig(true)
-          const data = config.data || []
+          const data = await syncOnlineAIGlobalConfig(
+            () => apiSystemConfig(true, true),
+            () => {
+              const current = useStore.getState().userInfo
+              return current.isLogin && current.token === token
+            },
+          )
+          if (!data) return undefined
           setEeSystemConfig([...data])
           let autoUploadProjectParams = {
             isOpen: false,
@@ -179,8 +187,9 @@ export const useUploadInfoByEnpriTrace = () => {
             emiter.emit('autoUploadProject', JSON.stringify(autoUploadProjectParams))
           }
           return data
-        } catch {
+        } catch (error) {
           setEeSystemConfig([])
+          yakitNotify('error', tOriginal('LayoutUtils.apiSystemConfigFailed', { error: String(error) }))
           return undefined
         }
       }

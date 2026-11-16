@@ -2,17 +2,21 @@ import { act, renderHook } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useEeSystemConfig, useStore } from '@/store'
 import type { UserInfoProps } from '@/store'
-import { useUploadInfoByEnpriTrace } from '../utils'
+import { apiSystemConfig, useUploadInfoByEnpriTrace } from '../utils'
 
 const mocks = vi.hoisted(() => ({
   netWorkApi: vi.fn(),
   aboutLoginUpload: vi.fn(),
   loginHTTPFlowsToOnline: vi.fn(),
   updateGlobalNetworkConfig: vi.fn(),
+  enterprise: true,
 }))
 
 vi.mock('@/services/fetch', () => ({ NetWorkApi: mocks.netWorkApi }))
-vi.mock('@/utils/envfile', () => ({ isEnpriTrace: () => true }))
+vi.mock('@/utils/envfile', () => ({ isEnpriTrace: () => mocks.enterprise }))
+vi.mock('@/pages/ai-re-act/hooks/useAIGlobalConfig', () => ({
+  syncOnlineAIGlobalConfig: async (fetchConfig) => (await fetchConfig()).data,
+}))
 vi.mock('@/utils/login', () => ({
   aboutLoginUpload: mocks.aboutLoginUpload,
   loginHTTPFlowsToOnline: mocks.loginHTTPFlowsToOnline,
@@ -40,6 +44,7 @@ const loggedOutUserInfo = (): UserInfoProps => ({
 describe('useUploadInfoByEnpriTrace 登录态读取', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mocks.enterprise = true
     useStore.getState().setStoreUserInfo(loggedOutUserInfo())
     useEeSystemConfig.setState({ eeSystemConfig: [] })
   })
@@ -55,7 +60,7 @@ describe('useUploadInfoByEnpriTrace 登录态读取', () => {
       await startUpload({ isUploadSyncData: true })
     })
 
-    expect(mocks.netWorkApi).toHaveBeenCalledWith({ method: 'get', url: 'system/config' })
+    expect(mocks.netWorkApi).toHaveBeenCalledWith({ method: 'get', url: 'system/config', params: { forClient: true } })
     expect(useEeSystemConfig.getState().eeSystemConfig).toEqual([{ configName: 'syncData', isOpen: true, content: '' }])
     expect(mocks.aboutLoginUpload).toHaveBeenCalledWith('fresh-login-token')
     expect(mocks.loginHTTPFlowsToOnline).toHaveBeenCalledWith('fresh-login-token')
@@ -69,5 +74,19 @@ describe('useUploadInfoByEnpriTrace 登录态读取', () => {
     expect(data).toBeUndefined()
     expect(mocks.netWorkApi).not.toHaveBeenCalled()
     expect(mocks.aboutLoginUpload).not.toHaveBeenCalled()
+  })
+
+  it('管理页面读取原始配置，不请求用户替换', async () => {
+    mocks.netWorkApi.mockResolvedValue({ data: [] })
+    await apiSystemConfig()
+    expect(mocks.netWorkApi).toHaveBeenCalledWith({ method: 'get', url: 'system/config' })
+  })
+
+  it('社区版不下载企业模型配置', async () => {
+    mocks.enterprise = false
+    useStore.getState().setStoreUserInfo({ ...loggedOutUserInfo(), isLogin: true, token: 'community' })
+    const { result } = renderHook(() => useUploadInfoByEnpriTrace())
+    await act(() => result.current[0].startUpload({}))
+    expect(mocks.netWorkApi).not.toHaveBeenCalled()
   })
 })

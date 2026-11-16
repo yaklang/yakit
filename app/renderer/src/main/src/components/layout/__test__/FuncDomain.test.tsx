@@ -390,6 +390,24 @@ const baseProps: FuncDomainProp = {
   consoleType: 'float',
 }
 
+describe('CCB 企业登录', () => {
+  it('渲染企业用户菜单，不因缺少社区头像映射而白屏', () => {
+    const previousUser = { ...userInfo }
+    const previousEdition = { ...edition }
+    try {
+      Object.assign(edition, { community: false, yakit: false, enterprise: true })
+      Object.assign(userInfo, { isLogin: true, platform: 'ccb', companyName: 'ccb-user' })
+      queryRisks.mockResolvedValue({ Data: [] })
+      const view = render(<FuncDomain {...baseProps} isJudgeLicense={false} />)
+      expect(screen.getByTestId('user-menu-trigger')).toBeInTheDocument()
+      view.unmount()
+    } finally {
+      Object.assign(userInfo, previousUser)
+      Object.assign(edition, previousEdition)
+    }
+  })
+})
+
 describe('MoreYaklangVersion 轻量选项', () => {
   beforeEach(() => {
     edition.community = true

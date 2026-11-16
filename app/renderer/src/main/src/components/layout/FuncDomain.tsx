@@ -382,7 +382,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
             <div className={styles['divider-wrapper']}></div>
             {userInfo.isLogin ? (
               <>
-                {userInfo.platform === 'company' ? (
+                {['company', 'ccb'].includes(userInfo.platform || '') ? (
                   <YakitDropdownMenu
                     key={i18nRefresh}
                     menu={{

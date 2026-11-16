@@ -13,7 +13,6 @@ import { useStore, useYakitDynamicStatus } from '@/store'
 import { CacheDropDownGV } from '@/yakitGV'
 import emiter from '@/utils/eventBus/eventBus'
 import { useUploadInfoByEnpriTrace } from '@/components/layout/utils'
-import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
 import { yakitApp, yakitAuth, yakitCodec, yakitProfile, yakitShell, yakitUILayout } from '@/services/electronBridge'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { SettingsSections } from '../../constants'
@@ -40,7 +39,6 @@ export const GeneralSettings: React.FC = () => {
   const { dynamicStatus } = useYakitDynamicStatus()
   const pluginSourceLocked = dynamicStatus.isDynamicStatus
   const [uploadProjectEvent] = useUploadInfoByEnpriTrace()
-  const [, aiGlobalConfigEvent] = useAIGlobalConfig()
 
   const [workspacePath, setWorkspacePath] = useState('')
   const [usedSpace, setUsedSpace] = useState('')
@@ -210,16 +208,10 @@ export const GeneralSettings: React.FC = () => {
         } else {
           setRemoteValue(getRemoteHttpSettingGV(), JSON.stringify(values))
         }
-        uploadProjectEvent
-          .startUpload({
-            isAutoUploadProject: true,
-            isUpdateGlobalConfig: false,
-          })
-          .then(async (systemConfig) => {
-            if (systemConfig?.length) {
-              await aiGlobalConfigEvent.getAIGlobalConfigAfterLogin(systemConfig)
-            }
-          })
+        uploadProjectEvent.startUpload({
+          isAutoUploadProject: true,
+          isUpdateGlobalConfig: false,
+        })
       })
       .catch((e: any) => {
         failed(t('ConfigPrivateDomain.privateDomainSetFailed', { error: String(e) }))

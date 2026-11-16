@@ -9,6 +9,7 @@ import { LocalGVS } from '@/enums/localGlobal'
 import { JSONParseLog } from './tool'
 import { yakitApp, yakitNetwork, yakitPlugin } from '@/services/electronBridge'
 import { stopIMControl } from './imControl'
+import { clearOnlineAIGlobalConfig } from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
 
 let stopIMControlForLogoutPromise: Promise<unknown> | undefined
 
@@ -26,6 +27,7 @@ const stopIMControlForLogout = () => {
 
 export const loginOut = async (userInfo: UserInfoProps) => {
   if (!userInfo.isLogin) return
+  if (isEnpriTrace()) await clearOnlineAIGlobalConfig()
   void stopIMControlForLogout()
   // 此处会导致退出接口异常时间调用
   // await aboutLoginUpload(userInfo.token)
@@ -43,8 +45,9 @@ export const loginOut = async (userInfo: UserInfoProps) => {
     .finally(globalUserLogout)
 }
 
-export const loginOutLocal = (userInfo: UserInfoProps) => {
+export const loginOutLocal = async (userInfo: UserInfoProps) => {
   if (!userInfo.isLogin) return
+  if (isEnpriTrace()) await clearOnlineAIGlobalConfig()
   void stopIMControlForLogout()
   getRemoteValue(getRemoteHttpSettingGV()).then(async (setting) => {
     if (!setting) return

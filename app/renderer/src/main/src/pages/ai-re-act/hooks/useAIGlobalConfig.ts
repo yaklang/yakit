@@ -2,7 +2,6 @@ import { useCreation, useMemoizedFn } from 'ahooks'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   type AIGlobalConfig,
-  type AIModelConfig,
   type ServerAIGlobalConfig,
   grpcGetAIGlobalConfig,
   grpcSetAIGlobalConfig,
@@ -12,7 +11,6 @@ import { AIModelTypeInterFileNameEnum } from '@/pages/ai-agent/defaultConstant'
 import { shallow } from 'zustand/shallow'
 import { cloneDeep } from 'lodash'
 import type { API } from '@/services/swagger/resposeType'
-import { debugToPrintLogs } from '@/utils/logCollection'
 
 /** 与 getFileNameByModelType 对应的配置字段；直接用常量避免动态 import 整份 AIModelForm */
 const AI_MODEL_CONFIG_KEYS = [
@@ -23,6 +21,8 @@ const AI_MODEL_CONFIG_KEYS = [
 
 let saveQueue: Promise<unknown> = Promise.resolve()
 let saveEpoch = 0
+let onlineSyncEpoch = 0
+let onlineModelsRevision = 0
 
 /** int64/double 为空字符串时，SetAIGlobalConfig 无法序列化 */
 const fixEmptyNumber = (config: AIGlobalConfig): AIGlobalConfig => {
@@ -48,6 +48,82 @@ const fixEmptyNumber = (config: AIGlobalConfig): AIGlobalConfig => {
   return next
 }
 
+/** All online-model writes share the local settings queue, including logout. */
+const replaceOnlineAIModels = (
+  data: API.SystemConfigList[],
+  isCurrent: () => boolean,
+  previousOrder?: AIGlobalConfig,
+) => {
+  const epoch = ++saveEpoch
+  const task = saveQueue.then(async () => {
+    if (!isCurrent()) return
+    const current = await grpcGetAIGlobalConfig()
+    if (!isCurrent()) return
+    const aiConfig = data.find((item) => item.configName === 'AI')
+    const server: ServerAIGlobalConfig & { Enabled?: boolean } =
+      aiConfig?.isOpen && aiConfig.content ? JSON.parse(aiConfig.content) : {}
+    if (!server || typeof server !== 'object' || Array.isArray(server)) throw new Error('Invalid enterprise AI config')
+    const next = cloneDeep(current)
+    for (const key of AI_MODEL_CONFIG_KEYS) {
+      const models = server.Enabled === false ? [] : server[key] || []
+      if (!Array.isArray(models)) throw new Error('Invalid enterprise AI model list')
+      for (const model of models) {
+        if (!model?.Provider || !model.ModelName) throw new Error('Invalid enterprise AI model')
+        if (model.Provider.Headers?.some((header) => header.Value?.includes('{{user.'))) {
+          throw new Error('企业模型 Header 尚未解析，请升级企业服务端 / unresolved enterprise AI header')
+        }
+      }
+      const available = [
+        ...(current[key] || []).filter((model) => !model.IsOnline),
+        // Web provider IDs are not local engine IDs and may be non-numeric.
+        ...models.map((model) => ({ ...model, ProviderId: '0', IsOnline: true })),
+      ]
+      // Preserve routing priority while replacing the old user's provider values.
+      const ordered = (previousOrder?.[key] || current[key] || []).flatMap((old) => {
+        const index = available.findIndex(
+          (model) => model.ModelName === old.ModelName && !!model.IsOnline === !!old.IsOnline,
+        )
+        return index < 0 ? [] : available.splice(index, 1)
+      })
+      next[key] = [...ordered, ...available]
+    }
+    if (!isCurrent()) return
+    const snapshot = fixEmptyNumber(next)
+    await grpcSetAIGlobalConfig(snapshot)
+    ++onlineModelsRevision
+    if (isCurrent() && epoch === saveEpoch) useAIGlobalConfigStore.getState().setAIGlobalConfig(snapshot)
+    return current
+  })
+  saveQueue = task.catch(() => undefined)
+  return task
+}
+
+/** Invalidate outstanding downloads before clearing persisted user-specific models. */
+export const clearOnlineAIGlobalConfig = () => {
+  ++onlineSyncEpoch
+  return replaceOnlineAIModels([], () => true)
+}
+
+/** Downloads are session-scoped: a response arriving after logout must never be applied. */
+export const syncOnlineAIGlobalConfig = async (
+  fetchConfig: () => Promise<API.SystemConfigResponse>,
+  isSameSession: () => boolean,
+): Promise<API.SystemConfigList[] | undefined> => {
+  const epoch = ++onlineSyncEpoch
+  const isCurrent = () => epoch === onlineSyncEpoch && isSameSession()
+  try {
+    const previous = await replaceOnlineAIModels([], isCurrent)
+    if (!isCurrent()) return
+    const response = await fetchConfig()
+    if (!isCurrent()) return
+    const data = response.data || []
+    await replaceOnlineAIModels(data, isCurrent, previous)
+    return isCurrent() ? data : undefined
+  } catch (error) {
+    if (isCurrent()) throw error
+  }
+}
+
 interface UseAIGlobalConfigData {
   aiGlobalConfig: AIGlobalConfig
   queryLoading: boolean
@@ -63,8 +139,6 @@ interface UseAIGlobalConfigEvents {
   setAIGlobalConfig: (data: Partial<AIGlobalConfig>) => Promise<void>
   /** 获取最新的值,不会设置全局变量中的值,会设置ref */
   getLastAIGlobalConfig: () => Promise<AIGlobalConfig>
-  /** 企业版登录后获取服务端 AI 配置并合并到本地配置 */
-  getAIGlobalConfigAfterLogin: (data: API.SystemConfigList[]) => Promise<void>
   /** 设置到全局变量中 */
   setConfigStore: (data: AIGlobalConfig) => void
 }
@@ -123,17 +197,38 @@ function useAIGlobalConfig(params) {
 
   const setAIGlobalConfig = useMemoizedFn(async (data: Partial<AIGlobalConfig>): Promise<void> => {
     const epoch = ++saveEpoch
+    const onlineRevision = onlineModelsRevision
     const next: AIGlobalConfig = {
       ...useAIGlobalConfigStore.getState().aiGlobalConfig,
       ...data,
     }
-    const snapshot = fixEmptyNumber(next)
+    let snapshot = fixEmptyNumber(next)
     aiGlobalConfigRef.current = snapshot
     setConfig(snapshot)
     setUpdateLoading(true)
 
     const task = saveQueue.then(async () => {
+      // A queued settings save may have captured the previous account's models.
+      // Retain the latest downloaded identity if an online write completed first.
+      if (onlineRevision !== onlineModelsRevision) {
+        snapshot = cloneDeep(snapshot)
+        const current = await grpcGetAIGlobalConfig()
+        for (const key of AI_MODEL_CONFIG_KEYS) {
+          const available = [
+            ...(snapshot[key] || []).filter((model) => !model.IsOnline),
+            ...(current[key] || []).filter((model) => model.IsOnline),
+          ]
+          const ordered = (snapshot[key] || []).flatMap((old) => {
+            const index = available.findIndex(
+              (model) => model.ModelName === old.ModelName && !!model.IsOnline === !!old.IsOnline,
+            )
+            return index < 0 ? [] : available.splice(index, 1)
+          })
+          snapshot[key] = [...ordered, ...available]
+        }
+      }
       await grpcSetAIGlobalConfig(snapshot)
+      if (epoch === saveEpoch) applyFetchedConfig(snapshot, epoch)
     })
     saveQueue = task.catch(() => undefined)
     try {
@@ -170,53 +265,6 @@ function useAIGlobalConfig(params) {
     aiGlobalConfigRef.current = cloneDeep(data)
   })
 
-  /** 企业版登录后获取服务端 AI 配置并合并到本地配置 */
-  const getAIGlobalConfigAfterLogin = useMemoizedFn(async (data: API.SystemConfigList[]) => {
-    try {
-      if (!data?.length) return
-      const currentConfig = await getLastAIGlobalConfig()
-      const nextConfig: AIGlobalConfig = cloneDeep(currentConfig)
-
-      const aiConfig = data.find((item) => item.configName === 'AI')
-      if (!aiConfig?.content) return
-
-      let serverConfig: ServerAIGlobalConfig = {}
-      serverConfig = JSON.parse(aiConfig.content)
-
-      // 必须同步遍历：forEach(async) 不会被外层 await，会导致 merge 未完成就 setAIGlobalConfig
-      for (const key of AI_MODEL_CONFIG_KEYS) {
-        const serverModels = (serverConfig[key] || []).map((model) => ({
-          ...model,
-          IsOnline: true,
-        }))
-        const mergedModels = (currentConfig[key] || []).reduce((list, item) => {
-          if (!item.IsOnline) {
-            list.push(item)
-            return list
-          }
-          const hit = serverModels.find(({ ModelName }) => ModelName === item.ModelName)
-          if (hit) {
-            list.push(hit)
-          }
-          return list
-        }, [] as AIModelConfig[])
-
-        const appendServerModels = serverModels.filter(
-          (model) => !mergedModels.some(({ ModelName, IsOnline }) => ModelName === model.ModelName && IsOnline),
-        )
-        nextConfig[key] = [...mergedModels, ...appendServerModels]
-      }
-
-      await setAIGlobalConfig(nextConfig)
-    } catch (err) {
-      debugToPrintLogs({
-        page: 'useAIGlobalConfig',
-        fun: 'getAIGlobalConfigAfterLogin',
-        content: err,
-      })
-    }
-  })
-
   const data: UseAIGlobalConfigData = useMemo(() => {
     return {
       aiGlobalConfig,
@@ -232,7 +280,6 @@ function useAIGlobalConfig(params) {
       onRefresh: (isShowLoading) => getAIGlobalConfig(isShowLoading),
       setAIGlobalConfig: (res) => setAIGlobalConfig(res),
       getLastAIGlobalConfig: () => getLastAIGlobalConfig(),
-      getAIGlobalConfigAfterLogin: (data) => getAIGlobalConfigAfterLogin(data),
       setConfigStore: (res) => setConfigStore(res),
     }
   }, [])
