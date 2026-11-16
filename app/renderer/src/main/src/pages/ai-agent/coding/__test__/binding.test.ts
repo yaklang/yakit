@@ -2,19 +2,18 @@ import { describe, expect, it } from 'vitest'
 import { newCodingSessionDraft, restoreCodingSession } from '../binding'
 import { getAgentMode, isCodingAgent } from '../../agentMode'
 
-describe('agent mode compatibility', () => {
-  it('defaults to security and reads historical coding flags', () => {
+describe('agent mode', () => {
+  it('defaults to security and restores the saved mode', () => {
     expect(getAgentMode()).toBe('security')
     expect(getAgentMode({})).toBe('security')
-    expect(getAgentMode({ CodingMode: false })).toBe('security')
-    expect(restoreCodingSession({ CodingMode: true }).AgentMode).toBe('coding')
-    expect(newCodingSessionDraft({ CodingMode: true }).AgentMode).toBe('coding')
-    expect(isCodingAgent({ AgentMode: 'coding', CodingMode: false })).toBe(true)
+    expect(restoreCodingSession({ AgentMode: 'coding' }).AgentMode).toBe('coding')
+    expect(newCodingSessionDraft({ AgentMode: 'coding' }).AgentMode).toBe('coding')
+    expect(isCodingAgent({ AgentMode: 'coding' })).toBe(true)
   })
-  it('uses explicit mode before legacy flags and preserves unknown values for server validation', () => {
-    expect(getAgentMode({ AgentMode: 'security', CodingMode: true })).toBe('security')
-    expect(getAgentMode({ AgentMode: 'future-mode', CodingMode: true })).toBe('future-mode')
-    expect(isCodingAgent({ AgentMode: 'future-mode', CodingMode: true })).toBe(false)
+  it('preserves unknown values for server validation', () => {
+    expect(getAgentMode({ AgentMode: 'security' })).toBe('security')
+    expect(getAgentMode({ AgentMode: 'future-mode' })).toBe('future-mode')
+    expect(isCodingAgent({ AgentMode: 'future-mode' })).toBe(false)
   })
 })
 

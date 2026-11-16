@@ -25,7 +25,7 @@ import { openAIAgentChatTab } from '../historyChat/HistoryChat'
 import { setExperimentalCoding, useExperimentalCoding } from './experimentalCodingStore'
 import { listCodingSessions, queryCodingWorkspaces } from './api'
 import type { CodingWorkspace } from './api'
-import { codingSessionBinding, emptyCodingBinding, selectCodingWorkspace, workspaceRoots } from './binding'
+import { codingSessionBinding, emptyCodingBinding, selectCodingWorkspace } from './binding'
 import { openCodingWorktrees } from './navigation'
 import { CodingWorkspaceCreate } from './CodingWorkspaceCreate'
 import { CodingEnvironmentPopover } from './CodingEnvironmentPopover'
@@ -150,7 +150,7 @@ export const CodingSessionControls = ({
     (locked || setting.CodingWorktreeID) && setting.CodingSourceRoots?.length
       ? setting.CodingSourceRoots
       : workspace
-        ? workspaceRoots(workspace)
+        ? workspace.RootPaths
         : setting.CodingSourceRoots || []
   useEffect(() => {
     const refreshProjects = () => setRefresh((value) => value + 1)
@@ -161,7 +161,7 @@ export const CodingSessionControls = ({
   }, [])
   useEffect(() => {
     if (!workspace || locked || setting.CodingWorktreeID) return
-    if (JSON.stringify(workspaceRoots(workspace)) === JSON.stringify(setting.CodingSourceRoots || [])) return
+    if (JSON.stringify(workspace.RootPaths) === JSON.stringify(setting.CodingSourceRoots || [])) return
     setSetting((old) => ({ ...old, ...selectCodingWorkspace(workspace) }))
   }, [workspace, locked, setting.CodingWorktreeID, setSetting])
   useEffect(() => {
@@ -273,7 +273,7 @@ export const CodingSessionControls = ({
                       role="menuitemradio"
                       aria-checked={item.ID === setting.CodingWorkspaceID}
                       disabled={locked || !enabled}
-                      title={workspaceRoots(item).join('\n')}
+                      title={item.RootPaths.join('\n')}
                       onClick={() => selectWorkspace(item)}
                     >
                       <FolderOutlined />

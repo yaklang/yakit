@@ -10,7 +10,6 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { getMainOperatorPageBodyContainerOrBody } from '@/utils/getMainOperatorPageBodyContainer'
 import { getPathBaseName } from '@/utils/str'
 import { createCodingWorkspace, updateCodingWorkspace, type CodingWorkspace } from './api'
-import { workspaceRoots } from './binding'
 import styles from './CodingAgentControls.module.scss'
 
 const { ipcRenderer } = window.require('electron')
@@ -30,7 +29,7 @@ export const CodingWorkspaceCreate = ({
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [name, setName] = useState(workspace?.Name || '')
-  const [paths, setPaths] = useState<string[]>(workspace ? [...workspaceRoots(workspace)] : [])
+  const [paths, setPaths] = useState<string[]>(workspace ? [...workspace.RootPaths] : [])
   const [readingFolders, setReadingFolders] = useState(false)
   const [dragging, setDragging] = useState(false)
   const dragDepth = useRef(0)

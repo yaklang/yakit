@@ -50,8 +50,6 @@ export type AISource = `${AISourceEnum}`
 export interface AIStartParams {
   /** Session persona: security (default), coding. */
   AgentMode?: string
-  /** @deprecated Compatibility with older engines and saved sessions. Use AgentMode. */
-  CodingMode?: boolean
   CodingWorkspaceID?: string
   CodingWorkingDirectory?: string
   CodingCreateWorktree?: boolean

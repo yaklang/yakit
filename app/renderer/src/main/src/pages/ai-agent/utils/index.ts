@@ -146,8 +146,6 @@ export const formatAIAgentSetting = (setting: AIAgentSetting): AIAgentSetting =>
     data.SingleModelMode = setting.SingleModelMode ?? AIAgentSettingDefault.SingleModelMode
     data.AgentMode = getAgentMode(setting)
     const coding = data.AgentMode === 'coding'
-    // Compatibility for engines that predate AgentMode.
-    data.CodingMode = coding
     data.CodingWorkspaceID = coding ? setting.CodingWorkspaceID || '' : ''
     data.CodingWorkingDirectory = coding ? setting.CodingWorkingDirectory || '' : ''
     data.CodingCreateWorktree = coding && !!setting.CodingCreateWorktree

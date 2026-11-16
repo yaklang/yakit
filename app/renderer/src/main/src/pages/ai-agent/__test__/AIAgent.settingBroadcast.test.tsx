@@ -382,27 +382,27 @@ describe('AIAgent 配置广播', () => {
     },
   )
 
-  it.each([true, false])('恢复旧 Coding 会话时先迁移模式再应用安全默认值，草稿：%s', async (draft) => {
-    const legacy = {
-      CodingMode: true,
-      CodingWorkspaceID: 'legacy-project',
-      CodingWorkingDirectory: '/legacy',
+  it.each([true, false])('恢复 Coding 会话时保留模式，草稿：%s', async (draft) => {
+    const saved = {
+      AgentMode: 'coding',
+      CodingWorkspaceID: 'saved-project',
+      CodingWorkingDirectory: '/saved',
     }
     const session = {
       ...createWelcomeChat(),
-      SessionID: 'legacy-coding',
+      SessionID: 'saved-coding',
       isDraftSession: draft,
-      ...(draft ? { StartParams: legacy } : {}),
+      ...(draft ? { StartParams: saved } : {}),
     }
-    querySessionMock.mockResolvedValue(sessionResponse([{ ...session, StartParams: legacy }]))
-    render(<AIAgent pageId="legacy-tab" initialSession={session} />)
+    querySessionMock.mockResolvedValue(sessionResponse([{ ...session, StartParams: saved }]))
+    render(<AIAgent pageId="saved-tab" initialSession={session} />)
     await waitFor(() =>
       expect(JSON.parse(screen.getByTestId('setting').textContent!)).toMatchObject({
         AgentMode: 'coding',
-        CodingWorkspaceID: 'legacy-project',
+        CodingWorkspaceID: 'saved-project',
       }),
     )
-    expect(legacy).not.toHaveProperty('AgentMode')
+    expect(saved.AgentMode).toBe('coding')
   })
 
   it.each([false, true])('子组件创建默认会话后欢迎页仍读取缓存（StrictMode=%s）', async (reactStrictMode) => {

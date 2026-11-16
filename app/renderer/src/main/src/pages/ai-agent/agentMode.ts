@@ -1,8 +1,6 @@
 import type { AIStartParams } from '@/pages/ai-re-act/hooks/grpcApi'
 
-/** Explicit AgentMode wins; the boolean is only for sessions saved by older builds. */
-export const getAgentMode = (params?: Pick<AIStartParams, 'AgentMode' | 'CodingMode'>): string =>
-  params?.AgentMode || (params?.CodingMode ? 'coding' : 'security')
+/** Session mode is fixed at startup; unspecified mode uses the security agent. */
+export const getAgentMode = (params?: Pick<AIStartParams, 'AgentMode'>): string => params?.AgentMode || 'security'
 
-export const isCodingAgent = (params?: Pick<AIStartParams, 'AgentMode' | 'CodingMode'>) =>
-  getAgentMode(params) === 'coding'
+export const isCodingAgent = (params?: Pick<AIStartParams, 'AgentMode'>) => getAgentMode(params) === 'coding'

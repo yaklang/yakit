@@ -4,7 +4,6 @@ import type { CodingSession, CodingWorkspace, CodingWorktree } from './api'
 
 export const codingBindingKeys = [
   'AgentMode',
-  'CodingMode',
   'CodingWorkspaceID',
   'CodingWorkingDirectory',
   'CodingCreateWorktree',
@@ -16,8 +15,6 @@ export const codingBindingKeys = [
 
 export const emptyCodingBinding = {
   AgentMode: 'security',
-  // Clear a legacy flag when resetting a draft; AgentMode remains authoritative.
-  CodingMode: false,
   CodingWorkspaceID: '',
   CodingWorkingDirectory: '',
   CodingCreateWorktree: false,
@@ -27,11 +24,8 @@ export const emptyCodingBinding = {
   CodingSourceRoots: [] as string[],
 }
 
-export const workspaceRoots = (workspace: CodingWorkspace) =>
-  workspace.RootPaths?.length ? workspace.RootPaths : [workspace.RootPath]
-
 export const selectCodingWorkspace = (workspace: CodingWorkspace, worktree?: CodingWorktree) => {
-  const roots = [...workspaceRoots(workspace)]
+  const roots = [...workspace.RootPaths]
   if (worktree) roots[0] = worktree.SourceDirectory
   return {
     ...emptyCodingBinding,

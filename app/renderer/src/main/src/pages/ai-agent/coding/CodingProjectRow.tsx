@@ -21,7 +21,6 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { getPathBaseName } from '@/utils/str'
 import { yakitNotify } from '@/utils/notification'
 import { openCodingDirectory, type CodingWorkspace } from './api'
-import { workspaceRoots } from './binding'
 import { openCodingProject } from './navigation'
 import { setCodingProjectPinned } from './projectPreferences'
 import styles from './CodingProjects.module.scss'
@@ -64,7 +63,7 @@ export const CodingProjectRow = ({
       setHoverOpen(false)
     }
   }, [inViewport])
-  const roots = workspaceRoots(workspace)
+  const roots = workspace.RootPaths
   const closePopups = () => {
     setMenuOpen(undefined)
     setHoverOpen(false)

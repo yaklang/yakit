@@ -10,23 +10,21 @@ import { formatAIAgentSetting } from '..'
 import { AIAgentSettingDefault } from '../../defaultConstant'
 
 describe('formatAIAgentSetting', () => {
-  it('defaults to security and only emits the legacy flag as a compatibility mirror', () => {
+  it('defaults to security and clears unrelated coding fields', () => {
     expect(AIAgentSettingDefault.AgentMode).toBe('security')
-    const { AgentMode: _mode, ...legacySetting } = AIAgentSettingDefault
-    expect(formatAIAgentSetting(legacySetting)).toMatchObject({ AgentMode: 'security', CodingMode: false })
-    expect(formatAIAgentSetting({ ...legacySetting, CodingMode: true })).toMatchObject({
+    const { AgentMode: _mode, ...settingWithoutMode } = AIAgentSettingDefault
+    expect(formatAIAgentSetting(settingWithoutMode)).toMatchObject({ AgentMode: 'security' })
+    expect(formatAIAgentSetting({ ...settingWithoutMode, AgentMode: 'coding' })).toMatchObject({
       AgentMode: 'coding',
-      CodingMode: true,
     })
     expect(
       formatAIAgentSetting({
-        ...legacySetting,
+        ...settingWithoutMode,
         AgentMode: 'security',
-        CodingMode: true,
         CodingWorkspaceID: 'stale',
         CodingCreateWorktree: true,
       }),
-    ).toMatchObject({ AgentMode: 'security', CodingMode: false, CodingWorkspaceID: '', CodingCreateWorktree: false })
+    ).toMatchObject({ AgentMode: 'security', CodingWorkspaceID: '', CodingCreateWorktree: false })
   })
 
   it('SingleModelMode 缺字段时回退默认 false，并保留显式 true', () => {

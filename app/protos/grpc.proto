@@ -128,8 +128,6 @@ service Yak {
   rpc GetAICodingWorktree(GetAICodingWorktreeRequest) returns (AICodingWorktree);
   rpc ListAICodingBranches(AICodingWorkspaceRequest) returns (ListAICodingBranchesResponse);
   rpc ListAICodingSessions(AICodingWorkspaceRequest) returns (ListAICodingSessionsResponse);
-  // Worktrees are now created atomically with session binding at session startup.
-  rpc CreateAICodingWorktree(AICodingWorkspaceRequest) returns (AICodingWorktree) { option deprecated = true; }
 
   // version
   rpc Version(Empty) returns (VersionResponse);
@@ -2380,8 +2378,7 @@ message AIStartParams {
   optional bool NetworkDebug = 52;
   // Connection-local, build-generated component catalog and interaction capabilities.
   string ClientUI = 53;
-  // Deprecated: use AgentMode. Read only as a fallback when AgentMode is empty.
-  bool CodingMode = 54 [deprecated = true];
+  reserved 54;
   string CodingWorkspaceID = 55;
   string CodingWorkingDirectory = 56;
   // Only primary RootPaths[0]'s repository is isolated. Secondary roots stay original.
@@ -2390,7 +2387,7 @@ message AIStartParams {
   string CodingWorktreeID = 59; // Reuse a managed worktree in the same workspace.
   repeated string CodingWorkspaceRoots = 60; // Server-resolved effective directories.
   repeated string CodingSourceRoots = 61; // Server-resolved original directories.
-  // Agent persona: security (default) or coding. Explicit value overrides CodingMode.
+  // Agent persona: security (default) or coding.
   string AgentMode = 62;
 }
 
@@ -10740,8 +10737,8 @@ message AICodingWorkspace {
 }
 message CreateAICodingWorkspaceRequest {
   string Name = 1;
-  string RootPath = 2;
-  repeated string RootPaths = 3; // Preferred over legacy RootPath.
+  reserved 2;
+  repeated string RootPaths = 3; // Ordered source directories; first is primary.
 }
 message UpdateAICodingWorkspaceRequest {
   string WorkspaceID = 1;
