@@ -5,7 +5,13 @@ import classNames from 'classnames'
 import { Tooltip } from 'antd'
 import LoadingOutlined from '@ant-design/icons/lib/icons/LoadingOutlined'
 import { Virtuoso } from 'react-virtuoso'
-import { PencilOutlined, PlusSmOutlined, TimerOutlined, TrashOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import {
+  ArrowUpFromDotOutlined,
+  PencilOutlined,
+  PlusSmOutlined,
+  TimerOutlined,
+  TrashOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import YakitCollapse from '@/components/yakitUI/YakitCollapse/YakitCollapse'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
@@ -20,7 +26,6 @@ import type { AIScheduledTasksListItemProps, AIScheduledTasksListProps } from '.
 import { grpcDeleteAIReActSchedule, grpcSetAIReActScheduleEnabled } from '../utils'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { formatScheduleRule } from '../scheduleDisplay'
-import { OutlineArrowUpFromDotIcon } from '../icon'
 import AIScheduledTasksDetail from '../aiScheduledTasksDetail/AIScheduledTasksDetail'
 import styles from './AIScheduledTasksList.module.scss'
 
@@ -221,7 +226,7 @@ const AIScheduledTasksListItem: React.FC<AIScheduledTasksListItemProps> = React.
                 <Tooltip title={t('AIScheduledTasks.runNow')}>
                   <YakitButton
                     type="text2"
-                    icon={<OutlineArrowUpFromDotIcon />}
+                    icon={<ArrowUpFromDotOutlined />}
                     aria-label={t('AIScheduledTasks.runNow')}
                     onClick={() => onRunNow?.(item)}
                   />

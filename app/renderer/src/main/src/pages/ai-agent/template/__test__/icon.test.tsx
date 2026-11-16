@@ -1,13 +1,14 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { OutlineAIIcon, OutlineAtIcon } from '../icon'
+import { AIColorful } from '@yakit-libs/yakit-ui-icons/colorful'
+import { AtOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 
 afterEach(cleanup)
 
 describe('template icons', () => {
   it.each([
-    ['AI', OutlineAIIcon],
-    ['At', OutlineAtIcon],
+    ['AI', AIColorful],
+    ['At', AtOutlined],
   ] as const)('%s preserves the design size and forwards icon props', (name, Component) => {
     const onClick = vi.fn()
     render(<Component aria-label={name} className="template-icon" style={{ color: '#353639' }} onClick={onClick} />)
@@ -27,17 +28,17 @@ describe('template icons', () => {
   it('keeps gradient references local to each AI icon instance', () => {
     const { container } = render(
       <>
-        <OutlineAIIcon />
-        <OutlineAIIcon />
+        <AIColorful />
+        <AIColorful />
       </>,
     )
 
-    const ids = Array.from(container.querySelectorAll('[id]'), (element) => element.id)
+    const ids = Array.from(container.querySelectorAll('linearGradient[id]'), (element) => element.id)
     expect(ids).toHaveLength(6)
     expect(new Set(ids).size).toBe(ids.length)
 
     for (const svg of container.querySelectorAll('svg')) {
-      const localIds = new Set(Array.from(svg.querySelectorAll('[id]'), (element) => element.id))
+      const localIds = new Set(Array.from(svg.querySelectorAll('linearGradient[id]'), (element) => element.id))
       const paths = svg.querySelectorAll('path')
       expect(paths).toHaveLength(3)
       for (const path of paths) {
@@ -48,7 +49,7 @@ describe('template icons', () => {
   })
 
   it('lets the At icon inherit its stroke color', () => {
-    const { container } = render(<OutlineAtIcon />)
+    const { container } = render(<AtOutlined />)
     expect(container.querySelector('path')).toHaveAttribute('stroke', 'currentColor')
   })
 })
