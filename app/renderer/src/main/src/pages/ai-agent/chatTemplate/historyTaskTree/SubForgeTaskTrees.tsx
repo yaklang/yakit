@@ -5,6 +5,7 @@ import { TaskSkippedIcon } from '@yakit-libs/yakit-ui-icons/oldicon/TaskSkippedI
 import { ChevronDownOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { TaskInProgressIndicator } from '../../aiTree/TaskInProgressIndicator'
 import { useStore } from 'zustand'
+import { AITaskStatus } from '@/pages/ai-re-act/hooks/grpcApi'
 import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import type { SubForgeRun, SubForgeTaskNode } from '@/pages/ai-re-act/hooks/subForgeTaskTree'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -21,6 +22,13 @@ export function SubForgeTaskTrees({
 }) {
   const store = useCurrentStore()
   const runs = useStore(store, (state) => state.subForgeRuns)
+  const active = useStore(
+    store,
+    (state) =>
+      state.execute &&
+      state.currentChatStatus.coordinatorId === coordinatorId &&
+      state.currentChatStatus.status === AITaskStatus.inProgress,
+  )
   const children = Object.values(runs).filter(
     (run) => run.parent_coordinator_id === coordinatorId && run.parent_task_id === taskId,
   )
@@ -28,16 +36,16 @@ export function SubForgeTaskTrees({
   return (
     <div className={styles.children} style={{ marginLeft: Math.max(0, (level - 1) * 16 - 8) }}>
       {children.map((run) => (
-        <SubForgeRunTree key={run.child_coordinator_id} run={run} />
+        <SubForgeRunTree key={run.child_coordinator_id} run={run} active={active} />
       ))}
     </div>
   )
 }
 
 /** Read-only display: child IDs must never enter the parent's skip/restart actions. */
-export function SubForgeRunTree({ run }: { run: SubForgeRun }) {
+export function SubForgeRunTree({ run, active }: { run: SubForgeRun; active: boolean }) {
   const { t } = useI18nNamespaces(['aiAgent'])
-  const status = run.historical && run.status === 'running' ? 'unknown' : run.status
+  const status = (!active || run.historical) && run.status === 'running' ? 'unknown' : run.status
   const renderNode = (node: SubForgeTaskNode, index: number): React.ReactNode => {
     const progress = node.progress === 'processing' && status !== 'running' ? 'unknown' : node.progress || 'pending'
     return (

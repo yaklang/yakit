@@ -55,10 +55,6 @@
 }
 .tree {
   padding: 6px 0 0;
-  // Deep plans retain their hierarchy without consuming the entire sidebar width.
-  ul ul ul {
-    padding-left: 0;
-  }
   li {
     position: relative;
   }
