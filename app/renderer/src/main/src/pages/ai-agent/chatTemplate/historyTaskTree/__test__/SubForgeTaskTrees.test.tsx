@@ -35,6 +35,16 @@ describe('nested Forge display', () => {
     fireEvent.click(container.querySelector('summary')!)
     expect(container.querySelector('details')).not.toHaveAttribute('open')
   })
+  it('preserves a collapsed run when a node status updates', () => {
+    const { container, rerender } = render(<SubForgeRunTree run={run} />)
+    fireEvent.click(container.querySelector('summary')!)
+    rerender(<SubForgeRunTree run={{ ...run, revision: 3, status: 'succeeded' }} />)
+    expect(container.querySelector('details')).not.toHaveAttribute('open')
+    fireEvent.click(container.querySelector('summary')!)
+    expect(container.querySelector('details')).toHaveAttribute('open')
+    expect(screen.getByText('Read evidence')).toBeVisible()
+    expect(container.querySelector('[data-status="processing"]')).not.toBeInTheDocument()
+  })
   it('does not show an interrupted historical run as still processing', () => {
     const { container } = render(<SubForgeRunTree run={{ ...run, historical: true }} />)
     expect(container.querySelector('[data-status="unknown"]')).toBeInTheDocument()

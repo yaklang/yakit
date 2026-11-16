@@ -26,7 +26,7 @@ export function SubForgeTaskTrees({
   )
   if (!children.length) return null
   return (
-    <div className={styles.children} style={{ marginLeft: Math.max(0, level - 1) * 16 - 8 }}>
+    <div className={styles.children} style={{ marginLeft: Math.max(0, (level - 1) * 16 - 8) }}>
       {children.map((run) => (
         <SubForgeRunTree key={run.child_coordinator_id} run={run} />
       ))}
