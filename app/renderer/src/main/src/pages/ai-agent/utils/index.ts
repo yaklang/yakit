@@ -1,3 +1,4 @@
+import { getAgentMode } from '../agentMode'
 import type { AIAgentSetting } from '../aiAgentType'
 import isNil from 'lodash/isNil'
 import { AIAgentSettingDefault, AttachedResourceKeyEnum, AttachedResourceTypeEnum } from '../defaultConstant'
@@ -143,6 +144,15 @@ export const formatAIAgentSetting = (setting: AIAgentSetting): AIAgentSetting =>
       setting.DisableToolIntervalReview ?? AIAgentSettingDefault.DisableToolIntervalReview
     data.DisableMemoryTriage = setting.DisableMemoryTriage ?? AIAgentSettingDefault.DisableMemoryTriage
     data.SingleModelMode = setting.SingleModelMode ?? AIAgentSettingDefault.SingleModelMode
+    data.AgentMode = getAgentMode(setting)
+    const coding = data.AgentMode === 'coding'
+    data.CodingWorkspaceID = coding ? setting.CodingWorkspaceID || '' : ''
+    data.CodingWorkingDirectory = coding ? setting.CodingWorkingDirectory || '' : ''
+    data.CodingCreateWorktree = coding && !!setting.CodingCreateWorktree
+    data.CodingWorktreeBaseRef = data.CodingCreateWorktree ? setting.CodingWorktreeBaseRef?.trim() || '' : ''
+    data.CodingWorktreeID = coding && !data.CodingCreateWorktree ? setting.CodingWorktreeID || '' : ''
+    data.CodingWorkspaceRoots = coding ? [...(setting.CodingWorkspaceRoots || [])] : []
+    data.CodingSourceRoots = coding ? [...(setting.CodingSourceRoots || [])] : []
   } catch (error) {}
   return data
 }

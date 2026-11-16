@@ -39,6 +39,7 @@ const resizeObservers = vi.hoisted(() => {
 
 const welcomeAnimationMocks = vi.hoisted(() => ({
   animationDisabled: false,
+  coding: false,
 }))
 
 const firstDraft: AIChatInputDraft = {
@@ -47,6 +48,11 @@ const firstDraft: AIChatInputDraft = {
   hiddenInlineKeys: [],
   selectedResourceIds: { http: ['101'], risk: ['8'] },
 }
+
+vi.mock('../../useContext/useStore', () => ({
+  default: () => ({ setting: { AgentMode: welcomeAnimationMocks.coding ? 'coding' : 'security' } }),
+}))
+vi.mock('../../coding/CodingAgentControls', () => ({ CodingSessionControls: () => null }))
 
 vi.mock('../../template/template', () => ({
   AIChatTextarea: React.forwardRef<AIChatTextareaRefProps, AIChatTextareaProps>(function Input(props, ref) {
@@ -134,6 +140,7 @@ const { default: AIChatWelcome } = await compileReactModule<typeof WelcomeModule
 beforeEach(() => {
   resizeObservers.instances.length = 0
   welcomeAnimationMocks.animationDisabled = false
+  welcomeAnimationMocks.coding = false
   tipsMocks.empty = false
   vi.stubGlobal('ResizeObserver', resizeObservers.MockResizeObserver)
   // jsdom 默认 clientWidth/Height 为 0，会误判成 compact/short；先固定为大屏。
@@ -150,6 +157,18 @@ afterEach(() => {
 const WELCOME_TITLE = 'Memfit AI Agent'
 
 describe('AIChatWelcome 输入框转发', () => {
+  it('编程模式复用欢迎页标题、背景和输入区，只替换安全场景内容', () => {
+    welcomeAnimationMocks.coding = true
+    const { container } = render(<AIChatWelcome onTriageSubmit={vi.fn()} onSetReAct={vi.fn()} />)
+    expect(container.querySelector('.title')).toHaveTextContent(WELCOME_TITLE)
+    expect(screen.getByText('CodingAgent.welcome')).toBeInTheDocument()
+    expect(screen.getByTestId('scenario-capabilities')).toHaveAttribute('data-enabled', 'false')
+    expect(screen.queryByTestId('welcome-tips-cards')).toBeNull()
+    expect(screen.queryByTestId('welcome-recent-sessions')).toBeNull()
+    expect(screen.getByTestId('welcome-ascii-ripple')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '发送首问' })).toBeInTheDocument()
+  })
+
   it('在欢迎页开启场景能力入口', () => {
     render(<AIChatWelcome onTriageSubmit={vi.fn()} onSetReAct={vi.fn()} />)
     expect(screen.getByTestId('scenario-capabilities')).toHaveAttribute('data-enabled', 'true')

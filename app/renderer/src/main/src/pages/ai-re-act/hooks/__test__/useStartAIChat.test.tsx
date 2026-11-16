@@ -1,3 +1,4 @@
+import { setExperimentalCoding } from '@/pages/ai-agent/coding/experimentalCodingStore'
 import './setupElectron'
 import { act, cleanup, renderHook } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -33,6 +34,7 @@ beforeEach(() => {
   vi.clearAllMocks()
   mocks.onStart.mockReturnValue('stream-token')
   mocks.prepare.mockImplementation((value) => ({ attachedResourceInfo: value.attachedResourceInfo }))
+  setExperimentalCoding(false)
   mocks.activeChat = undefined
   mocks.setting = { Source: 'ai', TimelineSessionID: 'stale-setting' }
 })
@@ -212,5 +214,58 @@ describe('submission identity', () => {
     act(() => result.current({ qs: 'hello', target: { kind: 'new', sessionId: 'client-session' } }))
     mocks.onStart.mock.calls[0][0].onLinkSuccess('client-session', true)
     expect(mocks.setActiveChat).toHaveBeenCalledWith(expect.objectContaining({ SessionID: 'client-session' }))
+  })
+})
+
+describe('coding startup gate', () => {
+  it('rejects new coding sessions when the experiment is off or the workspace is missing', () => {
+    Object.assign(mocks.setting, { AgentMode: 'coding' })
+    const { result } = renderHook(() => useStartAIChat())
+    expect(result.current({ qs: 'implement', target: { kind: 'new', sessionId: 'coding-new' } })).toBe(false)
+    act(() => setExperimentalCoding(true))
+    expect(result.current({ qs: 'implement', target: { kind: 'new', sessionId: 'coding-new' } })).toBe(false)
+    expect(mocks.onStart).not.toHaveBeenCalled()
+  })
+  it('sends the selected binding and resumes existing coding sessions after opt-out', () => {
+    const binding = { AgentMode: 'coding', CodingWorkspaceID: 'workspace-one', CodingWorkingDirectory: '/source/tree' }
+    Object.assign(mocks.setting, binding)
+    const { result } = renderHook(() => useStartAIChat())
+    act(() => setExperimentalCoding(true))
+    act(() => {
+      result.current({ qs: 'implement', target: { kind: 'new', sessionId: 'coding-new' } })
+    })
+    expect(mocks.onStart.mock.calls[0][0].params.Params).toMatchObject({ ...binding, CodingWorkingDirectory: '' })
+    act(() => setExperimentalCoding(false))
+    act(() => {
+      result.current({ qs: 'continue', target: { kind: 'resume', sessionId: 'coding-new' } })
+    })
+    expect(mocks.onStart.mock.calls[1][0].params.Params).toMatchObject(binding)
+  })
+})
+
+it('passes the worktree creation intent only on first startup and leaves effective roots to the engine', () => {
+  setExperimentalCoding(true)
+  Object.assign(mocks.setting, {
+    AgentMode: 'coding',
+    CodingWorkspaceID: 'workspace-one',
+    CodingCreateWorktree: true,
+    CodingWorktreeBaseRef: 'release',
+    CodingWorkingDirectory: '/stale',
+    CodingWorkspaceRoots: ['/stale'],
+    CodingSourceRoots: ['/source'],
+  })
+  const { result } = renderHook(() => useStartAIChat())
+  act(() => result.current({ qs: 'implement', target: { kind: 'new', sessionId: 'new' } }))
+  expect(mocks.onStart.mock.calls[0][0].params.Params).toMatchObject({
+    CodingCreateWorktree: true,
+    CodingWorktreeBaseRef: 'release',
+    CodingWorkingDirectory: '',
+    CodingWorkspaceRoots: [],
+    CodingSourceRoots: [],
+  })
+  act(() => result.current({ qs: 'retry', target: { kind: 'resume', sessionId: 'new' } }))
+  expect(mocks.onStart.mock.calls[1][0].params.Params).toMatchObject({
+    CodingCreateWorktree: false,
+    CodingWorktreeBaseRef: '',
   })
 })

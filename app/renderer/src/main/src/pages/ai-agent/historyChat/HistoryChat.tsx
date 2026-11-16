@@ -1,8 +1,9 @@
+import { isCodingAgent } from '@/pages/ai-agent/agentMode'
 import { memo, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import useAIAgentStore from '../useContext/useStore'
 import useAIAgentDispatcher from '../useContext/useDispatcher'
 import { yakitNotify } from '@/utils/notification'
-import { ReActChatEventEnum } from '../defaultConstant'
+import { createWelcomeChat, ReActChatEventEnum } from '../defaultConstant'
 import {
   DesktopComputerOutlined,
   MessageCirclePlusOutlined,
@@ -49,6 +50,9 @@ import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionCon
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { syncAIAgentPageInfo } from '../utils/syncAIAgentPageInfo'
 import { mergeAISessionUpdate } from './mergeAISessionUpdate'
+import { CodingProjects } from '../coding/CodingProjects'
+import { newCodingSessionDraft } from '../coding/binding'
+import type { AIAgentSetting } from '../aiAgentType'
 
 const HISTORY_SOURCE_FILTER_OPTIONS: {
   key: HistorySourceFilter
@@ -127,9 +131,13 @@ export const takePendingOpenForge = () => {
   return next
 }
 
-export const onNewChat = (openNewTab?: boolean, pageId?: string) => {
+export const onNewChat = (openNewTab?: boolean, pageId?: string, setting?: AIAgentSetting) => {
   if (openNewTab) {
-    openAIAgentChatTab()
+    openAIAgentChatTab(
+      setting && isCodingAgent(setting)
+        ? { ...createWelcomeChat(), StartParams: { ...setting, ...newCodingSessionDraft(setting) } }
+        : undefined,
+    )
     return
   }
   emiter.emit('onReActChatEvent', JSON.stringify({ type: ReActChatEventEnum.NEW_CHAT, pageId }))
@@ -166,7 +174,8 @@ const HistoryChat = memo(({ aiSource, embedded, title, className }: HistoryChatP
     return getHistorySourceQueryPlatform(historySourceFilter)
   }, [enableHistorySourceFilter, historySourceFilter])
   const [{ sessions }, dispatcher] = useSessionList(historyQuerySources, historyQueryPlatform)
-  const { openChatInNewTab, activeChat, pageId } = useAIAgentStore()
+  const { openChatInNewTab, activeChat, pageId, setting } = useAIAgentStore()
+  const showProjects = !embedded && isGlobalAIAgentHistory && historySourceFilter === 'local' && isCodingAgent(setting)
 
   const currentRouteKey = usePageInfo((state) => state.getCurrentPageTabRouteKey(), shallow)
 
@@ -564,7 +573,7 @@ const HistoryChat = memo(({ aiSource, embedded, title, className }: HistoryChatP
               <YakitButton
                 type="text2"
                 icon={<MessageCirclePlusOutlined color="currentColor" size={16} />}
-                onClick={() => onNewChat(openChatInNewTab, pageId)}
+                onClick={() => onNewChat(openChatInNewTab, pageId, getSetting())}
               />
             </Tooltip>
           )}
@@ -581,6 +590,8 @@ const HistoryChat = memo(({ aiSource, embedded, title, className }: HistoryChatP
           onChange={(e) => setSearch(e.target.value)}
         />
       </div>
+      {showProjects && <CodingProjects search={searchDebounce} />}
+      {showProjects && <div className={styles['recent-title']}>{t('CodingAgent.recentSessions')}</div>}
       <div className={styles['content']}>
         <YakitSpin spinning={clearLoading}>
           <HistoryChatList

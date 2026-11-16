@@ -131,6 +131,7 @@
     "ai-forge": "技能库",
     "manageRightClickPlugins": "右键插件设置",
     "contextMenuResult": "右键插件结果",
-    "settings": "设置"
+    "settings": "设置",
+    "ai-worktrees": "工作树"
   }
 }

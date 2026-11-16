@@ -10,6 +10,23 @@ import { formatAIAgentSetting } from '..'
 import { AIAgentSettingDefault } from '../../defaultConstant'
 
 describe('formatAIAgentSetting', () => {
+  it('defaults to security and clears unrelated coding fields', () => {
+    expect(AIAgentSettingDefault.AgentMode).toBe('security')
+    const { AgentMode: _mode, ...settingWithoutMode } = AIAgentSettingDefault
+    expect(formatAIAgentSetting(settingWithoutMode)).toMatchObject({ AgentMode: 'security' })
+    expect(formatAIAgentSetting({ ...settingWithoutMode, AgentMode: 'coding' })).toMatchObject({
+      AgentMode: 'coding',
+    })
+    expect(
+      formatAIAgentSetting({
+        ...settingWithoutMode,
+        AgentMode: 'security',
+        CodingWorkspaceID: 'stale',
+        CodingCreateWorktree: true,
+      }),
+    ).toMatchObject({ AgentMode: 'security', CodingWorkspaceID: '', CodingCreateWorktree: false })
+  })
+
   it('SingleModelMode 缺字段时回退默认 false，并保留显式 true', () => {
     const { SingleModelMode: _omit, ...rest } = AIAgentSettingDefault
     expect(formatAIAgentSetting(rest).SingleModelMode).toBe(false)
@@ -99,5 +116,40 @@ describe('formatAIAgentSetting', () => {
     expect(formatAIAgentSetting({ ...AIAgentSettingDefault, RuntimeContextSizeLimit: 0 }).RuntimeContextSizeLimit).toBe(
       0,
     )
+  })
+})
+
+it('normalizes coding startup intent without carrying a conflicting selected checkout', () => {
+  expect(
+    formatAIAgentSetting({
+      ...AIAgentSettingDefault,
+      AgentMode: 'coding',
+      CodingWorkspaceID: 'workspace',
+      CodingCreateWorktree: true,
+      CodingWorktreeBaseRef: ' release ',
+      CodingWorktreeID: 'old-tree',
+    }),
+  ).toMatchObject({
+    CodingWorkspaceID: 'workspace',
+    CodingCreateWorktree: true,
+    CodingWorktreeBaseRef: 'release',
+    CodingWorktreeID: '',
+  })
+  expect(
+    formatAIAgentSetting({
+      ...AIAgentSettingDefault,
+      AgentMode: 'security',
+      CodingWorkspaceID: 'workspace',
+      CodingCreateWorktree: true,
+      CodingWorktreeBaseRef: 'main',
+      CodingWorktreeID: 'old-tree',
+      CodingWorkspaceRoots: ['/old'],
+    }),
+  ).toMatchObject({
+    CodingWorkspaceID: '',
+    CodingCreateWorktree: false,
+    CodingWorktreeBaseRef: '',
+    CodingWorktreeID: '',
+    CodingWorkspaceRoots: [],
   })
 })

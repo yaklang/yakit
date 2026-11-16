@@ -1,3 +1,4 @@
+import { restoreCodingSession } from '../../coding/binding'
 import { memo, useMemo, useRef, useState, type FC, type MouseEvent } from 'react'
 import { Virtuoso } from 'react-virtuoso'
 import styles from './HistoryChatList.module.scss'
@@ -270,6 +271,7 @@ const HistoryChatList: FC<{
       SyncPerceptionTrigger: info?.StartParams?.SyncPerceptionTrigger ?? false,
       EnablePlan: info?.StartParams?.EnablePlan ?? false,
       SingleModelMode: info?.StartParams?.SingleModelMode ?? false,
+      ...restoreCodingSession(info?.StartParams),
       DisableMemoryTriage: info?.StartParams?.DisableMemoryTriage ?? false,
       Strategy: {
         EnableMultiAgent: info?.StartParams?.Strategy?.EnableMultiAgent ?? false,

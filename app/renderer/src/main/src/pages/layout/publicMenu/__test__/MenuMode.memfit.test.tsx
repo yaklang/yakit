@@ -8,6 +8,7 @@ import type { PublicRouteMenuProps } from '@/routes/newRoute'
 import { MenuMode } from '../MenuMode'
 import { MemfitMemoryIcon } from '../memfitMenuIcon'
 import styles from '../MenuMode.module.scss'
+import { setExperimentalCoding } from '@/pages/ai-agent/coding/experimentalCodingStore'
 
 const edition = vi.hoisted(() => ({ current: 'memfit' }))
 const comparison = vi.hoisted(() => ({ reset: vi.fn() }))
@@ -60,6 +61,7 @@ const pluginToId = {
 describe('Memfit 公共菜单', () => {
   beforeEach(() => {
     edition.current = 'memfit'
+    setExperimentalCoding(false)
     comparison.reset.mockClear()
   })
   afterEach(cleanup)
@@ -69,7 +71,7 @@ describe('Memfit 公共菜单', () => {
     expect(menus.map((item) => item.page)).toEqual([undefined, undefined, undefined])
     expect(menus[0]).toMatchObject({ label: 'AI', labelUi: 'YakitRoute.ai' })
     expect(menus[1]).toMatchObject({ label: '插件', labelUi: 'YakitRoute.plugin' })
-    expect(menus[0].children?.map((item) => item.page)).toEqual(aiRoutes)
+    expect(menus[0].children?.map((item) => item.page)).toEqual([...aiRoutes, YakitRoute.AI_Worktrees])
     expect(menus[1].children).toEqual([{ page: YakitRoute.Plugin_Hub, ...YakitRouteToPageInfo[YakitRoute.Plugin_Hub] }])
     for (const child of menus[0].children ?? []) {
       expect(child).toEqual({ page: child.page, ...YakitRouteToPageInfo[child.page!] })
@@ -105,6 +107,14 @@ describe('Memfit 公共菜单', () => {
       fireEvent.click(screen.getByText(YakitRouteToPageInfo[route].labelUi!))
     }
     expect(onMenuSelect.mock.calls).toEqual(aiRoutes.map((route) => [{ route }]))
+  })
+
+  it('实验开关启用后工作树与知识库同级，点击打开独立页面', () => {
+    setExperimentalCoding(true)
+    const onMenuSelect = vi.fn()
+    render(<MenuMode mode="AI" pluginToId={pluginToId} onMenuSelect={onMenuSelect} />)
+    fireEvent.click(screen.getByText('YakitRoute.ai-worktrees'))
+    expect(onMenuSelect).toHaveBeenCalledWith({ route: YakitRoute.AI_Worktrees })
   })
 
   it('记忆库图标重复渲染时各自使用独立的透明度蒙版', () => {

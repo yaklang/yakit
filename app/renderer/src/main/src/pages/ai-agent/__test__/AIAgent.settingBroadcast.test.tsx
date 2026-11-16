@@ -14,6 +14,8 @@ import { RemoteAIAgentGV } from '@/enums/aiAgent'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { YakitRouteToPageInfo } from '@/routes/newRoute'
 import { globalSessionEngine } from '../../ai-re-act/hooks/ChatMultiSessionController'
+import { setExperimentalCoding } from '../coding/experimentalCodingStore'
+import { emptyCodingBinding } from '../coding/binding'
 
 const ipc = vi.hoisted(() => ({
   useChatIPC: vi.fn(),
@@ -25,6 +27,8 @@ const ipc = vi.hoisted(() => ({
   pages: new Map(),
   sessions: new Map(),
   showHistory: false,
+  showModeControls: false,
+  pendingChat: undefined as undefined | { status: string; streamToken: string },
   prepareWelcomeStore: false,
   chatMounted: vi.fn(),
   chatUnmounted: vi.fn(),
@@ -99,6 +103,7 @@ vi.mock('../../yakRunner/SplitView/SplitView', () => ({
 
 vi.mock('../aiAgentChat/AIAgentChat', async () => {
   const { useContext, useEffect } = await import('react')
+  const { CodingAgentControls } = await import('../coding/CodingAgentControls')
   const { default: AIAgentContext } = await import('../useContext/AIAgentContext')
   const { default: useRuntimeContextSizeLimit } = await import('../useContext/useRuntimeContextSizeLimit')
   return {
@@ -122,6 +127,7 @@ vi.mock('../aiAgentChat/AIAgentChat', async () => {
       }, [store.activeChat?.SessionID])
       return (
         <div>
+          {ipc.showModeControls && <CodingAgentControls />}
           <span data-testid="runtime-limit">{runtimeLimit}</span>
           <span data-testid="raw-limit">{store.activeChat?.StartParams?.RuntimeContextSizeLimit}</span>
           <span data-testid="default-limit">{store.setting.RuntimeContextSizeLimit}</span>
@@ -187,6 +193,7 @@ vi.mock('../../ai-re-act/hooks/useChatIPC', () => ({
   useChatIPC: (...args: unknown[]) => {
     ipc.useChatIPC(...args)
     return {
+      pendingChat: ipc.pendingChat,
       onStart: vi.fn(),
       onSend: vi.fn(),
       onClose: ipc.onClose,
@@ -259,6 +266,9 @@ describe('AIAgent 配置广播', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     ipc.showHistory = false
+    ipc.showModeControls = false
+    ipc.pendingChat = undefined
+    setExperimentalCoding(false)
     ipc.prepareWelcomeStore = false
     ipc.pages.clear()
     ipc.sessions.clear()
@@ -346,6 +356,53 @@ describe('AIAgent 配置广播', () => {
     expect(screen.getByTestId('goal')).toHaveTextContent('7')
     expect(screen.getByTestId('enable-plan')).toHaveTextContent('true')
     expect(getRemoteValueMock).not.toHaveBeenCalledWith(RemoteAIAgentGV.AIAgentChatSetting)
+  })
+
+  it.each([false, true])(
+    '项目草稿从路由恢复 coding 配置，不被安全助手缓存覆盖（StrictMode=%s）',
+    async (reactStrictMode) => {
+      ipc.prepareWelcomeStore = true
+      const setting = {
+        ...AIAgentSettingDefault,
+        AgentMode: 'coding',
+        CodingWorkspaceID: 'project',
+        CodingWorkingDirectory: '/frontend',
+        CodingSourceRoots: ['/frontend', '/backend'],
+        CodingWorkspaceRoots: ['/frontend', '/backend'],
+        CodingCreateWorktree: false,
+      }
+      const draft = { ...createWelcomeChat(), StartParams: setting }
+      render(<AIAgent pageId="project-tab" initialSession={draft} />, { reactStrictMode })
+
+      await waitFor(() => expect(JSON.parse(screen.getByTestId('setting').textContent!)).toEqual(setting))
+      expect(globalSessionEngine.ensureSession(draft.SessionID).request).toEqual(setting)
+      expect(getRemoteValueMock).not.toHaveBeenCalledWith(RemoteAIAgentGV.AIAgentChatSetting)
+      expect(querySessionMock).not.toHaveBeenCalled()
+      expect(screen.getByTestId('welcome-session')).toHaveTextContent(draft.SessionID)
+    },
+  )
+
+  it.each([true, false])('恢复 Coding 会话时保留模式，草稿：%s', async (draft) => {
+    const saved = {
+      AgentMode: 'coding',
+      CodingWorkspaceID: 'saved-project',
+      CodingWorkingDirectory: '/saved',
+    }
+    const session = {
+      ...createWelcomeChat(),
+      SessionID: 'saved-coding',
+      isDraftSession: draft,
+      ...(draft ? { StartParams: saved } : {}),
+    }
+    querySessionMock.mockResolvedValue(sessionResponse([{ ...session, StartParams: saved }]))
+    render(<AIAgent pageId="saved-tab" initialSession={session} />)
+    await waitFor(() =>
+      expect(JSON.parse(screen.getByTestId('setting').textContent!)).toMatchObject({
+        AgentMode: 'coding',
+        CodingWorkspaceID: 'saved-project',
+      }),
+    )
+    expect(saved.AgentMode).toBe('coding')
   })
 
   it.each([false, true])('子组件创建默认会话后欢迎页仍读取缓存（StrictMode=%s）', async (reactStrictMode) => {
@@ -1376,6 +1433,46 @@ describe('AIAgent 配置广播', () => {
     render(<AIAgent pageId="test" initialSession={restored.pageParamsInfo.aiAgentPageInfo.session} />)
     expect(screen.getByTestId('active-session')).toHaveTextContent('created')
     expect(querySessionMock).toHaveBeenCalledWith(expect.objectContaining({ Filter: { SessionID: ['created'] } }))
+  })
+
+  it.each([false, true])('切换模式保留原请求和后台任务，pending：%s', async (pending) => {
+    setExperimentalCoding(true)
+    ipc.showModeControls = true
+    if (pending) ipc.pendingChat = { status: 'connecting', streamToken: 'coding-stream' }
+    const original = {
+      ...AIAgentSettingDefault,
+      AgentMode: 'coding',
+      CodingWorkspaceID: 'project',
+      CodingWorktreeID: 'worktree',
+      CodingWorkingDirectory: '/trees/project',
+      CodingSourceRoots: ['/source'],
+      CodingWorkspaceRoots: ['/trees/project'],
+    }
+    const session = { ...createWelcomeChat(), SessionID: 'coding', isDraftSession: pending, StartParams: original }
+    querySessionMock.mockResolvedValue(sessionResponse([session]))
+    const data = globalSessionEngine.ensureSession('coding')
+    data.request = cloneDeep(original)
+    data.store.setState({ execute: true })
+    render(<AIAgent pageId="test" initialSession={session} />)
+    await waitFor(() => expect(JSON.parse(screen.getByTestId('setting').textContent!).AgentMode).toBe('coding'))
+    vi.mocked(globalSessionEngine.updateSessionConfig).mockClear()
+    const open = vi.fn()
+    emiter.on('openPage', open)
+    fireEvent.click(screen.getByRole('button', { name: 'Coding Agent' }))
+    fireEvent.click(await screen.findByText('CodingAgent.securityDescription'))
+    emiter.off('openPage', open)
+    await waitFor(() => expect(screen.queryByRole('menu')).toBeNull())
+    const draft = JSON.parse(open.mock.calls[0][0]).params.aiAgentPageInfo.session
+    expect(draft.SessionID).not.toBe('coding')
+    expect(draft).toMatchObject({ isDraftSession: true, StartParams: emptyCodingBinding })
+    expect(JSON.parse(screen.getByTestId('setting').textContent!)).toMatchObject(original)
+    expect(JSON.parse(screen.getByTestId('active-chat').textContent!).SessionID).toBe('coding')
+    expect(ipc.detachPendingChat).not.toHaveBeenCalled()
+    expect(ipc.cancelPendingChat).not.toHaveBeenCalled()
+    expect(ipc.onClose).not.toHaveBeenCalled()
+    expect(data.store.getState().execute).toBe(true)
+    expect(data.request).toEqual(original)
+    expect(globalSessionEngine.updateSessionConfig).not.toHaveBeenCalledWith('coding', expect.anything())
   })
 
   it('切历史和欢迎页只脱离 pending 视图，提交继续在后台运行', async () => {

@@ -135,6 +135,7 @@ export const AIMentionTabs: YakitSideTabProps['yakitTabs'] = [
 
 /** ai-agent 聊天全局配置参数默认值 */
 export const AIAgentSettingDefault: AIAgentSetting = {
+  AgentMode: 'security',
   EnableSystemFileSystemOperator: true,
   UseDefaultAIConfig: true,
   ForgeName: '',

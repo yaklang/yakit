@@ -1,7 +1,11 @@
+import { isCodingAgent } from '@/pages/ai-agent/agentMode'
 import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import type { AIChatWelcomeProps } from './type'
 import styles from './AIChatWelcome.module.scss'
 import { AIChatTextarea } from '../template/template'
+import useAIAgentStore from '../useContext/useStore'
+import { CodingSessionControls } from '../coding/CodingAgentControls'
+import type { CodingWorkspace } from '../coding/api'
 import type { AIChatTextareaRefProps } from '../template/type'
 
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -33,6 +37,9 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
   forwardRef((props, ref) => {
     const { t } = useI18nNamespaces(['aiAgent'])
     const { onTriageSubmit } = props
+    const { setting } = useAIAgentStore()
+    const coding = isCodingAgent(setting)
+    const [codingWorkspace, setCodingWorkspace] = useState<CodingWorkspace>()
     const aiChatTextareaRef = useRef<AIChatTextareaRefProps>({
       setMention: () => {},
       setValue: () => {},
@@ -106,19 +113,28 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
                       </span>
                     ))}
               </div>
-              <Flex vertical gap={12} className={styles['welcome-tips-block']}>
-                {!isEmptyStats && <div className={styles['subtitle']}>{t('AIChatWelcome.WelcomeHomeSubTitle')}</div>}
-                <WelcomeTipsCards compact={layout.compact} onEmptyChange={handleEmptyStatsChange} added={added} />
-                {!isEmptyStats && <WelcomeRecentSessions density={layout.sessionDensity} />}
-              </Flex>
+              {coding ? (
+                <div className={styles['subtitle']}>
+                  {codingWorkspace
+                    ? t('CodingAgent.welcomeProject', { name: codingWorkspace.Name })
+                    : t('CodingAgent.welcome')}
+                </div>
+              ) : (
+                <Flex vertical gap={12} className={styles['welcome-tips-block']}>
+                  {!isEmptyStats && <div className={styles['subtitle']}>{t('AIChatWelcome.WelcomeHomeSubTitle')}</div>}
+                  <WelcomeTipsCards compact={layout.compact} onEmptyChange={handleEmptyStatsChange} added={added} />
+                  {!isEmptyStats && <WelcomeRecentSessions density={layout.sessionDensity} />}
+                </Flex>
+              )}
             </Flex>
             <div className={styles['input-body-wrapper']}>
               <div className={styles['input-panel']} data-ai-ripple-disabled>
                 <AIChatTextarea
+                  inputHeader={<CodingSessionControls onWorkspaceChange={setCodingWorkspace} />}
                   ref={aiChatTextareaRef}
                   onSubmitWithDraft={onTriageSubmit}
                   initialDraft={props.initialDraft}
-                  showScenarioCapabilities
+                  showScenarioCapabilities={!coding}
                   filterMentionType={['recent']}
                   selectedHttpFlowIds={props.selectedHttpFlowIds}
                   selectedRiskIds={props.selectedRiskIds}

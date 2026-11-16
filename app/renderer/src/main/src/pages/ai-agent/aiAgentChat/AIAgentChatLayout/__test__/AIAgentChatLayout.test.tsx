@@ -40,7 +40,7 @@ vi.mock('@/i18n/useI18nNamespaces', () => ({
 }))
 vi.mock('@/pages/ai-agent/useContext/useStore', () => ({
   default: function useAgentStore() {
-    return useStore(agentStore)
+    return { ...useStore(agentStore), setting: {} }
   },
 }))
 vi.mock('@/pages/ai-re-act/hooks/useCurrentDataBySession', () => ({

@@ -48,6 +48,15 @@ export enum AISourceEnum {
 export type AISource = `${AISourceEnum}`
 
 export interface AIStartParams {
+  /** Session persona: security (default), coding. */
+  AgentMode?: string
+  CodingWorkspaceID?: string
+  CodingWorkingDirectory?: string
+  CodingCreateWorktree?: boolean
+  CodingWorktreeBaseRef?: string
+  CodingWorktreeID?: string
+  CodingWorkspaceRoots?: string[]
+  CodingSourceRoots?: string[]
   ClientUI?: string
   CoordinatorId?: string
   Sequence?: number

@@ -83,3 +83,80 @@ describe('script providers and global controls gRPC contract', () => {
     expect(loaded).toEqual(saved)
   })
 })
+
+describe('experimental coding gRPC contract', () => {
+  it('round-trips mode and workspace binding in starts and history', () => {
+    const binding = {
+      AgentMode: 'coding',
+      CodingWorkspaceID: 'workspace-one',
+      CodingWorkingDirectory: '/source/tree',
+      CodingCreateWorktree: true,
+      CodingWorktreeBaseRef: 'main',
+      CodingWorktreeID: 'tree-id',
+      CodingWorkspaceRoots: ['/tree', '/back'],
+      CodingSourceRoots: ['/front', '/back'],
+    }
+    const start = ypb.Yak.service.StartAIReAct
+    expect(start.requestDeserialize(start.requestSerialize({ IsStart: true, Params: binding })).Params).toMatchObject(
+      binding,
+    )
+    const history = ypb.Yak.service.QueryAISession
+    const result = history.responseDeserialize(
+      history.responseSerialize({ Data: [{ SessionID: 'coding', StartParams: binding }] }),
+    )
+    expect(result.Data[0].StartParams).toMatchObject(binding)
+  })
+  it('round-trips branch refs and checkout status', () => {
+    const method = ypb.Yak.service.ListAICodingBranches
+    const payload = {
+      Data: [{ Name: 'origin/main', Ref: 'refs/remotes/origin/main', Commit: 'abc', Remote: true }],
+      CurrentBranch: 'main',
+      CurrentCommit: 'abc',
+      DefaultRef: 'refs/remotes/origin/main',
+      HasLocalChanges: true,
+    }
+    expect(method.requestDeserialize(method.requestSerialize({ WorkspaceID: 'one' }))).toEqual({ WorkspaceID: 'one' })
+    expect(method.responseDeserialize(method.responseSerialize(payload))).toEqual(payload)
+  })
+  it('exposes workspace and worktree RPC payloads', () => {
+    const method = ypb.Yak.service.CreateAICodingWorkspace
+    expect(
+      method.requestDeserialize(method.requestSerialize({ Name: 'Project', RootPaths: ['/front', '/back'] })),
+    ).toMatchObject({
+      Name: 'Project',
+      RootPaths: ['/front', '/back'],
+    })
+    const list = ypb.Yak.service.ListAICodingWorktrees
+    expect(
+      list.responseDeserialize(
+        list.responseSerialize({
+          Data: [
+            {
+              ID: 'tree',
+              WorkspaceID: 'workspace',
+              OwnerSessionID: 'owner',
+              SessionIDs: ['owner', 'linked'],
+              Path: '/source/tree',
+              WorkingDirectory: '/source/tree/app',
+              State: 'ready',
+              SourceDirectory: '/source/app',
+              Detached: true,
+              Locked: true,
+            },
+          ],
+        }),
+      ).Data[0],
+    ).toMatchObject({
+      ID: 'tree',
+      WorkspaceID: 'workspace',
+      OwnerSessionID: 'owner',
+      SessionIDs: ['owner', 'linked'],
+      Path: '/source/tree',
+      WorkingDirectory: '/source/tree/app',
+      State: 'ready',
+      SourceDirectory: '/source/app',
+      Detached: true,
+      Locked: true,
+    })
+  })
+})

@@ -1,3 +1,4 @@
+import { restoreCodingSession } from '../../coding/binding'
 import React, { useEffect, useState } from 'react'
 import { useCreation, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import moment from 'moment'
@@ -179,6 +180,7 @@ const AIScheduledTasksDetail: React.FC<AIScheduledTasksDetailProps> = React.memo
       SyncPerceptionTrigger: relatedSession.StartParams?.SyncPerceptionTrigger ?? false,
       EnablePlan: relatedSession.StartParams?.EnablePlan ?? false,
       SingleModelMode: relatedSession.StartParams?.SingleModelMode ?? false,
+      ...restoreCodingSession(relatedSession.StartParams),
       DisableMemoryTriage: relatedSession.StartParams?.DisableMemoryTriage ?? false,
       Strategy: {
         EnableMultiAgent: relatedSession.StartParams?.Strategy?.EnableMultiAgent ?? false,

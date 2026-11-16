@@ -12,6 +12,7 @@ import { onReStart } from '../../utils'
 import { StrictMode } from 'react'
 import { AIAgentSettingDefault } from '../../defaultConstant'
 import { syncAIAgentPageInfo } from '../../utils/syncAIAgentPageInfo'
+import { usePageInfo, type PageNodeItemProps } from '@/store/pageInfo'
 
 const mocks = vi.hoisted(() => ({
   activeChat: undefined as { SessionID: string; isDraftSession?: boolean } | undefined,
@@ -115,6 +116,33 @@ afterEach(() => {
 })
 
 describe('welcome submission', () => {
+  it.each([false, true])('项目草稿首问在已绑定的标签内启动，接纳结果为 %s 时不清空项目配置', (accepted) => {
+    mocks.openChatInNewTab = true
+    mocks.activeChat = { SessionID: 'project-draft', isDraftSession: true }
+    mocks.startChat.mockReturnValueOnce(accepted)
+    const queryPage = vi.spyOn(usePageInfo.getState(), 'queryPagesDataById').mockReturnValue({
+      pageParamsInfo: { aiAgentPageInfo: { session: mocks.activeChat } },
+    } as PageNodeItemProps)
+    const opened = vi.fn()
+    emiter.on('openPage', opened)
+    try {
+      render(<AIAgentChat />)
+      fireEvent.click(screen.getByRole('button', { name: 'submit-text' }))
+      expect(mocks.startChat).toHaveBeenCalledExactlyOnceWith({
+        qs: 'first question',
+        target: { kind: 'new', sessionId: 'project-draft' },
+      })
+      expect(mocks.onSubmitResult).toHaveBeenCalledWith(accepted)
+      expect(opened).not.toHaveBeenCalled()
+      expect(mocks.setActiveChat).not.toHaveBeenCalled()
+      expect(mocks.setSetting).not.toHaveBeenCalled()
+      expect(screen.getByTestId('mode')).toHaveTextContent(accepted ? 're-act' : 'welcome')
+    } finally {
+      queryPage.mockRestore()
+      emiter.off('openPage', opened)
+    }
+  })
+
   it.each([false, true])('欢迎页传递启动接纳结果 %s，仅接纳时切换模式', (accepted) => {
     mocks.startChat.mockReturnValueOnce(accepted)
     render(<AIAgentChat />)

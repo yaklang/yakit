@@ -594,6 +594,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
         >
           {(materialsOpen, toggleMaterials, summary, materialsMenuOpen) => (
             <div className={classNames(styles['textarea-wrapper'])} onKeyDown={handleTextareaKeyDown}>
+              {props.inputHeader}
               <div className={styles['materials-row']}>
                 <YakitButton
                   type="text2"

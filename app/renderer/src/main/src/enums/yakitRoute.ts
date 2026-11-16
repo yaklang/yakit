@@ -130,6 +130,7 @@ export enum YakitRoute {
   AI_Tool = 'ai-tool',
   /** 技能 */
   AI_Forge = 'ai-forge',
+  AI_Worktrees = 'ai-worktrees',
   /** Yak MCP 调用历史 */
   MCP_History = 'mcp-history',
   /** 右键插件管理 */

@@ -1,3 +1,4 @@
+import { codingBindingKeys, emptyCodingBinding } from '../coding/binding'
 import cloneDeep from 'lodash/cloneDeep'
 import { omit } from 'lodash'
 import { AISourceEnum } from '@/pages/ai-re-act/hooks/grpcApi'
@@ -8,7 +9,13 @@ import type { AIAgentSetting } from '../aiAgentType'
 import { AIAgentSettingDefault } from '../defaultConstant'
 
 const omitPersistKeys = ['AIService', 'AIModelName', 'TimelineContentSizeLimit'] as const
-const omitSessionRuntimeKeys = ['EnablePlan', 'SyncPerceptionTrigger', 'SingleModelMode', 'Source'] as const
+const omitSessionRuntimeKeys = [
+  'EnablePlan',
+  'SyncPerceptionTrigger',
+  'SingleModelMode',
+  'Source',
+  ...codingBindingKeys,
+] as const
 
 export const stripAIAgentChatSettingForPersist = (setting: Partial<AIAgentSetting>): Partial<AIAgentSetting> => {
   const data = omit(setting, [...omitPersistKeys, ...omitSessionRuntimeKeys]) as Partial<AIAgentSetting>
@@ -56,6 +63,7 @@ export const applyAIAgentChatSettingSessionDefaults = (setting: AIAgentSetting):
     SyncPerceptionTrigger: false,
     EnablePlan: false,
     SingleModelMode: false,
+    ...emptyCodingBinding,
     Source: AISourceEnum.aiAgent,
     Strategy: {
       ...setting.Strategy,

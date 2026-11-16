@@ -12,6 +12,7 @@ import {
   mergeAIAgentChatSettingCache,
   persistAIAgentChatSetting,
   serializeAIAgentChatSetting,
+  stripAIAgentChatSettingForPersist,
 } from '../aiAgentChatSettingCache'
 
 vi.mock('@/utils/kv', () => ({
@@ -233,4 +234,22 @@ describe('persistAIAgentChatSetting', () => {
     expect(setRemoteValueMock).toHaveBeenCalled()
     expect(emitMock).not.toHaveBeenCalled()
   })
+})
+
+it('does not broadcast or persist coding source bindings as global chat defaults', () => {
+  const binding = {
+    AgentMode: 'coding',
+    CodingWorkspaceID: 'workspace',
+    CodingWorkingDirectory: '/source',
+    CodingCreateWorktree: true,
+    CodingWorktreeBaseRef: 'main',
+    CodingWorktreeID: 'tree',
+    CodingWorkspaceRoots: ['/tree', '/back'],
+    CodingSourceRoots: ['/front', '/back'],
+  }
+  const persisted = stripAIAgentChatSettingForPersist({ ...AIAgentSettingDefault, ...binding })
+  expect(persisted.AgentMode).toBeUndefined()
+  expect(persisted.CodingWorkspaceID).toBeUndefined()
+  expect(persisted.CodingWorkingDirectory).toBeUndefined()
+  for (const key of Object.keys(binding)) expect(persisted[key]).toBeUndefined()
 })
