@@ -55,6 +55,7 @@ interface MockTaskStoreState {
   execute: boolean
   pendingReply: boolean
   taskDetailsUpdate: number
+  loadedSkillsUpdate: number
   sessionExecution?: Record<string, unknown>
 }
 // 详情条目带 uuid：父级收到更新通知后比较 uuid 判断详情是否被流数据刷新（参照 AITaskExecutionDetails）
@@ -63,6 +64,7 @@ interface MockTaskDetails {
   execution?: Record<string, unknown>
 }
 const mockTaskDetailsMap = new Map<string, MockTaskDetails>()
+const mockLoadedSkills = { total: 0 }
 const mockRunningTaskStore = createStore<{ count: number | undefined }>(() => ({ count: undefined }))
 const mockAgentStore = createStore<{ activeChat?: { Id: number; SessionID: string } }>(() => ({}))
 const mockTaskStore: StoreApi<MockTaskStoreState> = createStore<MockTaskStoreState>(() => ({
@@ -70,6 +72,7 @@ const mockTaskStore: StoreApi<MockTaskStoreState> = createStore<MockTaskStoreSta
   execute: false,
   pendingReply: false,
   taskDetailsUpdate: 0,
+  loadedSkillsUpdate: 0,
   sessionExecution: undefined,
 }))
 const setMockQuestionID = (questionID: string) => {
@@ -82,8 +85,10 @@ const resetMockStore = () => {
     execute: false,
     pendingReply: false,
     taskDetailsUpdate: 0,
+    loadedSkillsUpdate: 0,
     sessionExecution: undefined,
   })
+  mockLoadedSkills.total = 0
   mockTaskDetailsMap.clear()
   casualTaskState.questionID = ''
 }
@@ -94,6 +99,7 @@ vi.mock('../../hooks/useCurrentDataBySession', () => ({
     taskDetailsMap: mockTaskDetailsMap,
     httpRunTimeIDs: [] as string[],
     aiPerfData: {},
+    loadedSkills: mockLoadedSkills,
   }),
 }))
 
@@ -128,6 +134,7 @@ const {
   casualTaskState,
   mockSyncCasualTaskTab,
   mockOpenLogWindow,
+  mockOnSend,
   mockExportModalState,
   dispatcherState,
   mockNetWorkApi,
@@ -137,6 +144,7 @@ const {
   casualTaskState: { questionID: '' },
   mockSyncCasualTaskTab: vi.fn(),
   mockOpenLogWindow: vi.fn(),
+  mockOnSend: vi.fn(() => true),
   mockExportModalState: { lastVisible: undefined as boolean | undefined },
   // getSetting 返回的可控配置，「任务详情」入口按 Source 决定是否渲染
   dispatcherState: { setting: { Source: 'ai' } as { Source: string } },
@@ -184,8 +192,55 @@ vi.mock('@/hook/useAiChatLog/useAiChatLog.ts', () => ({
   default: () => ({ onOpenLogWindow: mockOpenLogWindow }),
 }))
 vi.mock('@/pages/ai-agent/useContext/useDispatcher', () => ({
-  default: () => ({ getSetting: () => dispatcherState.setting }),
+  default: () => ({ getSetting: () => dispatcherState.setting, onSend: mockOnSend }),
 }))
+
+const sessionIdState = vi.hoisted(() => ({ id: '' }))
+vi.mock('../../hooks/useCurrentSessionId', () => ({
+  default: () => sessionIdState.id,
+}))
+
+const browserInstancesMock = vi.hoisted(() => {
+  let instances: { id: string }[] = []
+  const listeners = new Set<() => void>()
+  return {
+    getInstances: () => instances,
+    setInstances(next: { id: string; online?: boolean }[]) {
+      instances = next
+      listeners.forEach((listener) => listener())
+    },
+    subscribe(listener: () => void) {
+      listeners.add(listener)
+      return () => listeners.delete(listener)
+    },
+    reset() {
+      instances = []
+      listeners.forEach((listener) => listener())
+    },
+  }
+})
+vi.mock('@/pages/ai-agent/browserInstances/browserInstanceStore', async () => {
+  const React = await import('react')
+  return {
+    useBrowserInstances: () => {
+      const instances = React.useSyncExternalStore(
+        browserInstancesMock.subscribe,
+        browserInstancesMock.getInstances,
+        browserInstancesMock.getInstances,
+      )
+      return {
+        instances,
+        history: [],
+        pending: [],
+        selectedId: '',
+        loading: false,
+        error: '',
+        historyError: '',
+        autoApprovalErrors: {},
+      }
+    },
+  }
+})
 
 vi.mock('@/pages/ai-agent/components/ExportAILogsModal/ExportAILogsModal', () => ({
   ExportAILogsModal: ({ visible, loading, onOk }: React.ComponentProps<typeof ExportAILogsModalComponent>) => {
@@ -309,6 +364,8 @@ const expectEmptyDataCards = () => {
 
 describe('AIRightPanel', () => {
   beforeEach(() => {
+    sessionIdState.id = ''
+    browserInstancesMock.reset()
     mockRunningTaskStore.setState({ count: undefined })
     viewportState.visible = true
     mockAgentStore.setState({ activeChat: undefined })
@@ -1052,10 +1109,16 @@ describe('AIRightPanel', () => {
   })
 
   it.each([false, true])('加载技能菜单位于文件系统和浏览器实例之间（小屏：%s）', (small) => {
-    render(<AIRightPanel small={small} />)
-    const loadSkills = screen.getByLabelText('加载技能')
-    expect(screen.getByLabelText('文件系统').nextElementSibling).toBe(loadSkills)
-    expect(loadSkills.nextElementSibling).toBe(screen.getByLabelText('浏览器实例'))
+    browserInstancesMock.setInstances([{ id: 'browser-1', online: true }])
+    try {
+      render(<AIRightPanel small={small} />)
+      const loadSkills = screen.getByLabelText('加载技能')
+      expect(screen.getByLabelText('文件系统').nextElementSibling).toBe(loadSkills)
+      expect(loadSkills.nextElementSibling).toBe(screen.getByLabelText('浏览器实例'))
+    } finally {
+      cleanup()
+      browserInstancesMock.reset()
+    }
   })
 
   it('小屏加载技能与异步任务互相切换', () => {
@@ -1083,6 +1146,64 @@ describe('AIRightPanel', () => {
     fireEvent.click(screen.getByText('已加载'))
     expect(screen.getByTestId('load-skills-pane')).toHaveAttribute('data-load-state', 'loaded')
     expect(within(pane).getByText('2')).toBeInTheDocument()
+  })
+
+  it.each([false, true])('加载技能菜单展示已加载技能数量（小屏：%s）', (small) => {
+    mockLoadedSkills.total = 6
+    const result = render(<AIRightPanel small={small} />)
+    try {
+      if (small) expect(screen.getByLabelText('加载技能 6')).toBeInTheDocument()
+      else expect(screen.getByLabelText('加载技能')).toHaveTextContent('加载技能6')
+      act(() => {
+        mockLoadedSkills.total = 0
+        mockTaskStore.setState((state) => ({ loadedSkillsUpdate: state.loadedSkillsUpdate + 1 }))
+      })
+      expect(screen.queryByLabelText('加载技能 6')).not.toBeInTheDocument()
+      expect(screen.getByLabelText('加载技能').textContent).toBe(small ? '' : '加载技能')
+    } finally {
+      result.unmount()
+      resetMockStore()
+    }
+  })
+
+  it('未打开加载技能时按会话和任务各同步一次，快照刷新不重复请求', () => {
+    sessionIdState.id = 'session-skills'
+    setMockQuestionID('task-a')
+    mockTaskDetailsMap.set('task-a', { uuid: 'uuid-1' })
+    mockOnSend.mockClear()
+    const result = render(<AIRightPanel />)
+    try {
+      expect(screen.queryByTestId('load-skills-pane')).not.toBeInTheDocument()
+      expect(mockOnSend).toHaveBeenCalledTimes(1)
+      expect(mockOnSend).toHaveBeenCalledWith(
+        expect.objectContaining({
+          token: 'session-skills',
+          params: expect.objectContaining({
+            IsSyncMessage: true,
+            SyncType: 'skill_loaded_sync',
+          }),
+        }),
+      )
+
+      const detail = mockTaskDetailsMap.get('task-a')!
+      detail.uuid = 'uuid-2'
+      act(() => mockTaskStore.setState((state) => ({ taskDetailsUpdate: state.taskDetailsUpdate + 1 })))
+      expect(mockOnSend).toHaveBeenCalledTimes(1)
+
+      act(() => setMockQuestionID('task-b'))
+      expect(mockOnSend).toHaveBeenCalledTimes(2)
+
+      act(() => {
+        mockLoadedSkills.total = 3
+        mockTaskStore.setState((state) => ({ loadedSkillsUpdate: state.loadedSkillsUpdate + 1 }))
+      })
+      expect(screen.getByLabelText('加载技能')).toHaveTextContent('加载技能3')
+      expect(mockOnSend).toHaveBeenCalledTimes(2)
+    } finally {
+      result.unmount()
+      sessionIdState.id = ''
+      resetMockStore()
+    }
   })
 
   it('包裹组件支持自定义标题和操作区', () => {
@@ -1153,6 +1274,12 @@ describe('AIRightPanel', () => {
 
   it.each(['任务详情看板', '流量', '漏洞'])('大屏点击%s后切为小屏，提示保持关闭直到鼠标移出再移入', async (label) => {
     casualTaskState.questionID = 'q-1'
+    mockTaskStore.setState({
+      sessionExecution: {
+        http_flow_count: 3,
+        risk_level_count: { critical: 1, high: 0, warning: 0, low: 0, info: 0, other: 0, total: 1 },
+      },
+    })
     try {
       const { rerender } = render(<AIRightPanel small={false} />)
       const button = screen.getByLabelText(label)
@@ -1180,6 +1307,7 @@ describe('AIRightPanel', () => {
       casualTaskState.questionID = ''
       mockSyncCasualTaskTab.mockClear()
       mockEmit.mockClear()
+      resetMockStore()
       cleanup()
     }
   })
@@ -1316,7 +1444,7 @@ describe('AIRightPanel', () => {
     }
   })
 
-  it('漏洞等级计数全部为 0 时不渲染等级角标', async () => {
+  it('漏洞等级计数全部为 0 时不显示漏洞入口', async () => {
     setMockQuestionID('task-risk-all-zero')
     mockTaskDetailsMap.set('task-risk-all-zero', {
       uuid: 'uuid-risk-all-zero',
@@ -1326,9 +1454,7 @@ describe('AIRightPanel', () => {
     })
     const result = await renderPanel(<AIRightPanel />)
     try {
-      const riskButton = screen.getByLabelText('漏洞')
-      // 无任何等级数字与分隔符，整个 risk-tag 角标隐藏
-      expect(riskButton.textContent).toBe('漏洞')
+      expect(screen.queryByLabelText('漏洞')).not.toBeInTheDocument()
       expect(screen.queryByText('｜')).not.toBeInTheDocument()
     } finally {
       result.unmount()
@@ -1347,8 +1473,8 @@ describe('AIRightPanel', () => {
     mockTaskDetailsMap.set('task-live-count', detail)
     try {
       render(<AIRightPanel small={small} />)
-      const trafficMenu = screen.getByLabelText('流量')
-      const riskMenu = screen.getByLabelText('漏洞')
+      expect(screen.queryByLabelText('流量')).not.toBeInTheDocument()
+      expect(screen.queryByLabelText('漏洞')).not.toBeInTheDocument()
 
       for (const [index, count] of [42, 99, 100, 366, 58, 0].entries()) {
         // 与 session_snapshot 一致：保留任务条目引用，替换 execution 并更新 uuid。
@@ -1357,11 +1483,16 @@ describe('AIRightPanel', () => {
         act(() => mockTaskStore.setState((state) => ({ taskDetailsUpdate: state.taskDetailsUpdate + 1 })))
         act(() => vi.advanceTimersByTime(3000))
 
-        const displayedCount = small && count > 99 ? 99 : count || ''
-        expect(trafficMenu.textContent).toBe(`${small ? '' : '流量'}${displayedCount}`)
-        expect(riskMenu.textContent).toBe(`${small ? '' : '漏洞'}${displayedCount}`)
         expect(screen.getByLabelText('异步任务').textContent).toBe(`${small ? '' : '异步任务'}7`)
-        if (small && count > 0) {
+        if (count === 0) {
+          expect(screen.queryByLabelText('流量')).not.toBeInTheDocument()
+          expect(screen.queryByLabelText('漏洞')).not.toBeInTheDocument()
+          continue
+        }
+        const displayedCount = small && count > 99 ? 99 : count
+        expect(screen.getByLabelText('流量').textContent).toBe(`${small ? '' : '流量'}${displayedCount}`)
+        expect(screen.getByLabelText('漏洞').textContent).toBe(`${small ? '' : '漏洞'}${displayedCount}`)
+        if (small) {
           for (const label of ['流量', '漏洞']) {
             const badge = screen.getByLabelText(`${label} ${count}`)
             expect(badge.classList.contains('count-badge-overflow')).toBe(count > 99)
@@ -1459,16 +1590,16 @@ describe('AIRightPanel', () => {
       expect(screen.getByLabelText('漏洞')).toHaveTextContent(/^漏洞7$/)
 
       act(() => setMockQuestionID('task-without-snapshot'))
-      expect(screen.getByLabelText('流量')).toHaveTextContent(/^流量$/)
-      expect(screen.getByLabelText('漏洞')).toHaveTextContent(/^漏洞$/)
+      expect(screen.queryByLabelText('流量')).not.toBeInTheDocument()
+      expect(screen.queryByLabelText('漏洞')).not.toBeInTheDocument()
       expectEmptyDataCards()
 
       act(() => setMockQuestionID('task-first'))
       expect(screen.getByLabelText('流量')).toHaveTextContent('42')
       expect(screen.getByLabelText('漏洞')).toHaveTextContent('2｜3')
       act(() => setMockQuestionID(''))
-      expect(screen.getByLabelText('流量')).toHaveTextContent(/^流量$/)
-      expect(screen.getByLabelText('漏洞')).toHaveTextContent(/^漏洞$/)
+      expect(screen.queryByLabelText('流量')).not.toBeInTheDocument()
+      expect(screen.queryByLabelText('漏洞')).not.toBeInTheDocument()
       expectEmptyDataCards()
     } finally {
       result.unmount()
@@ -1774,27 +1905,73 @@ describe('AIRightPanel', () => {
     }
   })
 
+  it('浏览器实例、流量、漏洞没有数据时不显示，流量和漏洞有数据时显示数量', async () => {
+    const result = await renderPanel(<AIRightPanel />)
+    try {
+      expect(screen.queryByLabelText('浏览器实例')).not.toBeInTheDocument()
+      expect(screen.queryByLabelText('流量')).not.toBeInTheDocument()
+      expect(screen.queryByLabelText('漏洞')).not.toBeInTheDocument()
+
+      setMockQuestionID('task-activity')
+      mockTaskDetailsMap.set('task-activity', {
+        uuid: 'uuid-activity',
+        execution: {
+          http_flow_count: 8,
+          risk_level_count: { critical: 1, high: 0, warning: 0, low: 0, info: 0, other: 0, total: 1 },
+        },
+      })
+      act(() => {
+        browserInstancesMock.setInstances([
+          { id: 'browser-1', online: true },
+          { id: 'browser-2', online: true },
+        ])
+        mockTaskStore.setState((state) => ({ taskDetailsUpdate: state.taskDetailsUpdate + 1 }))
+      })
+      expect(screen.getByLabelText('浏览器实例')).toBeInTheDocument()
+      await waitFor(() => expect(screen.getByLabelText('流量')).toHaveTextContent('8'), { timeout: 5000 })
+      expect(screen.getByLabelText('漏洞')).toHaveTextContent('1')
+    } finally {
+      result.unmount()
+      resetMockStore()
+    }
+  })
+
   it('菜单点击：文件系统/浏览器/会话历史激活侧边栏对应页，流量/漏洞切换工作区', async () => {
-    await renderPanel(<AIRightPanel />)
-    fireEvent.click(screen.getByText('文件系统'))
-    expect(mockEmit).toHaveBeenCalledWith(
-      'switchAIAgentTab',
-      JSON.stringify({ type: 'setTabActive', params: { active: 'file', show: true, toggle: true } }),
-    )
-    fireEvent.click(screen.getByText('流量'))
-    expect(mockEmit).toHaveBeenCalledWith('switchAIActTab', JSON.stringify({ key: 'http' }))
-    fireEvent.click(screen.getByText('漏洞'))
-    expect(mockEmit).toHaveBeenCalledWith('switchAIActTab', JSON.stringify({ key: 'risk' }))
-    fireEvent.click(screen.getByText('浏览器实例'))
-    expect(mockEmit).toHaveBeenCalledWith(
-      'switchAIAgentTab',
-      JSON.stringify({ type: 'setTabActive', params: { active: 'browser', show: true, toggle: true } }),
-    )
-    fireEvent.click(screen.getByText('会话历史'))
-    expect(mockEmit).toHaveBeenCalledWith(
-      'switchAIAgentTab',
-      JSON.stringify({ type: 'setTabActive', params: { active: 'session', show: true, toggle: true } }),
-    )
+    browserInstancesMock.setInstances([{ id: 'browser-1', online: true }])
+    setMockQuestionID('menu-click')
+    mockTaskDetailsMap.set('menu-click', {
+      uuid: 'uuid-menu-click',
+      execution: {
+        http_flow_count: 2,
+        risk_level_count: { critical: 1, high: 0, warning: 0, low: 0, info: 0, other: 0, total: 1 },
+      },
+    })
+    const result = await renderPanel(<AIRightPanel />)
+    try {
+      fireEvent.click(screen.getByText('文件系统'))
+      expect(mockEmit).toHaveBeenCalledWith(
+        'switchAIAgentTab',
+        JSON.stringify({ type: 'setTabActive', params: { active: 'file', show: true, toggle: true } }),
+      )
+      fireEvent.click(screen.getByText('流量'))
+      expect(mockEmit).toHaveBeenCalledWith('switchAIActTab', JSON.stringify({ key: 'http' }))
+      fireEvent.click(screen.getByText('漏洞'))
+      expect(mockEmit).toHaveBeenCalledWith('switchAIActTab', JSON.stringify({ key: 'risk' }))
+      fireEvent.click(screen.getByText('浏览器实例'))
+      expect(mockEmit).toHaveBeenCalledWith(
+        'switchAIAgentTab',
+        JSON.stringify({ type: 'setTabActive', params: { active: 'browser', show: true, toggle: true } }),
+      )
+      fireEvent.click(screen.getByText('会话历史'))
+      expect(mockEmit).toHaveBeenCalledWith(
+        'switchAIAgentTab',
+        JSON.stringify({ type: 'setTabActive', params: { active: 'session', show: true, toggle: true } }),
+      )
+    } finally {
+      result.unmount()
+      browserInstancesMock.reset()
+      resetMockStore()
+    }
   })
 
   it('菜单点击：任务详情入口按条件渲染，点击同步任务 tab', async () => {

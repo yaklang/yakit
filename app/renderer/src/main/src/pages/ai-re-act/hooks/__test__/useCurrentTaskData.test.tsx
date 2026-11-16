@@ -35,7 +35,6 @@ vi.mock('../useCurrentSessionId', () => ({
 }))
 
 import useCurrentTaskData from '../useCurrentTaskData/useCurrentTaskData'
-import useCurrentTaskExecution from '../useCurrentTaskData/useCurrentTaskExecution'
 
 const createRawData = (): MockRawData => ({
   taskDetailsMap: new Map(),
@@ -247,39 +246,6 @@ describe('useCurrentTaskData', () => {
     const { result, rerender } = renderHook(
       () => useCurrentTaskData('shared-task', 60000)?.execution?.task_name ?? 'missing',
     )
-    expect(result.current).toBe('session-a')
-
-    act(() => {
-      hoisted.currentSessionId.value = 'session-b'
-      rerender()
-    })
-
-    expect(result.current).toBe('session-b')
-  })
-})
-
-describe('useCurrentTaskExecution', () => {
-  it('切换 taskId 后会读取新任务的 execution，即使 uuid 相同', () => {
-    const session = getSession('session-a')
-    session.taskDetailsMap.set('task-a', createTaskData('task-a', '', 'task-a'))
-    session.taskDetailsMap.set('task-b', createTaskData('task-b', '', 'task-b'))
-
-    const { result, rerender } = renderHook(
-      ({ taskId }: { taskId: string }) => useCurrentTaskExecution(taskId, 60000)?.task_name ?? 'missing',
-      { initialProps: { taskId: 'task-a' } },
-    )
-    expect(result.current).toBe('task-a')
-
-    rerender({ taskId: 'task-b' })
-
-    expect(result.current).toBe('task-b')
-  })
-
-  it('切换会话后会读取新会话的 execution，即使 uuid 相同', () => {
-    getSession('session-a').taskDetailsMap.set('shared-task', createTaskData('shared-task', 'same-uuid', 'session-a'))
-    getSession('session-b').taskDetailsMap.set('shared-task', createTaskData('shared-task', 'same-uuid', 'session-b'))
-
-    const { result, rerender } = renderHook(() => useCurrentTaskExecution('shared-task', 60000)?.task_name ?? 'missing')
     expect(result.current).toBe('session-a')
 
     act(() => {

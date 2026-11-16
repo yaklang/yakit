@@ -156,15 +156,33 @@ vi.mock('@/pages/ai-agent/useContext/useStore', async () => {
   }
 })
 vi.mock('@/pages/ai-agent/useContext/useDispatcher', () => ({
-  default: () => ({ getSetting: () => ({ Source: 'ai' }) }),
+  default: () => ({ getSetting: () => ({ Source: 'ai' }), onSend: vi.fn(() => true) }),
+}))
+vi.mock('@/pages/ai-agent/browserInstances/browserInstanceStore', () => ({
+  useBrowserInstances: () => ({
+    instances: [],
+    history: [],
+    pending: [],
+    selectedId: '',
+    loading: false,
+    error: '',
+    historyError: '',
+    autoApprovalErrors: {},
+  }),
 }))
 vi.mock('@/i18n/useI18nNamespaces', () => ({
   useI18nNamespaces: () => ({ t: (key: string) => key }),
 }))
 
 // 保留真实菜单、任务入口 hook、事件总线和工作区，仅隔离内容页面及 IPC 依赖。
-vi.mock('@/pages/ai-re-act/hooks/useCurrentTaskData/useCurrentTaskExecution', () => ({
-  default: () => undefined,
+vi.mock('@/pages/ai-re-act/hooks/useCurrentTaskData/useCurrentTaskData', () => ({
+  default: () => ({
+    uuid: 'snapshot-1',
+    execution: {
+      http_flow_count: 1,
+      risk_level_count: { critical: 1, high: 0, warning: 0, low: 0, info: 0, other: 0, total: 1 },
+    },
+  }),
 }))
 vi.mock('@/pages/ai-agent/chatTemplate/aiTaskExecutionDetails/AITaskExecutionDetails', () => ({
   AITaskExecutionDetails: ({ taskId }: { taskId: string }) => <div data-testid="task-detail">{taskId}</div>,
@@ -627,7 +645,7 @@ describe('AIChatWorkspace 菜单切换', () => {
     }
   })
 
-  it.each([true, false])('small=%s：先打开任务详情，无数据时仍可点击流量、漏洞打开 tab', (small) => {
+  it.each([true, false])('small=%s：先打开任务详情，有计数时点击流量、漏洞打开空 tab', (small) => {
     const onTabsChange = vi.fn()
     render(
       <>
