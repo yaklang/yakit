@@ -2,7 +2,11 @@ import type React from 'react'
 import { Tooltip } from 'antd'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { OutlineArrowsTransferDownIcon, OutlineArrowsTransferUpIcon, OutlineArrowsUpDownIcon } from '../icon'
+import {
+  ArrowsTransferDownOutlined,
+  ArrowsTransferUpOutlined,
+  ArrowsUpDownOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import type { AISkillSortButtonProps } from './type'
 
 export const AISkillSortButton: React.FC<AISkillSortButtonProps> = ({ sortOrder, onChange }) => {
@@ -14,22 +18,18 @@ export const AISkillSortButton: React.FC<AISkillSortButtonProps> = ({ sortOrder,
       default: 'AISkillLoadingPane.sortByTokens',
     }[sortOrder || 'default'],
   )
-  const renderSortIcon = () => {
-    switch (sortOrder) {
-      case 'asc':
-        return <OutlineArrowsTransferUpIcon style={{ color: 'var(--Colors-Use-Main-Primary)' }} />
-      case 'desc':
-        return <OutlineArrowsTransferDownIcon style={{ color: 'var(--Colors-Use-Main-Primary)' }} />
-      default:
-        return <OutlineArrowsUpDownIcon style={{ color: 'var(--Colors-Use-Neutral-Text-4-Help-text)' }} />
-    }
-  }
+  const SortIcon = {
+    asc: ArrowsTransferUpOutlined,
+    desc: ArrowsTransferDownOutlined,
+    default: ArrowsUpDownOutlined,
+  }[sortOrder ?? 'default']
+  const iconColor = sortOrder ? 'var(--Colors-Use-Main-Primary)' : 'var(--Colors-Use-Neutral-Text-4-Help-text)'
   return (
     <Tooltip title={title}>
       <YakitButton
         type="text2"
         aria-label={title}
-        icon={renderSortIcon()}
+        icon={<SortIcon style={{ color: iconColor }} svgProps={{ style: { color: 'inherit' } }} />}
         onClick={() => onChange(sortOrder === undefined ? 'asc' : sortOrder === 'asc' ? 'desc' : undefined)}
       />
     </Tooltip>

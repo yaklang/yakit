@@ -11,7 +11,7 @@ import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { AIAgentSettingDefault, AIReviewRuleIconMap, AIReviewRuleOptions } from '@/pages/ai-agent/defaultConstant'
 import type { AIReviewRuleOptionsType } from '@/pages/ai-agent/defaultConstant'
 import { HandOutlined, SirenOutlined } from '@yakit-libs/yakit-ui-icons/outline'
-import { OutlineAIIcon } from '@/pages/ai-agent/template/icon'
+import { AIColorful } from '@yakit-libs/yakit-ui-icons/colorful'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { AIInputEventHotPatchTypeEnum } from '../hooks/grpcApi'
@@ -128,7 +128,7 @@ const AIReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) =
     return AIReviewRuleIconMap[value]?.icon
   })
   const getActiveIcon = useMemoizedFn((value: AIReviewRuleOptionsType) => {
-    if (value === 'ai') return <OutlineAIIcon />
+    if (value === 'ai') return <AIColorful />
     if (value === 'manual') return <HandOutlined color="currentColor" />
     return getIcon(value)
   })

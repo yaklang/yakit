@@ -580,6 +580,23 @@ describe('AISkillLoadingPane session skills', () => {
     expect(onSend).not.toHaveBeenCalled()
   })
 
+  it('技能排序按钮的 SVG 在默认、升序和降序下继承图标主题色', () => {
+    render(<AISkillLoadingPane loadState="loaded" />)
+
+    const states = [
+      ['sortByTokens', 'var(--Colors-Use-Neutral-Text-4-Help-text)'],
+      ['sortByTokensAscending', 'var(--Colors-Use-Main-Primary)'],
+      ['sortByTokensDescending', 'var(--Colors-Use-Main-Primary)'],
+    ]
+    for (const [label, color] of states) {
+      const button = screen.getByRole('button', { name: `AISkillLoadingPane.${label}` })
+      const svg = button.querySelector('svg')
+      expect(svg?.style.color).toBe('inherit')
+      expect(svg?.parentElement?.style.color).toBe(color)
+      fireEvent.click(button)
+    }
+  })
+
   it('搜索、排序、切换加载状态仅更新展示，不发送请求也不修改 rawData', () => {
     const original = structuredClone(sessions.get('session-1')!.loadedSkills.skills)
     const result = render(<AISkillLoadingPane loadState="loaded" />)

@@ -1530,6 +1530,31 @@ describe('MainOperatorContent initial cache loading', () => {
     },
   )
 
+  it('skips AI recovery and saves subsequent local tab changes', async () => {
+    const app = setup({ memfit: false })
+    app.mount()
+    app.ai.reject(new Error('read failed'))
+    await settle()
+
+    const modal = app.bindings.showYakitModal.mock.calls[0][0]
+    modal.onCancel()
+    await modal.onOk()
+    expect(app.bindings.getRemoteProjectValue).toHaveBeenCalledExactlyOnceWith('ai-tabs')
+    expect(app.bindings.setPagesData).not.toHaveBeenCalled()
+    expect(app.bindings.saveAIAgentCache).not.toHaveBeenCalled()
+    expect(app.locked()).toBe(true)
+
+    app.wf.resolve('[]')
+    await settle()
+    expect(app.locked()).toBe(false)
+
+    const sync = app.bindings.usePageInfo.subscribe.mock.calls[0][1] as (page: unknown) => void
+    const localPage = { pageList: [{ pageId: 'local', sortFieId: 1, pageParamsInfo: {} }] }
+    sync(localPage)
+    expect(app.bindings.saveAIAgentCache).toHaveBeenCalledExactlyOnceWith(localPage)
+    app.dispose()
+  })
+
   it('retries AI recovery without losing local tabs or unlocking while WF is pending', async () => {
     const app = setup({ memfit: false })
     app.bindings.setPagesData.mockImplementation((route, page) => {
