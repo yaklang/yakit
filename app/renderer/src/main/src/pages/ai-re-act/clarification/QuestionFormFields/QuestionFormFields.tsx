@@ -52,11 +52,18 @@ function orderedKeys(form: QuestionForm) {
   return [...order.filter((key) => keys.includes(key)), ...keys.filter((key) => !order.includes(key))]
 }
 
-function isCompactField(schema: RJSFSchema) {
-  return schema.type === 'string' || schema.type === 'number' || schema.type === 'integer'
+function titleUnits(title: string) {
+  let units = 0
+  for (const char of title) units += char.charCodeAt(0) > 255 ? 2 : 1
+  return units
 }
 
-function groupFields(form: QuestionForm) {
+function isCompactField(schema: RJSFSchema) {
+  const short = schema.type === 'string' || schema.type === 'number' || schema.type === 'integer'
+  return short && titleUnits(schema.title || '') <= 24
+}
+
+export function groupFields(form: QuestionForm) {
   const rows: { compact: boolean; keys: string[] }[] = []
   for (const key of orderedKeys(form)) {
     const schema = (form.schema.properties || {})[key] as RJSFSchema
