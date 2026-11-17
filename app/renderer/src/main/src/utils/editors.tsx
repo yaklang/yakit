@@ -554,6 +554,9 @@ export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
   noShowHex?: boolean
   /** 显示常见 HTTP 头的隐藏开关，仅改变编辑器视图 */
   showHeaderVisibilityToggle?: boolean
+  /** 当前请求的显示状态，与全局默认偏好分离。新建请求默认展开。 */
+  requestHeadersHidden?: boolean
+  onRequestHeadersHiddenChange?: (hidden: boolean) => void
   // 外部单独控制渲染html是否显示，如果是采用内部type控制是否显示，此字段不需要传
   renderHtml?: React.ReactNode
   // 是否由外部接管children的渲染，如果是由外部接管children的渲染，则编辑器组件不再对children进行任何处理，完全由外部控制，适用于一些特殊场景，比如内嵌入一些特殊组件等
@@ -622,9 +625,15 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
   const [strValue, setStrValue] = useState(originValue)
   const [monacoEditor, setMonacoEditor] = useState<IMonacoEditor>()
   const headerRole = isResponse ? 'response' : 'request'
-  const headersHidden = useEditorHeaderVisibility(
-    (state) => !!props.showHeaderVisibilityToggle && state.hidden[headerRole],
-  )
+  const [localRequestHeadersHidden, setLocalRequestHeadersHidden] = useState(false)
+  const requestHeadersHidden = props.requestHeadersHidden ?? localRequestHeadersHidden
+  const setRequestHeadersHidden = useMemoizedFn((hidden: boolean) => {
+    setLocalRequestHeadersHidden(hidden)
+    props.onRequestHeadersHiddenChange?.(hidden)
+  })
+  const responseHeadersHidden = useEditorHeaderVisibility((state) => state.hidden.response)
+  const headersHidden =
+    !!props.showHeaderVisibilityToggle && (isResponse ? responseHeadersHidden : requestHeadersHidden)
   const initializeHeaderVisibility = useEditorHeaderVisibility((state) => state.initialize)
   const toggleHeaderVisibility = useEditorHeaderVisibility((state) => state.toggle)
   const hiddenHeaderNames = useEditorHeaderVisibility((state) =>
@@ -780,6 +789,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
     if (props.readOnly) {
       return
     }
+    if (props.showHeaderVisibilityToggle && !isResponse) setRequestHeadersHidden(false)
     setStrValue(rawBytesToPacketText(hexDataRef.current))
   })
 
@@ -850,11 +860,13 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
 
   const empty = !!props.emptyOr && originValue.length == 0
   const showTextEditor = !showHexView && !empty && !renderHtml && !props.renderHtml && !props.children
+  const onRequestDocumentChange = useMemoizedFn(() => setRequestHeadersHidden(false))
   useHiddenHTTPHeaders(
     monacoEditor,
     !!props.showHeaderVisibilityToggle && headersHidden && showTextEditor,
     !!isResponse,
     hiddenHeaderNames,
+    !isResponse && !props.readOnly ? onRequestDocumentChange : undefined,
   )
   const headerVisibilityLabel = t(
     headersHidden
@@ -1126,7 +1138,10 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                     aria-label={headerVisibilityLabel}
                     aria-pressed={headersHidden}
                     disabled={!showTextEditor}
-                    onClick={() => void toggleHeaderVisibility(headerRole)}
+                    onClick={() => {
+                      if (isResponse) void toggleHeaderVisibility('response')
+                      else setRequestHeadersHidden(!requestHeadersHidden)
+                    }}
                   />
                 </Tooltip>
               )}

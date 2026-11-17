@@ -710,6 +710,7 @@ export const getDefaultFixedTabsNoSinglPageRoute = (softMode: SoftMode) => {
 export const LogOutCloseRoutes: YakitRoute[] = [YakitRoute.Plugin_Audit, YakitRoute.Data_Statistics]
 
 export interface ComponentParams {
+  requestHeadersHidden?: WebFuzzerPageInfoProps['requestHeadersHidden']
   browserTransformSelection?: WebFuzzerPageInfoProps['browserTransformSelection']
   lastSelectedHistory?: WebFuzzerPageInfoProps['lastSelectedHistory']
   // 是否跳转到新开页面 默认跳转

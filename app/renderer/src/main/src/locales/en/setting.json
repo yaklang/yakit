@@ -104,7 +104,8 @@
     }
   },
   "HTTPHeaderVisibilitySettings": {
-    "description": "Changes display only, preserving the original packet and sent content. Header names are case-insensitive. Saved settings apply to all WebFuzzer tabs.",
+    "description": "Changes display only, preserving the original packet and sent content. Header names are case-insensitive.",
+    "requestHint": "The request default applies only when sending a request to WebFuzzer from elsewhere. New tabs, edits and pastes turn off hiding for the current request without changing this default.",
     "request": "Request headers",
     "response": "Response headers",
     "count": "{{count}} headers",

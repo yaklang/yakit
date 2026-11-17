@@ -1997,3 +1997,98 @@ describe('MainOperatorContent initial cache loading', () => {
     await vi.advanceTimersByTimeAsync(300)
   })
 })
+
+describe('WebFuzzer request header defaults at the shared send-to-tab entry', () => {
+  const setup = (hiddenByDefault: boolean) => {
+    const preferences = { hidden: { request: hiddenByDefault }, initialize: vi.fn(async () => {}) }
+    const addPagesDataCache = vi.fn()
+    const bindings = {
+      YakitRoute,
+      useMemoizedFn: (fn: unknown) => fn,
+      pageCache: [{ route: YakitRoute.HTTPFuzzer }],
+      onInitFuzzer: vi.fn(),
+      getFuzzerCacheData: vi.fn(async () => ({})),
+      DefFuzzerTableMaxData: 100,
+      defaultPostTemplate: 'POST / HTTP/1.1\r\nHost: example.com\r\n\r\n',
+      defaultAdvancedConfigValue: {},
+      defaultAdvancedConfigShow: {},
+      JSONParseLog: JSON.parse,
+      getHotPatchCodeInfo: vi.fn(async () => ({ hotPatchCode: '', hotPatchOpen: false })),
+      systemRef: { current: 'test' },
+      useEditorHeaderVisibility: { getState: () => preferences },
+      yakitNotify: vi.fn(),
+      t: (key: string) => key,
+      randomString: () => 'random',
+      addPagesDataCache,
+    }
+    const addFuzzerList = execute(`return ${declaration('addFuzzerList')!.initializer!.getText(source)}`, bindings)
+    const openMenuPage = vi.fn((_route, options) => {
+      addFuzzerList('wf', { id: 'page', groupId: '0', pageParams: options.pageParams }, 1)
+    })
+    const addFuzzer = execute(`return ${declaration('addFuzzer')!.initializer!.getText(source)}`, {
+      ...bindings,
+      openMenuPage,
+    })
+    const registration = find(
+      (node) =>
+        ts.isCallExpression(node) &&
+        node.expression.getText(source) === 'ipcRenderer.on' &&
+        node.arguments[0]?.getText(source) === "'fetch-send-to-tab'",
+    )[0] as ts.CallExpression
+    const receive = execute(`return ${registration.arguments[1].getText(source)}`, { YakitRoute, addFuzzer })
+    const page = () => addPagesDataCache.mock.calls.at(-1)?.[1].pageParamsInfo.webFuzzerPageInfo
+    return { addFuzzer, receive, page, preferences, openMenuPage, notify: bindings.yakitNotify }
+  }
+
+  it.each([true, false])('all packet senders use the saved request default (%s)', async (hidden) => {
+    const context = setup(hidden)
+    const packet = 'GET / HTTP/1.1\r\nAccept: */*\r\n\r\n'
+    context.receive(undefined, { type: 'fuzzer', data: { request: packet, isHttps: true } })
+    await vi.waitFor(() => expect(context.page()).toBeDefined())
+    expect(context.page()).toMatchObject({ request: packet, requestHeadersHidden: hidden })
+    expect(context.preferences.initialize).toHaveBeenCalledOnce()
+    expect(context.notify).not.toHaveBeenCalled()
+  })
+
+  it('new tabs never inherit the default, including send-to-tab without a packet', async () => {
+    const context = setup(true)
+    await context.addFuzzer({})
+    expect(context.page().requestHeadersHidden).toBe(false)
+    await context.addFuzzer({ request: 'GET /template HTTP/1.1' })
+    expect(context.page().requestHeadersHidden).toBe(false)
+    await context.addFuzzer({}, true)
+    expect(context.page().requestHeadersHidden).toBe(false)
+    expect(context.preferences.initialize).not.toHaveBeenCalled()
+  })
+
+  it('also applies the default to context menus forwarding request and configuration together', async () => {
+    const context = setup(true)
+    const packet = 'POST /shared HTTP/1.1\r\nAccept: */*\r\n\r\nbody'
+    context.receive(undefined, {
+      type: 'fuzzer',
+      data: { shareContent: JSON.stringify({ request: packet, advancedConfiguration: { isHttps: true } }) },
+    })
+    await vi.waitFor(() => expect(context.page()).toBeDefined())
+    expect(context.page()).toMatchObject({
+      request: packet,
+      requestHeadersHidden: true,
+      advancedConfigValue: { isHttps: true },
+    })
+    expect(context.notify).not.toHaveBeenCalled()
+  })
+
+  it('waits for preferences before creating an imported tab and snapshots that value', async () => {
+    const context = setup(false)
+    const loading = deferred<void>()
+    context.preferences.initialize.mockImplementation(() => loading.promise)
+    const pending = context.addFuzzer({ request: 'GET /import HTTP/1.1' }, true)
+    await vi.waitFor(() => expect(context.preferences.initialize).toHaveBeenCalledOnce())
+    expect(context.openMenuPage).not.toHaveBeenCalled()
+    context.preferences.hidden.request = true
+    loading.resolve()
+    await pending
+    expect(context.page().requestHeadersHidden).toBe(true)
+    context.preferences.hidden.request = false
+    expect(context.page().requestHeadersHidden).toBe(true)
+  })
+})

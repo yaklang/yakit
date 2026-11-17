@@ -38,6 +38,23 @@ function createEditor(packet: string) {
 afterEach(cleanup)
 
 describe('useHiddenHTTPHeaders', () => {
+  it.each(['content', 'model'] as const)(
+    'initial load stays hidden; subsequent %s changes reveal instead of refolding',
+    (event) => {
+      const instance = createEditor('GET / HTTP/1.1\nAccept: */*\n\nbody')
+      const onDocumentChange = vi.fn()
+      renderHook(() => useHiddenHTTPHeaders(instance.editor, true, false, undefined, onDocumentChange))
+      expect(onDocumentChange).not.toHaveBeenCalled()
+      expect(instance.hiddenAreas.mock.lastCall?.[0]).toHaveLength(1)
+      instance.hiddenAreas.mockClear()
+      act(() => instance.change('GET / HTTP/1.1\nAccept: text/plain\n\nchanged', event))
+      expect(instance.hiddenAreas).toHaveBeenCalledExactlyOnceWith([], expect.any(Object))
+      expect(onDocumentChange).toHaveBeenCalledOnce()
+      act(() => instance.change('GET / HTTP/1.1\nAccept: */*\n\nbody'))
+      expect(instance.hiddenAreas).toHaveBeenCalledTimes(1)
+    },
+  )
+
   it('reuses one hidden-area source across toggles and edited lists', () => {
     const instance = createEditor('GET / HTTP/1.1\nAccept: */*\nHost: example.com\n\n')
     const hook = renderHook(({ enabled, headers }) => useHiddenHTTPHeaders(instance.editor, enabled, false, headers), {

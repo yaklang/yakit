@@ -135,6 +135,9 @@ export const HTTPHeaderVisibilitySettings = () => {
               >
                 {t('HTTPHeaderVisibilitySettings.hideByDefault')}
               </YakitCheckbox>
+              {role === 'request' && (
+                <div className={styles.description}>{t('HTTPHeaderVisibilitySettings.requestHint')}</div>
+              )}
               <div className={styles.list}>
                 {draft[role].headers.length ? (
                   draft[role].headers.map((header) => (

@@ -104,7 +104,8 @@
     }
   },
   "HTTPHeaderVisibilitySettings": {
-    "description": "仅隐藏显示，不修改原始报文或发送内容。头名不区分大小写，保存后应用于所有 WebFuzzer 标签页。",
+    "description": "仅隐藏显示，不修改原始报文或发送内容。头名不区分大小写。",
+    "requestHint": "请求默认隐藏仅用于从其他位置发送请求到 WebFuzzer。新建标签、编辑或粘贴请求会关闭当前请求的隐藏，不改变此默认设置。",
     "request": "请求头",
     "response": "响应头",
     "count": "{{count}} 项",

@@ -67,8 +67,10 @@ const preview = (role: HeaderRole) => {
     onDidChangeModel: subscribe,
     onDidDispose: subscribe,
   }
+  const importedRequestHidden = useEditorHeaderVisibility.getState().hidden.request
   renderHook(() => {
-    const hidden = useEditorHeaderVisibility((state) => state.hidden[role])
+    const responseHidden = useEditorHeaderVisibility((state) => state.hidden.response)
+    const hidden = role === 'request' ? importedRequestHidden : responseHidden
     const headers = useEditorHeaderVisibility((state) => state.headers[role])
     useHiddenHTTPHeaders(instance as unknown as editor.IStandaloneCodeEditor, hidden, role === 'response', headers)
   })
@@ -130,7 +132,9 @@ describe.each<HeaderRole>(['request', 'response'])('%s 全局 HTTP 头部隐藏�
     expect(live.hiddenAreas).not.toHaveBeenCalled()
     await save()
     expect(persistedSettings()[role].headers).toEqual([...DEFAULT_HIDDEN_HTTP_HEADERS[role], 'x-custom'])
-    expect(live.hiddenAreas).toHaveBeenLastCalledWith([range(2, 3)], expect.any(Object))
+    if (role === 'request') expect(live.hiddenAreas).not.toHaveBeenCalled()
+    else expect(live.hiddenAreas).toHaveBeenLastCalledWith([range(2, 3)], expect.any(Object))
+    expect(preview(role).hiddenAreas).toHaveBeenLastCalledWith([range(2, 3)], expect.any(Object))
     expect(
       Array.from({ length: live.model.getLineCount() }, (_, n) => live.model.getLineContent(n + 1)).join('\n'),
     ).toBe(live.packet)
@@ -191,12 +195,12 @@ describe.each<HeaderRole>(['request', 'response'])('%s 全局 HTTP 头部隐藏�
     await save()
     expect(persistedSettings()[role].headers).toEqual(DEFAULT_HIDDEN_HTTP_HEADERS[role])
     expect(persistedSettings()[role].hidden).toBe(false)
-    expect(live.hiddenAreas).toHaveBeenLastCalledWith([], expect.any(Object))
+    expect(live.hiddenAreas).toHaveBeenLastCalledWith(role === 'request' ? [range(2)] : [], expect.any(Object))
     expect(useEditorHeaderVisibility.getState().headers[other]).toEqual(['x-custom'])
     expect(useEditorHeaderVisibility.getState().hidden[other]).toBe(true)
   })
 
-  it('默认隐藏只作用于对应方向，并同步现有和新建编辑器；取消勾选后显示全部', async () => {
+  it('请求默认值只用于后续导入，响应保持同步；修改默认值不切换已有请求', async () => {
     const live = preview(role)
     const other = preview(role === 'request' ? 'response' : 'request')
     const panel = (await open())[role]
@@ -204,35 +208,37 @@ describe.each<HeaderRole>(['request', 'response'])('%s 全局 HTTP 头部隐藏�
     fireEvent.click(panel.getByRole('checkbox'))
     await save()
     expect(persistedSettings()[role].hidden).toBe(true)
-    expect(live.hiddenAreas).toHaveBeenLastCalledWith([range(2)], expect.any(Object))
+    if (role === 'request') expect(live.hiddenAreas).not.toHaveBeenCalled()
+    else expect(live.hiddenAreas).toHaveBeenLastCalledWith([range(2)], expect.any(Object))
     expect(other.hiddenAreas).not.toHaveBeenCalled()
     const newlyOpened = preview(role)
     expect(newlyOpened.hiddenAreas).toHaveBeenLastCalledWith([range(2)], expect.any(Object))
     fireEvent.click(panel.getByRole('checkbox'))
     await save()
     expect(persistedSettings()[role].hidden).toBe(false)
-    expect(live.hiddenAreas).toHaveBeenLastCalledWith([], expect.any(Object))
-    expect(newlyOpened.hiddenAreas).toHaveBeenLastCalledWith([], expect.any(Object))
+    if (role === 'request') expect(live.hiddenAreas).not.toHaveBeenCalled()
+    else expect(live.hiddenAreas).toHaveBeenLastCalledWith([], expect.any(Object))
+    expect(newlyOpened.hiddenAreas).toHaveBeenLastCalledWith(role === 'request' ? [range(2)] : [], expect.any(Object))
     expect(preview(role).hiddenAreas).not.toHaveBeenCalled()
   })
 })
 
 describe('全局设置的提交、丢弃和失败处理', () => {
-  it('切回仍挂载的全局设置时显示工具栏最新开关，未保存的表单修改不会被覆盖', async () => {
-    const { request, unmount } = await open()
+  it('响应工具栏更新默认开关时，未保存的表单修改不会被覆盖', async () => {
+    const { response, unmount } = await open()
     await act(async () => {
-      await useEditorHeaderVisibility.getState().toggle('request')
+      await useEditorHeaderVisibility.getState().toggle('response')
     })
-    expect(request.getByRole('checkbox')).toBeChecked()
-    fireEvent.click(request.getByRole('button', { name: 'Remove accept' }))
+    expect(response.getByRole('checkbox')).toBeChecked()
+    fireEvent.click(response.getByRole('button', { name: 'Remove server' }))
     await act(async () => {
-      await useEditorHeaderVisibility.getState().toggle('request')
+      await useEditorHeaderVisibility.getState().toggle('response')
     })
-    expect(request.queryByText('accept')).not.toBeInTheDocument()
-    expect(request.getByRole('checkbox')).toBeChecked()
+    expect(response.queryByText('server')).not.toBeInTheDocument()
+    expect(response.getByRole('checkbox')).toBeChecked()
     unmount()
-    const reopened = (await open()).request
-    expect(reopened.getByText('accept')).toBeInTheDocument()
+    const reopened = (await open()).response
+    expect(reopened.getByText('server')).toBeInTheDocument()
     expect(reopened.getByRole('checkbox')).not.toBeChecked()
   })
 
