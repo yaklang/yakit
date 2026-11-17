@@ -69,7 +69,13 @@ const replaceOnlineAIModels = (
       if (!Array.isArray(models)) throw new Error('Invalid enterprise AI model list')
       for (const model of models) {
         if (!model?.Provider || !model.ModelName) throw new Error('Invalid enterprise AI model')
-        if (model.Provider.Headers?.some((header) => header.Value?.includes('{{user.'))) {
+        if (
+          model.Provider.Headers?.some(
+            (header) =>
+              header.Value?.includes('{{user.') ||
+              ('ValueSource' in header && header.ValueSource && header.ValueSource !== 'static'),
+          )
+        ) {
           throw new Error('企业模型 Header 尚未解析，请升级企业服务端 / unresolved enterprise AI header')
         }
       }

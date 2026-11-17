@@ -58,7 +58,7 @@ describe('enterprise model config download', () => {
     expect(useAIGlobalConfigStore.getState().aiGlobalConfig).toEqual(persisted)
   })
 
-  it.each(['failure', 'missing', 'disabled', 'malformed', 'unresolved'] as const)(
+  it.each(['failure', 'missing', 'disabled', 'malformed', 'unresolved', 'unresolved-source'] as const)(
     '%s config cannot retain a previous enterprise identity',
     async (kind) => {
       const fetchConfig = async () => {
@@ -66,10 +66,18 @@ describe('enterprise model config download', () => {
         if (kind === 'missing') return { ...response(''), data: [] }
         if (kind === 'disabled') return response('bob.zh', false)
         if (kind === 'unresolved') return response('{{user.adUsername}}')
+        if (kind === 'unresolved-source') {
+          const config = response('')
+          const content = JSON.parse(config.data[0].content!)
+          content.IntelligentModels[0].Provider.Headers[0].ValueSource = 'user_ad_username'
+          config.data[0].content = JSON.stringify(content)
+          return config
+        }
         return { data: [{ configName: 'AI', isOpen: true, content: '{' }] } as API.SystemConfigResponse
       }
       const task = syncOnlineAIGlobalConfig(fetchConfig, () => true)
-      if (['failure', 'malformed', 'unresolved'].includes(kind)) await expect(task).rejects.toBeDefined()
+      if (['failure', 'malformed', 'unresolved', 'unresolved-source'].includes(kind))
+        await expect(task).rejects.toBeDefined()
       else await task
       expect(persisted.IntelligentModels).toEqual([model('local', 'local-value', false)])
       expect(persisted.LightweightModels).toEqual([])
