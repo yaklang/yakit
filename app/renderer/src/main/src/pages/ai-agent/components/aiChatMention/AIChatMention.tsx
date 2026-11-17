@@ -20,7 +20,7 @@ import { MentionBrowsers, MentionFileTree } from './MentionCategoryLists'
 import { defaultFolder, useCustomFolder } from '../aiFileSystemList/store/useCustomFolder'
 import RecentListOfMention from './recentListOfMention/RecentListOfMention'
 import { loadRecentMentionResources } from './recentListOfMention/recentListOfMentionData'
-import type { AIChatMentionProps } from './type'
+import type { AIChatMentionProps, MentionListControls, MentionRow } from './type'
 import styles from './AIChatMention.module.scss'
 
 export const AIChatMention: FC<AIChatMentionProps> = ({
@@ -29,6 +29,7 @@ export const AIChatMention: FC<AIChatMentionProps> = ({
   filterKeyword,
   keyboardTarget,
   onSelect,
+  onSelectMany,
   visible = true,
   materials = [],
   focusMode,
@@ -60,6 +61,8 @@ export const AIChatMention: FC<AIChatMentionProps> = ({
   const [popupFocused, setPopupFocused] = useState(false)
   const [total, setTotal] = useState(0)
   const root = useRef<HTMLDivElement>(null)
+  const modifierPointer = useRef<NonNullable<MentionListControls['onModifierPointer']>['current']>()
+  const suppressModifierClick = useRef(false)
   const query = keyword.trim().toLowerCase()
   const remoteKeyword = useDebounce(keyword.trim(), { wait: 200 })
 
@@ -117,6 +120,8 @@ export const AIChatMention: FC<AIChatMentionProps> = ({
   }
 
   const getContainer = useMemoizedFn(() => (popupFocused ? root.current : keyboardTarget?.() || root.current))
+  // 点分类 Tab 后焦点在弹层里，主监听会离开输入框；回车仍要留在输入框上，避免变成发送。
+  const getExtraContainer = useMemoizedFn(() => (popupFocused ? keyboardTarget?.() || null : null))
   const switchTabByArrow = (step: -1 | 1) => {
     if (!visible || !active || filterOpen) return
     const index = tabs.findIndex((tab) => tab.value === active)
@@ -139,13 +144,46 @@ export const AIChatMention: FC<AIChatMentionProps> = ({
     exactMatch: true,
     useCapture: true,
   })
+  useKeyPress(visible && active ? ['leftarrow', 'rightarrow'] : () => false, handleTabKeyPress, {
+    target: getExtraContainer,
+    exactMatch: true,
+    useCapture: true,
+  })
 
   const pick = useMemoizedFn<AIChatMentionProps['onSelect']>((type, value) => {
     if (type === 'browser' && value) selectBrowserInstance(value.id)
     onSelect(type, value)
   })
+  const pickMany = useMemoizedFn((items: MentionRow[]) => {
+    items.forEach((item) => {
+      if (item.type === 'browser') selectBrowserInstance(item.id)
+    })
+    if (!onSelectMany) {
+      items.forEach((item) => onSelect(item.type, item))
+      return
+    }
+    onSelectMany(
+      items.map((item) => ({
+        type: item.type,
+        value: {
+          id: item.id,
+          name: item.name,
+          originalName: item.originalName,
+          mentionSource: item.mentionSource,
+          knowledgeIndex: item.knowledgeIndex,
+        },
+      })),
+    )
+  })
 
-  const controls = { getContainer, onSelect: pick, keyboardEnabled: !filterOpen }
+  const controls = {
+    getContainer,
+    extraContainer: getExtraContainer,
+    onSelect: pick,
+    onSelectMany: pickMany,
+    onModifierPointer: modifierPointer,
+    keyboardEnabled: !filterOpen,
+  }
   const catalog = {
     [AIMentionTabsEnum.Forge_Name]: 'forge',
     [AIMentionTabsEnum.Tool]: 'tool',
@@ -219,6 +257,27 @@ export const AIChatMention: FC<AIChatMentionProps> = ({
       onFocusCapture={() => setPopupFocused(true)}
       onBlurCapture={(event) => {
         if (!event.currentTarget.contains(event.relatedTarget)) setPopupFocused(false)
+      }}
+      onMouseDownCapture={(event) => {
+        // 上次 Ctrl/Shift 按下后若在弹层外松开，click 不会回到这里，标志位要在下一次按下时清掉。
+        suppressModifierClick.current = false
+        if (!event.ctrlKey && !event.metaKey && !event.shiftKey) return
+        const target = event.target instanceof Element ? event.target : null
+        const option = target?.closest<HTMLElement>('[role="option"]')
+        if (!option?.id || !modifierPointer.current) return
+        event.preventDefault()
+        suppressModifierClick.current = true
+        modifierPointer.current(option.id, {
+          ctrlKey: event.ctrlKey,
+          metaKey: event.metaKey,
+          shiftKey: event.shiftKey,
+        })
+      }}
+      onClickCapture={(event) => {
+        if (!suppressModifierClick.current) return
+        suppressModifierClick.current = false
+        event.preventDefault()
+        event.stopPropagation()
       }}
       onClick={(event) => event.stopPropagation()}
     >

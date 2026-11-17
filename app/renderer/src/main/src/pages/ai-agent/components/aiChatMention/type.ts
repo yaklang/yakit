@@ -14,9 +14,16 @@ export interface AIChatMentionSelectItem {
   knowledgeIndex?: AIMentionCommandParams['knowledgeIndex']
 }
 
+export interface AIChatMentionSelectEntry {
+  type: AIMentionTypeItem
+  value?: AIChatMentionSelectItem
+}
+
 export interface AIChatMentionProps {
   defaultActiveTab?: AIMentionTabsEnum
   onSelect: (type: AIMentionTypeItem, value?: AIChatMentionSelectItem) => void
+  /** Ctrl/Shift 多选后按回车，一次性提交当前列表中的选中项。 */
+  onSelectMany?: (items: AIChatMentionSelectEntry[]) => void
   filterMode?: `${AIMentionTabsEnum}`[]
   filterKeyword?: string
   keyboardTarget?: () => HTMLElement | null
@@ -40,6 +47,13 @@ export type MentionRow = ResourceMentionRow | BrowserMentionRow
 
 export type MentionListControls = {
   getContainer: () => HTMLElement | null
+  /** 弹层抢走焦点后，仍在输入框上拦截方向键和回车。 */
+  extraContainer?: () => HTMLElement | null
   keyboardEnabled?: boolean
   onSelect: AIChatMentionProps['onSelect']
+  onSelectMany?: (items: MentionRow[]) => void
+  /** 面板在 mousedown 阶段收下 Ctrl/Shift 点击，避免输入框抢走选区。 */
+  onModifierPointer?: {
+    current?: (rowId: string, modifiers: { ctrlKey?: boolean; metaKey?: boolean; shiftKey?: boolean }) => void
+  }
 }

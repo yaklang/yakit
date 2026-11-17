@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { unescapeUnderscoreInPath } from '../utils'
+import { normalizeSubmittedMarkdown, unescapeUnderscoreInPath } from '../utils'
 
 describe('unescapeUnderscoreInPath', () => {
   describe('路径上下文：应反转义 \\_ 为 _', () => {
@@ -81,5 +81,14 @@ describe('unescapeUnderscoreInPath', () => {
       // a_b 片段非路径保持，/path_x 片段是 Unix 路径反转义
       expect(unescapeUnderscoreInPath(input)).toBe('a\\_b   /path_x')
     })
+  })
+})
+
+describe('normalizeSubmittedMarkdown', () => {
+  it('把 &#x20; 还原成空格，并去掉文末换行和文末空白', () => {
+    expect(normalizeSubmittedMarkdown('正文&#x20;\n')).toBe('正文')
+    expect(normalizeSubmittedMarkdown('&#x20;正文\n')).toBe(' 正文')
+    expect(normalizeSubmittedMarkdown('正文&#x20;\n下一行&#x20;\n')).toBe('正文 \n下一行')
+    expect(normalizeSubmittedMarkdown('D:\\\\work\\_file.txt&#x20;\n')).toBe('D:\\\\work_file.txt')
   })
 })

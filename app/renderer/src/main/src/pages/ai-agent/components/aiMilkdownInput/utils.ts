@@ -201,3 +201,9 @@ export const unescapeUnderscoreInPath = (markdown: string): string =>
       return part
     })
     .join('')
+
+/** 提交用 markdown：还原路径下划线，并把 remark 写在换行前的 &#x20; 还原成空格后去掉文末空白。 */
+export const normalizeSubmittedMarkdown = (markdown: string): string =>
+  unescapeUnderscoreInPath(markdown.replace(/&#x20;/g, ' '))
+    .replace(/\n+$/, '')
+    .trimEnd()

@@ -178,7 +178,7 @@ export const MaterialCatalogList: FC<MaterialCatalogListProps> = ({
     return (
       <div
         key={item.id}
-        className={styles.row}
+        className={option?.checked ? `${styles.row} ${styles.checked}` : styles.row}
         id={option?.id}
         role={option ? 'option' : undefined}
         aria-selected={option?.active}

@@ -24,7 +24,7 @@ interface FocusModeOptionsProps {
   keyword?: string
   selectedId?: string
   filterValue?: ResourceFilterValue
-  keyboard?: Pick<MentionListControls, 'getContainer' | 'keyboardEnabled'>
+  keyboard?: Pick<MentionListControls, 'getContainer' | 'extraContainer' | 'keyboardEnabled'>
   onSelect: (focusMode: SelectedFocusMode) => void
   onTotalChange?: (total: number) => void
 }
@@ -63,6 +63,7 @@ export const FocusModeOptions: FC<FocusModeOptionsProps> = ({
     spinning ? [] : rows,
     {
       getContainer: keyboard?.getContainer ?? getNoKeyboardTarget,
+      extraContainer: keyboard?.extraContainer,
       keyboardEnabled: !!keyboard && keyboard.keyboardEnabled !== false,
       onSelect: (_, row) => onSelect({ id: row.id, label: row.row.name ?? row.name }),
     },

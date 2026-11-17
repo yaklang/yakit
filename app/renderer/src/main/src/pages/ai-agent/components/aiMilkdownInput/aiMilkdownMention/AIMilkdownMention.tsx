@@ -10,9 +10,15 @@ import styles from './AIMilkdownMention.module.scss'
 import { PANEL_GAP, PANEL_OFFSET_UP, PANEL_WIDTH_EXTRA_EACH } from '../constants'
 import { iconMap } from '@/pages/ai-agent/defaultConstant'
 import { AIChatMention } from '../../aiChatMention/AIChatMention'
-import type { AIChatMentionProps, AIChatMentionSelectItem, AIMentionTypeItem } from '../../aiChatMention/type'
+import type {
+  AIChatMentionProps,
+  AIChatMentionSelectEntry,
+  AIChatMentionSelectItem,
+  AIMentionTypeItem,
+} from '../../aiChatMention/type'
 import { callCommand } from '@milkdown/kit/utils'
-import { aiMentionCommand, type AIMentionCommandParams } from './aiMentionPlugin'
+import { aiMentionCommand, aiMentionsCommand, type AIMentionCommandParams } from './aiMentionPlugin'
+import { planMentionConfirm, toMentionCommandParams } from './mentionConfirm'
 import { extractMentionFilterKeyword } from './mentionQuery'
 import { tryClaimMilkdownPopup, releaseMilkdownPopup } from '../panelMutex'
 import classNames from 'classnames'
@@ -203,14 +209,7 @@ export const AIMilkdownMention: React.FC<AIMilkdownMentionProps> = (props) => {
   )
 
   const onSure = useMemoizedFn((type: AIMentionTypeItem, value?: AIChatMentionSelectItem) => {
-    const params: AIMentionCommandParams = {
-      mentionType: type,
-      mentionId: value?.id || '0',
-      mentionName: value?.name || '',
-      name: value?.originalName,
-      mentionSource: value?.mentionSource,
-      knowledgeIndex: value?.knowledgeIndex,
-    }
+    const params = toMentionCommandParams({ type, value })
     switch (type) {
       case 'focusMode':
         action(callCommand(removeAIOffsetCommand.key))
@@ -218,10 +217,22 @@ export const AIMilkdownMention: React.FC<AIMilkdownMentionProps> = (props) => {
         break
 
       default:
-        action(callCommand<AIMentionCommandParams>(aiMentionCommand.key, params))
+        action(callCommand(aiMentionCommand.key, params))
         break
     }
 
+    onHide()
+  })
+
+  const onSureMany = useMemoizedFn((items: AIChatMentionSelectEntry[]) => {
+    const plan = planMentionConfirm(items)
+    if (plan.mentions.length) {
+      action(callCommand(aiMentionsCommand.key, plan.mentions))
+    }
+    if (plan.focus) {
+      if (plan.removeTrigger) action(callCommand(removeAIOffsetCommand.key))
+      onMemfitExtra?.(plan.focus)
+    }
     onHide()
   })
 
@@ -250,6 +261,7 @@ export const AIMilkdownMention: React.FC<AIMilkdownMentionProps> = (props) => {
     >
       <AIChatMention
         onSelect={onSure}
+        onSelectMany={onSureMany}
         filterMode={filterMode}
         {...getMaterials?.()}
         filterKeyword={filterKeyword}

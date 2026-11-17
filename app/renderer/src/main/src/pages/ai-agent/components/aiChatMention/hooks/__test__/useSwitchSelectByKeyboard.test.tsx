@@ -39,6 +39,7 @@ interface SetupOptions {
   itemRect?: { top: number; bottom: number; height: number }
   mountedRowIds?: string[]
   onEnter?: () => void
+  extraContainer?: () => HTMLElement | null
 }
 
 const setup = (options: SetupOptions) => {
@@ -71,6 +72,7 @@ const setup = (options: SetupOptions) => {
       onSelectNumber,
       onEnter,
       getContainer: () => keyboardTarget,
+      extraContainer: options.extraContainer,
       enabled: options.enabled,
     }),
   )
@@ -179,6 +181,36 @@ describe('useSwitchSelectByKeyboard', () => {
     const { onEnter, keyboardTarget } = setup({ data, selected: data[0] })
     const event = fireKey(keyboardTarget, KEY_ENTER, 'Enter')
     expect(event.defaultPrevented).toBe(true)
+    expect(onEnter).toHaveBeenCalledTimes(1)
+  })
+
+  it('主监听离开后，额外目标上的 Enter 仍拦截', () => {
+    const data = makeData(1)
+    const extra = document.body.appendChild(document.createElement('div'))
+    const { onEnter } = setup({
+      data,
+      selected: data[0],
+      extraContainer: () => extra,
+    })
+    const event = fireKey(extra, KEY_ENTER, 'Enter')
+    expect(event.defaultPrevented).toBe(true)
+    expect(onEnter).toHaveBeenCalledTimes(1)
+  })
+
+  it('分类 Tab 上的 Enter 提交，行内按钮上的 Enter 不拦截', () => {
+    const data = makeData(1)
+    const { onEnter, keyboardTarget } = setup({ data, selected: data[0] })
+    const scroller = keyboardTarget.appendChild(document.createElement('div'))
+    scroller.dataset.mentionTabs = ''
+    const tab = scroller.appendChild(document.createElement('button'))
+    const action = keyboardTarget.appendChild(document.createElement('button'))
+
+    const tabEvent = fireKey(tab, KEY_ENTER, 'Enter')
+    expect(tabEvent.defaultPrevented).toBe(true)
+    expect(onEnter).toHaveBeenCalledTimes(1)
+
+    const actionEvent = fireKey(action, KEY_ENTER, 'Enter')
+    expect(actionEvent.defaultPrevented).toBe(false)
     expect(onEnter).toHaveBeenCalledTimes(1)
   })
 

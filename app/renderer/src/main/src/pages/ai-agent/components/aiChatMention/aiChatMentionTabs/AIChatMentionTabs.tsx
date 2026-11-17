@@ -111,6 +111,7 @@ export const AIChatMentionTabs: React.FC<AIChatMentionTabsProps> = React.memo((p
           className={styles['mention-tabs']}
           ref={tabsRef}
           onScroll={onScrollTabs}
+          data-mention-tabs=""
           data-testid="ai-chat-mention-tabs-scroller"
         >
           {tabs.map((tab) => {

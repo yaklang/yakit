@@ -522,6 +522,127 @@ describe('AIChatMention', () => {
     )
   })
 
+  it('ctrl 或 shift 点击多选，回车一次性提交，普通点击仍立即提交', async () => {
+    const editor = document.createElement('div')
+    const onSelect = vi.fn()
+    const onSelectMany = vi.fn()
+    await act(async () => {
+      render(<AIChatMention keyboardTarget={() => editor} onSelect={onSelect} onSelectMany={onSelectMany} />)
+    })
+    const first = await screen.findByRole('option', { name: /^recent-summary\b/ })
+    const second = screen.getByRole('option', { name: /^recent-translate\b/ })
+
+    fireEvent.click(second)
+    expect(onSelect).toHaveBeenCalledWith('forge', expect.objectContaining({ name: 'recent-translate' }))
+    expect(onSelectMany).not.toHaveBeenCalled()
+
+    fireEvent.click(first, { ctrlKey: true })
+    fireEvent.click(second, { ctrlKey: true })
+    fireEvent.click(second, { ctrlKey: true })
+    fireEvent.click(first, { ctrlKey: true })
+    fireEvent.keyDown(editor, { key: 'Enter', keyCode: 13 })
+    expect(onSelect).toHaveBeenLastCalledWith('forge', expect.objectContaining({ name: 'recent-summary' }))
+    expect(onSelectMany).not.toHaveBeenCalled()
+
+    await act(() => new Promise((resolve) => setTimeout(resolve, 250)))
+    fireEvent.click(second, { shiftKey: true })
+    expect(first).toHaveAttribute('aria-selected', 'true')
+    expect(second).toHaveAttribute('aria-selected', 'true')
+    fireEvent.keyDown(editor, { key: 'Enter', keyCode: 13 })
+    expect(onSelect).toHaveBeenCalledTimes(2)
+    expect(onSelectMany.mock.calls[0][0].map((item: { value?: { name?: string } }) => item.value?.name)).toEqual([
+      'recent-summary',
+      'recent-translate',
+    ])
+  })
+
+  it('Ctrl 的 mousedown 多选，随后的 click 被捕获吞掉且不会反选', async () => {
+    const editor = document.createElement('div')
+    const onSelect = vi.fn()
+    const onSelectMany = vi.fn()
+    await act(async () => {
+      render(<AIChatMention keyboardTarget={() => editor} onSelect={onSelect} onSelectMany={onSelectMany} />)
+    })
+    const first = await screen.findByRole('option', { name: /^recent-summary\b/ })
+    const second = screen.getByRole('option', { name: /^recent-translate\b/ })
+
+    const toggle = (option: HTMLElement) => {
+      fireEvent.mouseDown(option, { ctrlKey: true })
+      fireEvent.mouseUp(option, { ctrlKey: true })
+      fireEvent.click(option, { ctrlKey: true })
+    }
+    toggle(first)
+    toggle(second)
+
+    expect(onSelect).not.toHaveBeenCalled()
+    expect(first).toHaveAttribute('aria-selected', 'true')
+    expect(second).toHaveAttribute('aria-selected', 'true')
+    fireEvent.keyDown(editor, { key: 'Enter', keyCode: 13 })
+    expect(onSelectMany.mock.calls[0][0].map((item: { value?: { name?: string } }) => item.value?.name)).toEqual([
+      'recent-summary',
+      'recent-translate',
+    ])
+  })
+
+  it('Ctrl 按下后在弹层外松开，下一次普通点击仍会提交', async () => {
+    const onSelect = vi.fn()
+    await act(async () => {
+      render(<AIChatMention onSelect={onSelect} onSelectMany={vi.fn()} />)
+    })
+    const first = await screen.findByRole('option', { name: /^recent-summary\b/ })
+    const second = screen.getByRole('option', { name: /^recent-translate\b/ })
+
+    fireEvent.mouseDown(first, { ctrlKey: true })
+    fireEvent.mouseDown(second)
+    fireEvent.click(second)
+    expect(onSelect).toHaveBeenCalledWith('forge', expect.objectContaining({ name: 'recent-translate' }))
+  })
+
+  it('切到工具并多选后，输入框回车只提交工具，不把回车留给发送', async () => {
+    vi.mocked(grpcQueryAIForge).mockImplementation(async ({ Pagination }) => ({
+      Data: [skill(11, 'skill-a'), skill(12, 'skill-b')],
+      Pagination,
+      Total: 2,
+    }))
+    vi.mocked(grpcGetAIToolList).mockImplementation(async ({ Pagination }) => ({
+      Tools: [
+        { ID: 21, Name: 'tool-a', VerboseName: 'Tool A' },
+        { ID: 22, Name: 'tool-b', VerboseName: 'Tool B' },
+      ] as AITool[],
+      Pagination,
+      Total: 2,
+    }))
+    const editor = document.createElement('div')
+    const onSelectMany = vi.fn()
+    await act(async () => {
+      render(<AIChatMention keyboardTarget={() => editor} onSelect={vi.fn()} onSelectMany={onSelectMany} />)
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'AIMentionTabs.skill' }))
+    const skillA = await screen.findByRole('option', { name: /skill-a/ })
+    const skillB = screen.getByRole('option', { name: /skill-b/ })
+    fireEvent.click(skillA, { ctrlKey: true })
+    fireEvent.click(skillB, { ctrlKey: true })
+
+    const toolTab = screen.getByRole('button', { name: 'AIMentionTabs.tool' })
+    act(() => toolTab.focus())
+    fireEvent.click(toolTab)
+    const toolA = await screen.findByRole('option', { name: /Tool A/ })
+    const toolB = screen.getByRole('option', { name: /Tool B/ })
+    fireEvent.click(toolA, { ctrlKey: true })
+    fireEvent.click(toolB, { ctrlKey: true })
+
+    expect(fireEvent.keyDown(editor, { key: 'Enter', keyCode: 13 })).toBe(false)
+    expect(onSelectMany).toHaveBeenCalledTimes(1)
+    expect(
+      onSelectMany.mock.calls[0][0].map((item: { type?: string; value?: { name?: string } }) => item.type),
+    ).toEqual(['tool', 'tool'])
+    expect(onSelectMany.mock.calls[0][0].map((item: { value?: { name?: string } }) => item.value?.name)).toEqual([
+      'Tool A',
+      'Tool B',
+    ])
+  })
+
   it('moves focus from the clicked scene tab when switching tabs with the keyboard', () => {
     vi.mocked(useBrowserInstances).mockReturnValue({
       ...emptyBrowserState,

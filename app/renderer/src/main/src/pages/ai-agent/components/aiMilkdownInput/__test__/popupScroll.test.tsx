@@ -41,7 +41,7 @@ vi.mock('@milkdown/kit/plugin/slash', () => ({
 }))
 vi.mock('@/pages/ai-agent/defaultConstant', () => ({ iconMap: {} }))
 vi.mock('../customPlugin', () => ({ removeAIOffsetCommand: {} }))
-vi.mock('../aiMilkdownMention/aiMentionPlugin', () => ({ aiMentionCommand: {} }))
+vi.mock('../aiMilkdownMention/aiMentionPlugin', () => ({ aiMentionCommand: {}, aiMentionsCommand: {} }))
 vi.mock('../../aiChatMention/AIChatMention', () => ({
   AIChatMention: () => <div data-testid="mention-list">items</div>,
 }))
