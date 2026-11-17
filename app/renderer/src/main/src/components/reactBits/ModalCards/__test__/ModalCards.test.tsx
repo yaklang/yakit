@@ -257,6 +257,14 @@ describe('ModalCards', () => {
     expect(screen.getByRole('dialog')).toBeInTheDocument()
   })
 
+  it('hideGrid 不渲染预览网格，受控 id 仍打开弹层', async () => {
+    render(<ModalCards cards={cards} animationSpeed="none" hideGrid selectedId="a" onSelectedIdChange={vi.fn()} />)
+    await flushMount()
+    expect(document.querySelector('.modal-cards-grid')).toBeNull()
+    expect(document.querySelector('.modal-card-image')).toBeNull()
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+  })
+
   it('selectedId 受控打开对应手册，关闭时回传 null', async () => {
     const onSelectedIdChange = vi.fn()
     render(<ModalCards cards={cards} animationSpeed="none" selectedId="b" onSelectedIdChange={onSelectedIdChange} />)

@@ -129,6 +129,7 @@ const WelcomeSceneCards: FC<WelcomeSceneCardsProps> = memo(({ openId, onOpenIdCh
       {modalOnly ? null : <div className={styles['subtitle']}>{t('AIChatWelcome.WelcomeSceneSubTitle')}</div>}
       <ModalCards
         cards={cards}
+        hideGrid={modalOnly}
         className={styles['scene-list']}
         animationSpeed={animationDisabled ? 'none' : 'normal'}
         ariaLabel={t('AIChatWelcome.WelcomeSceneSubTitle')}
