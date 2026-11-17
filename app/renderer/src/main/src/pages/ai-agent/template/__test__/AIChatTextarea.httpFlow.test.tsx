@@ -1613,6 +1613,18 @@ describe('输入框资料栏', () => {
     expect(ref.current?.getValue()).toContain('可取消知识库')
   })
 
+  it('同一知识库重复加入时不追加', async () => {
+    const { ref } = await setup()
+    editors[0].action((ctx) => ctx.get(editorViewCtx).setProps({ handleScrollToSelection: () => true }))
+    const current = { mentionType: 'knowledgeBase' as const, lock: true, unique: true }
+    act(() => {
+      ref.current?.setMention({ ...current, mentionId: 'kb-a', mentionName: '知识库A' })
+      ref.current?.setMention({ ...current, mentionId: 'kb-a', mentionName: '知识库A' })
+      ref.current?.setMention({ ...current, mentionId: 'kb-b', mentionName: '知识库B' })
+    })
+    expect(extractDataWithMilkdown(editors[0]).mentions.map((item) => item.mentionId)).toEqual(['kb-a', 'kb-b'])
+  })
+
   it.each([
     ['browser-A', 'A', '浏览器 A'],
     ['missing-browser', '离线浏览器', '离线浏览器'],

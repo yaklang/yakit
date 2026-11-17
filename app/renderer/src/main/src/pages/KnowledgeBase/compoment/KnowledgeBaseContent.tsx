@@ -369,6 +369,7 @@ const KnowledgeBaseContentInner = forwardRef<unknown, KnowledgeBaseContentProps>
           mentionType: 'knowledgeBase',
           mentionName: targetKnowledgeBase.KnowledgeBaseName,
           lock: true,
+          unique: true,
         })
       })
     })
