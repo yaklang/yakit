@@ -176,6 +176,56 @@ describe('enterprise model config download', () => {
     expect(persisted.IntelligentModels[1].Provider.Headers?.[0].Value).toBe('bob.zh')
   })
 
+  it('clears an enterprise-only single model and restores its mode after a successful download', async () => {
+    persisted.SingleModelMode = true
+    persisted.IntelligentModels = [model('enterprise', 'alice.zh')]
+    vi.mocked(grpcSetAIGlobalConfig).mockImplementation(async (value) => {
+      if (value.SingleModelMode && !value.IntelligentModels.length) throw new Error('invalid single model')
+      persisted = structuredClone(value)
+      return null
+    })
+    await syncOnlineAIGlobalConfig(
+      async () => {
+        expect(persisted.SingleModelMode).toBe(false)
+        expect(persisted.IntelligentModels).toEqual([])
+        return response('bob.zh')
+      },
+      () => true,
+    )
+    expect(persisted.SingleModelMode).toBe(true)
+    expect(persisted.IntelligentModels[0].Provider.Headers?.[0].Value).toBe('bob.zh')
+    await clearOnlineAIGlobalConfig()
+    expect(persisted.SingleModelMode).toBe(false)
+    expect(persisted.IntelligentModels).toEqual([])
+  })
+
+  it('a queued settings save cannot restore single-model mode after its last online model is cleared', async () => {
+    persisted.SingleModelMode = true
+    persisted.IntelligentModels = [model('enterprise', 'alice.zh')]
+    useAIGlobalConfigStore.getState().setAIGlobalConfig(structuredClone(persisted))
+    const { result } = renderHook(() => useAIGlobalConfig())
+    let release!: (config: AIGlobalConfig) => void
+    vi.mocked(grpcGetAIGlobalConfig).mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          release = resolve
+        }),
+    )
+    await act(async () => {
+      const logout = clearOnlineAIGlobalConfig()
+      await vi.waitFor(() => expect(release).toBeDefined())
+      const settings = result.current[1].setAIGlobalConfig({ DisableFallback: true })
+      release(structuredClone(persisted))
+      await Promise.all([logout, settings])
+    })
+    expect(persisted.SingleModelMode).toBe(false)
+    expect(persisted.IntelligentModels).toEqual([])
+    expect(persisted.DisableFallback).toBe(true)
+    for (const [config] of vi.mocked(grpcSetAIGlobalConfig).mock.calls) {
+      expect(config.SingleModelMode && !config.IntelligentModels.length).toBe(false)
+    }
+  })
+
   it('ignores an old request failure after a new session has synced', async () => {
     let reject!: (error: Error) => void
     const oldFetch = vi.fn(

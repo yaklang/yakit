@@ -93,6 +93,10 @@ const replaceOnlineAIModels = (
       })
       next[key] = [...ordered, ...available]
     }
+    // The engine rejects single-model mode without a main model. Clear safely,
+    // then restore the previous mode once the new download supplies a model.
+    next.SingleModelMode =
+      !!(previousOrder?.SingleModelMode ?? current.SingleModelMode) && next.IntelligentModels.length > 0
     if (!isCurrent()) return
     const snapshot = fixEmptyNumber(next)
     await grpcSetAIGlobalConfig(snapshot)
@@ -232,6 +236,7 @@ function useAIGlobalConfig(params) {
           })
           snapshot[key] = [...ordered, ...available]
         }
+        if (!snapshot.IntelligentModels.length) snapshot.SingleModelMode = false
       }
       await grpcSetAIGlobalConfig(snapshot)
       if (epoch === saveEpoch) applyFetchedConfig(snapshot, epoch)
