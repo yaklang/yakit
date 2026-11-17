@@ -112,7 +112,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
               <div className={styles['title']}>
                 {!isEmptyStats && (
                   <YakitDropdownMenu
-                    dropdown={{ open: guideMenuOpen, onOpenChange: setGuideMenuOpen }}
+                    dropdown={{ open: guideMenuOpen, onOpenChange: setGuideMenuOpen, trigger: ['click'] }}
                     menu={{
                       data: GUIDE_SCENES.map((item) => ({ label: t(item.labelKey), key: item.key })),
                       onClick: handleGuideMenuClick,

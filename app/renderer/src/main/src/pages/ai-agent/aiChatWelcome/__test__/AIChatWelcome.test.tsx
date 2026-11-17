@@ -351,6 +351,7 @@ describe('AIChatWelcome 空态', () => {
     await waitFor(() => {
       expect(screen.queryByText('AIChatWelcome.WelcomeHomeSubTitle')).not.toBeInTheDocument()
     })
+    expect(screen.queryByRole('button', { name: 'AIChatWelcome.guideMenu' })).not.toBeInTheDocument()
     expect(screen.queryByTestId('welcome-recent-sessions')).not.toBeInTheDocument()
     expect(screen.getByTestId('welcome-tips-cards')).toBeInTheDocument()
     expect(screen.getAllByTestId('welcome-scene-cards')).toHaveLength(1)
