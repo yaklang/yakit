@@ -19,21 +19,27 @@ vi.mock('@/components/yakitUI/YakitButton/YakitButton', () => ({
 vi.mock('@/components/reactBits/ModalCards/ModalCards', () => ({
   default: ({
     cards,
+    selectedId,
+    hideGrid,
   }: {
     cards: Array<{ id: string; title: string; footer?: ReactNode; steps?: unknown[]; expandTrigger?: string }>
+    selectedId?: string | null
+    hideGrid?: boolean
   }) => (
-    <div data-testid="modal-cards">
-      {cards.map((card) => (
-        <div
-          key={card.id}
-          data-testid={`scene-card-${card.id}`}
-          data-steps={card.steps?.length ?? 0}
-          data-expand={card.expandTrigger || 'card'}
-        >
-          <span>{card.title}</span>
-          {card.footer}
-        </div>
-      ))}
+    <div data-testid="modal-cards" data-selected-id={selectedId ?? ''} data-hide-grid={hideGrid ? 'true' : 'false'}>
+      {hideGrid
+        ? null
+        : cards.map((card) => (
+            <div
+              key={card.id}
+              data-testid={`scene-card-${card.id}`}
+              data-steps={card.steps?.length ?? 0}
+              data-expand={card.expandTrigger || 'card'}
+            >
+              <span>{card.title}</span>
+              {card.footer}
+            </div>
+          ))}
     </div>
   ),
 }))
@@ -77,5 +83,15 @@ describe('WelcomeSceneCards', () => {
     expect(screen.getByTestId('scene-card-idor').getAttribute('data-steps')).toBe('4')
     expect(screen.getByTestId('scene-card-idor').getAttribute('data-expand')).toBe('footer')
     expect(screen.getByRole('button', { name: 'AIChatWelcome.sceneReadDocs' })).toBeInTheDocument()
+    expect(screen.getByTestId('modal-cards')).toHaveAttribute('data-selected-id', '')
+  })
+
+  it('openId 打开对应场景手册，modalOnly 时不展示卡片列表', () => {
+    render(<WelcomeSceneCards openId="traffic" modalOnly />)
+    expect(screen.getByTestId('modal-cards')).toHaveAttribute('data-selected-id', 'traffic')
+    expect(screen.getByTestId('modal-cards')).toHaveAttribute('data-hide-grid', 'true')
+    expect(screen.queryByTestId('scene-card-traffic')).not.toBeInTheDocument()
+    expect(screen.getByTestId('welcome-scene-cards')).toHaveAttribute('hidden')
+    expect(screen.queryByText('AIChatWelcome.WelcomeSceneSubTitle')).not.toBeInTheDocument()
   })
 })

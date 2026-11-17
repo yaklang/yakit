@@ -3,6 +3,10 @@
   flex-direction: column;
   gap: 12px;
   width: 100%;
+
+  &[hidden] {
+    display: none;
+  }
 }
 
 .subtitle {

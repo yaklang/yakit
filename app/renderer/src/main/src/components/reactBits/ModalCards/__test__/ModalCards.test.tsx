@@ -219,6 +219,62 @@ describe('ModalCards', () => {
     expect(screen.getByRole('dialog')).toBeInTheDocument()
   })
 
+  it('受控模式下切换和 Escape 都回传目标 id', async () => {
+    const onSelectedIdChange = vi.fn()
+    const guideCards: CardData[] = [
+      {
+        id: 'a',
+        imageUrl: 'a.png',
+        title: '场景甲',
+        description: '简介甲',
+        confirmLabel: '知道了',
+        steps: [{ title: '甲第一步', items: [{ images: ['a.png'] }] }],
+      },
+      {
+        id: 'b',
+        imageUrl: 'b.png',
+        title: '场景乙',
+        description: '简介乙',
+        confirmLabel: '知道了',
+        steps: [{ title: '乙第一步', items: [{ images: ['b.png'] }] }],
+      },
+    ]
+    render(
+      <ModalCards
+        cards={guideCards}
+        animationSpeed="none"
+        selectedId="a"
+        onSelectedIdChange={onSelectedIdChange}
+        prevLabel="上一个"
+        nextLabel="下一个"
+      />,
+    )
+    await flushMount()
+    fireEvent.click(screen.getByRole('button', { name: '下一个' }))
+    expect(onSelectedIdChange).toHaveBeenCalledWith('b')
+    fireEvent.keyDown(document, { key: 'Escape' })
+    expect(onSelectedIdChange).toHaveBeenCalledWith(null)
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+  })
+
+  it('hideGrid 不渲染预览网格，受控 id 仍打开弹层', async () => {
+    render(<ModalCards cards={cards} animationSpeed="none" hideGrid selectedId="a" onSelectedIdChange={vi.fn()} />)
+    await flushMount()
+    expect(document.querySelector('.modal-cards-grid')).toBeNull()
+    expect(document.querySelector('.modal-card-image')).toBeNull()
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+  })
+
+  it('selectedId 受控打开对应手册，关闭时回传 null', async () => {
+    const onSelectedIdChange = vi.fn()
+    render(<ModalCards cards={cards} animationSpeed="none" selectedId="b" onSelectedIdChange={onSelectedIdChange} />)
+    await flushMount()
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    expect(screen.getAllByText('卡片乙').length).toBeGreaterThan(1)
+    fireEvent.click(screen.getByRole('dialog').querySelector('button') as HTMLButtonElement)
+    expect(onSelectedIdChange).toHaveBeenCalledWith(null)
+  })
+
   it('Escape 与关闭按钮可收起', async () => {
     render(<ModalCards cards={cards} animationSpeed="none" closeLabel="关闭" />)
     await flushMount()

@@ -40,6 +40,7 @@
     "toolBase": "工具庫",
     "expandResources": "擴充套件資源",
     "WelcomeHomeSubTitle": "資料庫資料，可添加到當前會話中引用",
+    "guideMenu": "新手引導",
     "WelcomeSceneSubTitle": "透過經典應用場景介紹，瞭解我們能做什麼",
     "scenePentestTitle": "基礎滲透測試",
     "scenePentestDesc": "輸入目標，AI 自動拆解任務執行滲透，發現網站漏洞。",
