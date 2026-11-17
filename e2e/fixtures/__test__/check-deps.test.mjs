@@ -50,11 +50,16 @@ describe('dependency installation checks', () => {
     const electronDir = path.join(root, 'node_modules/electron')
     writeJSON(path.join(electronDir, 'package.json'), { version: '27.0.0' })
     expect(dependencyIssues(root)).toEqual([
-      'electron（运行文件缺失，请在该项目目录执行 node node_modules/electron/install.js）',
+      'electron（运行文件缺失或版本不一致，请在该项目目录执行 node node_modules/electron/install.js）',
     ])
     writeFileSync(path.join(electronDir, 'path.txt'), 'electron')
     mkdirSync(path.join(electronDir, 'dist'))
     writeFileSync(path.join(electronDir, 'dist/electron'), '')
+    writeFileSync(path.join(electronDir, 'dist/version'), 'v22.3.27')
+    expect(dependencyIssues(root)).toEqual([
+      'electron（运行文件缺失或版本不一致，请在该项目目录执行 node node_modules/electron/install.js）',
+    ])
+    writeFileSync(path.join(electronDir, 'dist/version'), 'v27.0.0')
     expect(dependencyIssues(root)).toEqual([])
   })
 })

@@ -11,8 +11,8 @@ const {
 } = require('electron')
 const isDev = require('electron-is-dev')
 const path = require('path')
-const url = require('url')
 const process = require('process')
+const { filePathFromAtomUrl } = require('./atomFileUrl')
 const { configureE2EEnvironment } = require('./e2eEnvironment')
 
 // This must run before localCache/filePath are loaded: both can resolve and
@@ -748,21 +748,19 @@ if (!shouldAbortStartupForDebugFlags) {
         globalShortcut.unregister('esc')
       })
 
-      screenshots.on('ok', () => {
-        if (screenshots.$win?.isFocused()) {
-          screenshots.endCapture()
-          globalShortcut.unregister('esc')
-        }
-      })
+      screenshots.on('copied', () => globalShortcut.unregister('esc'))
       screenshots.on('cancel', () => {
         globalShortcut.unregister('esc')
       })
     }
 
-    // 注册协议
     protocol.registerFileProtocol('atom', (request, callback) => {
-      const filePath = url.fileURLToPath('file://' + request.url.slice('atom://'.length))
-      callback(filePath)
+      try {
+        callback(filePathFromAtomUrl(request.url))
+      } catch (error) {
+        console.error('Failed to resolve atom URL:', request.url, error)
+        callback({ error: -2 })
+      }
     })
 
     void rendererDiagnostics.start().catch((error) => {

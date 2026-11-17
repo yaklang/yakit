@@ -1,4 +1,5 @@
 const { contextBridge, ipcRenderer } = require('electron')
+const { getPathForFile } = require('./preloadFilePath')
 
 const ENGINE_LINK_PREFIX = 'EngineLink:'
 
@@ -28,6 +29,7 @@ const handleIsCrashed = () => {
 
 contextBridge.exposeInMainWorld('yakitBridge', {
   app: {
+    getPathForFile,
     markRendererReady: () => send('engine-win-render-ok'),
     generateStartEngine: () => invokePrefixed('generate-start-engine'),
     setEnterpriseToDomain: (flag) => invokePrefixed('is-enpritrace-to-domain', flag),

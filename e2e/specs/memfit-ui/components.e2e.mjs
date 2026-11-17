@@ -272,6 +272,8 @@ describe('Memfit real Chromium component regression', () => {
     await expect(button('查看原始字段')).toHaveAttribute('aria-expanded', 'false')
     await browser.waitUntil(async () => !(await overlayVisible('.ant-popover')))
     await show('Tooltip')
+    // Chromium 152 does not fire mouseenter for a trigger that mounts under a stationary pointer.
+    await $('body').moveTo({ x: 1, y: 1 })
     await button('术语解释').moveTo()
     await browser.waitUntil(() => overlayVisible('.ant-tooltip'))
     await capture('tooltip-open')

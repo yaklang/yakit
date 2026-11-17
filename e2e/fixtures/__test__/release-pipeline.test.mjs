@@ -1,5 +1,6 @@
 // @vitest-environment node
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { readFileSync } from 'node:fs'
 import { mkdtemp, mkdir, readFile, readlink, rm, stat, symlink, writeFile } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
@@ -11,6 +12,8 @@ import {
   assertSourceRun,
   assertVersion,
   createPlan,
+  currentElectronVersion,
+  legacyElectronVersion,
   sha256,
 } from '../../../scripts/release/model.mjs'
 import { archive, extract } from '../../../scripts/release/io.mjs'
@@ -67,10 +70,24 @@ describe('release identity and native matrix', () => {
     expect(new Set(candidate.targets.map((target) => target.id)).size).toBe(20)
     expect(new Set(candidate.targets.map((target) => target.runner)).size).toBe(5)
     expect(candidate.targets.filter((target) => target.platform === 'darwin')).toHaveLength(8)
-    expect(candidate.targets.every((target) => target.electronVersion === (target.legacy ? '22.3.27' : '27.0.0'))).toBe(
-      true,
-    )
+    expect(
+      candidate.targets.every(
+        (target) => target.electronVersion === (target.legacy ? legacyElectronVersion : currentElectronVersion),
+      ),
+    ).toBe(true)
     expect(assertPlan(candidate)).toBe(candidate)
+  })
+  it('reads the normal Electron version from package.json before the legacy downgrade', () => {
+    const packageVersion = JSON.parse(readFileSync(new URL('../../../package.json', import.meta.url), 'utf8'))
+      .devDependencies.electron
+    expect(currentElectronVersion).toBe(packageVersion)
+    for (const script of ['electron-builder.sh', 'electron-irify-builder.sh', 'electron-memfit-builder.sh']) {
+      const source = readFileSync(new URL(`../../../packageScript/script/${script}`, import.meta.url), 'utf8')
+      const readAt = source.indexOf("require('./package.json').devDependencies.electron")
+      expect(readAt).toBeGreaterThan(-1)
+      expect(source.indexOf('electron@22.3.27')).toBeGreaterThan(readAt)
+      expect(source).not.toContain(`electron@${packageVersion}`)
+    }
   })
   it.each(['latest', '', '1.4', 'dev/1.4.9', '1.4.9/../../latest', '1.4.9;echo x', 'https://host/engine'])(
     'rejects an ambiguous engine version: %s',

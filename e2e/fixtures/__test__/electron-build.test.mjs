@@ -320,13 +320,16 @@ describe('Electron bundle contract', () => {
     async (name) => {
       const exposed = {}
       const ipcRenderer = Object.assign(new EventEmitter(), { send: vi.fn(), invoke: vi.fn(), sendSync: vi.fn() })
+      const getPathForFile = vi.fn(() => '/selected.txt')
       const process = Object.assign(new EventEmitter(), { argv: [] })
-      const window = { addEventListener: vi.fn() }
+      class File {}
+      const window = { addEventListener: vi.fn(), File }
       vm.runInNewContext(await readFile(path.join(output, `preload/${name}.js`), 'utf8'), {
         require: (id) => {
           expect(id).toBe('electron')
           return {
             ipcRenderer,
+            webUtils: { getPathForFile },
             contextBridge: {
               exposeInMainWorld: (key, value) => {
                 exposed[key] = value
@@ -341,7 +344,11 @@ describe('Electron bundle contract', () => {
       if (name === 'main') {
         process.emit('loaded')
         expect(window.yakitBridge).toBeDefined()
+        const selected = new window.File()
+        expect(selected.path).toBe('/selected.txt')
+        expect(getPathForFile).toHaveBeenCalledWith(selected)
       } else if (name === 'engine-link') {
+        expect(exposed.yakitBridge.app.getPathForFile({ name: 'selected.txt' })).toBe('/selected.txt')
         await exposed.yakitBridge.system.isDev()
         expect(ipcRenderer.invoke).toHaveBeenCalledWith('EngineLink:is-dev')
       } else {

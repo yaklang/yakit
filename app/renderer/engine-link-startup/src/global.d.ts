@@ -141,6 +141,7 @@ declare global {
 
   interface YakitBridge {
     app: {
+      getPathForFile: (file: File) => string
       markRendererReady: () => void
       generateStartEngine: () => Promise<unknown>
       setEnterpriseToDomain: (flag: boolean) => Promise<unknown>

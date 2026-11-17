@@ -1,5 +1,6 @@
 const { appResourcePath, preloadPath } = require('../runtimePaths')
-const { BrowserView, BrowserWindow, clipboard, desktopCapturer, dialog, ipcMain, nativeImage } = require('electron')
+const { BrowserView, BrowserWindow, desktopCapturer, dialog, ipcMain } = require('electron')
+const { writeClipboardImage } = require('../clipboardCompat')
 const Events = require('events')
 const fs = require('fs-extra')
 const Event = require('./event')
@@ -334,7 +335,7 @@ class Screenshots extends Events {
      * @param {Buffer} buffer
      * @param {ScreenshotsData} data
      */
-    ipcMain.on('SCREENSHOTS:ok', (e, buffer, data) => {
+    ipcMain.on('SCREENSHOTS:ok', async (e, buffer, data) => {
       this.logger('SCREENSHOTS:ok buffer.length %d, data: %o', buffer.length, data)
 
       const event = new Event()
@@ -342,7 +343,16 @@ class Screenshots extends Events {
       if (event.defaultPrevented) {
         return
       }
-      clipboard.writeImage(nativeImage.createFromBuffer(buffer))
+      try {
+        await writeClipboardImage(buffer)
+      } catch (error) {
+        console.error('Failed to copy screenshot to clipboard:', error)
+        this.emit('cancel', new Event())
+        await this.endCapture()
+        dialog.showErrorBox('截图复制失败', String(error))
+        return
+      }
+      this.emit('copied')
       this.endCapture()
     })
     // CANCEL事件

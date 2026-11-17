@@ -55,8 +55,8 @@ const loadIndex = (platform, opts = {}) => {
     if (id === 'electron') return electron
     if (id === 'electron-is-dev') return false
     if (id === 'path') return path
-    if (id === 'url') return { fileURLToPath: vi.fn() }
     if (id === 'process') return fakeProcess
+    if (id === './atomFileUrl') return { filePathFromAtomUrl: (value) => value }
     if (id === './e2eEnvironment') return { configureE2EEnvironment: vi.fn(() => ({ enabled: false })) }
     if (id === './runtimePaths')
       return {

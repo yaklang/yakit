@@ -25,7 +25,7 @@ Yakit 是一个基于 Electron + React 的跨平台桌面应用，主要技术�
 
 ## 前置要求
 
-- Node.js（版本以团队约定为准，仓库暂未提供 `.nvmrc`）
+- Node.js >= 22.22.0（主渲染端 `engines` 的要求，也满足 Electron 44；仓库暂未提供 `.nvmrc`）
 - Yarn（本项目使用 `yarn` 作为包管理器，根目录已提供 `yarn.lock`）
 - macOS（Apple Silicon / M 芯片）如遇到原生依赖编译失败，可参考 `ELECTRON_GUIDE.md` 执行：
   ```bash

@@ -38,8 +38,8 @@ node scripts/engine-startup/verify-electron-ipc.cjs /absolute/downloaded-yak 1 m
 node scripts/engine-startup/verify-electron-ipc.cjs /absolute/downloaded-yak 100 ipc ipc
 ```
 
-The matrix executes auto IPC, IPC-only and explicit TCP using the locked Electron
-27 runtime and grpc-js client, even with unusable proxy variables. IPC is tested
+The matrix executes auto IPC, IPC-only and explicit TCP using the Electron
+runtime version locked in the repository `package.json` and the grpc-js client, even with unusable proxy variables. IPC is tested
 while the fallback TCP port is occupied. It exercises cancellation/recovery,
 business RPC, negative authentication, disconnect/reconnect, endpoint/password
 freshness, secret redaction and confirmed owned-child cleanup. All databases are

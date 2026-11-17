@@ -1,4 +1,7 @@
+import { createRequire } from 'node:module'
+
 const screenshotModulePath = process.env.YAKIT_E2E_SCREENSHOT_MODULE
+const electronVersion = createRequire(import.meta.url)('electron/package.json').version
 if (!screenshotModulePath) throw new Error('Run through scripts/run-electron-e2e.mjs to build the screenshot fixture')
 const syntheticPage = `<!doctype html>
 <html>
@@ -246,7 +249,7 @@ describe('Yakit screenshot capture', () => {
 
     expect(widthScale).toBeCloseTo(heightScale, 2)
     expect(capture.displayScaleFactor).toBeGreaterThan(0)
-    expect(capture.electronVersion).toMatch(/^27\./)
+    expect(capture.electronVersion).toBe(electronVersion)
     expect(['darwin', 'linux', 'win32']).toContain(capture.platform)
   })
 })

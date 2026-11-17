@@ -15,18 +15,22 @@ fi
 
 edition="memfit"
 
+electron_version=$(node -p "require('./package.json').devDependencies.electron")
+
 rm -rf ./app/renderer/engine-link-startup/dist
 rm -rf ./app/renderer/pages
 rm -rf ./release
 
 ./packageScript/script/installMemfitRender.sh ${item} || { exit 1; }
 
-yarn remove electron && yarn add electron@27.0.0 --dev
+yarn remove electron && yarn add "electron@${electron_version}" --dev
 cp ./bins/yak_windows_normal_amd64.zip ./bins/yak_windows_amd64.zip
 ./packageScript/script/retryScript.sh "yarn cli pack -s win -v ${edition}" || { exit 1; }
 ./packageScript/script/retryScript.sh "yarn cli pack -s linux -v ${edition}" || { exit 1; }
 ./packageScript/script/retryScript.sh "yarn cli pack -s mac -v ${edition} --sign" || { exit 1; }
 
+# legacy 段会改写 package.json 的 electron 版本，用 trap 保证任何退出路径都还原
+trap 'yarn remove electron && yarn add "electron@${electron_version}" --dev' EXIT
 yarn remove electron && yarn add electron@22.3.27 --dev
 cp ./bins/yak_windows_legacy_amd64.zip ./bins/yak_windows_amd64.zip
 ./packageScript/script/retryScript.sh "yarn cli pack -s win -v ${edition} --legacy" || { exit 1; }

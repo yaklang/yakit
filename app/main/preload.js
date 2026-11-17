@@ -1,4 +1,5 @@
 const { ipcRenderer } = require('electron')
+const { installFilePath } = require('./preloadFilePath')
 
 const mitmDebugHooksEnabled = process.argv.includes('--yakit-mitm-debug-hooks=1')
 
@@ -44,6 +45,7 @@ const handleIsCrashed = () => {
 }
 
 process.on('loaded', function () {
+  installFilePath(window)
   window.require = function (i) {
     if (i !== 'electron') {
       return

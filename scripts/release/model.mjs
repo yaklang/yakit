@@ -1,5 +1,14 @@
 import { createHash } from 'node:crypto'
+import { readFileSync } from 'node:fs'
 import { readFile, writeFile } from 'node:fs/promises'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const rootPackage = JSON.parse(
+  readFileSync(join(dirname(fileURLToPath(import.meta.url)), '../../package.json'), 'utf8'),
+)
+export const currentElectronVersion = rootPackage.devDependencies.electron
+export const legacyElectronVersion = '22.3.27'
 
 export const products = {
   yakit: { name: 'Yakit', oss: 'yak' },
@@ -63,7 +72,7 @@ export function createPlan({ editions, version, sha, runId, repository, ref, ref
         ...platform,
         edition,
         legacy,
-        electronVersion: legacy ? '22.3.27' : '27.0.0',
+        electronVersion: legacy ? legacyElectronVersion : currentElectronVersion,
         id: `${edition}-${platform.platform}-${platform.arch}-${legacy ? 'legacy' : 'normal'}`,
       })),
     ),

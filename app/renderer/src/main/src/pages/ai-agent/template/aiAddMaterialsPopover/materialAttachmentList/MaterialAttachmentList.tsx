@@ -7,6 +7,7 @@ import { imgTypes } from '@/components/MilkdownEditor/utils/utils'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { toAtomFileUrl } from '@/utils/atomFileUrl'
 import { getFileSuffixFromName, getPathBaseName } from '@/utils/str'
 import { FolderDefault, KeyToIcon } from '@/pages/yakRunner/FileTree/icon'
 import { FileExcelIcon, FilePdfIcon, FilePptIcon, FileUnknownIcon, FileWordIcon } from '../../fileIcon'
@@ -108,7 +109,7 @@ const MaterialAttachmentList: FC<MaterialAttachmentListProps> = ({ attachments, 
               ) : showThumbnail ? (
                 <img
                   className={`${styles['file-icon']} ${styles.thumbnail}`}
-                  src={isPendingImage ? path : `atom://${path}`}
+                  src={isPendingImage ? path : toAtomFileUrl(path)}
                   alt={fileName}
                   loading="lazy"
                   onError={() => setFailedImagePaths((current) => new Set(current).add(path))}
