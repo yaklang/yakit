@@ -21,8 +21,13 @@ const KEY_DOWN = 40
 const KEY_ENTER = 13
 
 /** jsdom 无布局：ahooks 按 keyCode 匹配别名且要求 event.key 非空，keyCode 需挂到事件实例上 */
-const fireKey = (target: HTMLElement, keyCode: number, key: string) => {
-  const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true })
+const fireKey = (
+  target: HTMLElement,
+  keyCode: number,
+  key: string,
+  modifiers?: { ctrlKey?: boolean; metaKey?: boolean },
+) => {
+  const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true, ...modifiers })
   Object.defineProperty(event, 'keyCode', { get: () => keyCode })
   target.dispatchEvent(event)
   return event
@@ -39,6 +44,7 @@ interface SetupOptions {
   itemRect?: { top: number; bottom: number; height: number }
   mountedRowIds?: string[]
   onEnter?: () => void
+  onCtrlEnter?: () => void
   extraContainer?: () => HTMLElement | null
 }
 
@@ -71,6 +77,7 @@ const setup = (options: SetupOptions) => {
       rowKey: (item) => `row-${item.id}`,
       onSelectNumber,
       onEnter,
+      onCtrlEnter: options.onCtrlEnter,
       getContainer: () => keyboardTarget,
       extraContainer: options.extraContainer,
       enabled: options.enabled,
@@ -212,6 +219,24 @@ describe('useSwitchSelectByKeyboard', () => {
     const actionEvent = fireKey(action, KEY_ENTER, 'Enter')
     expect(actionEvent.defaultPrevented).toBe(false)
     expect(onEnter).toHaveBeenCalledTimes(1)
+  })
+
+  it('Ctrl 或 Cmd+Enter 拦截并触发多选，普通 Enter 不走这条', () => {
+    const data = makeData(1)
+    const onCtrlEnter = vi.fn()
+    const { onEnter, keyboardTarget } = setup({ data, selected: data[0], onCtrlEnter })
+    const ctrlEvent = fireKey(keyboardTarget, KEY_ENTER, 'Enter', { ctrlKey: true })
+    expect(ctrlEvent.defaultPrevented).toBe(true)
+    expect(onCtrlEnter).toHaveBeenCalledTimes(1)
+    expect(onEnter).not.toHaveBeenCalled()
+
+    const metaEvent = fireKey(keyboardTarget, KEY_ENTER, 'Enter', { metaKey: true })
+    expect(metaEvent.defaultPrevented).toBe(true)
+    expect(onCtrlEnter).toHaveBeenCalledTimes(2)
+
+    fireKey(keyboardTarget, KEY_ENTER, 'Enter')
+    expect(onEnter).toHaveBeenCalledTimes(1)
+    expect(onCtrlEnter).toHaveBeenCalledTimes(2)
   })
 
   it('enabled=false → 方向键不响应', () => {

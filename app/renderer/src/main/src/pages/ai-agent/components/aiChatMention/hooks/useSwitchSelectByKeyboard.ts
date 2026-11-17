@@ -10,7 +10,7 @@ import {
 const noKeyboardTarget = () => null
 
 function useBoundKeyPress(
-  key: 'uparrow' | 'downarrow' | 'enter' | (() => false),
+  key: string | string[] | (() => false),
   handler: (event: KeyboardEvent) => void,
   targets: Array<(() => HTMLElement | null) | undefined>,
 ) {
@@ -26,6 +26,8 @@ function useSwitchSelectByKeyboard<T>(
     rowKey: string | ((v: T) => string)
     onSelectNumber: (m: number, isScroll: boolean) => void
     onEnter: () => void
+    /** Ctrl/Cmd+Enter：把当前高亮项加入多选，不提交。 */
+    onCtrlEnter?: () => void
     /** 固定行高；目标 DOM 未挂载（虚拟列表）时用于估算 scrollTop */
     defItemHeight?: number
     getContainer?: () => HTMLElement | null
@@ -34,7 +36,17 @@ function useSwitchSelectByKeyboard<T>(
     enabled?: boolean
   },
 ): void {
-  const { data, selected, rowKey, onSelectNumber, onEnter, getContainer, extraContainer, enabled = true } = params
+  const {
+    data,
+    selected,
+    rowKey,
+    onSelectNumber,
+    onEnter,
+    onCtrlEnter,
+    getContainer,
+    extraContainer,
+    enabled = true,
+  } = params
 
   const defItemHeight = useCreation(() => params.defItemHeight ?? 32, [params.defItemHeight])
 
@@ -133,9 +145,16 @@ function useSwitchSelectByKeyboard<T>(
     e.preventDefault()
     onEnterKey()
   }
+  const onCtrlEnterEvent = (e: KeyboardEvent) => {
+    if (e.repeat || !onCtrlEnter) return
+    e.stopPropagation()
+    e.preventDefault()
+    onCtrlEnter()
+  }
   useBoundKeyPress(active ? 'uparrow' : () => false, onUpKey, targets)
   useBoundKeyPress(active ? 'downarrow' : () => false, onDownKey, targets)
   useBoundKeyPress(active ? 'enter' : () => false, onEnterEvent, targets)
+  useBoundKeyPress(active && onCtrlEnter ? ['ctrl.enter', 'meta.enter'] : () => false, onCtrlEnterEvent, targets)
 }
 
 export default useSwitchSelectByKeyboard

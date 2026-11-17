@@ -98,6 +98,21 @@ export const useMentionRowsKeyboard = (
       }
       if (selected) commit([selected])
     },
+    onCtrlEnter: allowMulti
+      ? () => {
+          if (!selected) return
+          const next = resolveMentionPointerSelect({
+            orderedKeys: rows.map(rowKey),
+            checkedKeys,
+            anchorKey: multiActive ? multi.anchorKey : rowKey(selected),
+            clickedKey: rowKey(selected),
+            modifiers: { ctrlKey: true },
+          })
+          if (!next) return
+          setMulti({ resetKey, keys: next.checkedKeys, anchorKey: next.anchorKey })
+          setSelection({ key: rowKey(selected), resetKey })
+        }
+      : undefined,
   })
 
   return (item: MentionRow) => ({

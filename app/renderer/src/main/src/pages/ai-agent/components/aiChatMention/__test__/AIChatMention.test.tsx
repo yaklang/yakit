@@ -556,6 +556,30 @@ describe('AIChatMention', () => {
     ])
   })
 
+  it('Ctrl+Enter 把当前高亮项加入多选，回车再一次性提交', async () => {
+    const editor = document.createElement('div')
+    const onSelect = vi.fn()
+    const onSelectMany = vi.fn()
+    await act(async () => {
+      render(<AIChatMention keyboardTarget={() => editor} onSelect={onSelect} onSelectMany={onSelectMany} />)
+    })
+    const first = await screen.findByRole('option', { name: /^recent-summary\b/ })
+    const second = screen.getByRole('option', { name: /^recent-translate\b/ })
+
+    fireEvent.keyDown(editor, { key: 'Enter', keyCode: 13, ctrlKey: true })
+    fireEvent.keyDown(editor, { key: 'ArrowDown', keyCode: 40 })
+    fireEvent.keyDown(editor, { key: 'Enter', keyCode: 13, ctrlKey: true })
+
+    expect(onSelect).not.toHaveBeenCalled()
+    expect(first).toHaveAttribute('aria-selected', 'true')
+    expect(second).toHaveAttribute('aria-selected', 'true')
+    fireEvent.keyDown(editor, { key: 'Enter', keyCode: 13 })
+    expect(onSelectMany.mock.calls[0][0].map((item: { value?: { name?: string } }) => item.value?.name)).toEqual([
+      'recent-summary',
+      'recent-translate',
+    ])
+  })
+
   it('Ctrl 的 mousedown 多选，随后的 click 被捕获吞掉且不会反选', async () => {
     const editor = document.createElement('div')
     const onSelect = vi.fn()
