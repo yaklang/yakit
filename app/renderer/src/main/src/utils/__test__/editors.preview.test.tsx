@@ -3,8 +3,10 @@ import type * as Hooks from 'ahooks'
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { NewHTTPPacketEditor, type NewHTTPPacketEditorProp } from '../editors'
+import { useEditorHeaderVisibility } from '@/store/editorHeaderVisibility'
+import { FuzzerRemoteGV } from '@/enums/fuzzer'
 
-const mocks = vi.hoisted(() => ({ detect: vi.fn(), render: vi.fn(), noop: vi.fn() }))
+const mocks = vi.hoisted(() => ({ detect: vi.fn(), render: vi.fn(), noop: vi.fn(), save: vi.fn() }))
 vi.mock('../prettifyPacket', () => ({
   formatPacketRender: mocks.detect,
   prettifyPacketRender: mocks.render,
@@ -27,7 +29,7 @@ vi.mock('@/components/yakitUI/YakitEditor/binaryFuzztag', () => ({
   packetTextToRawBytes: (text: string) => new TextEncoder().encode(text),
   rawBytesToPacketText: (bytes: Uint8Array) => new TextDecoder().decode(bytes),
 }))
-vi.mock('@/utils/kv', () => ({ getRemoteValue: async () => undefined }))
+vi.mock('@/utils/kv', () => ({ getRemoteValue: async () => undefined, setRemoteValue: mocks.save }))
 vi.mock('antd', () => ({
   Card: ({ title, extra, children }: React.PropsWithChildren<{ title?: React.ReactNode; extra?: React.ReactNode }>) => (
     <div>
@@ -47,7 +49,11 @@ vi.mock('@ant-design/icons', () => ({
   SettingOutlined: () => null,
   ThunderboltFilled: () => null,
 }))
-vi.mock('@yakit-libs/yakit-ui-icons/outline', () => ({ DotsVerticalOutlined: () => null }))
+vi.mock('@yakit-libs/yakit-ui-icons/outline', () => ({
+  DotsVerticalOutlined: () => null,
+  EyeOffOutlined: () => null,
+  EyeOutlined: () => null,
+}))
 vi.mock('@/components/yakitUI/YakitTag/YakitCheckableTag', () => ({
   YakitCheckableTag: ({
     checked,
@@ -60,7 +66,12 @@ vi.mock('@/components/yakitUI/YakitTag/YakitCheckableTag', () => ({
   ),
 }))
 vi.mock('@/components/yakitUI/YakitSwitch/YakitSwitch', () => ({ YakitSwitch: () => null }))
-vi.mock('@/components/yakitUI/YakitButton/YakitButton', () => ({ YakitButton: () => null }))
+vi.mock('@/components/yakitUI/YakitButton/YakitButton', () => ({
+  YakitButton: ({ icon, size, type, ...props }) => <button {...props} />,
+}))
+vi.mock('@/components/yakitUI/YakitEditor/BinaryFuzztagHexEditor', () => ({
+  BinaryFuzztagHexEditor: () => <div data-testid="hex-editor" />,
+}))
 vi.mock('@/components/yakitUI/YakitPopover/YakitPopover', () => ({
   YakitPopover: ({ children }: React.PropsWithChildren) => <>{children}</>,
 }))
@@ -111,11 +122,14 @@ const advance = (ms: number) =>
 beforeEach(() => {
   vi.useFakeTimers()
   vi.clearAllMocks()
+  mocks.save.mockResolvedValue(undefined)
+  useEditorHeaderVisibility.setState({ hidden: { request: false, response: false } })
   mocks.detect.mockImplementation((_packet, done) => done('<p>renderable</p>'))
   mocks.render.mockReset().mockResolvedValue('<p>preview</p>')
 })
-afterEach(() => {
+afterEach(async () => {
   cleanup()
+  await act(async () => {})
   vi.clearAllTimers()
   vi.useRealTimers()
 })
@@ -207,5 +221,82 @@ describe('NewHTTPPacketEditor preview interactions', () => {
     view.unmount()
     await advance(300)
     expect(mocks.render).not.toHaveBeenCalled()
+  })
+})
+
+describe('NewHTTPPacketEditor header visibility controls', () => {
+  it('only exposes the opt-in control', () => {
+    render(<NewHTTPPacketEditor {...props} />)
+    expect(screen.queryByRole('button', { name: 'NewHTTPPacketEditor.hideResponseHeaders' })).toBeNull()
+  })
+
+  it('toggles request and response independently without changing the original packets', () => {
+    const request = 'GET / HTTP/1.1\nAccept: */*\nHost: example.com\n\n'
+    const response = 'HTTP/1.1 200 OK\nServer: example\nContent-Length: 0\n\n'
+    const onChange = vi.fn()
+    render(
+      <>
+        <NewHTTPPacketEditor
+          originValue={request}
+          showHeaderVisibilityToggle
+          isShowBeautifyRender={false}
+          showDefaultExtra={false}
+          onChange={onChange}
+        />
+        <NewHTTPPacketEditor {...props} originValue={response} showHeaderVisibilityToggle />
+      </>,
+    )
+    onChange.mockClear()
+    expect(screen.queryByRole('button', { name: 'HTTPHeaderVisibilitySettings.title' })).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'NewHTTPPacketEditor.hideRequestHeaders' }))
+    expect(screen.getByRole('button', { name: 'NewHTTPPacketEditor.showRequestHeaders' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    expect(screen.getByRole('button', { name: 'NewHTTPPacketEditor.hideResponseHeaders' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'NewHTTPPacketEditor.showRequestHeaders' }))
+    expect(screen.getAllByTestId('packet').map((packet) => packet.textContent)).toEqual([request, response])
+    expect(onChange).not.toHaveBeenCalled()
+  })
+
+  it('retains the toggle across HEX and render views and disables it outside the text editor', async () => {
+    const view = render(<NewHTTPPacketEditor {...props} showHeaderVisibilityToggle />)
+    fireEvent.click(screen.getByRole('button', { name: 'NewHTTPPacketEditor.hideResponseHeaders' }))
+    const button = () => screen.getByRole('button', { name: 'NewHTTPPacketEditor.showResponseHeaders' })
+    view.rerender(<NewHTTPPacketEditor {...props} showHeaderVisibilityToggle noShowHex={false} />)
+    expect(button()).toBeDisabled()
+    view.rerender(<NewHTTPPacketEditor {...props} showHeaderVisibilityToggle />)
+    expect(button()).toBeEnabled()
+    expect(button()).toHaveAttribute('aria-pressed', 'true')
+    clickRender()
+    await advance(300)
+    expect(button()).toBeDisabled()
+    clickRender()
+    expect(button()).toBeEnabled()
+    expect(button()).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  it('saves toggles and synchronizes existing and newly mounted editors of the same role', async () => {
+    const view = render(
+      <>
+        <NewHTTPPacketEditor {...props} showHeaderVisibilityToggle />
+        <NewHTTPPacketEditor {...props} showHeaderVisibilityToggle />
+      </>,
+    )
+    fireEvent.click(screen.getAllByRole('button', { name: 'NewHTTPPacketEditor.hideResponseHeaders' })[0])
+    await advance(0)
+    expect(screen.getAllByRole('button', { name: 'NewHTTPPacketEditor.showResponseHeaders' })).toHaveLength(2)
+    expect(mocks.save).toHaveBeenCalledExactlyOnceWith(FuzzerRemoteGV.WebFuzzerHeaderVisibility, expect.any(String))
+    expect(JSON.parse(mocks.save.mock.calls[0][1]).response.hidden).toBe(true)
+    view.unmount()
+    render(<NewHTTPPacketEditor {...props} showHeaderVisibilityToggle />)
+    expect(screen.getByRole('button', { name: 'NewHTTPPacketEditor.showResponseHeaders' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    expect(mocks.save).toHaveBeenCalledTimes(1)
   })
 })

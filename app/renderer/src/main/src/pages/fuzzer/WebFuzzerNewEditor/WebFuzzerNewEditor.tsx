@@ -310,6 +310,7 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
 
     return (
       <NewHTTPPacketEditor
+        showHeaderVisibilityToggle
         defaultHttps={isHttps}
         isShowBeautifyRender={false}
         showDefaultExtra={false}

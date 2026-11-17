@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import {
   CogOutlined,
+  EyeOffOutlined,
   MCPOutlined,
   PuzzleOutlined,
   CommandOutlined,
@@ -17,6 +18,7 @@ export type SettingsAnchor =
   | 'general'
   | 'appearance'
   | 'shortcut-key'
+  | 'http-header-visibility'
   | 'reverse'
   | 'system-proxy'
   | 'global-config'
@@ -44,6 +46,7 @@ export const SettingsMenu: SettingsMenuGroup[] = [
       { key: 'general', icon: <CogOutlined color="currentColor" /> },
       { key: 'appearance', icon: <SunOutlined color="currentColor" /> },
       { key: 'shortcut-key', icon: <CommandOutlined color="currentColor" /> },
+      { key: 'http-header-visibility', icon: <EyeOffOutlined color="currentColor" /> },
     ],
   },
   {

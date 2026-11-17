@@ -13,6 +13,7 @@ vi.mock('@/i18n/useI18nNamespaces', () => ({
         'SettingsPage.item.general': '通用',
         'SettingsPage.item.appearance': '外观',
         'SettingsPage.item.shortcut-key': '快捷键',
+        'SettingsPage.item.http-header-visibility': 'HTTP 头部隐藏',
         'SettingsPage.item.reverse': '反连',
         'SettingsPage.item.system-proxy': '系统代理',
         'SettingsPage.item.global-config': '全局配置',
@@ -35,6 +36,15 @@ describe('SettingsSide', () => {
     render(<SettingsSide activeAnchor="general" onSelect={onSelect} />)
     await user.click(screen.getByText('外观'))
     expect(onSelect).toHaveBeenCalledWith('appearance')
+  })
+
+  it('可搜索并进入 HTTP 头部隐藏设置', async () => {
+    const user = userEvent.setup()
+    const onSelect = vi.fn()
+    render(<SettingsSide activeAnchor="general" onSelect={onSelect} />)
+    await user.type(screen.getByPlaceholderText('搜索'), 'HTTP')
+    await user.click(screen.getByRole('button', { name: 'HTTP 头部隐藏' }))
+    expect(onSelect).toHaveBeenCalledWith('http-header-visibility')
   })
 
   it('按标题或菜单名过滤；分组名命中时保留整组', async () => {

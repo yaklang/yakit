@@ -5435,6 +5435,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
           firstNodeStyle={{ padding: !show ? 0 : undefined, background: 'var(--Colors-Use-Basic-Background)' }}
           firstNode={
             <NewHTTPPacketEditor
+              showHeaderVisibilityToggle
               keepSearchName={keepSearchName}
               language={fuzzerResponse?.DisableRenderStyles ? 'text' : undefined}
               isShowBeautifyRender={!fuzzerResponse?.IsTooLargeResponse}

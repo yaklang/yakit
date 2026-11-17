@@ -379,6 +379,10 @@
     "jumpToWebTree": "点击可在网站树筛选"
   },
   "NewHTTPPacketEditor": {
+    "hideRequestHeaders": "隐藏常见请求头（仅影响显示）",
+    "showRequestHeaders": "显示全部请求头",
+    "hideResponseHeaders": "隐藏常见响应头（仅影响显示）",
+    "showResponseHeaders": "显示全部响应头",
     "render": "渲染",
     "compare": "对比",
     "noWrap": "不自动换行",

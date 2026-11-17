@@ -379,6 +379,10 @@
     "jumpToWebTree": "Click to filter in the site tree."
   },
   "NewHTTPPacketEditor": {
+    "hideRequestHeaders": "Hide common request headers (display only)",
+    "showRequestHeaders": "Show all request headers",
+    "hideResponseHeaders": "Hide common response headers (display only)",
+    "showResponseHeaders": "Show all response headers",
     "render": "Render",
     "compare": "Compare",
     "noWrap": "No Wrap",
