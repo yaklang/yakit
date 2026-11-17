@@ -55,7 +55,6 @@ interface MockTaskStoreState {
   execute: boolean
   pendingReply: boolean
   taskDetailsUpdate: number
-  loadedSkillsUpdate: number
   sessionExecution?: Record<string, unknown>
 }
 // 详情条目带 uuid：父级收到更新通知后比较 uuid 判断详情是否被流数据刷新（参照 AITaskExecutionDetails）
@@ -64,7 +63,6 @@ interface MockTaskDetails {
   execution?: Record<string, unknown>
 }
 const mockTaskDetailsMap = new Map<string, MockTaskDetails>()
-const mockLoadedSkills = { total: 0 }
 const mockRunningTaskStore = createStore<{ count: number | undefined }>(() => ({ count: undefined }))
 const mockAgentStore = createStore<{ activeChat?: { Id: number; SessionID: string } }>(() => ({}))
 const mockTaskStore: StoreApi<MockTaskStoreState> = createStore<MockTaskStoreState>(() => ({
@@ -72,7 +70,6 @@ const mockTaskStore: StoreApi<MockTaskStoreState> = createStore<MockTaskStoreSta
   execute: false,
   pendingReply: false,
   taskDetailsUpdate: 0,
-  loadedSkillsUpdate: 0,
   sessionExecution: undefined,
 }))
 const setMockQuestionID = (questionID: string) => {
@@ -85,10 +82,8 @@ const resetMockStore = () => {
     execute: false,
     pendingReply: false,
     taskDetailsUpdate: 0,
-    loadedSkillsUpdate: 0,
     sessionExecution: undefined,
   })
-  mockLoadedSkills.total = 0
   mockTaskDetailsMap.clear()
   casualTaskState.questionID = ''
 }
@@ -99,7 +94,6 @@ vi.mock('../../hooks/useCurrentDataBySession', () => ({
     taskDetailsMap: mockTaskDetailsMap,
     httpRunTimeIDs: [] as string[],
     aiPerfData: {},
-    loadedSkills: mockLoadedSkills,
   }),
 }))
 
@@ -134,7 +128,6 @@ const {
   casualTaskState,
   mockSyncCasualTaskTab,
   mockOpenLogWindow,
-  mockOnSend,
   mockExportModalState,
   dispatcherState,
   mockNetWorkApi,
@@ -144,7 +137,6 @@ const {
   casualTaskState: { questionID: '' },
   mockSyncCasualTaskTab: vi.fn(),
   mockOpenLogWindow: vi.fn(),
-  mockOnSend: vi.fn(() => true),
   mockExportModalState: { lastVisible: undefined as boolean | undefined },
   // getSetting 返回的可控配置，「任务详情」入口按 Source 决定是否渲染
   dispatcherState: { setting: { Source: 'ai' } as { Source: string } },
@@ -192,7 +184,7 @@ vi.mock('@/hook/useAiChatLog/useAiChatLog.ts', () => ({
   default: () => ({ onOpenLogWindow: mockOpenLogWindow }),
 }))
 vi.mock('@/pages/ai-agent/useContext/useDispatcher', () => ({
-  default: () => ({ getSetting: () => dispatcherState.setting, onSend: mockOnSend }),
+  default: () => ({ getSetting: () => dispatcherState.setting }),
 }))
 
 const sessionIdState = vi.hoisted(() => ({ id: '' }))
@@ -1146,64 +1138,6 @@ describe('AIRightPanel', () => {
     fireEvent.click(screen.getByText('已加载'))
     expect(screen.getByTestId('load-skills-pane')).toHaveAttribute('data-load-state', 'loaded')
     expect(within(pane).getByText('2')).toBeInTheDocument()
-  })
-
-  it.each([false, true])('加载技能菜单展示已加载技能数量（小屏：%s）', (small) => {
-    mockLoadedSkills.total = 6
-    const result = render(<AIRightPanel small={small} />)
-    try {
-      if (small) expect(screen.getByLabelText('加载技能 6')).toBeInTheDocument()
-      else expect(screen.getByLabelText('加载技能')).toHaveTextContent('加载技能6')
-      act(() => {
-        mockLoadedSkills.total = 0
-        mockTaskStore.setState((state) => ({ loadedSkillsUpdate: state.loadedSkillsUpdate + 1 }))
-      })
-      expect(screen.queryByLabelText('加载技能 6')).not.toBeInTheDocument()
-      expect(screen.getByLabelText('加载技能').textContent).toBe(small ? '' : '加载技能')
-    } finally {
-      result.unmount()
-      resetMockStore()
-    }
-  })
-
-  it('未打开加载技能时按会话和任务各同步一次，快照刷新不重复请求', () => {
-    sessionIdState.id = 'session-skills'
-    setMockQuestionID('task-a')
-    mockTaskDetailsMap.set('task-a', { uuid: 'uuid-1' })
-    mockOnSend.mockClear()
-    const result = render(<AIRightPanel />)
-    try {
-      expect(screen.queryByTestId('load-skills-pane')).not.toBeInTheDocument()
-      expect(mockOnSend).toHaveBeenCalledTimes(1)
-      expect(mockOnSend).toHaveBeenCalledWith(
-        expect.objectContaining({
-          token: 'session-skills',
-          params: expect.objectContaining({
-            IsSyncMessage: true,
-            SyncType: 'skill_loaded_sync',
-          }),
-        }),
-      )
-
-      const detail = mockTaskDetailsMap.get('task-a')!
-      detail.uuid = 'uuid-2'
-      act(() => mockTaskStore.setState((state) => ({ taskDetailsUpdate: state.taskDetailsUpdate + 1 })))
-      expect(mockOnSend).toHaveBeenCalledTimes(1)
-
-      act(() => setMockQuestionID('task-b'))
-      expect(mockOnSend).toHaveBeenCalledTimes(2)
-
-      act(() => {
-        mockLoadedSkills.total = 3
-        mockTaskStore.setState((state) => ({ loadedSkillsUpdate: state.loadedSkillsUpdate + 1 }))
-      })
-      expect(screen.getByLabelText('加载技能')).toHaveTextContent('加载技能3')
-      expect(mockOnSend).toHaveBeenCalledTimes(2)
-    } finally {
-      result.unmount()
-      sessionIdState.id = ''
-      resetMockStore()
-    }
   })
 
   it('包裹组件支持自定义标题和操作区', () => {

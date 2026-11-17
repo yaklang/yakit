@@ -156,7 +156,7 @@ vi.mock('@/pages/ai-agent/useContext/useStore', async () => {
   }
 })
 vi.mock('@/pages/ai-agent/useContext/useDispatcher', () => ({
-  default: () => ({ getSetting: () => ({ Source: 'ai' }), onSend: vi.fn(() => true) }),
+  default: () => ({ getSetting: () => ({ Source: 'ai' }) }),
 }))
 vi.mock('@/pages/ai-agent/browserInstances/browserInstanceStore', () => ({
   useBrowserInstances: () => ({

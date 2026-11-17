@@ -7,7 +7,7 @@ import { AISkillLoadingPane } from './AISkillLoadingPane/AISkillLoadingPane'
 import TimelineCard from '@/pages/ai-agent/chatTemplate/TimelineCard/TimelineCard'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import { useStore } from 'zustand'
-import { useCurrentRawData, useCurrentStore } from '../hooks/useCurrentDataBySession'
+import { useCurrentStore } from '../hooks/useCurrentDataBySession'
 import useCurrentSessionId from '../hooks/useCurrentSessionId'
 import useCurrentTaskData from '../hooks/useCurrentTaskData/useCurrentTaskData'
 import classNames from 'classnames'
@@ -16,7 +16,7 @@ import {
   isSessionSnapshotClockActive,
   useSessionSnapshotExecutionDuration,
 } from '../hooks/useSessionSnapshotExecutionDuration'
-import { AIInputEventSyncTypeEnum, AISourceEnum, AISkillLoadStateEnum } from '../hooks/grpcApi'
+import { AISourceEnum, AISkillLoadStateEnum } from '../hooks/grpcApi'
 import type { AIAgentGrpcApi } from '../hooks/grpcApi'
 import type { AISkillLoadState } from './AISkillLoadingPane/type'
 import emiter from '@/utils/eventBus/eventBus'
@@ -27,7 +27,6 @@ import { isCommunityEdition } from '@/utils/envfile'
 import { CeUserTokenQuota } from '@/components/CeUserMenu/CeUserTokenQuota'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { failed, yakitNotify } from '@/utils/notification'
-import { randomString } from '@/utils/randomUtil'
 import { AIAgentTabListEnum, AITabsEnum, SwitchAIAgentTabEventEnum } from '@/pages/ai-agent/defaultConstant'
 import { useBrowserInstances } from '@/pages/ai-agent/browserInstances/browserInstanceStore'
 import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
@@ -603,10 +602,6 @@ type ChatRightPanelProps = { panel: PanelState }
 const ChatRightPanel: React.FC<ChatRightPanelProps> = React.memo((props) => {
   const { panel } = props
   const store = useCurrentStore()
-  const rawData = useCurrentRawData()
-  const sessionId = useCurrentSessionId()
-  useStore(store, (state) => state.loadedSkillsUpdate)
-  const skillTotal = rawData.loadedSkills?.total ?? 0
   const questionID = useStore(store, (state) => state.currentChatStatus.questionID)
   const taskData = useCurrentTaskData(questionID)
   const sessionExecution = useStore(store, (state) => state.sessionExecution)
@@ -628,7 +623,7 @@ const ChatRightPanel: React.FC<ChatRightPanelProps> = React.memo((props) => {
   const [moreOpen, setMoreOpen] = useState(false)
   // 菜单点击交互：打开工作区 tab / 导出与查看日志
   const { activeChat } = useAIAgentStore()
-  const { getSetting, onSend } = useAIAgentDispatcher()
+  const { getSetting } = useAIAgentDispatcher()
   const { currentChatStatusQuestionID, syncCasualTaskTab } = useCasualTaskTab()
   const { onOpenLogWindow } = useAiChatLog()
   const [exportModalVisible, setExportModalVisible] = useState(false)
@@ -638,19 +633,6 @@ const ChatRightPanel: React.FC<ChatRightPanelProps> = React.memo((props) => {
     // 切换会话时关闭旧会话的内容浮层
     panel.closePane()
   }, [activeChat?.Id])
-
-  useEffect(() => {
-    if (!sessionId) return
-    onSend({
-      token: sessionId,
-      type: '',
-      params: {
-        IsSyncMessage: true,
-        SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_SKILL_LOADED,
-        SyncID: randomString(8),
-      },
-    })
-  }, [sessionId, questionID])
 
   const trafficCount = executionData?.http_flow_count ?? 0
   const hasRisk = riskTotal > 0 || (!!riskCounts && getRiskTagEntries(riskCounts).length > 0)
@@ -668,7 +650,6 @@ const ChatRightPanel: React.FC<ChatRightPanelProps> = React.memo((props) => {
   }, [currentChatStatusQuestionID, browserOnlineCount, trafficCount, hasRisk])
   const totals: Partial<Record<AIRightPanelMenuKey, number | undefined>> = {
     traffic: trafficCount,
-    'load-skills': skillTotal,
     'task-list': runningTaskCount,
     risk: riskTotal,
   }

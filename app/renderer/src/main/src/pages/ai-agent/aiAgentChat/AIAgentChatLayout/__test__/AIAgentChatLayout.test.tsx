@@ -55,7 +55,7 @@ vi.mock('@/pages/ai-re-act/hooks/useCurrentSessionId', () => ({
 vi.mock('@/pages/ai-agent/grpc', () => ({ grpcQueryHTTPFlows: queryFlows, grpcExportAILogs: vi.fn() }))
 vi.mock('@/pages/risks/YakitRiskTable/utils', () => ({ apiRiskFieldGroup: queryRisks }))
 vi.mock('@/pages/ai-agent/useContext/useDispatcher', () => ({
-  default: () => ({ getSetting: () => ({ Source: 'ai' }), onSend: vi.fn(() => true) }),
+  default: () => ({ getSetting: () => ({ Source: 'ai' }) }),
 }))
 vi.mock('@/pages/ai-agent/browserInstances/browserInstanceStore', () => ({
   useBrowserInstances: () => ({
