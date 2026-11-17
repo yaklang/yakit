@@ -135,9 +135,6 @@ export const HTTPHeaderVisibilitySettings = () => {
               >
                 {t('HTTPHeaderVisibilitySettings.hideByDefault')}
               </YakitCheckbox>
-              {role === 'request' && (
-                <div className={styles.description}>{t('HTTPHeaderVisibilitySettings.requestHint')}</div>
-              )}
               <div className={styles.list}>
                 {draft[role].headers.length ? (
                   draft[role].headers.map((header) => (
@@ -210,7 +207,6 @@ export const HTTPHeaderVisibilitySettings = () => {
         </div>
       )}
       <div className={styles.footer}>
-        <span className={styles['save-hint']}>{t('HTTPHeaderVisibilitySettings.saveHint')}</span>
         <YakitButton disabled={!draft} loading={saving} onClick={() => void save()}>
           {t('HTTPHeaderVisibilitySettings.save')}
         </YakitButton>

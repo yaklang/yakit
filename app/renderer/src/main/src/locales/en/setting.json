@@ -105,7 +105,6 @@
   },
   "HTTPHeaderVisibilitySettings": {
     "description": "Changes display only, preserving the original packet and sent content. Header names are case-insensitive.",
-    "requestHint": "The request default applies only when sending a request to WebFuzzer from elsewhere. New tabs, edits and pastes turn off hiding for the current request without changing this default.",
     "request": "Request headers",
     "response": "Response headers",
     "count": "{{count}} headers",
@@ -123,7 +122,6 @@
     "saveFailed": "Could not save header visibility settings: {{error}}",
     "loadFailed": "Could not load settings. Please retry.",
     "retry": "Retry",
-    "saved": "HTTP header visibility settings saved",
-    "saveHint": "Click Save to apply changes. Closing the page or switching settings sections discards unsaved changes."
+    "saved": "HTTP header visibility settings saved"
   }
 }

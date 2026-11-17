@@ -105,7 +105,6 @@
   },
   "HTTPHeaderVisibilitySettings": {
     "description": "僅隱藏顯示，不修改原始封包或傳送內容。標頭名稱不區分大小寫。",
-    "requestHint": "請求預設隱藏僅用於從其他位置傳送請求至 WebFuzzer。新增分頁、編輯或貼上請求會關閉目前請求的隱藏，不改變此預設設定。",
     "request": "請求標頭",
     "response": "回應標頭",
     "count": "{{count}} 項",
@@ -123,7 +122,6 @@
     "saveFailed": "儲存標頭隱藏設定失敗：{{error}}",
     "loadFailed": "讀取設定失敗，請重試",
     "retry": "重試",
-    "saved": "HTTP 標頭隱藏設定已儲存",
-    "saveHint": "點擊儲存後生效，關閉頁面或切換設定項目會捨棄未儲存的修改。"
+    "saved": "HTTP 標頭隱藏設定已儲存"
   }
 }

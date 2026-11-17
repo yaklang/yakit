@@ -100,15 +100,9 @@
 .footer {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 8px;
   margin-top: 24px;
   padding-top: 16px;
   border-top: 1px solid var(--Colors-Use-Neutral-Border);
-}
-
-.save-hint {
-  color: var(--Colors-Use-Neutral-Text-3-Secondary);
-  font-size: 12px;
-  line-height: 20px;
 }
