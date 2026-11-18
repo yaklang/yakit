@@ -34,6 +34,7 @@ describe('SettingsMenu', () => {
       'general',
       'appearance',
       'shortcut-key',
+      'http-header-visibility',
       'reverse',
       'system-proxy',
       'global-config',

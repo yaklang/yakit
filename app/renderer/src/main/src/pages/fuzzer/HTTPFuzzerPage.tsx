@@ -1012,6 +1012,21 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
   const [advancedConfigValue, setAdvancedConfigValue] = useState<AdvancedConfigValueProps>(
     initWebFuzzerPageInfo().advancedConfigValue,
   ) //  在新建页面的时候，就将高级配置的初始值存放在数据中心中，所以页面得高级配置得值可以直接通过页面得id在数据中心中获取
+  const [requestHeadersHidden, updateRequestHeadersHidden] = useState(
+    () => initWebFuzzerPageInfo().requestHeadersHidden ?? false,
+  )
+  const setRequestHeadersHidden = useMemoizedFn((hidden: boolean) => {
+    updateRequestHeadersHidden(hidden)
+    const currentItem = queryPagesDataById(YakitRoute.HTTPFuzzer, props.id)
+    if (!currentItem?.pageParamsInfo.webFuzzerPageInfo) return
+    updatePagesDataCacheById(YakitRoute.HTTPFuzzer, {
+      ...currentItem,
+      pageParamsInfo: {
+        ...currentItem.pageParamsInfo,
+        webFuzzerPageInfo: { ...currentItem.pageParamsInfo.webFuzzerPageInfo, requestHeadersHidden: hidden },
+      },
+    })
+  })
   const [browserTransformSelection, updateBrowserTransformSelection] = useState<BrowserTransformSelection | undefined>(
     initWebFuzzerPageInfo().browserTransformSelection,
   )
@@ -3717,6 +3732,8 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                       refreshTrigger={refreshTrigger}
                       casualEditorApplyNonce={casualEditorApplyNonce}
                       request={requestRef.current}
+                      requestHeadersHidden={requestHeadersHidden}
+                      onRequestHeadersHiddenChange={setRequestHeadersHidden}
                       setRequest={onSetRequest}
                       hex={hex}
                       isHttps={advancedConfigValue.isHttps}
@@ -5435,6 +5452,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
           firstNodeStyle={{ padding: !show ? 0 : undefined, background: 'var(--Colors-Use-Basic-Background)' }}
           firstNode={
             <NewHTTPPacketEditor
+              showHeaderVisibilityToggle
               keepSearchName={keepSearchName}
               language={fuzzerResponse?.DisableRenderStyles ? 'text' : undefined}
               isShowBeautifyRender={!fuzzerResponse?.IsTooLargeResponse}

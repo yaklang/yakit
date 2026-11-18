@@ -5,6 +5,7 @@ import { SettingsContent } from '../SettingsContent'
 vi.mock('@/i18n/useI18nNamespaces', () => ({
   useI18nNamespaces: () => ({
     t: (key: string) => {
+      if (key === 'SettingsPage.item.http-header-visibility') return 'HTTP 头部隐藏'
       if (key === 'SettingsPage.item.general') return '通用'
       if (key === 'SettingsPage.item.appearance') return '外观'
       if (key === 'SettingsPage.item.reverse') return '反连'
@@ -12,6 +13,10 @@ vi.mock('@/i18n/useI18nNamespaces', () => ({
       return key
     },
   }),
+}))
+
+vi.mock('../httpHeaderVisibility/HTTPHeaderVisibilitySettings', () => ({
+  HTTPHeaderVisibilitySettings: () => <div>header-visibility-panel</div>,
 }))
 
 vi.mock('../appearance/AppearanceSettings', () => ({
@@ -46,6 +51,13 @@ describe('SettingsContent', () => {
     render(<SettingsContent anchor="general" />)
     expect(screen.getByText('通用')).toBeInTheDocument()
     expect(screen.getByTestId('panel-general')).toBeInTheDocument()
+  })
+
+  it('HTTP 头部隐藏是全局设置中的内嵌面板', () => {
+    render(<SettingsContent anchor="http-header-visibility" />)
+    expect(screen.getByText('HTTP 头部隐藏')).toBeInTheDocument()
+    expect(screen.getByText('header-visibility-panel')).toBeInTheDocument()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
   it('hideOuterTitle 的 reverse 不渲染外层标题', () => {

@@ -31,7 +31,8 @@
       "right-click-plugins": "右键插件管理",
       "ai-config": "AI 配置",
       "ai-model": "模型",
-      "yak-mcp": "Yak MCP"
+      "yak-mcp": "Yak MCP",
+      "http-header-visibility": "HTTP 头部隐藏"
     },
     "general": {
       "workspace": "工作空间",
@@ -101,5 +102,26 @@
       "tabMultiple": "History (多选)",
       "tabPacket": "数据包"
     }
+  },
+  "HTTPHeaderVisibilitySettings": {
+    "description": "仅隐藏显示，不修改原始报文或发送内容。头名不区分大小写。",
+    "request": "请求头",
+    "response": "响应头",
+    "count": "{{count}} 项",
+    "hideByDefault": "默认隐藏以下头部",
+    "remove": "删除 {{header}}",
+    "empty": "列表为空，将显示全部头部",
+    "placeholder": "输入头名，例如 x-custom-header",
+    "newHeader": "新增{{role}}名称",
+    "add": "添加",
+    "clear": "清空列表",
+    "restoreDefaults": "恢复默认",
+    "save": "保存",
+    "invalidName": "请输入有效的 HTTP 头名，不包含冒号、空格或头部值",
+    "duplicateName": "该头名已在列表中（不区分大小写）",
+    "saveFailed": "保存头部隐藏设置失败：{{error}}",
+    "loadFailed": "读取设置失败，请重试",
+    "retry": "重试",
+    "saved": "HTTP 头部隐藏设置已保存"
   }
 }

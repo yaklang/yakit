@@ -1,4 +1,8 @@
 {
+  "HTTPHeaderVisibility": {
+    "notLoaded": "头部隐藏设置尚未加载，请重试",
+    "invalidName": "HTTP 头名无效，请检查后重试"
+  },
   "BrowserHTTPGateway": {
     "envelopeChanges": "报文封装变化",
     "boundCall": "绑定的页面调用",
@@ -379,6 +383,11 @@
     "jumpToWebTree": "点击可在网站树筛选"
   },
   "NewHTTPPacketEditor": {
+    "hideRequestHeaders": "隐藏常见请求头（仅影响显示）",
+    "showRequestHeaders": "显示全部请求头",
+    "hideResponseHeaders": "隐藏常见响应头（仅影响显示）",
+    "showResponseHeaders": "显示全部响应头",
+    "responseHeaderVisibilityScope": "{{action}}。同步 WebFuzzer 的响应视图，并立即保存为响应默认设置。",
     "render": "渲染",
     "compare": "对比",
     "noWrap": "不自动换行",

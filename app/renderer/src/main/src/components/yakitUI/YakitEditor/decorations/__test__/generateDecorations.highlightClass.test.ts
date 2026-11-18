@@ -46,6 +46,23 @@ const findClass = (highLightFindClass: string) =>
   )?.options.className
 
 describe('generateDecorations 高亮类名', () => {
+  it('keeps header hints on their own lines when headers are hidden', () => {
+    const packet = 'POST / HTTP/1.1\nHost: example.com\nContent-Length: 0\n\n'
+    const packetModel = {
+      ...model,
+      getValue: () => packet,
+      getValueInRange: () => packet,
+      getPositionAt: (offset: number) => {
+        const lines = packet.slice(0, offset).split('\n')
+        return { lineNumber: lines.length, column: lines[lines.length - 1].length + 1 }
+      },
+    }
+    const decorations = generateDecorations({ ...base, model: packetModel, type: 'http', showHostHint: true } as never)
+    const host = decorations.find((item) => String(item.id).startsWith('host-label-'))
+    const length = decorations.find((item) => String(item.id).startsWith('content-length'))
+    expect(host?.range).toMatchObject({ startLineNumber: 2, startColumn: 1, endLineNumber: 2 })
+    expect(length?.range).toMatchObject({ startLineNumber: 3, startColumn: 1, endLineNumber: 3 })
+  })
   it('同一坐标换成引用类时，装饰使用新类名', () => {
     expect(findClass('hight-light-file-search-hit')).toBe('hight-light-file-search-hit')
     expect(findClass('hight-light-yak-runner-color')).toBe('hight-light-yak-runner-color')

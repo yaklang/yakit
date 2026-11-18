@@ -36,6 +36,8 @@ export interface WebFuzzerNewEditorProps {
   /** casual 审阅分段写回时递增，与 refreshTrigger 组合以强制请求编辑器同步 `requestRef`（避免仅 ref 更新子组件未吃到新 props） */
   casualEditorApplyNonce?: number
   request: string
+  requestHeadersHidden?: boolean
+  onRequestHeadersHiddenChange?: (hidden: boolean) => void
   hex: boolean
   isHttps: boolean
   hotPatchCode: string
@@ -310,6 +312,9 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
 
     return (
       <NewHTTPPacketEditor
+        showHeaderVisibilityToggle
+        requestHeadersHidden={props.requestHeadersHidden}
+        onRequestHeadersHiddenChange={props.onRequestHeadersHiddenChange}
         defaultHttps={isHttps}
         isShowBeautifyRender={false}
         showDefaultExtra={false}

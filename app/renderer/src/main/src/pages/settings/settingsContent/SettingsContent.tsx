@@ -1,5 +1,6 @@
 import { type ComponentType, useEffect, useRef } from 'react'
 import { getSettingsLabel, type SettingsAnchor } from '../constants'
+import { HTTPHeaderVisibilitySettings } from './httpHeaderVisibility/HTTPHeaderVisibilitySettings'
 import { AppearanceSettings } from './appearance/AppearanceSettings'
 import { GeneralSettings } from './general/GeneralSettings'
 import { SystemProxySettings } from './systemProxy/SystemProxySettings'
@@ -21,6 +22,7 @@ interface SettingsPanelProps {
 const SettingsPanels: Record<SettingsAnchor, ComponentType<SettingsPanelProps>> = {
   general: GeneralSettings,
   appearance: AppearanceSettings,
+  'http-header-visibility': HTTPHeaderVisibilitySettings,
   reverse: ReverseSettings,
   'shortcut-key': ShortcutKeySettings,
   'system-proxy': SystemProxySettings,

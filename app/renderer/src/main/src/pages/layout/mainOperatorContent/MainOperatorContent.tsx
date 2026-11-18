@@ -98,6 +98,7 @@ const DownloadAllPlugin = React.lazy(() =>
 import { getHotPatchCodeInfo } from '@/pages/fuzzer/fuzzerHotPatchUtils'
 import { type FuzzerCacheDataProps, getFuzzerCacheData } from '@/pages/fuzzer/fuzzerCacheData'
 import type { ShareValueProps } from '@/pages/fuzzer/HTTPFuzzerPage'
+import { useEditorHeaderVisibility } from '@/store/editorHeaderVisibility'
 import type { AdvancedConfigValueProps } from '@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType'
 import { RenderFuzzerSequence, RenderSubPage } from './renderSubPage/RenderSubPage'
 import { SubTabCountDropdown } from './SubTabCountDropdown'
@@ -1597,7 +1598,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     // 写成HOC是否好点呢，现在一个页面启动就是一个函数
     ipcRenderer.on('fetch-send-to-tab', (e, res: any) => {
       const { type, data = {} } = res
-      if (type === 'fuzzer') addFuzzer(data)
+      if (type === 'fuzzer') addFuzzer(data, true)
       if (type === 'websocket-fuzzer') addWebsocketFuzzer(data)
       if (type === 'add-yakit-script') addYakScript(data)
       if (type === 'facade-server') addFacadeServer(data)
@@ -1677,7 +1678,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
 
   /** ---------- 增加tab页面 start ---------- */
   /** Global Sending Function(全局发送功能|通过发送新增功能页面)*/
-  const addFuzzer = useMemoizedFn(async (res: any) => {
+  const addFuzzer = useMemoizedFn(async (res: any, fromPacketSend = false) => {
     const {
       isHttps,
       request,
@@ -1716,6 +1717,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
       let newAdvancedConfigShow = cacheData.advancedConfigShow
       let newIsHttps = !!isHttps
       let newRequest = request || defaultPostTemplate
+      let hasIncomingRequest = !!request
       // 有分享内容，数据以分享内容为准
       if (Object.prototype.hasOwnProperty.call(res, 'shareContent')) {
         const shareContent: ShareValueProps = JSONParseLog(res.shareContent, {
@@ -1724,6 +1726,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         })
         newIsHttps = shareContent.advancedConfiguration.isHttps
         newRequest = shareContent.request || defaultPostTemplate
+        hasIncomingRequest = !!shareContent.request
 
         newAdvancedConfigValue = shareContent.advancedConfiguration
         newAdvancedConfigShow = shareContent.advancedConfigShow
@@ -1757,6 +1760,11 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
       }
 
       const { hotPatchCode, hotPatchOpen } = await getHotPatchCodeInfo()
+      let requestHeadersHidden = false
+      if (fromPacketSend && hasIncomingRequest) {
+        await useEditorHeaderVisibility.getState().initialize()
+        requestHeadersHidden = useEditorHeaderVisibility.getState().hidden.request
+      }
 
       openMenuPage(
         { route: YakitRoute.HTTPFuzzer },
@@ -1765,6 +1773,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
           selectSubItem,
           pageParams: {
             request: newRequest,
+            requestHeadersHidden,
             system: systemRef.current,
             advancedConfigValue: {
               ...newAdvancedConfigValue,
@@ -3255,6 +3264,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 },
                 advancedConfigShow: cacheData.advancedConfigShow,
                 request: nodeItem.pageParams?.request || defaultPostTemplate,
+                requestHeadersHidden: nodeItem.pageParams?.requestHeadersHidden ?? false,
                 hotPatchCode: nodeItem.pageParams?.hotPatchCode || HotPatchDefaultContent,
                 browserTransformSelection: nodeItem.pageParams?.browserTransformSelection,
                 lastSelectedHistory: nodeItem.pageParams?.lastSelectedHistory,
@@ -3292,6 +3302,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
               },
               advancedConfigShow: cacheData.advancedConfigShow,
               request: parentItem.pageParams?.request || defaultPostTemplate,
+              requestHeadersHidden: parentItem.pageParams?.requestHeadersHidden ?? false,
               hotPatchCode: parentItem.pageParams?.hotPatchCode || HotPatchDefaultContent,
               browserTransformSelection: parentItem.pageParams?.browserTransformSelection,
               lastSelectedHistory: parentItem.pageParams?.lastSelectedHistory,
@@ -3384,6 +3395,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
           },
           advancedConfigShow: node.pageParams?.advancedConfigShow,
           request: node.pageParams?.request || defaultPostTemplate,
+          requestHeadersHidden: node.pageParams?.requestHeadersHidden ?? false,
           hotPatchCode: node.pageParams?.hotPatchCode || '',
           browserTransformSelection: node.pageParams?.browserTransformSelection,
           lastSelectedHistory: node.pageParams?.lastSelectedHistory,

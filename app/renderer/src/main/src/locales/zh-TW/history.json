@@ -1,4 +1,8 @@
 {
+  "HTTPHeaderVisibility": {
+    "notLoaded": "標頭隱藏設定尚未載入，請重試",
+    "invalidName": "HTTP 標頭名稱無效，請檢查後重試"
+  },
   "BrowserHTTPGateway": {
     "envelopeChanges": "報文封裝變化",
     "boundCall": "綁定的頁面呼叫",
@@ -379,6 +383,11 @@
     "jumpToWebTree": "點擊可在網站樹篩選"
   },
   "NewHTTPPacketEditor": {
+    "hideRequestHeaders": "隱藏常見請求標頭（僅影響顯示）",
+    "showRequestHeaders": "顯示全部請求標頭",
+    "hideResponseHeaders": "隱藏常見回應標頭（僅影響顯示）",
+    "showResponseHeaders": "顯示全部回應標頭",
+    "responseHeaderVisibilityScope": "{{action}}。同步 WebFuzzer 的回應檢視，並立即儲存為回應預設設定。",
     "render": "渲染",
     "compare": "對比",
     "noWrap": "不自動換行",

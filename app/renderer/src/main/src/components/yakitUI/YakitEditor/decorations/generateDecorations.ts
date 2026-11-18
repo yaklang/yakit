@@ -101,7 +101,8 @@ export const generateDecorations = (params: GenerateDecorationsParams): YakitIMo
           if (!match) {
             return
           }
-          const start = model.getPositionAt(match.index)
+          // Keep the decoration inside its header line so hiding that line also hides the hint.
+          const start = model.getPositionAt(match.index + 1)
           const end = model.getPositionAt(match.index + match[0].indexOf(':'))
           dec.push({
             id: detail.classType + match.index,
@@ -124,7 +125,7 @@ export const generateDecorations = (params: GenerateDecorationsParams): YakitIMo
 
         const fullMatch = hostMatch[0]
         const hostColonIndex = hostMatch.index + fullMatch.indexOf(':')
-        const hostLabelStart = model.getPositionAt(hostMatch.index)
+        const hostLabelStart = model.getPositionAt(hostMatch.index + 1)
         const hostLabelEnd = model.getPositionAt(hostColonIndex + 1)
 
         // 添加 Host 标签装饰器（? 标记）
