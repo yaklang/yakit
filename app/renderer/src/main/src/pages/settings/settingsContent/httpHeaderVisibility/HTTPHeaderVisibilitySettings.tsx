@@ -89,8 +89,9 @@ export const HTTPHeaderVisibilitySettings = () => {
     setSaving(true)
     try {
       await saveSettings({
-        request: { ...draft.request, headers: request },
-        response: { ...draft.response, headers: response },
+        // 隐藏开关只在编辑器内切换；保存名单时使用实时状态，避免覆盖草稿期间的切换。
+        request: { hidden: hidden.request, headers: request },
+        response: { hidden: hidden.response, headers: response },
       })
       resetDraft()
       yakitNotify('success', t('HTTPHeaderVisibilitySettings.saved'))

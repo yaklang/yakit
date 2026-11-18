@@ -207,6 +207,21 @@ describe('全局设置的提交、丢弃和失败处理', () => {
     expect(reopened.getByText('server')).toBeInTheDocument()
   })
 
+  it.each<HeaderRole>(['request', 'response'])('%s 保存名单时保留草稿期间切换的隐藏状态', async (role) => {
+    const page = await open()
+    const panel = page[role]
+    fireEvent.change(panel.getByRole('textbox'), { target: { value: 'X-Live' } })
+    fireEvent.click(panel.getByRole('button', { name: 'add' }))
+    await act(async () => {
+      await useEditorHeaderVisibility.getState().toggle(role)
+    })
+    expect(useEditorHeaderVisibility.getState().hidden[role]).toBe(true)
+    await save()
+    expect(persistedSettings()[role].hidden).toBe(true)
+    expect(persistedSettings()[role].headers).toContain('x-live')
+    expect(useEditorHeaderVisibility.getState().hidden[role]).toBe(true)
+  })
+
   it.each<HeaderRole>(['request', 'response'])(
     '%s 未保存就关闭：丢弃新增、删除、输入与错误，不写入存储或影响编辑器',
     async (role) => {
