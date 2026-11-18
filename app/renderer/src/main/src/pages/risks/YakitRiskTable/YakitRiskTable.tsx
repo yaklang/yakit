@@ -411,6 +411,16 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
   const isInitRequestRef = useRef<boolean>(true)
   const listQueryEpochRef = useRef<number>(0)
   const incrementInFlightRef = useRef<boolean>(false)
+  const mountedRef = useRef<boolean>(true)
+  const loadingTimerRef = useRef<ReturnType<typeof setTimeout>>()
+
+  useEffect(() => {
+    mountedRef.current = true
+    return () => {
+      mountedRef.current = false
+      if (loadingTimerRef.current) clearTimeout(loadingTimerRef.current)
+    }
+  }, [])
 
   useEffect(() => {
     if (!aiRiskSelection) return
@@ -1396,6 +1406,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
     request
       .then((res) => {
         if (epoch !== listQueryEpochRef.current) return
+        if (!mountedRef.current) return
         const resData = getResData(res.Data)
         const d = isInit ? mergeRisksById(resData, [], 'append') : mergeRisksById(resData, getResponse().Data, 'append')
         prePage.current += 1
@@ -1437,7 +1448,11 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
           if (lastId) beforeId.current = lastId
         }
       })
-      .finally(() => setTimeout(() => setLoading(false), 300))
+      .finally(() => {
+        if (!mountedRef.current) return
+        if (loadingTimerRef.current) clearTimeout(loadingTimerRef.current)
+        loadingTimerRef.current = setTimeout(() => setLoading(false), 300)
+      })
   })
   /**
    * 1.获取所有数据，带查询条件

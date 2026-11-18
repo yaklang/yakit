@@ -1,6 +1,8 @@
-import { useEffect, useState } from 'react'
-import { TrashOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { useEffect, useRef, useState } from 'react'
+import { Tooltip } from 'antd'
+import { PlusOutlined, RefreshOutlined, TrashOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -16,6 +18,9 @@ export const HTTPHeaderVisibilitySettings = () => {
   const { initialize, saveSettings, hidden, headers, ready } = useEditorHeaderVisibility()
   const [input, setInput] = useState({ request: '', response: '' })
   const [errors, setErrors] = useState({ request: '', response: '' })
+  const [drafting, setDrafting] = useState({ request: false, response: false })
+  // 点击工具栏/取消按钮时先触发 blur，避免失焦提交抢先执行。
+  const skipBlurCommitRef = useRef(false)
   const [saving, setSaving] = useState(false)
   const [loadFailed, setLoadFailed] = useState(false)
   const [attempt, setAttempt] = useState(0)
@@ -54,6 +59,22 @@ export const HTTPHeaderVisibilitySettings = () => {
     }
   }
 
+  const resetInput = (role: HeaderRole) => {
+    setInput((current) => ({ ...current, [role]: '' }))
+    setErrors((current) => ({ ...current, [role]: '' }))
+  }
+
+  const startAdd = (role: HeaderRole) => {
+    skipBlurCommitRef.current = false
+    setDrafting((current) => ({ ...current, [role]: true }))
+    resetInput(role)
+  }
+
+  const cancelAdd = (role: HeaderRole) => {
+    setDrafting((current) => ({ ...current, [role]: false }))
+    resetInput(role)
+  }
+
   const add = async (role: HeaderRole) => {
     const name = input[role].trim().toLowerCase()
     if (!name) return
@@ -65,12 +86,20 @@ export const HTTPHeaderVisibilitySettings = () => {
     setErrors((current) => ({ ...current, [role]: error }))
     if (error) return
     if (!(await persist(role, [name, ...headers[role]]))) return
-    setInput((current) => ({ ...current, [role]: '' }))
+    setDrafting((current) => ({ ...current, [role]: false }))
+    resetInput(role)
   }
 
-  const resetInput = (role: HeaderRole) => {
-    setInput((current) => ({ ...current, [role]: '' }))
-    setErrors((current) => ({ ...current, [role]: '' }))
+  const commitOnBlur = (role: HeaderRole) => {
+    if (skipBlurCommitRef.current) {
+      skipBlurCommitRef.current = false
+      return
+    }
+    if (!input[role].trim()) {
+      cancelAdd(role)
+      return
+    }
+    void add(role)
   }
 
   return (
@@ -98,82 +127,136 @@ export const HTTPHeaderVisibilitySettings = () => {
           {roles.map((role) => (
             <section key={role} className={styles.panel} aria-label={t(`HTTPHeaderVisibilitySettings.${role}`)}>
               <div className={styles.heading}>
-                <h3>{t(`HTTPHeaderVisibilitySettings.${role}`)}</h3>
-                <span className={styles.count}>
-                  {t('HTTPHeaderVisibilitySettings.count', { count: headers[role].length })}
-                </span>
+                <div className={styles.title}>
+                  <h3>{t(`HTTPHeaderVisibilitySettings.${role}`)}</h3>
+                  <span className={styles.count}>
+                    {t('HTTPHeaderVisibilitySettings.count', { count: headers[role].length })}
+                  </span>
+                </div>
+                <div className={styles.actions}>
+                  <YakitButton
+                    size="small"
+                    type="text"
+                    icon={<PlusOutlined color="currentColor" />}
+                    aria-label={t('HTTPHeaderVisibilitySettings.add')}
+                    disabled={saving || drafting[role]}
+                    onClick={() => startAdd(role)}
+                  >
+                    {t('HTTPHeaderVisibilitySettings.add')}
+                  </YakitButton>
+                  <Tooltip title={t('HTTPHeaderVisibilitySettings.clear')} mouseLeaveDelay={0} destroyOnHidden>
+                    <YakitButton
+                      size="small"
+                      type="text"
+                      colors="danger"
+                      icon={<TrashOutlined color="currentColor" />}
+                      aria-label={t('HTTPHeaderVisibilitySettings.clear')}
+                      disabled={saving || !headers[role].length}
+                      onMouseDown={() => {
+                        if (drafting[role]) skipBlurCommitRef.current = true
+                      }}
+                      onClick={() => {
+                        skipBlurCommitRef.current = false
+                        cancelAdd(role)
+                        void persist(role, [])
+                      }}
+                    />
+                  </Tooltip>
+                  <Tooltip
+                    title={t('HTTPHeaderVisibilitySettings.restoreDefaults')}
+                    mouseLeaveDelay={0}
+                    destroyOnHidden
+                  >
+                    <YakitButton
+                      size="small"
+                      type="text2"
+                      icon={<RefreshOutlined color="currentColor" />}
+                      aria-label={t('HTTPHeaderVisibilitySettings.restoreDefaults')}
+                      disabled={saving}
+                      onMouseDown={() => {
+                        if (drafting[role]) skipBlurCommitRef.current = true
+                      }}
+                      onClick={() => {
+                        skipBlurCommitRef.current = false
+                        cancelAdd(role)
+                        void persist(role, [...DEFAULT_HIDDEN_HTTP_HEADERS[role]])
+                      }}
+                    />
+                  </Tooltip>
+                </div>
               </div>
               <div className={styles.list}>
-                {headers[role].length ? (
-                  headers[role].map((header) => (
-                    <div key={header} className={styles.row}>
-                      <span>{header}</span>
-                      <YakitButton
-                        size="small"
-                        type="text2"
-                        className={styles.remove}
-                        disabled={saving}
-                        icon={<TrashOutlined />}
-                        aria-label={t('HTTPHeaderVisibilitySettings.remove', { header })}
-                        onClick={() =>
-                          void persist(
-                            role,
-                            headers[role].filter((name) => name !== header),
-                          )
-                        }
-                      />
-                    </div>
-                  ))
-                ) : (
-                  <div className={styles.empty}>{t('HTTPHeaderVisibilitySettings.empty')}</div>
+                {drafting[role] && (
+                  <div className={styles.row}>
+                    <YakitInput
+                      autoFocus
+                      size="small"
+                      className={styles.draftInput}
+                      value={input[role]}
+                      disabled={saving}
+                      placeholder={t('HTTPHeaderVisibilitySettings.placeholder')}
+                      aria-label={t('HTTPHeaderVisibilitySettings.newHeader', {
+                        role: t(`HTTPHeaderVisibilitySettings.${role}`),
+                      })}
+                      onChange={(event) => {
+                        const value = event.target.value
+                        setInput((current) => ({ ...current, [role]: value }))
+                        setErrors((current) => ({ ...current, [role]: '' }))
+                      }}
+                      onPressEnter={() => void add(role)}
+                      onBlur={() => commitOnBlur(role)}
+                    />
+                    <YakitButton
+                      size="small"
+                      type="text2"
+                      colors="danger"
+                      disabled={saving}
+                      icon={<TrashOutlined />}
+                      aria-label={t('HTTPHeaderVisibilitySettings.cancelAdd')}
+                      onMouseDown={() => {
+                        if (drafting[role]) skipBlurCommitRef.current = true
+                      }}
+                      onClick={() => {
+                        skipBlurCommitRef.current = false
+                        cancelAdd(role)
+                      }}
+                    />
+                  </div>
                 )}
-              </div>
-              <div className={styles.add}>
-                <YakitInput
-                  value={input[role]}
-                  disabled={saving}
-                  placeholder={t('HTTPHeaderVisibilitySettings.placeholder')}
-                  aria-label={t('HTTPHeaderVisibilitySettings.newHeader', {
-                    role: t(`HTTPHeaderVisibilitySettings.${role}`),
-                  })}
-                  onChange={(event) => {
-                    const value = event.target.value
-                    setInput((current) => ({ ...current, [role]: value }))
-                    setErrors((current) => ({ ...current, [role]: '' }))
-                  }}
-                  onPressEnter={() => void add(role)}
-                />
-                <YakitButton type="outline2" disabled={saving || !input[role].trim()} onClick={() => void add(role)}>
-                  {t('HTTPHeaderVisibilitySettings.add')}
-                </YakitButton>
+                {headers[role].length
+                  ? headers[role].map((header) => (
+                      <div key={header} className={styles.row}>
+                        <span>{header}</span>
+                        <YakitButton
+                          size="small"
+                          type="text"
+                          colors="danger"
+                          disabled={saving}
+                          icon={<TrashOutlined />}
+                          aria-label={t('HTTPHeaderVisibilitySettings.remove', { header })}
+                          onClick={() =>
+                            void persist(
+                              role,
+                              headers[role].filter((name) => name !== header),
+                            )
+                          }
+                        />
+                      </div>
+                    ))
+                  : !drafting[role] && (
+                      <div className={styles.emptyState}>
+                        <YakitEmpty
+                          title={t('HTTPHeaderVisibilitySettings.empty')}
+                          imageStyle={{ height: 96, width: 96, margin: '0 auto 8px' }}
+                        />
+                      </div>
+                    )}
               </div>
               {errors[role] && (
                 <div role="alert" className={styles.error}>
                   {errors[role]}
                 </div>
               )}
-              <div className={styles.actions}>
-                <YakitButton
-                  type="text2"
-                  disabled={saving || !headers[role].length}
-                  onClick={() => {
-                    resetInput(role)
-                    void persist(role, [])
-                  }}
-                >
-                  {t('HTTPHeaderVisibilitySettings.clear')}
-                </YakitButton>
-                <YakitButton
-                  type="text2"
-                  disabled={saving}
-                  onClick={() => {
-                    resetInput(role)
-                    void persist(role, [...DEFAULT_HIDDEN_HTTP_HEADERS[role]])
-                  }}
-                >
-                  {t('HTTPHeaderVisibilitySettings.restoreDefaults')}
-                </YakitButton>
-              </div>
             </section>
           ))}
         </div>

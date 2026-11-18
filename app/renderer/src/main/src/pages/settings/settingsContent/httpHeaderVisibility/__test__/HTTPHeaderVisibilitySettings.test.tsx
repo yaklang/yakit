@@ -10,7 +10,11 @@ import { FuzzerRemoteGV } from '@/enums/fuzzer'
 const mocks = vi.hoisted(() => ({ read: vi.fn(), write: vi.fn(), failed: vi.fn() }))
 vi.mock('@/utils/kv', () => ({ getRemoteValue: mocks.read, setRemoteValue: mocks.write }))
 vi.mock('@/utils/notification', () => ({ yakitFailed: mocks.failed }))
-vi.mock('@yakit-libs/yakit-ui-icons/outline', () => ({ TrashOutlined: () => null }))
+vi.mock('@yakit-libs/yakit-ui-icons/outline', () => ({
+  PlusOutlined: () => null,
+  RefreshOutlined: () => null,
+  TrashOutlined: () => null,
+}))
 vi.mock('@/i18n/useI18nNamespaces', () => ({
   useI18nNamespaces: () => ({
     t: (key: string, params?: Record<string, unknown>) => {
@@ -110,8 +114,9 @@ describe.each<HeaderRole>(['request', 'response'])('%s 全局 HTTP 头部隐藏�
     useEditorHeaderVisibility.setState({ hidden: { request: true, response: true } })
     const live = preview(role)
     const panel = (await open())[role]
-    fireEvent.change(panel.getByRole('textbox'), { target: { value: ' X-Custom ' } })
     fireEvent.click(panel.getByRole('button', { name: 'add' }))
+    fireEvent.change(panel.getByRole('textbox'), { target: { value: ' X-Custom ' } })
+    fireEvent.keyDown(panel.getByRole('textbox'), { key: 'Enter' })
     await waitFor(() =>
       expect(persistedSettings()[role].headers).toEqual(['x-custom', ...DEFAULT_HIDDEN_HTTP_HEADERS[role]]),
     )
@@ -122,7 +127,7 @@ describe.each<HeaderRole>(['request', 'response'])('%s 全局 HTTP 头部隐藏�
     expect(
       Array.from({ length: live.model.getLineCount() }, (_, n) => live.model.getLineContent(n + 1)).join('\n'),
     ).toBe(live.packet)
-    expect(panel.getByRole('textbox')).toHaveValue('')
+    expect(panel.queryByRole('textbox')).toBeNull()
   })
 
   it('删除头部立即生效，且只影响该侧隐藏列表', async () => {
@@ -148,9 +153,7 @@ describe.each<HeaderRole>(['request', 'response'])('%s 全局 HTTP 头部隐藏�
     useEditorHeaderVisibility.setState({ hidden: { request: true, response: true } })
     const live = preview(role)
     const panel = (await open())[role]
-    fireEvent.change(panel.getByRole('textbox'), { target: { value: 'X-Pending' } })
     fireEvent.click(panel.getByRole('button', { name: 'clear' }))
-    expect(panel.getByRole('textbox')).toHaveValue('')
     await waitFor(() => expect(persistedSettings()[role].headers).toEqual([]))
     expect(persistedSettings()[role].hidden).toBe(true)
     expect(live.hiddenAreas).toHaveBeenLastCalledWith([], expect.any(Object))
@@ -168,12 +171,13 @@ describe.each<HeaderRole>(['request', 'response'])('%s 全局 HTTP 头部隐藏�
     })
     const live = preview(role)
     const panel = (await open())[role]
-    fireEvent.change(panel.getByRole('textbox'), { target: { value: 'bad:header' } })
     fireEvent.click(panel.getByRole('button', { name: 'add' }))
+    fireEvent.change(panel.getByRole('textbox'), { target: { value: 'bad:header' } })
+    fireEvent.keyDown(panel.getByRole('textbox'), { key: 'Enter' })
     expect(panel.getByRole('alert')).toHaveTextContent('invalidName')
     fireEvent.click(panel.getByRole('button', { name: 'restoreDefaults' }))
     expect(panel.queryByRole('alert')).not.toBeInTheDocument()
-    expect(panel.getByRole('textbox')).toHaveValue('')
+    expect(panel.queryByRole('textbox')).toBeNull()
     await waitFor(() => expect(persistedSettings()[role].headers).toEqual(DEFAULT_HIDDEN_HTTP_HEADERS[role]))
     expect(persistedSettings()[role].hidden).toBe(true)
     expect(panel.getAllByRole('button', { name: /^Remove / })).toHaveLength(DEFAULT_HIDDEN_HTTP_HEADERS[role].length)
@@ -187,8 +191,9 @@ describe('全局设置的即时保存与失败处理', () => {
   it('设置页不提供保存按钮，列表改动即时写入，工具栏切换不会覆盖名单', async () => {
     const page = await open()
     expect(screen.queryByRole('button', { name: 'save' })).toBeNull()
-    fireEvent.change(page.request.getByRole('textbox'), { target: { value: 'X-Live' } })
     fireEvent.click(page.request.getByRole('button', { name: 'add' }))
+    fireEvent.change(page.request.getByRole('textbox'), { target: { value: 'X-Live' } })
+    fireEvent.keyDown(page.request.getByRole('textbox'), { key: 'Enter' })
     await waitFor(() => expect(persistedSettings().request.headers).toContain('x-live'))
     await act(async () => {
       await useEditorHeaderVisibility.getState().toggle('response')
@@ -197,15 +202,29 @@ describe('全局设置的即时保存与失败处理', () => {
     expect(useEditorHeaderVisibility.getState().headers.request).toContain('x-live')
   })
 
+  it('新增输入框失焦时也会提交', async () => {
+    const { request } = await open()
+    const addButton = request.getByRole('button', { name: 'add' })
+    fireEvent.mouseDown(addButton)
+    fireEvent.click(addButton)
+    fireEvent.change(request.getByRole('textbox'), { target: { value: 'X-Blur' } })
+    fireEvent.blur(request.getByRole('textbox'))
+    await waitFor(() =>
+      expect(persistedSettings().request.headers).toEqual(['x-blur', ...DEFAULT_HIDDEN_HTTP_HEADERS.request]),
+    )
+    expect(request.queryByRole('textbox')).toBeNull()
+  })
+
   it('大小写不同的同名头部不能重复新增；非法名称不写入', async () => {
     const { request } = await open()
-    fireEvent.change(request.getByRole('textbox'), { target: { value: ' ACCEPT ' } })
     fireEvent.click(request.getByRole('button', { name: 'add' }))
+    fireEvent.change(request.getByRole('textbox'), { target: { value: ' ACCEPT ' } })
+    fireEvent.keyDown(request.getByRole('textbox'), { key: 'Enter' })
     expect(request.getByRole('alert')).toHaveTextContent('duplicateName')
     expect(request.getAllByRole('button', { name: 'Remove accept' })).toHaveLength(1)
     expect(mocks.write).not.toHaveBeenCalled()
     fireEvent.change(request.getByRole('textbox'), { target: { value: 'Bad: header' } })
-    fireEvent.click(request.getByRole('button', { name: 'add' }))
+    fireEvent.keyDown(request.getByRole('textbox'), { key: 'Enter' })
     expect(request.getByRole('alert')).toHaveTextContent('invalidName')
     expect(mocks.write).not.toHaveBeenCalled()
   })
@@ -213,16 +232,17 @@ describe('全局设置的即时保存与失败处理', () => {
   it('写入失败时保留输入和原列表，重试成功后即时生效', async () => {
     const { request } = await open()
     mocks.write.mockRejectedValueOnce(new Error('save failed'))
-    fireEvent.change(request.getByRole('textbox'), { target: { value: 'X-Pending' } })
     fireEvent.click(request.getByRole('button', { name: 'add' }))
+    fireEvent.change(request.getByRole('textbox'), { target: { value: 'X-Pending' } })
+    fireEvent.keyDown(request.getByRole('textbox'), { key: 'Enter' })
     await waitFor(() => expect(mocks.failed).toHaveBeenCalled())
     expect(request.getByRole('textbox')).toHaveValue('X-Pending')
     expect(useEditorHeaderVisibility.getState().headers.request).not.toContain('x-pending')
-    fireEvent.click(request.getByRole('button', { name: 'add' }))
+    fireEvent.keyDown(request.getByRole('textbox'), { key: 'Enter' })
     await waitFor(() =>
       expect(persistedSettings().request.headers).toEqual(['x-pending', ...DEFAULT_HIDDEN_HTTP_HEADERS.request]),
     )
-    expect(request.getByRole('textbox')).toHaveValue('')
+    expect(request.queryByRole('textbox')).toBeNull()
     expect(request.getByText('x-pending')).toBeInTheDocument()
   })
 

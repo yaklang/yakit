@@ -6,21 +6,16 @@
 }
 
 .panels {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
-  align-items: start;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .panel {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   min-width: 0;
-  padding: 14px 14px 12px;
-  border: 1px solid var(--Colors-Use-Neutral-Border);
-  border-radius: 8px;
-  background: var(--Colors-Use-Basic-Background);
 }
 
 .heading {
@@ -44,11 +39,10 @@
 }
 
 .list {
-  height: 240px;
-  padding: 4px;
-  overflow: auto;
-  border-radius: 6px;
-  background: var(--Colors-Use-Neutral-Bg);
+  overflow: hidden;
+  border: 1px solid var(--Colors-Use-Neutral-Border);
+  border-radius: 8px;
+  background: var(--Colors-Use-Basic-Background);
 }
 
 .row {
@@ -56,50 +50,41 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  min-height: 26px;
-  padding: 2px 4px 2px 8px;
-  border-radius: 4px;
+  min-height: 45px;
+  padding: 0 12px;
   font-family: monospace;
   font-size: 12px;
 
+  & + .row {
+    border-top: 1px solid var(--Colors-Use-Neutral-Border);
+  }
+
   > span {
-    overflow-wrap: anywhere;
-  }
-
-  &:hover {
-    background: var(--Colors-Use-Basic-Background);
-  }
-}
-
-.remove {
-  flex-shrink: 0;
-  opacity: 0;
-  transition: opacity 0.15s ease;
-}
-
-.row:hover .remove,
-.row:focus-within .remove {
-  opacity: 1;
-}
-
-.add {
-  display: flex;
-  gap: 8px;
-
-  > :first-child {
     flex: 1;
     min-width: 0;
+    overflow-wrap: anywhere;
   }
+}
+
+.title {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
 }
 
 .actions {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 8px;
+  flex-shrink: 0;
 }
 
-.empty,
+.draftInput {
+  flex: 1;
+  min-width: 0;
+}
+
 .loading {
   display: flex;
   align-items: center;
@@ -109,13 +94,11 @@
   color: var(--Colors-Use-Neutral-Text-3-Secondary);
 }
 
+.emptyState {
+  padding: 32px 0;
+}
+
 .error {
   font-size: 12px;
   color: var(--Colors-Use-Error-Primary);
-}
-
-@media (max-width: 640px) {
-  .panels {
-    grid-template-columns: minmax(0, 1fr);
-  }
 }

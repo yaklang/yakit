@@ -113,6 +113,7 @@
     "placeholder": "輸入標頭名稱，例如 x-custom-header",
     "newHeader": "新增{{role}}名稱",
     "add": "新增",
+    "cancelAdd": "取消新增",
     "clear": "清空清單",
     "restoreDefaults": "恢復預設值",
     "invalidName": "請輸入有效的 HTTP 標頭名稱，不包含冒號、空格或標頭值",

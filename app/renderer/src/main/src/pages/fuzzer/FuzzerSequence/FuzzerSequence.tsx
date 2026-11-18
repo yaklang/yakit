@@ -2822,13 +2822,36 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
     )
     const sequenceResponsePacket = httpResponse?.ResponseRaw?.byteLength ? httpResponse.ResponseRaw : sequenceStoredRaw
 
-    const { queryPagesDataById, updatePagesDataCacheById } = usePageInfo(
-      (s) => ({
-        queryPagesDataById: s.queryPagesDataById,
-        updatePagesDataCacheById: s.updatePagesDataCacheById,
-      }),
+    const { queryPagesDataById, updatePagesDataCacheById, requestHeadersHidden, responseHeadersHidden } = usePageInfo(
+      (s) => {
+        const info = pageId
+          ? s.queryPagesDataById(YakitRoute.HTTPFuzzer, pageId)?.pageParamsInfo.webFuzzerPageInfo
+          : undefined
+        return {
+          queryPagesDataById: s.queryPagesDataById,
+          updatePagesDataCacheById: s.updatePagesDataCacheById,
+          requestHeadersHidden: info?.requestHeadersHidden ?? false,
+          responseHeadersHidden: info?.responseHeadersHidden ?? false,
+        }
+      },
       shallow,
     )
+    // 头部隐藏状态跟随序列页签，直接读写底层页面缓存，避免切换页签时沿用上一个页签的状态。
+    const setHeaderHidden = useMemoizedFn((role: 'request' | 'response', hidden: boolean) => {
+      if (!pageId) return
+      const currentItem = queryPagesDataById(YakitRoute.HTTPFuzzer, pageId)
+      if (!currentItem?.pageParamsInfo.webFuzzerPageInfo) return
+      updatePagesDataCacheById(YakitRoute.HTTPFuzzer, {
+        ...currentItem,
+        pageParamsInfo: {
+          ...currentItem.pageParamsInfo,
+          webFuzzerPageInfo: {
+            ...currentItem.pageParamsInfo.webFuzzerPageInfo,
+            ...(role === 'request' ? { requestHeadersHidden: hidden } : { responseHeadersHidden: hidden }),
+          },
+        },
+      })
+    })
     useImperativeHandle(
       ref,
       () => ({
@@ -2930,7 +2953,6 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
 
     const [hex, setHex] = useState<boolean>(false)
     const [privacy, setPrivacy] = useState(false)
-    const [requestHeadersHidden, setRequestHeadersHidden] = useState(false)
     const firstNodeExtra = (headerVisibilityToggle?: React.ReactNode) => (
       <>
         {+(firstNodeSize?.width || 0) < 350 ? (
@@ -3121,7 +3143,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                 refreshTrigger={refreshTrigger}
                 request={requestHttpRef.current}
                 requestHeadersHidden={requestHeadersHidden}
-                onRequestHeadersHiddenChange={setRequestHeadersHidden}
+                onRequestHeadersHiddenChange={(hidden) => setHeaderHidden('request', hidden)}
                 setRequest={(i) => onSetRequestHttp(i)}
                 isHttps={advancedConfigValue.isHttps}
                 hotPatchCode={hotPatchCode}
@@ -3152,6 +3174,8 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                   fuzzerResponse={httpResponse}
                   defaultResponseSearch={defaultResponseSearch}
                   request={requestHttpRef.current}
+                  responseHeadersHidden={responseHeadersHidden}
+                  onResponseHeadersHiddenChange={(hidden) => setHeaderHidden('response', hidden)}
                   isHttps={advancedConfigValue.isHttps}
                   webFuzzerValue={Uint8ArrayToString(sequenceResponsePacket)}
                   showMatcherAndExtraction={showMatcherAndExtraction}

@@ -113,6 +113,7 @@
     "placeholder": "Header name, e.g. x-custom-header",
     "newHeader": "New {{role}} name",
     "add": "Add",
+    "cancelAdd": "Cancel",
     "clear": "Clear list",
     "restoreDefaults": "Restore defaults",
     "invalidName": "Enter a valid HTTP header name without colons, spaces, or values",
