@@ -145,8 +145,6 @@ const openModels = async () => {
   return screen.getByRole('region', { name: '模型列表' })
 }
 
-/** CI 根目录 vitest 会 stub CSS modules，不能靠 className。 */
-const getDropdownButtons = (dropdown: HTMLElement) => within(dropdown).getAllByRole('button')
 const getEditButtons = (dropdown: HTMLElement) => within(dropdown).getAllByRole('button', { name: 'YakitButton.edit' })
 
 describe('EnterpriseAIModelSelect', () => {
@@ -189,27 +187,25 @@ describe('EnterpriseAIModelSelect', () => {
     expect(screen.getByText('AIReasoningEffort.probeUnsupported').parentElement).toHaveTextContent(
       'ConfigNetworkPage.effortXhigh',
     )
-    const trigger = within(dropdown).getByRole('button', { name: 'AIReasoningEffort.selectQuality' })
-    await waitFor(() => expect(trigger).toHaveAttribute('aria-disabled', 'false'))
-    fireEvent.click(trigger)
-    expect(screen.queryByRole('menuitemradio', { name: 'ConfigNetworkPage.effortMax' })).not.toBeInTheDocument()
+    expect(within(dropdown).queryByRole('button', { name: 'AIReasoningEffort.effortMax' })).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: '关闭选择' }))
     fireEvent.click(screen.getByRole('button', { name: '打开选择' }))
     await waitFor(() => expect(mocks.probe).toHaveBeenCalledTimes(2))
-    fireEvent.click(screen.getByRole('button', { name: 'AIReasoningEffort.selectQuality' }))
-    expect(await screen.findByRole('menuitemradio', { name: 'ConfigNetworkPage.effortMax' })).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: 'AIReasoningEffort.effortMax' })).toBeInTheDocument()
     expect(screen.queryByText('Error')).not.toBeInTheDocument()
   })
 
-  it('思考选择随模型切换，关闭后保存；同一模型重新打开不重复探测', async () => {
+  it('在模型列表内直接选择思考档位，关闭后保存；同一模型重新打开不重复探测', async () => {
     mocks.probe.mockResolvedValue({ MaxSupported: true, XhighSupported: true })
     const dropdown = await openModels()
-    const trigger = within(dropdown).getByRole('button', { name: 'AIReasoningEffort.selectQuality' })
-    expect(trigger).toHaveAttribute('aria-disabled', 'true')
-    await waitFor(() => expect(trigger).toHaveAttribute('aria-disabled', 'false'))
+    const highEffort = within(dropdown).getByRole('button', { name: 'ConfigNetworkPage.effortHigh' })
+    expect(highEffort).toBeDisabled()
+    await waitFor(() => expect(highEffort).toBeEnabled())
     await waitFor(() => expect(mocks.probe).toHaveBeenCalledTimes(1))
-    fireEvent.click(trigger)
-    fireEvent.click(await screen.findByRole('menuitemradio', { name: 'ConfigNetworkPage.effortHigh' }))
+    fireEvent.click(highEffort)
+    expect(highEffort).toHaveAttribute('aria-pressed', 'true')
+    expect(dropdown).toBeVisible()
+    expect(mocks.save).not.toHaveBeenCalled()
     fireEvent.click(screen.getByRole('button', { name: '关闭选择' }))
     await waitFor(() =>
       expect(mocks.save).toHaveBeenCalledWith(
@@ -286,9 +282,7 @@ describe('EnterpriseAIModelSelect', () => {
     if (!oldResultFirst) {
       await act(async () => resolveFirst({ MaxSupported: true, XhighSupported: true }))
     }
-    const trigger = within(dropdown).getByRole('button', { name: 'AIReasoningEffort.selectQuality' })
-    fireEvent.click(trigger)
-    expect(screen.queryByRole('menuitemradio', { name: 'ConfigNetworkPage.effortMax' })).not.toBeInTheDocument()
+    expect(within(dropdown).queryByRole('button', { name: 'AIReasoningEffort.effortMax' })).not.toBeInTheDocument()
     await act(async () => resolveSecond({ MaxSupported: false, XhighSupported: true }))
     fireEvent.click(screen.getByRole('button', { name: '关闭选择' }))
     await waitFor(() => expect(mocks.save).toHaveBeenCalled())
@@ -308,7 +302,9 @@ describe('EnterpriseAIModelSelect', () => {
     await act(async () => vi.advanceTimersByTimeAsync(250))
     act(() => emiter.emit('onRefreshAvailableAIModelList'))
     expect(mocks.load).toHaveBeenCalledTimes(2)
-    const refresh = getDropdownButtons(screen.getByRole('region', { name: '模型列表' }))[2]
+    const refresh = within(screen.getByRole('region', { name: '模型列表' })).getByRole('button', {
+      name: 'YakitButton.refresh',
+    })
     expect(refresh).toHaveClass('ant-btn-loading')
 
     await act(async () => completions[latestFirst ? 1 : 0]())
@@ -495,8 +491,11 @@ describe('EnterpriseAIModelSelect', () => {
     const dropdown = await openModels()
     fireEvent.mouseEnter(getEditButtons(dropdown)[0])
     expect(await screen.findByText('AIModelSelect.emptyModels')).toBeVisible()
-    expect(screen.getAllByText('AIModelSelect.selectModel')).toHaveLength(2)
-    const refreshButtons = screen.getAllByRole('button', { name: 'YakitButton.refresh' })
+    expect(within(dropdown).getByText('AIModelSelect.selectModel')).toBeVisible()
+    expect(within(dropdown).getByText('AiAgengt.intelligentModels')).toBeVisible()
+    const editor = screen.getByRole('region', { name: 'AIModelSelect.selectModel' })
+    expect(within(editor).getByText('AIModelSelect.selectModel')).toBeVisible()
+    const refreshButtons = within(editor).getAllByRole('button', { name: 'YakitButton.refresh' })
     expect(refreshButtons).toHaveLength(2)
     refreshButtons.forEach((button) => expect(button).toBeVisible())
     expect(screen.queryByText('模型选择')).not.toBeInTheDocument()
@@ -567,16 +566,14 @@ describe('EnterpriseAIModelSelect', () => {
     expect(mocks.load).toHaveBeenCalledTimes(1)
   })
 
-  it('管理模型按钮显示国际化文案并打开模型配置，刷新仍会重新拉取模型列表', async () => {
+  it('标题栏提供带国际化名称的新增、管理和刷新按钮', async () => {
     const emit = vi.spyOn(emiter, 'emit')
     const dropdown = await openModels()
     expect(within(dropdown).getByText('model-a')).toBeInTheDocument()
-    const buttons = getDropdownButtons(dropdown)
-    expect(buttons).toHaveLength(6)
     const configButton = within(dropdown).getByRole('button', { name: 'AIModelSelect.manageModels' })
     expect(configButton).toBeVisible()
-    const refreshButton = buttons[2]
-    expect(buttons[1]).toHaveAttribute('aria-label', 'AIModelList.addModel')
+    const refreshButton = within(dropdown).getByRole('button', { name: 'YakitButton.refresh' })
+    expect(within(dropdown).getByRole('button', { name: 'AIModelList.addModel' })).toBeVisible()
     fireEvent.click(configButton)
     expect(emit).toHaveBeenCalledWith(
       'openPage',

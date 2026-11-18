@@ -1,47 +1,74 @@
 div.model-select-popup:global(.ant-select-dropdown) {
   // 模型下拉定位到视口，避免弹层改变页面的滚动范围。
   position: fixed;
+  box-sizing: border-box;
+  width: 362px;
+  max-width: calc(100vw - 16px);
+  // 覆盖 Select 按触发器宽度设置的内联 min-width。
+  min-width: 0 !important;
   border-radius: 12px;
 }
 
+div.community-model-select-popup:global(.ant-select-dropdown) {
+  padding: 0;
+}
+
 .drop-select-wrapper {
-  width: 360px;
+  padding-top: 8px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  :global {
-    .ant-select-item-option-grouped {
-      padding-left: 8px;
-    }
-  }
-  .select-title {
-    color: var(--Colors-Use-Neutral-Text-1-Title);
-    font-size: 12px;
-    font-weight: 600;
-    line-height: 16px; /* 133.333% */
-    letter-spacing: 0.5px;
-    padding: 2px 8px 0 8px;
+}
 
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    .select-title-left {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      flex-shrink: 0;
-    }
-    .select-title-right {
-      display: flex;
-      align-items: center;
-      gap: 4px;
+.select-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 24px;
+  padding: 0 12px;
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+  letter-spacing: 0.5px;
+}
+
+.select-title-left,
+.select-title-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.select-title-right {
+  :global(button.ant-btn) {
+    height: 24px;
+    padding: 4px;
+    gap: 4px;
+    font-size: 12px;
+    line-height: 16px;
+
+    svg {
+      width: 16px;
+      height: 16px;
     }
   }
-  .type-btn {
-    margin-bottom: 4px;
-    padding: 0 4px;
+
+  :global(button.ant-btn-icon-only) {
+    width: 24px;
   }
 }
+
+.select-title-info {
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+}
+
+.select-title-divider {
+  width: 1px;
+  height: 12px;
+  margin: 0 4px;
+  background: var(--Colors-Use-Neutral-Border);
+}
+
 .select-option {
   display: flex;
   align-items: center;
@@ -87,6 +114,7 @@ div.model-select-popup:global(.ant-select-dropdown) {
 
 .model-name-content {
   min-height: 60px;
+  padding: 4px 4px 8px;
   .edit-content-item {
     display: flex;
     flex-direction: column;
@@ -97,7 +125,6 @@ div.model-select-popup:global(.ant-select-dropdown) {
       display: flex;
       align-items: center;
       flex-direction: column;
-      gap: 4px;
       width: 100%;
       .edit-content-options-item {
         display: flex;
@@ -105,10 +132,13 @@ div.model-select-popup:global(.ant-select-dropdown) {
         justify-content: space-between;
         cursor: pointer;
         border-radius: 4px;
-        padding: 0 4px;
+        padding: 4px 8px;
         width: 100%;
-        height: 22px;
+        height: 24px;
         color: var(--Colors-Use-Neutral-Text-1-Title);
+        font-size: 12px;
+        line-height: 16px;
+        letter-spacing: 0.5px;
         &:hover {
           background-color: var(--Colors-Use-Neutral-Bg-Hover);
         }
@@ -129,7 +159,7 @@ div.model-select-popup:global(.ant-select-dropdown) {
     }
   }
   .model-name-list {
-    max-height: 194px;
+    max-height: min(192px, 50vh);
     overflow-y: auto;
   }
 }

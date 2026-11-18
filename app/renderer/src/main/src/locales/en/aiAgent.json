@@ -112,9 +112,10 @@
     "toConfigure": "Go to Configure",
     "configDesc": "No available AI model found. Please configure one before use.",
     "selectModel": "Select AI Model",
+    "modelTitle": "Model",
     "openConfigTooltip": "Open model configuration in Settings",
     "manageModels": "Manage Models",
-    "resetModel": "Reset Model",
+    "resetModel": "Reset",
     "resetModelTooltip": "Reset to the default model",
     "emptyModels": "No models found. Refresh to try again.",
     "noBuiltinModel": "No built-in primary model found"
@@ -893,7 +894,10 @@
   },
   "AIReasoningEffort": {
     "probeUnsupported": "This model does not support this effort level",
-    "selectQuality": "Thinking quality",
+    "selectQuality": "Thinking effort",
+    "effortDefault": "Default",
+    "effortLow": "Low (fast)",
+    "effortMax": "Max (slowest)",
     "tooltip": "Off disables thinking; default follows the model default; Very High / Maximum are extended tiers shown only after probe confirmation",
     "probing": "Probing..."
   },

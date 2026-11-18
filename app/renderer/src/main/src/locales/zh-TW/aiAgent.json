@@ -112,9 +112,10 @@
     "toConfigure": "去配置",
     "configDesc": "無可使用AI模型，請配置後使用",
     "selectModel": "AI 模型選擇",
+    "modelTitle": "模型",
     "openConfigTooltip": "開啟設定中的模型配置",
     "manageModels": "管理模型",
-    "resetModel": "重置模型",
+    "resetModel": "重置",
     "resetModelTooltip": "重置回預設的模型",
     "emptyModels": "未取得模型，可點擊重新整理再次取得。",
     "noBuiltinModel": "未找到內建主模型"
@@ -893,7 +894,10 @@
   },
   "AIReasoningEffort": {
     "probeUnsupported": "此模型不支援該檔位",
-    "selectQuality": "思考品質選擇",
+    "selectQuality": "思考強度",
+    "effortDefault": "默認",
+    "effortLow": "低 (快)",
+    "effortMax": "最高 (最慢)",
     "tooltip": "關閉不進行思考；默認則跟隨模型默認；極高 / 最高 為擴展檔位，僅探測確認支援後展示",
     "probing": "探測中..."
   },

@@ -541,6 +541,7 @@ export const EnterpriseAIModelSelect: React.FC<AIModelSelectProps> = React.memo(
                       <YakitButton
                         size="small"
                         type="text2"
+                        aria-label={t('YakitButton.refresh')}
                         icon={<RefreshOutlined color="currentColor" />}
                         loading={onlineLoading || queryLoading}
                         onClick={(e) => {
@@ -583,6 +584,7 @@ export const EnterpriseAIModelSelect: React.FC<AIModelSelectProps> = React.memo(
                 {open && (
                   <AIReasoningEffortSelect
                     key={effortModelKey}
+                    className={styles['reasoning-effort-footer']}
                     model={selectIntelligentItem}
                     probing={effortProbing}
                     probeResponse={probeResponse}
@@ -597,7 +599,7 @@ export const EnterpriseAIModelSelect: React.FC<AIModelSelectProps> = React.memo(
           setOpen={onSetOpen}
           optionLabelProp="label"
           value="select"
-          closestClassName={`.${styles['edit-content']}, [data-ai-reasoning-effort-menu]`}
+          closestClassName={`.${styles['edit-content']}`}
         >
           {renderContent()}
         </AIChatSelect>
@@ -881,7 +883,7 @@ const AIModelEditContent: React.FC<AIModelEditContentProps> = React.memo((props)
   ).run
   return (
     //  ANCHOR[id=ai-model-edit-content] edit-content-wrapper
-    <div className={styles['edit-content-wrapper']}>
+    <div className={styles['edit-content-wrapper']} role="region" aria-label={t('AIModelSelect.selectModel')}>
       <YakitSpin size="small" spinning={modelNameData.loading}>
         <AIModelEditContentItem
           filed="ModelName"

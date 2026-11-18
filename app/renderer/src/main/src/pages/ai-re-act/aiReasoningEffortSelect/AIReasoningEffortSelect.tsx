@@ -1,13 +1,8 @@
 import type { FC } from 'react'
-import { useState } from 'react'
+import { useId } from 'react'
 import type { AIReasoningEffortSelectProps } from './type'
-import {
-  CheckOutlined,
-  ChevronRightOutlined,
-  ExclamationOutlined,
-  InformationCircleOutlined,
-} from '@yakit-libs/yakit-ui-icons/outline'
-import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
+import { ExclamationOutlined, InformationCircleOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import YakitSolidLoading from '@/components/yakitUI/YakitSolidLoading/YakitSolidLoading'
 import classNames from 'classnames'
@@ -38,18 +33,20 @@ export const AIReasoningEffortSelect: FC<AIReasoningEffortSelectProps> = ({
   probeResponse,
   onChange,
 }) => {
-  // configNetwork 命名空间：选项文案（ConfigNetworkPage.effortDefault/effortLow 等）与表单共用
   const { t } = useI18nNamespaces(['aiAgent', 'configNetwork'])
+  const titleId = useId()
   const disabled = disabledProp || !model
   const effortValue = normalizeReasoningEffort(model?.Provider.ReasoningEffort)
-  const effortOptions = buildReasoningEffortOptions(t, model?.ProbedExtendedEfforts, effortValue)
-  const effortLabel = String(effortOptions.find((item) => item.value === effortValue)?.label || effortValue).replace(
-    /（[^）]*）|\([^)]*\)/g,
-    '',
+  const effortOptions = buildReasoningEffortOptions(
+    t,
+    model?.ProbedExtendedEfforts,
+    model?.ProbedExtendedEfforts ? undefined : effortValue,
   )
-  const menuOptions = model?.ProbedExtendedEfforts
-    ? buildReasoningEffortOptions(t, model.ProbedExtendedEfforts)
-    : effortOptions
+  const compactLabels: Partial<Record<string, string>> = {
+    'no-set': t('AIReasoningEffort.effortDefault'),
+    low: t('AIReasoningEffort.effortLow'),
+    max: t('AIReasoningEffort.effortMax'),
+  }
   const probeErrors =
     !probing && probeResponse
       ? [
@@ -66,16 +63,8 @@ export const AIReasoningEffortSelect: FC<AIReasoningEffortSelectProps> = ({
         ].filter(({ supported }) => supported === false)
       : []
 
-  const [requestedOpen, setOpen] = useState(false)
-  const open = requestedOpen && !disabled
-
-  const onSetOpen = (value: boolean) => {
-    if (!value || !disabled) setOpen(value)
-  }
-
   const onEffortSelect = (value: string) => {
-    if (disabled) return
-    setOpen(false)
+    if (disabled || value === effortValue) return
     // no-set 不落库（undefined），与模型表单 formValueToAIConfigProvider 保存语义一致
     onChange((m) => ({
       ...m,
@@ -85,90 +74,56 @@ export const AIReasoningEffortSelect: FC<AIReasoningEffortSelectProps> = ({
 
   return (
     <div
-      className={classNames(styles['reasoning-effort-select'], className, {
-        [styles['reasoning-effort-select-open']]: open,
-      })}
+      className={classNames(styles['reasoning-effort-select'], className)}
       onClick={(event) => event.stopPropagation()}
     >
-      <YakitPopover
-        arrow={false}
-        placement="rightTop"
-        trigger="click"
-        open={open}
-        onOpenChange={onSetOpen}
-        getPopupContainer={(trigger) => trigger.ownerDocument.body}
-        classNames={{ root: styles['effort-popover'] }}
-        content={
-          <div
-            className={styles['effort-menu']}
-            data-ai-reasoning-effort-menu
-            role="menu"
-            aria-label={t('AIReasoningEffort.selectQuality')}
-          >
-            {menuOptions.map((item) => (
-              <div
-                key={item.value}
-                className={styles['effort-option']}
-                role="menuitemradio"
-                aria-checked={effortValue === item.value}
-                onClick={() => onEffortSelect(String(item.value))}
-              >
-                <span>{item.label}</span>
-                {effortValue === item.value && <CheckOutlined size={16} color="currentColor" />}
-              </div>
-            ))}
-          </div>
-        }
-      >
-        <div
-          className={styles['effort-trigger']}
-          role="button"
-          aria-disabled={disabled}
-          aria-label={t('AIReasoningEffort.selectQuality')}
-          aria-haspopup="menu"
-          aria-expanded={open}
-        >
-          <span className={styles['effort-title']}>
-            {t('AIReasoningEffort.selectQuality')}
-            <Tooltip title={t('AIReasoningEffort.tooltip')}>
-              <InformationCircleOutlined size={12} color="currentColor" />
-            </Tooltip>
-          </span>
-          <span className={styles['effort-value']}>
-            {probing && <YakitSolidLoading inline size={12} />}
-            {probeErrors.length > 0 && (
-              <Tooltip
-                classNames={{ root: styles['effort-error-tooltip'] }}
-                title={
-                  <div className={styles['effort-error-details']}>
-                    {probeErrors.map(({ label, message }) => (
-                      <div key={label}>
-                        <strong>{label}</strong>
-                        <div>{message ? getProbeErrorMessage(message) : t('AIReasoningEffort.probeUnsupported')}</div>
-                      </div>
-                    ))}
+      <div className={styles['effort-heading']}>
+        <span id={titleId}>{t('AIReasoningEffort.selectQuality')}</span>
+        <Tooltip title={t('AIReasoningEffort.tooltip')}>
+          <InformationCircleOutlined className={styles['effort-info-icon']} size={12} color="currentColor" />
+        </Tooltip>
+        {probing && <YakitSolidLoading inline size={12} aria-label={t('AIReasoningEffort.probing')} />}
+        {probeErrors.length > 0 && (
+          <Tooltip
+            classNames={{ root: styles['effort-error-tooltip'] }}
+            title={
+              <div className={styles['effort-error-details']}>
+                {probeErrors.map(({ label, message }) => (
+                  <div key={label}>
+                    <strong>{label}</strong>
+                    <div>{message ? getProbeErrorMessage(message) : t('AIReasoningEffort.probeUnsupported')}</div>
                   </div>
-                }
-                destroyOnHidden
-              >
-                <YakitTag
-                  className={styles['effort-error-tag']}
-                  size="small"
-                  color="serious"
-                  fullRadius
-                  border={false}
-                  onClick={(event) => event.stopPropagation()}
-                >
-                  <ExclamationOutlined size={14} color="currentColor" />
-                  Error
-                </YakitTag>
-              </Tooltip>
-            )}
-            {effortLabel}
-            <ChevronRightOutlined size={12} color="currentColor" />
-          </span>
-        </div>
-      </YakitPopover>
+                ))}
+              </div>
+            }
+            destroyOnHidden
+          >
+            <YakitTag className={styles['effort-error-tag']} size="small" color="serious" fullRadius border={false}>
+              <ExclamationOutlined size={12} color="currentColor" />
+              Error
+            </YakitTag>
+          </Tooltip>
+        )}
+      </div>
+      <div className={styles['effort-options']} role="group" aria-labelledby={titleId}>
+        {effortOptions.map((item) => {
+          const value = String(item.value)
+          return (
+            <YakitButton
+              key={value}
+              className={styles['effort-pill']}
+              type={effortValue === value ? 'primary' : 'secondary2'}
+              size="small"
+              radius="9999px"
+              aria-pressed={effortValue === value}
+              disabled={disabled}
+              onClick={() => onEffortSelect(value)}
+            >
+              {compactLabels[value] ?? item.label}
+            </YakitButton>
+          )
+        })}
+      </div>
     </div>
   )
 }
