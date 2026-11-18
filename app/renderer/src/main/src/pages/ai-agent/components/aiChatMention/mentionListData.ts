@@ -20,6 +20,7 @@ export const skillMentionRow = (item: AIForge): ResourceMentionRow => ({
   id: String(item.Id),
   name: item.ForgeVerboseName || item.ForgeName,
   originalName: item.ForgeName,
+  forgeType: item.ForgeType,
   row: { kind: 'forge', description: item.Description },
 })
 

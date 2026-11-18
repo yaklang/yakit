@@ -168,6 +168,7 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
                     onMemfitExtra={onMemfitExtra}
                     filterMode={filterMode}
                     getMaterials={getMaterials}
+                    onModeChangeComplete={onModeChangeComplete}
                   />
                 ),
               }),

@@ -12,6 +12,7 @@ const context = vi.hoisted(() => ({
   content: '',
   providers: [] as any[],
   planSelected: false,
+  onToggleMode: vi.fn(),
   strategy: {} as AIExecutionStrategy,
 }))
 vi.mock('@milkdown/react', () => ({ useInstance: () => [false, () => ({ action: vi.fn() })] }))
@@ -39,11 +40,25 @@ vi.mock('@milkdown/kit/plugin/slash', () => ({
     destroy = vi.fn()
   },
 }))
+vi.mock('@milkdown/kit/utils', () => ({ callCommand: vi.fn(() => vi.fn()) }))
 vi.mock('@/pages/ai-agent/defaultConstant', () => ({ iconMap: {} }))
 vi.mock('../customPlugin', () => ({ removeAIOffsetCommand: {} }))
-vi.mock('../aiMilkdownMention/aiMentionPlugin', () => ({ aiMentionCommand: {}, aiMentionsCommand: {} }))
+vi.mock('../aiMilkdownMention/aiMentionPlugin', () => ({
+  aiMentionCommand: { key: 'mention' },
+  aiMentionsCommand: { key: 'mentions' },
+}))
 vi.mock('../../aiChatMention/AIChatMention', () => ({
-  AIChatMention: () => <div data-testid="mention-list">items</div>,
+  AIChatMention: ({ onSelect }: { onSelect?: (type: string, value: object) => void }) => (
+    <div data-testid="mention-list">
+      items
+      <button type="button" onClick={() => onSelect?.('forge', { id: '1', name: '模板', forgeType: 'yak' })}>
+        pick-forge
+      </button>
+      <button type="button" onClick={() => onSelect?.('forge', { id: '2', name: '技能', forgeType: 'skillmd' })}>
+        pick-skill
+      </button>
+    </div>
+  ),
 }))
 vi.mock('@/components/yakitUI/YakitTag/YakitTag', () => ({ YakitTag: () => null }))
 vi.mock('@/components/yakitUI/YakitInputNumber/YakitInputNumber', () => ({ YakitInputNumber: () => null }))
@@ -53,10 +68,11 @@ vi.mock('@/components/yakitUI/YakitSelect/YakitSelect', () => ({
 }))
 vi.mock('@/pages/ai-agent/aiRunModeSelect/useAIRunMode', () => ({
   useAIRunMode: () => ({
+    enablePlan: context.planSelected,
     goalMinIterations: 1,
     maxSubAgents: 1,
     strategy: context.strategy,
-    onToggleMode: vi.fn(),
+    onToggleMode: context.onToggleMode,
     onSetStrategy: vi.fn(),
     isModeSelected: () => context.planSelected,
   }),
@@ -69,6 +85,7 @@ beforeEach(() => {
   context.providers = []
   context.prevState = {}
   context.planSelected = false
+  context.onToggleMode.mockClear()
   context.strategy = {}
   scrollContainer = document.createElement('div')
   const anchor = document.createElement('div')
@@ -156,6 +173,45 @@ describe('mention popup outside clicks', () => {
     fireEvent.click(getByTestId('mention-list'))
     fireEvent.click(context.view.dom)
     expect(element.dataset.show).toBe('true')
+  })
+})
+
+describe('mention non-skill starts plan', () => {
+  it('opens plan when selecting a yak forge and plan is off', () => {
+    context.content = '@'
+    const onModeChangeComplete = vi.fn()
+    const { getByRole } = render(<AIMilkdownMention onModeChangeComplete={onModeChangeComplete} />)
+    act(() => vi.advanceTimersByTime(250))
+
+    fireEvent.click(getByRole('button', { name: 'pick-forge' }))
+
+    expect(context.onToggleMode).toHaveBeenCalledWith('plan')
+    expect(onModeChangeComplete).toHaveBeenCalledOnce()
+  })
+
+  it('does not start plan for skillmd', () => {
+    context.content = '@'
+    const onModeChangeComplete = vi.fn()
+    const { getByRole } = render(<AIMilkdownMention onModeChangeComplete={onModeChangeComplete} />)
+    act(() => vi.advanceTimersByTime(250))
+
+    fireEvent.click(getByRole('button', { name: 'pick-skill' }))
+
+    expect(context.onToggleMode).not.toHaveBeenCalled()
+    expect(onModeChangeComplete).not.toHaveBeenCalled()
+  })
+
+  it('does not start plan when plan is already on', () => {
+    context.content = '@'
+    context.planSelected = true
+    const onModeChangeComplete = vi.fn()
+    const { getByRole } = render(<AIMilkdownMention onModeChangeComplete={onModeChangeComplete} />)
+    act(() => vi.advanceTimersByTime(250))
+
+    fireEvent.click(getByRole('button', { name: 'pick-forge' }))
+
+    expect(context.onToggleMode).not.toHaveBeenCalled()
+    expect(onModeChangeComplete).not.toHaveBeenCalled()
   })
 })
 

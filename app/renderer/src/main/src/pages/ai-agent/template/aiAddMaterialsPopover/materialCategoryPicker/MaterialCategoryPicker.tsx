@@ -76,6 +76,7 @@ const getAddedOptions = (
   return Array.from(addedById.values(), (mention) => {
     const item = catalogById.get(mention.mentionId)
     return {
+      ...(item ?? {}),
       id: mention.mentionId,
       name: item?.name ?? mention.mentionName,
       description: item?.description || descriptions[`${mention.mentionType}:${mention.mentionId}`],

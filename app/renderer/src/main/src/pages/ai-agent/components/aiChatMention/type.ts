@@ -2,6 +2,7 @@ import type { AIMentionTabsEnum, iconMap } from '../../defaultConstant'
 import type { AIBrowserInstance } from '../../browserInstances/browserInstanceStore'
 import type { AIMentionCommandParams } from '../aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
 import type { MentionResourceRowProps } from './mentionResourceRow/type'
+import type { AIForge } from '../../type/forge'
 
 export type AIMentionTypeItem = AIMentionCommandParams['mentionType']
 export type iconMapType = keyof typeof iconMap
@@ -12,6 +13,7 @@ export interface AIChatMentionSelectItem {
   originalName?: string
   mentionSource?: AIMentionCommandParams['mentionSource']
   knowledgeIndex?: AIMentionCommandParams['knowledgeIndex']
+  forgeType?: AIForge['ForgeType']
 }
 
 export interface AIChatMentionSelectEntry {

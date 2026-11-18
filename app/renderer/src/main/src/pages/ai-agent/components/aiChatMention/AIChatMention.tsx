@@ -171,6 +171,7 @@ export const AIChatMention: FC<AIChatMentionProps> = ({
           originalName: item.originalName,
           mentionSource: item.mentionSource,
           knowledgeIndex: item.knowledgeIndex,
+          forgeType: item.forgeType,
         },
       })),
     )

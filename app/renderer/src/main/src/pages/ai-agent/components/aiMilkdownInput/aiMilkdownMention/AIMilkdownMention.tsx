@@ -18,7 +18,8 @@ import type {
 } from '../../aiChatMention/type'
 import { callCommand } from '@milkdown/kit/utils'
 import { aiMentionCommand, aiMentionsCommand, type AIMentionCommandParams } from './aiMentionPlugin'
-import { planMentionConfirm, toMentionCommandParams } from './mentionConfirm'
+import { planMentionConfirm, shouldStartPlanForMentions, toMentionCommandParams } from './mentionConfirm'
+import { useAIRunMode } from '@/pages/ai-agent/aiRunModeSelect/useAIRunMode'
 import { extractMentionFilterKeyword } from './mentionQuery'
 import { tryClaimMilkdownPopup, releaseMilkdownPopup } from '../panelMutex'
 import classNames from 'classnames'
@@ -32,11 +33,13 @@ interface AIMilkdownMentionProps {
   onMemfitExtra?: (v: AIMentionCommandParams) => void
   filterMode?: AIChatMentionProps['filterMode']
   getMaterials?: () => Pick<AIChatMentionProps, 'materials' | 'focusMode'>
+  onModeChangeComplete?: () => void
 }
 
 const mentionTarget = '@'
 export const AIMilkdownMention: React.FC<AIMilkdownMentionProps> = (props) => {
-  const { onMemfitExtra, filterMode, getMaterials } = props
+  const { onMemfitExtra, filterMode, getMaterials, onModeChangeComplete } = props
+  const { enablePlan, onToggleMode } = useAIRunMode()
   const ref = useRef<HTMLDivElement>(null)
   const slashProvider = useRef<SlashProvider>()
   const [filterKeyword, setFilterKeyword] = useState('')
@@ -208,6 +211,12 @@ export const AIMilkdownMention: React.FC<AIMilkdownMentionProps> = (props) => {
     { wait: 200, leading: true },
   )
 
+  const startPlanIfNeeded = useMemoizedFn((items: AIChatMentionSelectEntry[]) => {
+    if (!shouldStartPlanForMentions(items, enablePlan)) return
+    onToggleMode('plan')
+    onModeChangeComplete?.()
+  })
+
   const onSure = useMemoizedFn((type: AIMentionTypeItem, value?: AIChatMentionSelectItem) => {
     const params = toMentionCommandParams({ type, value })
     switch (type) {
@@ -222,6 +231,7 @@ export const AIMilkdownMention: React.FC<AIMilkdownMentionProps> = (props) => {
     }
 
     onHide()
+    startPlanIfNeeded([{ type, value }])
   })
 
   const onSureMany = useMemoizedFn((items: AIChatMentionSelectEntry[]) => {
@@ -234,6 +244,7 @@ export const AIMilkdownMention: React.FC<AIMilkdownMentionProps> = (props) => {
       onMemfitExtra?.(plan.focus)
     }
     onHide()
+    startPlanIfNeeded(items)
   })
 
   const onHide = useMemoizedFn((restoreFocus = true) => {

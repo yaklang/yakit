@@ -807,6 +807,40 @@ describe('AIChatMention', () => {
     )
   })
 
+  it.each(['all', 'added'] as const)(
+    'keeps forgeType when selecting a yak template from the %s skill filter',
+    async (filter) => {
+      vi.mocked(grpcQueryAIForge).mockImplementation(async ({ Pagination }) => ({
+        Data: [
+          { Id: 11, ForgeName: 'skill-a', ForgeVerboseName: 'Skill A', ForgeType: 'skillmd', Description: 'skill' },
+          { Id: 12, ForgeName: 'forge-a', ForgeVerboseName: 'Forge A', ForgeType: 'yak', Description: 'template' },
+        ],
+        Pagination,
+        Total: 2,
+      }))
+      const editor = document.createElement('div')
+      const onSelect = vi.fn()
+      await act(async () => {
+        render(
+          <AIChatMention
+            keyboardTarget={() => editor}
+            onSelect={onSelect}
+            materials={[{ mentionType: 'forge', mentionId: '12', mentionName: 'Forge A', name: 'forge-a' }]}
+          />,
+        )
+      })
+      fireEvent.click(screen.getByRole('button', { name: 'AIMentionTabs.skill' }))
+      expect(await screen.findByRole('option', { name: /Forge A/ })).toBeInTheDocument()
+      if (filter === 'added') {
+        fireEvent.click(screen.getByRole('button', { name: 'test-added-filter' }))
+        expect(screen.queryByRole('option', { name: /Skill A/ })).not.toBeInTheDocument()
+      }
+      fireEvent.click(await screen.findByRole('option', { name: /Forge A/ }))
+      fireEvent.keyDown(editor, { key: 'Enter', keyCode: 13 })
+      expect(onSelect).toHaveBeenCalledWith('forge', expect.objectContaining({ id: '12', forgeType: 'yak' }))
+    },
+  )
+
   it('sends catalog keywords to the backend and filters already-added rows locally', async () => {
     render(
       <AIChatMention
