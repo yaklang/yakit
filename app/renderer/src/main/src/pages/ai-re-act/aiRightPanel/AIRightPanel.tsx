@@ -649,6 +649,7 @@ const ChatRightPanel: React.FC<ChatRightPanelProps> = React.memo((props) => {
     })
   }, [currentChatStatusQuestionID, browserOnlineCount, trafficCount, hasRisk])
   const totals: Partial<Record<AIRightPanelMenuKey, number | undefined>> = {
+    browser: browserOnlineCount,
     traffic: trafficCount,
     'task-list': runningTaskCount,
     risk: riskTotal,

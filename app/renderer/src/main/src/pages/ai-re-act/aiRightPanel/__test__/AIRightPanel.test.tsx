@@ -1839,7 +1839,7 @@ describe('AIRightPanel', () => {
     }
   })
 
-  it('浏览器实例、流量、漏洞没有数据时不显示，流量和漏洞有数据时显示数量', async () => {
+  it('浏览器实例、流量、漏洞没有数据时不显示，有数据时显示数量', async () => {
     const result = await renderPanel(<AIRightPanel />)
     try {
       expect(screen.queryByLabelText('浏览器实例')).not.toBeInTheDocument()
@@ -1861,7 +1861,7 @@ describe('AIRightPanel', () => {
         ])
         mockTaskStore.setState((state) => ({ taskDetailsUpdate: state.taskDetailsUpdate + 1 }))
       })
-      expect(screen.getByLabelText('浏览器实例')).toBeInTheDocument()
+      expect(screen.getByLabelText('浏览器实例')).toHaveTextContent('2')
       await waitFor(() => expect(screen.getByLabelText('流量')).toHaveTextContent('8'), { timeout: 5000 })
       expect(screen.getByLabelText('漏洞')).toHaveTextContent('1')
     } finally {
