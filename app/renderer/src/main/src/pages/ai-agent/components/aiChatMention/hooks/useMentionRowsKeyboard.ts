@@ -27,7 +27,7 @@ export const useMentionRowsKeyboard = (
   const checkedKeys = multiActive ? multi.keys : []
   const keyboardOn = !!controls && controls.keyboardEnabled !== false
   // 只有面板接下了 Ctrl/Shift 点击的列表才允许多选。场景列表没有该回调，保持单选。
-  const allowMulti = keyboardOn && !!controls.onModifierPointer
+  const allowMulti = keyboardOn && !!controls?.onModifierPointer
   const onModifierPointer = controls?.onModifierPointer
   const rowsRef = useRef(rows)
   const checkedKeysRef = useRef(checkedKeys)
