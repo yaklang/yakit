@@ -171,8 +171,6 @@ export default memo(function ModelContextPopover() {
               Params: {
                 RuntimeContextSizeLimit: requestedTokens,
                 ...(requestedDisabled === undefined ? {} : { DisableContextAutoAdjust: requestedDisabled }),
-                AIService: confirmedContext.provider,
-                AIModelName: confirmedContext.model,
                 ModelContextKey: confirmedContext.context_key,
               },
             },

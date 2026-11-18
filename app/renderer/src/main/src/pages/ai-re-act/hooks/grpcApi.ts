@@ -142,6 +142,7 @@ export interface AIStartParams {
   RuntimeContextSizeLimit?: number
   /** Model-scoped hotpatch; omission preserves the saved preference. */
   DisableContextAutoAdjust?: boolean
+  /** 后端返回的模型配置标识，热更新时原样传回；无需携带 AIService / AIModelName。 */
   ModelContextKey?: string
   /** 用户交互的最大次数限制,超过这个次数，AI 将不再被允许问用户问题 */
   UserInteractLimit?: number

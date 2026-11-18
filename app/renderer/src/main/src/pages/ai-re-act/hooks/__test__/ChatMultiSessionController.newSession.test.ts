@@ -201,8 +201,6 @@ describe('frontend allocated session identity', () => {
     const Params = {
       RuntimeContextSizeLimit: tokens,
       ModelContextKey: 'owner:model',
-      AIService: 'openai',
-      AIModelName: 'quality',
     }
     const patch = { IsConfigHotpatch: true, HotpatchType: 'RuntimeContextSizeLimit' as const, Params }
     expect(controller.handleSendMessage({ token: 'client-session', type: 'casual', params: patch })).toBe(true)

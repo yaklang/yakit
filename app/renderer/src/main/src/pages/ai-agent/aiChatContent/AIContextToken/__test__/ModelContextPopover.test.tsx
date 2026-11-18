@@ -252,8 +252,6 @@ describe('composer model context popover', () => {
           Params: {
             RuntimeContextSizeLimit: 0,
             DisableContextAutoAdjust: true,
-            AIService: 'openai',
-            AIModelName: 'actual',
             ModelContextKey: 'service-a',
           },
         }),
@@ -393,7 +391,7 @@ describe('composer model context popover', () => {
     expect(mocks.onSend).not.toHaveBeenCalled()
     expect(mocks.setActiveChat).not.toHaveBeenCalled()
   })
-  it.each([true, false])('hotpatches the displayed runtime model only when accepted: %s', (accepted) => {
+  it.each([true, false])('hotpatches using only the runtime key and threshold: accepted=%s', (accepted) => {
     sessionStore.setState({ execute: true })
     mocks.sessionId = 'session'
     mocks.perf = runtime
@@ -409,8 +407,6 @@ describe('composer model context popover', () => {
         HotpatchType: 'RuntimeContextSizeLimit',
         Params: {
           RuntimeContextSizeLimit: 101 * 1000,
-          AIService: 'openai',
-          AIModelName: 'actual',
           ModelContextKey: 'service-a',
         },
       },
