@@ -8,39 +8,47 @@
 .panels {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 24px;
+  gap: 16px;
+  align-items: start;
 }
 
 .panel {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   min-width: 0;
+  padding: 14px 14px 12px;
+  border: 1px solid var(--Colors-Use-Neutral-Border);
+  border-radius: 8px;
+  background: var(--Colors-Use-Basic-Background);
 }
 
 .heading {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
 
   h3 {
     margin: 0;
     font-size: 14px;
+    font-weight: 500;
+    line-height: 20px;
     color: var(--Colors-Use-Neutral-Text-1-Title);
-  }
-
-  > span {
-    font-size: 12px;
-    color: var(--Colors-Use-Neutral-Text-3-Secondary);
   }
 }
 
+.count {
+  font-size: 12px;
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+}
+
 .list {
-  height: 260px;
+  height: 240px;
+  padding: 4px;
   overflow: auto;
-  border: 1px solid var(--Colors-Use-Neutral-Border);
-  border-radius: 4px;
-  background: var(--Colors-Use-Basic-Background);
+  border-radius: 6px;
+  background: var(--Colors-Use-Neutral-Bg);
 }
 
 .row {
@@ -48,7 +56,9 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 5px 8px 5px 12px;
+  min-height: 26px;
+  padding: 2px 4px 2px 8px;
+  border-radius: 4px;
   font-family: monospace;
   font-size: 12px;
 
@@ -56,9 +66,20 @@
     overflow-wrap: anywhere;
   }
 
-  &:nth-child(even) {
-    background: var(--Colors-Use-Neutral-Bg);
+  &:hover {
+    background: var(--Colors-Use-Basic-Background);
   }
+}
+
+.remove {
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.row:hover .remove,
+.row:focus-within .remove {
+  opacity: 1;
 }
 
 .add {
@@ -73,7 +94,9 @@
 
 .actions {
   display: flex;
+  align-items: center;
   justify-content: space-between;
+  gap: 8px;
 }
 
 .empty,
@@ -98,11 +121,15 @@
 }
 
 .footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   gap: 8px;
-  margin-top: 24px;
-  padding-top: 16px;
+  margin-top: 20px;
+  padding: 12px 0;
   border-top: 1px solid var(--Colors-Use-Neutral-Border);
+  background: var(--Colors-Use-Basic-Background);
 }

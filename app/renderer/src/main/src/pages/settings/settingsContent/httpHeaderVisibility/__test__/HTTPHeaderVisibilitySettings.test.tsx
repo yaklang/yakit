@@ -1,4 +1,3 @@
-import type React from 'react'
 import type { editor } from 'monaco-editor'
 import { act, cleanup, fireEvent, render, renderHook, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -26,14 +25,6 @@ vi.mock('@/i18n/useI18nNamespaces', () => ({
 vi.mock('@/components/yakitUI/YakitButton/YakitButton', () => ({
   YakitButton: ({ size, type, icon, loading, disabled, ...props }) => (
     <button disabled={disabled || loading} {...props} />
-  ),
-}))
-vi.mock('@/components/yakitUI/YakitCheckbox/YakitCheckbox', () => ({
-  YakitCheckbox: ({ children, ...props }: React.PropsWithChildren<React.InputHTMLAttributes<HTMLInputElement>>) => (
-    <label>
-      <input type="checkbox" {...props} />
-      {children}
-    </label>
   ),
 }))
 vi.mock('@/components/yakitUI/YakitInput/YakitInput', () => ({
@@ -123,18 +114,17 @@ const save = async () => {
 
 describe.each<HeaderRole>(['request', 'response'])('%s 全局 HTTP 头部隐藏设置', (role) => {
   it('新增名称去除首尾空格并转小写；保存后隐藏匹配头部，正文和原始报文保持完整', async () => {
+    useEditorHeaderVisibility.setState({ hidden: { request: true, response: true } })
     const live = preview(role)
     const panel = (await open())[role]
     fireEvent.change(panel.getByRole('textbox'), { target: { value: ' X-Custom ' } })
     fireEvent.click(panel.getByRole('button', { name: 'add' }))
     expect(panel.getByText('x-custom')).toBeInTheDocument()
-    fireEvent.click(panel.getByRole('checkbox'))
     expect(mocks.write).not.toHaveBeenCalled()
-    expect(live.hiddenAreas).not.toHaveBeenCalled()
     await save()
     expect(persistedSettings()[role].headers).toEqual([...DEFAULT_HIDDEN_HTTP_HEADERS[role], 'x-custom'])
-    if (role === 'request') expect(live.hiddenAreas).not.toHaveBeenCalled()
-    else expect(live.hiddenAreas).toHaveBeenLastCalledWith([range(2, 3)], expect.any(Object))
+    expect(persistedSettings()[role].hidden).toBe(true)
+    expect(live.hiddenAreas).toHaveBeenLastCalledWith([range(2, 3)], expect.any(Object))
     expect(preview(role).hiddenAreas).toHaveBeenLastCalledWith([range(2, 3)], expect.any(Object))
     expect(
       Array.from({ length: live.model.getLineCount() }, (_, n) => live.model.getLineContent(n + 1)).join('\n'),
@@ -177,7 +167,7 @@ describe.each<HeaderRole>(['request', 'response'])('%s 全局 HTTP 头部隐藏�
     expect(reopened.queryAllByRole('button', { name: /^Remove / })).toHaveLength(0)
   })
 
-  it('恢复默认重置该侧完整预置列表和默认隐藏开关，清理输入及错误，不改变另一侧', async () => {
+  it('恢复默认只重置该侧完整预置列表，保留当前隐藏状态，清理输入及错误，不改变另一侧', async () => {
     const other = role === 'request' ? 'response' : 'request'
     useEditorHeaderVisibility.setState({
       hidden: { request: true, response: true },
@@ -191,60 +181,34 @@ describe.each<HeaderRole>(['request', 'response'])('%s 全局 HTTP 头部隐藏�
     fireEvent.click(panel.getByRole('button', { name: 'restoreDefaults' }))
     expect(panel.queryByRole('alert')).not.toBeInTheDocument()
     expect(panel.getByRole('textbox')).toHaveValue('')
-    expect(panel.getByRole('checkbox')).not.toBeChecked()
     expect(panel.getAllByRole('button', { name: /^Remove / })).toHaveLength(DEFAULT_HIDDEN_HTTP_HEADERS[role].length)
     await save()
     expect(persistedSettings()[role].headers).toEqual(DEFAULT_HIDDEN_HTTP_HEADERS[role])
-    expect(persistedSettings()[role].hidden).toBe(false)
-    expect(live.hiddenAreas).toHaveBeenLastCalledWith(role === 'request' ? [range(2)] : [], expect.any(Object))
+    expect(persistedSettings()[role].hidden).toBe(true)
+    expect(live.hiddenAreas).toHaveBeenLastCalledWith([range(2)], expect.any(Object))
     expect(useEditorHeaderVisibility.getState().headers[other]).toEqual(['x-custom'])
     expect(useEditorHeaderVisibility.getState().hidden[other]).toBe(true)
-  })
-
-  it('请求默认值只用于后续导入，响应保持同步；修改默认值不切换已有请求', async () => {
-    const live = preview(role)
-    const other = preview(role === 'request' ? 'response' : 'request')
-    const panel = (await open())[role]
-    expect(panel.getByRole('checkbox')).not.toBeChecked()
-    fireEvent.click(panel.getByRole('checkbox'))
-    await save()
-    expect(persistedSettings()[role].hidden).toBe(true)
-    if (role === 'request') expect(live.hiddenAreas).not.toHaveBeenCalled()
-    else expect(live.hiddenAreas).toHaveBeenLastCalledWith([range(2)], expect.any(Object))
-    expect(other.hiddenAreas).not.toHaveBeenCalled()
-    const newlyOpened = preview(role)
-    expect(newlyOpened.hiddenAreas).toHaveBeenLastCalledWith([range(2)], expect.any(Object))
-    fireEvent.click(panel.getByRole('checkbox'))
-    await save()
-    expect(persistedSettings()[role].hidden).toBe(false)
-    if (role === 'request') expect(live.hiddenAreas).not.toHaveBeenCalled()
-    else expect(live.hiddenAreas).toHaveBeenLastCalledWith([], expect.any(Object))
-    expect(newlyOpened.hiddenAreas).toHaveBeenLastCalledWith(role === 'request' ? [range(2)] : [], expect.any(Object))
-    expect(preview(role).hiddenAreas).not.toHaveBeenCalled()
   })
 })
 
 describe('全局设置的提交、丢弃和失败处理', () => {
-  it('响应工具栏更新默认开关时，未保存的表单修改不会被覆盖', async () => {
+  it('工具栏切换隐藏状态时，未保存的表单修改不会被覆盖', async () => {
     const { response, unmount } = await open()
     await act(async () => {
       await useEditorHeaderVisibility.getState().toggle('response')
     })
-    expect(response.getByRole('checkbox')).toBeChecked()
     fireEvent.click(response.getByRole('button', { name: 'Remove server' }))
     await act(async () => {
       await useEditorHeaderVisibility.getState().toggle('response')
     })
     expect(response.queryByText('server')).not.toBeInTheDocument()
-    expect(response.getByRole('checkbox')).toBeChecked()
     unmount()
     const reopened = (await open()).response
     expect(reopened.getByText('server')).toBeInTheDocument()
-    expect(reopened.getByRole('checkbox')).not.toBeChecked()
   })
 
   it.each<HeaderRole>(['request', 'response'])(
-    '%s 未保存就关闭：丢弃新增、删除、开关、输入与错误，不写入存储或影响编辑器',
+    '%s 未保存就关闭：丢弃新增、删除、输入与错误，不写入存储或影响编辑器',
     async (role) => {
       const live = preview(role)
       const page = await open()
@@ -253,7 +217,6 @@ describe('全局设置的提交、丢弃和失败处理', () => {
       fireEvent.change(panel.getByRole('textbox'), { target: { value: 'X-Draft' } })
       fireEvent.click(panel.getByRole('button', { name: 'add' }))
       fireEvent.click(panel.getByRole('button', { name: `Remove ${baseHeader[role]}` }))
-      fireEvent.click(panel.getByRole('checkbox'))
       fireEvent.change(panel.getByRole('textbox'), { target: { value: 'Bad: header' } })
       fireEvent.click(panel.getByRole('button', { name: 'add' }))
       expect(panel.getByRole('alert')).toHaveTextContent('invalidName')
@@ -261,7 +224,6 @@ describe('全局设置的提交、丢弃和失败处理', () => {
       const reopened = (await open())[role]
       expect(reopened.queryByText('x-draft')).not.toBeInTheDocument()
       expect(reopened.getByText(baseHeader[role])).toBeInTheDocument()
-      expect(reopened.getByRole('checkbox')).not.toBeChecked()
       expect(reopened.getByRole('textbox')).toHaveValue('')
       expect(reopened.queryByRole('alert')).not.toBeInTheDocument()
       expect(mocks.write).not.toHaveBeenCalled()
@@ -275,7 +237,6 @@ describe('全局设置的提交、丢弃和失败处理', () => {
     const page = await open()
     fireEvent.change(page.request.getByRole('textbox'), { target: { value: 'X-Saved' } })
     fireEvent.click(page.request.getByRole('button', { name: 'add' }))
-    fireEvent.click(page.request.getByRole('checkbox'))
     expect(mocks.write).not.toHaveBeenCalled()
     await save()
     const writesAfterSave = mocks.write.mock.calls.length
@@ -283,11 +244,9 @@ describe('全局设置的提交、丢弃和失败处理', () => {
     fireEvent.click(page.request.getByRole('button', { name: 'clear' }))
     fireEvent.click(page.request.getByRole('button', { name: 'restoreDefaults' }))
     expect(page.request.queryByText('x-saved')).not.toBeInTheDocument()
-    expect(page.request.getByRole('checkbox')).not.toBeChecked()
     page.unmount()
     const reopened = (await open()).request
     expect(reopened.getByText('x-saved')).toBeInTheDocument()
-    expect(reopened.getByRole('checkbox')).toBeChecked()
     expect(mocks.write).toHaveBeenCalledTimes(writesAfterSave)
     expect(saved).toEqual(stored)
   })

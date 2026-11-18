@@ -27,18 +27,24 @@ const execute = (code: string, bindings: Record<string, unknown>) => {
 const request = 'GET / HTTP/1.1\r\nHost: example.test\r\nAccept: */*\r\n\r\n'
 const nodes = () =>
   [
-    ['single-hidden', '0', true],
-    ['single-visible', '0', false],
-    ['group-1', '0', false],
-    ['child-hidden', 'group-1', true],
-    ['child-visible', 'group-1', false],
-  ].map(([id, groupId, hidden], index) => ({
+    ['single-hidden', '0', true, false],
+    ['single-visible', '0', false, true],
+    ['group-1', '0', false, false],
+    ['child-hidden', 'group-1', true, true],
+    ['child-visible', 'group-1', false, false],
+  ].map(([id, groupId, requestHidden, responseHidden], index) => ({
     pageId: id,
     pageGroupId: groupId,
     pageName: id,
     sortFieId: index,
     pageParamsInfo: {
-      webFuzzerPageInfo: { request, hotPatchCode: 'patch', requestHeadersHidden: hidden, advancedConfigValue: {} },
+      webFuzzerPageInfo: {
+        request,
+        hotPatchCode: 'patch',
+        requestHeadersHidden: requestHidden,
+        responseHeadersHidden: responseHidden,
+        advancedConfigValue: {},
+      },
     },
   }))
 const serialize = (pageList: ReturnType<typeof nodes>) =>
@@ -98,6 +104,7 @@ describe('request header visibility cache roundtrip', () => {
         request,
         hotPatchCode: 'patch',
         requestHeadersHidden: node.pageParamsInfo.webFuzzerPageInfo.requestHeadersHidden,
+        responseHeadersHidden: node.pageParamsInfo.webFuzzerPageInfo.responseHeadersHidden,
       })
     }
   })
@@ -106,8 +113,15 @@ describe('request header visibility cache roundtrip', () => {
     const cache = serialize(nodes())
     cache.forEach((node) => {
       delete node.pageParams.requestHeadersHidden
+      delete node.pageParams.responseHeadersHidden
     })
     const after = await restore(safeParseFuzzerCache(JSON.stringify(cache)), add)
-    expect(after.every((node) => node.pageParamsInfo.webFuzzerPageInfo.requestHeadersHidden === false)).toBe(true)
+    expect(
+      after.every(
+        (node) =>
+          node.pageParamsInfo.webFuzzerPageInfo.requestHeadersHidden === false &&
+          node.pageParamsInfo.webFuzzerPageInfo.responseHeadersHidden === false,
+      ),
+    ).toBe(true)
   })
 })

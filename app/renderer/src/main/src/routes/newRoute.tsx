@@ -711,6 +711,7 @@ export const LogOutCloseRoutes: YakitRoute[] = [YakitRoute.Plugin_Audit, YakitRo
 
 export interface ComponentParams {
   requestHeadersHidden?: WebFuzzerPageInfoProps['requestHeadersHidden']
+  responseHeadersHidden?: WebFuzzerPageInfoProps['responseHeadersHidden']
   browserTransformSelection?: WebFuzzerPageInfoProps['browserTransformSelection']
   lastSelectedHistory?: WebFuzzerPageInfoProps['lastSelectedHistory']
   // 是否跳转到新开页面 默认跳转

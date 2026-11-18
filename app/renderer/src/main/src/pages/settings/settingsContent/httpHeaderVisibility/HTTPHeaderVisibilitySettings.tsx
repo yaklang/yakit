@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { TrashOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -29,6 +28,7 @@ export const HTTPHeaderVisibilitySettings = () => {
   const draft = draftOverride || (ready.request && ready.response ? savedSettings : undefined)
   const [input, setInput] = useState({ request: '', response: '' })
   const [errors, setErrors] = useState({ request: '', response: '' })
+  const dirty = !!draftOverride || !!input.request.trim() || !!input.response.trim()
   const [saving, setSaving] = useState(false)
   const [loadFailed, setLoadFailed] = useState(false)
   const [attempt, setAttempt] = useState(0)
@@ -127,15 +127,10 @@ export const HTTPHeaderVisibilitySettings = () => {
             <section key={role} className={styles.panel} aria-label={t(`HTTPHeaderVisibilitySettings.${role}`)}>
               <div className={styles.heading}>
                 <h3>{t(`HTTPHeaderVisibilitySettings.${role}`)}</h3>
-                <span>{t('HTTPHeaderVisibilitySettings.count', { count: draft[role].headers.length })}</span>
+                <span className={styles.count}>
+                  {t('HTTPHeaderVisibilitySettings.count', { count: draft[role].headers.length })}
+                </span>
               </div>
-              <YakitCheckbox
-                checked={draft[role].hidden}
-                disabled={saving}
-                onChange={(event) => update(role, { hidden: event.target.checked })}
-              >
-                {t('HTTPHeaderVisibilitySettings.hideByDefault')}
-              </YakitCheckbox>
               <div className={styles.list}>
                 {draft[role].headers.length ? (
                   draft[role].headers.map((header) => (
@@ -144,6 +139,7 @@ export const HTTPHeaderVisibilitySettings = () => {
                       <YakitButton
                         size="small"
                         type="text2"
+                        className={styles.remove}
                         disabled={saving}
                         icon={<TrashOutlined />}
                         aria-label={t('HTTPHeaderVisibilitySettings.remove', { header })}
@@ -157,6 +153,7 @@ export const HTTPHeaderVisibilitySettings = () => {
               </div>
               <div className={styles.add}>
                 <YakitInput
+                  size="middle"
                   value={input[role]}
                   disabled={saving}
                   placeholder={t('HTTPHeaderVisibilitySettings.placeholder')}
@@ -195,7 +192,7 @@ export const HTTPHeaderVisibilitySettings = () => {
                   type="text2"
                   disabled={saving}
                   onClick={() => {
-                    update(role, { hidden: false, headers: [...DEFAULT_HIDDEN_HTTP_HEADERS[role]] })
+                    update(role, { headers: [...DEFAULT_HIDDEN_HTTP_HEADERS[role]] })
                     setInput((current) => ({ ...current, [role]: '' }))
                     setErrors((current) => ({ ...current, [role]: '' }))
                   }}
@@ -208,6 +205,9 @@ export const HTTPHeaderVisibilitySettings = () => {
         </div>
       )}
       <div className={styles.footer}>
+        <YakitButton type="outline2" disabled={!draft || !dirty || saving} onClick={resetDraft}>
+          {t('HTTPHeaderVisibilitySettings.reset')}
+        </YakitButton>
         <YakitButton disabled={!draft} loading={saving} onClick={() => void save()}>
           {t('HTTPHeaderVisibilitySettings.save')}
         </YakitButton>

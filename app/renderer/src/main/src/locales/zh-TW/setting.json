@@ -104,11 +104,10 @@
     }
   },
   "HTTPHeaderVisibilitySettings": {
-    "description": "僅隱藏顯示，不修改原始封包或傳送內容。標頭名稱不區分大小寫。",
+    "description": "清單內的標頭會在 WebFuzzer、History、MITM 的編輯器中折疊顯示（需在編輯器內開啟標頭隱藏）。僅影響顯示，不修改原始封包或傳送內容；標頭名稱不區分大小寫。",
     "request": "請求標頭",
     "response": "回應標頭",
     "count": "{{count}} 項",
-    "hideByDefault": "預設隱藏以下標頭",
     "remove": "刪除 {{header}}",
     "empty": "清單為空，將顯示全部標頭",
     "placeholder": "輸入標頭名稱，例如 x-custom-header",
@@ -116,6 +115,7 @@
     "add": "新增",
     "clear": "清空清單",
     "restoreDefaults": "恢復預設值",
+    "reset": "重設",
     "save": "儲存",
     "invalidName": "請輸入有效的 HTTP 標頭名稱，不包含冒號、空格或標頭值",
     "duplicateName": "該標頭名稱已在清單中（不區分大小寫）",

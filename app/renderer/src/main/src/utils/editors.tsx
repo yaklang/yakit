@@ -554,9 +554,12 @@ export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
   noShowHex?: boolean
   /** 显示常见 HTTP 头的隐藏开关，仅改变编辑器视图 */
   showHeaderVisibilityToggle?: boolean
-  /** 当前请求的显示状态，与全局默认偏好分离。新建请求默认展开。 */
+  /** 当前请求的显示状态（WebFuzzer 按页签管理）。未传时与 History/MITM 共用全局状态。 */
   requestHeadersHidden?: boolean
   onRequestHeadersHiddenChange?: (hidden: boolean) => void
+  /** 当前响应的显示状态（WebFuzzer 按页签管理）。未传时与 History/MITM 共用全局状态。 */
+  responseHeadersHidden?: boolean
+  onResponseHeadersHiddenChange?: (hidden: boolean) => void
   // 外部单独控制渲染html是否显示，如果是采用内部type控制是否显示，此字段不需要传
   renderHtml?: React.ReactNode
   // 是否由外部接管children的渲染，如果是由外部接管children的渲染，则编辑器组件不再对children进行任何处理，完全由外部控制，适用于一些特殊场景，比如内嵌入一些特殊组件等
@@ -625,21 +628,34 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
   const [strValue, setStrValue] = useState(originValue)
   const [monacoEditor, setMonacoEditor] = useState<IMonacoEditor>()
   const headerRole = isResponse ? 'response' : 'request'
-  const [localRequestHeadersHidden, setLocalRequestHeadersHidden] = useState(false)
-  const requestHeadersHidden = props.requestHeadersHidden ?? localRequestHeadersHidden
-  const setRequestHeadersHidden = useMemoizedFn((hidden: boolean) => {
-    setLocalRequestHeadersHidden(hidden)
-    props.onRequestHeadersHiddenChange?.(hidden)
-  })
   const headerVisibility = useEditorHeaderVisibility((state) => state.hidden)
-  const responseHeadersHidden = headerVisibility.response
-  // Search only reveals this response. A new packet or an explicit preference change uses the saved default again.
-  const [revealedResponse, setRevealedResponse] = useState<{ packet: string; preferences: typeof headerVisibility }>()
-  const responseRevealed =
-    revealedResponse?.packet === originValue && revealedResponse?.preferences === headerVisibility
+  // 传入对应角色的 prop 时按页签独立管理；未传时与 History/MITM 共用全局状态。
+  const tabHeadersHidden = isResponse ? props.responseHeadersHidden : props.requestHeadersHidden
+  const tabHeaderMode = tabHeadersHidden !== undefined
+  const sharedHeadersHidden = headerVisibility[headerRole]
+  const setTabHeadersHidden = useMemoizedFn((hidden: boolean) => {
+    if (isResponse) props.onResponseHeadersHiddenChange?.(hidden)
+    else props.onRequestHeadersHiddenChange?.(hidden)
+  })
+  // 搜索或编辑只能临时展开当前编辑器；切换报文或全局偏好变化后重新应用保存的状态。
+  const [revealed, setRevealed] = useState<{
+    role: typeof headerRole
+    packet: string
+    preferences: typeof headerVisibility
+  }>()
+  const sharedRevealed =
+    revealed?.role === headerRole &&
+    revealed?.preferences === headerVisibility &&
+    (!props.readOnly || revealed.packet === originValue)
   const headersHidden =
-    !!props.showHeaderVisibilityToggle &&
-    (isResponse ? responseHeadersHidden && !responseRevealed : requestHeadersHidden)
+    !!props.showHeaderVisibilityToggle && (tabHeaderMode ? !!tabHeadersHidden : sharedHeadersHidden && !sharedRevealed)
+  const revealHeaders = useMemoizedFn(() => {
+    if (tabHeaderMode) {
+      setTabHeadersHidden(false)
+      return
+    }
+    setRevealed({ role: headerRole, packet: originValue, preferences: headerVisibility })
+  })
   const initializeHeaderVisibility = useEditorHeaderVisibility((state) => state.initialize)
   const toggleHeaderVisibility = useEditorHeaderVisibility((state) => state.toggle)
   const hiddenHeaderNames = useEditorHeaderVisibility((state) =>
@@ -795,7 +811,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
     if (props.readOnly) {
       return
     }
-    if (props.showHeaderVisibilityToggle && !isResponse) setRequestHeadersHidden(false)
+    if (props.showHeaderVisibilityToggle) revealHeaders()
     setStrValue(rawBytesToPacketText(hexDataRef.current))
   })
 
@@ -866,17 +882,14 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
 
   const empty = !!props.emptyOr && originValue.length == 0
   const showTextEditor = !showHexView && !empty && !renderHtml && !props.renderHtml && !props.children
-  const onRequestDocumentChange = useMemoizedFn(() => setRequestHeadersHidden(false))
-  const onSearchReveal = useMemoizedFn(() => {
-    if (isResponse) setRevealedResponse({ packet: originValue, preferences: headerVisibility })
-    else setRequestHeadersHidden(false)
-  })
+  const onDocumentChange = useMemoizedFn(() => revealHeaders())
+  const onSearchReveal = useMemoizedFn(() => revealHeaders())
   useHiddenHTTPHeaders(
     monacoEditor,
     !!props.showHeaderVisibilityToggle && headersHidden && showTextEditor,
     !!isResponse,
     hiddenHeaderNames,
-    !isResponse && !props.readOnly ? onRequestDocumentChange : undefined,
+    !props.readOnly ? onDocumentChange : undefined,
     onSearchReveal,
   )
   const headerVisibilityLabel = t(
@@ -887,6 +900,33 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
       : isResponse
         ? 'NewHTTPPacketEditor.hideResponseHeaders'
         : 'NewHTTPPacketEditor.hideRequestHeaders',
+  )
+  const headerVisibilityToggle = props.showHeaderVisibilityToggle && (
+    <Tooltip
+      title={
+        isResponse
+          ? t('NewHTTPPacketEditor.responseHeaderVisibilityScope', { action: headerVisibilityLabel })
+          : headerVisibilityLabel
+      }
+    >
+      <YakitButton
+        size="small"
+        type={headersHidden ? 'primary' : 'outline2'}
+        icon={headersHidden ? <EyeOffOutlined /> : <EyeOutlined />}
+        aria-label={headerVisibilityLabel}
+        aria-pressed={headersHidden}
+        disabled={!showTextEditor}
+        onClick={() => {
+          if (tabHeaderMode) {
+            setTabHeadersHidden(!tabHeadersHidden)
+            return
+          }
+          setRevealed(undefined)
+          // 临时展开后再次点击不会反转已有的全局默认值，只清除本次展开。
+          if (headersHidden || !sharedHeadersHidden) void toggleHeaderVisibility(headerRole)
+        }}
+      />
+    </Tooltip>
   )
 
   // 如果这个不为空的话，默认直接打开搜索功能
@@ -1137,34 +1177,12 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
           )
         }
         extra={
-          !props.noHeader && (
+          props.noHeader ? (
+            headerVisibilityToggle || undefined
+          ) : (
             <div style={{ display: 'flex', gap: 2, alignItems: 'center' }}>
               {props.extra}
-              {props.showHeaderVisibilityToggle && (
-                <Tooltip
-                  title={
-                    isResponse
-                      ? t('NewHTTPPacketEditor.responseHeaderVisibilityScope', { action: headerVisibilityLabel })
-                      : headerVisibilityLabel
-                  }
-                >
-                  <YakitButton
-                    size="small"
-                    type={headersHidden ? 'primary' : 'text2'}
-                    icon={headersHidden ? <EyeOffOutlined /> : <EyeOutlined />}
-                    aria-label={headerVisibilityLabel}
-                    aria-pressed={headersHidden}
-                    disabled={!showTextEditor}
-                    onClick={() => {
-                      if (isResponse) {
-                        setRevealedResponse(undefined)
-                        // After a local search reveal, enabling hiding need not invert an already-enabled default.
-                        if (headersHidden || !responseHeadersHidden) void toggleHeaderVisibility('response')
-                      } else setRequestHeadersHidden(!requestHeadersHidden)
-                    }}
-                  />
-                </Tooltip>
-              )}
+              {headerVisibilityToggle}
               {isShowBeautifyRender && renderTypeOptions()}
               {props.AfterBeautifyRenderBtn}
               {dataCompare && dataCompare.rightCode.length > 0 && (

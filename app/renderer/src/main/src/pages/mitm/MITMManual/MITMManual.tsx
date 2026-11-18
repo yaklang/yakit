@@ -1620,6 +1620,7 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
       onEditor={setPacketEditor}
       noMinimap={!isResponse}
       noHeader={false}
+      showHeaderVisibilityToggle
       noPacketModifier={true}
       readOnly={disabled}
       isResponse={isResponse}

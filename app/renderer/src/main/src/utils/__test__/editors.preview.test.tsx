@@ -324,16 +324,28 @@ describe('NewHTTPPacketEditor header visibility controls', () => {
       />
     )
   }
+  const ResponseEditor = ({
+    initialHidden = false,
+    ...rest
+  }: NewHTTPPacketEditorProp & { initialHidden?: boolean }) => {
+    const [hidden, setHidden] = useState(initialHidden)
+    return (
+      <NewHTTPPacketEditor
+        {...rest}
+        showHeaderVisibilityToggle
+        responseHeadersHidden={hidden}
+        onResponseHeadersHiddenChange={setHidden}
+      />
+    )
+  }
+  const response = 'HTTP/1.1 200 OK\nServer: example\nContent-Length: 0\n\nbody'
 
-  it('new request editors stay expanded even when the saved request default is enabled', () => {
+  it('new request tabs stay expanded even when the shared preference is enabled', () => {
     useEditorHeaderVisibility.setState({ hidden: { request: true, response: false } })
-    render(<NewHTTPPacketEditor originValue={request} showHeaderVisibilityToggle requestHeadersHidden={undefined} />)
-    const button = screen.getByRole('button', { name: 'NewHTTPPacketEditor.hideRequestHeaders' })
-    expect(button).toHaveAttribute('aria-pressed', 'false')
-    fireEvent.click(button)
-    expect(screen.getByRole('button', { name: 'NewHTTPPacketEditor.showRequestHeaders' })).toHaveAttribute(
+    render(<NewHTTPPacketEditor originValue={request} showHeaderVisibilityToggle requestHeadersHidden={false} />)
+    expect(screen.getByRole('button', { name: 'NewHTTPPacketEditor.hideRequestHeaders' })).toHaveAttribute(
       'aria-pressed',
-      'true',
+      'false',
     )
     expect(mocks.save).not.toHaveBeenCalled()
   })
@@ -528,9 +540,8 @@ describe('NewHTTPPacketEditor header visibility controls', () => {
     const onChange = vi.fn()
     render(
       <>
-        <NewHTTPPacketEditor
+        <RequestEditor
           originValue={request}
-          showHeaderVisibilityToggle
           isShowBeautifyRender={false}
           showDefaultExtra={false}
           onChange={onChange}
@@ -590,5 +601,84 @@ describe('NewHTTPPacketEditor header visibility controls', () => {
       'true',
     )
     expect(mocks.save).toHaveBeenCalledTimes(1)
+  })
+
+  it('manages response visibility per tab without touching the shared preference', () => {
+    useEditorHeaderVisibility.setState({ hidden: { request: false, response: false } })
+    render(<ResponseEditor {...props} originValue={response} />)
+    fireEvent.click(screen.getByRole('button', { name: 'NewHTTPPacketEditor.hideResponseHeaders' }))
+    expect(screen.getByRole('button', { name: 'NewHTTPPacketEditor.showResponseHeaders' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    expect(useEditorHeaderVisibility.getState().hidden.response).toBe(false)
+    expect(mocks.save).not.toHaveBeenCalled()
+  })
+
+  it('editing a response in a tab reveals its headers without writing the shared preference', () => {
+    useEditorHeaderVisibility.setState({ hidden: { request: false, response: true } })
+    render(<ResponseEditor {...props} readOnly={false} originValue={response} initialHidden />)
+    expect(screen.getByRole('button', { name: 'NewHTTPPacketEditor.showResponseHeaders' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    fireEvent.change(screen.getByRole('textbox', { name: 'packet input' }), {
+      target: { value: response + ' changed' },
+    })
+    expect(screen.getByRole('button', { name: 'NewHTTPPacketEditor.hideResponseHeaders' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    )
+    expect(useEditorHeaderVisibility.getState().hidden.response).toBe(true)
+    expect(mocks.save).not.toHaveBeenCalled()
+  })
+
+  it('shares request visibility between editors without a tab state', async () => {
+    useEditorHeaderVisibility.setState({ hidden: { request: false, response: false } })
+    render(
+      <>
+        <NewHTTPPacketEditor originValue={request} showHeaderVisibilityToggle />
+        <NewHTTPPacketEditor originValue={request} showHeaderVisibilityToggle />
+      </>,
+    )
+    fireEvent.click(screen.getAllByRole('button', { name: 'NewHTTPPacketEditor.hideRequestHeaders' })[0])
+    await advance(0)
+    expect(screen.getAllByRole('button', { name: 'NewHTTPPacketEditor.showRequestHeaders' })).toHaveLength(2)
+    expect(mocks.save).toHaveBeenCalledExactlyOnceWith(FuzzerRemoteGV.WebFuzzerHeaderVisibility, expect.any(String))
+    expect(JSON.parse(mocks.save.mock.calls[0][1]).request.hidden).toBe(true)
+  })
+
+  it('editing a shared request reveals headers locally without writing preferences', () => {
+    useEditorHeaderVisibility.setState({ hidden: { request: true, response: false } })
+    render(
+      <NewHTTPPacketEditor
+        originValue={request}
+        showHeaderVisibilityToggle
+        isShowBeautifyRender={false}
+        showDefaultExtra={false}
+      />,
+    )
+    expect(screen.getByRole('button', { name: 'NewHTTPPacketEditor.showRequestHeaders' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    fireEvent.change(screen.getByRole('textbox', { name: 'packet input' }), {
+      target: { value: request + ' changed' },
+    })
+    expect(screen.getByRole('button', { name: 'NewHTTPPacketEditor.hideRequestHeaders' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    )
+    expect(useEditorHeaderVisibility.getState().hidden.request).toBe(true)
+    expect(mocks.save).not.toHaveBeenCalled()
+  })
+
+  it('keeps the opt-in control visible when the editor header is suppressed', () => {
+    useEditorHeaderVisibility.setState({ hidden: { request: false, response: true } })
+    render(<NewHTTPPacketEditor {...props} noHeader showHeaderVisibilityToggle />)
+    expect(screen.getByRole('button', { name: 'NewHTTPPacketEditor.showResponseHeaders' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
   })
 })

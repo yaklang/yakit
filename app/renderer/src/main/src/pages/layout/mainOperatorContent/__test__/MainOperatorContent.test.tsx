@@ -1998,9 +1998,8 @@ describe('MainOperatorContent initial cache loading', () => {
   })
 })
 
-describe('WebFuzzer request header defaults at the shared send-to-tab entry', () => {
-  const setup = (hiddenByDefault: boolean) => {
-    const preferences = { hidden: { request: hiddenByDefault }, initialize: vi.fn(async () => {}) }
+describe('WebFuzzer new tabs always start with header hiding off', () => {
+  const setup = () => {
     const addPagesDataCache = vi.fn()
     const bindings = {
       YakitRoute,
@@ -2015,7 +2014,6 @@ describe('WebFuzzer request header defaults at the shared send-to-tab entry', ()
       JSONParseLog: JSON.parse,
       getHotPatchCodeInfo: vi.fn(async () => ({ hotPatchCode: '', hotPatchOpen: false })),
       systemRef: { current: 'test' },
-      useEditorHeaderVisibility: { getState: () => preferences },
       yakitNotify: vi.fn(),
       t: (key: string) => key,
       randomString: () => 'random',
@@ -2037,32 +2035,32 @@ describe('WebFuzzer request header defaults at the shared send-to-tab entry', ()
     )[0] as ts.CallExpression
     const receive = execute(`return ${registration.arguments[1].getText(source)}`, { YakitRoute, addFuzzer })
     const page = () => addPagesDataCache.mock.calls.at(-1)?.[1].pageParamsInfo.webFuzzerPageInfo
-    return { addFuzzer, receive, page, preferences, openMenuPage, notify: bindings.yakitNotify }
+    return { addFuzzer, receive, page, notify: bindings.yakitNotify }
   }
 
-  it.each([true, false])('all packet senders use the saved request default (%s)', async (hidden) => {
-    const context = setup(hidden)
+  it('expands request and response headers for tabs created from sent packets', async () => {
+    const context = setup()
     const packet = 'GET / HTTP/1.1\r\nAccept: */*\r\n\r\n'
     context.receive(undefined, { type: 'fuzzer', data: { request: packet, isHttps: true } })
     await vi.waitFor(() => expect(context.page()).toBeDefined())
-    expect(context.page()).toMatchObject({ request: packet, requestHeadersHidden: hidden })
-    expect(context.preferences.initialize).toHaveBeenCalledOnce()
+    expect(context.page()).toMatchObject({
+      request: packet,
+      requestHeadersHidden: false,
+      responseHeadersHidden: false,
+    })
     expect(context.notify).not.toHaveBeenCalled()
   })
 
-  it('new tabs never inherit the default, including send-to-tab without a packet', async () => {
-    const context = setup(true)
+  it('expands both sides for new tabs, including send-to-tab without a packet', async () => {
+    const context = setup()
     await context.addFuzzer({})
-    expect(context.page().requestHeadersHidden).toBe(false)
+    expect(context.page()).toMatchObject({ requestHeadersHidden: false, responseHeadersHidden: false })
     await context.addFuzzer({ request: 'GET /template HTTP/1.1' })
-    expect(context.page().requestHeadersHidden).toBe(false)
-    await context.addFuzzer({}, true)
-    expect(context.page().requestHeadersHidden).toBe(false)
-    expect(context.preferences.initialize).not.toHaveBeenCalled()
+    expect(context.page()).toMatchObject({ requestHeadersHidden: false, responseHeadersHidden: false })
   })
 
-  it('also applies the default to context menus forwarding request and configuration together', async () => {
-    const context = setup(true)
+  it('expands both sides for context menus forwarding request and configuration together', async () => {
+    const context = setup()
     const packet = 'POST /shared HTTP/1.1\r\nAccept: */*\r\n\r\nbody'
     context.receive(undefined, {
       type: 'fuzzer',
@@ -2071,24 +2069,10 @@ describe('WebFuzzer request header defaults at the shared send-to-tab entry', ()
     await vi.waitFor(() => expect(context.page()).toBeDefined())
     expect(context.page()).toMatchObject({
       request: packet,
-      requestHeadersHidden: true,
+      requestHeadersHidden: false,
+      responseHeadersHidden: false,
       advancedConfigValue: { isHttps: true },
     })
     expect(context.notify).not.toHaveBeenCalled()
-  })
-
-  it('waits for preferences before creating an imported tab and snapshots that value', async () => {
-    const context = setup(false)
-    const loading = deferred<void>()
-    context.preferences.initialize.mockImplementation(() => loading.promise)
-    const pending = context.addFuzzer({ request: 'GET /import HTTP/1.1' }, true)
-    await vi.waitFor(() => expect(context.preferences.initialize).toHaveBeenCalledOnce())
-    expect(context.openMenuPage).not.toHaveBeenCalled()
-    context.preferences.hidden.request = true
-    loading.resolve()
-    await pending
-    expect(context.page().requestHeadersHidden).toBe(true)
-    context.preferences.hidden.request = false
-    expect(context.page().requestHeadersHidden).toBe(true)
   })
 })
