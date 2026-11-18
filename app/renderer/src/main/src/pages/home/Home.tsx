@@ -70,8 +70,6 @@ import {
 } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitRoute } from '@/enums/yakitRoute'
 import emiter from '@/utils/eventBus/eventBus'
-import { AIAgentTabListEnum } from '../ai-agent/defaultConstant'
-import { openAIAgentTab } from '../ai-agent/aiAgentTabNavigation'
 import type { RouteToPageProps } from '../layout/publicMenu/PublicMenu'
 import { usePluginToId } from '@/store/publicMenu'
 import { ResidentPluginName } from '@/routes/newRoute'
@@ -110,7 +108,6 @@ import { useSoftMode, YakitModeEnum } from '@/store/softMode'
 import { getNotepadAdd, getNotepadManage } from '../layout/NotepadMenu/utils'
 import styles from './home.module.scss'
 import { SystemInfo } from '@/constants/hardware'
-import { useBrowserInstances } from '../ai-agent/browserInstances/browserInstanceStore'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -135,56 +132,6 @@ interface ToolInfo {
 }
 
 interface HomeProp {}
-
-const BrowserPairingNotify: React.FC = () => {
-  const { t } = useI18nNamespaces(['aiAgent'])
-  const { pending } = useBrowserInstances()
-  const seenPendingIdsRef = useRef(new Set<string>())
-  const openBrowserPairing = useMemoizedFn(() => {
-    openAIAgentTab(AIAgentTabListEnum.Browser)
-  })
-  useEffect(() => {
-    const onAutoApproved = (identity: string) => {
-      yakitNotify('success', {
-        message: (
-          <span>
-            {t('BrowserInstances.autoConnectedNotifyPrefix', { identity })} &nbsp;
-            <Tooltip title={t('BrowserInstances.pairingRequestNotifyTooltip')}>
-              <span style={{ color: 'var(--Colors-Use-Main-Primary)' }}>
-                {t('BrowserInstances.autoConnectedNotifyAction')}
-              </span>
-            </Tooltip>
-          </span>
-        ),
-        style: { cursor: 'pointer' },
-        onClick: openBrowserPairing,
-      })
-    }
-    emiter.on('onBrowserExtensionAutoApproved', onAutoApproved)
-    return () => emiter.off('onBrowserExtensionAutoApproved', onAutoApproved)
-  }, [t, openBrowserPairing])
-  useEffect(() => {
-    const nextIds = pending.map((item) => item.id)
-    const hasNew = nextIds.some((id) => !seenPendingIdsRef.current.has(id))
-    seenPendingIdsRef.current = new Set(nextIds)
-    if (!hasNew) return
-    yakitNotify('info', {
-      message: (
-        <span>
-          {t('BrowserInstances.pairingRequestNotifyPrefix')} &nbsp;
-          <Tooltip title={t('BrowserInstances.pairingRequestNotifyTooltip')}>
-            <span style={{ color: 'var(--Colors-Use-Main-Primary)' }}>
-              {t('BrowserInstances.pairingRequestNotifyAction')}
-            </span>
-          </Tooltip>
-        </span>
-      ),
-      style: { cursor: 'pointer' },
-      onClick: openBrowserPairing,
-    })
-  }, [pending, t, openBrowserPairing])
-  return null
-}
 
 const Home: React.FC<HomeProp> = (props) => {
   const { t, i18nRefresh } = useI18nNamespaces(['yakitUi', 'yakitRoute', 'home'])
@@ -990,7 +937,6 @@ const Home: React.FC<HomeProp> = (props) => {
 
   return (
     <div className={styles['home-page-wrapper']} ref={homeRef}>
-      <BrowserPairingNotify />
       <YakitResizeBox
         isVer={false}
         lineDirection="left"

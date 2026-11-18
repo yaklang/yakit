@@ -45,6 +45,17 @@ vi.mock('../grpc', () => ({ grpcQueryAISession: vi.fn() }))
 
 vi.mock('@/utils/notification', () => ({
   failed: vi.fn(),
+  yakitNotify: vi.fn(),
+}))
+
+vi.mock('../browserInstances/browserInstanceStore', () => ({
+  useBrowserInstances: () => ({
+    instances: [],
+    pending: [],
+    selectedId: '',
+    loading: false,
+    error: '',
+  }),
 }))
 
 vi.mock('../AIAgentSideList', async () => {
