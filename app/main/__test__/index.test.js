@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
 import vm from 'node:vm'
+import { filePathFromAtomUrl } from '../atomFileUrl'
 
 const loadIndex = (platform, opts = {}) => {
   const timers = []
@@ -56,7 +57,7 @@ const loadIndex = (platform, opts = {}) => {
     if (id === 'electron-is-dev') return false
     if (id === 'path') return path
     if (id === 'process') return fakeProcess
-    if (id === './atomFileUrl') return { filePathFromAtomUrl: (value) => value }
+    if (id === './atomFileUrl') return { filePathFromAtomUrl }
     if (id === './e2eEnvironment') return { configureE2EEnvironment: vi.fn(() => ({ enabled: false })) }
     if (id === './runtimePaths')
       return {
@@ -117,6 +118,7 @@ const loadIndex = (platform, opts = {}) => {
   sandbox.registerGlobalIPC()
   return {
     appExitHandler: ipcHandlers.get('app-exit'),
+    handleAtomProtocolRequest: sandbox.handleAtomProtocolRequest,
     timers,
     calls,
     dialog: electron.dialog,
@@ -248,5 +250,23 @@ describe('app-exit scheduling', () => {
     await timers[0].fn()
     expect(calls.appExit).toHaveBeenCalledTimes(1)
     expect(calls.recoveryStop).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('atom protocol handler', () => {
+  it('resolves valid atom URLs and returns error -2 for malformed URLs', () => {
+    const { handleAtomProtocolRequest } = loadIndex('win32')
+    const validCallback = vi.fn()
+    handleAtomProtocolRequest({ url: 'atom:///C%3A/Users/foo/my%20file.png' }, validCallback)
+    expect(validCallback).toHaveBeenCalledWith('C:/Users/foo/my file.png')
+
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+    try {
+      const invalidCallback = vi.fn()
+      handleAtomProtocolRequest({ url: 'atom:///C%3A/%E0%A4%A' }, invalidCallback)
+      expect(invalidCallback).toHaveBeenCalledWith({ error: -2 })
+    } finally {
+      consoleError.mockRestore()
+    }
   })
 })

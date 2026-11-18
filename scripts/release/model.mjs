@@ -1,13 +1,16 @@
 import { createHash } from 'node:crypto'
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { readFile, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-const rootPackage = JSON.parse(
-  readFileSync(join(dirname(fileURLToPath(import.meta.url)), '../../package.json'), 'utf8'),
-)
-export const currentElectronVersion = rootPackage.devDependencies.electron
+const manifestPath = [
+  join(dirname(fileURLToPath(import.meta.url)), '../../package.json'),
+  join(process.cwd(), 'package.json'),
+].find((file) => existsSync(file))
+export const currentElectronVersion = manifestPath
+  ? JSON.parse(readFileSync(manifestPath, 'utf8')).devDependencies?.electron
+  : undefined
 export const legacyElectronVersion = '22.3.27'
 
 export const products = {
@@ -54,6 +57,7 @@ export function assertReleaseIdentity(tag, editions, version) {
 }
 
 export function createPlan({ editions, version, sha, runId, repository, ref, refType }) {
+  if (!currentElectronVersion) throw new Error('Missing package.json devDependencies.electron')
   assertVersion(version)
   if (!/^[a-f0-9]{40}$/.test(sha || '')) throw new Error('Invalid source commit')
   if (!/^\d+$/.test(String(runId))) throw new Error('Invalid prepare run ID')

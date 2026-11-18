@@ -6,7 +6,7 @@
   "scripts": {
     "cli": "node ./cli/cli.mjs",
     "check-deps": "node scripts/check-deps.js",
-    "postinstall": "electron-builder install-app-deps",
+    "postinstall": "node node_modules/electron/install.js && electron-builder install-app-deps",
     "release-render": "cd app/renderer/src/main && yarn release-render",
     "release-link-render": "cd app/renderer/engine-link-startup && yarn release-render",
     "release-irify": "node scripts/release-irify.js",

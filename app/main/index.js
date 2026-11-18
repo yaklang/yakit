@@ -713,6 +713,15 @@ if (rendererRecovery) {
 const menu = Menu.buildFromTemplate(MenuTemplate)
 Menu.setApplicationMenu(menu)
 
+function handleAtomProtocolRequest(request, callback) {
+  try {
+    callback(filePathFromAtomUrl(request.url))
+  } catch (error) {
+    console.error('Failed to resolve atom URL:', request.url, error)
+    callback({ error: -2 })
+  }
+}
+
 /**
  * ---------------- App Ready ----------------
  */
@@ -754,14 +763,7 @@ if (!shouldAbortStartupForDebugFlags) {
       })
     }
 
-    protocol.registerFileProtocol('atom', (request, callback) => {
-      try {
-        callback(filePathFromAtomUrl(request.url))
-      } catch (error) {
-        console.error('Failed to resolve atom URL:', request.url, error)
-        callback({ error: -2 })
-      }
-    })
+    protocol.registerFileProtocol('atom', handleAtomProtocolRequest)
 
     void rendererDiagnostics.start().catch((error) => {
       printLogOutputFile(`[renderer-diagnostics] startup failed: ${error?.message || error}`)

@@ -1,10 +1,11 @@
 // @vitest-environment node
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { readFileSync } from 'node:fs'
-import { mkdtemp, mkdir, readFile, readlink, rm, stat, symlink, writeFile } from 'node:fs/promises'
+import { cp, mkdtemp, mkdir, readFile, readlink, rm, stat, symlink, writeFile } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import { createRequire } from 'node:module'
+import { pathToFileURL } from 'node:url'
 import {
   artifactName,
   assertPlan,
@@ -87,6 +88,26 @@ describe('release identity and native matrix', () => {
       expect(readAt).toBeGreaterThan(-1)
       expect(source.indexOf('electron@22.3.27')).toBeGreaterThan(readAt)
       expect(source).not.toContain(`electron@${packageVersion}`)
+      expect(source).not.toContain('yarn remove electron')
+      expect(source).toContain('!= "undefined"')
+      expect(source).toContain('node node_modules/electron/install.js')
+    }
+  })
+  it('loads release model without ../../package.json in sparse checkouts', async () => {
+    const sparse = await directory()
+    await mkdir(path.join(sparse, 'scripts/release'), { recursive: true })
+    await cp(
+      new URL('../../../scripts/release/model.mjs', import.meta.url),
+      path.join(sparse, 'scripts/release/model.mjs'),
+    )
+    const originalCwd = process.cwd()
+    process.chdir(sparse)
+    try {
+      const mod = await import(`${pathToFileURL(path.join(sparse, 'scripts/release/model.mjs')).href}?t=${Date.now()}`)
+      expect(mod.currentElectronVersion).toBeUndefined()
+      expect(mod.assertVersion('1.4.9-beta5')).toBe('1.4.9-beta5')
+    } finally {
+      process.chdir(originalCwd)
     }
   })
   it.each(['latest', '', '1.4', 'dev/1.4.9', '1.4.9/../../latest', '1.4.9;echo x', 'https://host/engine'])(
