@@ -171,6 +171,20 @@ describe('useAIRunMode', () => {
     )
   })
 
+  it('立即提交内联验收条件的最后一次修改，关闭菜单后仍保留', () => {
+    const { result, unmount } = renderHook(() => useAIRunMode())
+
+    act(() => {
+      result.current.onSetStrategy({ GoalAcceptanceCriteria: '验收' }, true)
+      result.current.onSetStrategy({ GoalAcceptanceCriteria: '验收通过' }, true)
+    })
+    unmount()
+
+    expect(setSetting).toHaveBeenCalledTimes(2)
+    const updated = setSetting.mock.lastCall?.[0](settingRef.value)
+    expect(updated.Strategy.GoalAcceptanceCriteria).toBe('验收通过')
+  })
+
   it('pending 完成绑定后，再次切换模式会使用正式 SessionID', () => {
     executeRef.value = true
     sessionIdRef.value = ''

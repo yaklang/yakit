@@ -14,7 +14,6 @@ import type { MaterialCategory, MaterialOption } from '../type'
 export const ALL_KNOWLEDGE_BASES = '@所有知识库'
 
 const EMPTY_CATALOG: MaterialOption[] = []
-type CatalogCategory = Exclude<MaterialCategory, 'focusMode'>
 
 const toKnowledgeOption = (item: KnowledgeBaseItem, knowledgeIndex: number): MaterialOption => ({
   id: String(item.ID),
@@ -31,7 +30,7 @@ interface MaterialPage {
 }
 
 const loadMaterialCatalogPage = async (
-  category: Exclude<CatalogCategory, 'knowledgeBase'>,
+  category: Exclude<MaterialCategory, 'knowledgeBase'>,
   keyword: string,
   page: number,
 ): Promise<MaterialPage> => {
@@ -73,7 +72,7 @@ const loadMaterialCatalogPage = async (
   }
 }
 
-export const useMaterialCatalog = (category: CatalogCategory, search: string, filterValue: ResourceFilterValue) => {
+export const useMaterialCatalog = (category: MaterialCategory, search: string, filterValue: ResourceFilterValue) => {
   const { t, i18n } = useI18nNamespaces(['aiAgent'])
   const keyword = useDebounce(search.trim(), { wait: 200 })
   const isKnowledgeBase = category === 'knowledgeBase'

@@ -233,24 +233,37 @@
     "basicCheck": "工具基础检测"
   },
   "AIChatTextarea": {
+    "otherMaterials": "其他资料",
     "dropToAddToChat": "松开以添加到对话",
     "addMaterials": "添加资料",
-    "otherMaterials": "其他资料"
+    "queueSend": "排队发送"
+  },
+  "AIContextUsage": {
+    "label": "上下文 {{percent}}%"
+  },
+  "AIRunningStatus": {
+    "label": "运行中 第 {{round}} 轮 · {{elapsed}} / {{duration}}",
+    "state": "运行中",
+    "round": "第 {{round}} 轮"
   },
   "AIAddMaterialsPopover": {
     "scenarioCapabilities": "能力",
-    "currentScenario": "当前选择",
     "addedSkills": "已添加技能",
     "addedKnowledgeBases": "已添加知识库",
     "addedOtherMaterials": "其他已添加资料",
     "goToAdd": "去添加",
+    "continueAdding": "继续添加",
+    "attachments": "附件",
+    "addedAttachments": "我添加的附件",
+    "addedBrowsers": "已添加的浏览器",
+    "shortcuts": "快捷键",
+    "mentionShortcut": "使用 @ 添加上下文",
+    "modeShortcut": "使用 / 选择执行模式",
+    "currentScenario": "当前选择",
     "searchMaterials": "请输入关键字搜索",
     "contextHint": "添加的资料会作为当前会话的上下文优先使用",
     "attachment": "添加文件",
     "addFolder": "添加文件夹",
-    "continueAdding": "继续添加",
-    "attachments": "附件",
-    "addedAttachments": "我添加的附件",
     "attachmentHint": "从本地上传，单次最多 {{max}} 个",
     "attachmentLimitExceeded": "已选择 {{count}} 个附件，单次最多添加 {{max}} 个",
     "attachmentFailed": "打开文件选择器失败：{{error}}",
@@ -262,10 +275,10 @@
     "knowledgeHint": "引用知识库内容",
     "toolHint": "AI 会优先调用已添加的工具来完成任务",
     "fileSystemHint": "从文件系统添加，浏览并搜索你的文件",
-    "browserHint": "在 AI 中操作浏览器",
-    "addedBrowsers": "已添加的浏览器",
-    "sceneHint": "使用场景框架限定 AI 的思考范围",
-    "current": "当前:"
+    "browserHint": "在 AI 中操作浏览器"
+  },
+  "AIFocusMode": {
+    "focusModeTooltip": "使用场景框架限定 AI 的思考范围"
   },
   "AIToolDecision": {
     "decision": "决策"
@@ -571,9 +584,9 @@
   "AIReviewRuleOptions": {
     "manualLabel": "人工",
     "manualDesc": "所有审阅都由用户自己操作",
-    "yoloLabel": "托管 YOLO",
+    "yoloLabel": "YOLO",
     "yoloDesc": "所有审阅默认执行，不进行询问",
-    "aiLabel": "协同 AI",
+    "aiLabel": "协同",
     "aiDesc": "由AI判断审阅风险，低风险默认执行，高风险由用户操作"
   },
   "AIModelPolicyOptions": {
@@ -941,8 +954,7 @@
     "switchToSource": "切换源码模式"
   },
   "AIMilkdownInput": {
-    "placeholderPrompt": "向我提问",
-    "placeholderHint": "使用技能、工具、文件和知识库...",
+    "placeholder": "向我提问 @ 使用技能、工具、文件和知识库， / 选择模式",
     "selectedHttpFlowSummary": "勾选了 {{count}} 条流量",
     "selectedRiskSummary": "勾选了 {{count}} 条漏洞风险",
     "imagesNotSaved": "图片尚未保存完成，请稍后重试；若保存失败，请移除失败图片后重新上传"
@@ -958,7 +970,7 @@
     "minIterationsPrefix": "最小迭代次数: {{value}}",
     "acceptanceOption": "验收条件（文本描述）",
     "acceptance": "验收条件",
-    "acceptancePlaceholder": "请描述一下验收条件...",
+    "acceptancePlaceholder": "请描述一下你的验收条件...",
     "acceptancePrefix": "验收条件: {{value}}",
     "durationOption": "持续时间（设置“继续深入”时间来增加轮次）",
     "duration": "持续时间",
@@ -971,14 +983,22 @@
     "setSubAgentCount": "设置子 Agent 数量"
   },
   "AIRunModeSelect": {
+    "executionMode": "执行模式",
+    "modeCount": "{{count}}种模式",
+    "modeCountShort": "{{count}}种",
+    "iterationCount": "{{count}}次",
     "mode": "模式",
     "multiMode": "多模式",
     "configuration": "执行模式配置",
     "configurationTip": "按任务需要组合使用 Plan、Multi-Agent 和 Goal 模式",
     "planTip": "允许 AI 制定计划并按计划执行",
     "multiAgentTip": "优先使用 SubAgent 派发完成任务",
-    "goalHint": "请选择一种目标模式并设定参数",
-    "switchGoalModeContent": "切换后，当前选中项的值将恢复为默认值，是否继续？",
+    "stopCondition": "停止条件",
+    "customDuration": "自定义",
+    "durationHours": "小时",
+    "durationMinutes": "分钟",
+    "hourUnit": "时",
+    "minuteUnit": "分",
     "durationHint": "设置“继续深入”时间来增加轮次",
     "editAcceptance": "编辑验收条件",
     "noAcceptance": "暂无"

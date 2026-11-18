@@ -116,6 +116,7 @@ import { OutlinePayloadIcon } from '@yakit-libs/yakit-ui-icons/oldicon/OutlinePa
 import emiter from '@/utils/eventBus/eventBus'
 import { createMcpWebFuzzerExecutionSlot } from './mcpWebFuzzerExecutionSlot'
 import { HistoryAIReActChatProvider, useHistoryAIReActChat } from '@/components/historyAIReActChat'
+import { AIInputInnerFeatureEnum, getFooterLeftTypesWithItem } from '@/pages/ai-agent/template/type'
 import {
   applyHttpFuzzRequestChangeToWebFuzzerPage,
   registerWebFuzzerPageApplyRequestFromCard,
@@ -3452,6 +3453,10 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                     fuzzerAiSlot={renderHistoryAIReActChat({
                       externalParameters: {
                         isOpen: false,
+                        footerLeftTypes: getFooterLeftTypesWithItem({
+                          type: AIInputInnerFeatureEnum.AIFocusMode,
+                          props: { value: focusModeLoop, disabled: true },
+                        }),
                         rightIcon: {
                           history: true,
                           dataDetails: { type: 'text2' },

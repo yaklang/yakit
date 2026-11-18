@@ -29,7 +29,7 @@ const optionIcons = { forge: PuzzleOutlined, tool: Wrench1Outlined, knowledgeBas
 
 interface MaterialCategoryPickerProps extends MaterialPanelHeader {
   /** 当前列表的资料类型，支持技能、工具和知识库。 */
-  category: Exclude<MaterialCategory, 'focusMode'>
+  category: MaterialCategory
   mentions: AIMentionCommandParams[]
   /** 按「资料类型:ID」保存的描述，目录数据没有描述时用于回填。 */
   descriptions: Record<string, string>

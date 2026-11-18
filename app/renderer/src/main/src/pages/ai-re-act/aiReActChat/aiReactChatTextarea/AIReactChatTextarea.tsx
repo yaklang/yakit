@@ -3,21 +3,14 @@ import React, { forwardRef } from 'react'
 import type { AIReactChatTextareaProps } from './type'
 import { AIChatTextarea } from '@/pages/ai-agent/template/template'
 import styles from '../AIReActChat.module.scss'
-import { RoundedStopButton } from '../AIReActComponent'
 import omit from 'lodash/omit'
-import { useStore } from 'zustand'
-import { useCurrentStore } from '../../hooks/useCurrentDataBySession'
 import useGetChatDataStoreKey from '../../hooks/useGetChatDataStoreKey'
-import { AITaskStatus } from '../../hooks/grpcApi'
 
 export const AIReactChatTextarea: React.FC<AIReactChatTextareaProps> = React.memo(
   forwardRef((props, ref) => {
-    const { handleSubmit, externalParameters, handleStopCasualTask } = props
+    const { handleSubmit, externalParameters } = props
 
     const { pendingChat } = useAIAgentStore()
-    const store = useCurrentStore()
-    const cancelChatLoading = useStore(store, (state) => state.cancelChatLoading)
-    const casualLoading = useStore(store, (state) => state.currentChatStatus.status === AITaskStatus.inProgress)
 
     const chatDataStoreKey = useGetChatDataStoreKey()
     return (
@@ -26,17 +19,6 @@ export const AIReactChatTextarea: React.FC<AIReactChatTextareaProps> = React.mem
         milkdownClassName={styles['milkdown-input']}
         loading={pendingChat?.status === 'connecting'}
         onSubmit={handleSubmit}
-        inputFooterRight={
-          casualLoading && (
-            <div className={styles['extra-footer-right']}>
-              <RoundedStopButton
-                loading={cancelChatLoading}
-                onClick={handleStopCasualTask}
-                style={{ width: 24, height: 24 }}
-              />
-            </div>
-          )
-        }
         chatDataStoreKey={chatDataStoreKey}
         {...omit(externalParameters, 'rightIcon')}
       />

@@ -37,7 +37,7 @@ export interface AIRightPanelProps {
 }
 
 /** AIReActChat 列表与输入框内容轨道的最大宽度（px） */
-export const AI_RIGHT_PANEL_INPUT_MAX_WIDTH = 784
+export const AI_RIGHT_PANEL_INPUT_MAX_WIDTH = 864
 
 /** 正常态面板槽位：301px 面板 + 12px 右侧留白 + 12px 内容间距 */
 export const AI_RIGHT_PANEL_NORMAL_SLOT_WIDTH = 325

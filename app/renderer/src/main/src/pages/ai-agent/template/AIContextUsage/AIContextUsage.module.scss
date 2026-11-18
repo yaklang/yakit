@@ -1,0 +1,20 @@
+.badge {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 4px;
+  height: 24px;
+  box-sizing: border-box;
+  padding: 0 3px;
+  border: 1px solid var(--Colors-Use-Neutral-Border);
+  border-radius: 9999px;
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  font-size: 12px;
+  line-height: 16px;
+  white-space: nowrap;
+}
+
+.label {
+  display: var(--ai-footer-context-label-display, inline);
+  margin-inline-end: 3px;
+}

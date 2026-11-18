@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { AIModelSelect } from '../AIModelSelect'
+import { EnterpriseAIModelSelect } from '../enterpriseAIModelSelect/EnterpriseAIModelSelect'
 import type { AIGlobalConfig, AIModelConfig } from '../../utils'
 import { defaultAIGlobalConfig } from '../../../defaultConstant'
 import { useAIGlobalConfigStore } from '@/store/aiGlobalConfig'
@@ -163,6 +164,21 @@ const expectModelRequest = (Type: string) =>
   })
 
 describe('AIModelSelect', () => {
+  it.each([
+    ['社区版', AIModelSelect],
+    ['企业版', EnterpriseAIModelSelect],
+  ] as const)('%s 会话模式只展示模型图标，仍可打开模型列表', async (_edition, ModelSelect) => {
+    config.IntelligentModels[0] = createModel('configured-a', 'aibalance')
+    useAIGlobalConfigStore.getState().setAIGlobalConfig(config)
+    render(<ModelSelect iconOnly />)
+
+    const selected = await screen.findByTestId('selected-model')
+    expect(selected.textContent).toBe('')
+    expect(within(selected).getByTitle('configured-a').querySelector('svg')).toBeInTheDocument()
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: '打开选择' })))
+    expect(screen.getByRole('region', { name: '模型列表' })).toBeVisible()
+  })
+
   it.each([
     [undefined, 'effortDefault'],
     ['off', 'effortOff'],

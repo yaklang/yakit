@@ -1,4 +1,6 @@
 div.model-select-popup:global(.ant-select-dropdown) {
+  // 模型下拉定位到视口，避免弹层改变页面的滚动范围。
+  position: fixed;
   border-radius: 12px;
 }
 

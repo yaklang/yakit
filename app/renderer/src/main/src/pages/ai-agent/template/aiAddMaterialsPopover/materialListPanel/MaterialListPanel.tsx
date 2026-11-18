@@ -45,7 +45,6 @@ const MaterialListPanel: FC<MaterialListPanelProps> = ({
         <div
           className={classNames(styles.search, {
             [styles['filter-search']]: filter,
-            [styles['scenario-search']]: variant === 'scenario',
             [styles['attachment-search']]: isAttachmentPanel,
           })}
         >

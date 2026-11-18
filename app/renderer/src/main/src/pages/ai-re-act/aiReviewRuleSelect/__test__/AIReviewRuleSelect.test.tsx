@@ -1,4 +1,3 @@
-import type { PropsWithChildren } from 'react'
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import AIReviewRuleSelect from '../AIReviewRuleSelect'
@@ -36,20 +35,39 @@ vi.mock('zustand', () => ({
   useStore: (_store: unknown, selector: (state: { execute: boolean }) => unknown) =>
     selector({ execute: mocks.execute }),
 }))
-vi.mock('@/i18n/useI18nNamespaces', () => ({ useI18nNamespaces: () => ({ t: (key: string) => key }) }))
+vi.mock('@/i18n/useI18nNamespaces', async () => {
+  const { default: zh } = await import('@/locales/zh/aiAgent.json')
+  return {
+    useI18nNamespaces: () => ({
+      t: (key: string) => (key === 'AIChatSetting.riskThreshold' ? zh.AIChatSetting.riskThreshold : key),
+    }),
+  }
+})
 vi.mock('@/pages/ai-agent/defaultConstant', async () => {
-  const { createElement } = await import('react')
+  const { default: zh } = await import('@/locales/zh/aiAgent.json')
   return {
     AIAgentSettingDefault: { ReviewPolicy: 'ai', AIReviewRiskControlScore: 0.5 },
     AIReviewRuleOptions: [
       { value: 'manual', label: '人工', describe: '人工审核操作' },
-      { value: 'yolo', label: '托管 YOLO', describe: '自动执行操作' },
-      { value: 'ai', label: '协同 AI', describe: 'AI 协同审核' },
+      { value: 'yolo', label: zh.AIReviewRuleOptions.yoloLabel, describe: '自动执行操作' },
+      { value: 'ai', label: zh.AIReviewRuleOptions.aiLabel, describe: 'AI 协同审核' },
     ],
     AIReviewRuleIconMap: {
-      manual: { icon: createElement('svg', { 'data-testid': 'dropdown-manual-icon' }) },
-      yolo: { icon: createElement('svg', { 'data-testid': 'dropdown-yolo-icon' }) },
-      ai: { icon: createElement('svg', { 'data-testid': 'dropdown-ai-icon' }) },
+      manual: {
+        get icon() {
+          return <svg data-testid="dropdown-manual-icon" />
+        },
+      },
+      yolo: {
+        get icon() {
+          return <svg data-testid="dropdown-yolo-icon" />
+        },
+      },
+      ai: {
+        get icon() {
+          return <svg data-testid="dropdown-ai-icon" />
+        },
+      },
     },
   }
 })
@@ -57,25 +75,18 @@ vi.mock('@/components/yakitUI/YakitSelect/YakitSelect', async () => {
   const { Select } = await import('antd')
   return { YakitSelect: Select }
 })
-vi.mock('@/components/yakitUI/YakitPopover/YakitPopover', () => ({
-  YakitPopover: ({ children }: PropsWithChildren) => children,
-}))
-vi.mock('@/components/yakitUI/YakitButton/YakitButton', async () => {
-  const { createElement } = await import('react')
-  return { YakitButton: () => createElement('button', { 'aria-label': '风险阈值' }) }
-})
-
 beforeEach(() => {
   vi.clearAllMocks()
   mocks.setting.ReviewPolicy = 'ai'
+  mocks.setting.AIReviewRiskControlScore = 0.5
   mocks.execute = false
 })
 afterEach(cleanup)
 
 describe('AIReviewRuleSelect selected display', () => {
   it.each([
-    ['ai', '协同 AI'],
-    ['yolo', '托管 YOLO'],
+    ['ai', '协同'],
+    ['yolo', 'YOLO'],
     ['manual', '人工'],
   ] as const)('shows the %s policy without a dropdown arrow or icon background', (policy, label) => {
     mocks.setting.ReviewPolicy = policy
@@ -92,10 +103,9 @@ describe('AIReviewRuleSelect selected display', () => {
     if (policy === 'ai') {
       expect(selected.firstElementChild).toHaveClass(styles['select-option-ai'])
       expect(icon.querySelectorAll('linearGradient')).toHaveLength(3)
-      expect(screen.getByRole('button', { name: '风险阈值' })).toBeInTheDocument()
-    } else {
-      expect(screen.queryByRole('button', { name: '风险阈值' })).toBeNull()
     }
+    expect(screen.queryByRole('button', { name: '风险阈值' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('slider')).not.toBeInTheDocument()
     if (policy === 'yolo') expect(selected.firstElementChild).toHaveClass(styles['select-option-yolo'])
     if (policy === 'manual') expect(icon.querySelector('path')?.getAttribute('d')).toMatch(/^M7 11\.5V14/)
   })
@@ -116,7 +126,7 @@ describe('AIReviewRuleSelect selected display', () => {
     expect(within(dropdown).getByText('自动执行操作')).toBeInTheDocument()
     expect(within(dropdown).getByText('AI 协同审核')).toBeInTheDocument()
 
-    fireEvent.click(within(dropdown).getByText('托管 YOLO'))
+    fireEvent.click(within(dropdown).getByText('YOLO'))
     expect(screen.getByRole('combobox')).toHaveAttribute('aria-expanded', 'false')
     expect(mocks.setSetting).toHaveBeenCalledOnce()
     expect(mocks.setSetting.mock.calls[0][0](mocks.setting)).toEqual({ ...mocks.setting, ReviewPolicy: 'yolo' })
@@ -134,10 +144,10 @@ describe('AIReviewRuleSelect selected display', () => {
     fireEvent.click(container.querySelector(`.${styles['ai-chat-select-wrapper']}`)!)
     const dropdown = document.querySelector(`.${styles['drop-select-wrapper']}`) as HTMLElement
 
-    fireEvent.click(within(dropdown).getByText('协同 AI'))
+    fireEvent.click(within(dropdown).getByText('协同'))
 
     expect(screen.getByRole('combobox')).toHaveAttribute('aria-expanded', 'false')
-    expect(mocks.setSetting.mock.calls[0][0](mocks.setting).ReviewPolicy).toBe('ai')
+    expect(mocks.setSetting).not.toHaveBeenCalled()
     expect(mocks.onSend).not.toHaveBeenCalled()
   })
 
@@ -147,6 +157,48 @@ describe('AIReviewRuleSelect selected display', () => {
     fireEvent.mouseDown(document.body)
 
     expect(screen.getByRole('combobox')).toHaveAttribute('aria-expanded', 'false')
-    expect(mocks.setSetting.mock.calls[0][0](mocks.setting).ReviewPolicy).toBe('ai')
+    expect(mocks.setSetting).not.toHaveBeenCalled()
+  })
+
+  it('keeps the dropdown open and reveals the inline threshold when switching to AI collaboration', () => {
+    mocks.setting.ReviewPolicy = 'manual'
+    const { container } = render(<AIReviewRuleSelect />)
+    fireEvent.click(container.querySelector(`.${styles['ai-chat-select-wrapper']}`)!)
+    expect(screen.queryByRole('slider')).not.toBeInTheDocument()
+
+    const dropdown = document.querySelector(`.${styles['drop-select-wrapper']}`) as HTMLElement
+    fireEvent.click(within(dropdown).getByText('协同'))
+
+    expect(screen.getByRole('combobox')).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.getByRole('slider', { name: '风险阈值' })).toHaveAttribute('aria-valuenow', '0.5')
+    expect(mocks.setSetting.mock.calls[0][0](mocks.setting)).toEqual({ ...mocks.setting, ReviewPolicy: 'ai' })
+  })
+
+  it('saves the edited threshold and hot-updates a running session when the dropdown closes', () => {
+    mocks.execute = true
+    const { container, rerender } = render(<AIReviewRuleSelect />)
+    const trigger = container.querySelector(`.${styles['ai-chat-select-wrapper']}`)!
+    fireEvent.click(trigger)
+    const slider = screen.getByRole('slider', { name: '风险阈值' })
+    fireEvent.keyDown(slider, { key: 'Home', keyCode: 36, which: 36 })
+
+    expect(slider).toHaveAttribute('aria-valuenow', '0')
+    expect(mocks.setSetting).not.toHaveBeenCalled()
+    expect(mocks.onSend).not.toHaveBeenCalled()
+
+    fireEvent.mouseDown(document.body)
+
+    expect(mocks.setSetting.mock.calls[0][0](mocks.setting)).toEqual({ ...mocks.setting, AIReviewRiskControlScore: 0 })
+    expect(mocks.onSend).toHaveBeenCalledWith(
+      expect.objectContaining({
+        token: 'session-1',
+        params: expect.objectContaining({ IsConfigHotpatch: true, Params: { AIReviewRiskControlScore: 0 } }),
+      }),
+    )
+    mocks.setting = { ...mocks.setting, AIReviewRiskControlScore: 0 }
+    rerender(<AIReviewRuleSelect />)
+    fireEvent.click(trigger)
+    expect(screen.getByRole('slider', { name: '风险阈值' })).toHaveAttribute('aria-valuenow', '0')
+    expect(mocks.onSend).toHaveBeenCalledOnce()
   })
 })

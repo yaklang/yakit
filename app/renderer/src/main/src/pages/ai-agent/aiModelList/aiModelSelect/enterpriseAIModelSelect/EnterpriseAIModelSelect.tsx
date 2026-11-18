@@ -116,7 +116,7 @@ const matchModelTargets = (
 
 export const EnterpriseAIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi', 'configNetwork'])
-  const { isOpen = true, mountContainer, className } = props
+  const { isOpen = true, mountContainer, className, iconOnly } = props
   //#region AI model
 
   const [{ aiGlobalConfig, queryLoading }, event] = useAIGlobalConfig()
@@ -319,12 +319,16 @@ export const EnterpriseAIModelSelect: React.FC<AIModelSelectProps> = React.memo(
       <YakitSelect.Option
         value="select"
         label={
-          <div className={modelSelectStyles['select-option']}>
+          <div className={modelSelectStyles['select-option']} title={iconOnly ? modelName : undefined}>
             {getIconByAI(selectIntelligentItem?.Provider.Type)}
-            <span className={modelSelectStyles['select-option-text']} title={`${modelName}`}>
-              {modelName}
-            </span>
-            <span className={modelSelectStyles['select-option-effort']}>{reasoningEffortLabel}</span>
+            {!iconOnly && (
+              <>
+                <span className={modelSelectStyles['select-option-text']} title={modelName}>
+                  {modelName}
+                </span>
+                <span className={modelSelectStyles['select-option-effort']}>{reasoningEffortLabel}</span>
+              </>
+            )}
           </div>
         }
       >
@@ -501,7 +505,9 @@ export const EnterpriseAIModelSelect: React.FC<AIModelSelectProps> = React.memo(
     <div ref={refRef} className={className}>
       {isHaveData ? (
         <AIChatSelect
+          aria-label={iconOnly ? t('AIModelSelect.selectModel') : undefined}
           variant="borderless"
+          dropdownAlign={{ htmlRegion: 'visible' }}
           classNames={{ popup: { root: modelSelectStyles['model-select-popup'] } }}
           dropdownRender={() => {
             return (

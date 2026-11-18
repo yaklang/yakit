@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react'
+import type React from 'react'
+import { memo, useRef, useState } from 'react'
 import { Slider } from 'antd'
 import type { SliderSingleProps } from 'antd'
 import type { AIChatSelectProps, ReviewRuleSelectProps } from './type'
@@ -6,24 +7,20 @@ import styles from './AIReviewRuleSelect.module.scss'
 import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
 import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
 import classNames from 'classnames'
-import { useClickAway, useControllableValue, useCreation, useMemoizedFn, useUpdateEffect } from 'ahooks'
+import { useClickAway, useControllableValue, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { AIAgentSettingDefault, AIReviewRuleIconMap, AIReviewRuleOptions } from '@/pages/ai-agent/defaultConstant'
 import type { AIReviewRuleOptionsType } from '@/pages/ai-agent/defaultConstant'
-import { HandOutlined, SirenOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { HandOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { AIColorful } from '@yakit-libs/yakit-ui-icons/colorful'
-import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
-import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { AIInputEventHotPatchTypeEnum } from '../hooks/grpcApi'
 import type { AIInputEvent, AIStartParams } from '../hooks/grpcApi'
-import isEqual from 'lodash/isEqual'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import isNil from 'lodash/isNil'
 import useCurrentSessionId from '../hooks/useCurrentSessionId'
 import { useCurrentStore } from '../hooks/useCurrentDataBySession'
 import { useStore } from 'zustand'
 
-const AIReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) => {
+const AIReviewRuleSelect: React.FC<ReviewRuleSelectProps> = memo((props) => {
   const { t } = useI18nNamespaces(['aiAgent'])
   /** 当前对话唯一ID */
   const sessionId = useCurrentSessionId()
@@ -33,36 +30,14 @@ const AIReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) =
   const { setting } = useAIAgentStore()
   const { setSetting, onSend } = useAIAgentDispatcher()
 
-  const [visible, setVisible] = useState<boolean>(false)
   const [open, setOpen] = useState<boolean>(false)
-  const [selectAIReviewRiskControlScore, setAIReviewRiskControlScore] =
-    useState<AIStartParams['AIReviewRiskControlScore']>()
-
-  const modelValue = useCreation(() => {
-    return setting?.ReviewPolicy || AIAgentSettingDefault.ReviewPolicy
-  }, [setting?.ReviewPolicy, execute])
+  const [draftRiskScore, setDraftRiskScore] = useState<number>()
+  const modelValue = setting?.ReviewPolicy || AIAgentSettingDefault.ReviewPolicy
   const [selectReviewPolicy, setSelectReviewPolicy] = useState<AIStartParams['ReviewPolicy']>()
-
-  const displayReviewPolicy = useCreation(() => {
-    if (open) return selectReviewPolicy ?? modelValue
-    return modelValue
-  }, [open, selectReviewPolicy, modelValue])
-
-  const aiReviewRiskControlScore = useCreation(() => {
-    return setting?.AIReviewRiskControlScore || AIAgentSettingDefault.AIReviewRiskControlScore
-  }, [setting?.AIReviewRiskControlScore])
-
-  useEffect(() => {
-    if (!open) {
-      setSelectReviewPolicy(undefined)
-    }
-  }, [modelValue, open])
-
-  useEffect(() => {
-    if (!visible) {
-      setAIReviewRiskControlScore(undefined)
-    }
-  }, [aiReviewRiskControlScore, visible])
+  const displayReviewPolicy = selectReviewPolicy ?? modelValue
+  const savedRiskScore = setting?.AIReviewRiskControlScore ?? AIAgentSettingDefault.AIReviewRiskControlScore
+  const riskScore = draftRiskScore ?? savedRiskScore
+  const riskLabel = t('AIChatSetting.riskThreshold')
 
   //#region 热更新 Review 规则
   useUpdateEffect(() => {
@@ -100,30 +75,6 @@ const AIReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) =
   })
   //#endregion
 
-  const onSelectModel = useMemoizedFn((value: AIStartParams['ReviewPolicy']) => {
-    setSetting && setSetting((old) => ({ ...old, ReviewPolicy: value }))
-  })
-
-  const onSetAIReviewRiskControlScore = useMemoizedFn((value?: number) => {
-    setSetting && setSetting((old) => ({ ...old, AIReviewRiskControlScore: value || 0 }))
-  })
-
-  const onVisibleChange = useMemoizedFn((v: boolean) => {
-    setVisible(v)
-    if (
-      !v &&
-      execute &&
-      !isNil(selectAIReviewRiskControlScore) &&
-      !isEqual(selectAIReviewRiskControlScore, aiReviewRiskControlScore)
-    ) {
-      handHotpatchAIReviewRiskControlScore(selectAIReviewRiskControlScore)
-    }
-    if (v) {
-      setAIReviewRiskControlScore(aiReviewRiskControlScore)
-    } else {
-      onSetAIReviewRiskControlScore(selectAIReviewRiskControlScore)
-    }
-  })
   const getIcon = useMemoizedFn((value: AIReviewRuleOptionsType) => {
     return AIReviewRuleIconMap[value]?.icon
   })
@@ -132,17 +83,28 @@ const AIReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) =
     if (value === 'manual') return <HandOutlined color="currentColor" />
     return getIcon(value)
   })
-  const onSetOpen = useMemoizedFn((v: boolean, reviewPolicy = selectReviewPolicy) => {
-    setOpen(v)
-    if (!v && execute && !isEqual(reviewPolicy, modelValue)) {
-      handHotpatchReviewPolicy(reviewPolicy)
+  const onSetOpen = useMemoizedFn((nextOpen: boolean) => {
+    setOpen(nextOpen)
+    if (nextOpen) return
+
+    if (draftRiskScore !== undefined && draftRiskScore !== savedRiskScore) {
+      if (execute) handHotpatchAIReviewRiskControlScore(draftRiskScore)
+      setSetting?.((old) => ({ ...old, AIReviewRiskControlScore: draftRiskScore }))
     }
-    if (v) {
-      setSelectReviewPolicy(modelValue)
-    } else {
-      onSelectModel(reviewPolicy)
-    }
+    setDraftRiskScore(undefined)
+    setSelectReviewPolicy(undefined)
   })
+  const onPickPolicy = (policy: AIReviewRuleOptionsType) => {
+    if (policy !== displayReviewPolicy) {
+      if (execute) handHotpatchReviewPolicy(policy)
+      setSetting?.((old) => ({ ...old, ReviewPolicy: policy }))
+      if (policy === 'ai') {
+        setSelectReviewPolicy(policy)
+        return
+      }
+    }
+    onSetOpen(false)
+  }
   const renderContent = useMemoizedFn(() => {
     const currentSelect = AIReviewRuleOptions.find((item) => item.value === displayReviewPolicy)
     return (
@@ -175,22 +137,18 @@ const AIReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) =
   return (
     <div className={classNames(styles['review-rule-select-wrapper'], props.className)}>
       <AIChatSelect
-        key={displayReviewPolicy}
-        dropdownRender={(menu) => {
+        dropdownRender={() => {
           return (
-            <div className={styles['drop-select-wrapper']}>
-              <div className={styles['select-title']}>
-                {/* <OutlineCodepenIcon /> */}
-                回答模式
-              </div>
-              <div className={styles['select-content']} onClick={(e) => e.stopPropagation()}>
+            <div className={styles['drop-select-wrapper']} onClick={(event) => event.stopPropagation()}>
+              <div className={styles['select-title']}>回答模式</div>
+              <div className={styles['select-content']}>
                 {AIReviewRuleOptions.map((item) => (
                   <div
                     key={item.value}
                     className={classNames(styles['option-wrapper'], styles['select-option-wrapper'], {
                       [styles['select-option-active-wrapper']]: item.value === displayReviewPolicy,
                     })}
-                    onClick={() => onSetOpen(false, item.value)}
+                    onClick={() => onPickPolicy(item.value)}
                   >
                     <div className={styles['icon-wrapper']}>{getIcon(item.value)}</div>
                     <div className={styles['text-wrapper']}>
@@ -200,6 +158,20 @@ const AIReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) =
                   </div>
                 ))}
               </div>
+              {displayReviewPolicy === 'ai' && (
+                <div className={styles['risk-panel']} onKeyDown={(event) => event.stopPropagation()}>
+                  <span>{riskLabel}</span>
+                  <FormItemSlider
+                    className={styles['risk-slider']}
+                    ariaLabelForHandle={riskLabel}
+                    value={riskScore}
+                    onChange={setDraftRiskScore}
+                    min={0}
+                    max={1}
+                    step={0.01}
+                  />
+                </div>
+              )}
             </div>
           )
         }}
@@ -212,40 +184,12 @@ const AIReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) =
       >
         {renderContent()}
       </AIChatSelect>
-      {modelValue === 'ai' && (
-        <YakitPopover
-          content={
-            <div className={styles['popover-wrapper']}>
-              <span>风险阈值：</span>
-              <FormItemSlider
-                value={selectAIReviewRiskControlScore}
-                onChange={setAIReviewRiskControlScore}
-                min={0}
-                max={1}
-                step={0.01}
-              />
-            </div>
-          }
-          trigger={['hover', 'click']}
-          open={visible}
-          onOpenChange={onVisibleChange}
-        >
-          <YakitButton
-            type="text2"
-            isHover={visible}
-            icon={<SirenOutlined className={styles['siren-icon']} color="currentColor" />}
-            onClick={(e) => {
-              e.stopPropagation()
-            }}
-          />
-        </YakitPopover>
-      )}
     </div>
   )
 })
 export default AIReviewRuleSelect
 
-export const AIChatSelect: React.FC<AIChatSelectProps> = React.memo((props) => {
+export const AIChatSelect: React.FC<AIChatSelectProps> = memo((props) => {
   const { getList, dropdownRender, children, setOpen: defSetOpen, closestClassName, disabled, ...rest } = props
   const [open, setOpen] = useControllableValue(props, {
     defaultValue: false,
@@ -288,7 +232,7 @@ export const AIChatSelect: React.FC<AIChatSelectProps> = React.memo((props) => {
       className={classNames(styles['ai-chat-select-wrapper'], {
         [styles['ai-chat-select-borderless']]: rest.variant === 'borderless',
       })}
-      onClick={onSelectWrapperClick}
+      onClick={rest.onOpenChange ? undefined : onSelectWrapperClick}
     >
       <YakitSelect
         {...rest}
@@ -304,7 +248,7 @@ export const AIChatSelect: React.FC<AIChatSelectProps> = React.memo((props) => {
   )
 })
 
-const FormItemSlider: React.FC<SliderSingleProps> = React.memo((props) => {
+const FormItemSlider: React.FC<SliderSingleProps> = memo((props) => {
   const { value, ...rest } = props
   return (
     <div className={styles['form-item-slider']}>

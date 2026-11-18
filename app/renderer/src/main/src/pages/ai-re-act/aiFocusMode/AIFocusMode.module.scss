@@ -1,0 +1,39 @@
+.trigger:global(.ant-select-single.ant-select-borderless) :global(.ant-select-selector) {
+  :global(.ant-select-selection-item),
+  :global(.ant-select-selection-placeholder) {
+    display: flex;
+    align-items: center;
+    height: 16px;
+    line-height: 16px;
+  }
+}
+
+.trigger.with-clear:global(.ant-select-single.ant-select-borderless) {
+  :global(.ant-select-clear) {
+    inset-inline-end: 26px;
+  }
+
+  :global(.ant-select-selector .ant-select-selection-item) {
+    padding-inline-end: 42px;
+  }
+}
+
+.trigger:global(.ant-select-single.ant-select-borderless.ant-select-disabled) {
+  .label,
+  :global(.ant-select-arrow),
+  :global(.ant-select-selector) svg {
+    color: var(--Colors-Use-Neutral-Disable);
+  }
+
+  :global(.ant-select-selector) {
+    cursor: not-allowed;
+  }
+}
+
+.label {
+  min-width: 0;
+  padding-inline: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

@@ -79,7 +79,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
 
 const CurrentAIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi', 'configNetwork'])
-  const { isOpen = true, className } = props
+  const { isOpen = true, className, iconOnly } = props
   const [aiDraftConfig, setAIDraftConfig] = useState<AIGlobalConfig>(() => cloneDeep(defaultAIGlobalConfig))
   const [open, setOpen] = useState(false)
   const [modelNames, setModelNames] = useState<string[]>([])
@@ -321,12 +321,15 @@ const CurrentAIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
     aiDraftConfig.IntelligentModels.length > 0 ||
     aiDraftConfig.LightweightModels.length > 0 ||
     aiDraftConfig.VisionModels.length > 0
+  const modelName = getModelName(selectIntelligentItem?.ModelName)
 
   return (
     <div ref={refRef} className={className}>
       {isHaveData && (
         <AIChatSelect
+          aria-label={iconOnly ? t('AIModelSelect.selectModel') : undefined}
           variant="borderless"
+          dropdownAlign={{ htmlRegion: 'visible' }}
           classNames={{ popup: { root: styles['model-select-popup'] } }}
           closestClassName="[data-ai-reasoning-effort-menu]"
           dropdownRender={() => (
@@ -416,13 +419,17 @@ const CurrentAIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
           <YakitSelect.Option
             value="select"
             label={
-              <div className={styles['select-option']}>
+              <div className={styles['select-option']} title={iconOnly ? modelName : undefined}>
                 {getIconByAI(selectIntelligentItem?.Provider.Type)}
-                <span className={styles['select-option-text']} title={getModelName(selectIntelligentItem?.ModelName)}>
-                  {getModelName(selectIntelligentItem?.ModelName)}
-                </span>
-                {selectIntelligentItem && (
-                  <span className={styles['select-option-effort']}>{reasoningEffortLabel}</span>
+                {!iconOnly && (
+                  <>
+                    <span className={styles['select-option-text']} title={modelName}>
+                      {modelName}
+                    </span>
+                    {selectIntelligentItem && (
+                      <span className={styles['select-option-effort']}>{reasoningEffortLabel}</span>
+                    )}
+                  </>
                 )}
               </div>
             }

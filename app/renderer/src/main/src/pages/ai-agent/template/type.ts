@@ -6,6 +6,7 @@ import type { AICodeBlockCommandParams } from '../components/aiMilkdownInput/aiC
 import type { EditorMilkdownProps } from '@/components/MilkdownEditor/MilkdownEditorType'
 import type { AIChatMentionProps } from '../components/aiChatMention/type'
 import type { AIReviewRuleSelectProps } from '@/pages/ai-re-act/aiReviewRuleSelect/type'
+import type { AIFocusModeProps } from '@/pages/ai-re-act/aiFocusMode/type'
 import type { AIEnabledCapability } from '@/pages/ai-re-act/hooks/grpcApi'
 import type { AIModelSelectProps } from '../aiModelList/aiModelSelect/AIModelSelectType'
 import type { WorkspaceAddedCounts } from './aiAddMaterialsPopover/workspaceAddedCounts'
@@ -62,10 +63,24 @@ export interface AIChatTextareaRefProps {
   editorMilkdown?: EditorMilkdownProps
 }
 export enum AIInputInnerFeatureEnum {
+  AddMaterials = 'AddMaterials',
+  AIRunModeSelect = 'AIRunModeSelect',
   AIReviewRuleSelect = 'AIReviewRuleSelect',
-}
-export enum AIInputFooterRightEnum {
   AIModelSelect = 'AIModelSelect',
+  AIFocusMode = 'AIFocusMode',
+  AIInputSettings = 'AIInputSettings',
+}
+export const defaultFooterLeftTypes = [
+  AIInputInnerFeatureEnum.AddMaterials,
+  AIInputInnerFeatureEnum.AIRunModeSelect,
+  AIInputInnerFeatureEnum.AIReviewRuleSelect,
+  AIInputInnerFeatureEnum.AIModelSelect,
+  AIInputInnerFeatureEnum.AIFocusMode,
+  AIInputInnerFeatureEnum.AIInputSettings,
+]
+export enum AIInputFooterRightEnum {
+  AIContextUsage = 'AIContextUsage',
+  AIRunningStatus = 'AIRunningStatus',
   Custom = 'Custom',
 }
 export type AIInputInnerFeature = `${AIInputInnerFeatureEnum}`
@@ -74,16 +89,28 @@ interface FooterLeftTypesBase<T extends string, U> {
   props?: U
   component?: ReactNode
 }
-type AIReviewRuleSelectType = FooterLeftTypesBase<AIInputInnerFeatureEnum.AIReviewRuleSelect, AIReviewRuleSelectProps>
-export type FooterLeftTypesComponentProps = AIReviewRuleSelectType
+export type FooterLeftTypesComponentProps =
+  | FooterLeftTypesBase<
+      | AIInputInnerFeatureEnum.AddMaterials
+      | AIInputInnerFeatureEnum.AIRunModeSelect
+      | AIInputInnerFeatureEnum.AIInputSettings,
+      never
+    >
+  | FooterLeftTypesBase<AIInputInnerFeatureEnum.AIReviewRuleSelect, AIReviewRuleSelectProps>
+  | FooterLeftTypesBase<AIInputInnerFeatureEnum.AIModelSelect, Omit<AIModelSelectProps, 'iconOnly'>>
+  | FooterLeftTypesBase<AIInputInnerFeatureEnum.AIFocusMode, Partial<Omit<AIFocusModeProps, 'iconOnly'>>>
+
+export const getFooterLeftTypesWithItem = (item: FooterLeftTypesComponentProps) =>
+  defaultFooterLeftTypes.map((type) => (type === item.type ? item : type))
+
 export type FooterRightTypesComponentProps =
-  | FooterLeftTypesBase<AIInputFooterRightEnum.AIModelSelect, AIModelSelectProps>
+  | FooterLeftTypesBase<AIInputFooterRightEnum.AIContextUsage | AIInputFooterRightEnum.AIRunningStatus, never>
   | { type: AIInputFooterRightEnum.Custom; key: string; component: ReactNode }
 export interface AIChatTextareaProps {
   ref?: React.ForwardedRef<AIChatTextareaRefProps>
   /** 提交按钮的 loading 状态 */
   loading?: boolean
-  /**输入框左下角 */
+  /** 替换输入框左侧底栏内容。 */
   inputFooterLeft?: ReactNode
   /**输入框右下角 */
   inputFooterRight?: ReactNode
@@ -99,10 +126,11 @@ export interface AIChatTextareaProps {
   defaultValue?: string
   /**ai模型不存在时，是否弹窗 */
   isOpen?: boolean
+  /** @ 菜单中要隐藏的分类。 */
   filterMentionType?: AIChatMentionProps['filterMode']
+  /** 默认依次展示添加资料、执行模式、审核规则、模型、场景和设置。 */
   footerLeftTypes?: (AIInputInnerFeature | FooterLeftTypesComponentProps)[]
-  /** 省略时展示默认模型选择，传空数组时隐藏右侧配置项。 */
-  footerRightTypes?: FooterRightTypesComponentProps[]
+  footerRightTypes?: (AIInputFooterRightEnum | FooterRightTypesComponentProps)[]
   /** 图片路径前缀 */
   chatDataStoreKey: string
   /** 欢迎页在首次连接前展示的场景能力 */

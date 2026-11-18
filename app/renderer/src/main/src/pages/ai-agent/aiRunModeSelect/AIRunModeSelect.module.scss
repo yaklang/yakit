@@ -1,10 +1,100 @@
-.run-mode-select:global(.ant-btn.ant-btn-icon-only) {
-  width: 24px;
-  height: 24px;
-  padding: 4px;
-  border: none;
-  border-radius: 4px;
-  color: var(--Colors-Use-Neutral-Text-2-Primary);
+.run-mode-trigger {
+  display: flex;
+  width: fit-content;
+  min-width: min(100%, 48px);
+  max-width: min(100%, 180px);
+}
+
+.run-mode-select:global(.ant-btn.ant-btn-default) {
+  width: fit-content;
+  max-width: 100%;
+  min-width: 0;
+  padding: 0 5px;
+  border-radius: 9999px;
+  font-weight: 400;
+  line-height: 16px;
+  letter-spacing: 0.5px;
+
+  &.run-mode-select-active {
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+    background: var(--Colors-Use-Main-Bg);
+    border-color: var(--Colors-Use-Main-Border);
+
+    .mode-icons svg {
+      color: var(--Colors-Use-Main-Primary);
+    }
+  }
+}
+
+.mode-chevron {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.mode-icons {
+  display: inline-flex;
+  flex-shrink: 0;
+  gap: 4px;
+}
+
+.mode-label {
+  min-width: calc(1em + 0.5px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mode-detail {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mode-count-short {
+  display: none;
+}
+
+@container ai-chat-textarea (width < 864px) {
+}
+
+@container ai-chat-textarea (width < 640px) {
+  .run-mode-trigger:not([data-goal-kind='duration']) {
+    .mode-detail,
+    .mode-separator {
+      display: none;
+    }
+  }
+  .run-mode-trigger .run-mode-select .mode-icons > :not(:first-child) {
+    display: none;
+  }
+  .mode-chevron {
+    display: none;
+  }
+}
+
+@container ai-chat-textarea (width < 430px) {
+  [data-has-footer-indicators] .run-mode-trigger[data-goal-kind='duration'] {
+    .mode-detail,
+    .mode-separator {
+      display: none;
+    }
+  }
+}
+
+@container ai-chat-textarea (width < 360px) {
+  .mode-count-full {
+    display: none;
+  }
+
+  .mode-count-short {
+    display: inline;
+  }
+}
+
+.criteria-tooltip {
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
 }
 
 .mode-popover:global(.ant-popover) {
@@ -105,49 +195,10 @@
   }
 }
 
-.configuration-hint {
-  margin-bottom: 8px;
-  color: var(--Colors-Use-Neutral-Disable);
-}
-
-.mode-configuration .goal-options {
-  width: 100%;
-  font-size: 12px;
-  line-height: 16px;
-
-  :global {
-    .ant-radio-wrapper {
-      flex-shrink: 0;
-      margin-inline-end: 0;
-      color: var(--Colors-Use-Neutral-Text-1-Title);
-      font-size: 12px;
-      line-height: 16px;
-      letter-spacing: 0.5px;
-    }
-    .ant-radio-inner {
-      background: var(--Colors-Use-Basic-Background);
-      border-color: var(--Colors-Use-Neutral-Border);
-    }
-    .ant-radio-checked .ant-radio-inner {
-      border-color: var(--Colors-Use-Main-Primary);
-    }
-    .ant-radio-checked .ant-radio-inner::after {
-      background: var(--Colors-Use-Main-Primary);
-    }
-  }
-}
-
 .configuration-row {
   justify-content: space-between;
   gap: 8px;
   min-height: 28px;
-  min-width: 0;
-
-  + .configuration-row {
-    margin-top: 8px;
-    padding-top: 8px;
-    border-top: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
-  }
 
   .configuration-control {
     width: 104px;
@@ -155,70 +206,44 @@
   }
 }
 
-.duration-label {
-  flex: 1;
-  min-width: 0;
-}
-
-.duration-hint {
-  margin: 2px 0 0 24px;
-  color: var(--Colors-Use-Neutral-Text-4-Help-text);
-}
-
-.configuration-row .acceptance-trigger:global(.ant-btn) {
+.goal-choice-row {
   display: flex;
-  flex: 0 1 auto;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: flex-end;
-  gap: 2px;
-  min-width: 0;
-  height: 22px;
-  padding: 0 0 0 8px;
-  color: var(--Colors-Use-Neutral-Text-4-Help-text);
-  font: inherit;
-
-  .acceptance-text {
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  > :last-child {
-    flex-shrink: 0;
-  }
-
-  &.acceptance-empty {
-    color: var(--Colors-Use-Neutral-Disable);
-  }
+  justify-content: space-between;
+  min-height: 24px;
+  gap: 4px 8px;
 }
 
-.acceptance-popover:global(.ant-popover) {
-  :global(.ant-popover-inner) {
-    padding: 0;
-    border-radius: 8px;
-    border-color: var(--Colors-Use-Neutral-Border);
-  }
+.goal-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
 }
 
-.acceptance-editor {
-  width: 320px;
-  max-width: calc(100vw - 24px);
-  box-sizing: border-box;
-  padding: 12px;
+.goal-divider {
+  height: 1px;
+  margin: 7px 0 8px;
+  background: var(--Colors-Use-Neutral-Bg-Hover);
+}
+
+.goal-acceptance:global(.ant-input) {
+  height: 76px;
+  padding: 8px 12px;
   font-size: 12px;
   line-height: 16px;
   letter-spacing: 0.5px;
+  resize: none;
 }
 
-.acceptance-title {
-  margin-bottom: 8px;
-  font-weight: 600;
-}
-
-.acceptance-actions {
-  display: flex;
-  justify-content: flex-end;
+.custom-duration {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto;
+  align-items: center;
   gap: 8px;
-  margin-top: 8px;
+  margin-top: 12px;
+
+  :global(.ant-input-number) {
+    width: 100%;
+  }
 }

@@ -3,6 +3,7 @@ import type { ModalProps } from 'antd'
 
 export interface AIModelSelectProps {
   isOpen?: boolean
+  iconOnly?: boolean
   className?: string
   mountContainer?: ModalProps['getContainer']
 }

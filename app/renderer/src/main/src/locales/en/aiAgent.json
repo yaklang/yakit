@@ -233,24 +233,37 @@
     "basicCheck": "Tool Basic Check"
   },
   "AIChatTextarea": {
+    "otherMaterials": "Other materials",
     "dropToAddToChat": "Release to add to chat",
     "addMaterials": "Add materials",
-    "otherMaterials": "Other materials"
+    "queueSend": "Queue send"
+  },
+  "AIContextUsage": {
+    "label": "Context {{percent}}%"
+  },
+  "AIRunningStatus": {
+    "label": "Running round {{round}} · {{elapsed}} / {{duration}}",
+    "state": "Running",
+    "round": "round {{round}}"
   },
   "AIAddMaterialsPopover": {
     "scenarioCapabilities": "Capabilities",
-    "currentScenario": "Current selection",
     "addedSkills": "Added skills",
     "addedKnowledgeBases": "Added knowledge bases",
     "addedOtherMaterials": "Other added materials",
     "goToAdd": "Add more",
+    "continueAdding": "Add more",
+    "attachments": "Attachments",
+    "addedAttachments": "My attachments",
+    "addedBrowsers": "Added browsers",
+    "shortcuts": "Shortcuts",
+    "mentionShortcut": "Use @ to add context",
+    "modeShortcut": "Use / to choose execution modes",
+    "currentScenario": "Current selection",
     "searchMaterials": "Enter a keyword to search",
     "contextHint": "All added materials are used as context for the current conversation.",
     "attachment": "Add files",
     "addFolder": "Add folders",
-    "continueAdding": "Add more",
-    "attachments": "Attachments",
-    "addedAttachments": "My attachments",
     "attachmentHint": "Upload up to {{max}} items at a time",
     "attachmentLimitExceeded": "You selected {{count}} attachments. You can add up to {{max}} at a time.",
     "attachmentFailed": "Unable to open the file picker: {{error}}",
@@ -262,10 +275,10 @@
     "knowledgeHint": "Reference a knowledge base",
     "toolHint": "AI prioritizes added tools when completing tasks",
     "fileSystemHint": "Browse and search your files",
-    "browserHint": "Operate a browser with AI",
-    "addedBrowsers": "Added browsers",
-    "sceneHint": "Use a framework to guide AI in complex scenarios",
-    "current": "Current:"
+    "browserHint": "Operate a browser with AI"
+  },
+  "AIFocusMode": {
+    "focusModeTooltip": "Use a framework to guide AI in complex scenarios"
   },
   "AIToolDecision": {
     "decision": "Decision"
@@ -571,9 +584,9 @@
   "AIReviewRuleOptions": {
     "manualLabel": "manual",
     "manualDesc": "All reviews are handled manually by the user",
-    "yoloLabel": "Escrow YOLO",
+    "yoloLabel": "YOLO",
     "yoloDesc": "All reviews are executed by default without prompting",
-    "aiLabel": "Collaborative AI",
+    "aiLabel": "Collaboration",
     "aiDesc": "AI judges review risk, low risk runs by default, high risk is handled by the user"
   },
   "AIModelPolicyOptions": {
@@ -941,8 +954,7 @@
     "switchToSource": "Switch to source mode"
   },
   "AIMilkdownInput": {
-    "placeholderPrompt": "Ask me anything",
-    "placeholderHint": "Use skills, tools, files, and knowledge bases...",
+    "placeholder": "Ask me anything @ Use skills, tools, files, and knowledge bases, / Choose a mode",
     "selectedHttpFlowSummary": "Selected {{count}} HTTP flows",
     "selectedRiskSummary": "Selected {{count}} risks",
     "imagesNotSaved": "Images have not finished saving. Please try again shortly. If saving failed, remove the failed images and upload them again."
@@ -958,7 +970,7 @@
     "minIterationsPrefix": "Minimum iterations: {{value}}",
     "acceptanceOption": "Acceptance criteria (text)",
     "acceptance": "Acceptance criteria",
-    "acceptancePlaceholder": "Describe the acceptance criteria...",
+    "acceptancePlaceholder": "Describe your acceptance criteria...",
     "acceptancePrefix": "Acceptance criteria: {{value}}",
     "durationOption": "Duration (set a “go deeper” window to add rounds)",
     "duration": "Duration",
@@ -971,14 +983,22 @@
     "setSubAgentCount": "Set sub-agent count"
   },
   "AIRunModeSelect": {
+    "executionMode": "Execution modes",
+    "modeCount": "{{count}} modes",
+    "modeCountShort": "{{count}}",
+    "iterationCount": "{{count}}×",
     "mode": "Mode",
     "multiMode": "Multi-mode",
     "configuration": "Execution modes",
     "configurationTip": "Combine Plan, Multi-Agent and Goal modes for your task",
     "planTip": "Allow AI to create a plan and execute it",
     "multiAgentTip": "Prefer delegating tasks to SubAgents",
-    "goalHint": "Choose a goal mode and set its parameters",
-    "switchGoalModeContent": "Switching will reset the value of the currently selected option to its default. Continue?",
+    "stopCondition": "Stop condition",
+    "customDuration": "Custom",
+    "durationHours": "Hours",
+    "durationMinutes": "Minutes",
+    "hourUnit": "h",
+    "minuteUnit": "min",
     "durationHint": "Set a time window to continue exploring",
     "editAcceptance": "Edit acceptance criteria",
     "noAcceptance": "None"

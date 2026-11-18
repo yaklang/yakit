@@ -5,5 +5,4 @@ export interface AIReactChatTextareaProps {
   ref?: React.ForwardedRef<AIChatTextareaRefProps>
   handleSubmit: (v: AIChatTextareaSubmit) => void
   externalParameters: AIReActChatProps['externalParameters']
-  handleStopCasualTask: () => void
 }

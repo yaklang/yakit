@@ -74,7 +74,7 @@ export const useAIRunMode = () => {
     { wait: 200, leading: true },
   ).run
 
-  const onSetStrategy = useDebounceFn(
+  const strategyUpdate = useDebounceFn(
     useMemoizedFn((next: AIExecutionStrategy) => {
       const merged: AIExecutionStrategy = { ...(setting?.Strategy || {}), ...next }
       if (execute && isChatSession(activeChat)) {
@@ -107,7 +107,12 @@ export const useAIRunMode = () => {
       }
     }),
     { wait: 200, leading: true },
-  ).run
+  )
+
+  const onSetStrategy = useMemoizedFn((next: AIExecutionStrategy, immediate = false) => {
+    strategyUpdate.run(next)
+    if (immediate) strategyUpdate.flush()
+  })
 
   const isModeSelected = useMemoizedFn((key: ModeOptionKey) => {
     switch (key) {
