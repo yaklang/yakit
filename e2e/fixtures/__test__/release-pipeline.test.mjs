@@ -93,19 +93,40 @@ describe('release identity and native matrix', () => {
       expect(source).toContain('node node_modules/electron/install.js')
     }
   })
-  it('loads release model without ../../package.json in sparse checkouts', async () => {
-    const sparse = await directory()
-    await mkdir(path.join(sparse, 'scripts/release'), { recursive: true })
-    await cp(
-      new URL('../../../scripts/release/model.mjs', import.meta.url),
-      path.join(sparse, 'scripts/release/model.mjs'),
-    )
+  it('falls back to workspace package.json in sparse coordinator checkouts and guards createPlan when missing', async () => {
     const originalCwd = process.cwd()
-    process.chdir(sparse)
+    const workspace = await directory()
+    await writeFile(path.join(workspace, 'package.json'), JSON.stringify({ devDependencies: { electron: '44.99.0' } }))
+    const coordinatorModel = path.join(workspace, '.release/coordinator/scripts/release/model.mjs')
+    await mkdir(path.dirname(coordinatorModel), { recursive: true })
+    await cp(new URL('../../../scripts/release/model.mjs', import.meta.url), coordinatorModel)
+    process.chdir(workspace)
     try {
-      const mod = await import(`${pathToFileURL(path.join(sparse, 'scripts/release/model.mjs')).href}?t=${Date.now()}`)
+      const mod = await import(`${pathToFileURL(coordinatorModel).href}?t=${Date.now()}-fallback`)
+      expect(mod.currentElectronVersion).toBe('44.99.0')
+    } finally {
+      process.chdir(originalCwd)
+    }
+
+    const isolated = await directory()
+    const isolatedModel = path.join(isolated, 'scripts/release/model.mjs')
+    await mkdir(path.dirname(isolatedModel), { recursive: true })
+    await cp(new URL('../../../scripts/release/model.mjs', import.meta.url), isolatedModel)
+    process.chdir(isolated)
+    try {
+      const mod = await import(`${pathToFileURL(isolatedModel).href}?t=${Date.now()}-missing`)
       expect(mod.currentElectronVersion).toBeUndefined()
-      expect(mod.assertVersion('1.4.9-beta5')).toBe('1.4.9-beta5')
+      expect(() =>
+        mod.createPlan({
+          editions: 'yakit',
+          version: '1.4.9-1030',
+          sha: 'a'.repeat(40),
+          runId: '123',
+          repository: 'yaklang/yakit',
+          ref: 'v1.4.9-1030',
+          refType: 'tag',
+        }),
+      ).toThrow('Missing package.json devDependencies.electron')
     } finally {
       process.chdir(originalCwd)
     }
