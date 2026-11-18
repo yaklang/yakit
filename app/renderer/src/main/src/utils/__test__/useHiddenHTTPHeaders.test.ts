@@ -1,11 +1,16 @@
 import { act, cleanup, renderHook } from '@testing-library/react'
-import type { editor } from 'monaco-editor'
+import type { editor, IRange } from 'monaco-editor'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { useHiddenHTTPHeaders } from '../useHiddenHTTPHeaders'
 
 function createEditor(packet: string) {
   let value = packet
-  const listeners = { content: new Set<() => void>(), model: new Set<() => void>(), dispose: new Set<() => void>() }
+  const listeners = {
+    content: new Set<() => void>(),
+    model: new Set<() => void>(),
+    dispose: new Set<() => void>(),
+    find: new Set<() => void>(),
+  }
   const event = (key: keyof typeof listeners) => (callback: () => void) => {
     listeners[key].add(callback)
     return { dispose: () => listeners[key].delete(callback) }
@@ -15,8 +20,10 @@ function createEditor(packet: string) {
     getLineCount: () => value.split('\n').length,
     getLineContent: (line: number) => value.split('\n')[line - 1],
   }
+  const findState = { isRevealed: false, currentMatch: null as IRange | null, onFindReplaceStateChange: event('find') }
   const instance = {
     getModel: () => model,
+    getContribution: () => ({ getState: () => findState }),
     setHiddenAreas: vi.fn(),
     onDidChangeModelContent: event('content'),
     onDidChangeModel: event('model'),
@@ -26,6 +33,12 @@ function createEditor(packet: string) {
     editor: instance as unknown as editor.IStandaloneCodeEditor,
     hiddenAreas: instance.setHiddenAreas,
     listeners,
+    search: (line: number | null, isRevealed = true) => {
+      findState.isRevealed = isRevealed
+      findState.currentMatch =
+        line === null ? null : { startLineNumber: line, startColumn: 1, endLineNumber: line, endColumn: 7 }
+      emit('find')
+    },
     getValue: () => value,
     change: (packet: string, key: 'content' | 'model' = 'content') => {
       value = packet
@@ -38,6 +51,40 @@ function createEditor(packet: string) {
 afterEach(cleanup)
 
 describe('useHiddenHTTPHeaders', () => {
+  it.each([false, true])('reveals a hidden search match without changing the document (response=%s)', (isResponse) => {
+    const packet = isResponse ? 'HTTP/1.1 200 OK\nServer: example\n\nbody' : 'GET / HTTP/1.1\nAccept: */*\n\nbody'
+    const instance = createEditor(packet)
+    const onDocumentChange = vi.fn()
+    const onSearchReveal = vi.fn()
+    const hook = renderHook(() =>
+      useHiddenHTTPHeaders(instance.editor, true, isResponse, undefined, onDocumentChange, onSearchReveal),
+    )
+    instance.hiddenAreas.mockClear()
+    act(() => instance.search(4))
+    act(() => instance.search(null))
+    act(() => instance.search(2, false))
+    expect(instance.hiddenAreas).not.toHaveBeenCalled()
+    act(() => instance.search(2))
+    expect(instance.hiddenAreas).toHaveBeenCalledExactlyOnceWith([], expect.any(Object))
+    expect(onSearchReveal).toHaveBeenCalledOnce()
+    expect(onDocumentChange).not.toHaveBeenCalled()
+    expect(instance.getValue()).toBe(packet)
+    act(() => instance.search(null, false))
+    hook.rerender()
+    expect(instance.hiddenAreas).toHaveBeenCalledTimes(1)
+    hook.unmount()
+    expect(instance.listeners.find.size).toBe(0)
+  })
+
+  it('keeps an existing search match visible when the hidden areas are first applied', () => {
+    const instance = createEditor('GET / HTTP/1.1\nAccept: */*\n\nbody')
+    instance.search(2)
+    const onSearchReveal = vi.fn()
+    renderHook(() => useHiddenHTTPHeaders(instance.editor, true, false, undefined, undefined, onSearchReveal))
+    expect(instance.hiddenAreas).toHaveBeenLastCalledWith([], expect.any(Object))
+    expect(onSearchReveal).toHaveBeenCalledOnce()
+  })
+
   it.each(['content', 'model'] as const)(
     'initial load stays hidden; subsequent %s changes reveal instead of refolding',
     (event) => {

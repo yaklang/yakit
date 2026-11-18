@@ -62,6 +62,7 @@ const preview = (role: HeaderRole) => {
   const subscribe = () => ({ dispose: vi.fn() })
   const instance = {
     getModel: () => model,
+    getContribution: () => undefined,
     setHiddenAreas: hiddenAreas,
     onDidChangeModelContent: subscribe,
     onDidChangeModel: subscribe,

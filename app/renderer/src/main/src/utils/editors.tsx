@@ -631,9 +631,15 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
     setLocalRequestHeadersHidden(hidden)
     props.onRequestHeadersHiddenChange?.(hidden)
   })
-  const responseHeadersHidden = useEditorHeaderVisibility((state) => state.hidden.response)
+  const headerVisibility = useEditorHeaderVisibility((state) => state.hidden)
+  const responseHeadersHidden = headerVisibility.response
+  // Search only reveals this response. A new packet or an explicit preference change uses the saved default again.
+  const [revealedResponse, setRevealedResponse] = useState<{ packet: string; preferences: typeof headerVisibility }>()
+  const responseRevealed =
+    revealedResponse?.packet === originValue && revealedResponse?.preferences === headerVisibility
   const headersHidden =
-    !!props.showHeaderVisibilityToggle && (isResponse ? responseHeadersHidden : requestHeadersHidden)
+    !!props.showHeaderVisibilityToggle &&
+    (isResponse ? responseHeadersHidden && !responseRevealed : requestHeadersHidden)
   const initializeHeaderVisibility = useEditorHeaderVisibility((state) => state.initialize)
   const toggleHeaderVisibility = useEditorHeaderVisibility((state) => state.toggle)
   const hiddenHeaderNames = useEditorHeaderVisibility((state) =>
@@ -861,12 +867,17 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
   const empty = !!props.emptyOr && originValue.length == 0
   const showTextEditor = !showHexView && !empty && !renderHtml && !props.renderHtml && !props.children
   const onRequestDocumentChange = useMemoizedFn(() => setRequestHeadersHidden(false))
+  const onSearchReveal = useMemoizedFn(() => {
+    if (isResponse) setRevealedResponse({ packet: originValue, preferences: headerVisibility })
+    else setRequestHeadersHidden(false)
+  })
   useHiddenHTTPHeaders(
     monacoEditor,
     !!props.showHeaderVisibilityToggle && headersHidden && showTextEditor,
     !!isResponse,
     hiddenHeaderNames,
     !isResponse && !props.readOnly ? onRequestDocumentChange : undefined,
+    onSearchReveal,
   )
   const headerVisibilityLabel = t(
     headersHidden
@@ -1130,7 +1141,13 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
             <div style={{ display: 'flex', gap: 2, alignItems: 'center' }}>
               {props.extra}
               {props.showHeaderVisibilityToggle && (
-                <Tooltip title={headerVisibilityLabel}>
+                <Tooltip
+                  title={
+                    isResponse
+                      ? t('NewHTTPPacketEditor.responseHeaderVisibilityScope', { action: headerVisibilityLabel })
+                      : headerVisibilityLabel
+                  }
+                >
                   <YakitButton
                     size="small"
                     type={headersHidden ? 'primary' : 'text2'}
@@ -1139,8 +1156,11 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                     aria-pressed={headersHidden}
                     disabled={!showTextEditor}
                     onClick={() => {
-                      if (isResponse) void toggleHeaderVisibility('response')
-                      else setRequestHeadersHidden(!requestHeadersHidden)
+                      if (isResponse) {
+                        setRevealedResponse(undefined)
+                        // After a local search reveal, enabling hiding need not invert an already-enabled default.
+                        if (headersHidden || !responseHeadersHidden) void toggleHeaderVisibility('response')
+                      } else setRequestHeadersHidden(!requestHeadersHidden)
                     }}
                   />
                 </Tooltip>

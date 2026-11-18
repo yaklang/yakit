@@ -751,6 +751,7 @@ export const getFuzzerProcessedCacheData = (pageList) => {
         minDelaySeconds: advancedConfigValue.minDelaySeconds,
         maxDelaySeconds: advancedConfigValue.maxDelaySeconds,
         request: ele.pageParamsInfo?.webFuzzerPageInfo?.request || defaultPostTemplate,
+        requestHeadersHidden: ele.pageParamsInfo?.webFuzzerPageInfo?.requestHeadersHidden ?? false,
         hotPatchCode: hotPatchCode,
         browserTransformSelection: ele.pageParamsInfo?.webFuzzerPageInfo?.browserTransformSelection,
         lastSelectedHistory: ele.pageParamsInfo?.webFuzzerPageInfo?.lastSelectedHistory,

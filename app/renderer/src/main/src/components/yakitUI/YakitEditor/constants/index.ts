@@ -30,6 +30,7 @@ export interface contextMenuProps {
 
 interface IFindReplaceState {
   isRevealed: boolean
+  currentMatch?: monaco.IRange | null
   searchString: string
   change(update: { searchString: string }, moveCursor: boolean): void
   onFindReplaceStateChange: monaco.IEvent<() => void>

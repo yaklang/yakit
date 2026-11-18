@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import i18n from '@/i18n/i18n'
 import { FuzzerRemoteGV } from '@/enums/fuzzer'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { yakitFailed } from '@/utils/notification'
@@ -13,6 +14,8 @@ export interface HeaderVisibilitySettings {
 
 export type HTTPHeaderVisibilitySettings = Record<HeaderRole, HeaderVisibilitySettings>
 const roles: HeaderRole[] = ['request', 'response']
+// The editor's history namespace is preloaded, including before opening the settings panel.
+const t = i18n.getFixedT(null, 'history')
 
 interface EditorHeaderVisibilityStore {
   hidden: Record<HeaderRole, boolean>
@@ -57,8 +60,7 @@ export const useEditorHeaderVisibility = create<EditorHeaderVisibilityStore>((se
   const enqueue = (write: () => Promise<void>) => {
     const result = writes.then(async () => {
       await get().initialize()
-      if (!get().ready.request || !get().ready.response)
-        throw new Error('HTTP header visibility settings are not loaded')
+      if (!get().ready.request || !get().ready.response) throw new Error(t('HTTPHeaderVisibility.notLoaded'))
       await write()
     })
     writes = result.catch(() => {})
@@ -82,22 +84,6 @@ export const useEditorHeaderVisibility = create<EditorHeaderVisibilityStore>((se
               hidden: entry?.hidden === true,
               headers: parseHeaders(entry?.headers, role),
             }
-          }
-        } else {
-          // Preserve preferences already saved by development builds using separate keys.
-          const [requestHidden, responseHidden, requestHeaders, responseHeaders] = await Promise.all([
-            getRemoteValue(FuzzerRemoteGV.WebFuzzerHideRequestHeaders),
-            getRemoteValue(FuzzerRemoteGV.WebFuzzerHideResponseHeaders),
-            getRemoteValue(FuzzerRemoteGV.WebFuzzerHiddenRequestHeaders),
-            getRemoteValue(FuzzerRemoteGV.WebFuzzerHiddenResponseHeaders),
-          ])
-          settings.request = {
-            hidden: requestHidden === 'true',
-            headers: parseHeaders(parseJSON(requestHeaders), 'request'),
-          }
-          settings.response = {
-            hidden: responseHidden === 'true',
-            headers: parseHeaders(parseJSON(responseHeaders), 'response'),
           }
         }
         persisted = settings
@@ -141,7 +127,7 @@ export const useEditorHeaderVisibility = create<EditorHeaderVisibilityStore>((se
       for (const role of roles) {
         const headers = normalizeHTTPHeaderNames(settings[role].headers)
         if (headers.some((header) => !isValidHTTPHeaderName(header)))
-          return Promise.reject(new Error('Invalid HTTP header name'))
+          return Promise.reject(new Error(t('HTTPHeaderVisibility.invalidName')))
         next[role] = { hidden: settings[role].hidden, headers }
       }
       const versions = { ...visibilityVersion }

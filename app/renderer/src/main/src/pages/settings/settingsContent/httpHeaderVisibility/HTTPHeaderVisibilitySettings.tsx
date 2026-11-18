@@ -20,7 +20,8 @@ export const HTTPHeaderVisibilitySettings = () => {
   const { t } = useI18nNamespaces(['setting'])
   const { initialize, saveSettings, hidden, headers, ready } = useEditorHeaderVisibility()
   const [draftOverride, setDraftOverride] = useState<Record<HeaderRole, HeaderVisibilitySettings>>()
-  // Global settings stay mounted when switching tabs. Follow saved preferences until the user starts editing.
+  // Switching top-level application tabs keeps this panel mounted; changing settings sections discards its draft.
+  // Follow saved preferences until the user starts editing.
   const savedSettings: Record<HeaderRole, HeaderVisibilitySettings> = {
     request: { hidden: hidden.request, headers: headers.request },
     response: { hidden: hidden.response, headers: headers.response },

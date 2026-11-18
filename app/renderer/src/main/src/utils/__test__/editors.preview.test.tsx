@@ -7,7 +7,13 @@ import { NewHTTPPacketEditor, type NewHTTPPacketEditorProp } from '../editors'
 import { useEditorHeaderVisibility } from '@/store/editorHeaderVisibility'
 import { FuzzerRemoteGV } from '@/enums/fuzzer'
 
-const mocks = vi.hoisted(() => ({ detect: vi.fn(), render: vi.fn(), noop: vi.fn(), save: vi.fn() }))
+const mocks = vi.hoisted(() => ({
+  detect: vi.fn(),
+  render: vi.fn(),
+  noop: vi.fn(),
+  save: vi.fn(),
+  editors: [] as { search: (line: number | null) => void; hiddenAreas: ReturnType<typeof vi.fn> }[],
+}))
 vi.mock('../prettifyPacket', () => ({
   formatPacketRender: mocks.detect,
   prettifyPacketRender: mocks.render,
@@ -27,6 +33,24 @@ vi.mock('@/components/yakitUI/YakitEditor/extraYakitEditor', () => ({
   HTTPPacketYakitEditor: ({ value, setValue, editorDidMount }) => {
     const [document] = useState(() => {
       const listeners = new Set<() => void>()
+      const findListeners = new Set<() => void>()
+      const findState = {
+        isRevealed: false,
+        currentMatch: null as { startLineNumber: number; endLineNumber: number } | null,
+        onFindReplaceStateChange: (fn: () => void) => {
+          findListeners.add(fn)
+          return { dispose: () => findListeners.delete(fn) }
+        },
+      }
+      const hiddenAreas = vi.fn()
+      mocks.editors.push({
+        hiddenAreas,
+        search: (line) => {
+          findState.isRevealed = line !== null
+          findState.currentMatch = line === null ? null : { startLineNumber: line, endLineNumber: line }
+          findListeners.forEach((fn) => fn())
+        },
+      })
       const model = {
         value,
         getLineCount: () => model.value.split('\n').length,
@@ -38,7 +62,8 @@ vi.mock('@/components/yakitUI/YakitEditor/extraYakitEditor', () => ({
         editor: {
           getModel: () => model,
           setSelection: vi.fn(),
-          setHiddenAreas: vi.fn(),
+          setHiddenAreas: hiddenAreas,
+          getContribution: () => ({ getState: () => findState }),
           onDidChangeModelContent: (fn: () => void) => {
             listeners.add(fn)
             return { dispose: () => listeners.delete(fn) }
@@ -87,7 +112,9 @@ vi.mock('antd', () => ({
       {children}
     </div>
   ),
-  Tooltip: ({ children }: React.PropsWithChildren) => <>{children}</>,
+  Tooltip: ({ title, children }: React.PropsWithChildren<{ title?: React.ReactNode }>) => (
+    <span title={typeof title === 'string' ? title : undefined}>{children}</span>
+  ),
   Form: Object.assign(({ children }: React.PropsWithChildren) => <form>{children}</form>, {
     Item: ({ children }: React.PropsWithChildren) => <div>{children}</div>,
   }),
@@ -181,6 +208,7 @@ const advance = (ms: number) =>
 beforeEach(() => {
   vi.useFakeTimers()
   vi.clearAllMocks()
+  mocks.editors.length = 0
   mocks.save.mockResolvedValue(undefined)
   useEditorHeaderVisibility.setState({ hidden: { request: false, response: false } })
   mocks.detect.mockImplementation((_packet, done) => done('<p>renderable</p>'))
@@ -402,6 +430,90 @@ describe('NewHTTPPacketEditor header visibility controls', () => {
       'false',
     )
     expect(screen.getByTestId('packet')).toHaveTextContent('replacement')
+    expect(mocks.save).not.toHaveBeenCalled()
+  })
+
+  it('search reveals only the current request and leaves preferences and other views untouched', () => {
+    useEditorHeaderVisibility.setState({ hidden: { request: true, response: true } })
+    render(
+      <>
+        <RequestEditor originValue={request} initialHidden />
+        <RequestEditor originValue={request} initialHidden />
+        <NewHTTPPacketEditor {...props} showHeaderVisibilityToggle />
+      </>,
+    )
+    act(() => mocks.editors[0].search(2))
+    expect(screen.getAllByRole('button', { name: 'NewHTTPPacketEditor.hideRequestHeaders' })).toHaveLength(1)
+    expect(screen.getAllByRole('button', { name: 'NewHTTPPacketEditor.showRequestHeaders' })).toHaveLength(1)
+    expect(screen.getByRole('button', { name: 'NewHTTPPacketEditor.showResponseHeaders' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    expect(useEditorHeaderVisibility.getState().hidden).toEqual({ request: true, response: true })
+    expect(mocks.save).not.toHaveBeenCalled()
+    act(() => mocks.editors[0].search(null))
+    fireEvent.click(screen.getByRole('button', { name: 'NewHTTPPacketEditor.hideRequestHeaders' }))
+    expect(screen.getAllByRole('button', { name: 'NewHTTPPacketEditor.showRequestHeaders' })).toHaveLength(2)
+  })
+
+  it('search reveals one response without saving, and its eye button can re-enable the existing default', async () => {
+    const response = 'HTTP/1.1 200 OK\nServer: example\n\nbody'
+    useEditorHeaderVisibility.setState({ hidden: { request: false, response: true } })
+    render(
+      <>
+        <NewHTTPPacketEditor {...props} originValue={response} showHeaderVisibilityToggle />
+        <NewHTTPPacketEditor {...props} originValue={response} showHeaderVisibilityToggle />
+      </>,
+    )
+    act(() => mocks.editors[0].search(2))
+    act(() => mocks.editors[0].search(null))
+    const button = screen.getByRole('button', { name: 'NewHTTPPacketEditor.hideResponseHeaders' })
+    expect(button.closest('[title]')).toHaveAttribute('title', 'NewHTTPPacketEditor.responseHeaderVisibilityScope')
+    expect(screen.getByRole('button', { name: 'NewHTTPPacketEditor.showResponseHeaders' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    expect(useEditorHeaderVisibility.getState().hidden.response).toBe(true)
+    expect(mocks.save).not.toHaveBeenCalled()
+    fireEvent.click(button)
+    expect(screen.getAllByRole('button', { name: 'NewHTTPPacketEditor.showResponseHeaders' })).toHaveLength(2)
+    expect(mocks.save).not.toHaveBeenCalled()
+    fireEvent.click(screen.getAllByRole('button', { name: 'NewHTTPPacketEditor.showResponseHeaders' })[0])
+    await advance(0)
+    expect(screen.getAllByRole('button', { name: 'NewHTTPPacketEditor.hideResponseHeaders' })).toHaveLength(2)
+    expect(mocks.save).toHaveBeenCalledTimes(1)
+    expect(JSON.parse(mocks.save.mock.calls[0][1]).response.hidden).toBe(false)
+  })
+
+  it('keeps a searched response expanded across refreshes, but applies defaults to a new response or explicit preferences', () => {
+    const response = 'HTTP/1.1 200 OK\nServer: example\n\nbody'
+    useEditorHeaderVisibility.setState({ hidden: { request: false, response: true } })
+    const view = render(
+      <NewHTTPPacketEditor {...props} originValue={response} showHeaderVisibilityToggle refreshTrigger={0} />,
+    )
+    act(() => mocks.editors[0].search(2))
+    act(() => mocks.editors[0].search(null))
+    view.rerender(
+      <NewHTTPPacketEditor {...props} originValue={response} showHeaderVisibilityToggle refreshTrigger={1} />,
+    )
+    expect(screen.getByRole('button', { name: 'NewHTTPPacketEditor.hideResponseHeaders' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    )
+    view.rerender(
+      <NewHTTPPacketEditor {...props} originValue={response + ' new'} showHeaderVisibilityToggle refreshTrigger={2} />,
+    )
+    expect(screen.getByRole('button', { name: 'NewHTTPPacketEditor.showResponseHeaders' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    act(() => mocks.editors[0].search(2))
+    act(() => mocks.editors[0].search(null))
+    act(() => useEditorHeaderVisibility.setState({ hidden: { request: false, response: true } }))
+    expect(screen.getByRole('button', { name: 'NewHTTPPacketEditor.showResponseHeaders' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
     expect(mocks.save).not.toHaveBeenCalled()
   })
 

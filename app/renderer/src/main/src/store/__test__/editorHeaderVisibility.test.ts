@@ -46,6 +46,7 @@ describe('persistent HTTP header visibility', () => {
       expect(store.getState().hidden).toEqual({ request: false, response: false })
       expect(store.getState().headers).toEqual(DEFAULT_HIDDEN_HTTP_HEADERS)
       expect(setRemoteValue).not.toHaveBeenCalled()
+      expect(getRemoteValue).toHaveBeenCalledExactlyOnceWith(key)
     },
   )
 
@@ -62,28 +63,6 @@ describe('persistent HTTP header visibility', () => {
     expect(store.getState().hidden).toEqual({ request: true, response: false })
     expect(getRemoteValue).toHaveBeenCalledExactlyOnceWith(key)
     expect(setRemoteValue).not.toHaveBeenCalled()
-  })
-
-  it('reads earlier split preferences without writing until the user explicitly changes settings', async () => {
-    const saved = persistence()
-    saved.set(FuzzerRemoteGV.WebFuzzerHideRequestHeaders, 'true')
-    saved.set(FuzzerRemoteGV.WebFuzzerHiddenRequestHeaders, '["X-Custom"]')
-    saved.set(FuzzerRemoteGV.WebFuzzerHideResponseHeaders, 'false')
-    saved.set(FuzzerRemoteGV.WebFuzzerHiddenResponseHeaders, '[]')
-    const store = await loadStore()
-    await store.getState().initialize()
-    expect(store.getState().headers).toEqual({ request: ['x-custom'], response: [] })
-    expect(store.getState().hidden).toEqual({ request: true, response: false })
-    expect(setRemoteValue).not.toHaveBeenCalled()
-    await store.getState().toggle('response')
-    expect(JSON.parse(saved.get(key)!)).toEqual({
-      request: { hidden: true, headers: ['x-custom'] },
-      response: { hidden: true, headers: [] },
-    })
-    vi.resetModules()
-    const restarted = await loadStore()
-    await restarted.getState().initialize()
-    expect(restarted.getState().hidden).toEqual({ request: true, response: true })
   })
 
   it.each(['request', 'response'] as const)(
@@ -153,7 +132,7 @@ describe('persistent HTTP header visibility', () => {
       const next = defaults()
       next[role] = { hidden: true, headers: ['Bad: header'] }
       const store = await loadStore()
-      await expect(store.getState().saveSettings(next)).rejects.toThrow('Invalid HTTP header name')
+      await expect(store.getState().saveSettings(next)).rejects.toThrow('HTTPHeaderVisibility.invalidName')
       expect(setRemoteValue).not.toHaveBeenCalled()
     },
   )
@@ -242,6 +221,15 @@ describe('persistent HTTP header visibility', () => {
     await store.getState().toggle('request')
     expect(store.getState().hidden.request).toBe(true)
     expect(JSON.parse(saved.get(key)!).request.hidden).toBe(true)
+  })
+
+  it('uses a translated message when a toolbar click cannot load the settings', async () => {
+    vi.mocked(getRemoteValue).mockRejectedValue(new Error('disconnected'))
+    const store = await loadStore()
+    await store.getState().toggle('response')
+    expect(yakitFailed).toHaveBeenLastCalledWith('Error: HTTPHeaderVisibility.notLoaded')
+    expect(setRemoteValue).not.toHaveBeenCalled()
+    expect(store.getState().hidden.response).toBe(false)
   })
 
   it('reports read failure and permits retry without overwriting stored preferences', async () => {
