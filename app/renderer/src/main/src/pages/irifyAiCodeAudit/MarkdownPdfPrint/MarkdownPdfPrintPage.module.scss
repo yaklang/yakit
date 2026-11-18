@@ -4,14 +4,20 @@
   margin: 0 !important;
   padding: 0 !important;
   width: 100% !important;
-  min-height: 100vh;
+  // 打印文档须随内容展开，解除应用根节点的单屏高度和溢出裁剪。
+  height: auto !important;
+  min-height: 0 !important;
+  overflow: visible !important;
   background-color: var(--Colors-Use-Neutral-Bg-Hover) !important;
+}
+
+:global(#root.markdown-pdf-print-page-root > .yakit-antd-app) {
+  height: auto;
 }
 
 .markdown-pdf-print {
   box-sizing: border-box;
   width: 100%;
-  min-height: 100vh;
   margin: 0;
   padding: 8px 12px;
   background-color: var(--Colors-Use-Neutral-Bg-Hover);
