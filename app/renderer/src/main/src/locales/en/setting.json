@@ -115,13 +115,10 @@
     "add": "Add",
     "clear": "Clear list",
     "restoreDefaults": "Restore defaults",
-    "reset": "Reset",
-    "save": "Save",
     "invalidName": "Enter a valid HTTP header name without colons, spaces, or values",
     "duplicateName": "This header is already listed (case-insensitive)",
     "saveFailed": "Could not save header visibility settings: {{error}}",
     "loadFailed": "Could not load settings. Please retry.",
-    "retry": "Retry",
-    "saved": "HTTP header visibility settings saved"
+    "retry": "Retry"
   }
 }

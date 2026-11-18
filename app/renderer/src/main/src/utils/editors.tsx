@@ -554,6 +554,10 @@ export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
   noShowHex?: boolean
   /** 显示常见 HTTP 头的隐藏开关，仅改变编辑器视图 */
   showHeaderVisibilityToggle?: boolean
+  /** 由外部工具栏渲染开关时，隐藏编辑器自带的按钮 */
+  hideHeaderVisibilityButton?: boolean
+  /** 工具栏按钮间距，默认 2px */
+  extraGap?: number
   /** 当前请求的显示状态（WebFuzzer 按页签管理）。未传时与 History/MITM 共用全局状态。 */
   requestHeadersHidden?: boolean
   onRequestHeadersHiddenChange?: (hidden: boolean) => void
@@ -605,6 +609,47 @@ interface TypeOptionsProps {
 
 interface RefreshEditorOperationRecordProps extends OperationRecordRes {
   editorId: string
+}
+
+interface HeaderVisibilityButtonProps {
+  role: 'request' | 'response'
+  hidden: boolean
+  disabled?: boolean
+  onToggle: () => void
+}
+
+/** 头部隐藏开关按钮；供编辑器内置工具栏与外部自定义工具栏复用 */
+export const HeaderVisibilityButton: React.FC<HeaderVisibilityButtonProps> = ({ role, hidden, disabled, onToggle }) => {
+  const { t } = useI18nNamespaces(['history'])
+  const label = t(
+    hidden
+      ? role === 'response'
+        ? 'NewHTTPPacketEditor.showResponseHeaders'
+        : 'NewHTTPPacketEditor.showRequestHeaders'
+      : role === 'response'
+        ? 'NewHTTPPacketEditor.hideResponseHeaders'
+        : 'NewHTTPPacketEditor.hideRequestHeaders',
+  )
+  return (
+    <Tooltip
+      title={role === 'response' ? t('NewHTTPPacketEditor.responseHeaderVisibilityScope', { action: label }) : label}
+      mouseLeaveDelay={0}
+      destroyOnHidden
+    >
+      {/* 禁用态按钮不触发鼠标事件，包一层 span 保证 tooltip 能正常关闭 */}
+      <span style={{ display: 'inline-flex' }}>
+        <YakitButton
+          size="small"
+          type={hidden ? 'primary' : 'outline2'}
+          icon={hidden ? <EyeOffOutlined /> : <EyeOutlined />}
+          aria-label={label}
+          aria-pressed={hidden}
+          disabled={disabled}
+          onClick={onToggle}
+        />
+      </span>
+    </Tooltip>
+  )
 }
 
 export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo((props: NewHTTPPacketEditorProp) => {
@@ -889,44 +934,25 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
     !!props.showHeaderVisibilityToggle && headersHidden && showTextEditor,
     !!isResponse,
     hiddenHeaderNames,
-    !props.readOnly ? onDocumentChange : undefined,
+    // 共享模式只由搜索/手动开关控制；切换报文或编辑内容都应继续使用保存的显示状态。
+    !props.readOnly && tabHeaderMode ? onDocumentChange : undefined,
     onSearchReveal,
   )
-  const headerVisibilityLabel = t(
-    headersHidden
-      ? isResponse
-        ? 'NewHTTPPacketEditor.showResponseHeaders'
-        : 'NewHTTPPacketEditor.showRequestHeaders'
-      : isResponse
-        ? 'NewHTTPPacketEditor.hideResponseHeaders'
-        : 'NewHTTPPacketEditor.hideRequestHeaders',
-  )
   const headerVisibilityToggle = props.showHeaderVisibilityToggle && (
-    <Tooltip
-      title={
-        isResponse
-          ? t('NewHTTPPacketEditor.responseHeaderVisibilityScope', { action: headerVisibilityLabel })
-          : headerVisibilityLabel
-      }
-    >
-      <YakitButton
-        size="small"
-        type={headersHidden ? 'primary' : 'outline2'}
-        icon={headersHidden ? <EyeOffOutlined /> : <EyeOutlined />}
-        aria-label={headerVisibilityLabel}
-        aria-pressed={headersHidden}
-        disabled={!showTextEditor}
-        onClick={() => {
-          if (tabHeaderMode) {
-            setTabHeadersHidden(!tabHeadersHidden)
-            return
-          }
-          setRevealed(undefined)
-          // 临时展开后再次点击不会反转已有的全局默认值，只清除本次展开。
-          if (headersHidden || !sharedHeadersHidden) void toggleHeaderVisibility(headerRole)
-        }}
-      />
-    </Tooltip>
+    <HeaderVisibilityButton
+      role={headerRole}
+      hidden={headersHidden}
+      disabled={!showTextEditor}
+      onToggle={() => {
+        if (tabHeaderMode) {
+          setTabHeadersHidden(!tabHeadersHidden)
+          return
+        }
+        setRevealed(undefined)
+        // 临时展开后再次点击不会反转已有的全局默认值，只清除本次展开。
+        if (headersHidden || !sharedHeadersHidden) void toggleHeaderVisibility(headerRole)
+      }}
+    />
   )
 
   // 如果这个不为空的话，默认直接打开搜索功能
@@ -1178,11 +1204,11 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
         }
         extra={
           props.noHeader ? (
-            headerVisibilityToggle || undefined
+            !props.hideHeaderVisibilityButton && (headerVisibilityToggle || undefined)
           ) : (
-            <div style={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: props.extraGap ?? 2, alignItems: 'center' }}>
               {props.extra}
-              {headerVisibilityToggle}
+              {!props.hideHeaderVisibilityButton && headerVisibilityToggle}
               {isShowBeautifyRender && renderTypeOptions()}
               {props.AfterBeautifyRenderBtn}
               {dataCompare && dataCompare.rightCode.length > 0 && (

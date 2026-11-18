@@ -2610,7 +2610,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
   }, [firstFull, secondFull])
 
   const firstNodeExtra = useMemo(() => {
-    return () => {
+    return (headerVisibilityToggle?: React.ReactNode) => {
       const preDisabled = !isbuttonIsSendReqStatus || currentPage === 0 || currentPage === 1
       const nextDisabled =
         !isbuttonIsSendReqStatus || !Number(total) || currentPage === 0 || currentPage >= Number(total)
@@ -2668,6 +2668,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                 </YakitCheckableTag>
               </>
             )}
+            {headerVisibilityToggle}
             <YakitButton
               size="small"
               type="outline2"

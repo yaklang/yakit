@@ -115,13 +115,10 @@
     "add": "新增",
     "clear": "清空清單",
     "restoreDefaults": "恢復預設值",
-    "reset": "重設",
-    "save": "儲存",
     "invalidName": "請輸入有效的 HTTP 標頭名稱，不包含冒號、空格或標頭值",
     "duplicateName": "該標頭名稱已在清單中（不區分大小寫）",
     "saveFailed": "儲存標頭隱藏設定失敗：{{error}}",
     "loadFailed": "讀取設定失敗，請重試",
-    "retry": "重試",
-    "saved": "HTTP 標頭隱藏設定已儲存"
+    "retry": "重試"
   }
 }

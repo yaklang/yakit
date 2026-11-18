@@ -4,13 +4,9 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import {
-  useEditorHeaderVisibility,
-  type HeaderRole,
-  type HeaderVisibilitySettings,
-} from '@/store/editorHeaderVisibility'
+import { useEditorHeaderVisibility, type HeaderRole } from '@/store/editorHeaderVisibility'
 import { DEFAULT_HIDDEN_HTTP_HEADERS, isValidHTTPHeaderName } from '@/utils/hiddenHTTPHeaders'
-import { yakitFailed, yakitNotify } from '@/utils/notification'
+import { yakitFailed } from '@/utils/notification'
 import styles from './HTTPHeaderVisibilitySettings.module.scss'
 
 const roles: HeaderRole[] = ['request', 'response']
@@ -18,20 +14,12 @@ const roles: HeaderRole[] = ['request', 'response']
 export const HTTPHeaderVisibilitySettings = () => {
   const { t } = useI18nNamespaces(['setting'])
   const { initialize, saveSettings, hidden, headers, ready } = useEditorHeaderVisibility()
-  const [draftOverride, setDraftOverride] = useState<Record<HeaderRole, HeaderVisibilitySettings>>()
-  // Switching top-level application tabs keeps this panel mounted; changing settings sections discards its draft.
-  // Follow saved preferences until the user starts editing.
-  const savedSettings: Record<HeaderRole, HeaderVisibilitySettings> = {
-    request: { hidden: hidden.request, headers: headers.request },
-    response: { hidden: hidden.response, headers: headers.response },
-  }
-  const draft = draftOverride || (ready.request && ready.response ? savedSettings : undefined)
   const [input, setInput] = useState({ request: '', response: '' })
   const [errors, setErrors] = useState({ request: '', response: '' })
-  const dirty = !!draftOverride || !!input.request.trim() || !!input.response.trim()
   const [saving, setSaving] = useState(false)
   const [loadFailed, setLoadFailed] = useState(false)
   const [attempt, setAttempt] = useState(0)
+  const loaded = ready.request && ready.response
 
   useEffect(() => {
     let active = true
@@ -48,58 +36,41 @@ export const HTTPHeaderVisibilitySettings = () => {
     }
   }, [initialize, attempt])
 
-  const resetDraft = () => {
-    setDraftOverride(undefined)
-    setInput({ request: '', response: '' })
-    setErrors({ request: '', response: '' })
-  }
-
-  const update = (role: HeaderRole, settings: Partial<HeaderVisibilitySettings>) => {
-    setDraftOverride((current) => {
-      const previous = current || savedSettings
-      return { ...previous, [role]: { ...previous[role], ...settings } }
-    })
-  }
-
-  const headersWithInput = (role: HeaderRole) => {
-    const headers = draft?.[role].headers || []
-    const name = input[role].trim().toLowerCase()
-    if (!name) return headers
-    const error = !isValidHTTPHeaderName(name)
-      ? t('HTTPHeaderVisibilitySettings.invalidName')
-      : headers.includes(name)
-        ? t('HTTPHeaderVisibilitySettings.duplicateName')
-        : ''
-    setErrors((current) => ({ ...current, [role]: error }))
-    return error ? undefined : [...headers, name]
-  }
-
-  const add = (role: HeaderRole) => {
-    const headers = headersWithInput(role)
-    if (!headers) return
-    update(role, { headers })
-    setInput((current) => ({ ...current, [role]: '' }))
-  }
-
-  const save = async () => {
-    if (!draft || saving) return
-    const request = headersWithInput('request')
-    const response = headersWithInput('response')
-    if (!request || !response) return
+  // 改动即时写入远端配置；隐藏开关仍由编辑器维护，写入时保留其实时值。
+  const persist = async (role: HeaderRole, nextHeaders: readonly string[]) => {
+    if (!loaded || saving) return false
     setSaving(true)
     try {
       await saveSettings({
-        // 隐藏开关只在编辑器内切换；保存名单时使用实时状态，避免覆盖草稿期间的切换。
-        request: { hidden: hidden.request, headers: request },
-        response: { hidden: hidden.response, headers: response },
+        request: { hidden: hidden.request, headers: role === 'request' ? nextHeaders : headers.request },
+        response: { hidden: hidden.response, headers: role === 'response' ? nextHeaders : headers.response },
       })
-      resetDraft()
-      yakitNotify('success', t('HTTPHeaderVisibilitySettings.saved'))
+      return true
     } catch (error) {
       yakitFailed(t('HTTPHeaderVisibilitySettings.saveFailed', { error: String(error) }))
+      return false
     } finally {
       setSaving(false)
     }
+  }
+
+  const add = async (role: HeaderRole) => {
+    const name = input[role].trim().toLowerCase()
+    if (!name) return
+    const error = !isValidHTTPHeaderName(name)
+      ? t('HTTPHeaderVisibilitySettings.invalidName')
+      : headers[role].includes(name)
+        ? t('HTTPHeaderVisibilitySettings.duplicateName')
+        : ''
+    setErrors((current) => ({ ...current, [role]: error }))
+    if (error) return
+    if (!(await persist(role, [name, ...headers[role]]))) return
+    setInput((current) => ({ ...current, [role]: '' }))
+  }
+
+  const resetInput = (role: HeaderRole) => {
+    setInput((current) => ({ ...current, [role]: '' }))
+    setErrors((current) => ({ ...current, [role]: '' }))
   }
 
   return (
@@ -118,7 +89,7 @@ export const HTTPHeaderVisibilitySettings = () => {
             {t('HTTPHeaderVisibilitySettings.retry')}
           </YakitButton>
         </div>
-      ) : !draft ? (
+      ) : !loaded ? (
         <div className={styles.loading}>
           <YakitSpin spinning />
         </div>
@@ -129,12 +100,12 @@ export const HTTPHeaderVisibilitySettings = () => {
               <div className={styles.heading}>
                 <h3>{t(`HTTPHeaderVisibilitySettings.${role}`)}</h3>
                 <span className={styles.count}>
-                  {t('HTTPHeaderVisibilitySettings.count', { count: draft[role].headers.length })}
+                  {t('HTTPHeaderVisibilitySettings.count', { count: headers[role].length })}
                 </span>
               </div>
               <div className={styles.list}>
-                {draft[role].headers.length ? (
-                  draft[role].headers.map((header) => (
+                {headers[role].length ? (
+                  headers[role].map((header) => (
                     <div key={header} className={styles.row}>
                       <span>{header}</span>
                       <YakitButton
@@ -144,7 +115,12 @@ export const HTTPHeaderVisibilitySettings = () => {
                         disabled={saving}
                         icon={<TrashOutlined />}
                         aria-label={t('HTTPHeaderVisibilitySettings.remove', { header })}
-                        onClick={() => update(role, { headers: draft[role].headers.filter((name) => name !== header) })}
+                        onClick={() =>
+                          void persist(
+                            role,
+                            headers[role].filter((name) => name !== header),
+                          )
+                        }
                       />
                     </div>
                   ))
@@ -154,7 +130,6 @@ export const HTTPHeaderVisibilitySettings = () => {
               </div>
               <div className={styles.add}>
                 <YakitInput
-                  size="middle"
                   value={input[role]}
                   disabled={saving}
                   placeholder={t('HTTPHeaderVisibilitySettings.placeholder')}
@@ -166,9 +141,9 @@ export const HTTPHeaderVisibilitySettings = () => {
                     setInput((current) => ({ ...current, [role]: value }))
                     setErrors((current) => ({ ...current, [role]: '' }))
                   }}
-                  onPressEnter={() => add(role)}
+                  onPressEnter={() => void add(role)}
                 />
-                <YakitButton type="outline2" disabled={saving || !input[role].trim()} onClick={() => add(role)}>
+                <YakitButton type="outline2" disabled={saving || !input[role].trim()} onClick={() => void add(role)}>
                   {t('HTTPHeaderVisibilitySettings.add')}
                 </YakitButton>
               </div>
@@ -180,11 +155,10 @@ export const HTTPHeaderVisibilitySettings = () => {
               <div className={styles.actions}>
                 <YakitButton
                   type="text2"
-                  disabled={saving || !draft[role].headers.length}
+                  disabled={saving || !headers[role].length}
                   onClick={() => {
-                    update(role, { headers: [] })
-                    setInput((current) => ({ ...current, [role]: '' }))
-                    setErrors((current) => ({ ...current, [role]: '' }))
+                    resetInput(role)
+                    void persist(role, [])
                   }}
                 >
                   {t('HTTPHeaderVisibilitySettings.clear')}
@@ -193,9 +167,8 @@ export const HTTPHeaderVisibilitySettings = () => {
                   type="text2"
                   disabled={saving}
                   onClick={() => {
-                    update(role, { headers: [...DEFAULT_HIDDEN_HTTP_HEADERS[role]] })
-                    setInput((current) => ({ ...current, [role]: '' }))
-                    setErrors((current) => ({ ...current, [role]: '' }))
+                    resetInput(role)
+                    void persist(role, [...DEFAULT_HIDDEN_HTTP_HEADERS[role]])
                   }}
                 >
                   {t('HTTPHeaderVisibilitySettings.restoreDefaults')}
@@ -205,14 +178,6 @@ export const HTTPHeaderVisibilitySettings = () => {
           ))}
         </div>
       )}
-      <div className={styles.footer}>
-        <YakitButton type="outline2" disabled={!draft || !dirty || saving} onClick={resetDraft}>
-          {t('HTTPHeaderVisibilitySettings.reset')}
-        </YakitButton>
-        <YakitButton disabled={!draft} loading={saving} onClick={() => void save()}>
-          {t('HTTPHeaderVisibilitySettings.save')}
-        </YakitButton>
-      </div>
     </div>
   )
 }

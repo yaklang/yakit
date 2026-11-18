@@ -115,13 +115,10 @@
     "add": "添加",
     "clear": "清空列表",
     "restoreDefaults": "恢复默认",
-    "reset": "重置",
-    "save": "保存",
     "invalidName": "请输入有效的 HTTP 头名，不包含冒号、空格或头部值",
     "duplicateName": "该头名已在列表中（不区分大小写）",
     "saveFailed": "保存头部隐藏设置失败：{{error}}",
     "loadFailed": "读取设置失败，请重试",
-    "retry": "重试",
-    "saved": "HTTP 头部隐藏设置已保存"
+    "retry": "重试"
   }
 }

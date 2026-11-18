@@ -119,17 +119,3 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
-
-.footer {
-  position: sticky;
-  bottom: 0;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-top: 20px;
-  padding: 12px 0;
-  border-top: 1px solid var(--Colors-Use-Neutral-Border);
-  background: var(--Colors-Use-Basic-Background);
-}

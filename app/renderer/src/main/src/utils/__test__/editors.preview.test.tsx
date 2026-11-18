@@ -648,7 +648,7 @@ describe('NewHTTPPacketEditor header visibility controls', () => {
     expect(JSON.parse(mocks.save.mock.calls[0][1]).request.hidden).toBe(true)
   })
 
-  it('editing a shared request reveals headers locally without writing preferences', () => {
+  it('editing a shared request keeps using the saved hidden state without writing preferences', () => {
     useEditorHeaderVisibility.setState({ hidden: { request: true, response: false } })
     render(
       <NewHTTPPacketEditor
@@ -665,9 +665,9 @@ describe('NewHTTPPacketEditor header visibility controls', () => {
     fireEvent.change(screen.getByRole('textbox', { name: 'packet input' }), {
       target: { value: request + ' changed' },
     })
-    expect(screen.getByRole('button', { name: 'NewHTTPPacketEditor.hideRequestHeaders' })).toHaveAttribute(
+    expect(screen.getByRole('button', { name: 'NewHTTPPacketEditor.showRequestHeaders' })).toHaveAttribute(
       'aria-pressed',
-      'false',
+      'true',
     )
     expect(useEditorHeaderVisibility.getState().hidden.request).toBe(true)
     expect(mocks.save).not.toHaveBeenCalled()

@@ -257,8 +257,6 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
   // 编辑器发送到对比器
   const { compareState, setCompareLeft, setCompareRight } = useHttpFlowStore()
   const fromMITM = useMemo(() => props.pageType === 'MITM', [props.pageType])
-  // History / MITM 共用头部显示状态；WebFuzzer 有自己的按页签状态，不在此接入。
-  const enableHeaderVisibilityToggle = props.pageType === 'History' || props.pageType === 'MITM'
 
   const sendCodeCompareMenuItem = (type: string) => {
     return {
@@ -480,7 +478,6 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                         foldBinaryFuzztag={binaryDisplayEnabled}
                         onFoldBinaryFuzztagChange={binaryDisplayEnabledStore.setEnabled}
                         noHeader={true}
-                        showHeaderVisibilityToggle={enableHeaderVisibilityToggle}
                         originValue={flow.RequestString}
                         originalPackage={flow.Request}
                         defaultHttps={flow?.IsHTTPS}
@@ -542,7 +539,6 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                         readOnly={true}
                         noHeader={true}
                         isResponse={true}
-                        showHeaderVisibilityToggle={enableHeaderVisibilityToggle}
                         originValue={flow.ResponseString}
                         defaultHttps={flow?.IsHTTPS}
                         // actions={[...actionFuzzer]}
@@ -1967,8 +1963,6 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
     })
   }
   const fromMITM = useMemo(() => props.pageType === 'MITM', [props.pageType])
-  // History / MITM 共用头部显示状态。
-  const enableHeaderVisibilityToggle = pageType === 'History' || pageType === 'MITM'
   const packets = (
     <YakitResizeBox
       separatorNode={
@@ -2006,7 +2000,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
           <NewHTTPPacketEditor
             fromMITM={fromMITM}
             keepSearchName={`${pageType}-request`}
-            showHeaderVisibilityToggle={enableHeaderVisibilityToggle}
+            showHeaderVisibilityToggle={pageType === 'History' || pageType === 'MITM'}
             isShowBeautifyRender={!flow?.IsTooLargeRequest}
             title={(() => {
               const titleEle: ReactNode[] = []
@@ -2154,7 +2148,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
             fromMITM={fromMITM}
             downstreamProxyStr={props.downstreamProxyStr}
             keepSearchName={`${pageType}-response`}
-            showHeaderVisibilityToggle={enableHeaderVisibilityToggle}
+            showHeaderVisibilityToggle={pageType === 'History' || pageType === 'MITM'}
             language={flow?.DisableRenderStyles ? 'text' : undefined}
             typeOptionVal={resTypeOptionVal}
             onTypeOptionVal={(typeOptionVal) => {

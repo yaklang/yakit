@@ -2930,7 +2930,8 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
 
     const [hex, setHex] = useState<boolean>(false)
     const [privacy, setPrivacy] = useState(false)
-    const firstNodeExtra = () => (
+    const [requestHeadersHidden, setRequestHeadersHidden] = useState(false)
+    const firstNodeExtra = (headerVisibilityToggle?: React.ReactNode) => (
       <>
         {+(firstNodeSize?.width || 0) < 350 ? (
           <YakitPopover
@@ -2960,6 +2961,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
             </YakitCheckableTag>
           </>
         )}
+        {headerVisibilityToggle}
         <YakitButton
           size="small"
           type="primary"
@@ -3118,6 +3120,8 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                 ref={webFuzzerNewEditorRef}
                 refreshTrigger={refreshTrigger}
                 request={requestHttpRef.current}
+                requestHeadersHidden={requestHeadersHidden}
+                onRequestHeadersHiddenChange={setRequestHeadersHidden}
                 setRequest={(i) => onSetRequestHttp(i)}
                 isHttps={advancedConfigValue.isHttps}
                 hotPatchCode={hotPatchCode}
