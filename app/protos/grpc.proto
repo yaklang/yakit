@@ -143,6 +143,7 @@ service Yak {
 
   rpc WatchProcessConnection(stream WatchProcessRequest) returns (stream WatchProcessResponse);
   rpc MITMV2(stream MITMV2Request) returns (stream MITMV2Response);
+  rpc GetMITMDiagnostics(GetMITMDiagnosticsRequest) returns (GetMITMDiagnosticsResponse);
 
   // 开启端口
   rpc OpenPort(stream Input) returns (stream Output);
@@ -750,10 +751,6 @@ service Yak {
   rpc QueryTrafficPacket(QueryTrafficPacketRequest) returns (QueryTrafficPacketResponse);
   rpc QueryTrafficTCPReassembled(QueryTrafficTCPReassembledRequest) returns (QueryTrafficTCPReassembledResponse);
   rpc ParseTraffic(ParseTrafficRequest) returns (ParseTrafficResponse);
-  rpc ImportPCAPFile(ImportPCAPFileRequest) returns (stream ImportPCAPFileResponse);
-  rpc QueryPCAPDatabase(QueryPCAPDatabaseRequest) returns (QueryPCAPDatabaseResponse);
-  rpc ExportPCAPData(ExportPCAPDataRequest) returns (ExportPCAPDataResponse);
-  rpc DeletePCAPDatabase(DeletePCAPDatabaseRequest) returns (DeletePCAPDatabaseResponse);
 
   // 与前端交互的双工长连接，用于通知某些消息
   rpc DuplexConnection(stream DuplexConnectionRequest) returns (stream DuplexConnectionResponse);
@@ -996,6 +993,7 @@ service Yak {
   rpc GetToolSetList(Empty) returns(GetToolSetListResponse);
 
   rpc GetAIToolList(GetAIToolListRequest) returns(GetAIToolListResponse);
+  rpc QueryAITool(QueryAIToolRequest) returns(QueryAIToolResponse);
   rpc DeleteAITool(DeleteAIToolRequest) returns(DbOperateMessage);
   rpc SaveAITool(SaveAIToolRequest) returns(DbOperateMessage);
   rpc SaveAIToolV2(SaveAIToolRequest) returns(SaveAIToolV2Response);
@@ -1043,6 +1041,7 @@ service Yak {
   // Knowledge Base
   rpc GetKnowledgeBaseNameList(Empty) returns(GetKnowledgeBaseNameListResponse);
   rpc GetKnowledgeBase(GetKnowledgeBaseRequest) returns(GetKnowledgeBaseResponse);
+  rpc QueryKnowledgeBase(QueryKnowledgeBaseRequest) returns(QueryKnowledgeBaseResponse);
   rpc GetKnowledgeBaseTypeList(Empty) returns(GetKnowledgeBaseTypeListResponse);
   rpc DeleteKnowledgeBase(DeleteKnowledgeBaseRequest) returns(GeneralResponse);
   rpc CreateKnowledgeBase(CreateKnowledgeBaseRequest) returns(GeneralResponse);
@@ -1137,6 +1136,21 @@ service Yak {
   // filesystem. Returned paths are engine paths and can be used by file
   // Fuzztags in both local and remote-engine modes.
   rpc UploadToTemporaryFile(stream UploadToTemporaryFileRequest) returns (UploadToTemporaryFileResponse);
+
+  // Query resources attached by the latest input and the distinct resources
+  // attached throughout an AI session.
+  rpc GetAISessionCurrentResources(GetAISessionCurrentResourcesRequest) returns (GetAISessionCurrentResourcesResponse);
+
+  // Offline capture library (packet viewing).
+  rpc ImportPCAPFile(ImportPCAPFileRequest) returns (stream ImportPCAPFileResponse);
+  rpc QueryPCAPDatabase(QueryPCAPDatabaseRequest) returns (QueryPCAPDatabaseResponse);
+  rpc QueryPCAPPackets(QueryPCAPPacketsRequest) returns (QueryPCAPPacketsResponse);
+  rpc GetPCAPPacketDetail(GetPCAPPacketDetailRequest) returns (PCAPPacketDetail);
+  rpc ReadPCAPBytes(ReadPCAPBytesRequest) returns (ReadPCAPBytesResponse);
+  // Superseded by QueryPCAPPackets and GetPCAPPacketDetail.
+  rpc QueryPCAPPacket(QueryPCAPPacketRequest) returns (QueryPCAPPacketResponse);
+  rpc ExportPCAPData(ExportPCAPDataRequest) returns (ExportPCAPDataResponse);
+  rpc DeletePCAPDatabase(DeletePCAPDatabaseRequest) returns (DeletePCAPDatabaseResponse);
 }
 
 // IMBotConfig 描述一个 IM 平台 bot 的配置凭证。
@@ -1801,6 +1815,7 @@ message GetKnowledgeBaseResponse {
   Paging Pagination = 2;
   int64 Total = 3;
 }
+
 message CreateKnowledgeBaseRequest {
   string KnowledgeBaseName = 1;
   string KnowledgeBaseDescription = 2;
@@ -2072,6 +2087,7 @@ message AIToolFilter {
   string Keyword = 3;
   bool OnlyFavorites = 4;
   int64 ID = 5;
+  repeated int64 IDs = 6;
 }
 
 message AITool {
@@ -2186,6 +2202,7 @@ message AIInputEvent {
   // 配置热补丁目标任务的逻辑 ID (AIStatefulTask.GetId)。
   // 非空时，仅当前正在执行且 ID 匹配的任务会应用该热补丁（主要用于能力热更新）。
   string TaskId = 17;
+  // JSON metadata for a question/form submission. FreeInput remains human-readable.
   string UserInteraction = 18;
 }
 
@@ -2299,7 +2316,7 @@ message AIStartParams {
   int64 ReActMaxIteration = 27;
 
   // 限制 Timeline 的最大条目和最大内容大小（bytes）
-  int64 TimelineItemLimit = 28; // 已经废弃，功能不可用了。运行时上下文请看 RuntimeContextSizeLimit
+  int64 TimelineItemLimit = 28; // 已经废弃，功能不可用了，只需要关注 TimelineContentSizeLimit 就好
   // Deprecated: 运行时的 Timeline 现在除了普通历史，还承载 Skill 正文、Evidence 等
   // 运行时上下文，内容规模已经不同；而且前端会下发一个非零默认值，覆盖服务端默认阈值。
   // 请改用 RuntimeContextSizeLimit。
@@ -3214,10 +3231,17 @@ message QueryTrafficSessionRequest {
 }
 
 message PcapXRequest {
-  // first request
+  // First request. Exactly one interface is supported in this phase.
   repeated string NetInterfaceList = 1;
+  // Deprecated: unused compatibility field. Use DurationMilliseconds.
   double TimeoutFloat = 2;
   SuricataConfig SuricataLoader = 3;
+  string BPF = 4;
+  int32 Snaplen = 5;
+  bool Promisc = 6;
+  int64 BatchSize = 7;
+  int64 FlushIntervalMilliseconds = 8;
+  int64 DurationMilliseconds = 9;
 }
 
 message SuricataConfig {
@@ -3229,6 +3253,16 @@ message PcapXResponse {
   int64 NetInterfaceTransferKBPerSeconds = 2;
   int64 TCPReassembledCount = 3;
   int64 TrafficSessionCount = 4;
+  string DatasetID = 5;
+  string State = 6;
+  int64 BytesIndexed = 7;
+  int64 TotalBytes = 8;
+  int64 ProtocolCount = 9;
+  int64 SessionCount = 10;
+  int64 StreamCount = 11;
+  int64 StreamChunkCount = 12;
+  bool Finished = 13;
+  string Error = 14;
 }
 
 
@@ -9136,6 +9170,8 @@ message SSARisk {
   string Solution = 28;
   string Description = 29 ;
   string LatestDisposalStatus = 30; // 最新处置状态 not_set | is_issue | not_issue | suspicious
+  // Stable result identity, including results without an audit-result row.
+  string ResultUUID = 32;
 }
 
 message SSARisksFilter {
@@ -9160,6 +9196,7 @@ message SSARisksFilter {
   SSARiskDiffRequest SSARiskDiffRequest = 18;
   // 增量查询
   bool Incremental = 19;
+  repeated string ResultUUID = 20;
 }
 
 message QuerySSARisksRequest {
@@ -9645,8 +9682,11 @@ message AIGlobalConfig {
   string AIPlanPrompt = 10;
   // Single-model routing takes precedence over tier selection without deleting tier lists.
   bool SingleModelMode = 11;
+  // Retry failed model calls and invalid model output until recovery or cancellation.
   bool RetryForever = 12;
+  // Opt-in complete HTTP diagnostics for subsequent model calls on this engine.
   bool NetworkDebug = 13;
+  // Engine-wide model attempts per minute; zero disables proactive rate limiting.
   int64 ModelRequestsPerMinute = 14;
 }
 
@@ -10442,6 +10482,112 @@ message MITMPipelineStats {
 
   int64 DatabaseWriteQueueDepth = 25;
   int64 DatabaseWriteQueueCapacity = 26;
+  MITMPipelineDiagnostics Diagnostics = 27;
+}
+
+message MITMPipelineDiagnostics {
+  repeated MITMStageStats HTTPStages = 1;
+  int64 WebSocketHandshaking = 2;
+  int64 WebSocketOnline = 3;
+  uint64 WebSocketHandshakeFailedLastMinute = 4;
+  int64 PersistBlocked = 5;
+  int64 OldestPersistBlockedAgeMs = 6;
+  int64 DatabaseWriteTakenUnfinished = 7;
+  int64 PersistSubmitToStartP95Ms = 8;
+  uint64 PersistSubmitToStartSamples = 9;
+  int64 PersistWriteP95Ms = 10;
+  uint64 PersistWriteSamples = 11;
+  int64 OldestWebSocketHandshakeAgeMs = 12;
+  // Queue wait is measured for tasks whose accepted event precedes write start.
+  int64 PersistQueueWaitP95Ms = 13;
+  uint64 PersistQueueWaitSamples = 14;
+  int64 InScopeWebSocketHandshaking = 15;
+  int64 OldestInScopeWebSocketHandshakeAgeMs = 16;
+}
+
+message MITMStageStats {
+  string Stage = 1;
+  int64 Count = 2;
+  int64 OldestAgeMs = 3;
+  int64 BrowserBackgroundCount = 4;
+  int64 OldestBrowserBackgroundAgeMs = 5;
+  int64 OldestOtherAgeMs = 6;
+  int64 FilteredCount = 7;
+  // Includes traffic still awaiting a filter decision. Excludes browser background traffic.
+  int64 InScopeOtherCount = 8;
+  int64 OldestInScopeOtherAgeMs = 9;
+}
+
+message GetMITMDiagnosticsRequest {
+  string SessionId = 1;
+  // storage, active, slow, failed, websocket, range, or detail.
+  string View = 2;
+  int32 Offset = 3;
+  int32 Limit = 4;
+  int64 FromUnixMs = 5;
+  int64 ToUnixMs = 6;
+  uint64 TraceId = 7;
+  string ConnectionId = 8;
+  // capture includes undecided traffic and excludes requests rejected by the MITM filters.
+  // Empty or all includes every retained sample. focus and browser are legacy scopes.
+  string TrafficScope = 9;
+  // For the active view, select HTTP requests currently in this stage.
+  string Stage = 10;
+}
+
+message GetMITMDiagnosticsResponse {
+  string SessionId = 1;
+  int64 GeneratedAtUnixMs = 2;
+  repeated MITMStorageSample Storage = 3;
+  repeated MITMTraceEntry Traces = 4;
+  int32 Total = 5;
+  MITMTraceEntry Detail = 6;
+  int32 BrowserBackgroundTotal = 7;
+}
+
+message MITMStorageSample {
+  int64 AtUnixMs = 1;
+  int64 PersistPending = 2;
+  uint64 RequestTotal = 3;
+  uint64 DispatchTotal = 4;
+  uint64 UpstreamCompletedTotal = 5;
+  uint64 PersistEnqueuedTotal = 6;
+  uint64 PersistedTotal = 7;
+  uint64 PersistFailedTotal = 8;
+  int64 PersistBlocked = 9;
+}
+
+message MITMTraceEntry {
+  uint64 TraceId = 1;
+  string Host = 2;
+  string Method = 3;
+  string Protocol = 4;
+  // Client-side connection identity within the MITM engine.
+  string ConnectionId = 5;
+  string Stage = 6;
+  string Outcome = 7;
+  int32 StatusCode = 8;
+  int64 StartedAtUnixMs = 9;
+  int64 StageAtUnixMs = 10;
+  int64 FinishedAtUnixMs = 11;
+  uint64 FlowId = 12;
+  uint32 Attempts = 13;
+  // A bounded error category derived from the actual operation.
+  string ErrorCode = 14;
+  repeated MITMTraceSpan Spans = 15;
+  bool SpansTruncated = 16;
+  // Known browser service inferred from the destination hostname.
+  string BrowserService = 17;
+  // pending, passed, request_excluded, response_excluded, static_js_excluded, or websocket_excluded.
+  string FilterDecision = 18;
+}
+
+message MITMTraceSpan {
+  string Stage = 1;
+  int64 StartedAtUnixMs = 2;
+  int64 FinishedAtUnixMs = 3;
+  uint32 Attempt = 4;
+  string Protocol = 5;
 }
 
 message QueryContextMenuActionsRequest {
@@ -10552,6 +10698,32 @@ message BrowserExtensionTaskEvent {
   int64 Timestamp = 6;
   uint64 Sequence = 7;
 }
+
+message AISessionTaskResourceInfo {
+  string Type = 1;
+  string Key = 2;
+  string Value = 3;
+  // Deprecated: retained for wire compatibility and not populated.
+  string Scope = 4;
+  // Deprecated: retained for wire compatibility and not populated.
+  string Source = 5;
+}
+
+message GetAISessionCurrentResourcesRequest {
+  string SessionID = 1;
+}
+
+message GetAISessionCurrentResourcesResponse {
+  string SessionID = 1;
+  string TaskID = 2;
+  string UserInputUUID = 3;
+  // Resources attached by the latest input.
+  repeated AISessionTaskResourceInfo TaskResources = 4;
+  // Distinct resources attached by inputs in this session. Resources from newer
+  // inputs come first; order within each input is preserved.
+  repeated AISessionTaskResourceInfo SessionResources = 5;
+}
+
 // A credential-free, bounded static GET. Network is read only for transport settings;
 // no fuzzing, hot patch, browser transform, task creation or persistence is performed.
 message HTTPPreviewResourceRequest {
@@ -10564,6 +10736,36 @@ message HTTPPreviewResourceResponse {
   string URL = 1;
   string MimeType = 2;
   bytes Data = 3;
+}
+
+message QueryAIToolRequest {
+  AIToolFilter Filter = 1;
+  Paging Pagination = 2;
+}
+
+message QueryAIToolResponse {
+  Paging Pagination = 1;
+  repeated AITool Data = 2;
+  int64 Total = 3;
+}
+
+message KnowledgeBaseFilter {
+  repeated int64 IDs = 1;
+  repeated string Names = 2;
+  string Keyword = 3;
+  repeated string Types = 4;
+  repeated string Tags = 5;
+}
+
+message QueryKnowledgeBaseRequest {
+  KnowledgeBaseFilter Filter = 1;
+  Paging Pagination = 2;
+}
+
+message QueryKnowledgeBaseResponse {
+  Paging Pagination = 1;
+  repeated KnowledgeBaseInfo Data = 2;
+  int64 Total = 3;
 }
 
 message PCAPDatabase {
@@ -10660,6 +10862,134 @@ message QueryPCAPPacketResponse {
   int64 NextCursor = 4;
   bool HasMore = 5;
   bool Truncated = 6; // Page shortened by byte budget; individual Raw values remain complete.
+}
+
+message PCAPPacketsFilter {
+  int64 Id = 1; // Exact original packet ID; zero disables the ID predicate.
+  repeated string SourceIP = 2; // OR within this field; canonical IPv4/IPv6.
+  repeated string DestinationIP = 3;
+  repeated int32 SourcePort = 4; // Port zero is a valid exact value.
+  repeated int32 DestinationPort = 5;
+  repeated string TransportLayerTypes = 6; // Case-insensitive, for example tcp or udp.
+  repeated string ApplicationLayerTypes = 7; // Completion-frame semantics, for example http.
+  repeated string LinkLayerTypes = 8; // Names or numeric DLT values.
+  repeated string NetworkLayerTypes = 9; // ipv4 or ipv6.
+  optional int64 StartTimestampNS = 10;
+  optional int64 EndTimestampNS = 11; // Exclusive: [StartTimestampNS, EndTimestampNS).
+  string Keyword = 12; // Literal endpoint/transport/packet summary/message summary substring.
+}
+
+message PCAPPacketSummary {
+  int64 Id = 1;
+  optional int64 TimestampNS = 2;
+  int64 CapturedLength = 3;
+  int64 OriginalLength = 4;
+  int64 LinkType = 5;
+  int64 Section = 6;
+  int64 Interface = 7;
+  string SourceMAC = 8;
+  string DestinationMAC = 9;
+  string VLANStack = 10;
+  string SourceIP = 11;
+  string DestinationIP = 12;
+  int32 SourcePort = 13;
+  int32 DestinationPort = 14;
+  string Transport = 15;
+  string Protocol = 16; // Effective protocol shown in the packet-list Protocol column.
+  repeated string ApplicationProtocols = 17; // Completed by this frame.
+  string Info = 18; // Bounded summary shown in the packet-list Info column.
+  string DecodeError = 19;
+}
+
+message QueryPCAPPacketsRequest {
+  string DatasetID = 1;
+  PCAPPacketsFilter Filter = 2;
+  Paging Pagination = 3; // ID ascending, AfterId + Limit only; Limit defaults to 100, max 1000.
+  // Absent: count the first page/cursor origin and skip later cursor pages.
+  // True: count every page. False: do not count.
+  optional bool IncludeTotal = 4;
+}
+
+message QueryPCAPPacketsResponse {
+  Paging Pagination = 1;
+  repeated PCAPPacketSummary Data = 2;
+  optional int64 Total = 3; // Exact matching packet count; absent when not computed.
+  int64 NextCursor = 4;
+  bool HasMore = 5;
+}
+
+message PCAPFieldRange {
+  string SourceID = 1; // frame:<id> or message:<id>.
+  int64 BitOffset = 2; // Bits from the beginning of SourceID.
+  int64 BitLength = 3;
+}
+
+message PCAPFieldNode {
+  string Name = 1;
+  optional string DisplayValue = 2; // Absent for a pure container node.
+  repeated PCAPFieldNode Children = 3;
+  repeated PCAPFieldRange Ranges = 4; // Empty when no reliable wire span is known.
+}
+
+message PCAPByteSource {
+  string ID = 1;
+  string Kind = 2; // frame or message.
+  string Name = 3;
+  int64 Length = 4;
+  string Completeness = 5; // Protocol evidence; independent from EOF.
+  repeated uint64 ContributorPacketIds = 6;
+  uint64 CompletedInPacketId = 7;
+  bytes InitialData = 8; // Bounded prefix; full content is available through ReadPCAPBytes.
+  int64 InitialOffset = 9;
+  bool InitialTruncated = 10; // InitialData does not cover the full source.
+}
+
+message PCAPMessageDetail {
+  uint64 MessageId = 1;
+  string Protocol = 2;
+  string Summary = 3;
+  string Status = 4;
+  string Completeness = 5;
+  string SourceID = 6;
+  repeated PCAPFieldNode Nodes = 7;
+  string DecodeError = 8;
+  bool NodesTruncated = 9; // Display-field tree reached its storage projection limit.
+}
+
+message PCAPRelatedMessage {
+  uint64 MessageId = 1;
+  string Protocol = 2;
+  string Summary = 3;
+  string SourceID = 4;
+  uint64 CompletedInPacketId = 5;
+  string Completeness = 6;
+}
+
+message GetPCAPPacketDetailRequest {
+  string DatasetID = 1;
+  int64 PacketID = 2;
+}
+
+message PCAPPacketDetail {
+  PCAPPacketSummary Packet = 1;
+  repeated PCAPFieldNode Nodes = 2; // Original frame tree; ranges use frame:<Packet.Id>.
+  repeated PCAPMessageDetail Messages = 3; // Messages completed in this frame.
+  repeated PCAPRelatedMessage RelatedMessages = 4; // Messages to which this frame contributes.
+  repeated PCAPByteSource ByteSources = 5; // Includes the frame and every completed message.
+}
+
+message ReadPCAPBytesRequest {
+  string DatasetID = 1;
+  string SourceID = 2; // frame:<packet-id> or message:<protocol-message-id>.
+  int64 Offset = 3; // Zero-based byte offset within the selected source.
+  int64 Length = 4; // Requested bytes; capped by the remaining source and server maximum.
+}
+
+message ReadPCAPBytesResponse {
+  bytes Data = 1;
+  int64 Offset = 2; // Offset of Data; echoes the validated request offset.
+  int64 TotalLength = 3;
+  bool EOF = 4; // True when the returned range reaches the selected source's end.
 }
 
 message ExportPCAPDataRequest {

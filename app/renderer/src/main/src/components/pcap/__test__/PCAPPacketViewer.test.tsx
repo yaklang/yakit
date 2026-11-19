@@ -1,13 +1,17 @@
 import React from 'react'
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { PacketPage, PCAPDatabase, PCAPPacket } from '../pcapTypes'
+import type { PacketPage, PCAPDatabase, PCAPPacketDetail, PCAPPacketSummary } from '../pcapTypes'
 
 const { api, listeners, cancel, browse } = vi.hoisted(() => ({
   api: {
+    getPcapMetadata: vi.fn(),
     queryPackets: vi.fn(),
+    getPacketDetail: vi.fn(),
+    readBytes: vi.fn(),
     queryDatabases: vi.fn(),
     importFile: vi.fn(),
+    startLiveCapture: vi.fn(),
     exportData: vi.fn(),
     deleteDatabase: vi.fn(),
   },
@@ -39,10 +43,46 @@ vi.mock('@/i18n/useI18nNamespaces', () => ({
 }))
 vi.mock('@/utils/notification', () => ({ success: vi.fn() }))
 vi.mock('@/utils/fileSystemDialog', () => ({ handleOpenFileSystemDialog: browse }))
+vi.mock('react-virtuoso', async (importOriginal) => ({
+  ...(await importOriginal<Record<string, unknown>>()),
+  TableVirtuoso: React.forwardRef(function MockTableVirtuoso(
+    { data, fixedHeaderContent, itemContent, endReached, components }: any,
+    ref,
+  ) {
+    React.useImperativeHandle(ref, () => ({
+      scrollTo: vi.fn(),
+      scrollBy: vi.fn(),
+      scrollToIndex: vi.fn(),
+      scrollIntoView: vi.fn(),
+      getState: vi.fn(),
+    }))
+    const Row = components?.TableRow
+    const EmptyPlaceholder = components?.EmptyPlaceholder
+    return (
+      <div>
+        {data.length ? (
+          <table>
+            <thead>{fixedHeaderContent?.()}</thead>
+            <tbody>
+              {data.map((item: any, index: number) => (
+                <Row key={item.Id} item={item} data-index={index} data-item-index={index} data-known-size={29}>
+                  {itemContent(index, item)}
+                </Row>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          EmptyPlaceholder && <EmptyPlaceholder />
+        )}
+        {endReached && <button onClick={() => endReached(data.length - 1)}>触发加载更多</button>}
+      </div>
+    )
+  }),
+}))
 vi.mock('../PacketDetailPane', () => ({
-  PacketDetailPane: ({ packet, onJump }) => (
+  PacketDetailPane: ({ detail, onJump }) => (
     <div data-testid="packet-details">
-      详情 #{packet.Id}
+      详情 #{detail.Packet.Id}
       <button onClick={() => onJump('38')}>跳转完成包</button>
     </div>
   ),
@@ -63,7 +103,7 @@ const database: PCAPDatabase = {
   LastError: '',
   ProtocolsIndexed: true,
 }
-const packet = (id: string): PCAPPacket => ({
+const packet = (id: string): PCAPPacketSummary => ({
   Id: id,
   TimestampNS: '1700000000123456789',
   CapturedLength: '478',
@@ -71,27 +111,51 @@ const packet = (id: string): PCAPPacket => ({
   LinkType: '1',
   Section: '0',
   Interface: '0',
-  LinkLayerType: 'Ethernet',
-  NetworkLayerType: 'IPv4',
-  TransportLayerType: 'TCP',
-  NetworkEndpointIPSrc: '10.0.0.1',
-  NetworkEndpointIPDst: '10.0.0.2',
-  TransportEndpointPortSrc: '80',
-  TransportEndpointPortDst: '12345',
-  EthernetEndpointHardwareAddrSrc: '',
-  EthernetEndpointHardwareAddrDst: '',
+  SourceMAC: '',
+  DestinationMAC: '',
+  VLANStack: '',
+  SourceIP: '10.0.0.1',
+  DestinationIP: '10.0.0.2',
+  SourcePort: 80,
+  DestinationPort: 12345,
+  Transport: 'tcp',
   Protocol: 'HTTP',
+  ApplicationProtocols: ['HTTP'],
   Info: `HTTP response ${id}`,
   DecodeError: '',
-  Raw: [],
-  Details: '',
 })
 const page = (id: string, hasMore = false): PacketPage => ({
   Data: [packet(id)],
-  Total: '43',
+  Total: id === '10' ? '43' : '',
   NextCursor: id,
   HasMore: hasMore,
-  Truncated: false,
+})
+const detail = (id: string): PCAPPacketDetail => ({
+  Packet: packet(id),
+  Nodes: [
+    {
+      Name: `Frame ${id}`,
+      DisplayValue: 'captured frame',
+      Children: [],
+      Ranges: [],
+    },
+  ],
+  Messages: [],
+  RelatedMessages: [],
+  ByteSources: [
+    {
+      ID: `frame:${id}`,
+      Kind: 'frame',
+      Name: `Frame #${id}`,
+      Length: '478',
+      Completeness: 'frame',
+      ContributorPacketIds: [],
+      CompletedInPacketId: '0',
+      InitialData: [],
+      InitialOffset: '0',
+      InitialTruncated: false,
+    },
+  ],
 })
 
 beforeEach(() => {
@@ -118,10 +182,23 @@ beforeEach(() => {
   vi.clearAllMocks()
   listeners.clear()
   api.queryDatabases.mockResolvedValue({ Data: [database], Total: '1', HasMore: false, NextCursor: '1' })
-  api.queryPackets.mockImplementation(async (query) =>
-    page(query.Id || (query.FromId === '10' ? '20' : '10'), !query.Id && query.FromId === '0'),
-  )
+  api.getPcapMetadata.mockResolvedValue({
+    AvailablePcapDevices: [
+      { Name: 'eth0', Description: 'Ethernet', NetInterfaceName: 'eth0', Addr: '', IP: '10.0.0.10' },
+    ],
+    DefaultPublicNetInterface: {
+      Name: 'eth0',
+      Description: 'Ethernet',
+      NetInterfaceName: 'eth0',
+      Addr: '',
+      IP: '10.0.0.10',
+    },
+  })
+  api.queryPackets.mockImplementation(async (query) => page(query.Pagination.AfterId === '10' ? '20' : '10', true))
+  api.getPacketDetail.mockImplementation(async ({ PacketID }) => detail(PacketID))
+  api.readBytes.mockResolvedValue({ Data: [], Offset: '0', TotalLength: '478', EOF: false })
   api.importFile.mockResolvedValue(undefined)
+  api.startLiveCapture.mockResolvedValue(undefined)
   cancel.mockResolvedValue(undefined)
 })
 afterEach(() => {
@@ -130,53 +207,66 @@ afterEach(() => {
 })
 
 describe('PCAP packet workspace', () => {
-  it('queries original frames through the old API, filters before paging and uses exact cursors', async () => {
+  it('uses the new query contract and appends cursor results while scrolling', async () => {
     render(<PCAPPacketViewer />)
     await screen.findByText('HTTP response 10')
-    expect(api.queryPackets).toHaveBeenCalledWith(
-      expect.objectContaining({ DatasetID: database.DatasetID, Full: false, FromId: '0' }),
-    )
-    fireEvent.click(screen.getByRole('button', { name: '下一页' }))
+    expect(api.queryPackets).toHaveBeenCalledWith({
+      DatasetID: database.DatasetID,
+      Filter: {},
+      Pagination: { Limit: 100, AfterId: '0' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: '触发加载更多' }))
     await screen.findByText('HTTP response 20')
-    expect(api.queryPackets).toHaveBeenLastCalledWith(
-      expect.objectContaining({ FromId: '10', Pagination: { Page: 1, Limit: 100 } }),
-    )
+    expect(screen.getByText('HTTP response 10')).toBeInTheDocument()
+    expect(api.queryPackets).toHaveBeenLastCalledWith({
+      DatasetID: database.DatasetID,
+      Filter: {},
+      Pagination: { Limit: 100, AfterId: '10' },
+    })
     fireEvent.change(screen.getByRole('textbox', { name: '源 IP' }), { target: { value: '10.0.0.1' } })
     fireEvent.change(screen.getByRole('textbox', { name: '源端口' }), { target: { value: '0' } })
     fireEvent.click(screen.getByRole('button', { name: '查询' }))
     await waitFor(() =>
-      expect(api.queryPackets).toHaveBeenLastCalledWith(
-        expect.objectContaining({ FromId: '0', SrcIP: '10.0.0.1', SrcPort: '0' }),
-      ),
+      expect(api.queryPackets).toHaveBeenLastCalledWith({
+        DatasetID: database.DatasetID,
+        Filter: { SourceIP: ['10.0.0.1'], SourcePort: [0] },
+        Pagination: { Limit: 100, AfterId: '0' },
+      }),
     )
+  })
+
+  it('loads a typed packet detail and jumps to the completion frame', async () => {
+    render(<PCAPPacketViewer />)
+    await screen.findByText('HTTP response 10')
     fireEvent.click(screen.getByText('HTTP response 10'))
     await screen.findByTestId('packet-details')
-    expect(api.queryPackets).toHaveBeenLastCalledWith({ DatasetID: database.DatasetID, Id: '10', Full: true })
+    expect(api.getPacketDetail).toHaveBeenCalledWith({ DatasetID: database.DatasetID, PacketID: '10' })
     fireEvent.click(screen.getByRole('button', { name: '跳转完成包' }))
-    await waitFor(() => expect(screen.getByTestId('packet-details')).toHaveTextContent('详情 #38'))
+    await waitFor(() =>
+      expect(api.getPacketDetail).toHaveBeenCalledWith({ DatasetID: database.DatasetID, PacketID: '38' }),
+    )
   })
 
   it('ignores a late detail response after switching datasets', async () => {
     const second = { ...database, Id: '2', DatasetID: 'dataset-b', SourcePath: '/captures/dns.cap' }
     api.queryDatabases.mockResolvedValue({ Data: [database, second], HasMore: false })
-    let resolveDetail: (value: PacketPage) => void = () => {}
-    api.queryPackets.mockImplementation((query) =>
-      query.Full
-        ? new Promise((resolve) => {
-            resolveDetail = resolve
-          })
-        : Promise.resolve(page('10')),
+    let resolveDetail: (value: PCAPPacketDetail) => void = () => {}
+    api.getPacketDetail.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveDetail = resolve
+        }),
     )
     render(<PCAPPacketViewer />)
     await screen.findByText('HTTP response 10')
     fireEvent.click(screen.getByText('HTTP response 10'))
-    fireEvent.click(screen.getByRole('button', { name: /dns.cap/ }))
+    fireEvent.click(screen.getByText('dns.cap').closest('button')!)
     await waitFor(() =>
       expect(api.queryPackets).toHaveBeenLastCalledWith(
-        expect.objectContaining({ DatasetID: 'dataset-b', Full: false }),
+        expect.objectContaining({ DatasetID: 'dataset-b', Pagination: { Limit: 100, AfterId: '0' } }),
       ),
     )
-    await act(async () => resolveDetail(page('999')))
+    await act(async () => resolveDetail(detail('999')))
     expect(screen.queryByTestId('packet-details')).not.toBeInTheDocument()
   })
 
@@ -200,7 +290,7 @@ describe('PCAP packet workspace', () => {
         Finished: false,
       }),
     )
-    expect(screen.getByRole('status')).toHaveTextContent('分析中')
+    expect(screen.getAllByRole('status').some((element) => element.textContent?.includes('分析中'))).toBe(true)
     act(() =>
       listeners.get(`${token}-data`)?.({
         State: 'ready',
@@ -211,6 +301,44 @@ describe('PCAP packet workspace', () => {
     )
     await waitFor(() => expect(listeners.size).toBe(0))
     expect(cancel).not.toHaveBeenCalled()
+  })
+
+  it('starts live capture, displays progress and cancels the PcapX stream', async () => {
+    render(<PCAPPacketViewer />)
+    await screen.findByText('HTTP response 10')
+    fireEvent.click(screen.getByRole('button', { name: '实时抓包' }))
+    await waitFor(() => expect(api.getPcapMetadata).toHaveBeenCalledOnce())
+    fireEvent.change(screen.getByLabelText('BPF 过滤表达式'), { target: { value: 'tcp port 80' } })
+    api.startLiveCapture.mockImplementation(async (_params, token) => {
+      expect(listeners.has(`${token}-data`)).toBe(true)
+    })
+    fireEvent.click(screen.getByRole('button', { name: '开始抓包' }))
+    await waitFor(() => expect(api.startLiveCapture).toHaveBeenCalled())
+    expect(api.startLiveCapture).toHaveBeenCalledWith(
+      expect.objectContaining({
+        NetInterfaceList: ['eth0'],
+        BPF: 'tcp port 80',
+        Snaplen: 65535,
+        Promisc: false,
+      }),
+      expect.any(String),
+    )
+    const token = api.startLiveCapture.mock.calls[0][1]
+    act(() =>
+      listeners.get(`${token}-data`)?.({
+        DatasetID: database.DatasetID,
+        State: 'ready',
+        PacketFrameCounter: '42',
+        ProtocolCount: '8',
+        BytesIndexed: '24000',
+        TotalBytes: '24000',
+        NetInterfaceTransferKBPerSeconds: '16',
+        Finished: false,
+      }),
+    )
+    await screen.findByText(/42 帧/)
+    fireEvent.click(screen.getByRole('button', { name: '停止抓包' }))
+    await waitFor(() => expect(cancel).toHaveBeenCalledWith('PcapX', token))
   })
 
   it('does not silently treat an unsupported engine as an empty library', async () => {
@@ -240,7 +368,7 @@ describe('PCAP packet workspace', () => {
     api.deleteDatabase.mockResolvedValue({ Deleted: true, CleanupPending: false })
     render(<PCAPPacketViewer />)
     await screen.findByText('HTTP response 10')
-    fireEvent.click(screen.getByRole('button', { name: '删除当前数据集' }))
+    fireEvent.click(screen.getByRole('button', { name: '删除 http.cap' }))
     expect(api.deleteDatabase).not.toHaveBeenCalled()
     api.queryDatabases.mockResolvedValue({ Data: [], HasMore: false })
     fireEvent.click(screen.getByRole('button', { name: '删除数据集' }))

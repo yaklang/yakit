@@ -9,7 +9,7 @@ import handlerHelper from '../handlers/handleStreamWithContext'
 const require = createRequire(import.meta.url)
 const loadHandlers = () => {
   const handlers = new Map()
-  const stream = Object.assign(new EventEmitter(), { cancel: vi.fn() })
+  const stream = Object.assign(new EventEmitter(), { cancel: vi.fn(), write: vi.fn() })
   const window = Object.assign(new EventEmitter(), {
     isDestroyed: () => false,
     webContents: Object.assign(new EventEmitter(), {
@@ -21,7 +21,12 @@ const loadHandlers = () => {
   })
   const client = {
     ImportPCAPFile: vi.fn(() => stream),
+    PcapX: vi.fn(() => stream),
+    GetPcapMetadata: vi.fn((_params, cb) => cb(null, { AvailablePcapDevices: [] })),
     QueryPCAPDatabase: vi.fn((_params, cb) => cb(null, { Data: [] })),
+    QueryPCAPPackets: vi.fn((_params, cb) => cb(null, { Data: [] })),
+    GetPCAPPacketDetail: vi.fn((_params, cb) => cb(null, { Packet: { Id: '1' } })),
+    ReadPCAPBytes: vi.fn((_params, cb) => cb(null, { Data: Buffer.from([1, 2]) })),
   }
   const module = { exports: {} }
   vm.runInNewContext(readFileSync(path.resolve('app/main/handlers/traffic.js'), 'utf8'), {
@@ -39,14 +44,25 @@ describe('PCAP main-process transport', () => {
     for (const name of [
       'QueryTrafficPacket',
       'ParseTraffic',
+      'GetPcapMetadata',
+      'PcapX',
       'ImportPCAPFile',
       'QueryPCAPDatabase',
+      'QueryPCAPPackets',
+      'GetPCAPPacketDetail',
+      'ReadPCAPBytes',
       'ExportPCAPData',
       'DeletePCAPDatabase',
     ])
       expect(handlers.has(name)).toBe(true)
     await expect(handlers.get('QueryPCAPDatabase')({}, {})).resolves.toEqual({ Data: [] })
     expect(client.QueryPCAPDatabase).toHaveBeenCalledOnce()
+    await expect(handlers.get('GetPCAPPacketDetail')({}, { DatasetID: 'd', PacketID: '1' })).resolves.toMatchObject({
+      Packet: { Id: '1' },
+    })
+    await expect(
+      handlers.get('ReadPCAPBytes')({}, { DatasetID: 'd', SourceID: 'frame:1', Offset: '0', Length: '2' }),
+    ).resolves.toEqual({ Data: Buffer.from([1, 2]) })
   })
 
   it('owns import streams per renderer and cancels them when the window closes', () => {
@@ -57,6 +73,21 @@ describe('PCAP main-process transport', () => {
     expect(window.webContents.send).toHaveBeenCalledWith('pcap-test-data', { Finished: false })
     expect(() => handlers.get('cancel-ImportPCAPFile')({ sender: { id: 8 } }, 'pcap-test')).toThrow()
     window.emit('closed')
+    expect(stream.cancel).toHaveBeenCalledOnce()
+  })
+
+  it('routes PcapX responses through the renderer stream helper', async () => {
+    const { handlers, window, stream } = loadHandlers()
+    const event = { sender: { id: 7 } }
+    const request = { NetInterfaceList: ['eth0'] }
+    handlers.get('PcapX')(event, request, 'live-test')
+    expect(stream.write).toHaveBeenCalledWith(request)
+    stream.emit('data', { DatasetID: 'dataset-live', Finished: false })
+    expect(window.webContents.send).toHaveBeenCalledWith('live-test-data', {
+      DatasetID: 'dataset-live',
+      Finished: false,
+    })
+    await handlers.get('cancel-PcapX')({ sender: { id: 7 } }, 'live-test')
     expect(stream.cancel).toHaveBeenCalledOnce()
   })
 })
@@ -93,5 +124,59 @@ describe('extended legacy protobuf contract', () => {
     expect(
       method.responseDeserialize(method.responseSerialize({ Data: [packet], NextCursor: packet.Id, HasMore: true })),
     ).toMatchObject({ Data: [packet], NextCursor: packet.Id, HasMore: true })
+  })
+
+  it('exposes the new packet query, detail and bounded byte methods', () => {
+    expect(service.QueryPCAPPackets).toBeTruthy()
+    expect(service.GetPCAPPacketDetail).toBeTruthy()
+    expect(service.ReadPCAPBytes).toBeTruthy()
+
+    const query = service.QueryPCAPPackets
+    const request = {
+      DatasetID: 'dataset',
+      Filter: { SourceIP: ['10.0.0.1'], SourcePort: [0], ApplicationLayerTypes: ['http'] },
+      Pagination: { Limit: 100, AfterId: '9007199254740993' },
+    }
+    expect(query.requestDeserialize(query.requestSerialize(request))).toMatchObject({
+      ...request,
+      Pagination: { ...request.Pagination, Limit: '100' },
+    })
+
+    const detail = service.GetPCAPPacketDetail
+    expect(
+      detail.requestDeserialize(detail.requestSerialize({ DatasetID: 'dataset', PacketID: '9007199254740993' })),
+    ).toMatchObject({ DatasetID: 'dataset', PacketID: '9007199254740993' })
+
+    const read = service.ReadPCAPBytes
+    const response = {
+      Data: Buffer.from([0, 255]),
+      Offset: '9007199254740993',
+      TotalLength: '9007199254741000',
+      EOF: false,
+    }
+    expect(read.responseDeserialize(read.responseSerialize(response))).toMatchObject(response)
+  })
+
+  it('carries live capture controls and DatasetID progress over PcapX', () => {
+    const method = service.PcapX
+    const request = {
+      NetInterfaceList: ['eth0'],
+      BPF: 'tcp port 80',
+      Snaplen: 4096,
+      Promisc: true,
+      BatchSize: '2000',
+      FlushIntervalMilliseconds: '250',
+      DurationMilliseconds: '0',
+    }
+    expect(method.requestDeserialize(method.requestSerialize(request))).toMatchObject(request)
+    const response = {
+      DatasetID: 'dataset-live',
+      State: 'ready',
+      PacketFrameCounter: '42',
+      ProtocolCount: '8',
+      NetInterfaceTransferKBPerSeconds: '1024',
+      Finished: false,
+    }
+    expect(method.responseDeserialize(method.responseSerialize(response))).toMatchObject(response)
   })
 })

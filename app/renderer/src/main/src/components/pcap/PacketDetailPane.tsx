@@ -1,163 +1,186 @@
 import { useMemo, useState } from 'react'
 import { Alert, Empty } from 'antd'
 import type { TreeDataNode } from 'antd'
+import { CloseOutlined } from '@ant-design/icons'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import YakitTree from '@/components/yakitUI/YakitTree/YakitTree'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
-import type { PacketDetails, PCAPPacket } from './pcapTypes'
-import { decodeBytes, protocolTree, type ByteRange } from './pcapUtils'
+import type { PCAPPacketDetail } from './pcapTypes'
+import { fieldTree, formatBytes, type FieldSelection } from './pcapUtils'
 import { PacketByteViewer } from './PacketByteViewer'
 import styles from './PCAPPacketViewer.module.scss'
 
 const expandedProtocolKeys = (nodes: TreeDataNode[], depth = 0): React.Key[] =>
   nodes.flatMap((node) => {
-    if (depth > 3 || /^(Frame |Body$|Payload$|Data$)/i.test(String(node.title))) return []
+    if (depth > 3 || /^(Frame |Body|Payload|Data)/i.test(String(node.title))) return []
     return [node.key, ...expandedProtocolKeys(node.children || [], depth + 1)]
   })
 
 export const PacketDetailPane = ({
-  packet,
+  datasetID,
+  detail,
   onJump,
   onClose,
 }: {
-  packet: PCAPPacket
+  datasetID: string
+  detail: PCAPPacketDetail
   onJump: (id: string) => void
   onClose: () => void
 }) => {
-  const [source, setSource] = useState('frame')
-  const [range, setRange] = useState<ByteRange>()
+  const frameSource = detail.ByteSources.find((source) => source.Kind === 'frame')
+  const reassembledMessages = detail.Messages.filter((message) => {
+    const byteSource = detail.ByteSources.find((source) => source.ID === message.SourceID)
+    return (byteSource?.ContributorPacketIds.length || 0) > 1
+  })
+  const hasReassembly = reassembledMessages.length > 0
+  const directMessage = !hasReassembly ? detail.Messages[0] : undefined
+  const initialSourceID = hasReassembly
+    ? frameSource?.ID || `frame:${detail.Packet.Id}`
+    : directMessage?.SourceID || frameSource?.ID || `frame:${detail.Packet.Id}`
+  const [sourceID, setSourceID] = useState(initialSourceID)
+  const [selection, setSelection] = useState<FieldSelection>()
   const [selectedKeys, setSelectedKeys] = useState<React.Key[]>([])
-  const parsed = useMemo(() => {
-    try {
-      return { details: JSON.parse(packet.Details) as PacketDetails, error: '' }
-    } catch {
-      return {
-        details: { Result: [], Messages: [], ProtocolsIndexed: false } as PacketDetails,
-        error: '协议详情格式无效，仍可查看原始字节',
-      }
-    }
-  }, [packet.Details])
-  const messages = parsed.details.Messages || []
-  const message = messages.find((item) => String(item.MessageId) === source)
-  const bytes = useMemo(() => decodeBytes(message ? message.RAW : packet.Raw), [message, packet.Raw])
-  const tree = useMemo(() => protocolTree(message ? message.Result : parsed.details.Result), [message, parsed.details])
+  const source = detail.ByteSources.find((item) => item.ID === sourceID)
+  const message = detail.Messages.find((item) => item.SourceID === sourceID)
+  const tree = useMemo(() => fieldTree(message?.Nodes || detail.Nodes), [detail.Nodes, message?.Nodes])
+
   const selectSource = (id: string) => {
-    setSource(id)
-    setRange(undefined)
+    setSourceID(id)
+    setSelection(undefined)
     setSelectedKeys([])
   }
+  const sourceLabel = (id: string) => {
+    const source = detail.ByteSources.find((item) => item.ID === id)
+    if (!source || source.Kind === 'frame') return '原始帧'
+    const message = detail.Messages.find((item) => item.SourceID === id)
+    return `${message?.Protocol || '协议'}重组`
+  }
+
   return (
-    <section className={styles.detail} aria-label={`数据包 ${packet.Id} 详情`}>
-      <div className={styles['detail-heading']}>
-        <span>
-          <strong>数据包 #{packet.Id}</strong>
-          <small>
-            {packet.Protocol} · {packet.CapturedLength} bytes
-          </small>
-        </span>
-        <YakitButton type="text2" size="small" onClick={onClose} aria-label="关闭数据包详情">
-          关闭详情
-        </YakitButton>
-      </div>
-      <div className={styles['source-tabs']} role="tablist" aria-label="字节来源">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={source === 'frame'}
-          className={source === 'frame' ? styles['active-tab'] : ''}
-          onClick={() => selectSource('frame')}
-        >
-          原始帧 #{packet.Id}
-        </button>
-        {messages.map((item) => (
-          <button
-            type="button"
-            role="tab"
-            key={item.MessageId}
-            aria-selected={source === String(item.MessageId)}
-            className={source === String(item.MessageId) ? styles['active-tab'] : ''}
-            onClick={() => selectSource(String(item.MessageId))}
-          >
-            {item.Protocol} 消息 #{item.MessageId}
-            <small>{item.PacketIds.length} 个贡献包</small>
-          </button>
-        ))}
-      </div>
-      {message && (
-        <div className={styles['message-evidence']}>
-          <YakitTag color={message.Status === 'decoded' && !message.DecodeError ? 'success' : 'warning'}>
-            {message.Status === 'decoded' ? '已解析' : message.Status}
-          </YakitTag>
-          <small title={`完整性：${message.Completeness}；字节来源：${message.Kind}`}>
-            {{ transaction: '事务级', message: '完整消息', headers: '仅头部' }[message.Completeness] ||
-              message.Completeness}
-          </small>
-          <span className={styles['message-info']} title={message.Info}>
-            {message.Info}
-          </span>
-          <span>
-            贡献包{' '}
-            {message.PacketIds.map((id) => (
-              <button type="button" key={id} onClick={() => onJump(String(id))}>
-                #{id}
-              </button>
-            ))}
-          </span>
-          {message.CompletedInPacketId > 0 && (
-            <span>
-              完成于{' '}
-              <button type="button" onClick={() => onJump(String(message.CompletedInPacketId))}>
-                #{message.CompletedInPacketId}
-              </button>
-            </span>
-          )}
+    <section className={styles.detail} aria-label={`数据包 ${detail.Packet.Id} 详情`}>
+      <div className={styles['detail-toolbar']}>
+        <div className={styles['detail-identity']}>
+          <strong>#{detail.Packet.Id}</strong>
+          <span>{detail.Packet.Protocol}</span>
+          <small>{formatBytes(detail.Packet.CapturedLength)}</small>
+          {detail.Messages.length > 0 && <small>{detail.Messages.length} 条消息</small>}
         </div>
-      )}
-      {(parsed.error || packet.DecodeError || message?.DecodeError) && (
-        <Alert type="warning" showIcon message={parsed.error || message?.DecodeError || packet.DecodeError} />
-      )}
-      {!parsed.details.ProtocolsIndexed && (
-        <Alert type="info" showIcon message="此数据集尚未建立协议索引；重新导入同一个文件即可补充协议分析。" />
-      )}
-      <div className={styles['detail-content']}>
-        <YakitResizeBox
-          firstRatio="42%"
-          firstMinSize={220}
-          secondMinSize={360}
-          firstNode={
-            <section className={styles['protocol-pane']}>
-              <div className={styles['pane-heading']}>
-                <span>协议解析</span>
-                <small>{message ? '来自 protocol_messages' : '来自 packets'}</small>
-              </div>
-              {tree.nodes.length ? (
-                <div key={source} className={styles['protocol-tree']}>
-                  <YakitTree
-                    key={source}
-                    treeData={tree.nodes}
-                    showIcon={false}
-                    defaultExpandedKeys={expandedProtocolKeys(tree.nodes)}
-                    selectedKeys={selectedKeys}
-                    onSelect={(keys) => {
-                      setSelectedKeys(keys)
-                      setRange(keys.length ? tree.scopes[String(keys[0])] : undefined)
-                    }}
-                  />
-                </div>
-              ) : (
-                <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="未提取到协议字段" />
-              )}
-              {message && (
-                <div className={styles['byte-status']}>
-                  协议字段读取自已保存的分析结果；无可靠偏移的字段不进行字节高亮。
-                </div>
-              )}
-            </section>
-          }
-          secondNode={<PacketByteViewer key={source} bytes={bytes} range={range} />}
+        {hasReassembly && (
+          <div className={styles['source-tabs']} role="tablist" aria-label="字节来源">
+            {frameSource && (
+              <button
+                type="button"
+                role="tab"
+                aria-selected={sourceID === frameSource.ID}
+                className={sourceID === frameSource.ID ? styles['active-tab'] : ''}
+                onClick={() => selectSource(frameSource.ID)}
+                title={frameSource.Name}
+              >
+                原始帧
+              </button>
+            )}
+            {reassembledMessages.map((reassembledMessage) => {
+              const reassembledSource = detail.ByteSources.find((item) => item.ID === reassembledMessage.SourceID)
+              if (!reassembledSource) return null
+              return (
+                <button
+                  type="button"
+                  role="tab"
+                  key={reassembledSource.ID}
+                  aria-selected={sourceID === reassembledSource.ID}
+                  className={sourceID === reassembledSource.ID ? styles['active-tab'] : ''}
+                  onClick={() => selectSource(reassembledSource.ID)}
+                  title={reassembledSource.Name}
+                >
+                  {sourceLabel(reassembledSource.ID)}
+                </button>
+              )
+            })}
+          </div>
+        )}
+        {hasReassembly && (
+          <div className={styles['detail-context']}>
+            {message ? (
+              <>
+                <span className={styles['detail-message-summary']} title={message.Summary}>
+                  {message.Summary}
+                </span>
+                {!!source?.ContributorPacketIds.length && (
+                  <span className={styles['detail-contributors']}>
+                    贡献帧{' '}
+                    {source.ContributorPacketIds.map((id) => (
+                      <button type="button" key={id} onClick={() => onJump(id)}>
+                        #{id}
+                      </button>
+                    ))}
+                  </span>
+                )}
+              </>
+            ) : detail.RelatedMessages.length > 0 ? (
+              <span className={styles['detail-contributors']}>
+                参与 {detail.RelatedMessages.length} 条消息
+                {detail.RelatedMessages.map((related) =>
+                  related.CompletedInPacketId && related.CompletedInPacketId !== '0' ? (
+                    <button type="button" key={related.SourceID} onClick={() => onJump(related.CompletedInPacketId)}>
+                      #{related.CompletedInPacketId}
+                    </button>
+                  ) : null,
+                )}
+              </span>
+            ) : null}
+          </div>
+        )}
+        <YakitButton
+          type="text2"
+          size="small"
+          icon={<CloseOutlined />}
+          onClick={onClose}
+          aria-label="关闭数据包详情"
+          className={styles['detail-close']}
         />
       </div>
+      {(message?.DecodeError || detail.Packet.DecodeError) && (
+        <Alert type="warning" showIcon message={message?.DecodeError || detail.Packet.DecodeError} />
+      )}
+      {message?.NodesTruncated && (
+        <Alert type="warning" showIcon message="协议字段过多，字段树只返回了受限的展示范围。" />
+      )}
+      {!source ? (
+        <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="未找到字节来源" />
+      ) : (
+        <div className={styles['detail-content']}>
+          <YakitResizeBox
+            firstRatio="42%"
+            firstMinSize={220}
+            secondMinSize={360}
+            firstNode={
+              <section className={styles['protocol-pane']}>
+                {tree.nodes.length ? (
+                  <div key={sourceID} className={styles['protocol-tree']}>
+                    <YakitTree
+                      treeData={tree.nodes}
+                      showIcon={false}
+                      defaultExpandedKeys={expandedProtocolKeys(tree.nodes)}
+                      selectedKeys={selectedKeys}
+                      onSelect={(keys) => {
+                        setSelectedKeys(keys)
+                        const next = keys.length ? tree.selections[String(keys[0])] : undefined
+                        setSelection(next)
+                        if (next?.sourceID && next.sourceID !== sourceID) setSourceID(next.sourceID)
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="未提取到协议字段" />
+                )}
+              </section>
+            }
+            secondNode={
+              <PacketByteViewer key={source.ID} datasetID={datasetID} source={source} selection={selection} />
+            }
+          />
+        </div>
+      )}
     </section>
   )
 }
