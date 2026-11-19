@@ -83,3 +83,28 @@ describe('script providers and global controls gRPC contract', () => {
     expect(loaded).toEqual(saved)
   })
 })
+
+describe('model vision gRPC contract', () => {
+  it('round-trips explicit true, false and unknown independently', () => {
+    const method = ypb.Yak.service.SetAIGlobalConfig
+    const payload = method.requestDeserialize(
+      method.requestSerialize({
+        IntelligentModels: [
+          { ModelName: 'verified', SupportsImageInput: true, SupportsImageToolCalling: false },
+          { ModelName: 'unknown' },
+        ],
+      }),
+    )
+    expect(payload.IntelligentModels[0].SupportsImageInput).toBe(true)
+    expect(payload.IntelligentModels[0].SupportsImageToolCalling).toBe(false)
+    expect(payload.IntelligentModels[1]).not.toHaveProperty('SupportsImageInput')
+    expect(payload.IntelligentModels[1]).not.toHaveProperty('SupportsImageToolCalling')
+  })
+
+  it('decodes rate-limited probes without inventing a negative capability', () => {
+    const method = ypb.Yak.service.ProbeModelVision
+    const result = method.responseDeserialize(method.responseSerialize({ ImageInputStatus: 'rate_limited' }))
+    expect(result.ImageInputStatus).toBe('rate_limited')
+    expect(result).not.toHaveProperty('SupportsImageInput')
+  })
+})

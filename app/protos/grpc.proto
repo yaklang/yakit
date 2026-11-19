@@ -779,6 +779,7 @@ service Yak {
   rpc ListAiModel(ListAiModelRequest) returns (ListAiModelResponse);
   rpc AIConfigHealthCheck(AIConfigHealthCheckRequest) returns (AIConfigHealthCheckResponse);
   rpc ProbeReasoningEffort(ProbeReasoningEffortRequest) returns (ProbeReasoningEffortResponse);
+  rpc ProbeModelVision(ProbeModelVisionRequest) returns (ProbeModelVisionResponse);
   rpc GetAIGlobalConfig(Empty) returns (AIGlobalConfig);
   rpc SetAIGlobalConfig(AIGlobalConfig) returns (Empty);
   rpc ListAIProviders(Empty) returns (ListAIProvidersResponse);
@@ -2369,6 +2370,7 @@ message AIStartParams {
   optional bool NetworkDebug = 52;
   // Connection-local, build-generated component catalog and interaction capabilities.
   string ClientUI = 53;
+  AIImageInputConfig ImageInput = 54;
 }
 
 message AIExecutionStrategy {
@@ -9609,6 +9611,9 @@ message AIModelConfig {
   // 是否已对 xhigh/max 做过探测。false=未探测（首次操作下拉框时触发）；
   // true=已探测（ProbedExtendedEfforts 即最终结果，不再重复探测）。
   bool EffortProbed = 7;
+  optional bool SupportsImageInput = 8;
+  string ImageTokenEstimator = 9;
+  optional bool SupportsImageToolCalling = 10;
 }
 
 message AIGlobalConfig {
@@ -10705,4 +10710,27 @@ message QueryKnowledgeBaseResponse {
   Paging Pagination = 1;
   repeated KnowledgeBaseInfo Data = 2;
   int64 Total = 3;
+}
+
+message AIImageInputConfig {
+  string Mode = 1; // auto (default), native, describe
+  optional bool MainModelSupportsImages = 2; // override for custom callbacks
+  // Legacy compatibility only; image retention now follows Timeline.
+  int64 MaxActiveImages = 3;
+  int64 VisualTokenLimit = 4;
+  int64 MaxLongEdge = 5;
+  int64 OutputReserveTokens = 6;
+  int64 MaxRequestBytes = 7;
+}
+
+message ProbeModelVisionRequest {
+  ThirdPartyApplicationConfig Config = 1;
+  string Model = 2;
+}
+
+message ProbeModelVisionResponse {
+  optional bool SupportsImageInput = 1;
+  optional bool SupportsImageToolCalling = 2;
+  string ImageInputStatus = 3;
+  string ImageToolCallingStatus = 4;
 }

@@ -1,4 +1,5 @@
 import React from 'react'
+import styles from './AINodeItem.module.scss'
 import { QuestionSummary } from '@/pages/ai-re-act/clarification/QuestionSummary/QuestionSummary'
 import { ComponentCard } from '@/pages/ai-re-act/display-ui/ComponentCard/ComponentCard'
 import type { AINodeItemProps } from './type'
@@ -33,6 +34,15 @@ const AINodeItem: React.FC<AINodeItemProps> = React.memo((props) => {
       return <AITriageChatContentWrapper isAnswer={false} itemData={itemData} renderNum={renderNum} />
     case AIChatQSDataTypeEnum.RESULT:
       return <AITriageChatContentWrapper isAnswer={true} itemData={itemData} renderNum={renderNum} />
+    case AIChatQSDataTypeEnum.IMAGE_MODEL_READ:
+      return (
+        <div className={styles.imageModelRead}>
+          {t(itemData.data.route === 'native' ? 'ModelVision.nativeTrace' : 'ModelVision.visionTrace', {
+            model: itemData.data.model,
+            count: itemData.data.imageCount,
+          })}
+        </div>
+      )
     case AIChatQSDataTypeEnum.THOUGHT:
       return <AIThought itemData={itemData} renderNum={renderNum} />
 

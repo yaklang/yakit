@@ -20,6 +20,8 @@ import {
   type AIProvider,
   grpcQueryAIProviderAll,
   grpcAIConfigHealthCheck,
+  grpcProbeModelVision,
+  type ModelVisionProbeResult,
   normalizeAIAPIType,
   type AIConfigHealthCheckResponse,
 } from '../utils'
@@ -259,6 +261,12 @@ export const formValueToAIConfigProvider = (res): ThirdPartyApplicationConfig =>
 export const getAIModelFormEffortKey = (values: AIThirdPartyApplicationConfig) =>
   JSON.stringify([providerToListAiModelConfig(formValueToAIConfigProvider(values)), values.model])
 
+const visionCapabilityLabel = (value?: boolean) => {
+  if (value === true) return 'ModelVision.supported'
+  if (value === false) return 'ModelVision.unsupported'
+  return 'ModelVision.unknown'
+}
+
 export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
   const { item, aiModelType, onSuccess, onClose } = props
 
@@ -267,6 +275,8 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
   const [loading, setLoading] = useState<boolean>(false)
 
   const [testLoading, setTestLoading] = useState<boolean>(false)
+  const [visionLoading, setVisionLoading] = useState(false)
+  const [visionProbe, setVisionProbe] = useState<{ key: string; result: ModelVisionProbeResult }>()
 
   const isShowSaveLoadingRef = useRef<boolean>(true)
   const formRef = useRef<{ form: FormInstance }>(null)
@@ -332,7 +342,14 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
       }
 
       const hasCurrentEffortProbe = res._EffortProbed && res._EffortProbeKey === getAIModelFormEffortKey(res)
+      const key = getAIModelFormEffortKey(res)
+      const previous =
+        item && getAIModelFormEffortKey(formValues as AIThirdPartyApplicationConfig) === key ? item : undefined
+      const vision = visionProbe?.key === key ? visionProbe.result : undefined
       const newItem: AIModelConfig = {
+        SupportsImageInput: vision?.SupportsImageInput ?? previous?.SupportsImageInput,
+        SupportsImageToolCalling: vision?.SupportsImageToolCalling ?? previous?.SupportsImageToolCalling,
+        ImageTokenEstimator: previous?.ImageTokenEstimator,
         ProviderId: res.api_key_id,
         Provider: {
           ...formValueToAIConfigProvider(res),
@@ -460,6 +477,24 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
     })
   })
 
+  const onProbeVision = useMemoizedFn(async () => {
+    const form = formRef.current?.form
+    const values = (await form?.validateFields().catch(() => undefined)) as AIThirdPartyApplicationConfig | undefined
+    if (!form || !values?.model) return
+    const key = getAIModelFormEffortKey(values)
+    setVisionLoading(true)
+    try {
+      const result = await grpcProbeModelVision(formValueToAIConfigProvider(values), values.model)
+      if (key === getAIModelFormEffortKey(form.getFieldsValue(true) as AIThirdPartyApplicationConfig)) {
+        setVisionProbe({ key, result })
+      }
+    } catch {
+      yakitNotify('error', t('ModelVision.requestFailed'))
+    } finally {
+      setVisionLoading(false)
+    }
+  })
+
   const onApplyRecommendConfig = useMemoizedFn((config: ThirdPartyApplicationConfig) => {
     formRef.current?.form?.setFieldsValue(buildAIConfigHealthCheckFormValues(config))
   })
@@ -493,6 +528,28 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
       footer={
         <>
           <div ref={footerRef} />
+          <div role="status" className={styles.visionCapabilities}>
+            <span>{t('ModelVision.readImage')}</span>
+            <YakitTag>
+              {t(visionCapabilityLabel(visionProbe ? visionProbe.result.SupportsImageInput : item?.SupportsImageInput))}
+            </YakitTag>
+            <span>{t('ModelVision.imageTools')}</span>
+            <YakitTag>
+              {t(
+                visionCapabilityLabel(
+                  visionProbe ? visionProbe.result.SupportsImageToolCalling : item?.SupportsImageToolCalling,
+                ),
+              )}
+            </YakitTag>
+          </div>
+          <YakitButton
+            type="outline2"
+            onClick={onProbeVision}
+            loading={visionLoading}
+            disabled={testLoading || loading}
+          >
+            {t('ModelVision.detect')}
+          </YakitButton>
           <YakitButton size="large" type="outline2" onClick={onCheckAndSave} loading={testLoading}>
             {t('AIModelList.testAndAddBtn')}
           </YakitButton>
@@ -501,7 +558,7 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
             type={'primary'}
             onClick={onOk}
             loading={loading}
-            disabled={testLoading || !isShowSaveLoadingRef.current}
+            disabled={testLoading || visionLoading || !isShowSaveLoadingRef.current}
           >
             {t('AIModelList.confirmAddBtn')}
           </YakitButton>

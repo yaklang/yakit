@@ -44,6 +44,30 @@ const handleThought: AIMessageHandler = (requestInfo) => {
   })
 }
 
+const handleImageModelRead: AIMessageHandler = ({ res, chatType, store, rawData, meta, sessionId }) => {
+  const data = JSON.parse(Uint8ArrayToString(res.Content) || '{}')
+  if (data?.state !== 'read' || !['native', 'vision'].includes(data.route) || !data.model) return
+  const item: AIChatQSData = {
+    ...genBaseAIChatData(res),
+    chatType,
+    type: AIChatQSDataTypeEnum.IMAGE_MODEL_READ,
+    data: { route: data.route, model: data.model, imageCount: Number(data.image_count) || 1 },
+    TaskId: generateTaskNodeDataID({
+      chatType,
+      planID: store.getState().currentChatStatus.questionID,
+      taskID: res.TaskId,
+      isExist: (key) => rawData.contents.has(key),
+    }),
+  }
+  rawData.contents.set(item.id, item)
+  persistIndependentItem(sessionId, item, meta.lifecycle)
+  store.getState().dispatchStreamingNode({
+    chatType,
+    parentTaskId: item.TaskId,
+    node: { token: item.id, kind: 'item', type: item.type, isHistory: res.IsSync },
+  })
+}
+
 const handleResult: AIMessageHandler = (requestInfo) => {
   const { res, chatType, store, rawData, meta } = requestInfo
   if (res.Type !== 'result') return
@@ -487,6 +511,7 @@ const handlePopTask: AIMessageHandler = (requestInfo) => {
 /** 单条grpc流数据对应一个独立的UI数据 */
 export const aiSingleItemDataHandlers = {
   thought: handleThought,
+  image_context: handleImageModelRead,
   result: handleResult,
   fail_react_task: handleFailReactTask,
   tool_call_decision: handleToolCallDecision,

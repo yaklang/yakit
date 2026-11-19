@@ -1917,6 +1917,7 @@ export class ChatMultiSessionController {
       [
         'session_title',
         'timeline_item',
+        'image_context',
         'timeline',
         'react_task_enqueue',
         'react_task_dequeue',

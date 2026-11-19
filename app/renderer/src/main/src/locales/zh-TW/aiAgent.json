@@ -1193,5 +1193,16 @@
     "stepDone": "完成",
     "stepError": "失敗",
     "invalidQuestion": "提問格式無效"
+  },
+  "ModelVision": {
+    "detect": "偵測視覺能力",
+    "readImage": "讀圖",
+    "imageTools": "帶圖工具呼叫",
+    "supported": "支援",
+    "unsupported": "不支援",
+    "unknown": "待驗證",
+    "requestFailed": "無法偵測模型視覺能力",
+    "nativeTrace": "主模型 {{model}} 直接讀取 {{count}} 張圖片",
+    "visionTrace": "視覺模型 {{model}} 輔助讀取 {{count}} 張圖片"
   }
 }

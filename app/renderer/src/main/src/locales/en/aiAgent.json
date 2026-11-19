@@ -1193,5 +1193,16 @@
     "stepDone": "Done",
     "stepError": "Failed",
     "invalidQuestion": "Invalid question format"
+  },
+  "ModelVision": {
+    "detect": "Detect vision capabilities",
+    "readImage": "Image input",
+    "imageTools": "Tool calls with images",
+    "supported": "Supported",
+    "unsupported": "Unsupported",
+    "unknown": "Unverified",
+    "requestFailed": "Could not detect model vision capabilities",
+    "nativeTrace": "Main model {{model}} read {{count}} image(s) directly",
+    "visionTrace": "Vision model {{model}} read {{count}} image(s)"
   }
 }

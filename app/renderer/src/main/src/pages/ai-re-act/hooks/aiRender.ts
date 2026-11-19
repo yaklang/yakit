@@ -375,6 +375,7 @@ export enum AIChatQSDataTypeEnum {
   STREAM = 'stream',
   /**思考 */
   THOUGHT = 'thought',
+  IMAGE_MODEL_READ = 'image_model_read',
   /**结果 */
   RESULT = 'result',
   /**工具总结 */
@@ -514,6 +515,10 @@ export type AIChatQSData =
   | ChatQuestion
   | ChatStream
   | ChatThought
+  | AIChatQSDataBase<
+      AIChatQSDataTypeEnum.IMAGE_MODEL_READ,
+      { route: 'native' | 'vision'; model: string; imageCount: number }
+    >
   | ChatResult
   | ChatToolResult
   | ChatPlanReviewRequire

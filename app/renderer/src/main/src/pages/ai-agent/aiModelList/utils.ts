@@ -390,6 +390,9 @@ export interface AIModelConfig {
   ProbedExtendedEfforts?: string[]
   /**是否已对 xhigh/max 做过探测 */
   EffortProbed?: boolean
+  SupportsImageInput?: boolean
+  SupportsImageToolCalling?: boolean
+  ImageTokenEstimator?: string
 }
 
 export interface ServerAIGlobalConfig {
@@ -551,3 +554,15 @@ export const grpcProbeReasoningEffort: APIFunc<ProbeReasoningEffortRequest, Prob
       })
   })
 }
+
+export interface ModelVisionProbeResult {
+  SupportsImageInput?: boolean
+  SupportsImageToolCalling?: boolean
+  ImageInputStatus: string
+  ImageToolCallingStatus: string
+}
+
+export const grpcProbeModelVision = (
+  Config: ThirdPartyApplicationConfig,
+  Model: string,
+): Promise<ModelVisionProbeResult> => ipcRenderer.invoke('ProbeModelVision', { Config, Model })
