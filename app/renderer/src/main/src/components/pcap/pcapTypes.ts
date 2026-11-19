@@ -1,5 +1,5 @@
-// The main process uses proto-loader's longs:String. Keep packet IDs and
-// nanosecond timestamps as strings all the way back to gRPC.
+// The main process uses proto-loader's longs:String. Keep packet IDs, message
+// IDs, byte offsets and nanosecond timestamps as strings across the bridge.
 export interface PCAPDatabase {
   Id: string
   DatasetID: string
@@ -29,6 +29,46 @@ export interface ImportProgress {
   Database?: PCAPDatabase
 }
 
+export interface PCAPNetInterface {
+  Name: string
+  Description: string
+  NetInterfaceName: string
+  Addr: string
+  IP: string
+  IsIpv4?: boolean
+  IsIpv6?: boolean
+}
+
+export interface PcapMetadata {
+  AvailablePcapDevices: PCAPNetInterface[]
+  DefaultPublicNetInterface?: PCAPNetInterface
+}
+
+export interface LiveCaptureRequest {
+  NetInterfaceList: string[]
+  BPF?: string
+  Snaplen?: number
+  Promisc?: boolean
+  BatchSize?: string
+  FlushIntervalMilliseconds?: string
+  DurationMilliseconds?: string
+}
+
+export interface LiveCaptureProgress {
+  DatasetID: string
+  State: string
+  BytesIndexed: string
+  TotalBytes: string
+  PacketFrameCounter: string
+  NetInterfaceTransferKBPerSeconds: string
+  ProtocolCount: string
+  SessionCount: string
+  StreamCount: string
+  StreamChunkCount: string
+  Finished: boolean
+  Error: string
+}
+
 export interface PacketFilters {
   Protocol: string
   SrcIP: string
@@ -38,24 +78,31 @@ export interface PacketFilters {
   Keyword: string
 }
 
+export interface PCAPPacketsFilter {
+  Id?: string
+  SourceIP?: string[]
+  DestinationIP?: string[]
+  SourcePort?: number[]
+  DestinationPort?: number[]
+  TransportLayerTypes?: string[]
+  ApplicationLayerTypes?: string[]
+  LinkLayerTypes?: string[]
+  NetworkLayerTypes?: string[]
+  StartTimestampNS?: string
+  EndTimestampNS?: string
+  Keyword?: string
+}
+
 export interface PacketQuery {
   DatasetID: string
-  Pagination?: { Limit: number; Page?: number }
-  FromId?: string
-  Id?: string
-  Full?: boolean
-  SrcIP?: string
-  DstIP?: string
-  SrcPort?: string
-  DstPort?: string
-  TransportLayerTypes?: string
-  ApplicationLayerTypes?: string
-  Keyword?: string
+  Filter?: PCAPPacketsFilter
+  Pagination: { Limit: number; AfterId?: string }
+  IncludeTotal?: boolean
 }
 
 export type ByteData = Uint8Array | number[] | { type: 'Buffer'; data: number[] } | string
 
-export interface PCAPPacket {
+export interface PCAPPacketSummary {
   Id: string
   TimestampNS?: string
   CapturedLength: string
@@ -63,52 +110,85 @@ export interface PCAPPacket {
   LinkType: string
   Section: string
   Interface: string
-  LinkLayerType: string
-  NetworkLayerType: string
-  TransportLayerType: string
-  NetworkEndpointIPSrc: string
-  NetworkEndpointIPDst: string
-  TransportEndpointPortSrc: string
-  TransportEndpointPortDst: string
-  EthernetEndpointHardwareAddrSrc: string
-  EthernetEndpointHardwareAddrDst: string
+  SourceMAC: string
+  DestinationMAC: string
+  VLANStack: string
+  SourceIP: string
+  DestinationIP: string
+  SourcePort: number
+  DestinationPort: number
+  Transport: string
   Protocol: string
+  ApplicationProtocols: string[]
   Info: string
   DecodeError: string
-  Raw: ByteData
-  Details: string
 }
 
 export interface PacketPage {
-  Data: PCAPPacket[]
-  Total: string
+  Data: PCAPPacketSummary[]
+  Total?: string
   NextCursor: string
   HasMore: boolean
-  Truncated: boolean
 }
 
-export interface ProtocolField {
-  name: string
-  value: ProtocolField[] | { leaf: boolean; verbose: string; scope?: [number, number] }
+export interface PCAPFieldRange {
+  SourceID: string
+  BitOffset: string
+  BitLength: string
 }
 
-export interface PacketMessage {
-  MessageId: number
+export interface PCAPFieldNode {
+  Name: string
+  DisplayValue?: string
+  Children: PCAPFieldNode[]
+  Ranges: PCAPFieldRange[]
+}
+
+export interface PCAPByteSource {
+  ID: string
+  Kind: string
+  Name: string
+  Length: string
+  Completeness: string
+  ContributorPacketIds: string[]
+  CompletedInPacketId: string
+  InitialData: ByteData
+  InitialOffset: string
+  InitialTruncated: boolean
+}
+
+export interface PCAPMessageDetail {
+  MessageId: string
   Protocol: string
-  Info: string
+  Summary: string
   Status: string
   Completeness: string
-  PacketIds: number[]
-  CompletedInPacketId: number
-  Kind: string
-  RAW: string
-  Result: ProtocolField[]
-  DecodeError?: string
+  SourceID: string
+  Nodes: PCAPFieldNode[]
+  DecodeError: string
+  NodesTruncated: boolean
 }
 
-export interface PacketDetails {
-  Result: ProtocolField[]
-  Messages: PacketMessage[]
-  ProtocolsIndexed: boolean
-  DecodeError?: string
+export interface PCAPRelatedMessage {
+  MessageId: string
+  Protocol: string
+  Summary: string
+  SourceID: string
+  CompletedInPacketId: string
+  Completeness: string
+}
+
+export interface PCAPPacketDetail {
+  Packet: PCAPPacketSummary
+  Nodes: PCAPFieldNode[]
+  Messages: PCAPMessageDetail[]
+  RelatedMessages: PCAPRelatedMessage[]
+  ByteSources: PCAPByteSource[]
+}
+
+export interface ReadPCAPBytesResponse {
+  Data: ByteData
+  Offset: string
+  TotalLength: string
+  EOF: boolean
 }

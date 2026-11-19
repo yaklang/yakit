@@ -1092,9 +1092,18 @@ declare global {
       onError: (callback: (payload: unknown) => void) => BridgeCleanup
     }
     traffic: {
+      getPcapMetadata: () => Promise<PCAPModels.PcapMetadata>
       queryPackets: (params: PCAPModels.PacketQuery) => Promise<PCAPModels.PacketPage>
+      getPacketDetail: (params: { DatasetID: string; PacketID: string }) => Promise<PCAPModels.PCAPPacketDetail>
+      readBytes: (params: {
+        DatasetID: string
+        SourceID: string
+        Offset: string
+        Length: string
+      }) => Promise<PCAPModels.ReadPCAPBytesResponse>
       queryDatabases: (params: { Pagination: { Limit: number; AfterId?: string } }) => Promise<PCAPModels.DatabasePage>
       importFile: (params: { InputFile: string }, token: string) => Promise<unknown>
+      startLiveCapture: (params: PCAPModels.LiveCaptureRequest, token: string) => Promise<unknown>
       exportData: (params: {
         DatasetID: string
         TargetPath: string

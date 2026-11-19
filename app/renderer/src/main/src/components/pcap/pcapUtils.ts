@@ -1,5 +1,5 @@
 import type { TreeDataNode } from 'antd'
-import type { ByteData, PacketFilters, PacketQuery, ProtocolField } from './pcapTypes'
+import type { ByteData, PacketFilters, PacketQuery, PCAPFieldNode, PCAPPacketsFilter } from './pcapTypes'
 
 export const emptyFilters: PacketFilters = { Protocol: '', SrcIP: '', DstIP: '', SrcPort: '', DstPort: '', Keyword: '' }
 
@@ -34,38 +34,78 @@ export const decodeBytes = (value?: ByteData): Uint8Array => {
 }
 
 export const packetQuery = (datasetID: string, filters: PacketFilters, cursor: string, limit: number): PacketQuery => {
-  const { Protocol, ...fields } = filters
-  const transport = ['TCP', 'UDP', 'SCTP', 'ARP', 'ICMPv4', 'ICMPv6'].includes(Protocol)
+  const { Protocol, SrcIP, DstIP, SrcPort, DstPort, Keyword } = filters
+  const values = (value: string) =>
+    value
+      .trim()
+      .split(/[\s,|]+/)
+      .filter(Boolean)
+  const ports = (value: string, label: string) =>
+    values(value).map((item) => {
+      const port = Number(item)
+      if (!Number.isInteger(port) || port < 0 || port > 65535) {
+        throw new Error(`${label}必须是 0–65535 的整数`)
+      }
+      return port
+    })
+  const filter: PCAPPacketsFilter = {}
+  if (SrcIP.trim()) filter.SourceIP = values(SrcIP)
+  if (DstIP.trim()) filter.DestinationIP = values(DstIP)
+  if (SrcPort.trim()) filter.SourcePort = ports(SrcPort, '源端口')
+  if (DstPort.trim()) filter.DestinationPort = ports(DstPort, '目的端口')
+  if (Keyword.trim()) filter.Keyword = Keyword.trim()
+
+  const protocol = Protocol.trim()
+  const transport = ['TCP', 'UDP', 'SCTP', 'ARP', 'ICMPv4', 'ICMPv6'].includes(protocol)
+  if (protocol && transport) filter.TransportLayerTypes = [protocol]
+  if (protocol && !transport) filter.ApplicationLayerTypes = [protocol]
   return {
     DatasetID: datasetID,
-    ...Object.fromEntries(Object.entries(fields).map(([key, value]) => [key, value.trim()])),
-    TransportLayerTypes: transport ? Protocol : '',
-    ApplicationLayerTypes: !transport ? Protocol : '',
-    FromId: cursor,
-    Pagination: { Page: 1, Limit: limit },
-    Full: false,
+    Filter: filter,
+    Pagination: { Limit: limit, AfterId: cursor },
   }
 }
 
 export type ByteRange = [number, number]
+export interface FieldSelection {
+  sourceID: string
+  ranges: ByteRange[]
+}
 
-export const protocolTree = (fields: ProtocolField[]) => {
-  const scopes: Record<string, ByteRange> = {}
-  const walk = (items: ProtocolField[], path: string): TreeDataNode[] =>
+const rangeForField = (range: PCAPFieldNode['Ranges'][number]): ByteRange | undefined => {
+  const start = Number(range.BitOffset)
+  const length = Number(range.BitLength)
+  if (!range.SourceID || !Number.isSafeInteger(start) || !Number.isSafeInteger(length) || start < 0 || length <= 0)
+    return undefined
+  return [Math.floor(start / 8), Math.ceil((start + length) / 8)]
+}
+
+export const fieldTree = (fields: PCAPFieldNode[]) => {
+  const selections: Record<string, FieldSelection> = {}
+  const walk = (items: PCAPFieldNode[], path: string): TreeDataNode[] =>
     items.map((field, index) => {
       const key = `${path}/${index}`
-      const { name, value } = field
-      if (Array.isArray(value)) {
-        const children = walk(value, key)
-        const ranges = children.map((child) => scopes[String(child.key)]).filter(Boolean)
-        if (ranges.length) scopes[key] = [Math.min(...ranges.map((r) => r[0])), Math.max(...ranges.map((r) => r[1]))]
-        return { key, title: name, children }
+      const children = walk(field.Children || [], key)
+      const sourceID = field.Ranges?.[0]?.SourceID || ''
+      const ownRanges = (field.Ranges || [])
+        .filter((range) => range.SourceID === sourceID)
+        .map(rangeForField)
+        .filter((range): range is ByteRange => Boolean(range))
+      if (sourceID && ownRanges.length) {
+        selections[key] = { sourceID, ranges: ownRanges }
+      } else if (children.length) {
+        const childSelections = children.map((child) => selections[String(child.key)]).filter(Boolean)
+        const childSource = childSelections[0]?.sourceID
+        if (childSource && childSelections.every((selection) => selection.sourceID === childSource)) {
+          const ranges = childSelections.flatMap((selection) => selection.ranges)
+          selections[key] = {
+            sourceID: childSource,
+            ranges: [[Math.min(...ranges.map((range) => range[0])), Math.max(...ranges.map((range) => range[1]))]],
+          }
+        }
       }
-      if (value?.scope && value.scope[0] >= 0 && value.scope[1] > value.scope[0]) {
-        // The legacy parser contract uses bits; the byte viewer uses [start,end).
-        scopes[key] = [Math.floor(value.scope[0] / 8), Math.ceil(value.scope[1] / 8)]
-      }
-      return { key, title: `${name}${value?.verbose !== undefined ? `: ${value.verbose}` : ''}`, isLeaf: true }
+      const title = field.DisplayValue ? `${field.Name}: ${field.DisplayValue}` : field.Name
+      return children.length ? { key, title, children } : { key, title, isLeaf: true }
     })
-  return { nodes: walk(fields, 'root'), scopes }
+  return { nodes: walk(fields, 'root'), selections }
 }

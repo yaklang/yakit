@@ -2,7 +2,14 @@ const { ipcMain } = require('electron')
 const handlerHelper = require('./handleStreamWithContext')
 
 module.exports = (win, getClient) => {
-  for (const method of ['QueryPCAPDatabase', 'ExportPCAPData', 'DeletePCAPDatabase']) {
+  for (const method of [
+    'QueryPCAPDatabase',
+    'QueryPCAPPackets',
+    'GetPCAPPacketDetail',
+    'ReadPCAPBytes',
+    'ExportPCAPData',
+    'DeletePCAPDatabase',
+  ]) {
     ipcMain.handle(method, async (_event, params) => {
       return await new Promise((resolve, reject) => {
         const client = getClient()
