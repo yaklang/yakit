@@ -917,7 +917,6 @@
     "noProfiles": "No transform profiles available on the shared document",
     "emptyTitle": "No online browsers",
     "emptyHint": "Connect the extension and share a page that includes transform profiles",
-    "openInstances": "Open browser instances",
     "request": "Request",
     "response": "Response",
     "bidirectional": "Bidirectional",

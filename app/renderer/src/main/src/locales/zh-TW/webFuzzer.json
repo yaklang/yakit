@@ -917,7 +917,6 @@
     "noProfiles": "當前共享文件沒有可用轉換配置",
     "emptyTitle": "沒有線上瀏覽器",
     "emptyHint": "連接外掛並共享包含轉換配置的頁面",
-    "openInstances": "打開瀏覽器實例",
     "request": "請求",
     "response": "響應",
     "bidirectional": "雙向",
