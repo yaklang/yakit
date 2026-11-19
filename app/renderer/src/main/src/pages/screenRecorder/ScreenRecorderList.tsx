@@ -6,6 +6,7 @@ import { Divider, Form, Tooltip } from 'antd'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { failed, yakitNotify } from '@/utils/notification'
 import { formatTimestamp } from '@/utils/timeUtil'
+import { toAtomFileUrl } from '@/utils/atomFileUrl'
 import { openABSFileLocated } from '@/utils/openWebsite'
 import styles from './ScreenRecorder.module.scss'
 import { RefreshIcon } from '@yakit-libs/yakit-ui-icons/oldicon'
@@ -591,7 +592,7 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = (props) =>
 
   const [form] = Form.useForm()
   useEffect(() => {
-    setUrlVideo(`atom://${item.Filename}`)
+    setUrlVideo(toAtomFileUrl(item.Filename))
   }, [item.Filename])
   const onPlayVideo = useMemoizedFn(() => {
     ipcRenderer
@@ -616,7 +617,7 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = (props) =>
       .invoke('GetOneScreenRecorders', params)
       .then((data) => {
         setVideoItem(data)
-        setUrlVideo(`atom://${data.Filename}`)
+        setUrlVideo(toAtomFileUrl(data.Filename))
       })
       .catch((err) => {
         yakitNotify('error', t('ScreenRecorderListItem.playFailed', { error: err }))

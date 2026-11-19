@@ -48,11 +48,11 @@ jobs:
             ~/.cache/electron
             ~/Library/Caches/electron
             ~/AppData/Local/electron/Cache
-          key: startup-artifacts-${{ runner.os }}-${{ runner.arch }}-27-${{ hashFiles('scripts/engine-startup/engines.json') }}
+          key: startup-artifacts-${{ runner.os }}-${{ runner.arch }}-44-${{ hashFiles('scripts/engine-startup/engines.json') }}
       - name: Install locked client/test dependencies
         timeout-minutes: 5
         run: yarn install --frozen-lockfile --ignore-scripts --non-interactive --network-timeout 60000
-      - name: Prepare locked Electron 27 runtime
+      - name: Prepare locked Electron 44 runtime
         timeout-minutes: 2
         run: node node_modules/electron/install.js
       - name: Configure Electron sandbox helper on the disposable Linux runner

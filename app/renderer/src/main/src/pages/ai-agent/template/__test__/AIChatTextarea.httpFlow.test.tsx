@@ -28,6 +28,7 @@ import { compileReactModule } from '@/utils/__test__/helpers/compileReactModule'
 import { useHttpFlowSelection } from '@/components/useHttpFlowSelection'
 import { HistoryAIReActChatContext } from '@/components/historyAIReActChat/context'
 import { yakitNotify } from '@/utils/notification'
+import { toAtomFileUrl } from '@/utils/atomFileUrl'
 import { handleOpenFileSystemDialog } from '@/utils/fileSystemDialog'
 import emiter from '@/utils/eventBus/eventBus'
 import * as edition from '@/utils/envfile'
@@ -875,7 +876,7 @@ describe('输入框资料栏', () => {
     const panel = await screen.findByRole('dialog', { name: 'AIChatTextarea.addMaterials' })
     expect(within(panel).getByText('(2)')).toBeInTheDocument()
     const thumbnail = within(panel).getByRole('img', { name: 'context_image.PNG' })
-    expect(thumbnail).toHaveAttribute('src', `atom://${imagePath}`)
+    expect(thumbnail).toHaveAttribute('src', toAtomFileUrl(imagePath))
     expect(within(panel).queryByRole('img', { name: 'context.txt' })).not.toBeInTheDocument()
     fireEvent.error(thumbnail)
     expect(thumbnail).not.toBeInTheDocument()
@@ -917,7 +918,7 @@ describe('输入框资料栏', () => {
     })
     expect(within(panel).getByText('(1)')).toBeInTheDocument()
     const savedThumbnail = await within(panel).findByRole('img', { name: 'image_123.png' })
-    expect(savedThumbnail).toHaveAttribute('src', `atom://${savedPath}`)
+    expect(savedThumbnail).toHaveAttribute('src', toAtomFileUrl(savedPath))
     await waitFor(() => expect(getLocalFileLinkInfo).toHaveBeenCalledExactlyOnceWith(savedPath, true))
     fireEvent.click(send)
     expect(onSubmit).toHaveBeenCalledExactlyOnceWith(

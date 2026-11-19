@@ -6,6 +6,9 @@ import './index.scss'
 import App from './App'
 import { NotificationProvider } from './utils/notification'
 import { YakitAntdProvider } from './theme/antdTheme'
+import { installDroppedFilePath } from './utils/installDroppedFilePath'
+
+installDroppedFilePath(File, window.yakitBridge?.app?.getPathForFile)
 
 createRoot(document.getElementById('root')!).render(
   <Suspense fallback={'loading'}>

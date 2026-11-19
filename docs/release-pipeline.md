@@ -29,7 +29,7 @@ Finalize 与 **Publish OSS Version Tag** 共用升级入口发布锁。在锁内
 ## 提前完成的工作
 
 - 在 Linux 标准 runner 上构建主渲染端、Link 和生产 Electron 主进程，冻结 Chrome 扩展资源。
-- 按 Windows x64、Linux x64/arm64、macOS Intel/Apple Silicon 并行预装配，分别使用 Electron 27.0.0 和兼容版 22.3.27。
+- 按 Windows x64、Linux x64/arm64、macOS Intel/Apple Silicon 并行预装配，分别使用 Electron 44.11.3 和兼容版 22.3.27。普通版要求 64 位 Windows 10 或 macOS 13 及以上，Electron 44 不提供 Windows 32 位或 Linux ARM 32 位运行时；旧系统需使用兼容版，Electron 22 已停止安全维护。当前发布矩阵没有 Windows 32 位安装包。
 - 完成生产依赖筛选、`app.asar`、Electron 外壳、图标、平台标记和应用版本等准备。
 - 全部目标成功后才写入候选的 `candidate.json` 就绪标记。构建结束后释放 runner，不等待后端。
 

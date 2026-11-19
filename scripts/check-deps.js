@@ -89,8 +89,10 @@ function dependencyIssues(projectDir) {
       const binaryRecord = path.join(packageDir, 'path.txt')
       const relativeBinary = exists(binaryRecord) ? fs.readFileSync(binaryRecord, 'utf8').trim() : ''
       const distDir = process.env.ELECTRON_OVERRIDE_DIST_PATH || path.join(packageDir, 'dist')
-      if (!relativeBinary || !exists(path.join(distDir, relativeBinary))) {
-        issues.push('electron（运行文件缺失，请在该项目目录执行 node node_modules/electron/install.js）')
+      const versionFile = path.join(distDir, 'version')
+      const runtimeVersion = exists(versionFile) ? fs.readFileSync(versionFile, 'utf8').trim().replace(/^v/, '') : ''
+      if (!relativeBinary || !exists(path.join(distDir, relativeBinary)) || runtimeVersion !== version) {
+        issues.push('electron（运行文件缺失或版本不一致，请在该项目目录执行 node node_modules/electron/install.js）')
       }
     }
   }

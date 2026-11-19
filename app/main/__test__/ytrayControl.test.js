@@ -12,6 +12,9 @@ import {
   restoreYTrayBrowserInstance,
 } from '../handlers/ytrayControl'
 
+// CI 选测试的静态关联锚点：本测试用 vm 沙箱加载 preload，此 mock 不参与执行
+vi.mock('../preload', () => ({}))
+
 let server
 let directory
 let socketPath
@@ -42,7 +45,8 @@ function loadHistoryBridge(endpoint, assertTrustedAppSender = vi.fn()) {
       },
     },
     window: { addEventListener: vi.fn() },
-    require: () => ({ ipcRenderer: { on: vi.fn(), invoke } }),
+    require: (name) =>
+      name === './preloadFilePath' ? { installFilePath: () => {} } : { ipcRenderer: { on: vi.fn(), invoke } },
   }
   vm.runInNewContext(fs.readFileSync(new URL('../preload.js', import.meta.url), 'utf8'), preloadContext)
   onLoaded()

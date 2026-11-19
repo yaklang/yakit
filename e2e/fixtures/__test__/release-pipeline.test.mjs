@@ -1,9 +1,11 @@
 // @vitest-environment node
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { mkdtemp, mkdir, readFile, readlink, rm, stat, symlink, writeFile } from 'node:fs/promises'
+import { readFileSync } from 'node:fs'
+import { cp, mkdtemp, mkdir, readFile, readlink, rm, stat, symlink, writeFile } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import { createRequire } from 'node:module'
+import { pathToFileURL } from 'node:url'
 import {
   artifactName,
   assertPlan,
@@ -11,6 +13,8 @@ import {
   assertSourceRun,
   assertVersion,
   createPlan,
+  currentElectronVersion,
+  legacyElectronVersion,
   sha256,
 } from '../../../scripts/release/model.mjs'
 import { archive, extract } from '../../../scripts/release/io.mjs'
@@ -67,10 +71,65 @@ describe('release identity and native matrix', () => {
     expect(new Set(candidate.targets.map((target) => target.id)).size).toBe(20)
     expect(new Set(candidate.targets.map((target) => target.runner)).size).toBe(5)
     expect(candidate.targets.filter((target) => target.platform === 'darwin')).toHaveLength(8)
-    expect(candidate.targets.every((target) => target.electronVersion === (target.legacy ? '22.3.27' : '27.0.0'))).toBe(
-      true,
-    )
+    expect(
+      candidate.targets.every(
+        (target) => target.electronVersion === (target.legacy ? legacyElectronVersion : currentElectronVersion),
+      ),
+    ).toBe(true)
     expect(assertPlan(candidate)).toBe(candidate)
+  })
+  it('reads the normal Electron version from package.json before the legacy downgrade', () => {
+    const packageVersion = JSON.parse(readFileSync(new URL('../../../package.json', import.meta.url), 'utf8'))
+      .devDependencies.electron
+    expect(currentElectronVersion).toBe(packageVersion)
+    for (const script of ['electron-builder.sh', 'electron-irify-builder.sh', 'electron-memfit-builder.sh']) {
+      const source = readFileSync(new URL(`../../../packageScript/script/${script}`, import.meta.url), 'utf8')
+      const readAt = source.indexOf("require('./package.json').devDependencies.electron")
+      expect(readAt).toBeGreaterThan(-1)
+      expect(source.indexOf('electron@22.3.27')).toBeGreaterThan(readAt)
+      expect(source).not.toContain(`electron@${packageVersion}`)
+      expect(source).not.toContain('yarn remove electron')
+      expect(source).toContain('!= "undefined"')
+      expect(source).toContain('node node_modules/electron/install.js')
+    }
+  })
+  it('falls back to workspace package.json in sparse coordinator checkouts and guards createPlan when missing', async () => {
+    const originalCwd = process.cwd()
+    const workspace = await directory()
+    await writeFile(path.join(workspace, 'package.json'), JSON.stringify({ devDependencies: { electron: '44.99.0' } }))
+    const coordinatorModel = path.join(workspace, '.release/coordinator/scripts/release/model.mjs')
+    await mkdir(path.dirname(coordinatorModel), { recursive: true })
+    await cp(new URL('../../../scripts/release/model.mjs', import.meta.url), coordinatorModel)
+    process.chdir(workspace)
+    try {
+      const mod = await import(`${pathToFileURL(coordinatorModel).href}?t=${Date.now()}-fallback`)
+      expect(mod.currentElectronVersion).toBe('44.99.0')
+    } finally {
+      process.chdir(originalCwd)
+    }
+
+    const isolated = await directory()
+    const isolatedModel = path.join(isolated, 'scripts/release/model.mjs')
+    await mkdir(path.dirname(isolatedModel), { recursive: true })
+    await cp(new URL('../../../scripts/release/model.mjs', import.meta.url), isolatedModel)
+    process.chdir(isolated)
+    try {
+      const mod = await import(`${pathToFileURL(isolatedModel).href}?t=${Date.now()}-missing`)
+      expect(mod.currentElectronVersion).toBeUndefined()
+      expect(() =>
+        mod.createPlan({
+          editions: 'yakit',
+          version: '1.4.9-1030',
+          sha: 'a'.repeat(40),
+          runId: '123',
+          repository: 'yaklang/yakit',
+          ref: 'v1.4.9-1030',
+          refType: 'tag',
+        }),
+      ).toThrow('Missing package.json devDependencies.electron')
+    } finally {
+      process.chdir(originalCwd)
+    }
   })
   it.each(['latest', '', '1.4', 'dev/1.4.9', '1.4.9/../../latest', '1.4.9;echo x', 'https://host/engine'])(
     'rejects an ambiguous engine version: %s',

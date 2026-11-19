@@ -1,6 +1,7 @@
 const { spawn } = require('node:child_process')
 const path = require('node:path')
 const { stopEngineChild } = require('../../app/main/handlers/utils/engineStartup')
+const electronVersion = require('electron/package.json').version
 const env = {
   ...process.env,
   HTTP_PROXY: 'http://127.0.0.1:1',
@@ -40,5 +41,5 @@ child.once('error', (error) => {
 child.once('close', (code) => {
   clearTimeout(timer)
   process.exitCode =
-    code === 0 && output.includes('"status": "PASS"') && output.includes('"electron": "27.0.0"') ? 0 : 1
+    code === 0 && output.includes('"status": "PASS"') && output.includes(`"electron": "${electronVersion}"`) ? 0 : 1
 })

@@ -155,7 +155,11 @@ async function verify(binary, cycles = 1, policy = 'ipc', expected = 'ipc') {
   }
 }
 
-if (require.main === module) {
+// Electron 44 loads the entry script from its own bootstrap module, so
+// require.main is not this module even when it is the process entry.
+const isDirectExecution = require.main === module || path.resolve(process.argv[1] || '') === __filename
+
+if (isDirectExecution) {
   const electron = process.versions.electron ? require('electron').app : null
   const run = async () => {
     try {

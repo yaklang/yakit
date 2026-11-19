@@ -6,7 +6,7 @@
   "scripts": {
     "cli": "node ./cli/cli.mjs",
     "check-deps": "node scripts/check-deps.js",
-    "postinstall": "electron-builder install-app-deps",
+    "postinstall": "node node_modules/electron/install.js && electron-builder install-app-deps",
     "release-render": "cd app/renderer/src/main && yarn release-render",
     "release-link-render": "cd app/renderer/engine-link-startup && yarn release-render",
     "release-irify": "node scripts/release-irify.js",
@@ -79,7 +79,7 @@
     "chalk": "5.6.2",
     "commander": "13.1.0",
     "concurrently": "6.5.1",
-    "electron": "27.0.0",
+    "electron": "44.11.3",
     "electron-builder": "26.15.3",
     "esbuild": "0.28.1",
     "execa": "8.0.0",

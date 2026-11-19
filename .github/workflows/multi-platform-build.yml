@@ -266,7 +266,7 @@ jobs:
               run: yarn cli install
               working-directory: ./
             - name: "Install Legacy Electron"
-              run: yarn remove electron && yarn add electron@22.3.27 --dev
+              run: yarn add electron@22.3.27 --dev
               if: ${{ inputs.legacy }}
               working-directory: ./
 

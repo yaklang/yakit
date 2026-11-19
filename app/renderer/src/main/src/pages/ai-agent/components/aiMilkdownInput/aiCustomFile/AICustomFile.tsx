@@ -5,6 +5,7 @@ import { useCreation, useMemoizedFn } from 'ahooks'
 import styles from './AICustomFile.module.scss'
 import classNames from 'classnames'
 
+import { toAtomFileUrl } from '@/utils/atomFileUrl'
 import { yakitNotify } from '@/utils/notification'
 import { randomString } from '@/utils/randomUtil'
 import { Progress } from 'antd'
@@ -103,7 +104,7 @@ export const AICustomFile: React.FC<AICustomFileProps> = React.memo((props) => {
     >
       {isUpdate && <Progress type="circle" percent={progress} className={styles['progress']} width={30} />}
       {showSrc && (
-        <img src={showSrc.startsWith('blob:') ? showSrc : `atom://${showSrc}`} alt={attrs.alt || '暂无图片'} />
+        <img src={showSrc.startsWith('blob:') ? showSrc : toAtomFileUrl(showSrc)} alt={attrs.alt || '暂无图片'} />
       )}
     </div>
   )
