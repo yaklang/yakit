@@ -48,6 +48,8 @@ export interface YakitMenuProp extends MenuProps {
   parentTitleClick?: boolean
   /** 外层装饰 className */
   menuWrapperClassName?: string
+  /** 菜单项标题 className */
+  menuItemTitleClassName?: string
 }
 
 export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
@@ -63,6 +65,7 @@ export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
     parentTitleClick = false,
     onClick,
     menuWrapperClassName,
+    menuItemTitleClassName,
     ...restMenu
   } = props
 
@@ -106,12 +109,24 @@ export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
                 {info.itemIcon}
                 {isHint && !!hintTitle ? (
                   <Tooltip zIndex={9999} title={hintTitle} placement="leftBottom">
-                    <div className={classNames(styles['yakit-menu-item-title'], 'yakit-single-line-ellipsis')}>
+                    <div
+                      className={classNames(
+                        styles['yakit-menu-item-title'],
+                        'yakit-single-line-ellipsis',
+                        menuItemTitleClassName,
+                      )}
+                    >
                       {info.label}
                     </div>
                   </Tooltip>
                 ) : (
-                  <div className={classNames(styles['yakit-menu-item-title'], 'yakit-single-line-ellipsis')}>
+                  <div
+                    className={classNames(
+                      styles['yakit-menu-item-title'],
+                      'yakit-single-line-ellipsis',
+                      menuItemTitleClassName,
+                    )}
+                  >
                     {info.label}
                   </div>
                 )}
@@ -150,12 +165,24 @@ export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
                 {info.itemIcon}
                 {isHint && !!hintTitle ? (
                   <Tooltip zIndex={9999} title={hintTitle} placement="leftBottom">
-                    <div className={classNames(styles['yakit-menu-item-title'], 'yakit-single-line-ellipsis')}>
+                    <div
+                      className={classNames(
+                        styles['yakit-menu-item-title'],
+                        'yakit-single-line-ellipsis',
+                        menuItemTitleClassName,
+                      )}
+                    >
                       {info.label}
                     </div>
                   </Tooltip>
                 ) : (
-                  <div className={classNames(styles['yakit-menu-item-title'], 'yakit-single-line-ellipsis')}>
+                  <div
+                    className={classNames(
+                      styles['yakit-menu-item-title'],
+                      'yakit-single-line-ellipsis',
+                      menuItemTitleClassName,
+                    )}
+                  >
                     {info.label}
                   </div>
                 )}

@@ -50,13 +50,10 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.a
     if (!['build', 'packaging'].includes(mode)) throw new Error('Expected build or packaging toolchain')
     const root = await dependencyFiles('.')
     const main = await dependencyFiles('app/renderer/src/main')
-    const link = await dependencyFiles('app/renderer/engine-link-startup')
     const manifest = mode === 'packaging' ? packagingManifest(root.manifest) : root.manifest
     await appendFile(
       process.env.GITHUB_OUTPUT,
-      `tools=${dependencyKey(manifest, root.lockfile)}\nrenderers=${sha256(
-        dependencyKey(main.manifest, main.lockfile) + dependencyKey(link.manifest, link.lockfile),
-      )}\n`,
+      `tools=${dependencyKey(manifest, root.lockfile)}\nrenderers=${dependencyKey(main.manifest, main.lockfile)}\n`,
     )
   } else if (command === 'manifest') {
     const { manifest, lockfile } = await dependencyFiles('.')

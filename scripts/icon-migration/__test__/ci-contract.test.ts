@@ -74,8 +74,8 @@ describe('icon migration test ownership', () => {
       [
         'scripts/icon-migration/__test__/colorful-plugin.test.ts',
         'app/renderer/src/main/src/__test__/yakitUiIconsPurePlugin.test.ts',
-        'app/renderer/engine-link-startup/src/__test__/yakitUiIconsPurePlugin.test.ts',
-        'app/renderer/engine-link-startup/src/__test__/iconMigrationConsumerContract.test.tsx',
+        'app/renderer/src/main/src/engineLinkStartup/__test__/yakitUiIconsPurePlugin.test.ts',
+        'app/renderer/src/main/src/engineLinkStartup/__test__/iconMigrationConsumerContract.test.tsx',
       ].join('\n'),
     )
     await execFileAsync(process.execPath, [genericSelector], {

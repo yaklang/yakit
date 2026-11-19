@@ -44,7 +44,6 @@ const runCli = (args) => {
 const PROJECTS = [
   { name: '根目录', dir: '', installCmd: runCli('install electron') },
   { name: '主渲染端', dir: 'app/renderer/src/main', installCmd: runCli('install main') },
-  { name: 'Link 渲染端', dir: 'app/renderer/engine-link-startup', installCmd: runCli('install link') },
 ]
 
 function exists(p) {
@@ -109,7 +108,7 @@ function main() {
     missing.forEach((p) => console.log(`  - ${p.name}`))
     console.log('')
     console.log('请先执行依赖安装（首次或重新克隆后必需）：')
-    console.log(`  ${runCli('install')}          # 根目录 + 两个渲染端`)
+    console.log(`  ${runCli('install')}          # 根目录 + 主渲染端`)
     console.log('')
     console.log('安装完成后再启动项目。')
     process.exit(0)
@@ -148,8 +147,8 @@ function main() {
   console.log('[检查通过] 已声明依赖存在、固定版本匹配，锁文件无本地改动')
   console.log('')
   console.log('接下来：')
-  console.log(`  ${runCli('start -v yakit')}   # 同时启动两个渲染端（:3000 + :5173）`)
-  console.log(`  ${runCli('electron')}         # 两端口就绪后启动 Electron 主进程`)
+  console.log(`  ${runCli('start -v yakit')}   # 启动渲染服务（主窗口 + link 共用 :3000）`)
+  console.log(`  ${runCli('electron')}         # 页面就绪后启动 Electron 主进程`)
   console.log(`  或: ${runCli('dev -v yakit')} # 一条命令 start + wait-on + electron`)
   process.exit(0)
 }

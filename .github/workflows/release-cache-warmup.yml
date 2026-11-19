@@ -8,8 +8,6 @@ on:
       - 'yarn.lock'
       - 'app/renderer/src/main/package.json'
       - 'app/renderer/src/main/yarn.lock'
-      - 'app/renderer/engine-link-startup/package.json'
-      - 'app/renderer/engine-link-startup/yarn.lock'
       - '.github/actions/release-toolchain/**'
       - '.github/workflows/release-cache-warmup.yml'
       - 'scripts/release/toolchain.mjs'

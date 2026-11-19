@@ -20,6 +20,13 @@ if (process.platform === 'darwin' || process.platform === 'linux') {
 
 let dbFile = 'default-yakit.db'
 
+function applyEditionRaw(type) {
+  deleteLocalCache('REACT_APP_PLATFORM')
+  setLocalCache('YAKIT_EDITION', type)
+  dbFile = type === 'yakitEE' ? 'company-default-yakit.db' : 'default-yakit.db'
+  return ''
+}
+
 function getRandomInt(max) {
   return Math.floor(Math.random() * max)
 }
@@ -175,10 +182,7 @@ module.exports = {
   clearing: () => {},
   register: (win, getClient) => {
     ipcMain.handle('set-release-edition-raw', (e, type) => {
-      deleteLocalCache('REACT_APP_PLATFORM')
-      setLocalCache('YAKIT_EDITION', type)
-      dbFile = type === 'yakitEE' ? 'company-default-yakit.db' : 'default-yakit.db'
-      return ''
+      return applyEditionRaw(type)
     })
 
     ipcMain.handle('ps-yak-grpc', async (e, params) => {
@@ -249,6 +253,10 @@ module.exports = {
     })
   },
   registerNewIPC: (win, getClient, ipcEventPre) => {
+    ipcMain.handle(ipcEventPre + 'set-release-edition-raw', (e, type) => {
+      return applyEditionRaw(type)
+    })
+
     ipcMain.handle(ipcEventPre + 'ps-yak-grpc', async (e, params) => {
       return listLocalEngines()
     })

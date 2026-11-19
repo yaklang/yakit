@@ -58,7 +58,7 @@ const compareSpecificity = (left: [number, number, number], right: [number, numb
 const compatibilityStyles = [
   'app/renderer/src/main/src/assets/global.scss',
   'app/renderer/src/main/src/auxWindow/styles/aux-base.scss',
-  'app/renderer/engine-link-startup/src/index.scss',
+  'app/renderer/src/main/src/engineLinkStartup/index.scss',
 ]
 
 const entryStyleContracts = [
@@ -71,7 +71,7 @@ const entryStyleContracts = [
     importPath: './styles/aux-base.scss',
   },
   {
-    entry: 'app/renderer/engine-link-startup/src/main.tsx',
+    entry: 'app/renderer/src/main/src/engineLinkStartup/main.tsx',
     importPath: './index.scss',
   },
 ]

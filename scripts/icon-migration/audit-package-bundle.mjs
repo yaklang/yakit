@@ -353,7 +353,7 @@ async function treeHash(files) {
 }
 
 function defaultPackageRoot(repoRoot, renderer) {
-  const rendererRoot = renderer === 'main' ? 'app/renderer/src/main' : 'app/renderer/engine-link-startup'
+  const rendererRoot = 'app/renderer/src/main'
   const candidates = [
     resolve(repoRoot, rendererRoot, 'node_modules/@yakit-libs/yakit-ui-icons'),
     resolve(repoRoot, 'node_modules/@yakit-libs/yakit-ui-icons'),
@@ -367,7 +367,7 @@ function defaultSourceRoots(repoRoot, renderer) {
   return [
     renderer === 'main'
       ? resolve(repoRoot, 'app/renderer/src/main/src')
-      : resolve(repoRoot, 'app/renderer/engine-link-startup/src'),
+      : resolve(repoRoot, 'app/renderer/src/main/src/engineLinkStartup'),
   ]
 }
 

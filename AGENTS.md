@@ -15,13 +15,13 @@ Yakit 是一个基于 Electron + React 的跨平台桌面应用，主要技术�
 | --- | --- | --- | --- |
 | Electron 主进程 | `app/main/` | 源码 index.js，构建入口 dist/electron/main/index.js，承载窗口、IPC、gRPC | - |
 | 主渲染端 | `app/renderer/src/main/` | Vite 8 MPA 主界面 | `3000` |
-| Link 渲染端 | `app/renderer/engine-link-startup/` | 引擎链接启动页 | `5173` |
+| Link 渲染端 | `app/renderer/src/main/src/engineLinkStartup/` | 引擎链接启动页源码；产物在 `app/renderer/pages/link` | `3000`（与主渲染端同一 Vite 服务） |
 
 > 主进程在开发模式下会分别加载：
-> - 主窗口：`http://127.0.0.1:3000`（`app/main/index.js:247`）
-> - 引擎链接窗口：`http://127.0.0.1:5173`（`app/main/index.js:143`）
+> - 主窗口：`http://127.0.0.1:3000`（`app/main/index.js:291`）
+> - 引擎链接窗口：`http://127.0.0.1:3000/engine-link.html`（`app/main/index.js:223`）
 >
-> 因此**两个渲染端都必须成功启动后，才能启动 Electron 主进程**，否则窗口会白屏。
+> 两个入口由**同一个 Vite 服务**提供；等服务就绪后再启动 Electron，否则窗口会白屏。
 
 ## 前置要求
 
@@ -39,19 +39,19 @@ Yakit 是一个基于 Electron + React 的跨平台桌面应用，主要技术�
 
 ## 依赖安装
 
-项目共有三个需要安装依赖的子项目。一条命令即可按顺序全部安装（根目录 → Link 渲染端 → 主渲染端）：
+项目共有两个需要安装依赖的子项目。一条命令即可按顺序全部安装（根目录 → 主渲染端；Link 源码与主渲染端共用同一套依赖）：
 
 ```bash
 yarn cli install
-# 等价于：yarn cli install electron && yarn cli install link && yarn cli install main
-# 也可只装其中一个：yarn cli install electron | main | link
+# 等价于：yarn cli install electron && yarn cli install main
+# 也可只装其中一个：yarn cli install electron | main
 ```
 
 命令细节见 [`cli/README.md`](cli/README.md)。本仓库日常仍以 `yarn cli` 为例；`pnpm cli` / `npm run cli --` / `node ./cli/cli.mjs` 语义相同。
 
 ## 启动开发环境
 
-> 开发模式下 Electron 主进程会分别加载主窗口 `http://127.0.0.1:3000` 与引擎链接窗口 `http://127.0.0.1:5173`，因此**两个渲染端都必须先成功启动**，再启动 Electron，否则对应窗口会白屏。
+> 开发模式下 Electron 主进程会分别加载主窗口 `http://127.0.0.1:3000` 与引擎链接窗口 `http://127.0.0.1:3000/engine-link.html`，两个入口由同一个 Vite 服务提供；**服务就绪后**再启动 Electron，否则对应窗口会白屏。
 
 ### 启动前依赖检查（重要）
 
@@ -64,7 +64,7 @@ yarn check-deps
 - 若提示「未安装依赖」：按提示先执行 `yarn cli install`。
 - 若提示「依赖可能有更新」：**使用 `AskUserQuestion` 工具向用户弹选项框确认**是否重新安装对应子项目的依赖，而不是在回复里用文字描述选项让用户再答一遍。选项示例：
   - `重装全部依赖`（执行 `yarn cli install`）
-  - `仅重装有改动的子项目`（按 check-deps 提示的列表：`yarn cli install electron` / `main` / `link`）
+  - `仅重装有改动的子项目`（按 check-deps 提示的列表：`yarn cli install electron` / `main`）
   - `跳过，直接启动`
 - 若提示「依赖一致」：进入启动步骤。但若用户提到最近 `git pull` 过而未重装（见下文「常见问题排查」的盲区），**使用 `AskUserQuestion` 工具弹选项框**询问是否仍重跑 `yarn cli install`。
 
@@ -85,7 +85,7 @@ yarn check-deps
 
 选完版本后，映射到 CLI `-v`（**不要**再跑已删除的 `start-renders*` / `pack-*`）：
 
-| 用户选择 | CLI `-v` | 启动两端渲染 |
+| 用户选择 | CLI `-v` | 启动渲染服务 |
 | --- | --- | --- |
 | Yakit | `yakit` | `yarn cli start -v yakit` |
 | enterprise | `yakitEE` | `yarn cli start -v yakitEE` |
@@ -94,14 +94,14 @@ yarn check-deps
 | irify-enterprise | `irifyEE` | `yarn cli start -v irifyEE` |
 | memfit | `memfit` | `yarn cli start -v memfit` |
 
-先启动两个渲染端（:3000 主渲染端 + :5173 Link 渲染端），例如社区版：
+先启动渲染服务（:3000，主窗口与 link 入口共用），例如社区版：
 
 ```bash
 yarn cli start -v yakit
-# 只启一端：yarn cli start -v yakit --main  或  --link
+# --main / --link 为兼容参数，均指向同一个 :3000 服务
 ```
 
-待两个渲染端**真正就绪**后，再启动 Electron 主进程：
+待渲染服务**真正就绪**后，再启动 Electron 主进程：
 
 ```bash
 yarn cli electron
@@ -113,22 +113,21 @@ yarn cli electron
 >
 > 必须按以下两步确认就绪：
 >
-> 1. **端口检查**：确认 `3000` 与 `5173` 端口均在监听。
+> 1. **端口检查**：确认 `3000` 端口在监听。
 >    ```bash
 >    lsof -i :3000 -sTCP:LISTEN
->    lsof -i :5173 -sTCP:LISTEN
 >    ```
 >
-> 2. **内容轮询**：用 `curl` 轮询，直到两端都返回 HTTP 200 且响应体包含有效内容（如 `<script` 或 `<div id="root"`），才说明首次编译完成、页面真正可访问。
+> 2. **内容轮询**：用 `curl` 轮询两个入口，直到均返回 HTTP 200 且响应体包含有效内容（如 `<script` 或 `<div id="root"`），才说明首次编译完成、页面真正可访问。
 >    ```bash
->    # 轮询直到主渲染端（:3000）就绪
+>    # 主窗口入口
 >    until curl -s http://127.0.0.1:3000 | grep -qE '<script|<div id="root"'; do sleep 2; done
 >
->    # 轮询直到 Link 渲染端（:5173）就绪
->    until curl -s http://127.0.0.1:5173 | grep -qE '<script|<div id="root"'; do sleep 2; done
+>    # Link 入口
+>    until curl -s http://127.0.0.1:3000/engine-link.html | grep -qE '<script|<div id="root"'; do sleep 2; done
 >    ```
 >
-> 两端都通过上述检查后，再执行 `yarn cli electron`。
+> 两个入口都通过检查后，再执行 `yarn cli electron`。
 >
 > 也可用 `yarn cli dev -v <edition>` 一条命令（start + 页面内容检查 + 单次构建 + electron）。CLI 已内置 HTTP 200 和 HTML 内容检查；Agent 可用上面的 curl 额外诊断。
 
@@ -148,14 +147,14 @@ yarn cli electron
 | memfit | `memfit` | Memfit AI | AI Agent 精简版 | `9016` |
 
 ```bash
-# 启动两端渲染（以企业版为例）
+# 启动渲染服务（以企业版为例）
 yarn cli start -v yakitEE
 
-# 只启主渲染 / Link
+# --main / --link 为兼容参数，均指向同一个 :3000 服务
 yarn cli start -v yakitEE --main
 yarn cli start -v yakitEE --link
 
-# 按上文「启动步骤」确认两端真正就绪后
+# 按上文「启动步骤」确认渲染服务真正就绪后
 yarn cli electron
 
 # 或一条命令（页面内容就绪后构建并启动 Electron）
@@ -173,7 +172,7 @@ yarn cli dev -v yakitEE
 
 ## 构建渲染端产物
 
-若需打包发布，默认 build 构建两个渲染端和主进程，再执行 electron-builder（打包前会重新检查并构建主进程）：
+若需打包发布，默认 build 构建主窗口产物、link 产物和主进程，再执行 electron-builder（打包前会重新检查并构建主进程）：
 
 ```bash
 yarn cli build -v yakit
@@ -203,7 +202,7 @@ yarn cli pack -s mac -v yakit
 - **启动 / 编译报错（模块找不到、API 报错、语法报错等）**：优先 `yarn check-deps` 排查依赖是否一致；结合上述盲区判断是否需要重装依赖。
 - **M1 芯片原生依赖编译失败**：执行 `brew install pkg-config pixman cairo pango`。
 - **Electron 下载慢 / 失败**：在当前终端执行对应镜像脚本后重试（macOS `source scripts/set-electron-mirror-macos.sh` / Linux `source scripts/set-electron-mirror-linux.sh` / Windows PowerShell `. .\scripts\set-electron-mirror.ps1` / Windows CMD `scripts\set-electron-mirror.cmd`）。
-- **端口被占用**：确认没有残留的 vite / electron 进程，必要时 `lsof -i :3000` / `lsof -i :5173` 排查。
+- **端口被占用**：确认没有残留的 vite / electron 进程，必要时 `lsof -i :3000` 排查。
 
 ## 代码规范
 
@@ -288,15 +287,15 @@ yarn cli pack -s mac -v yakit
 | 命令 | 作用 |
 | --- | --- |
 | `yarn check-deps` | 检查本地依赖是否与仓库一致（启动前执行） |
-| `yarn cli install` | 安装根目录 + 两个渲染端依赖 |
-| `yarn cli install electron\|main\|link` | 只装其中一个 |
+| `yarn cli install` | 安装根目录 + 主渲染端依赖 |
+| `yarn cli install electron\|main` | 只装其中一个 |
 | `yarn cli install cli` | 只装 CLI 运行时到 `cli/`（不含 Electron） |
-| `yarn cli add <electron\|main\|link> <pkg…>` | 给指定子项目加包（`-D` / `--dev`） |
-| `yarn cli remove <electron\|main\|link> <pkg…>` | 从指定子项目卸包 |
-| `yarn cli start -v <edition>` | 开发态启动两端渲染（`--main` / `--link` 只启一端） |
+| `yarn cli add <electron\|main> <pkg…>` | 给指定子项目加包（`-D` / `--dev`） |
+| `yarn cli remove <electron\|main> <pkg…>` | 从指定子项目卸包 |
+| `yarn cli start -v <edition>` | 开发态启动渲染服务（:3000，主窗口 + link 入口） |
 | `yarn cli electron` | 启动 Electron 主进程（不区分版本） |
 | `yarn cli dev -v <edition>` | start + 页面检查 + 主进程构建 + electron |
-| `yarn cli build -v <edition>` | 生产构建两端渲染及压缩主进程 |
+| `yarn cli build -v <edition>` | 生产构建主窗口 / link 产物及压缩主进程 |
 | `yarn cli pack -s <os> -v <edition>` | electron-builder 打安装包（`win\|mac\|linux\|mwl`） |
 
 `-v` 取值：`yakit` / `yakitEE` / `yakitSE` / `irify` / `irifyEE` / `memfit`（另有 `breachtrace`）。

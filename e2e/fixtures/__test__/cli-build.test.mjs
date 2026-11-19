@@ -10,7 +10,8 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../
 const fixtures = []
 
 afterEach(async () => {
-  for (const directory of fixtures.splice(0)) await rm(directory, { recursive: true, force: true })
+  for (const directory of fixtures.splice(0))
+    await rm(directory, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 })
 })
 
 // Run the real CLI and concurrently dependency, replacing only the expensive build commands.
@@ -23,10 +24,7 @@ async function runBuild(failingRenderer) {
   })
   await symlink(path.join(repoRoot, 'node_modules'), path.join(root, 'node_modules'), 'junction')
   const events = path.join(root, 'events.jsonl')
-  for (const [name, directory] of [
-    ['main', 'app/renderer/src/main'],
-    ['link', 'app/renderer/engine-link-startup'],
-  ]) {
+  for (const directory of ['app/renderer/src/main']) {
     const bin = path.join(root, directory, 'node_modules/.bin')
     await mkdir(bin, { recursive: true })
     for (const command of ['vite', 'tsc']) {
@@ -36,10 +34,11 @@ async function runBuild(failingRenderer) {
         `#!/usr/bin/env node
 const { appendFileSync } = require('node:fs')
 if (${JSON.stringify(command)} === 'vite') {
+  const buildName = process.argv.includes('vite.link.config.mts') ? 'link' : 'main'
   setTimeout(() => {
-    appendFileSync(${JSON.stringify(events)}, JSON.stringify(${JSON.stringify(name)}) + '\\n')
-    process.exit(${failingRenderer === name ? 1 : 0})
-  }, ${name === 'main' ? 600 : 900})
+    appendFileSync(${JSON.stringify(events)}, JSON.stringify(buildName) + '\\n')
+    process.exit(${JSON.stringify(failingRenderer)} === buildName ? 1 : 0)
+  }, buildName === 'main' ? 600 : 900)
 }
 `,
       )

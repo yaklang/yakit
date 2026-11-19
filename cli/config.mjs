@@ -21,15 +21,14 @@ const RootHelpExtraDoc = `
   完整说明见 cli/README.md
 `
 
-/** install -h：三端全装，或只装 electron / main / link */
+/** install -h：根目录 + 主渲染端，或只装其中一个 */
 const InstallCMDExamplesDoc = `
-  # 安装根目录 + 两个渲染端
+  # 安装根目录 + 主渲染端
   $ yarn cli install
 
-  # 只装主进程 / 主渲染端 / Link 渲染端
+  # 只装主进程 / 主渲染端
   $ yarn cli install electron
   $ yarn cli install main
-  $ yarn cli install link
 
   # 只装 CLI 运行时到 cli/（不含 Electron，给只构建渲染端的 CI 用）
   $ yarn cli install cli
@@ -41,9 +40,8 @@ const AddCMDExamplesDoc = `
   $ yarn cli add main lodash
   $ yarn cli add main -D vite-plugin-checker
 
-  # 给根目录 / Link 加依赖
+  # 给根目录加依赖
   $ yarn cli add electron wait-on
-  $ yarn cli add link ahooks
 `
 
 /** remove -h：从指定子项目卸包 */
@@ -51,18 +49,17 @@ const RemoveCMDExamplesDoc = `
   # 从指定子项目移除依赖
   $ yarn cli remove main lodash
   $ yarn cli remove electron env-cmd
-  $ yarn cli remove link dayjs
 `
 
-/** start -h：TTY 可省略 -v；--main / --link 只启一端 */
+/** start -h：TTY 可省略 -v；--main / --link 为兼容参数，均指向同一服务 */
 const StartCMDExamplesDoc = `
   # TTY 下未传 -v 会询问业务版本
   $ yarn cli start
 
-  # 启动 yakit 两端开发服务
+  # 启动 yakit 开发服务（主窗口与 link 共用 :3000）
   $ yarn cli start -v yakit
 
-  # 只启动主渲染端
+  # --main / --link 为兼容参数，均指向同一 Vite 服务
   $ yarn cli start -v irifyEE --main
 `
 
@@ -99,9 +96,9 @@ const ElectronCMDExamplesDoc = `
   $ yarn cli electron
 `
 
-/** dev -h：start + 等 :3000/:5173 + electron */
+/** dev -h：start + 等 :3000 + electron */
 const DevCMDExamplesDoc = `
-  # 启动两端渲染 + 等待页面 + 单次构建并启动 Electron
+  # 启动渲染服务 + 等待页面 + 单次构建并启动 Electron
   $ yarn cli dev -v yakit
 `
 

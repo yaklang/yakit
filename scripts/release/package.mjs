@@ -103,7 +103,8 @@ export async function preparePackage(plan, target) {
     'dist/electron/preload/main.js',
     'dist/electron/preload/engine-link.js',
     'app/renderer/pages/main/index.html',
-    'app/renderer/engine-link-startup/dist/index.html',
+    'app/renderer/pages/link/engine-link.html',
+    'app/renderer/pages/link/theme.css',
   ]) {
     if (!extractFile(path.join(paths.resources, 'app.asar'), path.normalize(file)).length)
       throw new Error(`Missing packaged runtime entry: ${file}`)

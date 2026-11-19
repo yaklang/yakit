@@ -23,10 +23,9 @@ import { YakitSpin } from '../YakitSpin/YakitSpin'
 import { YakitRadioButtons } from '../YakitRadioButtons/YakitRadioButtons'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { handleOpenFileSystemDialog, type OpenDialogOptions } from '@/utils/fileSystemDialog'
+import { yakitFileSystem } from '@/services/electronBridge'
 
 const { Dragger } = Upload
-
-const { ipcRenderer } = window.require('electron')
 
 /**是否符合接受的文件类型 */
 export const isAcceptEligible = (path: string, accept?: string) => {
@@ -140,8 +139,8 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
     }
     if (selectType === 'file' && setContent) {
       setUploadLoading(true)
-      ipcRenderer
-        .invoke('fetch-file-content', path)
+      yakitFileSystem
+        .fetchFileContent(path)
         .then((res) => {
           setContent(res)
         })
@@ -717,8 +716,8 @@ export const YakitDraggerContent: React.FC<YakitDraggerContentProps> = React.mem
       const filesLength = data.filePaths.length
       if (filesLength === 1) {
         const path: string = data.filePaths[0].replace(/\\/g, '\\')
-        ipcRenderer
-          .invoke('fetch-file-info-by-path', path)
+        yakitFileSystem
+          .fetchFileInfoByPath(path)
           .then((fileInfo) => {
             onHandlerFile({
               size: fileInfo.size,
@@ -736,8 +735,8 @@ export const YakitDraggerContent: React.FC<YakitDraggerContentProps> = React.mem
   /**通过文件路径获取文件内容 */
   const onGetContent = useMemoizedFn((path: string) => {
     setUploadLoading(true)
-    ipcRenderer
-      .invoke('fetch-file-content', path)
+    yakitFileSystem
+      .fetchFileContent(path)
       .then((res: string | { name: string; data: string[] }[]) => {
         if (Array.isArray(res)) {
           // 表格文件读取出来的
@@ -903,8 +902,8 @@ export const YakitDraggerContentPath: React.FC<YakitDraggerContentPathProps> = R
       const filesLength = data.filePaths.length
       if (filesLength === 1) {
         const path: string = data.filePaths[0].replace(/\\/g, '\\')
-        ipcRenderer
-          .invoke('fetch-file-info-by-path', path)
+        yakitFileSystem
+          .fetchFileInfoByPath(path)
           .then((fileInfo) => {
             onHandlerFile({
               size: fileInfo.size,
@@ -928,8 +927,8 @@ export const YakitDraggerContentPath: React.FC<YakitDraggerContentPathProps> = R
     }
     onTextAreaType('content')
     setUploadLoading(true)
-    ipcRenderer
-      .invoke('fetch-file-content', path)
+    yakitFileSystem
+      .fetchFileContent(path)
       .then((res: string | { name: string; data: string[] }[]) => {
         if (Array.isArray(res)) {
           // 表格文件读取出来的

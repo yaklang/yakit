@@ -27,5 +27,9 @@
     }
   },
   "include": ["src", "types"],
-  "exclude": ["src/alibaba/**"]
+  "exclude": [
+    "src/alibaba/**",
+    "src/__test__/fixtures/yakitUiIconsOldIconPerIcon-*",
+    "src/engineLinkStartup/__test__/.tmp-yakit-link-oldicon-*"
+  ]
 }

@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const { setThemeMock } = vi.hoisted(() => ({ setThemeMock: vi.fn() }))
 
-vi.mock('@/services/electronBridge', () => ({
+vi.mock('@/hook/useTheme/themeBridge', () => ({
   yakitTheme: {
     setTheme: (...args: unknown[]) => setThemeMock(...args),
   },
@@ -112,7 +112,46 @@ describe('themeStore', () => {
     })
     expect(useTheme.getState().theme).toBe('light')
     expect(document.documentElement.getAttribute('data-theme')).toBe('light')
+    expect(localStorage.getItem('theme')).toBe('light')
     expect(setThemeMock).not.toHaveBeenCalled()
+  })
+
+  it('previewTheme 只改 DOM/内存，确认后才写盘并通知 electron', async () => {
+    localStorage.setItem('theme', 'system')
+    const { useTheme } = await loadThemeModule()
+    act(() => {
+      useTheme.getState().previewTheme('dark')
+    })
+    expect(useTheme.getState().theme).toBe('dark')
+    expect(document.documentElement.getAttribute('data-theme')).toBe('dark')
+    expect(localStorage.getItem('theme')).toBe('system')
+    expect(setThemeMock).not.toHaveBeenCalled()
+
+    act(() => {
+      useTheme.getState().setTheme(useTheme.getState().theme)
+    })
+    expect(localStorage.getItem('theme')).toBe('dark')
+    expect(setThemeMock).toHaveBeenCalledWith('dark')
+  })
+
+  it('确认时保存当前模式：未预览保留 system，预览后保存预览值', async () => {
+    localStorage.setItem('theme', 'system')
+    const { useTheme } = await loadThemeModule()
+
+    act(() => {
+      useTheme.getState().setTheme(useTheme.getState().theme)
+    })
+    expect(localStorage.getItem('theme')).toBe('system')
+    expect(setThemeMock).toHaveBeenLastCalledWith('system')
+
+    act(() => {
+      useTheme.getState().previewTheme('dark')
+    })
+    act(() => {
+      useTheme.getState().setTheme(useTheme.getState().theme)
+    })
+    expect(localStorage.getItem('theme')).toBe('dark')
+    expect(setThemeMock).toHaveBeenLastCalledWith('dark')
   })
 
   it('仅 system 模式响应系统深色切换', async () => {

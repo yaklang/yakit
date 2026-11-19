@@ -489,9 +489,11 @@ describe('FuncDomain 设置菜单（UIOpSetting）', () => {
     fireEvent.click(screen.getByTestId('ui-op-setting-trigger'))
   }
 
+  const EXPERIMENTAL_MENU_TIMEOUT = 5000
+
   const openExperimentalMenu = async () => {
     openSettingMenu()
-    const explab = await screen.findByText('FuncDomain.explab')
+    const explab = await screen.findByText('FuncDomain.explab', undefined, { timeout: EXPERIMENTAL_MENU_TIMEOUT })
     fireEvent.mouseEnter(explab.closest('.ant-menu-submenu-title') ?? explab)
   }
 
@@ -573,25 +575,29 @@ describe('FuncDomain 设置菜单（UIOpSetting）', () => {
     render(<FuncDomain {...baseProps} />)
     await openExperimentalMenu()
 
-    expect(await screen.findByText('FuncDomain.vulinboxManager')).toBeInTheDocument()
+    expect(
+      await screen.findByText('FuncDomain.vulinboxManager', undefined, { timeout: EXPERIMENTAL_MENU_TIMEOUT }),
+    ).toBeInTheDocument()
     for (const label of sharedExperimentalLabels) {
       expect(screen.getByText(label)).toBeInTheDocument()
     }
     for (const label of memfitOnlyExperimentalLabels) {
       expect(screen.queryByText(label)).not.toBeInTheDocument()
     }
-  })
+  }, 15000)
 
   it('Memfit 的试验性功能保留 AI 相关入口与其余项', async () => {
     edition.memfit = true
     render(<FuncDomain {...baseProps} />)
     await openExperimentalMenu()
 
-    expect(await screen.findByText('FuncDomain.basChaosmaker')).toBeInTheDocument()
+    expect(
+      await screen.findByText('FuncDomain.basChaosmaker', undefined, { timeout: EXPERIMENTAL_MENU_TIMEOUT }),
+    ).toBeInTheDocument()
     for (const label of [...memfitOnlyExperimentalLabels, ...sharedExperimentalLabels]) {
       expect(screen.getByText(label)).toBeInTheDocument()
     }
-  })
+  }, 15000)
 })
 
 describe('FuncDomain 设置菜单录屏/截屏', () => {

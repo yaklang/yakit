@@ -5,7 +5,7 @@ inputs:
     description: Full build dependencies or the smaller packaging toolchain
     default: packaging
   renderers:
-    description: Restore installed dependencies for both renderers
+    description: Restore installed dependencies for the renderer
     default: 'false'
   electron-version:
     description: Optional exact Electron runtime to cache
@@ -53,14 +53,12 @@ runs:
       with:
         path: |
           app/renderer/src/main/node_modules
-          app/renderer/engine-link-startup/node_modules
-        key: release-render-deps-v1-${{ runner.os }}-${{ runner.arch }}-node22.22.1-${{ steps.identity.outputs.renderers }}
-    - name: Install both renderers on a cold cache
+        key: release-render-deps-v2-${{ runner.os }}-${{ runner.arch }}-node22.22.1-${{ steps.identity.outputs.renderers }}
+    - name: Install the renderer on a cold cache
       if: inputs.renderers == 'true' && steps.renderers.outputs.cache-hit != 'true'
       shell: bash
       run: |
         yarn --cwd app/renderer/src/main install --frozen-lockfile --ignore-scripts --non-interactive --network-timeout 120000
-        yarn --cwd app/renderer/engine-link-startup install --frozen-lockfile --ignore-scripts --non-interactive --network-timeout 120000
     - uses: actions/cache@v4
       if: inputs.electron-version != ''
       id: electron

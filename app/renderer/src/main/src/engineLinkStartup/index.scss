@@ -1,0 +1,49 @@
+html,
+body,
+#root {
+  width: 100%;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+// 主项目全局样式使用另一套字体栈与 tabular-nums，link 保持迁移前的排版
+body {
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans',
+    'Helvetica Neue', sans-serif;
+  font-variant: normal;
+  font-feature-settings: normal;
+}
+
+// 保持迁移后的图标颜色不依赖 @ant-design/icons 的运行时样式注入
+.yakit-icon {
+  color: inherit;
+}
+
+// 共享组件（YakitSelect / YakitTag）依赖的全局省略样式
+.content-ellipsis {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  word-break: break-all;
+}
+
+// 主项目 scrollbar 样式未启用 track，link 保持透明轨道
+::-webkit-scrollbar-track {
+  border-radius: 10px;
+  background: transparent;
+}
+
+// link 通知固定在右下角；主项目 notification 样式未包含右边界保护
+.ant-notification {
+  max-width: calc(100vw - 24px);
+  right: 12px !important;
+}
+
+.ant-notification-notice {
+  max-width: 100%;
+}
+
+.xterm .xterm-viewport {
+  overflow-y: auto !important;
+}

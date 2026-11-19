@@ -135,17 +135,17 @@ Prerequisites:
 
 Steps:
 
-1. Install all three packages (root Electron + both renderers)
+1. Install dependencies (root Electron + main renderer; Link shares the renderer dependencies)
 
      ```bash
      yarn cli install
      ```
 
-2. Start development (start both renderers, then Electron)
+2. Start development (start the renderer service, then Electron)
 
      ```bash
-     yarn cli start -v yakit   # starts both renderers (:3000 + :5173)
-     yarn cli electron         # after both ports are ready
+     yarn cli start -v yakit   # starts the :3000 service used by main + link
+     yarn cli electron         # after the page is ready
      # or: yarn cli dev -v yakit
      ```
 

@@ -180,10 +180,6 @@ const configOption = {
     '!backups/**/*',
     '!app/renderer/src/**/*',
     '!app/renderer/vite-plugins/**/*',
-    // 先排除整个目录（后面的规则可以“打破前面的排除”）
-    '!app/renderer/engine-link-startup/**/*',
-    // 再单独放行 dist
-    'app/renderer/engine-link-startup/dist/**/*',
     '!cli/*',
     '!**/*.p12',
     '!imgs/**/*',

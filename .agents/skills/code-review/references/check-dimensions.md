@@ -44,7 +44,7 @@
 
 ## 5. 依赖版本影响检查（仅当改动含 package.json）
 
-> 本仓库三处独立依赖：根 `package.json`、`app/renderer/src/main/package.json`、`app/renderer/engine-link-startup/package.json`，各配独立 `yarn.lock`。先确定改的是哪一处（或哪几处）。
+> 本仓库两处独立依赖：根 `package.json`、`app/renderer/src/main/package.json`，各配独立 `yarn.lock`（link 窗口与主渲染端共用后者）。先确定改的是哪一处（或哪两处）。
 
 - **新增依赖**：用途是什么、是否已有等价能力（避免重复引入）、体积影响、license 兼容。
 - **升级**：跨 major → 必查该版本 changelog 的 breaking change，并 grep 代码中受影响 API；minor / patch → 关注是否为解决特定问题。

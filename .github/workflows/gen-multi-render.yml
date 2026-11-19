@@ -46,14 +46,14 @@ jobs:
             - name: "Build CE Render"
               if: ${{ inputs.version == 'ce&ee' }}
               working-directory: ./
-              run: yarn cli build --main -v yakit
+              run: yarn cli build --main -v yakit && yarn cli build --link -v yakit
             - name: "zip CE Render"
               if: ${{ inputs.version == 'ce&ee' }}
               run: cd ${{ env.RENDER_PATH }} && zip -r ce.zip ./pages && rm -rf ./pages && cd ${{ env.RETURN_PATH }}
             - name: "Build EE Render"
               if: ${{ inputs.version == 'ce&ee' }}
               working-directory: ./
-              run: yarn cli build --main -v yakitEE
+              run: yarn cli build --main -v yakitEE && yarn cli build --link -v yakitEE
             - name: "zip EE Render"
               if: ${{ inputs.version == 'ce&ee' }}
               run: cd ${{ env.RENDER_PATH }} && zip -r ee.zip ./pages && rm -rf ./pages && cd ${{ env.RETURN_PATH }}
@@ -61,14 +61,14 @@ jobs:
             - name: "Build IRify Render"
               if: ${{ inputs.version == 'irify&irifyee' }}
               working-directory: ./
-              run: yarn cli build --main -v irify
+              run: yarn cli build --main -v irify && yarn cli build --link -v irify
             - name: "zip IRify Render"
               if: ${{ inputs.version == 'irify&irifyee' }}
               run: cd ${{ env.RENDER_PATH }} && zip -r irify.zip ./pages && rm -rf ./pages && cd ${{ env.RETURN_PATH }}
             - name: "Build IRifyEE Render"
               if: ${{ inputs.version == 'irify&irifyee' }}
               working-directory: ./
-              run: yarn cli build --main -v irifyEE
+              run: yarn cli build --main -v irifyEE && yarn cli build --link -v irifyEE
             - name: "zip IRifyEE Render"
               if: ${{ inputs.version == 'irify&irifyee' }}
               run: cd ${{ env.RENDER_PATH }} && zip -r irifyee.zip ./pages && rm -rf ./pages && cd ${{ env.RETURN_PATH }}
@@ -77,7 +77,7 @@ jobs:
             - name: Build Memfit Render
               if: ${{ inputs.version == 'memfit' }}
               working-directory: ./
-              run: yarn cli build --main -v memfit
+              run: yarn cli build --main -v memfit && yarn cli build --link -v memfit
             - name: zip Memfit Render
               if: ${{ inputs.version == 'memfit' }}
               run: cd ${{ env.RENDER_PATH }} && zip -r memfit.zip ./pages && rm -rf ./pages && cd ${{ env.RETURN_PATH }}

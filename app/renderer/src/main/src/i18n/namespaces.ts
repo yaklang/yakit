@@ -27,6 +27,7 @@ export enum I18nNamespaces {
   irifyAiCodeAudit = 'irifyAiCodeAudit',
   irifyHome = 'irifyHome',
   layout = 'layout',
+  link = 'link',
   mitm = 'mitm',
   manageRightClickPlugins = 'manageRightClickPlugins',
   notepad = 'notepad',
@@ -66,5 +67,11 @@ export enum I18nNamespaces {
  */
 export type I18nNamespace = `${I18nNamespaces}`
 
-/** 全部命名空间，便于批量预加载或校验 */
-export const ALL_I18N_NAMESPACES: I18nNamespace[] = Object.values(I18nNamespaces)
+/**
+ * 当前入口可用的命名空间；不等同于 locale 目录全集。
+ * link 窗口只保留启动页需要的两个；Node 环境没有 window，也不包含 link。
+ */
+export const ENTRY_I18N_NAMESPACES: I18nNamespace[] =
+  typeof window !== 'undefined' && window.__YAKIT_ENTRY__ === 'link'
+    ? [I18nNamespaces.link, I18nNamespaces.yakitUi]
+    : Object.values(I18nNamespaces).filter((ns) => ns !== I18nNamespaces.link)

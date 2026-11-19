@@ -6,7 +6,6 @@ const cliDir = path.dirname(fileURLToPath(import.meta.url))
 const repoRoot = path.resolve(cliDir, '..')
 
 const MAIN_RENDER_DIR = path.join(repoRoot, 'app/renderer/src/main')
-const LINK_RENDER_DIR = path.join(repoRoot, 'app/renderer/engine-link-startup')
 
 const detectPackageManager = () => {
   const ua = String(process.env.npm_config_user_agent || '').toLowerCase()
@@ -83,7 +82,6 @@ export {
   repoRoot,
   cliDir,
   MAIN_RENDER_DIR,
-  LINK_RENDER_DIR,
   detectPackageManager,
   packageManagerHint,
   importWithHint,

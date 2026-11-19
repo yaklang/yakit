@@ -1,7 +1,7 @@
 import { generateColors } from '@yakit-libs/color'
 import { getColors as getPreviewColors } from '@yakit-libs/color/preview'
 import type { ColorHex, ThemeMode } from '@yakit-libs/color'
-import { GetMainColor } from './envfile'
+import { GetMainColor } from '@/utils/yakitMainColor'
 
 const VAR_REF_PATTERN = /^var\((--[^)]+)\)$/
 export const DEFAULT_MAIN_COLOR = '#F17F30' as ColorHex
