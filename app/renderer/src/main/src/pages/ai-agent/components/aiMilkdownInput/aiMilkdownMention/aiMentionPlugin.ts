@@ -158,13 +158,12 @@ export const aiMentionCommand = $command<AIMentionCommandParams, string>(
       tr.deleteRange(deleteRange.from, deleteRange.to)
     }
     const fragment = state.schema.text(label)
-    dispatch?.(
-      tr
-        .setMeta(aiMentionCustomId, true)
-        .replaceSelectionWith(aiMentionCustomSchema.type(ctx).create({ ...params, lock: lock ?? false }, fragment))
-        .insertText(' ')
-        .scrollIntoView(),
+    tr.setMeta(aiMentionCustomId, true).replaceSelectionWith(
+      aiMentionCustomSchema.type(ctx).create({ ...params, lock: lock ?? false }, fragment),
     )
+    // 只在替换 @query 时补空格；资料栏插入/草稿恢复走同一命令，补空格会在删 chip 后残留并累积
+    if (deleteRange) tr.insertText(' ')
+    dispatch?.(tr.scrollIntoView())
     return true
   },
 )

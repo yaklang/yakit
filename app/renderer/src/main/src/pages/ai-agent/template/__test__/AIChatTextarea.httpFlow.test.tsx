@@ -1122,7 +1122,7 @@ describe('输入框资料栏', () => {
     fireEvent.click(send)
     expect(onSubmit.mock.calls[2][0].mentionList).toEqual([])
     await waitFor(() => expect(screen.queryByRole('button', { name: 'AIMentionTabs.skill 1' })).toBeNull())
-    expect(ref.current?.getValue()).toBe(' 正文')
+    expect(ref.current?.getValue()).toBe('正文')
     fireEvent.click(trigger)
     fireEvent.click(trigger)
     const menu = await screen.findByRole('dialog', { name: 'AIChatTextarea.addMaterials' })
@@ -1728,7 +1728,7 @@ describe('输入框资料栏', () => {
     expect(skillBadge).toBeInTheDocument()
     removeMention('skill-1')
     await waitFor(() => expect(skillBadge).not.toBeInTheDocument())
-    expect(ref.current?.getValue()).toBe('  正文')
+    expect(ref.current?.getValue()).toBe('正文')
   })
 
   it('在编辑器上方显示添加入口，其他资料只统计指定分类', async () => {

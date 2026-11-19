@@ -99,4 +99,13 @@ describe('normalizeSubmittedMarkdown', () => {
     expect(normalizeSubmittedMarkdown('D:\\\\work\\_file.txt&amp;#x20;\n')).toBe('D:\\\\work_file.txt')
     expect(normalizeSubmittedMarkdown('正文&#x20;&amp;#x20;\n')).toBe('正文')
   })
+
+  it('不改写行内字面量和代码块里的 &#x20; / &amp;#x20;', () => {
+    expect(normalizeSubmittedMarkdown('解释 \\&#x20; 是什么')).toBe('解释 \\&#x20; 是什么')
+    expect(normalizeSubmittedMarkdown('解释 &#x20; 是什么')).toBe('解释 &#x20; 是什么')
+    expect(normalizeSubmittedMarkdown('```html\n<div>&#x20;</div>\n```')).toBe('```html\n<div>&#x20;</div>\n```')
+    expect(normalizeSubmittedMarkdown('```html\n<div>&amp;#x20;</div>\n```')).toBe(
+      '```html\n<div>&amp;#x20;</div>\n```',
+    )
+  })
 })

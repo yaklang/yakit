@@ -1,9 +1,15 @@
 import { Editor, defaultValueCtx, editorViewCtx, rootCtx } from '@milkdown/kit/core'
 import { TextSelection } from '@milkdown/kit/prose/state'
+import type { EditorView } from '@milkdown/kit/prose/view'
 import { commonmark } from '@milkdown/kit/preset/commonmark'
 import { callCommand } from '@milkdown/kit/utils'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
-import { aiMentionCustomId, aiMentionCustomPlugin, aiMentionsCommand } from '../aiMilkdownMention/aiMentionPlugin'
+import {
+  aiMentionCommand,
+  aiMentionCustomId,
+  aiMentionCustomPlugin,
+  aiMentionsCommand,
+} from '../aiMilkdownMention/aiMentionPlugin'
 
 let editor: Editor | undefined
 
@@ -123,4 +129,62 @@ it('多选插入删掉 @query，每条 mention 后跟一个空格，光标停在
   expect(view.state.doc.textContent).not.toContain('@ab')
   expect(view.state.selection.empty).toBe(true)
   expect(view.state.selection.from).toBe(view.state.doc.content.size - 1)
+})
+
+const collectInline = (view: EditorView) => {
+  const inline: unknown[] = []
+  view.state.doc.firstChild?.forEach((node) => {
+    inline.push(node.type.name === aiMentionCustomId ? ['mention', node.attrs.mentionName] : ['text', node.text])
+  })
+  return inline
+}
+
+it('单选替换 @query 时在 mention 后补空格', async () => {
+  const root = document.createElement('div')
+  editor = await Editor.make()
+    .config((ctx) => {
+      ctx.set(rootCtx, root)
+      ctx.set(defaultValueCtx, '@ab后文')
+    })
+    .use(commonmark)
+    .use(aiMentionCustomPlugin())
+    .create()
+
+  editor.action((ctx) => {
+    const view = ctx.get(editorViewCtx)
+    const text = view.state.doc.textContent
+    const cursor = 1 + text.indexOf('@ab') + '@ab'.length
+    view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, cursor)))
+  })
+  editor.action(callCommand(aiMentionCommand.key, { mentionType: 'forge', mentionId: '1', mentionName: '技能' }))
+
+  const view = editor.action((ctx) => ctx.get(editorViewCtx))
+  expect(collectInline(view)).toEqual([
+    ['mention', '技能'],
+    ['text', ' 后文'],
+  ])
+})
+
+it('资料栏插入（无 @query）不补空格，避免删 chip 后残留', async () => {
+  const root = document.createElement('div')
+  editor = await Editor.make()
+    .config((ctx) => {
+      ctx.set(rootCtx, root)
+      ctx.set(defaultValueCtx, '正文')
+    })
+    .use(commonmark)
+    .use(aiMentionCustomPlugin())
+    .create()
+
+  editor.action((ctx) => {
+    const view = ctx.get(editorViewCtx)
+    view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, 1)))
+  })
+  editor.action(callCommand(aiMentionCommand.key, { mentionType: 'forge', mentionId: '2', mentionName: '正文技能' }))
+
+  const view = editor.action((ctx) => ctx.get(editorViewCtx))
+  expect(collectInline(view)).toEqual([
+    ['mention', '正文技能'],
+    ['text', '正文'],
+  ])
 })

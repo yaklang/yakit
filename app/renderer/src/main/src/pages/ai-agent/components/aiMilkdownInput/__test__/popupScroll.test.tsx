@@ -1,5 +1,6 @@
 import React from 'react'
 import { act, cleanup, fireEvent, render } from '@testing-library/react'
+import { callCommand } from '@milkdown/kit/utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { AIMilkdownMention } from '../aiMilkdownMention/AIMilkdownMention'
 import { AIMilkdownModeSlash } from '../aiMilkdownModeSlash/AIMilkdownModeSlash'
@@ -42,13 +43,19 @@ vi.mock('@milkdown/kit/plugin/slash', () => ({
 }))
 vi.mock('@milkdown/kit/utils', () => ({ callCommand: vi.fn(() => vi.fn()) }))
 vi.mock('@/pages/ai-agent/defaultConstant', () => ({ iconMap: {} }))
-vi.mock('../customPlugin', () => ({ removeAIOffsetCommand: {} }))
+vi.mock('../customPlugin', () => ({ removeAIOffsetCommand: { key: 'remove-offset' } }))
 vi.mock('../aiMilkdownMention/aiMentionPlugin', () => ({
   aiMentionCommand: { key: 'mention' },
   aiMentionsCommand: { key: 'mentions' },
 }))
 vi.mock('../../aiChatMention/AIChatMention', () => ({
-  AIChatMention: ({ onSelect }: { onSelect?: (type: string, value: object) => void }) => (
+  AIChatMention: ({
+    onSelect,
+    onSelectMany,
+  }: {
+    onSelect?: (type: string, value: object) => void
+    onSelectMany?: (items: { type: string; value: object }[]) => void
+  }) => (
     <div data-testid="mention-list">
       items
       <button type="button" onClick={() => onSelect?.('forge', { id: '1', name: '模板', forgeType: 'yak' })}>
@@ -56,6 +63,40 @@ vi.mock('../../aiChatMention/AIChatMention', () => ({
       </button>
       <button type="button" onClick={() => onSelect?.('forge', { id: '2', name: '技能', forgeType: 'skillmd' })}>
         pick-skill
+      </button>
+      <button
+        type="button"
+        onClick={() =>
+          onSelectMany?.([
+            { type: 'tool', value: { id: 't1', name: '工具1' } },
+            { type: 'file', value: { id: 'f1', name: '文件1' } },
+          ])
+        }
+      >
+        pick-many
+      </button>
+      <button
+        type="button"
+        onClick={() =>
+          onSelectMany?.([
+            { type: 'focusMode', value: { id: 'first', name: 'first' } },
+            { type: 'focusMode', value: { id: 'second', name: 'second' } },
+          ])
+        }
+      >
+        pick-focus-many
+      </button>
+      <button
+        type="button"
+        onClick={() =>
+          onSelectMany?.([
+            { type: 'tool', value: { id: 't1', name: '工具1' } },
+            { type: 'forge', value: { id: '1', name: '模板', forgeType: 'yak' } },
+            { type: 'focusMode', value: { id: 'summarize', name: 'summarize' } },
+          ])
+        }
+      >
+        pick-mixed-many
       </button>
     </div>
   ),
@@ -86,6 +127,7 @@ beforeEach(() => {
   context.prevState = {}
   context.planSelected = false
   context.onToggleMode.mockClear()
+  vi.mocked(callCommand).mockClear()
   context.strategy = {}
   scrollContainer = document.createElement('div')
   const anchor = document.createElement('div')
@@ -173,6 +215,75 @@ describe('mention popup outside clicks', () => {
     fireEvent.click(getByTestId('mention-list'))
     fireEvent.click(context.view.dom)
     expect(element.dataset.show).toBe('true')
+  })
+})
+
+describe('mention onSelectMany wiring', () => {
+  const emptyFields = { name: undefined, mentionSource: undefined, knowledgeIndex: undefined }
+
+  it('批量插入全部普通提及，且不删光标前一个字符', () => {
+    context.content = '@'
+    const onMemfitExtra = vi.fn()
+    const { getByRole } = render(<AIMilkdownMention onMemfitExtra={onMemfitExtra} />)
+    act(() => vi.advanceTimersByTime(250))
+
+    fireEvent.click(getByRole('button', { name: 'pick-many' }))
+
+    expect(callCommand).toHaveBeenCalledWith('mentions', [
+      { mentionType: 'tool', mentionId: 't1', mentionName: '工具1', ...emptyFields },
+      { mentionType: 'file', mentionId: 'f1', mentionName: '文件1', ...emptyFields },
+    ])
+    expect(callCommand).not.toHaveBeenCalledWith('remove-offset')
+    expect(onMemfitExtra).not.toHaveBeenCalled()
+    expect(context.onToggleMode).not.toHaveBeenCalled()
+  })
+
+  it('仅场景时删掉 @，focus 只取最后一项', () => {
+    context.content = '@'
+    const onMemfitExtra = vi.fn()
+    const { getByRole } = render(<AIMilkdownMention onMemfitExtra={onMemfitExtra} />)
+    act(() => vi.advanceTimersByTime(250))
+
+    fireEvent.click(getByRole('button', { name: 'pick-focus-many' }))
+
+    expect(callCommand).not.toHaveBeenCalledWith('mentions', expect.anything())
+    expect(callCommand).toHaveBeenCalledWith('remove-offset')
+    expect(onMemfitExtra).toHaveBeenCalledOnce()
+    expect(onMemfitExtra).toHaveBeenCalledWith({
+      mentionType: 'focusMode',
+      mentionId: 'second',
+      mentionName: 'second',
+      ...emptyFields,
+    })
+    expect(context.onToggleMode).not.toHaveBeenCalled()
+  })
+
+  it('混选时插入全部提及、focus 走 onMemfitExtra、Plan 只开一次且不再删触发符', () => {
+    context.content = '@'
+    const onMemfitExtra = vi.fn()
+    const onModeChangeComplete = vi.fn()
+    const { getByRole } = render(
+      <AIMilkdownMention onMemfitExtra={onMemfitExtra} onModeChangeComplete={onModeChangeComplete} />,
+    )
+    act(() => vi.advanceTimersByTime(250))
+
+    fireEvent.click(getByRole('button', { name: 'pick-mixed-many' }))
+
+    expect(callCommand).toHaveBeenCalledWith('mentions', [
+      { mentionType: 'tool', mentionId: 't1', mentionName: '工具1', ...emptyFields },
+      { mentionType: 'forge', mentionId: '1', mentionName: '模板', ...emptyFields },
+    ])
+    expect(callCommand).not.toHaveBeenCalledWith('remove-offset')
+    expect(onMemfitExtra).toHaveBeenCalledOnce()
+    expect(onMemfitExtra).toHaveBeenCalledWith({
+      mentionType: 'focusMode',
+      mentionId: 'summarize',
+      mentionName: 'summarize',
+      ...emptyFields,
+    })
+    expect(context.onToggleMode).toHaveBeenCalledOnce()
+    expect(context.onToggleMode).toHaveBeenCalledWith('plan')
+    expect(onModeChangeComplete).toHaveBeenCalledOnce()
   })
 })
 
