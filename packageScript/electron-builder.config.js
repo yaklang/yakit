@@ -158,11 +158,12 @@ const configOption = {
     '!tsconfig.preload.json',
     '!e2e/**/*',
     '!reports/**/*',
+    '!report/**/*',
     ...(files || []),
     '!bins/**/*',
-    '!reports/**/*',
     '!release/**/*',
     '!yak.exe',
+    '!nul',
     '!.github/**/*',
     '!.agents/skills{,/**/*}',
     '!.zcode/plans{,/**/*}',
@@ -178,6 +179,7 @@ const configOption = {
     '!build/**/*',
     '!backups/**/*',
     '!app/renderer/src/**/*',
+    '!app/renderer/vite-plugins/**/*',
     // 先排除整个目录（后面的规则可以“打破前面的排除”）
     '!app/renderer/engine-link-startup/**/*',
     // 再单独放行 dist
@@ -194,7 +196,11 @@ const configOption = {
     '!prettier.config.js',
     '!ELECTRON_GUIDE.md',
     '!README*',
+    '!node_modules/**/*.{md,markdown,d.ts,d.cts,d.mts,map}',
+    '!node_modules/**/{test,tests,__tests__,docs,doc,example,examples,coverage}/**/*',
   ],
+  compression: 'maximum',
+  electronLanguages: ['zh-CN', 'zh-TW', 'zh_CN', 'zh_TW', 'en-US', 'en'],
   asar: true,
   asarUnpack: ['dist/electron/resources/screenshots/*.node', 'dist/electron/resources/vendor/extVendor/**/*'],
   publish: [
@@ -233,6 +239,7 @@ const configOption = {
     warningsAsErrors: false,
     createDesktopShortcut: false,
     createStartMenuShortcut: true,
+    differentialPackage: false,
   },
   beforePack: 'packageScript/buildHook/before-pack.js',
   // 静态 AppImage runtime，无需目标系统安装 libfuse2（Kali / Ubuntu 24.04+ 等）

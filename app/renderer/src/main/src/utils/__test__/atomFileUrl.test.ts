@@ -6,11 +6,14 @@ describe('toAtomFileUrl', () => {
     expect(toAtomFileUrl('C:\\Users\\foo\\bar.png')).toBe('atom:///C%3A/Users/foo/bar.png')
   })
 
-  it('keeps a POSIX path unchanged aside from the atom scheme', () => {
+  it('keeps a POSIX path unchanged aside from the atom scheme, including backslashes', () => {
     expect(toAtomFileUrl('/Users/foo/bar.png')).toBe('atom:///Users/foo/bar.png')
+    expect(toAtomFileUrl('/Users/foo/a\\b.png')).toBe('atom:///Users/foo/a%5Cb.png')
+    expect(toAtomFileUrl('/C:/foo.png')).toBe('atom:///C%3A/foo.png')
   })
 
-  it('keeps a UNC path and encodes characters that would break a URL', () => {
+  it('keeps Windows forward-slash, UNC paths and encodes characters that would break a URL', () => {
+    expect(toAtomFileUrl('C:/Users/foo/bar.png')).toBe('atom:///C%3A/Users/foo/bar.png')
     expect(toAtomFileUrl('\\\\server\\share\\a.png')).toBe('atom:////server/share/a.png')
     expect(toAtomFileUrl('C:\\Users\\foo\\100%20.png')).toBe('atom:///C%3A/Users/foo/100%2520.png')
     expect(toAtomFileUrl('C:\\Users\\foo\\a#b?.png')).toBe('atom:///C%3A/Users/foo/a%23b%3F.png')

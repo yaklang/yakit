@@ -57,7 +57,8 @@ const loadIndex = (platform, opts = {}) => {
     if (id === 'electron-is-dev') return false
     if (id === 'path') return path
     if (id === 'process') return fakeProcess
-    if (id === './atomFileUrl') return { filePathFromAtomUrl }
+    if (id === './atomFileUrl')
+      return { filePathFromAtomUrl: (requestUrl) => filePathFromAtomUrl(requestUrl, platform) }
     if (id === './e2eEnvironment') return { configureE2EEnvironment: vi.fn(() => ({ enabled: false })) }
     if (id === './runtimePaths')
       return {
@@ -259,6 +260,11 @@ describe('atom protocol handler', () => {
     const validCallback = vi.fn()
     handleAtomProtocolRequest({ url: 'atom:///C%3A/Users/foo/my%20file.png' }, validCallback)
     expect(validCallback).toHaveBeenCalledWith('C:/Users/foo/my file.png')
+
+    const { handleAtomProtocolRequest: handlePosixAtom } = loadIndex('linux')
+    const posixCallback = vi.fn()
+    handlePosixAtom({ url: 'atom:///C%3A/foo.png' }, posixCallback)
+    expect(posixCallback).toHaveBeenCalledWith('/C:/foo.png')
 
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
     try {
