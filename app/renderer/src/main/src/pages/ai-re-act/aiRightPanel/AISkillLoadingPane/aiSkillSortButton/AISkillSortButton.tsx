@@ -29,7 +29,7 @@ export const AISkillSortButton: React.FC<AISkillSortButtonProps> = ({ sortOrder,
       <YakitButton
         type="text2"
         aria-label={title}
-        icon={<SortIcon style={{ color: iconColor }} svgProps={{ style: { color: 'inherit' } }} />}
+        icon={<SortIcon style={{ color: iconColor }} />}
         onClick={() => onChange(sortOrder === undefined ? 'asc' : sortOrder === 'asc' ? 'desc' : undefined)}
       />
     </Tooltip>

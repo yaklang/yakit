@@ -94,14 +94,14 @@ if (!createIconFile) throw new Error('Missing yakit-ui-icons createIcon build ar
 const createIconSource = readFileSync(path.join(packageDist, createIconFile), 'utf8')
 
 describe('yakit-ui-icons color compatibility contract', () => {
-  it('tests the installed 0.3.2 package contract', () => {
-    expect(packageJson.version).toBe('0.3.2')
+  it('tests the installed 0.3.3 package contract', () => {
+    expect(packageJson.version).toBe('0.3.3')
   })
 
   it('keeps the package default color in a zero-specificity :where rule', () => {
     expect(packageRule.selector).toBe(':where(.anticon.yakit-icon)')
-    expect(packageRule.body.replace(/\s+/g, ' ')).toContain(
-      'color: var( --yakit-icon-default-color, var(--Colors-Use-Neutral-Text-1-Title, #353639) )',
+    expect(packageRule.body.replace(/\s+/g, '')).toContain(
+      'color:var(--yakit-icon-default-color,var(--Colors-Use-Neutral-Text-1-Title,#353639))',
     )
   })
 
