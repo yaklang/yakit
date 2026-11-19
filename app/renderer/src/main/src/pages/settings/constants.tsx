@@ -82,6 +82,7 @@ export const getSettingsLabel = (anchor: string, t: TFunction) => {
 export const SettingsSections = {
   general: {
     workspace: 'workspace',
+    screenshot: 'screenshot',
     pluginSource: 'plugin-source',
   },
   appearance: {

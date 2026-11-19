@@ -41,6 +41,7 @@ import LoadingOutlined from '@ant-design/icons/lib/icons/LoadingOutlined'
 import { CheckOutlined, TerminalOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { showYakitModal } from '../yakitUI/YakitModal/YakitModalConfirm'
 import { useScreenRecorder } from '@/store/screenRecorder'
+import useShortcutKeyTrigger from '@/utils/globalShortcutKey/events/useShortcutKeyTrigger'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { useRunNodeStore } from '@/store/runNode'
 import emiter from '@/utils/eventBus/eventBus'
@@ -105,7 +106,15 @@ import { useDownloadYakit } from './update/useDownloadYakit'
 import { JSONParseLog } from '@/utils/tool'
 import { SystemInfo } from '@/constants/hardware'
 import { useI18nNamespaces, type TFunction } from '@/i18n/useI18nNamespaces'
-import { yakitApp, yakitEngine, yakitRisk, yakitShell, yakitStream, yakitUILayout } from '@/services/electronBridge'
+import {
+  yakitApp,
+  yakitEngine,
+  yakitRisk,
+  yakitScreenshot,
+  yakitShell,
+  yakitStream,
+  yakitUILayout,
+} from '@/services/electronBridge'
 import { parseIntranetYakitVersionFromPath } from './parseIntranetYakitVersion'
 import { CeUserMenuContent } from '../CeUserMenu/CeUserMenu'
 import CeRechargeModal from '../CeUserMenu/CeRechargeModal'
@@ -708,6 +717,7 @@ const GetScreenAndScreenshotMenuItems = (
   t: TFunction,
   isRecording: boolean,
   screenshotLoading: boolean,
+  fullScreenshotLoading: boolean,
   system: YakitSystem,
 ): YakitMenuItemProps[] => {
   const items: YakitMenuItemProps[] = [
@@ -735,18 +745,26 @@ const GetScreenAndScreenshotMenuItems = (
   ]
   // 主进程仅在 macOS/Windows 注册 activate-screenshot 处理器，Linux 下不展示截屏入口
   if (system === 'Darwin' || system === 'Windows_NT') {
+    const withLoading = (label: string, loading: boolean) => (
+      <div className={styles['screen-and-screenshot-menu-item']}>
+        <span>{label}</span>
+        {loading && (
+          <div className={styles['icon-loading-wrapper']} onClick={(e) => e.stopPropagation()}>
+            <LoadingOutlined className={styles['icon-hover-style']} />
+          </div>
+        )}
+      </div>
+    )
     items.push({
       key: 'screenshot',
-      label: (
-        <div className={styles['screen-and-screenshot-menu-item']}>
-          <span>{t('FuncDomain.screenshot')}</span>
-          {screenshotLoading && (
-            <div className={styles['icon-loading-wrapper']} onClick={(e) => e.stopPropagation()}>
-              <LoadingOutlined className={styles['icon-hover-style']} />
-            </div>
-          )}
-        </div>
-      ),
+      label: t('FuncDomain.screenshot'),
+      children: [
+        { key: 'screenshot-select', label: withLoading(t('FuncDomain.screenshotSelect'), screenshotLoading) },
+        {
+          key: 'screenshot-fullscreen',
+          label: withLoading(t('FuncDomain.screenshotFullscreen'), fullScreenshotLoading),
+        },
+      ],
     })
   }
   return items
@@ -766,6 +784,7 @@ const GetUIOpSettingMenu = (
   t: TFunction,
   isRecording: boolean,
   screenshotLoading: boolean,
+  fullScreenshotLoading: boolean,
   system: YakitSystem,
   isPerformanceSampling: boolean,
 ) => {
@@ -812,7 +831,7 @@ const GetUIOpSettingMenu = (
         key: 'diagnose-network',
         label: t('FuncDomain.diagnoseNetwork'),
       },
-      ...GetScreenAndScreenshotMenuItems(t, isRecording, screenshotLoading, system),
+      ...GetScreenAndScreenshotMenuItems(t, isRecording, screenshotLoading, fullScreenshotLoading, system),
       { type: 'divider' },
       {
         key: 'settings',
@@ -945,7 +964,7 @@ const GetUIOpSettingMenu = (
       key: 'diagnose-network',
       label: t('FuncDomain.diagnoseNetwork'),
     },
-    ...GetScreenAndScreenshotMenuItems(t, isRecording, screenshotLoading, system),
+    ...GetScreenAndScreenshotMenuItems(t, isRecording, screenshotLoading, fullScreenshotLoading, system),
     { type: 'divider' },
     {
       key: 'settings',
@@ -1122,8 +1141,56 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
   const [reclaimHint, setReclaimHint] = useState<boolean>(false)
   const { setRecording } = useScreenRecorder()
   const { performanceSamplingInfo } = usePerformanceSampling()
-  /** 截屏功能的loading */
+  /** 选区截屏的 loading */
   const [screenshotLoading, setScreenshotLoading] = useState<boolean>(false)
+  /** 截全屏的 loading */
+  const [fullScreenshotLoading, setFullScreenshotLoading] = useState<boolean>(false)
+  const fullScreenshotCapturing = useRef(false)
+
+  const captureFullScreenshot = useMemoizedFn(async () => {
+    if (fullScreenshotCapturing.current) return
+    fullScreenshotCapturing.current = true
+    setFullScreenshotLoading(true)
+    try {
+      // 等 Popover 离场动效（antd zoom-big，约 0.2s）结束后再截取，避免把淡出中的菜单拍进截图
+      await new Promise<void>((resolve) => setTimeout(resolve, 250))
+      const result = await yakitScreenshot.captureAndSave()
+      const savedPath = (
+        <span
+          role="button"
+          tabIndex={0}
+          title={t('Screenshot.openFileLocated')}
+          style={{ color: 'var(--Colors-Use-Main-Primary)', cursor: 'pointer', wordBreak: 'break-all' }}
+          onClick={() =>
+            yakitShell
+              .openSpecifiedFile(result.path)
+              .catch((error) => failed(t('Screenshot.openFileFailed', { error: String(error) })))
+          }
+        >
+          {result.path}
+        </span>
+      )
+      // 复制成功才声明已进剪贴板；失败时一条 warning 同时说明已保存和剪贴板错误，避免先后两条互相矛盾
+      if (result.clipboardCopied) {
+        yakitNotify('success', {
+          message: t('Screenshot.saved'),
+          description: savedPath,
+        })
+      } else {
+        yakitNotify('warning', {
+          message: t('Screenshot.clipboardFailed', { error: result.clipboardError || '' }),
+          description: savedPath,
+        })
+      }
+    } catch (error) {
+      failed(t('Screenshot.failed', { error: String(error) }))
+    } finally {
+      fullScreenshotCapturing.current = false
+      setFullScreenshotLoading(false)
+    }
+  })
+
+  useShortcutKeyTrigger('screenshotFullscreen', captureFullScreenshot)
 
   useEffect(() => {
     onIsCVEDatabaseReady()
@@ -1298,14 +1365,19 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
       case 'screen-recorder':
         addToTab('**screen-recorder')
         return
-      // 截屏
+      // 选区截屏：一级标题与二级「选区截屏」同效
       case 'screenshot':
+      case 'screenshot-select':
         if (screenshotLoading) return
         setScreenshotLoading(true)
         yakitUILayout.activateScreenshot()
         setTimeout(() => {
           setScreenshotLoading(false)
         }, 1000)
+        return
+      // 截全屏
+      case 'screenshot-fullscreen':
+        void captureFullScreenshot()
         return
       // 全局设置
       case 'settings':
@@ -1347,6 +1419,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
           t,
           isRecording,
           screenshotLoading,
+          fullScreenshotLoading,
           system,
           performanceSamplingInfo.isPerformanceSampling,
         ) as YakitMenuItemProps[]

@@ -515,6 +515,8 @@
     "stopScreen": "停止錄屏",
     "screenRecorder": "錄屏管理",
     "screenshot": "截圖",
+    "screenshotSelect": "選區截屏",
+    "screenshotFullscreen": "截全螢幕",
     "settings": "全域設定",
     "signOutSuccess": "已成功退出賬號",
     "signOutRemoteConfirm": "點選退出登入將自動退出遠端控制，是否確認退出",
@@ -732,5 +734,12 @@
     "noProcess": "未識別到已啟動的引擎程序",
     "killProcessFailed": "引擎程序(pid:{{pid}},port:{{port}})關閉失敗 {{error}}",
     "closing": "程序關閉中，請稍等 ..."
+  },
+  "Screenshot": {
+    "saved": "截圖已複製到剪貼簿，也可點擊以下路徑查看",
+    "failed": "截圖失敗：{{error}}",
+    "openFileLocated": "點擊在檔案總管中定位該檔案",
+    "openFileFailed": "開啟檔案位置失敗：{{error}}",
+    "clipboardFailed": "截圖已儲存，但寫入剪貼簿失敗：{{error}}"
   }
 }

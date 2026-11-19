@@ -776,7 +776,31 @@ declare global {
     TimeoutMilliseconds: number
   }
 
+  interface YakitScreenshotSettings {
+    directory: string
+    defaultDirectory: string
+    watermarkEnabled: boolean
+    watermarkPosition: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
+  }
+
   interface YakitBridge {
+    screenshot: {
+      captureAndSave: () => Promise<{
+        path: string
+        capturedAt: string
+        width: number
+        height: number
+        clipboardCopied: boolean
+        clipboardError: string
+      }>
+      getSettings: () => Promise<YakitScreenshotSettings>
+      updateWatermark: (
+        options: Partial<Pick<YakitScreenshotSettings, 'watermarkEnabled' | 'watermarkPosition'>>,
+      ) => Promise<YakitScreenshotSettings>
+      selectDirectory: () => Promise<YakitScreenshotSettings | null>
+      resetDirectory: () => Promise<YakitScreenshotSettings>
+      openDirectory: () => Promise<void>
+    }
     app: {
       generateStartEngine: () => Promise<unknown>
       generateChromePlugin: () => Promise<string>

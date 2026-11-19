@@ -1,4 +1,5 @@
 import { EventEmitter } from 'events'
+import vm from 'node:vm'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import screenshot from '../yakitScreenshot'
 
@@ -45,6 +46,50 @@ const replies = (stream) =>
 afterEach(() => vi.useRealTimers())
 
 describe('Yakit screenshot', () => {
+  it('returns the original PNG and physical dimensions without canvas work when watermarking is disabled', async () => {
+    const win = createWindow()
+    const png = Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=',
+      'base64',
+    )
+    win.webContents.capturePage.mockResolvedValue({ isEmpty: () => false, toPNG: () => png })
+    const result = await captureYakitScreenshot(win, undefined, { watermarkEnabled: false })
+    expect(result).toMatchObject({ data: png.toString('base64'), width: 1, height: 1 })
+    expect(result.capturedAt).toMatch(/^\d{4}-\d{2}-\d{2} /)
+    expect(win.webContents.executeJavaScriptInIsolatedWorld).not.toHaveBeenCalled()
+    expect(win.eventNames()).toEqual([])
+    expect(win.webContents.eventNames()).toEqual([])
+  })
+
+  it.each([
+    ['top-left', 12, 12],
+    ['top-right', 592, 12],
+    ['bottom-left', 12, 548],
+    ['bottom-right', 592, 548],
+  ])('draws the watermark at %s with the same margins and dimensions', async (position, left, top) => {
+    const win = createWindow()
+    const context = {
+      drawImage: vi.fn(),
+      measureText: () => ({ width: 180 }),
+      fillRect: vi.fn(),
+      fillText: vi.fn(),
+    }
+    win.webContents.executeJavaScriptInIsolatedWorld.mockImplementation((_world, [{ code }]) =>
+      vm.runInNewContext(code, {
+        atob: () => 'png',
+        Blob: class {},
+        createImageBitmap: async () => ({ width: 800, height: 600, close: () => {} }),
+        document: {
+          createElement: () => ({ getContext: () => context, toDataURL: () => 'data:image/png;base64,cG5n' }),
+        },
+      }),
+    )
+    const result = await captureYakitScreenshot(win, undefined, { watermarkPosition: position })
+    expect(context.fillRect).toHaveBeenCalledWith(left, top, 196, 40)
+    expect(context.fillText).toHaveBeenCalledWith(result.capturedAt, left + 8, top + 20)
+    expect(result).toMatchObject({ width: 800, height: 600 })
+  })
+
   it('uses local calendar fields and supports positive and negative fractional UTC offsets', () => {
     const date = new Date(2026, 8, 8, 12, 34, 56)
     vi.spyOn(date, 'getTimezoneOffset').mockReturnValue(-345)

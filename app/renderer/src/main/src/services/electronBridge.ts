@@ -7,6 +7,7 @@ const getBridge = (): YakitBridge => {
 }
 
 export const yakitApp = getBridge().app
+export const yakitScreenshot = getBridge().screenshot
 export const yakitTheme = getBridge().theme
 export const yakitSystem = getBridge().system
 export const yakitNetwork = getBridge().network

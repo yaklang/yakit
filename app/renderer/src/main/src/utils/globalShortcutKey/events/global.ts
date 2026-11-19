@@ -30,6 +30,8 @@ export const addScopeShow = (newEvent, oldEvent) => {
 export enum GlobalShortcutKey {
   /** 截图 */
   Screenshot = 'screenshot',
+  /** 截全屏 */
+  ScreenshotFullscreen = 'screenshotFullscreen',
   /** 关闭当前页面 */
   RemovePage = 'removePage',
   /** 新增二级页面 */
@@ -57,6 +59,10 @@ const globalShortcutKeyEvents: EventsType = {
   screenshot: {
     name: 'ShortcutKey.screenshot',
     keys: [YakitKeyMod.CtrlCmd, YakitKeyMod.Alt, YakitKeyBoard.KEY_B],
+  },
+  screenshotFullscreen: {
+    name: 'ShortcutKey.screenshotFullscreen',
+    keys: [YakitKeyMod.CtrlCmd, YakitKeyMod.Alt, YakitKeyBoard.KEY_S],
   },
   removePage: {
     name: 'ShortcutKey.closeCurrentPage',
