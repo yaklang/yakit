@@ -230,7 +230,7 @@ export const AIChatMention: FC<AIChatMentionProps> = ({
           />
         )
       case AIMentionTabsEnum.File_System:
-        return <MentionFileTree onSelect={pick} query={query} openedPaths={openedPaths} />
+        return <MentionFileTree onSelect={pick} onSelectMany={pickMany} query={query} openedPaths={openedPaths} />
       case AIMentionTabsEnum.FocusMode:
         return (
           <FocusModeOptions

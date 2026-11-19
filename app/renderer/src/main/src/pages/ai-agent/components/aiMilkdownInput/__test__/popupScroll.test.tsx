@@ -176,7 +176,7 @@ describe('mention popup outside clicks', () => {
   })
 })
 
-describe('mention non-skill starts plan', () => {
+describe('mention forge template starts plan', () => {
   it('opens plan when selecting a yak forge and plan is off', () => {
     context.content = '@'
     const onModeChangeComplete = vi.fn()

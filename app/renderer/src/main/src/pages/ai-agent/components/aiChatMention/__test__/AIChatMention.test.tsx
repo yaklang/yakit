@@ -447,8 +447,9 @@ describe('AIChatMention', () => {
       property: 'openDirectory',
     },
   ])('opens a local $property from the filesystem tab', async ({ isFolder, path, button, property }) => {
+    const onSelect = vi.fn()
     openDialog.mockResolvedValueOnce({ canceled: false, filePaths: [path] })
-    render(<AIChatMention onSelect={vi.fn()} />)
+    render(<AIChatMention onSelect={onSelect} />)
     fireEvent.click(screen.getByRole('button', { name: 'AIMentionTabs.fileSystem' }))
     expect(screen.queryByText('AIMentionTabs.loadedFiles')).not.toBeInTheDocument()
     await act(async () => {
@@ -461,6 +462,34 @@ describe('AIChatMention', () => {
       }),
     )
     expect(addHistoryItem).toHaveBeenCalledWith({ path, isFolder })
+    expect(onSelect).toHaveBeenCalledWith(
+      isFolder ? 'folder' : 'file',
+      expect.objectContaining({ id: path, name: path }),
+    )
+  })
+
+  it('adds a local batch to the input in one selection', async () => {
+    const onSelect = vi.fn()
+    const onSelectMany = vi.fn()
+    const filePaths = ['/tmp/a.txt', '/tmp/b.txt']
+    openDialog.mockResolvedValueOnce({ canceled: false, filePaths })
+    render(<AIChatMention onSelect={onSelect} onSelectMany={onSelectMany} />)
+    fireEvent.click(screen.getByRole('button', { name: 'AIMentionTabs.fileSystem' }))
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /^YakitButton.openFile/ }))
+    })
+    expect(addHistoryItem).toHaveBeenCalledTimes(2)
+    expect(onSelect).not.toHaveBeenCalled()
+    expect(onSelectMany.mock.calls[0][0].map((item: { type?: string; value?: { name?: string } }) => item)).toEqual([
+      expect.objectContaining({
+        type: 'file',
+        value: expect.objectContaining({ id: '/tmp/a.txt', name: '/tmp/a.txt' }),
+      }),
+      expect.objectContaining({
+        type: 'file',
+        value: expect.objectContaining({ id: '/tmp/b.txt', name: '/tmp/b.txt' }),
+      }),
+    ])
   })
 
   it('rejects more than 10 local paths without adding history', async () => {

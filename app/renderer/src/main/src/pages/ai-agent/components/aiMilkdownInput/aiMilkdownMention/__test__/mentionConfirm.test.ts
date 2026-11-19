@@ -69,6 +69,7 @@ describe('shouldStartPlanForMentions', () => {
   const skill = { type: 'forge' as const, value: { id: '1', name: '技能', forgeType: 'skillmd' as const } }
   const forge = { type: 'forge' as const, value: { id: '2', name: '模板', forgeType: 'yak' as const } }
   const tool = { type: 'tool' as const, value: { id: '3', name: '工具' } }
+  const file = { type: 'file' as const, value: { id: '/tmp/a.txt', name: '/tmp/a.txt' } }
 
   it('只选技能且 Plan 未开时不启动', () => {
     expect(shouldStartPlanForMentions([skill], false)).toBe(false)
@@ -78,8 +79,9 @@ describe('shouldStartPlanForMentions', () => {
     expect(shouldStartPlanForMentions([forge], false)).toBe(true)
   })
 
-  it('选中工具、知识库等非技能且 Plan 未开时启动', () => {
-    expect(shouldStartPlanForMentions([tool], false)).toBe(true)
+  it('选中文件、工具等非 forge 模板且 Plan 未开时不启动', () => {
+    expect(shouldStartPlanForMentions([tool], false)).toBe(false)
+    expect(shouldStartPlanForMentions([file], false)).toBe(false)
   })
 
   it('Plan 已开启时不再启动', () => {

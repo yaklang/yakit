@@ -46,12 +46,12 @@ export const MentionBrowsers: FC<MentionBrowsersProps> = ({ query, instances, ..
   )
 }
 
-interface MentionFileTreeProps extends Pick<MentionListControls, 'onSelect'> {
+interface MentionFileTreeProps extends Pick<MentionListControls, 'onSelect' | 'onSelectMany'> {
   query: string
   openedPaths: HistoryItem[]
 }
 
-export const MentionFileTree: FC<MentionFileTreeProps> = ({ onSelect, query, openedPaths }) => {
+export const MentionFileTree: FC<MentionFileTreeProps> = ({ onSelect, onSelectMany, query, openedPaths }) => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const [selected, setSelected] = useState<FileNodeProps>()
   const visiblePaths = openedPaths.filter(
@@ -75,9 +75,19 @@ export const MentionFileTree: FC<MentionFileTreeProps> = ({ onSelect, query, ope
         )
         return
       }
+      if (!filePaths.length) return
+      const type: 'folder' | 'file' = isFolder ? 'folder' : 'file'
       for (const path of filePaths) {
         await historyStore.addHistoryItem({ path, isFolder })
       }
+      const items = filePaths.map((path) => ({
+        type,
+        id: path,
+        name: path,
+        row: { kind: type, name: path },
+      }))
+      if (items.length > 1 && onSelectMany) onSelectMany(items)
+      else items.forEach((item) => onSelect(item.type, item))
     } catch (error) {
       yakitNotify('error', t('AIAddMaterialsPopover.attachmentFailed', { error: String(error) }))
     }

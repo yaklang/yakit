@@ -14,7 +14,7 @@ const isForgeTemplate = (item: AIChatMentionSelectEntry) =>
   item.type === 'forge' && (item.value?.forgeType === 'yak' || item.value?.forgeType === 'config')
 
 export const shouldStartPlanForMentions = (items: AIChatMentionSelectEntry[], enablePlan: boolean) =>
-  !enablePlan && items.some((item) => item.type !== 'forge' || isForgeTemplate(item))
+  !enablePlan && items.some(isForgeTemplate)
 
 /** 多选确认：普通提及批量插入（命令会删掉 @query），场景只记录最后一项。 */
 export const planMentionConfirm = (items: AIChatMentionSelectEntry[]) => {
