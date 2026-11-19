@@ -940,7 +940,7 @@ export const canTriggerSendShortcut = (
   loadingHistory: boolean,
 ) => inViewport && isbuttonIsSendReqStatus && !loadingHistory
 
-/** 左侧发送 / 继续 / 暂停停止。拉历史只禁用发送，不进入暂停停止。 */
+/** 左侧发送 / 继续 / 暂停停止。拉历史时禁用发送，并允许取消加载。 */
 export const FuzzerRequestToolbar: React.FC<{
   loading: boolean
   loadingHistory: boolean
@@ -952,7 +952,7 @@ export const FuzzerRequestToolbar: React.FC<{
   onCancel: () => void
   aiMenu?: React.ReactNode
 }> = (props) => {
-  const { t } = useI18nNamespaces(['yakitUi'])
+  const { t } = useI18nNamespaces(['yakitUi', 'webFuzzer'])
   const { loading, loadingHistory, isPause, cachedTotal, sendShortcut, onSend, onResumeAndPause, onCancel, aiMenu } =
     props
   if (loading && !loadingHistory) {
@@ -985,6 +985,11 @@ export const FuzzerRequestToolbar: React.FC<{
       <YakitButton disabled={loadingHistory} onClick={onSend} type={'primary'} size="large">
         {t('YakitButton.sendRequest')} {sendShortcut}
       </YakitButton>
+      {loadingHistory && (
+        <YakitButton onClick={onCancel} type="outline2" size="large">
+          {t('HTTPFuzzerPage.cancelLoading')}
+        </YakitButton>
+      )}
       {aiMenu}
     </>
   )
@@ -1428,17 +1433,15 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
   }, [])
 
   const streamRunRef = useRef<ReturnType<typeof createHTTPFuzzerRun> | null>(null)
+  const streamCleanupRef = useRef<(() => void) | undefined>(undefined)
   // 恢复历史选中的操作版本。发送、切历史（resetResponse）会自增，
   // 迟到的探测回调只在版本仍一致时继续，避免覆盖用户新发起的任务。
   const restoreOpRef = useRef(0)
 
   const resetResponse = useMemoizedFn(() => {
-    // 每次发送都换一个新 token：token 变化会触发流监听 effect 重挂，旧流的迟到
-    // error/end 落在旧频道上无人接收，不会再终止新请求；dispose 让旧 run 立即失效
-    void fuzzerRawStore.deleteScope(fuzzerPageScope(props.id))
-    streamRunRef.current?.dispose()
+    // 先清理旧流，再同步绑定新 token。历史回放可能在 React effect 提交前就结束。
+    streamCleanupRef.current?.()
     tokenRef.current = randomString(60)
-    setStreamToken(tokenRef.current)
     restoreOpRef.current += 1
     taskIDRef.current = ''
     dCountRef.current = 0
@@ -1461,6 +1464,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     if (!retryRef.current) {
       runtimeIdRef.current = ''
     }
+    streamCleanupRef.current = registerHTTPFuzzerStream(tokenRef.current)
   })
 
   const retryRef = useRef<boolean>(false)
@@ -1756,7 +1760,13 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
   const cancelCurrentHTTPFuzzer = useMemoizedFn(async () => {
     // Send cancellation before unlocking the UI so a fresh send follows it over IPC.
     const cancellation = ipcRenderer.invoke('cancel-HTTPFuzzer', tokenRef.current)
+    restoreOpRef.current += 1
     streamRunRef.current?.finish('cancel')
+    // 列表查询阶段可能还没有 active run，不能仅依赖 onEnd 解锁。
+    setLoadingHistory(false)
+    setLoading(false)
+    setIsPause(true)
+    setLoadingText('sending packets')
     runtimeIdRef.current = ''
     // cancel 后主进程 end 事件不再送达；须在此释放 MCP 槽位，否则 inFlight 永久卡住、
     // 残留 FuzzerIndex 还会污染后续手动发送 / 导出调试 YAML
@@ -1769,8 +1779,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     }
   })
   const dCountRef = useRef<number>(0)
-  const [streamToken, setStreamToken] = useState<string>(() => randomString(60))
-  const tokenRef = useRef<string>(streamToken)
+  const tokenRef = useRef<string>('')
   const taskIDRef = useRef<string>('')
   const runtimeIdRef = useRef<string>('')
   /**
@@ -1793,9 +1802,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
    *   AI tab 没收到过任何 `runtime_id`（`allAiFuzzRuntimeIds` 为空）则禁用。
    */
   const [responseSource, setResponseSource] = useState<'manual' | 'ai'>('manual')
-  useEffect(() => {
-    const token = tokenRef.current
-
+  const registerHTTPFuzzerStream = useMemoizedFn((token: string) => {
     const dataToken = `${token}-data`
     const errToken = `${token}-error`
     const endToken = `${token}-end`
@@ -2103,7 +2110,15 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
       ipcRenderer.removeAllListeners(endToken)
       void fuzzerRawStore.deleteScope(fuzzerPageScope(props.id))
     }
-  }, [streamToken])
+  })
+
+  useEffect(() => {
+    return () => {
+      restoreOpRef.current += 1
+      streamCleanupRef.current?.()
+      streamCleanupRef.current = undefined
+    }
+  }, [])
 
   const [extractedMap, { setAll, reset }] = useMap<string, string>()
   useEffect(() => {
@@ -2228,6 +2243,8 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
   })
   /** 按历史序列位置 pageInt 加载单个历史数据包详情 */
   const getList = useMemoizedFn((pageInt: number) => {
+    const opGen = ++restoreOpRef.current
+    loadingRef.current = true
     setLoadingHistory(true)
     setLoadingText(t('HTTPFuzzerPage.loadingData'))
     setLoading(true)
@@ -2235,15 +2252,19 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     ipcRenderer
       .invoke('QueryHistoryHTTPFuzzerTaskEx', params)
       .then((data: { Data: HTTPFuzzerTaskDetail[]; Total: number; Pagination: PaginationSchema }) => {
+        if (restoreOpRef.current !== opGen) return
         setTotal(Number(data.Total) || 0)
         if (data.Data.length > 0) {
           loadHistory(data.Data[0].BasicInfo.Id)
         } else {
+          loadingRef.current = false
           setLoadingHistory(false)
           setLoading(false)
         }
       })
       .catch((err) => {
+        if (restoreOpRef.current !== opGen) return
+        loadingRef.current = false
         setLoading(false)
         setLoadingHistory(false)
         failed(t('YakitNotification.loadFailed', { error: err + '' }))
