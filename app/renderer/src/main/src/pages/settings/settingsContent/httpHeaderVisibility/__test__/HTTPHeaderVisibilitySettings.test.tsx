@@ -39,7 +39,7 @@ vi.mock('@/components/yakitUI/YakitInput/YakitInput', () => ({
 vi.mock('@/components/yakitUI/YakitSpin/YakitSpin', () => ({ YakitSpin: () => <span role="status">Loading</span> }))
 
 const saved = new Map<string, string>()
-const persistedSettings = () => JSON.parse(saved.get(FuzzerRemoteGV.WebFuzzerHeaderVisibility)!)
+const persistedSettings = () => JSON.parse(saved.get(FuzzerRemoteGV.HTTPHeaderVisibility)!)
 const baseHeader = { request: 'accept', response: 'server' }
 
 // Keep the real settings component, store, normalization and editor hiding hook together.
@@ -159,7 +159,7 @@ describe.each<HeaderRole>(['request', 'response'])('%s 全局 HTTP 头部隐藏�
     expect(live.hiddenAreas).toHaveBeenLastCalledWith([], expect.any(Object))
     cleanup()
     const reopened = (await open())[role]
-    expect(reopened.getByText('empty')).toBeInTheDocument()
+    expect(reopened.getByText('noData')).toBeInTheDocument()
     expect(reopened.queryAllByRole('button', { name: /^Remove / })).toHaveLength(0)
   })
 

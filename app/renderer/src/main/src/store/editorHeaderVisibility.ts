@@ -50,10 +50,44 @@ const defaults = (): HTTPHeaderVisibilitySettings => ({
   response: { hidden: false, headers: DEFAULT_HIDDEN_HTTP_HEADERS.response },
 })
 
+/** 远端配置的同步镜像：编辑器首帧就能拿到上次的隐藏状态，避免先展开再折叠 */
+const LOCAL_CACHE_KEY = FuzzerRemoteGV.HTTPHeaderVisibility
+
+const parseSettings = (value: unknown): HTTPHeaderVisibilitySettings | undefined => {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined
+  const settings = defaults()
+  const record = value as Record<string, { hidden?: unknown; headers?: unknown } | undefined>
+  for (const role of roles) {
+    const entry = record[role]
+    settings[role] = {
+      hidden: entry?.hidden === true,
+      headers: parseHeaders(entry?.headers, role),
+    }
+  }
+  return settings
+}
+
+const readLocalSettings = (): HTTPHeaderVisibilitySettings | undefined => {
+  if (typeof localStorage === 'undefined') return undefined
+  try {
+    return parseSettings(parseJSON(localStorage.getItem(LOCAL_CACHE_KEY)))
+  } catch {
+    return undefined
+  }
+}
+
+const writeLocalSettings = (settings: HTTPHeaderVisibilitySettings) => {
+  if (typeof localStorage === 'undefined') return
+  try {
+    localStorage.setItem(LOCAL_CACHE_KEY, JSON.stringify(settings))
+  } catch {}
+}
+
 export const useEditorHeaderVisibility = create<EditorHeaderVisibilityStore>((set, get) => {
   let initialization: Promise<void> | undefined
   let writes = Promise.resolve()
-  let persisted = defaults()
+  const cached = readLocalSettings()
+  let persisted = cached ?? defaults()
   const visibilityVersion = { request: 0, response: 0 }
   const pendingToggles = { request: 0, response: 0 }
 
@@ -68,25 +102,17 @@ export const useEditorHeaderVisibility = create<EditorHeaderVisibilityStore>((se
   }
 
   return {
-    hidden: { request: false, response: false },
-    headers: { ...DEFAULT_HIDDEN_HTTP_HEADERS },
+    hidden: { request: persisted.request.hidden, response: persisted.response.hidden },
+    headers: { request: persisted.request.headers, response: persisted.response.headers },
     ready: { request: false, response: false },
     initialize: () => {
       if (initialization) return initialization
       initialization = (async () => {
-        const value = await getRemoteValue(FuzzerRemoteGV.WebFuzzerHeaderVisibility)
-        const settings = defaults()
-        if (value) {
-          const parsed = parseJSON(value)
-          for (const role of roles) {
-            const entry = parsed && typeof parsed === 'object' ? parsed[role] : undefined
-            settings[role] = {
-              hidden: entry?.hidden === true,
-              headers: parseHeaders(entry?.headers, role),
-            }
-          }
-        }
-        persisted = settings
+        const value = await getRemoteValue(FuzzerRemoteGV.HTTPHeaderVisibility)
+        const remote = value ? parseSettings(parseJSON(value)) : undefined
+        const settings = remote ?? persisted
+        if (remote) persisted = remote
+        writeLocalSettings(settings)
         set((state) => ({
           hidden: {
             request: pendingToggles.request ? state.hidden.request : settings.request.hidden,
@@ -109,8 +135,9 @@ export const useEditorHeaderVisibility = create<EditorHeaderVisibilityStore>((se
       return enqueue(async () => {
         // Merge with the last committed snapshot, never another pending edit.
         const next = { ...persisted, [role]: { ...persisted[role], hidden } }
-        await setRemoteValue(FuzzerRemoteGV.WebFuzzerHeaderVisibility, JSON.stringify(next))
+        await setRemoteValue(FuzzerRemoteGV.HTTPHeaderVisibility, JSON.stringify(next))
         persisted = next
+        writeLocalSettings(next)
       })
         .catch((error) => {
           if (visibilityVersion[role] === version) {
@@ -133,8 +160,9 @@ export const useEditorHeaderVisibility = create<EditorHeaderVisibilityStore>((se
       const versions = { ...visibilityVersion }
       return enqueue(async () => {
         // A single SetKey commits both directions and their lists together.
-        await setRemoteValue(FuzzerRemoteGV.WebFuzzerHeaderVisibility, JSON.stringify(next))
+        await setRemoteValue(FuzzerRemoteGV.HTTPHeaderVisibility, JSON.stringify(next))
         persisted = next
+        writeLocalSettings(next)
         set((state) => ({
           hidden: {
             request: visibilityVersion.request === versions.request ? next.request.hidden : state.hidden.request,

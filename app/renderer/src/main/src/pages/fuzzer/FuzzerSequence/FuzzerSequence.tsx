@@ -2822,36 +2822,55 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
     )
     const sequenceResponsePacket = httpResponse?.ResponseRaw?.byteLength ? httpResponse.ResponseRaw : sequenceStoredRaw
 
-    const { queryPagesDataById, updatePagesDataCacheById, requestHeadersHidden, responseHeadersHidden } = usePageInfo(
-      (s) => {
-        const info = pageId
-          ? s.queryPagesDataById(YakitRoute.HTTPFuzzer, pageId)?.pageParamsInfo.webFuzzerPageInfo
-          : undefined
-        return {
-          queryPagesDataById: s.queryPagesDataById,
-          updatePagesDataCacheById: s.updatePagesDataCacheById,
-          requestHeadersHidden: info?.requestHeadersHidden ?? false,
-          responseHeadersHidden: info?.responseHeadersHidden ?? false,
-        }
-      },
-      shallow,
-    )
+    const {
+      queryPagesDataById,
+      updatePagesDataCacheById,
+      requestHeadersHidden,
+      responseHeadersHidden,
+      previewRequestHeadersHidden,
+      previewResponseHeadersHidden,
+    } = usePageInfo((s) => {
+      const info = pageId
+        ? s.queryPagesDataById(YakitRoute.HTTPFuzzer, pageId)?.pageParamsInfo.webFuzzerPageInfo
+        : undefined
+      return {
+        queryPagesDataById: s.queryPagesDataById,
+        updatePagesDataCacheById: s.updatePagesDataCacheById,
+        requestHeadersHidden: info?.requestHeadersHidden ?? false,
+        responseHeadersHidden: info?.responseHeadersHidden ?? false,
+        previewRequestHeadersHidden: info?.previewRequestHeadersHidden ?? false,
+        previewResponseHeadersHidden: info?.previewResponseHeadersHidden ?? false,
+      }
+    }, shallow)
     // 头部隐藏状态跟随序列页签，直接读写底层页面缓存，避免切换页签时沿用上一个页签的状态。
-    const setHeaderHidden = useMemoizedFn((role: 'request' | 'response', hidden: boolean) => {
+    const writeHeaderHidden = useMemoizedFn((role: 'request' | 'response', hidden: boolean, preview: boolean) => {
       if (!pageId) return
       const currentItem = queryPagesDataById(YakitRoute.HTTPFuzzer, pageId)
       if (!currentItem?.pageParamsInfo.webFuzzerPageInfo) return
+      const field = preview
+        ? role === 'request'
+          ? 'previewRequestHeadersHidden'
+          : 'previewResponseHeadersHidden'
+        : role === 'request'
+          ? 'requestHeadersHidden'
+          : 'responseHeadersHidden'
       updatePagesDataCacheById(YakitRoute.HTTPFuzzer, {
         ...currentItem,
         pageParamsInfo: {
           ...currentItem.pageParamsInfo,
           webFuzzerPageInfo: {
             ...currentItem.pageParamsInfo.webFuzzerPageInfo,
-            ...(role === 'request' ? { requestHeadersHidden: hidden } : { responseHeadersHidden: hidden }),
+            [field]: hidden,
           },
         },
       })
     })
+    const setHeaderHidden = useMemoizedFn((role: 'request' | 'response', hidden: boolean) =>
+      writeHeaderHidden(role, hidden, false),
+    )
+    const setPreviewHeaderHidden = useMemoizedFn((role: 'request' | 'response', hidden: boolean) =>
+      writeHeaderHidden(role, hidden, true),
+    )
     useImperativeHandle(
       ref,
       () => ({
@@ -3213,6 +3232,11 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                             ref={successTableRef}
                             isRefresh={isRefresh}
                             success={true}
+                            showHeaderVisibilityToggle
+                            requestHeadersHidden={previewRequestHeadersHidden}
+                            onRequestHeadersHiddenChange={(hidden) => setPreviewHeaderHidden('request', hidden)}
+                            responseHeadersHidden={previewResponseHeadersHidden}
+                            onResponseHeadersHiddenChange={(hidden) => setPreviewHeaderHidden('response', hidden)}
                             data={successFuzzer}
                             query={query}
                             setQuery={setQuery}
@@ -3229,6 +3253,11 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                           <HTTPFuzzerPageTable
                             isRefresh={isRefresh}
                             success={false}
+                            showHeaderVisibilityToggle
+                            requestHeadersHidden={previewRequestHeadersHidden}
+                            onRequestHeadersHiddenChange={(hidden) => setPreviewHeaderHidden('request', hidden)}
+                            responseHeadersHidden={previewResponseHeadersHidden}
+                            onResponseHeadersHiddenChange={(hidden) => setPreviewHeaderHidden('response', hidden)}
                             data={failedFuzzer}
                             query={query}
                             setQuery={setQuery}

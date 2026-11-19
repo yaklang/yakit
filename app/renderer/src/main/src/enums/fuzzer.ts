@@ -12,8 +12,11 @@ export enum FuzzerRemoteGV {
   WebFuzzerEditorBeautify = 'webFuzzer_editor_beautify',
   /** @name WebFuzzer编辑器美化&渲染 */
   WebFuzzerOneResEditorBeautifyRender = 'webFuzzer_one_res_editor_beautify_render',
-  /** @name WebFuzzer 头部隐藏设置（请求和响应作为一个 JSON 快照保存） */
-  WebFuzzerHeaderVisibility = 'webFuzzer_header_visibility',
+  /**
+   * @name HTTP 头部隐藏配置（请求/响应 JSON 快照）
+   * 隐藏头名单全局共用；显示状态仅 History / MITM 共享，WebFuzzer 按页签独立管理
+   */
+  HTTPHeaderVisibility = 'http_header_visibility',
   /**@name WebFuzzer高级配置内容的显/隐 */
   WebFuzzerAdvancedConfigShow = 'webFuzzer_advancedConfig_show',
   /**@name WebFuzzer最大前端渲染数量 */

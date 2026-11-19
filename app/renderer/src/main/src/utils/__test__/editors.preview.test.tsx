@@ -480,7 +480,7 @@ describe('NewHTTPPacketEditor header visibility controls', () => {
     act(() => mocks.editors[0].search(2))
     act(() => mocks.editors[0].search(null))
     const button = screen.getByRole('button', { name: 'NewHTTPPacketEditor.hideResponseHeaders' })
-    expect(button.closest('[title]')).toHaveAttribute('title', 'NewHTTPPacketEditor.responseHeaderVisibilityScope')
+    expect(button.closest('[title]')).toHaveAttribute('title', 'NewHTTPPacketEditor.hideResponseHeaders')
     expect(screen.getByRole('button', { name: 'NewHTTPPacketEditor.showResponseHeaders' })).toHaveAttribute(
       'aria-pressed',
       'true',
@@ -592,7 +592,7 @@ describe('NewHTTPPacketEditor header visibility controls', () => {
     fireEvent.click(screen.getAllByRole('button', { name: 'NewHTTPPacketEditor.hideResponseHeaders' })[0])
     await advance(0)
     expect(screen.getAllByRole('button', { name: 'NewHTTPPacketEditor.showResponseHeaders' })).toHaveLength(2)
-    expect(mocks.save).toHaveBeenCalledExactlyOnceWith(FuzzerRemoteGV.WebFuzzerHeaderVisibility, expect.any(String))
+    expect(mocks.save).toHaveBeenCalledExactlyOnceWith(FuzzerRemoteGV.HTTPHeaderVisibility, expect.any(String))
     expect(JSON.parse(mocks.save.mock.calls[0][1]).response.hidden).toBe(true)
     view.unmount()
     render(<NewHTTPPacketEditor {...props} showHeaderVisibilityToggle />)
@@ -644,7 +644,7 @@ describe('NewHTTPPacketEditor header visibility controls', () => {
     fireEvent.click(screen.getAllByRole('button', { name: 'NewHTTPPacketEditor.hideRequestHeaders' })[0])
     await advance(0)
     expect(screen.getAllByRole('button', { name: 'NewHTTPPacketEditor.showRequestHeaders' })).toHaveLength(2)
-    expect(mocks.save).toHaveBeenCalledExactlyOnceWith(FuzzerRemoteGV.WebFuzzerHeaderVisibility, expect.any(String))
+    expect(mocks.save).toHaveBeenCalledExactlyOnceWith(FuzzerRemoteGV.HTTPHeaderVisibility, expect.any(String))
     expect(JSON.parse(mocks.save.mock.calls[0][1]).request.hidden).toBe(true)
   })
 

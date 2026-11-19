@@ -24,6 +24,7 @@ import {
   useUpdateEffect,
 } from 'ahooks'
 import { getRemoteValue, setRemoteValue } from '../../utils/kv'
+import { getEditorViewCache, setEditorViewCache } from '../../utils/editorViewCache'
 import type { HTTPFuzzerTaskDetail } from './HTTPFuzzerHistory'
 import type { HotPatchTempItem } from './hotPatchShared'
 import { exportHTTPFuzzerResponse, exportPayloadResponse, exportExtractedDataResponse } from './HTTPFuzzerPageExport'
@@ -1039,6 +1040,36 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
       pageParamsInfo: {
         ...currentItem.pageParamsInfo,
         webFuzzerPageInfo: { ...currentItem.pageParamsInfo.webFuzzerPageInfo, responseHeadersHidden: hidden },
+      },
+    })
+  })
+  const [previewRequestHeadersHidden, updatePreviewRequestHeadersHidden] = useState(
+    () => initWebFuzzerPageInfo().previewRequestHeadersHidden ?? false,
+  )
+  const setPreviewRequestHeadersHidden = useMemoizedFn((hidden: boolean) => {
+    updatePreviewRequestHeadersHidden(hidden)
+    const currentItem = queryPagesDataById(YakitRoute.HTTPFuzzer, props.id)
+    if (!currentItem?.pageParamsInfo.webFuzzerPageInfo) return
+    updatePagesDataCacheById(YakitRoute.HTTPFuzzer, {
+      ...currentItem,
+      pageParamsInfo: {
+        ...currentItem.pageParamsInfo,
+        webFuzzerPageInfo: { ...currentItem.pageParamsInfo.webFuzzerPageInfo, previewRequestHeadersHidden: hidden },
+      },
+    })
+  })
+  const [previewResponseHeadersHidden, updatePreviewResponseHeadersHidden] = useState(
+    () => initWebFuzzerPageInfo().previewResponseHeadersHidden ?? false,
+  )
+  const setPreviewResponseHeadersHidden = useMemoizedFn((hidden: boolean) => {
+    updatePreviewResponseHeadersHidden(hidden)
+    const currentItem = queryPagesDataById(YakitRoute.HTTPFuzzer, props.id)
+    if (!currentItem?.pageParamsInfo.webFuzzerPageInfo) return
+    updatePagesDataCacheById(YakitRoute.HTTPFuzzer, {
+      ...currentItem,
+      pageParamsInfo: {
+        ...currentItem.pageParamsInfo,
+        webFuzzerPageInfo: { ...currentItem.pageParamsInfo.webFuzzerPageInfo, previewResponseHeadersHidden: hidden },
       },
     })
   })
@@ -3842,6 +3873,11 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         getPreviewNetwork={getPreviewNetwork}
                                         // onSendToWebFuzzer={onSendToWebFuzzer}
                                         success={true}
+                                        showHeaderVisibilityToggle
+                                        requestHeadersHidden={previewRequestHeadersHidden}
+                                        onRequestHeadersHiddenChange={setPreviewRequestHeadersHidden}
+                                        responseHeadersHidden={previewResponseHeadersHidden}
+                                        onResponseHeadersHiddenChange={setPreviewResponseHeadersHidden}
                                         data={successFuzzer}
                                         query={query}
                                         setQuery={setQuery}
@@ -3859,6 +3895,11 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                                       <HTTPFuzzerPageTable
                                         getPreviewNetwork={getPreviewNetwork}
                                         success={false}
+                                        showHeaderVisibilityToggle
+                                        requestHeadersHidden={previewRequestHeadersHidden}
+                                        onRequestHeadersHiddenChange={setPreviewRequestHeadersHidden}
+                                        responseHeadersHidden={previewResponseHeadersHidden}
+                                        onResponseHeadersHiddenChange={setPreviewResponseHeadersHidden}
                                         data={failedFuzzer}
                                         query={query}
                                         setQuery={setQuery}
@@ -5328,8 +5369,13 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
       setShowMatcherAndExtraction(false)
     })
 
-    // 一个响应的编辑器美化渲染缓存
-    const [resTypeOptionVal, setResTypeOptionVal] = useState<RenderTypeOptionVal>()
+    // 一个响应的编辑器美化渲染缓存：首帧同步读取本地镜像
+    const [resTypeOptionVal, setResTypeOptionVal] = useState<RenderTypeOptionVal | undefined>(
+      () =>
+        (getEditorViewCache(FuzzerRemoteGV.WebFuzzerOneResEditorBeautifyRender) || undefined) as
+          | RenderTypeOptionVal
+          | undefined,
+    )
     // 编辑器编码
     const [codeKey, setCodeKey] = useState<string>('')
     const [codeLoading, setCodeLoading] = useState<boolean>(false)
@@ -5337,11 +5383,8 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
     useEffect(() => {
       if (responsePacket.byteLength || fuzzerResponse?.UUID) {
         getRemoteValue(FuzzerRemoteGV.WebFuzzerOneResEditorBeautifyRender).then((res) => {
-          if (res) {
-            setResTypeOptionVal(res)
-          } else {
-            setResTypeOptionVal(undefined)
-          }
+          setResTypeOptionVal(res || undefined)
+          setEditorViewCache(FuzzerRemoteGV.WebFuzzerOneResEditorBeautifyRender, res || '')
         })
         getRemoteValue(FuzzerRemoteGV.FuzzerCodeEnCoding).then((res) => {
           if (res) {
@@ -5562,9 +5605,11 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                 if (typeOptionVal !== undefined) {
                   setResTypeOptionVal(typeOptionVal)
                   setRemoteValue(FuzzerRemoteGV.WebFuzzerOneResEditorBeautifyRender, typeOptionVal)
+                  setEditorViewCache(FuzzerRemoteGV.WebFuzzerOneResEditorBeautifyRender, typeOptionVal)
                 } else {
                   setResTypeOptionVal(undefined)
                   setRemoteValue(FuzzerRemoteGV.WebFuzzerOneResEditorBeautifyRender, '')
+                  setEditorViewCache(FuzzerRemoteGV.WebFuzzerOneResEditorBeautifyRender, '')
                 }
               }}
               onClickUrlMenu={copyUrl}

@@ -631,11 +631,7 @@ export const HeaderVisibilityButton: React.FC<HeaderVisibilityButtonProps> = ({ 
         : 'NewHTTPPacketEditor.hideRequestHeaders',
   )
   return (
-    <Tooltip
-      title={role === 'response' ? t('NewHTTPPacketEditor.responseHeaderVisibilityScope', { action: label }) : label}
-      mouseLeaveDelay={0}
-      destroyOnHidden
-    >
+    <Tooltip title={label} mouseLeaveDelay={0} destroyOnHidden>
       {/* 禁用态按钮不触发鼠标事件，包一层 span 保证 tooltip 能正常关闭 */}
       <span style={{ display: 'inline-flex' }}>
         <YakitButton

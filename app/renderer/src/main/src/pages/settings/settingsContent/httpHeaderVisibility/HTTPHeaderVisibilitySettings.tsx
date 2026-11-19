@@ -245,10 +245,7 @@ export const HTTPHeaderVisibilitySettings = () => {
                     ))
                   : !drafting[role] && (
                       <div className={styles.emptyState}>
-                        <YakitEmpty
-                          title={t('HTTPHeaderVisibilitySettings.empty')}
-                          imageStyle={{ height: 96, width: 96, margin: '0 auto 8px' }}
-                        />
+                        <YakitEmpty imageStyle={{ height: 96, width: 96, margin: '0 auto 8px' }} />
                       </div>
                     )}
               </div>

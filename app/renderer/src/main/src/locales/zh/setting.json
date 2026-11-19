@@ -104,12 +104,11 @@
     }
   },
   "HTTPHeaderVisibilitySettings": {
-    "description": "列表内的头部会在 WebFuzzer、History、MITM 的编辑器中折叠显示（需在编辑器内开启头部隐藏）。仅影响显示，不修改原始报文或发送内容；头名不区分大小写。",
+    "description": "列表内的头部会在 WebFuzzer、History（含流量分析等流量详情）、MITM 的编辑器中折叠显示；需在编辑器内开启头部隐藏。仅影响显示，不修改原始报文或发送内容；头名不区分大小写。",
     "request": "请求头",
     "response": "响应头",
     "count": "{{count}} 项",
     "remove": "删除 {{header}}",
-    "empty": "列表为空，将显示全部头部",
     "placeholder": "输入头名，例如 x-custom-header",
     "newHeader": "新增{{role}}名称",
     "add": "添加",

@@ -98,6 +98,7 @@ const DownloadAllPlugin = React.lazy(() =>
 import { getHotPatchCodeInfo } from '@/pages/fuzzer/fuzzerHotPatchUtils'
 import { type FuzzerCacheDataProps, getFuzzerCacheData } from '@/pages/fuzzer/fuzzerCacheData'
 import type { ShareValueProps } from '@/pages/fuzzer/HTTPFuzzerPage'
+import { useEditorHeaderVisibility } from '@/store/editorHeaderVisibility'
 import type { AdvancedConfigValueProps } from '@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType'
 import { RenderFuzzerSequence, RenderSubPage } from './renderSubPage/RenderSubPage'
 import { SubTabCountDropdown } from './SubTabCountDropdown'
@@ -763,6 +764,11 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
       ipcRenderer.send('close-childWin')
       ipcRenderer.removeAllListeners('child-window-hash')
     }
+  }, [])
+
+  useEffect(() => {
+    // 提前加载头部隐藏偏好，避免 History 等页面首帧先展开再折叠。
+    void useEditorHeaderVisibility.getState().initialize()
   }, [])
 
   const { softMode } = useSoftMode()
@@ -3257,6 +3263,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 request: nodeItem.pageParams?.request || defaultPostTemplate,
                 requestHeadersHidden: nodeItem.pageParams?.requestHeadersHidden ?? false,
                 responseHeadersHidden: nodeItem.pageParams?.responseHeadersHidden ?? false,
+                previewRequestHeadersHidden: nodeItem.pageParams?.previewRequestHeadersHidden ?? false,
+                previewResponseHeadersHidden: nodeItem.pageParams?.previewResponseHeadersHidden ?? false,
                 hotPatchCode: nodeItem.pageParams?.hotPatchCode || HotPatchDefaultContent,
                 browserTransformSelection: nodeItem.pageParams?.browserTransformSelection,
                 lastSelectedHistory: nodeItem.pageParams?.lastSelectedHistory,
@@ -3296,6 +3304,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
               request: parentItem.pageParams?.request || defaultPostTemplate,
               requestHeadersHidden: parentItem.pageParams?.requestHeadersHidden ?? false,
               responseHeadersHidden: parentItem.pageParams?.responseHeadersHidden ?? false,
+              previewRequestHeadersHidden: parentItem.pageParams?.previewRequestHeadersHidden ?? false,
+              previewResponseHeadersHidden: parentItem.pageParams?.previewResponseHeadersHidden ?? false,
               hotPatchCode: parentItem.pageParams?.hotPatchCode || HotPatchDefaultContent,
               browserTransformSelection: parentItem.pageParams?.browserTransformSelection,
               lastSelectedHistory: parentItem.pageParams?.lastSelectedHistory,
@@ -3390,6 +3400,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
           request: node.pageParams?.request || defaultPostTemplate,
           requestHeadersHidden: node.pageParams?.requestHeadersHidden ?? false,
           responseHeadersHidden: node.pageParams?.responseHeadersHidden ?? false,
+          previewRequestHeadersHidden: node.pageParams?.previewRequestHeadersHidden ?? false,
+          previewResponseHeadersHidden: node.pageParams?.previewResponseHeadersHidden ?? false,
           hotPatchCode: node.pageParams?.hotPatchCode || '',
           browserTransformSelection: node.pageParams?.browserTransformSelection,
           lastSelectedHistory: node.pageParams?.lastSelectedHistory,

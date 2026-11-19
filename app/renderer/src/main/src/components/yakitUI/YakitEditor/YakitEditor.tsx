@@ -162,6 +162,21 @@ const highLightFingerprint = (list?: readonly any[]): string => {
 /** Monaco link opener 全局只注册一次，避免多编辑器实例重复注册 */
 let linkOpenerRegistered = false
 
+/**
+ * react-monaco-editor 在编辑器已销毁但组件仍收到 props 更新时，会直接对空 model 调 getValue。
+ * 切换渲染/HEX、快速预览重挂载时可能触发，这里跳过该次更新，等新的编辑器实例按当前 value 初始化。
+ * 测试环境可能把 MonacoEditor mock 成函数组件，此时直接使用原组件。
+ */
+const SafeMonacoEditor = (() => {
+  if (!MonacoEditor?.prototype?.componentDidUpdate) return MonacoEditor
+  return class SafeMonacoEditor extends MonacoEditor {
+    componentDidUpdate(prevProps: React.ComponentProps<typeof MonacoEditor>) {
+      if (!this.editor?.getModel()) return
+      super.componentDidUpdate(prevProps)
+    }
+  }
+})()
+
 export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
   const {
     forceRenderMenu = false,
@@ -1606,7 +1621,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         }}
       >
         <ShortcutKeyFocusHook style={{ height: '100%', width: '100%', overflow: 'hidden' }} focusId={focusIds}>
-          <MonacoEditor
+          <SafeMonacoEditor
             // height={100}
             key={foldBinaryEnabled ? 'binary-fold-on' : 'binary-fold-off'}
             theme={theme || 'kurior'}

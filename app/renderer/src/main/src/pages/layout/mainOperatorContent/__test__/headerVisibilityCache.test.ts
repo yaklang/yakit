@@ -27,12 +27,12 @@ const execute = (code: string, bindings: Record<string, unknown>) => {
 const request = 'GET / HTTP/1.1\r\nHost: example.test\r\nAccept: */*\r\n\r\n'
 const nodes = () =>
   [
-    ['single-hidden', '0', true, false],
-    ['single-visible', '0', false, true],
-    ['group-1', '0', false, false],
-    ['child-hidden', 'group-1', true, true],
-    ['child-visible', 'group-1', false, false],
-  ].map(([id, groupId, requestHidden, responseHidden], index) => ({
+    ['single-hidden', '0', true, false, false, true],
+    ['single-visible', '0', false, true, true, false],
+    ['group-1', '0', false, false, false, false],
+    ['child-hidden', 'group-1', true, true, false, true],
+    ['child-visible', 'group-1', false, false, true, true],
+  ].map(([id, groupId, requestHidden, responseHidden, previewRequestHidden, previewResponseHidden], index) => ({
     pageId: id,
     pageGroupId: groupId,
     pageName: id,
@@ -43,6 +43,8 @@ const nodes = () =>
         hotPatchCode: 'patch',
         requestHeadersHidden: requestHidden,
         responseHeadersHidden: responseHidden,
+        previewRequestHeadersHidden: previewRequestHidden,
+        previewResponseHeadersHidden: previewResponseHidden,
         advancedConfigValue: {},
       },
     },
@@ -105,6 +107,8 @@ describe('request header visibility cache roundtrip', () => {
         hotPatchCode: 'patch',
         requestHeadersHidden: node.pageParamsInfo.webFuzzerPageInfo.requestHeadersHidden,
         responseHeadersHidden: node.pageParamsInfo.webFuzzerPageInfo.responseHeadersHidden,
+        previewRequestHeadersHidden: node.pageParamsInfo.webFuzzerPageInfo.previewRequestHeadersHidden,
+        previewResponseHeadersHidden: node.pageParamsInfo.webFuzzerPageInfo.previewResponseHeadersHidden,
       })
     }
   })
@@ -114,13 +118,17 @@ describe('request header visibility cache roundtrip', () => {
     cache.forEach((node) => {
       delete node.pageParams.requestHeadersHidden
       delete node.pageParams.responseHeadersHidden
+      delete node.pageParams.previewRequestHeadersHidden
+      delete node.pageParams.previewResponseHeadersHidden
     })
     const after = await restore(safeParseFuzzerCache(JSON.stringify(cache)), add)
     expect(
       after.every(
         (node) =>
           node.pageParamsInfo.webFuzzerPageInfo.requestHeadersHidden === false &&
-          node.pageParamsInfo.webFuzzerPageInfo.responseHeadersHidden === false,
+          node.pageParamsInfo.webFuzzerPageInfo.responseHeadersHidden === false &&
+          node.pageParamsInfo.webFuzzerPageInfo.previewRequestHeadersHidden === false &&
+          node.pageParamsInfo.webFuzzerPageInfo.previewResponseHeadersHidden === false,
       ),
     ).toBe(true)
   })

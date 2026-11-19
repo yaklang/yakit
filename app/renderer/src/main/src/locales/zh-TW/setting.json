@@ -104,12 +104,11 @@
     }
   },
   "HTTPHeaderVisibilitySettings": {
-    "description": "清單內的標頭會在 WebFuzzer、History、MITM 的編輯器中折疊顯示（需在編輯器內開啟標頭隱藏）。僅影響顯示，不修改原始封包或傳送內容；標頭名稱不區分大小寫。",
+    "description": "清單內的標頭會在 WebFuzzer、History（含流量分析等流量詳情）、MITM 的編輯器中折疊顯示；需在編輯器內開啟標頭隱藏。僅影響顯示，不修改原始封包或傳送內容；標頭名稱不區分大小寫。",
     "request": "請求標頭",
     "response": "回應標頭",
     "count": "{{count}} 項",
     "remove": "刪除 {{header}}",
-    "empty": "清單為空，將顯示全部標頭",
     "placeholder": "輸入標頭名稱，例如 x-custom-header",
     "newHeader": "新增{{role}}名稱",
     "add": "新增",

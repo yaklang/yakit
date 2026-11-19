@@ -345,17 +345,14 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
             <ByteCountTag selectionByteCount={selectionByteCount} itemKey="httpfuzzerRes" />
           </span>
         }
-        extraEnd={
-          firstNodeExtra &&
-          firstNodeExtra(
-            <HeaderVisibilityButton
-              role="request"
-              hidden={!!props.requestHeadersHidden}
-              disabled={hex}
-              onToggle={() => props.onRequestHeadersHiddenChange?.(!props.requestHeadersHidden)}
-            />,
-          )
-        }
+        extraEnd={firstNodeExtra?.(
+          <HeaderVisibilityButton
+            role="request"
+            hidden={!!props.requestHeadersHidden}
+            disabled={hex}
+            onToggle={() => props.onRequestHeadersHiddenChange?.(!props.requestHeadersHidden)}
+          />,
+        )}
         onClickUrlMenu={copyUrl}
         onClickUrlWithoutQueryMenu={copyUrlWithoutQuery}
         onClickOpenBrowserMenu={onClickOpenBrowserMenu}
