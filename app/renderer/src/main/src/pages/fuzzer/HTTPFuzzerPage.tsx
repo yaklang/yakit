@@ -25,6 +25,7 @@ import {
 } from 'ahooks'
 import { getRemoteValue, setRemoteValue } from '../../utils/kv'
 import { getEditorViewCache, setEditorViewCache } from '../../utils/editorViewCache'
+import { patchPageHeaderVisibility } from '../../utils/pageHeaderVisibility'
 import type { HTTPFuzzerTaskDetail } from './HTTPFuzzerHistory'
 import type { HotPatchTempItem } from './hotPatchShared'
 import { exportHTTPFuzzerResponse, exportPayloadResponse, exportExtractedDataResponse } from './HTTPFuzzerPageExport'
@@ -1018,60 +1019,40 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
   )
   const setRequestHeadersHidden = useMemoizedFn((hidden: boolean) => {
     updateRequestHeadersHidden(hidden)
-    const currentItem = queryPagesDataById(YakitRoute.HTTPFuzzer, props.id)
-    if (!currentItem?.pageParamsInfo.webFuzzerPageInfo) return
-    updatePagesDataCacheById(YakitRoute.HTTPFuzzer, {
-      ...currentItem,
-      pageParamsInfo: {
-        ...currentItem.pageParamsInfo,
-        webFuzzerPageInfo: { ...currentItem.pageParamsInfo.webFuzzerPageInfo, requestHeadersHidden: hidden },
-      },
-    })
+    patchPageHeaderVisibility(props.id, 'requestHeadersHidden', hidden, queryPagesDataById, updatePagesDataCacheById)
   })
   const [responseHeadersHidden, updateResponseHeadersHidden] = useState(
     () => initWebFuzzerPageInfo().responseHeadersHidden ?? false,
   )
   const setResponseHeadersHidden = useMemoizedFn((hidden: boolean) => {
     updateResponseHeadersHidden(hidden)
-    const currentItem = queryPagesDataById(YakitRoute.HTTPFuzzer, props.id)
-    if (!currentItem?.pageParamsInfo.webFuzzerPageInfo) return
-    updatePagesDataCacheById(YakitRoute.HTTPFuzzer, {
-      ...currentItem,
-      pageParamsInfo: {
-        ...currentItem.pageParamsInfo,
-        webFuzzerPageInfo: { ...currentItem.pageParamsInfo.webFuzzerPageInfo, responseHeadersHidden: hidden },
-      },
-    })
+    patchPageHeaderVisibility(props.id, 'responseHeadersHidden', hidden, queryPagesDataById, updatePagesDataCacheById)
   })
   const [previewRequestHeadersHidden, updatePreviewRequestHeadersHidden] = useState(
     () => initWebFuzzerPageInfo().previewRequestHeadersHidden ?? false,
   )
   const setPreviewRequestHeadersHidden = useMemoizedFn((hidden: boolean) => {
     updatePreviewRequestHeadersHidden(hidden)
-    const currentItem = queryPagesDataById(YakitRoute.HTTPFuzzer, props.id)
-    if (!currentItem?.pageParamsInfo.webFuzzerPageInfo) return
-    updatePagesDataCacheById(YakitRoute.HTTPFuzzer, {
-      ...currentItem,
-      pageParamsInfo: {
-        ...currentItem.pageParamsInfo,
-        webFuzzerPageInfo: { ...currentItem.pageParamsInfo.webFuzzerPageInfo, previewRequestHeadersHidden: hidden },
-      },
-    })
+    patchPageHeaderVisibility(
+      props.id,
+      'previewRequestHeadersHidden',
+      hidden,
+      queryPagesDataById,
+      updatePagesDataCacheById,
+    )
   })
   const [previewResponseHeadersHidden, updatePreviewResponseHeadersHidden] = useState(
     () => initWebFuzzerPageInfo().previewResponseHeadersHidden ?? false,
   )
   const setPreviewResponseHeadersHidden = useMemoizedFn((hidden: boolean) => {
     updatePreviewResponseHeadersHidden(hidden)
-    const currentItem = queryPagesDataById(YakitRoute.HTTPFuzzer, props.id)
-    if (!currentItem?.pageParamsInfo.webFuzzerPageInfo) return
-    updatePagesDataCacheById(YakitRoute.HTTPFuzzer, {
-      ...currentItem,
-      pageParamsInfo: {
-        ...currentItem.pageParamsInfo,
-        webFuzzerPageInfo: { ...currentItem.pageParamsInfo.webFuzzerPageInfo, previewResponseHeadersHidden: hidden },
-      },
-    })
+    patchPageHeaderVisibility(
+      props.id,
+      'previewResponseHeadersHidden',
+      hidden,
+      queryPagesDataById,
+      updatePagesDataCacheById,
+    )
   })
   const [browserTransformSelection, updateBrowserTransformSelection] = useState<BrowserTransformSelection | undefined>(
     initWebFuzzerPageInfo().browserTransformSelection,

@@ -59,8 +59,35 @@ vi.mock('@/components/yakitUI/YakitResizeBox/YakitResizeBox', () => ({
 }))
 vi.mock('@/utils/editors', () => ({
   HTTP_PACKET_EDITOR_Response_Info: 'HTTP_PACKET_EDITOR_Response_Info',
-  NewHTTPPacketEditor: ({ previewResponseId }: { previewResponseId?: string }) => (
-    <div data-testid="packet-editor" data-preview-id={previewResponseId ?? ''} />
+  NewHTTPPacketEditor: ({
+    previewResponseId,
+    showHeaderVisibilityToggle,
+    requestHeadersHidden,
+    responseHeadersHidden,
+    onRequestHeadersHiddenChange,
+    onResponseHeadersHiddenChange,
+  }: {
+    previewResponseId?: string
+    showHeaderVisibilityToggle?: boolean
+    requestHeadersHidden?: boolean
+    responseHeadersHidden?: boolean
+    onRequestHeadersHiddenChange?: (hidden: boolean) => void
+    onResponseHeadersHiddenChange?: (hidden: boolean) => void
+  }) => (
+    <div
+      data-testid="packet-editor"
+      data-preview-id={previewResponseId ?? ''}
+      data-show-header-toggle={String(!!showHeaderVisibilityToggle)}
+      data-request-hidden={String(requestHeadersHidden)}
+      data-response-hidden={String(responseHeadersHidden)}
+    >
+      <button type="button" onClick={() => onRequestHeadersHiddenChange?.(!requestHeadersHidden)}>
+        toggle-preview-request
+      </button>
+      <button type="button" onClick={() => onResponseHeadersHiddenChange?.(!responseHeadersHidden)}>
+        toggle-preview-response
+      </button>
+    </div>
   ),
 }))
 vi.mock('../../../HTTPFuzzerPage', () => ({
@@ -188,5 +215,36 @@ describe('HTTPFuzzerPageTable 选中行淘汰清理', () => {
     })
     expect(screen.getByTestId('packet-editor')).toHaveAttribute('data-preview-id', 'same')
     expect(screen.getByTestId('table-current')).toHaveAttribute('data-uuid', 'same')
+  })
+})
+
+describe('HTTPFuzzerPageTable 头部隐藏状态接线', () => {
+  it('使用传入的 preview 状态并回传切换', async () => {
+    const row = makeRow('preview', 1)
+    const onRequestHeadersHiddenChange = vi.fn()
+    const onResponseHeadersHiddenChange = vi.fn()
+    render(
+      <HTTPFuzzerPageTable
+        {...baseProps}
+        data={[row]}
+        showHeaderVisibilityToggle
+        requestHeadersHidden={false}
+        responseHeadersHidden
+        onRequestHeadersHiddenChange={onRequestHeadersHiddenChange}
+        onResponseHeadersHiddenChange={onResponseHeadersHiddenChange}
+      />,
+    )
+
+    await waitFor(() => fireEvent.click(screen.getByTestId('row-preview')))
+    await waitFor(() => expect(screen.getByTestId('packet-editor')).toHaveAttribute('data-preview-id', 'preview'))
+    const editor = screen.getByTestId('packet-editor')
+    expect(editor).toHaveAttribute('data-show-header-toggle', 'true')
+    expect(editor).toHaveAttribute('data-request-hidden', 'false')
+    expect(editor).toHaveAttribute('data-response-hidden', 'true')
+
+    fireEvent.click(screen.getByText('toggle-preview-request'))
+    expect(onRequestHeadersHiddenChange).toHaveBeenCalledWith(true)
+    fireEvent.click(screen.getByText('toggle-preview-response'))
+    expect(onResponseHeadersHiddenChange).toHaveBeenCalledWith(false)
   })
 })

@@ -74,6 +74,7 @@ import { randomString } from '@/utils/randomUtil'
 import { getRemoteValue } from '@/utils/kv'
 import type { AdvancedConfigValueProps } from '../HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType'
 import { HTTP_PACKET_EDITOR_Response_Info, type IMonacoEditor } from '@/utils/editors'
+import { patchPageHeaderVisibility } from '@/utils/pageHeaderVisibility'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import {
   HTTPFuzzerPageTable,
@@ -2845,8 +2846,6 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
     // 头部隐藏状态跟随序列页签，直接读写底层页面缓存，避免切换页签时沿用上一个页签的状态。
     const writeHeaderHidden = useMemoizedFn((role: 'request' | 'response', hidden: boolean, preview: boolean) => {
       if (!pageId) return
-      const currentItem = queryPagesDataById(YakitRoute.HTTPFuzzer, pageId)
-      if (!currentItem?.pageParamsInfo.webFuzzerPageInfo) return
       const field = preview
         ? role === 'request'
           ? 'previewRequestHeadersHidden'
@@ -2854,16 +2853,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
         : role === 'request'
           ? 'requestHeadersHidden'
           : 'responseHeadersHidden'
-      updatePagesDataCacheById(YakitRoute.HTTPFuzzer, {
-        ...currentItem,
-        pageParamsInfo: {
-          ...currentItem.pageParamsInfo,
-          webFuzzerPageInfo: {
-            ...currentItem.pageParamsInfo.webFuzzerPageInfo,
-            [field]: hidden,
-          },
-        },
-      })
+      patchPageHeaderVisibility(pageId, field, hidden, queryPagesDataById, updatePagesDataCacheById)
     })
     const setHeaderHidden = useMemoizedFn((role: 'request' | 'response', hidden: boolean) =>
       writeHeaderHidden(role, hidden, false),

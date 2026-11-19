@@ -215,6 +215,35 @@ describe('全局设置的即时保存与失败处理', () => {
     expect(request.queryByRole('textbox')).toBeNull()
   })
 
+  it.each([
+    ['clear', []],
+    ['restoreDefaults', [...DEFAULT_HIDDEN_HTTP_HEADERS.request]],
+  ])('草稿存在时点击 %s 先失焦也不会提交草稿', async (action, expected) => {
+    const { request } = await open()
+    fireEvent.click(request.getByRole('button', { name: 'add' }))
+    fireEvent.change(request.getByRole('textbox'), { target: { value: 'X-Draft' } })
+    const button = request.getByRole('button', { name: action })
+    fireEvent.mouseDown(button)
+    fireEvent.blur(request.getByRole('textbox'))
+    fireEvent.click(button)
+    await waitFor(() => expect(persistedSettings().request.headers).toEqual(expected))
+    expect(useEditorHeaderVisibility.getState().headers.request).toEqual(expected)
+    expect(request.queryByRole('textbox')).toBeNull()
+  })
+
+  it('取消新增丢弃草稿且不写入远端', async () => {
+    const { request } = await open()
+    fireEvent.click(request.getByRole('button', { name: 'add' }))
+    fireEvent.change(request.getByRole('textbox'), { target: { value: 'X-Draft' } })
+    const cancel = request.getByRole('button', { name: 'cancelAdd' })
+    fireEvent.mouseDown(cancel)
+    fireEvent.blur(request.getByRole('textbox'))
+    fireEvent.click(cancel)
+    expect(request.queryByRole('textbox')).toBeNull()
+    expect(mocks.write).not.toHaveBeenCalled()
+    expect(useEditorHeaderVisibility.getState().headers.request).toEqual(DEFAULT_HIDDEN_HTTP_HEADERS.request)
+  })
+
   it('大小写不同的同名头部不能重复新增；非法名称不写入', async () => {
     const { request } = await open()
     fireEvent.click(request.getByRole('button', { name: 'add' }))
