@@ -7,6 +7,7 @@ import {
   InformationCircleOutlined,
   IntentionOutlined,
   PencilAltOutlined,
+  QuestionMarkCircleOutlined,
   RotateCcwOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 import classNames from 'classnames'
@@ -268,6 +269,16 @@ export const AIRunModeMenu: FC<AIRunModeMenuProps> = ({ fullWidth }) => {
                 <div className={styles['mode-option-left']}>
                   <Icon size={16} color="currentColor" />
                   <span>{t(MODE_LABEL_KEY[item.key])}</span>
+                  {item.key === 'multiAgent' && (
+                    <Tooltip title={t('AIRunModeSelect.multiAgentTip')} trigger={['hover', 'focus']}>
+                      <QuestionMarkCircleOutlined
+                        size={12}
+                        color="var(--Colors-Use-Neutral-Text-3-Secondary)"
+                        tabIndex={0}
+                        aria-label={t('AIRunModeSelect.multiAgentTip')}
+                      />
+                    </Tooltip>
+                  )}
                 </div>
                 <YakitSwitch
                   aria-label={t(MODE_LABEL_KEY[item.key])}
