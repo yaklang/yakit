@@ -710,10 +710,6 @@ export const getDefaultFixedTabsNoSinglPageRoute = (softMode: SoftMode) => {
 export const LogOutCloseRoutes: YakitRoute[] = [YakitRoute.Plugin_Audit, YakitRoute.Data_Statistics]
 
 export interface ComponentParams {
-  requestHeadersHidden?: WebFuzzerPageInfoProps['requestHeadersHidden']
-  responseHeadersHidden?: WebFuzzerPageInfoProps['responseHeadersHidden']
-  previewRequestHeadersHidden?: WebFuzzerPageInfoProps['previewRequestHeadersHidden']
-  previewResponseHeadersHidden?: WebFuzzerPageInfoProps['previewResponseHeadersHidden']
   browserTransformSelection?: WebFuzzerPageInfoProps['browserTransformSelection']
   lastSelectedHistory?: WebFuzzerPageInfoProps['lastSelectedHistory']
   // 是否跳转到新开页面 默认跳转
@@ -725,6 +721,14 @@ export interface ComponentParams {
   advancedConfigValue?: AdvancedConfigValueProps
   advancedConfigShow?: AdvancedConfigShowProps | null
   hotPatchCode?: string
+  requestHeadersHidden?: WebFuzzerPageInfoProps['requestHeadersHidden']
+  responseHeadersHidden?: WebFuzzerPageInfoProps['responseHeadersHidden']
+  previewRequestHeadersHidden?: WebFuzzerPageInfoProps['previewRequestHeadersHidden']
+  previewResponseHeadersHidden?: WebFuzzerPageInfoProps['previewResponseHeadersHidden']
+  /**@name webFuzzer变量参数 */
+  params?: FuzzerParamItem[]
+  /**@name webFuzzer提取器参数 */
+  extractors?: HTTPResponseExtractor[]
   // Route.HTTPFuzzer 参数---end
 
   // order?: string
@@ -732,10 +736,6 @@ export interface ComponentParams {
   id?: string
   /**@param groupId HTTPFuzzer必须要有的，其他页面可以不用 */
   groupId?: string
-  /**@name webFuzzer变量参数 */
-  params?: FuzzerParamItem[]
-  /**@name webFuzzer提取器参数 */
-  extractors?: HTTPResponseExtractor[]
 
   // Route.Mod_ScanPort 参数
   scanportParams?: string

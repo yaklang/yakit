@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import i18n from '@/i18n/i18n'
-import { FuzzerRemoteGV } from '@/enums/fuzzer'
+import { RemoteHistoryGV } from '@/enums/history'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { yakitFailed } from '@/utils/notification'
 import { DEFAULT_HIDDEN_HTTP_HEADERS, isValidHTTPHeaderName, normalizeHTTPHeaderNames } from '@/utils/hiddenHTTPHeaders'
@@ -51,7 +51,7 @@ const defaults = (): HTTPHeaderVisibilitySettings => ({
 })
 
 /** 远端配置的同步镜像：编辑器首帧就能拿到上次的隐藏状态，避免先展开再折叠 */
-const LOCAL_CACHE_KEY = FuzzerRemoteGV.HTTPHeaderVisibility
+const LOCAL_CACHE_KEY = RemoteHistoryGV.HTTPHeaderVisibility
 
 const parseSettings = (value: unknown): HTTPHeaderVisibilitySettings | undefined => {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined
@@ -108,7 +108,7 @@ export const useEditorHeaderVisibility = create<EditorHeaderVisibilityStore>((se
     initialize: () => {
       if (initialization) return initialization
       initialization = (async () => {
-        const value = await getRemoteValue(FuzzerRemoteGV.HTTPHeaderVisibility)
+        const value = await getRemoteValue(RemoteHistoryGV.HTTPHeaderVisibility)
         const remote = value ? parseSettings(parseJSON(value)) : undefined
         const settings = remote ?? persisted
         if (remote) persisted = remote
@@ -135,7 +135,7 @@ export const useEditorHeaderVisibility = create<EditorHeaderVisibilityStore>((se
       return enqueue(async () => {
         // Merge with the last committed snapshot, never another pending edit.
         const next = { ...persisted, [role]: { ...persisted[role], hidden } }
-        await setRemoteValue(FuzzerRemoteGV.HTTPHeaderVisibility, JSON.stringify(next))
+        await setRemoteValue(RemoteHistoryGV.HTTPHeaderVisibility, JSON.stringify(next))
         persisted = next
         writeLocalSettings(next)
       })
@@ -160,7 +160,7 @@ export const useEditorHeaderVisibility = create<EditorHeaderVisibilityStore>((se
       const versions = { ...visibilityVersion }
       return enqueue(async () => {
         // A single SetKey commits both directions and their lists together.
-        await setRemoteValue(FuzzerRemoteGV.HTTPHeaderVisibility, JSON.stringify(next))
+        await setRemoteValue(RemoteHistoryGV.HTTPHeaderVisibility, JSON.stringify(next))
         persisted = next
         writeLocalSettings(next)
         set((state) => ({

@@ -212,9 +212,9 @@ export interface WebFuzzerPageInfoProps {
   requestHeadersHidden?: boolean
   /** 当前标签的响应头显示状态；新标签默认显示。 */
   responseHeadersHidden?: boolean
-  /** 快速预览的请求头显示状态；与主请求编辑器独立 */
+  /** 快速预览的请求头显示状态；新标签默认显示。 */
   previewRequestHeadersHidden?: boolean
-  /** 快速预览的响应头显示状态；与主响应编辑器独立 */
+  /** 快速预览的响应头显示状态；新标签默认显示。 */
   previewResponseHeadersHidden?: boolean
   browserTransformSelection?: BrowserTransformSelectionContract
   advancedConfigValue: AdvancedConfigValueProps

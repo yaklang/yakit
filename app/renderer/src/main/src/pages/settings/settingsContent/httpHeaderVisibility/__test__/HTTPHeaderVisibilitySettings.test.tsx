@@ -5,7 +5,7 @@ import { HTTPHeaderVisibilitySettings } from '../HTTPHeaderVisibilitySettings'
 import { useEditorHeaderVisibility, type HeaderRole } from '@/store/editorHeaderVisibility'
 import { DEFAULT_HIDDEN_HTTP_HEADERS } from '@/utils/hiddenHTTPHeaders'
 import { useHiddenHTTPHeaders } from '@/utils/useHiddenHTTPHeaders'
-import { FuzzerRemoteGV } from '@/enums/fuzzer'
+import { RemoteHistoryGV } from '@/enums/history'
 
 const mocks = vi.hoisted(() => ({ read: vi.fn(), write: vi.fn(), failed: vi.fn() }))
 vi.mock('@/utils/kv', () => ({ getRemoteValue: mocks.read, setRemoteValue: mocks.write }))
@@ -39,7 +39,7 @@ vi.mock('@/components/yakitUI/YakitInput/YakitInput', () => ({
 vi.mock('@/components/yakitUI/YakitSpin/YakitSpin', () => ({ YakitSpin: () => <span role="status">Loading</span> }))
 
 const saved = new Map<string, string>()
-const persistedSettings = () => JSON.parse(saved.get(FuzzerRemoteGV.HTTPHeaderVisibility)!)
+const persistedSettings = () => JSON.parse(saved.get(RemoteHistoryGV.HTTPHeaderVisibility)!)
 const baseHeader = { request: 'accept', response: 'server' }
 
 // Keep the real settings component, store, normalization and editor hiding hook together.

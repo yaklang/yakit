@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { FuzzerRemoteGV } from '@/enums/fuzzer'
+import { RemoteHistoryGV } from '@/enums/history'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { yakitFailed } from '@/utils/notification'
 import { DEFAULT_HIDDEN_HTTP_HEADERS } from '@/utils/hiddenHTTPHeaders'
@@ -8,7 +8,7 @@ import type { HTTPHeaderVisibilitySettings } from '../editorHeaderVisibility'
 vi.mock('@/utils/kv', () => ({ getRemoteValue: vi.fn(), setRemoteValue: vi.fn() }))
 vi.mock('@/utils/notification', () => ({ yakitFailed: vi.fn() }))
 
-const key = FuzzerRemoteGV.HTTPHeaderVisibility
+const key = RemoteHistoryGV.HTTPHeaderVisibility
 const defaults = (): HTTPHeaderVisibilitySettings => ({
   request: { hidden: false, headers: DEFAULT_HIDDEN_HTTP_HEADERS.request },
   response: { hidden: false, headers: DEFAULT_HIDDEN_HTTP_HEADERS.response },

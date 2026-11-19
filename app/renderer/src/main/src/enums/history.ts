@@ -25,4 +25,6 @@ export enum RemoteHistoryGV {
   HTTPFlowAnalysisMainYakitResizeBox = 'HTTPFlowAnalysisMain-YakitResizeBox',
   HTTPFlowAnalysisYakitResizeBox = 'HTTPFlowAnalysis-YakitResizeBox',
   HTTPFlowTableAnalysisStatusCode = 'HTTPFlowTable-AnalysisFilter-StatusCode',
+  /** @name HTTP 头部隐藏配置（请求/响应 JSON 快照）：名单全局共用，显示状态 History/MITM 共享 */
+  HTTPHeaderVisibility = 'http_header_visibility',
 }

@@ -5,7 +5,7 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { NewHTTPPacketEditor, type NewHTTPPacketEditorProp } from '../editors'
 import { useEditorHeaderVisibility } from '@/store/editorHeaderVisibility'
-import { FuzzerRemoteGV } from '@/enums/fuzzer'
+import { RemoteHistoryGV } from '@/enums/history'
 
 const mocks = vi.hoisted(() => ({
   detect: vi.fn(),
@@ -592,7 +592,7 @@ describe('NewHTTPPacketEditor header visibility controls', () => {
     fireEvent.click(screen.getAllByRole('button', { name: 'NewHTTPPacketEditor.hideResponseHeaders' })[0])
     await advance(0)
     expect(screen.getAllByRole('button', { name: 'NewHTTPPacketEditor.showResponseHeaders' })).toHaveLength(2)
-    expect(mocks.save).toHaveBeenCalledExactlyOnceWith(FuzzerRemoteGV.HTTPHeaderVisibility, expect.any(String))
+    expect(mocks.save).toHaveBeenCalledExactlyOnceWith(RemoteHistoryGV.HTTPHeaderVisibility, expect.any(String))
     expect(JSON.parse(mocks.save.mock.calls[0][1]).response.hidden).toBe(true)
     view.unmount()
     render(<NewHTTPPacketEditor {...props} showHeaderVisibilityToggle />)
@@ -644,7 +644,7 @@ describe('NewHTTPPacketEditor header visibility controls', () => {
     fireEvent.click(screen.getAllByRole('button', { name: 'NewHTTPPacketEditor.hideRequestHeaders' })[0])
     await advance(0)
     expect(screen.getAllByRole('button', { name: 'NewHTTPPacketEditor.showRequestHeaders' })).toHaveLength(2)
-    expect(mocks.save).toHaveBeenCalledExactlyOnceWith(FuzzerRemoteGV.HTTPHeaderVisibility, expect.any(String))
+    expect(mocks.save).toHaveBeenCalledExactlyOnceWith(RemoteHistoryGV.HTTPHeaderVisibility, expect.any(String))
     expect(JSON.parse(mocks.save.mock.calls[0][1]).request.hidden).toBe(true)
   })
 
