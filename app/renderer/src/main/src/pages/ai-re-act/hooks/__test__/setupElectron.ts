@@ -4,6 +4,10 @@
  */
 import { vi } from 'vitest'
 
+vi.mock('../useAIGlobalConfig', () => ({
+  getCanonicalAIGlobalConfig: vi.fn().mockResolvedValue({ IntelligentModels: [] }),
+}))
+
 export const ipcRendererMock = {
   on: vi.fn(),
   off: vi.fn(),

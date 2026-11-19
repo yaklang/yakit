@@ -37,17 +37,13 @@ export const AIFocusMode: FC<AIFocusModeProps> = ({
     })
   const heading = t('AiAgengt.focusMode')
   const renderLabel = (label: string) => (
-    <span className={selectStyles['select-option']} title={iconOnly ? label : undefined}>
+    <span className={selectStyles['select-option']} title={label}>
       <BoxOutlined
         size={16}
         color="var(--Colors-Use-Neutral-Text-2-Primary)"
         className={selectStyles['select-icon-wrapper']}
       />
-      {!iconOnly && (
-        <span className={styles.label} title={label}>
-          {label}
-        </span>
-      )}
+      {!iconOnly && <span className={styles.label}>{label}</span>}
     </span>
   )
 

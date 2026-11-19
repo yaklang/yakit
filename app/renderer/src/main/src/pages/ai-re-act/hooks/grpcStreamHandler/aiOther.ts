@@ -1,11 +1,9 @@
+import type { AIAgentChatMetaData } from '@/pages/ai-agent/type/aiChat'
+import type { ModelContextPatch } from '../aiRender'
 import type { AIMessageHandler } from '../type'
-import {
-  AIInputEventSyncTypeEnum,
-  AINotifyType,
-  AITaskStatus,
-  type AITaskStatusType,
-  type AIAgentGrpcApi,
-} from '../grpcApi'
+import { AIInputEventSyncTypeEnum, AINotifyType, AITaskStatus } from '../grpcApi'
+import type { AITaskStatusType, AIAgentGrpcApi } from '../grpcApi'
+import { updateModelContextState } from '../modelContext'
 import { Uint8ArrayToString } from '@/utils/str'
 import { genBaseAIChatData, genExecTasks, handleTaskPlanEnd, trySettleTaskPlanEnd } from '../utils'
 import { type AIChatQSData, AIChatQSDataTypeEnum } from '../aiRender'
@@ -19,11 +17,79 @@ import {
   deletePersistedContent,
 } from '../persist/contentPersistHelper'
 import { ensureToolResultOnUI } from './aiToolResult'
-import type { AIAgentChatMetaData } from '@/pages/ai-agent/type/aiChat'
 import i18n from '@/i18n/i18n'
 import { yakitNotify } from '@/utils/notification'
 
 const tAgent = i18n.getFixedT(null, 'aiAgent')
+
+const handleModelContext: AIMessageHandler = (request) => {
+  const { res, rawData } = request
+  if (res.Type !== 'model_context' || res.NodeId !== 'model_context' || res.IsSync) return
+
+  let data: AIAgentGrpcApi.ModelContext | null
+  try {
+    data = JSON.parse(Uint8ArrayToString(res.Content))
+  } catch {
+    // 单条诊断事件损坏时仍需继续处理后续会话事件。
+    return
+  }
+  if (data == null) return
+  const state = rawData.modelContext
+  if (state.saved && data.context_key !== state.saved.context_key) return
+  const { pending } = state
+  if (pending && data.context_key !== pending.baseline?.context_key) return
+
+  // 保存回执的用量可能为 0，只保留同一模型上次测得的值。
+  const sameContext = !state.runtime || state.runtime.context_key === data.context_key
+  const promptTokens = data.prompt_tokens || (sameContext ? state.promptTokens : undefined)
+  const previous = state.context ?? state.saved
+  const runtime = {
+    ...data,
+    minimum_threshold_tokens:
+      data.minimum_threshold_tokens ??
+      (previous?.context_key === data.context_key ? previous?.minimum_threshold_tokens : undefined),
+    prompt_tokens: promptTokens,
+  }
+  const changeId = data.change?.reason === 'manual' ? data.change.id : undefined
+  const newManualChange = typeof changeId === 'string' && !!changeId && changeId !== pending?.baseline?.change?.id
+  const saved = data.pending || data.error ? state.saved : { ...runtime, prompt_tokens: undefined }
+  const confirmsPatch = (patch: ModelContextPatch) =>
+    newManualChange &&
+    !data.pending &&
+    !data.error &&
+    (patch.threshold_tokens === undefined || patch.threshold_tokens === data.threshold_tokens) &&
+    (patch.disable_auto_adjust === undefined || patch.disable_auto_adjust === data.disable_auto_adjust)
+  // 流事件只能确认运行中的模型，设置查询的加载或失败状态仍由查询负责结束。
+  const update = { status: state.status === 'idle' ? ('ready' as const) : state.status, runtime, promptTokens, saved }
+  if (!pending) {
+    updateModelContextState(request, {
+      ...update,
+      context: runtime,
+      ...(!data.error &&
+        (!state.failedPatch || confirmsPatch(state.failedPatch)) && {
+          failedPatch: undefined,
+          error: undefined,
+        }),
+    })
+    return
+  }
+
+  const { patch } = pending
+  const rejected = typeof data.error === 'string' && !!data.error
+  const confirmed = confirmsPatch(patch)
+  if (!rejected && !confirmed) {
+    updateModelContextState(request, { ...update, context: { ...runtime, ...patch } })
+    return
+  }
+
+  updateModelContextState(request, {
+    ...update,
+    context: rejected ? { ...(state.saved ?? pending.baseline ?? runtime), prompt_tokens: promptTokens } : runtime,
+    pending: undefined,
+    failedPatch: rejected ? patch : undefined,
+    error: rejected ? data.error : undefined,
+  })
+}
 
 const handleHttpFuzzRequestChange: AIMessageHandler = (request) => {
   const { res, store, rawData } = request
@@ -609,6 +675,7 @@ const handleSkipSubtaskInPlan: AIMessageHandler = (requestInfo) => {
 }
 
 export const aiOtherDataHandlers = {
+  model_context: handleModelContext,
   http_fuzz_request_change: handleHttpFuzzRequestChange,
   http_flow_fuzz_status: handleHttpFlowFuzzStatus,
   session_title: handleSessionTitle,

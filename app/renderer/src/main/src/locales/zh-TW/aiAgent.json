@@ -240,7 +240,21 @@
     "queueSend": "排隊傳送"
   },
   "AIContextUsage": {
-    "label": "上下文 {{percent}}%"
+    "label": "上下文 {{percent}}%",
+    "title": "上下文使用情況",
+    "usedPercent": "已用 {{percent}}",
+    "summary": "已用 {{used}}，剩餘 {{remaining}}",
+    "limit": "(上限 {{threshold}})",
+    "threshold": "上下文壓縮閾值",
+    "autoAdjust": "自動調整",
+    "autoAdjustHelp": "觸發遠端錯誤以後自動調整",
+    "retry": "重試",
+    "saveTimeout": "儲存逾時，已恢復最近確認的設定",
+    "sessionUnavailable": "工作階段連線已中斷，請重試",
+    "missingContextKey": "沒有 context_key，更新失敗",
+    "waitingContext": "等待後端回傳資料",
+    "loadFailed": "讀取上下文設定失敗",
+    "saveFailed": "儲存上下文設定失敗"
   },
   "AIRunningStatus": {
     "label": "執行中 第 {{round}} 輪 · {{elapsed}} / {{duration}}",
@@ -1080,8 +1094,6 @@
     "aiCallAutoRetryDesc": "如果遠端 AI 不穩定（網路原因）時，某一次對話重試幾次",
     "aiTransactionRetry": "AI 事務重試次數",
     "aiTransactionRetryDesc": "如果回答品質不高時，調大可以有效重試回答",
-    "runtimeContextSize": "執行時上下文大小",
-    "runtimeContextSizeDesc": "上下文大小最小為 60 KB，僅支援正整數",
     "aiCallTokenLimit": "壓力 token 閾值",
     "aiCallTokenLimitDesc": "Token pressure limit，當 AI 對話的 token 數量超過這個限制時，需要警告",
     "userInteractLimit": "使用者互動上限",

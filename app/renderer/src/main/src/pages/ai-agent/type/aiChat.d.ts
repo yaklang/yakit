@@ -1,6 +1,6 @@
 import type { SessionLifecycle } from '@/pages/ai-re-act/hooks/sessionLifecycle'
 import type { AIAgentGrpcApi, AIInputEvent, AIStartParams, AISource } from '@/pages/ai-re-act/hooks/grpcApi'
-import type { PlanItemDetailsData, AIChatQSData } from '@/pages/ai-re-act/hooks/aiRender'
+import type { ModelContextState, PlanItemDetailsData, AIChatQSData } from '@/pages/ai-re-act/hooks/aiRender'
 import type { AISkillListItem } from '@/pages/ai-re-act/aiRightPanel/AISkillLoadingPane/aiSkillList/type'
 import type { PaginationSchema } from '@/pages/invoker/schema'
 import type { AIForge, AIFocus } from './forge'
@@ -163,6 +163,7 @@ export interface QueryAISessionRequest {
   }
 }
 export interface AIAgentChatData {
+  modelContext: ModelContextState
   /** 当前输入草稿的资料，供侧栏等界面同步展示。 */
   draftMaterials: AIDraftMaterials
   /** http_fuzz_request_change事件通知数据 */
@@ -224,6 +225,7 @@ export interface AIAgentChatData {
   contents: Map<string, AIChatQSData>
 }
 export interface AIAgentChatMetaData {
+  /** 当前会话上下文的查询、事件顺序与保存计时。 */
   /** 等待新标签领取的首问，领取后清空以避免重复发送。 */
   pendingWelcomeInput?: AIChatSubmitParams
   /** 新标签领取首问前的草稿，或启动被拒绝后用于回填的草稿。 */

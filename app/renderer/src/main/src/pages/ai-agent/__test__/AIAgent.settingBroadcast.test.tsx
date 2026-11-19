@@ -111,11 +111,9 @@ vi.mock('../../yakRunner/SplitView/SplitView', () => ({
 vi.mock('../aiAgentChat/AIAgentChat', async () => {
   const { useContext, useEffect } = await import('react')
   const { default: AIAgentContext } = await import('../useContext/AIAgentContext')
-  const { default: useRuntimeContextSizeLimit } = await import('../useContext/useRuntimeContextSizeLimit')
   return {
     AIAgentChat: () => {
       const { store, dispatcher } = useContext(AIAgentContext)
-      const runtimeLimit = useRuntimeContextSizeLimit()
       if (ipc.prepareWelcomeStore && store.activeChat?.isDraftSession && store.activeChat.SessionID) {
         globalSessionEngine.ensureSession(store.activeChat.SessionID)
       }
@@ -133,23 +131,20 @@ vi.mock('../aiAgentChat/AIAgentChat', async () => {
       }, [store.activeChat?.SessionID])
       return (
         <div>
-          <span data-testid="runtime-limit">{runtimeLimit}</span>
-          <span data-testid="raw-limit">{store.activeChat?.StartParams?.RuntimeContextSizeLimit}</span>
-          <span data-testid="default-limit">{store.setting.RuntimeContextSizeLimit}</span>
           <button
             onClick={() => {
               dispatcher.setActiveChat((current) =>
                 current
                   ? {
                       ...current,
-                      StartParams: { ...current.StartParams, RuntimeContextSizeLimit: 600 },
+                      StartParams: { ...current.StartParams, AICallTokenLimit: 600 },
                     }
                   : current,
               )
-              dispatcher.setSetting((current) => ({ ...current, RuntimeContextSizeLimit: 600 }))
+              dispatcher.setSetting((current) => ({ ...current, AICallTokenLimit: 600 }))
             }}
           >
-            change-limit
+            change-token-limit
           </button>
           <span data-testid="review-policy">{store.setting.ReviewPolicy}</span>
           <span data-testid="memory">{String(!!store.setting.DisableMemoryTriage)}</span>
@@ -325,7 +320,6 @@ describe('AIAgent 配置广播', () => {
       SyncPerceptionTrigger: true,
       SingleModelMode: true,
       DisableMemoryTriage: true,
-      RuntimeContextSizeLimit: 345,
       Strategy: {
         ...AIAgentSettingDefault.Strategy,
         EnableGoalMode: true,
@@ -572,10 +566,9 @@ describe('AIAgent 配置广播', () => {
     await act(async () => {})
 
     const setting = JSON.parse(screen.getByTestId('setting').textContent!)
-    expect(setting).toMatchObject({ RuntimeContextSizeLimit: runtimeKB, AICallTokenLimit: tokenKB })
+    expect(setting).toMatchObject({ AICallTokenLimit: tokenKB })
+    expect(setting).not.toHaveProperty('RuntimeContextSizeLimit')
     expect(setting).not.toHaveProperty('TimelineContentSizeLimit')
-    expect(screen.getByTestId('runtime-limit')).toHaveTextContent(String(runtimeKB > 0 ? runtimeKB : 300))
-    expect(screen.getByTestId('raw-limit')).toHaveTextContent(String(runtimeKB))
     expect(globalSessionEngine.updateSessionConfig).not.toHaveBeenCalled()
     expect(setRemoteValueMock).not.toHaveBeenCalled()
   })
@@ -586,7 +579,7 @@ describe('AIAgent 配置广播', () => {
       SessionID: 'history',
       Title: 'original',
       StartParams: {
-        RuntimeContextSizeLimit: 300,
+        AICallTokenLimit: 300,
         SyncPerceptionTrigger: true,
         EnablePlan: true,
         Strategy: { EnableGoalMode: true, MaxSubAgents: 4 },
@@ -594,7 +587,7 @@ describe('AIAgent 配置广播', () => {
     } as AISession
     querySessionMock.mockResolvedValueOnce(sessionResponse([session]))
     render(<AIAgent pageId="test" initialSession={session} />)
-    await waitFor(() => expect(screen.getByTestId('default-limit')).toHaveTextContent(/^300$/))
+    await waitFor(() => expect(querySessionMock).toHaveBeenCalledOnce())
     await act(async () => {})
     expect(globalSessionEngine.updateSessionConfig).not.toHaveBeenCalled()
     // 初始化恢复不写引擎；用户修改设置后进入正常配置同步路径。
@@ -604,7 +597,7 @@ describe('AIAgent 配置广播', () => {
     ipc.detachPendingChat.mockClear()
     ipc.updatePagesDataCacheById.mockClear()
     const updates = [
-      { StartParams: { RuntimeContextSizeLimit: 600 } },
+      { StartParams: { AICallTokenLimit: 600 } },
       { StartParams: { SyncPerceptionTrigger: false, Strategy: { MaxSubAgents: 0 } } },
     ]
     act(() => {
@@ -616,21 +609,15 @@ describe('AIAgent 配置广播', () => {
       ...session,
       StartParams: {
         ...session.StartParams,
-        RuntimeContextSizeLimit: 600,
+        AICallTokenLimit: 600,
         SyncPerceptionTrigger: false,
         Strategy: { EnableGoalMode: true, MaxSubAgents: 0 },
       },
     })
-    expect(screen.getByTestId('runtime-limit')).toHaveTextContent(/^600$/)
-    expect(screen.getByTestId('raw-limit')).toHaveTextContent(/^600$/)
-    expect(screen.getByTestId('default-limit')).toHaveTextContent(/^300$/)
-    expect(globalSessionEngine.updateSessionConfig).toHaveBeenCalledExactlyOnceWith(
-      'history',
-      expect.objectContaining({ RuntimeContextSizeLimit: 600 }),
-    )
+    expect(globalSessionEngine.updateSessionConfig).not.toHaveBeenCalled()
     expect(ipc.detachPendingChat).not.toHaveBeenCalled()
     expect(ipc.updatePagesDataCacheById).not.toHaveBeenCalled()
-    expect(session.StartParams?.RuntimeContextSizeLimit).toBe(300)
+    expect(session.StartParams?.AICallTokenLimit).toBe(300)
     expect(session.StartParams?.Strategy?.MaxSubAgents).toBe(4)
   })
 
@@ -649,7 +636,7 @@ describe('AIAgent 配置广播', () => {
         if (source === 'user') {
           fireEvent.click(screen.getByText('turn-on-plan'))
         } else if (source === 'context') {
-          fireEvent.click(screen.getByText('change-limit'))
+          fireEvent.click(screen.getByText('change-token-limit'))
           expect(ipc.detachPendingChat).not.toHaveBeenCalled()
           expect(ipc.updatePagesDataCacheById).not.toHaveBeenCalled()
         } else {
@@ -661,14 +648,10 @@ describe('AIAgent 配置广播', () => {
         source === 'user'
           ? { EnablePlan: true }
           : source === 'context'
-            ? { RuntimeContextSizeLimit: 600 }
+            ? { AICallTokenLimit: 600 }
             : { ReviewPolicy: 'yolo' },
       )
-      const { RuntimeContextSizeLimit: _defaultLimit, ...sessionConfig } = currentSetting
-      expect(globalSessionEngine.updateSessionConfig).toHaveBeenCalledExactlyOnceWith('history', {
-        ...sessionConfig,
-        ...(source === 'context' ? { RuntimeContextSizeLimit: 600 } : {}),
-      })
+      expect(globalSessionEngine.updateSessionConfig).toHaveBeenCalledExactlyOnceWith('history', currentSetting)
       const persistedCount = setRemoteValueMock.mock.calls.length
 
       await act(async () =>
@@ -682,7 +665,6 @@ describe('AIAgent 配置广播', () => {
       expect(JSON.parse(screen.getByTestId('setting').textContent!)).toEqual(currentSetting)
       expect(globalSessionEngine.updateSessionConfig).toHaveBeenCalledOnce()
       expect(setRemoteValueMock).toHaveBeenCalledTimes(persistedCount)
-      if (source === 'context') expect(screen.getByTestId('runtime-limit')).toHaveTextContent(/^600$/)
       expect(ipc.pages.get(YakitRoute.AI_Agent).pageList[0].pageName).toBe('查询标题')
     },
   )
@@ -870,7 +852,7 @@ describe('AIAgent 配置广播', () => {
     expect(screen.getByTestId('enable-plan')).toHaveTextContent('false')
     expect(globalSessionEngine.updateSessionConfig).toHaveBeenCalledWith(
       expect.any(String),
-      expect.objectContaining({ EnablePlan: true, RuntimeContextSizeLimit: 300 }),
+      expect.objectContaining({ EnablePlan: true }),
     )
   })
 
@@ -1010,48 +992,20 @@ describe('AIAgent 配置广播', () => {
     expect(ipc.detachPendingChat).not.toHaveBeenCalled()
   })
 
-  it('修改 A 生效值和新会话默认值，但不改变 B 的阈值和请求前端单位配置', async () => {
-    render(
-      <>
-        <section data-testid="session-a">
-          <AIAgent
-            pageId="a"
-            initialSession={{ SessionID: 'a', StartParams: { RuntimeContextSizeLimit: 300 } } as AISession}
-          />
-        </section>
-        <section data-testid="session-b">
-          <AIAgent
-            pageId="b"
-            initialSession={{ SessionID: 'b', StartParams: { RuntimeContextSizeLimit: 120 } } as AISession}
-          />
-        </section>
-        <section data-testid="new-session">
-          <AIAgent pageId="new" />
-        </section>
-      </>,
-    )
-    const a = within(screen.getByTestId('session-a'))
-    const b = within(screen.getByTestId('session-b'))
-    const next = within(screen.getByTestId('new-session'))
-    await waitFor(() => expect(next.getByTestId('review-policy')).toHaveTextContent('yolo'))
-    expect(a.getByTestId('runtime-limit')).toHaveTextContent(/^300$/)
-    expect(b.getByTestId('runtime-limit')).toHaveTextContent(/^120$/)
-    fireEvent.click(a.getByText('change-limit'))
-    await waitFor(() => expect(next.getByTestId('runtime-limit')).toHaveTextContent(/^600$/))
-    expect(a.getByTestId('runtime-limit')).toHaveTextContent(/^600$/)
-    expect(b.getByTestId('runtime-limit')).toHaveTextContent(/^120$/)
-    expect(b.getByTestId('default-limit')).toHaveTextContent(/^600$/)
-    const updates = vi.mocked(globalSessionEngine.updateSessionConfig).mock.calls
-    expect(updates.filter(([id]) => id === 'a').at(-1)?.[1].RuntimeContextSizeLimit).toBe(600)
-    expect(updates.filter(([id]) => id === 'b').every(([, config]) => config.RuntimeContextSizeLimit === 120)).toBe(
-      true,
-    )
-    expect(setRemoteValueMock.mock.calls.at(-1)?.[1]).toContain('"RuntimeContextSizeLimit":600')
-    fireEvent.click(b.getByText('back-to-welcome'))
-    expect(b.getByTestId('runtime-limit')).toHaveTextContent(/^600$/)
+  it('旧全局缓存中的上下文阈值不会传播到设置或持久化结果', async () => {
+    getRemoteValueMock.mockResolvedValue(JSON.stringify({ RuntimeContextSizeLimit: 900, ReviewPolicy: 'yolo' }))
+    render(<AIAgent pageId="legacy-settings" />)
+    await waitFor(() => expect(screen.getByTestId('review-policy')).toHaveTextContent('yolo'))
+    expect(JSON.parse(screen.getByTestId('setting').textContent!)).not.toHaveProperty('RuntimeContextSizeLimit')
+    fireEvent.click(screen.getByText('turn-on-plan'))
+    await waitFor(() => expect(setRemoteValueMock).toHaveBeenCalled())
+    for (const [, config] of vi.mocked(globalSessionEngine.updateSessionConfig).mock.calls) {
+      expect(config).not.toHaveProperty('RuntimeContextSizeLimit')
+    }
+    expect(setRemoteValueMock.mock.calls.at(-1)?.[1]).not.toContain('RuntimeContextSizeLimit')
   })
 
-  it.each([0, undefined])('旧会话的 %s 上限不采用异步读取的全局默认值', async (limit) => {
+  it.each([120, 0, undefined])('旧会话的 %s 上下文阈值不会进入当前设置', async (limit) => {
     getRemoteValueMock.mockResolvedValue(JSON.stringify({ RuntimeContextSizeLimit: 900, ReviewPolicy: 'yolo' }))
     render(
       <AIAgent
@@ -1061,9 +1015,7 @@ describe('AIAgent 配置广播', () => {
     )
     await waitFor(() => expect(querySessionMock).toHaveBeenCalledOnce())
     expect(getRemoteValueMock).not.toHaveBeenCalledWith(RemoteAIAgentGV.AIAgentChatSetting)
-    expect(screen.getByTestId('default-limit')).toHaveTextContent(/^300$/)
-    expect(screen.getByTestId('runtime-limit')).toHaveTextContent(/^300$/)
-    expect(screen.getByTestId('raw-limit').textContent).toBe(limit === undefined ? '' : '0')
+    expect(JSON.parse(screen.getByTestId('setting').textContent!)).not.toHaveProperty('RuntimeContextSizeLimit')
     expect(globalSessionEngine.updateSessionConfig).not.toHaveBeenCalled()
     expect(setRemoteValueMock).not.toHaveBeenCalled()
   })

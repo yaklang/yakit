@@ -1,9 +1,11 @@
 import { act, renderHook, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { AIModelPolicyEnum, defaultAIGlobalConfig } from '@/pages/ai-agent/defaultConstant'
-import { grpcGetAIGlobalConfig, grpcSetAIGlobalConfig, type AIGlobalConfig } from '@/pages/ai-agent/aiModelList/utils'
+import { grpcGetAIGlobalConfig, grpcSetAIGlobalConfig } from '@/pages/ai-agent/aiModelList/utils'
+import type { AIGlobalConfig } from '@/pages/ai-agent/aiModelList/utils'
+import type { API } from '@/services/swagger/resposeType'
 import { useAIGlobalConfigStore } from '@/store/aiGlobalConfig'
-import useAIGlobalConfig from '../useAIGlobalConfig'
+import useAIGlobalConfig, { getCanonicalAIGlobalConfig } from '../useAIGlobalConfig'
 
 vi.mock('@/pages/ai-agent/aiModelList/utils', () => ({
   grpcGetAIGlobalConfig: vi.fn(),
@@ -17,12 +19,14 @@ describe('useAIGlobalConfig', () => {
   beforeEach(() => {
     getMock.mockReset()
     setMock.mockReset()
-    getMock.mockResolvedValue({ ...defaultAIGlobalConfig })
+    getMock.mockImplementation(async () => setMock.mock.calls.at(-1)?.[0] ?? { ...defaultAIGlobalConfig })
     setMock.mockResolvedValue(null)
     useAIGlobalConfigStore.setState({
       aiGlobalConfig: { ...defaultAIGlobalConfig, RoutingPolicy: AIModelPolicyEnum.PolicyAuto, DisableFallback: false },
       isInit: false,
       queryLoading: false,
+      persistedAiGlobalConfig: undefined,
+      configSavePending: false,
     })
   })
 
@@ -118,7 +122,7 @@ describe('useAIGlobalConfig', () => {
       resolveGet = resolve
     })
     setMock.mockImplementationOnce(() => firstWrite).mockResolvedValue(null)
-    getMock.mockImplementation(() => delayedGet)
+    getMock.mockImplementationOnce(() => delayedGet).mockImplementation(async () => setMock.mock.calls.at(-1)![0])
 
     const { result } = renderHook(() => useAIGlobalConfig())
     await act(async () => {
@@ -156,7 +160,7 @@ describe('useAIGlobalConfig', () => {
     const delayedGet = new Promise<typeof defaultAIGlobalConfig>((resolve) => {
       resolveGet = resolve
     })
-    getMock.mockImplementationOnce(() => delayedGet).mockResolvedValue({ ...defaultAIGlobalConfig })
+    getMock.mockImplementationOnce(() => delayedGet).mockImplementation(async () => setMock.mock.calls.at(-1)![0])
 
     const { result } = renderHook(() => useAIGlobalConfig())
     await act(async () => {
@@ -243,5 +247,51 @@ describe('useAIGlobalConfig', () => {
     })
     // store 收到的是清洗后的快照
     expect(useAIGlobalConfigStore.getState().aiGlobalConfig).toEqual(saved)
+  })
+
+  it('保存中只发布乐观配置，回读后发布引擎分配的归属', async () => {
+    let finishSave!: (value: null) => void
+    setMock.mockReturnValueOnce(new Promise<null>((resolve) => (finishSave = resolve)))
+    const model = { ProviderId: '0', Provider: { Type: 'openai' }, ModelName: 'model', ExtraParams: [] }
+    const persisted = { ...defaultAIGlobalConfig, IntelligentModels: [{ ...model, ContextOwnerId: 'owner' }] }
+    getMock.mockResolvedValue(persisted)
+    const { result } = renderHook(() => useAIGlobalConfig())
+    let saving!: Promise<void>
+    await act(async () => {
+      saving = result.current[1].setAIGlobalConfig({ IntelligentModels: [model] })
+    })
+    expect(useAIGlobalConfigStore.getState()).toMatchObject({
+      configSavePending: true,
+      persistedAiGlobalConfig: undefined,
+    })
+    expect(getMock).not.toHaveBeenCalled()
+    await act(async () => {
+      finishSave(null)
+      await saving
+    })
+    expect(useAIGlobalConfigStore.getState()).toMatchObject({
+      configSavePending: false,
+      persistedAiGlobalConfig: persisted,
+    })
+  })
+
+  it('非 React 调用复用同一规范化回读', async () => {
+    const first = getCanonicalAIGlobalConfig()
+    const second = getCanonicalAIGlobalConfig()
+    expect(first).toBe(second)
+    await first
+    expect(getMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('企业配置刷新保留匹配条目的稳定归属', async () => {
+    const model = { ProviderId: '0', Provider: { Type: 'openai' }, ModelName: 'model', ExtraParams: [], IsOnline: true }
+    getMock.mockResolvedValue({ ...defaultAIGlobalConfig, IntelligentModels: [{ ...model, ContextOwnerId: 'owner' }] })
+    const { result } = renderHook(() => useAIGlobalConfig())
+    await act(async () =>
+      result.current[1].getAIGlobalConfigAfterLogin([
+        { configName: 'AI', content: JSON.stringify({ IntelligentModels: [model] }) } as API.SystemConfigList,
+      ]),
+    )
+    expect(setMock.mock.calls[0][0].IntelligentModels[0].ContextOwnerId).toBe('owner')
   })
 })

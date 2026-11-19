@@ -319,13 +319,11 @@ export const EnterpriseAIModelSelect: React.FC<AIModelSelectProps> = React.memo(
       <YakitSelect.Option
         value="select"
         label={
-          <div className={modelSelectStyles['select-option']} title={iconOnly ? modelName : undefined}>
+          <div className={modelSelectStyles['select-option']} title={modelName}>
             {getIconByAI(selectIntelligentItem?.Provider.Type)}
             {!iconOnly && (
               <>
-                <span className={modelSelectStyles['select-option-text']} title={modelName}>
-                  {modelName}
-                </span>
+                <span className={modelSelectStyles['select-option-text']}>{modelName}</span>
                 <span className={modelSelectStyles['select-option-effort']}>{reasoningEffortLabel}</span>
               </>
             )}
@@ -505,7 +503,7 @@ export const EnterpriseAIModelSelect: React.FC<AIModelSelectProps> = React.memo(
     <div ref={refRef} className={className}>
       {isHaveData ? (
         <AIChatSelect
-          aria-label={iconOnly ? t('AIModelSelect.selectModel') : undefined}
+          aria-label={t('AIModelSelect.selectModel')}
           variant="borderless"
           dropdownAlign={{ htmlRegion: 'visible' }}
           classNames={{ popup: { root: modelSelectStyles['model-select-popup'] } }}

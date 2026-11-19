@@ -74,10 +74,10 @@
 }
 
 @container ai-chat-textarea (width < 430px) {
-  [data-has-footer-indicators] .run-mode-trigger[data-goal-kind='duration'] {
+  .run-mode-trigger[data-goal-kind='duration'] {
     .mode-detail,
     .mode-separator {
-      display: none;
+      display: var(--ai-footer-duration-detail-display, inline);
     }
   }
 }

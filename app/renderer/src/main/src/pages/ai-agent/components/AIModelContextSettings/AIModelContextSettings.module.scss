@@ -1,0 +1,129 @@
+.settings {
+  position: relative;
+  width: 100%;
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0.5px;
+}
+
+.loadingOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+
+  > :global(.ant-spin) {
+    width: auto;
+    height: auto;
+  }
+}
+
+.card {
+  padding: 12px;
+  border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
+  border-radius: 8px;
+  background: var(--Colors-Use-Neutral-Bg);
+}
+
+.heading,
+.automatic {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.number {
+  flex: 0 0 104px;
+  width: 104px;
+}
+
+.slider:global(.ant-slider) {
+  margin: 8px 0 0;
+
+  :global(.ant-slider-rail) {
+    background: var(--Colors-Use-Neutral-Border);
+  }
+  :global(.ant-slider-track) {
+    background: var(--Colors-Use-Main-Primary);
+  }
+  :global(.ant-slider-handle::after) {
+    background: var(--Colors-Use-Main-Bg);
+    box-shadow: 0 0 0 1px var(--Colors-Use-Main-Primary);
+  }
+}
+
+.scale {
+  display: flex;
+  justify-content: space-between;
+  color: var(--Colors-Use-Neutral-Text-4-Help-text);
+}
+
+.automatic {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
+}
+
+.description {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  > :last-child {
+    color: var(--Colors-Use-Neutral-Text-4-Help-text);
+  }
+}
+
+.switch {
+  padding: 0;
+}
+
+.thresholdLabel {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.waitingIcon {
+  display: inline-flex;
+  color: var(--Colors-Use-Neutral-Text-4-Help-text);
+  cursor: help;
+}
+
+.thresholdLabel > span:first-child {
+  flex-shrink: 0;
+}
+
+.thresholdLabel .errorTag {
+  min-width: 0;
+  background: var(--Colors-Use-Error-Focus);
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 14px;
+  cursor: help;
+}
+
+.errorMessage {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.feedback {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  max-width: min(360px, calc(100vw - 32px));
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.retryButton {
+  align-self: flex-end;
+}

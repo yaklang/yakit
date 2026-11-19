@@ -1,5 +1,5 @@
 import cloneDeep from 'lodash/cloneDeep'
-import { omit } from 'lodash'
+import omit from 'lodash/omit'
 import { AISourceEnum } from '@/pages/ai-re-act/hooks/grpcApi'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import emiter from '@/utils/eventBus/eventBus'
@@ -7,7 +7,7 @@ import { RemoteAIAgentGV } from '@/enums/aiAgent'
 import type { AIAgentSetting } from '../aiAgentType'
 import { AIAgentSettingDefault } from '../defaultConstant'
 
-const omitPersistKeys = ['AIService', 'AIModelName', 'TimelineContentSizeLimit'] as const
+const omitPersistKeys = ['AIService', 'AIModelName', 'TimelineContentSizeLimit', 'RuntimeContextSizeLimit'] as const
 const omitSessionRuntimeKeys = ['EnablePlan', 'SyncPerceptionTrigger', 'SingleModelMode', 'Source'] as const
 
 export const stripAIAgentChatSettingForPersist = (setting: Partial<AIAgentSetting>): Partial<AIAgentSetting> => {

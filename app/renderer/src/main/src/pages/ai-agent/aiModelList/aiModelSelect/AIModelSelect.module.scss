@@ -81,6 +81,7 @@ div.community-model-select-popup:global(.ant-select-dropdown) {
   overflow: hidden;
 
   .select-option-text {
+    display: var(--ai-footer-selector-label-display, inline);
     min-width: 0;
     white-space: nowrap;
     text-overflow: ellipsis;
@@ -90,6 +91,7 @@ div.community-model-select-popup:global(.ant-select-dropdown) {
     flex-shrink: 0;
   }
   .select-option-effort {
+    display: var(--ai-footer-selector-label-display, inline);
     flex-shrink: 0;
     color: var(--Colors-Use-Neutral-Text-4-Help-text);
     line-height: 16px;

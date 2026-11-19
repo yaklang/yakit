@@ -240,7 +240,21 @@
     "queueSend": "排队发送"
   },
   "AIContextUsage": {
-    "label": "上下文 {{percent}}%"
+    "label": "上下文 {{percent}}%",
+    "title": "上下文使用情况",
+    "usedPercent": "已用 {{percent}}",
+    "summary": "已用 {{used}}，剩余 {{remaining}}",
+    "limit": "(上限 {{threshold}})",
+    "threshold": "上下文压缩阈值",
+    "autoAdjust": "自动调整",
+    "autoAdjustHelp": "触发远程错误以后自动调整",
+    "retry": "重试",
+    "saveTimeout": "保存超时，已恢复最近确认的设置",
+    "sessionUnavailable": "会话连接已断开，请重试",
+    "missingContextKey": "没有 context_key，更新失败",
+    "waitingContext": "等待后端返回数据",
+    "loadFailed": "读取上下文设置失败",
+    "saveFailed": "保存上下文设置失败"
   },
   "AIRunningStatus": {
     "label": "运行中 第 {{round}} 轮 · {{elapsed}} / {{duration}}",
@@ -1080,8 +1094,6 @@
     "aiCallAutoRetryDesc": "如果远端 AI 不稳定（网络原因）的时候，某一次对话重试几次",
     "aiTransactionRetry": "AI 事务重试次数",
     "aiTransactionRetryDesc": "如果回答质量不高的时候，调大可以有效重试回答",
-    "runtimeContextSize": "运行时上下文大小",
-    "runtimeContextSizeDesc": "上下文大小最小为 60 KB，仅支持正整数",
     "aiCallTokenLimit": "压力 token 阈值",
     "aiCallTokenLimitDesc": "Token pressure limit，当 AI 对话的 token 数量超过这个限制时，需要警告",
     "userInteractLimit": "用户交互上限",

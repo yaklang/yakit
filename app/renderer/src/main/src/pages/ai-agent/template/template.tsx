@@ -57,6 +57,7 @@ import type { AIMilkdownInputRef } from '../components/aiMilkdownInput/type'
 import type { AICodeBlockCommandParams } from '../components/aiMilkdownInput/aiCodeBlock/aiCustomCodeBlockPlugin'
 import AIRunModeSelect from '../aiRunModeSelect/AIRunModeSelect'
 import AIContextUsage from './AIContextUsage/AIContextUsage'
+import { useCurrentModelContextReset } from '../useContext/useAIModelContext'
 import AIRunningStatus from './AIRunningStatus/AIRunningStatus'
 import { RoundedStopButton } from '@/pages/ai-re-act/aiReActChat/AIReActComponent'
 import { aiResourceReferenceCustomSchema } from '../components/aiMilkdownInput/aiMilkdownResourceReference/aiResourceReferencePlugin'
@@ -184,11 +185,11 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
     const { isHovering, dropRef } = useAIChatDrop({
       onFilesChange: (v) => onFilesChange(v),
     })
-    const inputWidth = useListenWidth(dropRef)
     const footerLeftWidth = useListenWidth(footerLeftRef)
-    const compactSelectors = inputWidth > 0 && inputWidth < 640
     const compactFooterLeft = footerLeftWidth > 0 && footerLeftWidth < 360
-    const [inViewport = true] = useInViewport(dropRef)
+    const [inputVisible] = useInViewport(dropRef)
+    const inViewport = inputVisible ?? true
+    useCurrentModelContextReset(inputVisible === true)
     const editorMilkdown = useRef<EditorMilkdownProps>()
 
     useImperativeHandle(ref, () => {
@@ -517,40 +518,33 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
       setFocusMode(mentionName)
     })
 
-    const { inlineItems, moreItems, footerRightItems, hasFooterIndicators, showSelectorIcons, showFooterMore } =
-      useCreation(() => {
-        const footerLeftItems = (props.footerLeftTypes ?? defaultFooterLeftTypes).map((item) =>
-          typeof item === 'string' ? { type: item, props: undefined, component: undefined } : item,
-        )
-        const inlineItems: typeof footerLeftItems = []
-        const moreItems: typeof footerLeftItems = []
-        for (const item of footerLeftItems) {
-          const { type } = item
-          const inMoreMenu =
-            compactFooterLeft &&
-            (type === AIInputInnerFeatureEnum.AIModelSelect ||
-              type === AIInputInnerFeatureEnum.AIFocusMode ||
-              type === AIInputInnerFeatureEnum.AIInputSettings)
-          const items = inMoreMenu ? moreItems : inlineItems
-          items.push(item)
-        }
+    const { inlineItems, moreItems, footerRightItems, showFooterMore } = useCreation(() => {
+      const footerLeftItems = (props.footerLeftTypes ?? defaultFooterLeftTypes).map((item) =>
+        typeof item === 'string' ? { type: item, props: undefined, component: undefined } : item,
+      )
+      const inlineItems: typeof footerLeftItems = []
+      const moreItems: typeof footerLeftItems = []
+      for (const item of footerLeftItems) {
+        const { type } = item
+        const inMoreMenu =
+          compactFooterLeft &&
+          (type === AIInputInnerFeatureEnum.AIModelSelect ||
+            type === AIInputInnerFeatureEnum.AIFocusMode ||
+            type === AIInputInnerFeatureEnum.AIInputSettings)
+        const items = inMoreMenu ? moreItems : inlineItems
+        items.push(item)
+      }
 
-        const footerRightItems = (props.footerRightTypes ?? defaultFooterRightTypes).map((item) =>
-          typeof item === 'string' ? { type: item } : item,
-        )
-        /** TODO - 这个需要用到后端得字段去判断，压力数据和第几轮得数据 */
-        const hasFooterIndicators = defaultFooterRightTypes.every((type) =>
-          footerRightItems.some((item) => item.type === type && (!('component' in item) || item.component == null)),
-        )
-        return {
-          inlineItems,
-          moreItems,
-          footerRightItems,
-          hasFooterIndicators,
-          showSelectorIcons: compactSelectors || hasFooterIndicators,
-          showFooterMore: inputFooterLeft == null && moreItems.length > 0,
-        }
-      }, [props.footerLeftTypes, props.footerRightTypes, compactFooterLeft, compactSelectors, inputFooterLeft])
+      const footerRightItems = (props.footerRightTypes ?? defaultFooterRightTypes).map((item) =>
+        typeof item === 'string' ? { type: item } : item,
+      )
+      return {
+        inlineItems,
+        moreItems,
+        footerRightItems,
+        showFooterMore: inputFooterLeft == null && moreItems.length > 0,
+      }
+    }, [props.footerLeftTypes, props.footerRightTypes, compactFooterLeft, inputFooterLeft])
 
     useEffect(() => {
       if (!showFooterMore) setFooterMoreOpen(false)
@@ -560,8 +554,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
     }, [compactFooterLeft])
 
     const renderFooterLeftTypes = ({ open: materialsOpen, toggle: toggleMaterials }: AddMaterialsControls) => {
-      const renderItem = (item: (typeof inlineItems)[number], inMoreMenu: boolean): ReactNode => {
-        const iconOnly = !inMoreMenu && showSelectorIcons
+      const renderItem = (item: (typeof inlineItems)[number]): ReactNode => {
         switch (item.type) {
           case AIInputInnerFeatureEnum.AddMaterials:
             return (
@@ -609,10 +602,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                   <AIModelSelect
                     isOpen={isOpen}
                     {...item.props}
-                    iconOnly={iconOnly}
-                    className={classNames(styles['model-self-adaptive'], item.props?.className, {
-                      [styles['footer-selector-icon-only']]: iconOnly,
-                    })}
+                    className={classNames(styles['model-self-adaptive'], item.props?.className)}
                   />
                 )}
               </Fragment>
@@ -625,10 +615,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                     value={focusMode}
                     {...item.props}
                     onChange={item.props?.onChange ?? setFocusMode}
-                    className={classNames(styles['focus-mode-self-adaptive'], item.props?.className, {
-                      [styles['footer-selector-icon-only']]: iconOnly,
-                    })}
-                    iconOnly={iconOnly}
+                    className={classNames(styles['focus-mode-self-adaptive'], item.props?.className)}
                   />
                 )}
               </Fragment>
@@ -647,7 +634,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                       className={styles['settings-button']}
                       isActive={inputSettingVisible}
                     >
-                      {inMoreMenu && t('AIRightPanel.aiSettings')}
+                      <span className={styles['settings-label']}>{t('AIRightPanel.aiSettings')}</span>
                     </YakitButton>
                   </AIInputSettingPopover>
                 )}
@@ -660,7 +647,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
 
       return (
         <>
-          {inlineItems.map((item) => renderItem(item, false))}
+          {inlineItems.map(renderItem)}
           {showFooterMore && (
             <YakitPopover
               open={footerMoreOpen}
@@ -681,7 +668,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                   onClick={(event) => event.stopPropagation()}
                   onKeyDown={(event) => event.stopPropagation()}
                 >
-                  {moreItems.map((item) => renderItem(item, true))}
+                  {moreItems.map(renderItem)}
                 </div>
               }
             >
@@ -706,7 +693,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
         const component = 'component' in item ? item.component : undefined
         switch (item.type) {
           case AIInputFooterRightEnum.AIContextUsage:
-            return <Fragment key={item.type}>{component ?? <AIContextUsage />}</Fragment>
+            return <Fragment key={item.type}>{component ?? <AIContextUsage key={sessionId} />}</Fragment>
           case AIInputFooterRightEnum.AIRunningStatus:
             return <Fragment key={item.type}>{component ?? <AIRunningStatus />}</Fragment>
           case AIInputFooterRightEnum.Custom:
@@ -790,7 +777,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                 chatDataStoreKey={chatDataStoreKey}
                 onModeChangeComplete={() => setRunModeOpen(true)}
               />
-              <div className={styles['footer']} data-has-footer-indicators={hasFooterIndicators || undefined}>
+              <div className={styles['footer']}>
                 <div className={styles['footer-left']} ref={footerLeftRef}>
                   {inputFooterLeft ?? renderFooterLeftTypes(materialControls)}
                 </div>
@@ -802,7 +789,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                     type={running ? 'outline2' : undefined}
                     className={styles[running ? 'queue-send-btn' : 'round-btn']}
                     aria-label={t(running ? 'AIChatTextarea.queueSend' : 'YakitButton.send')}
-                    radius={running ? '16px' : '50%'}
+                    radius={running ? '16px' : 9999}
                     loading={loading}
                     disabled={
                       disabled &&

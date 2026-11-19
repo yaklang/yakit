@@ -5,6 +5,46 @@ import type { QuestionRequest, UISubmission } from '../interactive-ui/types'
 import type { UIDiagnostic } from '../interactive-ui/validate'
 
 // #region AI-Agent 非会话列表外的渲染数据
+export type AIModelContextSource = 'settings' | 'stream'
+
+/** 查询得到的阈值快照没有流事件中的实时用量。 */
+export type ModelContextSnapshot = Omit<AIAgentGrpcApi.ModelContext, 'prompt_tokens'> &
+  Partial<Pick<AIAgentGrpcApi.ModelContext, 'prompt_tokens'>>
+
+export type ModelContextPatch = Partial<Pick<AIAgentGrpcApi.ModelContext, 'threshold_tokens' | 'disable_auto_adjust'>>
+
+export interface PendingModelContextChange {
+  /** 本次提交的阈值或自动调整设置，用于核对引擎回执。 */
+  patch: ModelContextPatch
+  /** 上次保存结束前再次关闭弹窗提交的修改，按字段保留最新值。 */
+  queuedPatch?: ModelContextPatch
+  /** 等待保存结果的超时定时器，保存结束或状态重置时清除。 */
+  timer?: ReturnType<typeof setTimeout>
+  /** 提交前的快照，用于匹配回执，并在缺少已确认快照时回滚。 */
+  baseline?: ModelContextSnapshot
+}
+
+export interface ModelContextState {
+  /** 模型上下文的加载和可用状态；unbound 表示未配置主模型，unsupported 表示引擎不支持查询。 */
+  status: 'idle' | 'loading' | 'ready' | 'unbound' | 'unsupported' | 'error'
+  /** 状态版本号，用于忽略过期的异步结果和排队修改。 */
+  generation: number
+  /** 当前模型最近一次测得的提示词 token 数，用于回执未携带用量时继续展示。 */
+  promptTokens?: number
+  /** 从引擎查询或由引擎确认的最近快照，保存失败时用于恢复界面。 */
+  saved?: ModelContextSnapshot
+  /** 当前连接最近一次收到的模型上下文快照，包含流事件上报的设置和用量。 */
+  runtime?: ModelContextSnapshot
+  /** 界面当前展示的快照，保存期间可包含尚待引擎确认的修改。 */
+  context?: ModelContextSnapshot
+  /** 正在等待保存结果的修改，包含等待期间排队的后续修改。 */
+  pending?: PendingModelContextChange
+  /** 最近一次保存失败的修改，供用户重试。 */
+  failedPatch?: ModelContextPatch
+  /** 加载或保存失败时展示的错误信息，可以是错误文本或翻译键。 */
+  error?: string
+}
+
 /** 自由对话-实时问题队列 */
 export interface AIQuestionQueues {
   total: number
@@ -608,6 +648,7 @@ export interface ChatStoreState {
   availableSkillsUpdate: number
   /** aiChat.d.ts AIAgentChatData draftMaterials */
   draftMaterialsUpdate: number
+  modelContextUpdate: number
 
   /** 接口运行过程中的数据文件夹合集 */
   grpcFolders: AIFileSystemPin[]
@@ -722,6 +763,7 @@ export interface ChatStoreState {
       | 'loadedSkillsUpdate'
       | 'availableSkillsUpdate'
       | 'draftMaterialsUpdate'
+      | 'modelContextUpdate'
       | 'currentPlanReviewExtraUpdate'
       | 'chatTodoListUpdate'
       | 'taskDetailsUpdate',
@@ -756,6 +798,7 @@ export interface ChatStoreState {
         | 'loadedSkillsUpdate'
         | 'availableSkillsUpdate'
         | 'draftMaterialsUpdate'
+        | 'modelContextUpdate'
         | 'grpcFolders'
         | 'reActTimelines'
         | 'httpTabShow'

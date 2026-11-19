@@ -21,7 +21,7 @@ describe('会话配置接收边界', () => {
       Pagination: { Page: 1, Limit: 10, OrderBy: 'created_at', Order: 'desc' },
     })
 
-    expect(result.Data[0].StartParams).toEqual({ RuntimeContextSizeLimit: limit, AICallTokenLimit: 40 })
+    expect(result.Data[0].StartParams).toEqual({ AICallTokenLimit: 40 })
     expect(response.Data[0].StartParams?.RuntimeContextSizeLimit).toBe(limit * 1024)
     expect(result.Data[0]).not.toBe(response.Data[0])
   })

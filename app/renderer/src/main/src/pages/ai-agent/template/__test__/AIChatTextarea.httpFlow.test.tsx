@@ -53,6 +53,24 @@ import type * as CurrentDataBySession from '@/pages/ai-re-act/hooks/useCurrentDa
 import type * as AIAgentStoreModule from '@/pages/ai-agent/useContext/useStore'
 import type * as AIAgentDispatcherModule from '@/pages/ai-agent/useContext/useDispatcher'
 
+const modelContext = vi.hoisted(() => ({
+  enabled: true,
+  thresholdTokens: 500000,
+  promptTokens: 125000 as number | undefined,
+  disableAutoAdjust: false,
+  loading: false,
+  saving: false,
+  setThreshold: vi.fn(),
+  setAutoAdjust: vi.fn(),
+  retry: vi.fn(),
+  save: vi.fn(),
+  refresh: vi.fn(),
+}))
+vi.mock('@/pages/ai-agent/useContext/useAIModelContext', () => ({
+  default: () => modelContext,
+  useCurrentModelContextReset: vi.fn(),
+}))
+
 vi.mock('../../browserInstances/browserInstanceStore', () => ({
   useBrowserInstances: vi.fn(() => ({
     instances: ['A', 'B'].map(
@@ -198,7 +216,7 @@ vi.mock('@/components/MilkdownEditor/utils/utils', () => ({ imgTypes: ['.png'] }
 vi.mock('@/utils/notification', () => ({ success: vi.fn(), yakitNotify: vi.fn() }))
 vi.mock('@/utils/clipboard', () => ({ setClipboardText: vi.fn() }))
 vi.mock('../../aiModelList/aiModelSelect/AIModelSelect', () => ({
-  AIModelSelect: ({ iconOnly }: { iconOnly?: boolean }) => (
+  AIModelSelect: ({ iconOnly = false }: { iconOnly?: boolean }) => (
     <button type="button" data-icon-only={iconOnly}>
       默认模型选择
     </button>
@@ -372,6 +390,8 @@ beforeEach(() => {
     if (typeof target.getClientRects !== 'function') target.getClientRects = emptyClientRects
     if (typeof target.getBoundingClientRect !== 'function') target.getBoundingClientRect = zeroDomRect
   }
+  modelContext.promptTokens = 125000
+  modelContext.enabled = true
   fileSessions.clear()
   fileSession.id = 'file-session'
   sessionStore = createChatStore()
@@ -648,28 +668,45 @@ describe('输入框资料栏', () => {
     expect(stop.compareDocumentPosition(send) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
-  it('右侧显示默认状态项时，宽屏底栏的模型、场景和设置也只显示图标', () => {
+  it('右侧显示默认状态项时，底栏通过实际按钮匹配紧凑布局样式', () => {
     const { container, rerender } = render(<AIChatTextarea chatDataStoreKey="test" />)
-    resizeObservedElement(container.querySelector('[data-ai-input-card]')!, 864)
 
     expect(screen.getByRole('progressbar', { name: 'AIContextUsage.label' })).toBeInTheDocument()
-    const mode = screen.getByRole('button', { name: '执行模式' })
     expect(screen.queryByRole('status', { name: 'AIRunningStatus.label' })).not.toBeInTheDocument()
-    expect(mode.closest('[data-has-footer-indicators]')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '默认模型选择' })).toHaveAttribute('data-icon-only', 'true')
+    expect(container.querySelector('button[data-ai-context-usage]')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '默认模型选择' })).toHaveAttribute('data-icon-only', 'false')
     expect(screen.getByTitle('AiAgengt.focusMode').querySelector('svg')).toBeInTheDocument()
-    expect(screen.queryByText('AiAgengt.focusMode')).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'AIRightPanel.aiSettings' })).not.toHaveTextContent(
-      'AIRightPanel.aiSettings',
-    )
+    expect(screen.getByText('AiAgengt.focusMode')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'AIRightPanel.aiSettings' })).toHaveTextContent('AIRightPanel.aiSettings')
 
     rerender(<AIChatTextarea chatDataStoreKey="test" footerRightTypes={[]} />)
-    expect(mode.closest('[data-has-footer-indicators]')).toBeNull()
+    expect(container.querySelector('button[data-ai-context-usage]')).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: '默认模型选择' })).toHaveAttribute('data-icon-only', 'false')
     expect(screen.getByText('AiAgengt.focusMode')).toBeVisible()
+    expect(screen.getByRole('button', { name: 'AIRightPanel.aiSettings' })).toHaveTextContent('AIRightPanel.aiSettings')
   })
 
-  it('输入框宽度小于 640px 时模型和场景只显示图标，场景仍可选择和清空', async () => {
+  it('上下文用量控制实际按钮，布局文字保留给 CSS 决定显隐', () => {
+    modelContext.promptTokens = undefined
+    const { rerender } = render(<AIChatTextarea chatDataStoreKey="test" />)
+    expect(screen.queryByRole('progressbar', { name: 'AIContextUsage.label' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '默认模型选择' })).toHaveAttribute('data-icon-only', 'false')
+    expect(screen.getByText('AiAgengt.focusMode')).toBeVisible()
+    expect(screen.getByRole('button', { name: 'AIRightPanel.aiSettings' })).toHaveTextContent('AIRightPanel.aiSettings')
+    modelContext.promptTokens = 125000
+    rerender(<AIChatTextarea chatDataStoreKey="test" className="usage-ready" />)
+    expect(screen.getByRole('progressbar', { name: 'AIContextUsage.label' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'AIContextUsage.label' })).toHaveAttribute('data-ai-context-usage')
+    expect(screen.getByRole('button', { name: '默认模型选择' })).toHaveAttribute('data-icon-only', 'false')
+    expect(screen.getByText('AiAgengt.focusMode')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'AIRightPanel.aiSettings' })).toHaveTextContent('AIRightPanel.aiSettings')
+    modelContext.enabled = false
+    rerender(<AIChatTextarea chatDataStoreKey="test" className="usage-unsupported" />)
+    expect(screen.queryByRole('progressbar', { name: 'AIContextUsage.label' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '默认模型选择' })).toHaveAttribute('data-icon-only', 'false')
+  })
+
+  it('无上下文入口时保留文字，场景仍可选择和清空', async () => {
     vi.mocked(grpcQueryAIFocus).mockResolvedValue({
       Data: [
         {
@@ -683,30 +720,20 @@ describe('输入框资料栏', () => {
         },
       ],
     })
-    const { container } = render(<AIChatTextarea chatDataStoreKey="test" footerRightTypes={[]} />)
-    const input = container.querySelector('[data-ai-input-card]')!
+    render(<AIChatTextarea chatDataStoreKey="test" footerRightTypes={[]} />)
     const label = 'AiAgengt.focusMode'
     const model = screen.getByRole('button', { name: '默认模型选择' })
-    resizeObservedElement(input, 640)
     expect(model).toHaveAttribute('data-icon-only', 'false')
-    expect(screen.getByText(label)).toBeVisible()
-
-    resizeObservedElement(input, 639)
-    expect(model).toHaveAttribute('data-icon-only', 'true')
     const scene = screen.getByRole('combobox', { name: label })
-    expect(screen.queryByText(label)).not.toBeInTheDocument()
-    expect(screen.getByTitle(label).querySelector('svg')).toBeInTheDocument()
+    expect(screen.getByText(label)).toBeVisible()
 
     clickSceneSelector(scene)
     fireEvent.click(await screen.findByText('测试场景'))
     expect(scene).toHaveAttribute('aria-expanded', 'false')
-    expect(screen.getByTitle('测试场景').querySelector('svg')).toBeInTheDocument()
+    expect(screen.getByTitle('测试场景')).toHaveTextContent('测试场景')
     fireEvent.mouseDown(scene.closest('.ant-select')!.querySelector('.ant-select-clear')!)
     expect(screen.getByTitle(label)).toBeInTheDocument()
 
-    resizeObservedElement(input, 0)
-    expect(model).toHaveAttribute('data-icon-only', 'true')
-    resizeObservedElement(input, 640)
     expect(model).toHaveAttribute('data-icon-only', 'false')
     expect(within(model.parentElement!).getByText(label)).toBeVisible()
   })
@@ -725,10 +752,9 @@ describe('输入框资料栏', () => {
         },
       ],
     })
-    const { container } = render(<AIChatTextarea chatDataStoreKey="test" />)
+    render(<AIChatTextarea chatDataStoreKey="test" />)
     const footerLeft = screen.getByRole('button', { name: '协同' }).parentElement!
 
-    resizeObservedElement(container.querySelector('[data-ai-input-card]')!, 864)
     resizeObservedElement(footerLeft, 359)
     const more = within(footerLeft).getByRole('button', { name: 'YakitButton.more' })
     expect(more).toHaveAttribute('aria-expanded', 'false')
@@ -770,7 +796,7 @@ describe('输入框资料栏', () => {
     resizeObservedElement(footerLeft, 360)
     expect(screen.queryByRole('dialog', { name: 'YakitButton.more' })).not.toBeInTheDocument()
     expect(within(footerLeft).queryByRole('button', { name: 'YakitButton.more' })).not.toBeInTheDocument()
-    expect(within(footerLeft).getByRole('button', { name: '默认模型选择' })).toHaveAttribute('data-icon-only', 'true')
+    expect(within(footerLeft).getByRole('button', { name: '默认模型选择' })).toHaveAttribute('data-icon-only', 'false')
     expect(await within(footerLeft).findByTitle('更多菜单场景')).toBeInTheDocument()
     const inlineSettings = within(footerLeft).getByRole('button', { name: 'AIRightPanel.aiSettings' })
     expect(inlineSettings).toHaveAttribute('aria-expanded', 'false')
@@ -788,7 +814,7 @@ describe('输入框资料栏', () => {
   it('默认显示上下文并隐藏运行状态，运行时展示排队发送和固定停止按钮', async () => {
     const onSubmit = vi.fn()
     const view = render(<AIChatTextarea chatDataStoreKey="test" defaultValue="follow up" onSubmit={onSubmit} />)
-    expect(screen.getByRole('progressbar', { name: 'AIContextUsage.label' })).toHaveAttribute('aria-valuenow', '62')
+    expect(screen.getByRole('progressbar', { name: 'AIContextUsage.label' })).toHaveAttribute('aria-valuenow', '25')
     expect(screen.queryByRole('status', { name: 'AIRunningStatus.label' })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'YakitButton.send' })).toBeInTheDocument()
     act(startSessionTask)

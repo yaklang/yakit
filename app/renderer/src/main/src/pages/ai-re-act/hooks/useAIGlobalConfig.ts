@@ -1,16 +1,11 @@
 import { useCreation, useMemoizedFn } from 'ahooks'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import {
-  type AIGlobalConfig,
-  type AIModelConfig,
-  type ServerAIGlobalConfig,
-  grpcGetAIGlobalConfig,
-  grpcSetAIGlobalConfig,
-} from '@/pages/ai-agent/aiModelList/utils'
+import type { AIGlobalConfig, AIModelConfig, ServerAIGlobalConfig } from '@/pages/ai-agent/aiModelList/utils'
+import { grpcGetAIGlobalConfig, grpcSetAIGlobalConfig } from '@/pages/ai-agent/aiModelList/utils'
 import { useAIGlobalConfigStore } from '@/store/aiGlobalConfig'
 import { AIModelTypeInterFileNameEnum } from '@/pages/ai-agent/defaultConstant'
 import { shallow } from 'zustand/shallow'
-import { cloneDeep } from 'lodash'
+import cloneDeep from 'lodash/cloneDeep'
 import type { API } from '@/services/swagger/resposeType'
 import { debugToPrintLogs } from '@/utils/logCollection'
 
@@ -23,6 +18,29 @@ const AI_MODEL_CONFIG_KEYS = [
 
 let saveQueue: Promise<unknown> = Promise.resolve()
 let saveEpoch = 0
+let canonicalRead: { epoch: number; promise: Promise<AIGlobalConfig> } | undefined
+
+/** 等待配置保存完成，读取引擎确认的主模型。 */
+export const getCanonicalAIGlobalConfig = (): Promise<AIGlobalConfig> => {
+  const epoch = saveEpoch
+  if (canonicalRead?.epoch === epoch) return canonicalRead.promise
+  const promise = saveQueue
+    .then(() => (epoch === saveEpoch ? grpcGetAIGlobalConfig() : getCanonicalAIGlobalConfig()))
+    .then((config) => {
+      if (epoch !== saveEpoch) return getCanonicalAIGlobalConfig()
+      useAIGlobalConfigStore.setState({
+        aiGlobalConfig: config,
+        persistedAiGlobalConfig: config,
+        configSavePending: false,
+      })
+      return config
+    })
+    .finally(() => {
+      if (canonicalRead?.promise === promise) canonicalRead = undefined
+    })
+  canonicalRead = { epoch, promise }
+  return promise
+}
 
 /** int64/double 为空字符串时，SetAIGlobalConfig 无法序列化 */
 const fixEmptyNumber = (config: AIGlobalConfig): AIGlobalConfig => {
@@ -109,8 +127,7 @@ function useAIGlobalConfig(params) {
     const showLoading = isShowLoading !== false
     showLoading && setQueryLoading(true)
     // 刷新在保存期间触发时，先等当前写入完成，避免读到旧数据库配置。
-    saveQueue
-      .then(() => grpcGetAIGlobalConfig())
+    getCanonicalAIGlobalConfig()
       .then((res) => applyFetchedConfig(res, epoch))
       .catch(() => undefined)
       .finally(() => {
@@ -128,6 +145,7 @@ function useAIGlobalConfig(params) {
       ...data,
     }
     const snapshot = fixEmptyNumber(next)
+    useAIGlobalConfigStore.setState({ configSavePending: true })
     aiGlobalConfigRef.current = snapshot
     setConfig(snapshot)
     setUpdateLoading(true)
@@ -138,9 +156,13 @@ function useAIGlobalConfig(params) {
     saveQueue = task.catch(() => undefined)
     try {
       await task
+      if (epoch === saveEpoch) {
+        const config = await getCanonicalAIGlobalConfig()
+        applyFetchedConfig(config, epoch)
+      }
     } catch (err) {
       if (epoch === saveEpoch) {
-        grpcGetAIGlobalConfig()
+        getCanonicalAIGlobalConfig()
           .then((res) => applyFetchedConfig(res, epoch))
           .catch(() => undefined)
       }
@@ -196,7 +218,7 @@ function useAIGlobalConfig(params) {
           }
           const hit = serverModels.find(({ ModelName }) => ModelName === item.ModelName)
           if (hit) {
-            list.push(hit)
+            list.push({ ...hit, ContextOwnerId: item.ContextOwnerId })
           }
           return list
         }, [] as AIModelConfig[])

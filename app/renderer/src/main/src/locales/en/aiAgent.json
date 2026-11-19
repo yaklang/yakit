@@ -240,7 +240,21 @@
     "queueSend": "Queue send"
   },
   "AIContextUsage": {
-    "label": "Context {{percent}}%"
+    "label": "Context {{percent}}%",
+    "title": "Context usage",
+    "usedPercent": "Used {{percent}}",
+    "summary": "Used {{used}}, remaining {{remaining}}",
+    "limit": "(limit {{threshold}})",
+    "threshold": "Context compression threshold",
+    "autoAdjust": "Auto-adjust",
+    "autoAdjustHelp": "Adjust automatically after a remote error",
+    "retry": "Retry",
+    "saveTimeout": "Save timed out. Restored the last confirmed settings.",
+    "sessionUnavailable": "The session is disconnected. Please retry.",
+    "missingContextKey": "Update failed: missing context_key",
+    "waitingContext": "Waiting for data from the backend",
+    "loadFailed": "Failed to load context settings",
+    "saveFailed": "Failed to save context settings"
   },
   "AIRunningStatus": {
     "label": "Running round {{round}} · {{elapsed}} / {{duration}}",
@@ -1080,8 +1094,6 @@
     "aiCallAutoRetryDesc": "How many times to retry a single dialogue when the remote AI is unstable",
     "aiTransactionRetry": "AI transaction retry count",
     "aiTransactionRetryDesc": "Increase this to retry when answer quality is low",
-    "runtimeContextSize": "Runtime context size",
-    "runtimeContextSizeDesc": "Context size must be a positive integer of at least 60 KB",
     "aiCallTokenLimit": "Pressure token threshold",
     "aiCallTokenLimitDesc": "Warn when AI dialogue tokens exceed this limit",
     "userInteractLimit": "User interaction limit",

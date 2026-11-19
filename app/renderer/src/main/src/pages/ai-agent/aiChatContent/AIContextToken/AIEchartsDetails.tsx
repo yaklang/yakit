@@ -1,17 +1,16 @@
 import type React from 'react'
 import { memo, useEffect, useRef, useState } from 'react'
 import { useCreation, useInViewport, useMemoizedFn } from 'ahooks'
-import {
-  AICostDetailsEcharts,
-  type AICostDetailsEchartsProps,
-  AIPressureDetailsEcharts,
-  type AIPressureDetailsEchartsProps,
-  TokenCountEcharts,
-  type ContextStatsChartMetric,
+import { AICostDetailsEcharts, AIPressureDetailsEcharts, TokenCountEcharts } from '../../chatTemplate/AIEcharts'
+import type {
+  AICostDetailsEchartsProps,
+  AIPressureDetailsEchartsProps,
+  ContextStatsChartMetric,
 } from '../../chatTemplate/AIEcharts'
 import type { AIAgentGrpcApi } from '@/pages/ai-re-act/hooks/grpcApi'
 import type { AIAgentChatData } from '../../type/aiChat'
 import { formatNumberUnits } from '../../utils'
+import { formatModelContextTokens } from '../../utils/modelContextFormat'
 import {
   ArrowDownOutlined,
   ArrowUpOutlined,
@@ -22,7 +21,7 @@ import classNames from 'classnames'
 import { getPressuresData, getCostData, getContextStatsData } from './utils'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
-import useRuntimeContextSizeLimit from '../../useContext/useRuntimeContextSizeLimit'
+import useAIModelContext from '../../useContext/useAIModelContext'
 import ContextTable from './ContextTable/ContextTable'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
@@ -57,7 +56,7 @@ const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = ({
   renderNumber,
 }) => {
   const { t, i18n } = useI18nNamespaces(['aiAgent'])
-  const runtimeContextSizeLimit = useRuntimeContextSizeLimit()
+  const { thresholdTokens: threshold } = useAIModelContext('stream')
   const ref = useRef<HTMLDivElement>(null)
   const [inViewport = true] = useInViewport(ref)
   const [aiGlobalConfigData, event] = useAIGlobalConfig()
@@ -86,8 +85,6 @@ const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = ({
   const costEcharts: AICostDetailsEchartsProps['dataEcharts'] = useCreation(() => {
     return getCostData(firstCost)
   }, [renderNumber, firstCost?.intelligent, firstCost?.lightweight])
-
-  const threshold = useCreation(() => runtimeContextSizeLimit * 1024, [runtimeContextSizeLimit])
 
   const contextStatsData = useCreation(() => {
     return getContextStatsData(contextStats?.data)
@@ -118,9 +115,9 @@ const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = ({
       <div className={styles['echarts-heard']}>
         <div className={styles['echarts-heard-left']}>
           <div className={styles['title']}>{title}</div>
-          {title === t('AIContextToken.pressure') && (
+          {title === t('AIContextToken.pressure') && threshold !== undefined && (
             <div className={styles['threshold']}>
-              {t('AIContextToken.limit')}:{formatNumberUnits(threshold)}
+              {t('AIContextToken.limit')}:{formatModelContextTokens(threshold)}
             </div>
           )}
         </div>

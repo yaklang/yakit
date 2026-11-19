@@ -8,7 +8,7 @@ import {
   AISourceEnum,
   AITaskStatus,
   isReadonlySyncQuery,
-  withServerRuntimeContextLimit,
+  omitLegacyAIContextLimits,
   toServerAIStartParams,
 } from './grpcApi'
 import type { AIAgentGrpcApi, AIEventQueryRequest, AIInputEvent, AIOutputEvent, AIStartParams } from './grpcApi'
@@ -49,6 +49,7 @@ import { v4 as uuidv4 } from 'uuid'
 import moment from 'moment'
 import type { YakitRouteType } from '@/enums/yakitRoute'
 import { grpcQueryAIEvent } from '@/pages/ai-agent/grpc'
+import { clearModelContextSaveTimer, updateModelContextState } from './modelContext'
 import aiChatPersistStore from './persist/aiChatPersistStore'
 import {
   drainSessionContentWrites,
@@ -61,7 +62,6 @@ import type { DeleteSessionsAISourceType } from '@/pages/ai-agent/historyChat/ut
 import { clearThoughtDurationCache } from '@/pages/ai-agent/components/thoughtDuration/ThoughtDuration'
 import i18n from '@/i18n/i18n'
 import { useStore } from '@/store'
-
 const { ipcRenderer } = window.require('electron')
 const tAgent = i18n.getFixedT(null, 'aiAgent')
 const formatNotifyError = (error: unknown) => (error instanceof Error ? error.message : String(error))
@@ -78,9 +78,10 @@ export type DeleteSessionsParams = {
 
 // #region 生成初始化数据
 /** 生成AI-Agent会话数据实例 */
-const genAIAgentChatData = (): AIAgentChatData => {
+const genAIAgentChatData = (generation = 0): AIAgentChatData => {
   const defaultData: AIAgentChatData = {
     draftMaterials: DefaultDraftMaterials,
+    modelContext: { status: 'idle', generation },
     httpFuzzRequest: undefined,
     httpFlowFuzzStatus: undefined,
     sessionTitle: '',
@@ -344,6 +345,11 @@ export class ChatMultiSessionController {
   }
 
   private removeSessionData(sessionId: string) {
+    const rawData = this.rawDataPool.get(sessionId)
+    if (rawData) {
+      clearModelContextSaveTimer(rawData.modelContext.pending)
+      rawData.modelContext = { status: 'idle', generation: rawData.modelContext.generation + 1 }
+    }
     this.requestPool.delete(sessionId)
     this.rawDataPool.delete(sessionId)
     this.metaPool.delete(sessionId)
@@ -425,6 +431,14 @@ export class ChatMultiSessionController {
 
   /** 移除计时器和 IPC 监听；keepPending 仅保留失败记录，不继续接收事件。 */
   private releaseConnection(connection: SessionConnection, keepPending = false) {
+    const context = connection.data.rawData.modelContext
+    if (context.pending) {
+      updateModelContextState(connection.data, {
+        pending: undefined,
+        context: context.saved,
+        generation: context.generation + 1,
+      })
+    }
     if (connection.timer) clearTimeout(connection.timer)
     for (const suffix of ['data', 'end', 'error']) ipcRenderer.removeAllListeners(`${connection.token}-${suffix}`)
     if (!keepPending) this.connectionsByToken.delete(connection.token)
@@ -446,7 +460,7 @@ export class ChatMultiSessionController {
   }
 
   /** 先注册本轮 token 的监听再启动流，避免遗漏主进程立即回传的事件。 */
-  private startConnection(connection: SessionConnection, params: AIInputEvent & { Params: AIStartParams }) {
+  private async startConnection(connection: SessionConnection, params: AIInputEvent & { Params: AIStartParams }) {
     params = {
       ...params,
       Params: {
@@ -457,6 +471,10 @@ export class ChatMultiSessionController {
     const { token, data } = connection
     const { lifecycle } = data.meta
     const current = () => this.connectionsByToken.get(token) === connection && lifecycle.current && !lifecycle.closing
+    connection.timer = setTimeout(
+      () => this.failConnection(connection, new Error(tAgent('ChatSessionNotify.initTimeout'))),
+      30000,
+    )
     ipcRenderer.on(`${token}-data`, (_event, res: AIOutputEvent) => {
       if (!current()) return
       // 同一连接串行处理事件，后续事件不能越过初始化和前序事件。
@@ -477,13 +495,9 @@ export class ChatMultiSessionController {
       else this.failConnection(connection, new Error(tAgent('ChatSessionNotify.endedBeforeReady')))
     })
     lifecycle.started = true
-    // 主进程在 start 后发送初始 ping；迟迟收不到有效 pong 时退出等待状态。
-    connection.timer = setTimeout(() => {
-      this.failConnection(connection, new Error(tAgent('ChatSessionNotify.initTimeout')))
-    }, 30000)
     return ipcRenderer.invoke('start-ai-re-act', token, {
       ...params,
-      Params: withServerRuntimeContextLimit(toServerAIStartParams(params.Params)),
+      Params: toServerAIStartParams(params.Params),
     })
   }
 
@@ -951,7 +965,9 @@ export class ChatMultiSessionController {
   public updateSessionConfig(sessionId: string, config: Partial<Omit<AIStartParams, 'Source'>>) {
     const { request } = this.ensureSession(sessionId)
     const { Source: _omit, ...rest } = config as Partial<AIStartParams>
-    Object.assign(request, cloneDeep(rest))
+    delete request.TimelineContentSizeLimit
+    delete request.RuntimeContextSizeLimit
+    Object.assign(request, omitLegacyAIContextLimits(cloneDeep(rest)))
   }
 
   private activeShowSession: string = ''
@@ -1164,7 +1180,8 @@ export class ChatMultiSessionController {
 
     const { store, rawData } = this.ensureSession(sessionId)
     const draftMaterials = rawData.draftMaterials
-    Object.assign(rawData, genAIAgentChatData(), { draftMaterials })
+    clearModelContextSaveTimer(rawData.modelContext.pending)
+    Object.assign(rawData, genAIAgentChatData(rawData.modelContext.generation + 1), { draftMaterials })
     // 保留 store 实例与 action；只重置状态，避免已有 React 订阅失效。
     store.reset()
     store.getState().updateState({ execute: true, initLoading: true })
@@ -1290,14 +1307,19 @@ export class ChatMultiSessionController {
       kind === 'resume' || this.storePool.has(sessionId)
         ? this.ensureSession(sessionId)
         : this.createSessionData(() => (connection?.registered ? sessionId : undefined))
-    if (kind === 'new' && !data.meta.lifecycle.current) {
-      const draftMaterials = data.rawData.draftMaterials
-      Object.assign(data.rawData, genAIAgentChatData(), { draftMaterials })
-      data.store.reset()
-      data.meta = genAIAgentChatMetaData()
-      this.metaPool.set(sessionId, data.meta)
-    }
-    if (kind === 'resume') {
+    if (kind === 'new') {
+      const { rawData } = data
+      const generation = rawData.modelContext.generation + 1
+      clearModelContextSaveTimer(rawData.modelContext.pending)
+      if (data.meta.lifecycle.current) {
+        rawData.modelContext = { status: 'idle', generation }
+      } else {
+        Object.assign(rawData, genAIAgentChatData(generation), { draftMaterials: rawData.draftMaterials })
+        data.store.reset()
+        data.meta = genAIAgentChatMetaData()
+        this.metaPool.set(sessionId, data.meta)
+      }
+    } else {
       // 重连复用 store、替换生命周期，让旧回调和未提交的旧写入失效。
       data.meta.lifecycle.current = false
       this.closeSessionTimers(data.meta)
@@ -1315,13 +1337,15 @@ export class ChatMultiSessionController {
     const startParams = {
       ...startEvent,
       IsStart: true,
-      Params: { ...startConfig, TimelineSessionID: sessionId },
+      Params: { ...omitLegacyAIContextLimits(startConfig ?? {}), TimelineSessionID: sessionId },
     }
     if (kind === 'new') {
       // 新建使用前端的新 ID，不继承历史缓存配置。
       startParams.Params.Attach = false
       startParams.Params.PreferSessionCachedConfig = false
     }
+    delete data.request.TimelineContentSizeLimit
+    delete data.request.RuntimeContextSizeLimit
     Object.assign(data.request, startParams.Params)
     data.meta.lifecycle.writable = false
     data.meta.createChatQuestion = this.makeFirstQuestion(startParams)
@@ -1577,25 +1601,29 @@ export class ChatMultiSessionController {
           break
       }
 
-      this.requestMessage(token, params)
-      return true
+      return this.requestMessage(token, params, payload.onSendError)
     } catch (error) {
       console.error('handleSendMessage error', error)
       return false
     }
   }
   /** 向连接中的会话发送请求 */
-  private requestMessage(sessionId: string, request: AIInputEvent) {
+  private requestMessage(sessionId: string, request: AIInputEvent, onSendError?: AIChatSendParams['onSendError']) {
     // console.log('requestMessage', sessionId, request)
     const lifecycle = this.metaPool.get(sessionId)?.lifecycle
-    if (!lifecycle?.current || lifecycle.closing || !lifecycle.started) return
+    if (!lifecycle?.current || lifecycle.closing || !lifecycle.started) return false
     // 业务层始终传 SessionId，只有操作主进程流池时才转换为本轮 token。
     const outgoing = request.Params ? { ...request, Params: toServerAIStartParams(request.Params) } : request
     void ipcRenderer.invoke('send-ai-re-act', this.tokenBySessionId.get(sessionId), outgoing).catch((error) => {
       if (!lifecycle.current || lifecycle.closing) return
+      if (onSendError) {
+        onSendError(error)
+        return
+      }
       lifecycle.error ??= error
       this.handleSessionError(sessionId, error)
     })
+    return true
   }
 
   /** 拉取更旧事件；仅可发送时开启 loading，返回是否发起请求，供列表释放前插标记。 */

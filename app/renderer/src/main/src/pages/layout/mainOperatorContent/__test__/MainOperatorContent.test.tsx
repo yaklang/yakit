@@ -1368,7 +1368,7 @@ describe('MainOperatorContent initial cache loading', () => {
     const restored = app.bindings.setPagesData.mock.calls[0][1].pageList[0]
     expect(restored.pageParamsInfo.aiAgentPageInfo.session).toEqual({
       SessionID: 'cached-session',
-      StartParams: { RuntimeContextSizeLimit: 300, AICallTokenLimit: 40, EnablePlan: true },
+      StartParams: { AICallTokenLimit: 40, EnablePlan: true },
     })
     app.dispose()
   })
