@@ -174,7 +174,7 @@
   "ShortcutKey": {
     "editorConflict": "Editor conflict: {{name}} - this shortcut will be overridden in the editor",
     "contextMenuPluginConflict": "Right-click plugin conflict: {{name}} - please rebind to avoid conflicting with plugin shortcuts",
-    "screenshot": "Screenshot",
+    "screenshot": "Selection Screenshot",
     "screenshotFullscreen": "Capture Full Screen",
     "closeCurrentPage": "Close current page",
     "addSubPage": "Add sub page",

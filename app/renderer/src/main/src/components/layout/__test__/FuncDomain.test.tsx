@@ -45,7 +45,6 @@ const {
   performanceSamplingState,
   setSampling,
   screenshotCapture,
-  screenshotOpenDirectory,
   screenshotOpenSpecifiedFile,
 } = vi.hoisted(() => {
   // UIOpNotice 更新链路的可变 mock 状态（describe「UIOpNotice 更新按钮状态与文案」中按用例赋值）
@@ -82,7 +81,6 @@ const {
       performanceSamplingState.isPerformanceSampling = b
     }),
     screenshotCapture: vi.fn(),
-    screenshotOpenDirectory: vi.fn().mockResolvedValue(undefined),
     screenshotOpenSpecifiedFile: vi.fn().mockResolvedValue(undefined),
     eeConfig,
     versionSlots,
@@ -116,7 +114,6 @@ vi.mock('@/services/electronBridge', async (importOriginal) => {
     },
     yakitScreenshot: {
       captureAndSave: screenshotCapture,
-      openDirectory: screenshotOpenDirectory,
     },
     yakitShell: {
       openSpecifiedFile: screenshotOpenSpecifiedFile,
@@ -649,7 +646,7 @@ describe('FuncDomain 设置菜单录屏/截屏', () => {
     clipboardError,
   })
 
-  it('一级「截屏」标题点击等同于「选取截屏」，1 秒内 loading 不重复触发', async () => {
+  it('一级「截屏」标题点击等同于「选区截屏」，1 秒内 loading 不重复触发', async () => {
     render(<FuncDomain {...baseProps} />)
     openSettingMenu()
 
@@ -662,7 +659,7 @@ describe('FuncDomain 设置菜单录屏/截屏', () => {
     expect(yakitUILayout.activateScreenshot).toHaveBeenCalledTimes(1)
   })
 
-  it('「选取截屏」与「截全屏」为并列二级菜单，选取截屏触发 activateScreenshot', async () => {
+  it('「选区截屏」与「截全屏」为并列二级菜单，选区截屏触发 activateScreenshot', async () => {
     render(<FuncDomain {...baseProps} />)
     openSettingMenu()
     await openScreenshotSubmenu()

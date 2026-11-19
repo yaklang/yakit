@@ -1141,7 +1141,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
   const [reclaimHint, setReclaimHint] = useState<boolean>(false)
   const { setRecording } = useScreenRecorder()
   const { performanceSamplingInfo } = usePerformanceSampling()
-  /** 选取截屏的 loading */
+  /** 选区截屏的 loading */
   const [screenshotLoading, setScreenshotLoading] = useState<boolean>(false)
   /** 截全屏的 loading */
   const [fullScreenshotLoading, setFullScreenshotLoading] = useState<boolean>(false)
@@ -1171,14 +1171,6 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
           >
             {result.path}
           </span>
-        ),
-        actions: (
-          <YakitButton
-            type="text"
-            onClick={() => yakitScreenshot.openDirectory().catch((error) => failed(String(error)))}
-          >
-            {t('Screenshot.openDirectory')}
-          </YakitButton>
         ),
       })
       if (!result.clipboardCopied) {
@@ -1367,7 +1359,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
       case 'screen-recorder':
         addToTab('**screen-recorder')
         return
-      // 选取截屏：一级标题与二级「选取截屏」同效
+      // 选区截屏：一级标题与二级「选区截屏」同效
       case 'screenshot':
       case 'screenshot-select':
         if (screenshotLoading) return

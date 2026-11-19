@@ -515,7 +515,7 @@
     "stopScreen": "Stop Recording",
     "screenRecorder": "Recording Manager",
     "screenshot": "Screenshot",
-    "screenshotSelect": "Select Area to Capture",
+    "screenshotSelect": "Selection Screenshot",
     "screenshotFullscreen": "Capture Full Screen",
     "settings": "Global Settings",
     "signOutSuccess": "Successfully signed out",
@@ -736,9 +736,8 @@
     "closing": "Closing processes, please wait..."
   },
   "Screenshot": {
-    "saved": "Screenshot saved",
+    "saved": "Screenshot copied to the clipboard. You can also click the path below to view it.",
     "failed": "Screenshot failed: {{error}}",
-    "openDirectory": "Open screenshot folder",
     "openFileLocated": "Click to locate the file in File Manager",
     "openFileFailed": "Failed to open file location: {{error}}",
     "clipboardFailed": "Screenshot saved, but failed to copy to clipboard: {{error}}"
