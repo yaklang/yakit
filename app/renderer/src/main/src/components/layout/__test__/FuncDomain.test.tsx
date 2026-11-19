@@ -694,6 +694,7 @@ describe('FuncDomain 设置菜单录屏/截屏', () => {
       expect(yakitNotify).toHaveBeenCalledWith('success', expect.objectContaining({ description: expect.anything() })),
     )
     const successCall = (yakitNotify as ReturnType<typeof vi.fn>).mock.calls.find(([type]) => type === 'success')
+    expect(successCall?.[1]?.message).toBe('Screenshot.saved')
     const description = successCall?.[1]?.description
     expect(description.props.children).toBe('/local/screenshots/test.png')
     await act(async () => {
@@ -703,7 +704,7 @@ describe('FuncDomain 设置菜单录屏/截屏', () => {
     expect(yakitNotify).not.toHaveBeenCalledWith('warning', expect.anything())
   })
 
-  it('「截全屏」剪贴板写入失败时单独提示但不影响保存成功', async () => {
+  it('「截全屏」剪贴板写入失败时只提示已保存和路径，不声称已复制到剪贴板', async () => {
     screenshotCapture.mockResolvedValueOnce(shot('/saved.png', 'clipboard unavailable'))
     render(<FuncDomain {...baseProps} />)
     openSettingMenu()
@@ -711,9 +712,17 @@ describe('FuncDomain 设置菜单录屏/截屏', () => {
 
     fireEvent.click(screen.getByText('FuncDomain.screenshotFullscreen'))
     await waitFor(() =>
-      expect(yakitNotify).toHaveBeenCalledWith('warning', expect.stringContaining('clipboard unavailable')),
+      expect(yakitNotify).toHaveBeenCalledWith(
+        'warning',
+        expect.objectContaining({
+          message: 'Screenshot.clipboardFailed?error=clipboard unavailable',
+        }),
+      ),
     )
-    expect(yakitNotify).toHaveBeenCalledWith('success', expect.anything())
+    const warningCall = (yakitNotify as ReturnType<typeof vi.fn>).mock.calls.find(([type]) => type === 'warning')
+    expect(warningCall?.[1]?.description.props.children).toBe('/saved.png')
+    expect(yakitNotify).not.toHaveBeenCalledWith('success', expect.anything())
+    expect(yakitNotify).toHaveBeenCalledTimes(1)
   })
 
   it('截全屏快捷键触发截图并复用同一逻辑', async () => {

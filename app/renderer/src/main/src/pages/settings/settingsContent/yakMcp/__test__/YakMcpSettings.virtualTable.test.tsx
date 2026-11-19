@@ -94,6 +94,14 @@ describe('YakMcpSettings real virtual table', () => {
         <YakMcpSettings />
       </DndProvider>,
     )
+    await waitFor(() => expect(vi.mocked(grpcGetMCPToolList)).toHaveBeenCalled())
+    const viewport = await waitFor(() => {
+      const el = document.querySelector<HTMLElement>('.virtual-table-list-container')
+      expect(el).not.toBeNull()
+      return el!
+    })
+    // ahooks useVirtualList 在尺寸回调之前不渲染行。jsdom 的 ResizeObserver polyfill 不会报尺寸，滚动会走同一套范围计算。
+    fireEvent.scroll(viewport)
     await screen.findByRole('switch', { name: 'tool_0' })
     fireEvent.mouseDown(screen.getByRole('combobox', { name: 'SettingsPage.yakMcp.statusFilter' }))
     await userEvent.click(
@@ -101,7 +109,6 @@ describe('YakMcpSettings real virtual table', () => {
         selector: '.ant-select-item-option-content',
       }),
     )
-    const viewport = document.querySelector<HTMLElement>('.virtual-table-list-container')!
     expect(viewport).not.toBeNull()
     // jsdom does not dispatch the scroll event caused by the table's initial scrollTo(0).
     fireEvent.scroll(viewport)

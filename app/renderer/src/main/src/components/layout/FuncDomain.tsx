@@ -1155,26 +1155,32 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
       // 等 Popover 离场动效（antd zoom-big，约 0.2s）结束后再截取，避免把淡出中的菜单拍进截图
       await new Promise<void>((resolve) => setTimeout(resolve, 250))
       const result = await yakitScreenshot.captureAndSave()
-      yakitNotify('success', {
-        message: t('Screenshot.saved'),
-        description: (
-          <span
-            role="button"
-            tabIndex={0}
-            title={t('Screenshot.openFileLocated')}
-            style={{ color: 'var(--Colors-Use-Main-Primary)', cursor: 'pointer', wordBreak: 'break-all' }}
-            onClick={() =>
-              yakitShell
-                .openSpecifiedFile(result.path)
-                .catch((error) => failed(t('Screenshot.openFileFailed', { error: String(error) })))
-            }
-          >
-            {result.path}
-          </span>
-        ),
-      })
-      if (!result.clipboardCopied) {
-        yakitNotify('warning', t('Screenshot.clipboardFailed', { error: result.clipboardError || '' }))
+      const savedPath = (
+        <span
+          role="button"
+          tabIndex={0}
+          title={t('Screenshot.openFileLocated')}
+          style={{ color: 'var(--Colors-Use-Main-Primary)', cursor: 'pointer', wordBreak: 'break-all' }}
+          onClick={() =>
+            yakitShell
+              .openSpecifiedFile(result.path)
+              .catch((error) => failed(t('Screenshot.openFileFailed', { error: String(error) })))
+          }
+        >
+          {result.path}
+        </span>
+      )
+      // 复制成功才声明已进剪贴板；失败时一条 warning 同时说明已保存和剪贴板错误，避免先后两条互相矛盾
+      if (result.clipboardCopied) {
+        yakitNotify('success', {
+          message: t('Screenshot.saved'),
+          description: savedPath,
+        })
+      } else {
+        yakitNotify('warning', {
+          message: t('Screenshot.clipboardFailed', { error: result.clipboardError || '' }),
+          description: savedPath,
+        })
       }
     } catch (error) {
       failed(t('Screenshot.failed', { error: String(error) }))
