@@ -917,7 +917,6 @@
     "noProfiles": "当前共享文档没有可用转换配置",
     "emptyTitle": "没有在线浏览器",
     "emptyHint": "连接插件并共享包含转换配置的页面",
-    "openInstances": "打开浏览器实例",
     "request": "请求",
     "response": "响应",
     "bidirectional": "双向",

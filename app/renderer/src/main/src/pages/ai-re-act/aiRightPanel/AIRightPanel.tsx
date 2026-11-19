@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { TaskListPane } from '@/pages/ai-agent/chatTemplate/historyTaskTree/TaskListPane'
 import useRunningAsyncTaskCount from '@/pages/ai-agent/chatTemplate/historyTaskTree/useRunningAsyncTaskCount'
 import { AIRightPanelPane } from './AIRightPanelPane'
@@ -9,7 +9,7 @@ import { useCreation, useMemoizedFn } from 'ahooks'
 import { useStore } from 'zustand'
 import { useCurrentStore } from '../hooks/useCurrentDataBySession'
 import useCurrentSessionId from '../hooks/useCurrentSessionId'
-import useCurrentTaskExecution from '../hooks/useCurrentTaskData/useCurrentTaskExecution'
+import useCurrentTaskData from '../hooks/useCurrentTaskData/useCurrentTaskData'
 import classNames from 'classnames'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import {
@@ -28,6 +28,7 @@ import { CeUserTokenQuota } from '@/components/CeUserMenu/CeUserTokenQuota'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { failed, yakitNotify } from '@/utils/notification'
 import { AIAgentTabListEnum, AITabsEnum, SwitchAIAgentTabEventEnum } from '@/pages/ai-agent/defaultConstant'
+import { useBrowserInstances } from '@/pages/ai-agent/browserInstances/browserInstanceStore'
 import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
 import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
 import { useCasualTaskTab } from '@/pages/ai-agent/aiChatContent/hooks/useCasualTaskTab'
@@ -602,9 +603,14 @@ const ChatRightPanel: React.FC<ChatRightPanelProps> = React.memo((props) => {
   const { panel } = props
   const store = useCurrentStore()
   const questionID = useStore(store, (state) => state.currentChatStatus.questionID)
-  const taskExecution = useCurrentTaskExecution(questionID)
+  const taskData = useCurrentTaskData(questionID)
   const sessionExecution = useStore(store, (state) => state.sessionExecution)
-  const executionData = taskExecution ?? sessionExecution
+  const executionData = taskData?.execution ?? sessionExecution
+  const { instances: browserInstances } = useBrowserInstances()
+  const browserOnlineCount = useMemo(
+    () => browserInstances.filter((instance) => instance.online).length,
+    [browserInstances],
+  )
   const runningTaskCount = useRunningAsyncTaskCount()
   const levelCount = executionData?.risk_level_count
   // 快照映射见 riskLevelCount.mapSessionRiskLevelCount；首页全量别名归并见 useWelcomePanelStats。
@@ -628,16 +634,23 @@ const ChatRightPanel: React.FC<ChatRightPanelProps> = React.memo((props) => {
     panel.closePane()
   }, [activeChat?.Id])
 
+  const trafficCount = executionData?.http_flow_count ?? 0
+  const hasRisk = riskTotal > 0 || (!!riskCounts && getRiskTagEntries(riskCounts).length > 0)
   const mainMenus = useCreation(() => {
     // 无 questionID 或非 ai-agent 来源时不展示「任务详情」入口
     const showTaskBoard = !!currentChatStatusQuestionID && getSetting().Source === AISourceEnum.aiAgent
-    if (!showTaskBoard) {
-      return MAIN_MENUS.filter((item) => item.key !== 'task-board')
-    }
-    return MAIN_MENUS
-  }, [currentChatStatusQuestionID])
+    return MAIN_MENUS.filter((item) => {
+      if (!showTaskBoard && item.key === 'task-board') return false
+      // 浏览器实例、流量、漏洞没有数据时不占菜单位
+      if (item.key === 'browser') return browserOnlineCount > 0
+      if (item.key === 'traffic') return trafficCount > 0
+      if (item.key === 'risk') return hasRisk
+      return true
+    })
+  }, [currentChatStatusQuestionID, browserOnlineCount, trafficCount, hasRisk])
   const totals: Partial<Record<AIRightPanelMenuKey, number | undefined>> = {
-    traffic: executionData?.http_flow_count,
+    browser: browserOnlineCount,
+    traffic: trafficCount,
     'task-list': runningTaskCount,
     risk: riskTotal,
   }

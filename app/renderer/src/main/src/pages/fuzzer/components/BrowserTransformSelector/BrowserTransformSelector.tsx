@@ -11,8 +11,6 @@ import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import emiter from '@/utils/eventBus/eventBus'
-import { AIAgentTabListEnum } from '@/pages/ai-agent/defaultConstant'
-import { openAIAgentTab } from '@/pages/ai-agent/aiAgentTabNavigation'
 import {
   callBrowserExtensionCapability,
   getBrowserExtensionSnapshot,
@@ -208,17 +206,6 @@ export const BrowserTransformSelector: React.FC<BrowserTransformSelectorProps> =
           </div>
         )}
       </div>
-      <footer>
-        <YakitButton
-          type="text"
-          onClick={() => {
-            openAIAgentTab(AIAgentTabListEnum.Browser)
-            setOpen(false)
-          }}
-        >
-          {t('BrowserTransformSelector.openInstances')}
-        </YakitButton>
-      </footer>
     </div>
   )
 

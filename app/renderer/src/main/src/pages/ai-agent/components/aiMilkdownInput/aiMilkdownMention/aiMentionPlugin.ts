@@ -124,11 +124,27 @@ export interface AIMentionCommandParams {
   /** 技能或工具发送给后端的原名。 */
   name?: string
   lock?: boolean // 新增 lock 属性
+  /** 相同类型和 id 已在正文中时不再插入。 */
+  unique?: boolean
 }
 export const aiMentionCommand = $command<AIMentionCommandParams, string>(
   `command-${aiMentionCustomId}`,
   (ctx) => (params?: AIMentionCommandParams) => (state, dispatch) => {
     if (!params) return false
+    if (params.unique) {
+      let exists = false
+      state.doc.descendants((node) => {
+        if (
+          node.type.name === aiMentionCustomId &&
+          node.attrs.mentionType === params.mentionType &&
+          String(node.attrs.mentionId) === String(params.mentionId)
+        ) {
+          exists = true
+          return false
+        }
+      })
+      if (exists) return true
+    }
     const { selection, tr } = state
     if (!(selection instanceof TextSelection)) return false
     const { mentionName, lock } = params

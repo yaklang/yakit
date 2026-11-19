@@ -49,6 +49,8 @@ import { usePageInfo } from '@/store/pageInfo'
 import { YakitRouteToPageInfo } from '@/routes/newRoute'
 import { syncAIAgentPageInfo } from './utils/syncAIAgentPageInfo'
 import { isChatSession } from './utils/isChatSession'
+import { isMemfit } from '@/utils/envfile'
+import { BrowserPairingNotify } from './browserPairingNotify/BrowserPairingNotify'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -430,6 +432,12 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
   return (
     <AIAgentContext.Provider value={{ store, dispatcher }}>
       <div id={YakitAIAgentPageID} className={styles['ai-agent']} ref={agentRef}>
+        {/*
+          配对弹出提示仅 Memfit。Yakit、企业版、简易企业版、IRify 不弹这条提醒；
+          这些版本的浏览器页签和主进程配对能力仍然可用。
+          右面板浏览器入口仍按在线实例数显隐，待批准且无人在线时不会出现。
+        */}
+        {isMemfit() && <BrowserPairingNotify />}
         <div className={styles['ai-agent-wrapper']}>
           <YakitResizeBox
             freeze={show}

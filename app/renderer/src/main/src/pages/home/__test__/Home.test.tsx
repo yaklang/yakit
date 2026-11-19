@@ -38,9 +38,8 @@ const { ipcRendererMock, inViewport } = vi.hoisted(() => {
 import { act, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-const { startIdleVisibleInterval, pendingRef } = vi.hoisted(() => ({
+const { startIdleVisibleInterval } = vi.hoisted(() => ({
   startIdleVisibleInterval: vi.fn(() => vi.fn()),
-  pendingRef: { current: [] as { id: string }[] },
 }))
 
 vi.mock('@/utils/scheduleIdleTask', () => ({ startIdleVisibleInterval }))
@@ -94,16 +93,6 @@ vi.mock('@/utils/notification', () => ({
   yakitNotify: vi.fn(),
 }))
 
-vi.mock('../../ai-agent/browserInstances/browserInstanceStore', () => ({
-  useBrowserInstances: () => ({
-    instances: [],
-    pending: pendingRef.current,
-    selectedId: '',
-    loading: false,
-    error: '',
-  }),
-}))
-
 vi.mock('@/pages/plugins/utils', () => ({
   apiQueryYakScriptTotal: vi.fn().mockResolvedValue({ Total: 0 }),
 }))
@@ -137,10 +126,6 @@ vi.mock('@/components/yakitUI/YakitResizeBox/YakitResizeBox', () => ({
 }))
 
 import Home from '../Home'
-import { yakitNotify } from '@/utils/notification'
-import emiter from '@/utils/eventBus/eventBus'
-import { YakitRoute } from '@/enums/yakitRoute'
-import { AIAgentTabListEnum, SwitchAIAgentTabEventEnum } from '../../ai-agent/defaultConstant'
 
 describe('Home 离开首页停止轮询', () => {
   beforeEach(() => {
@@ -212,88 +197,5 @@ describe('Home 工具箱截屏入口平台过滤', () => {
   it('Windows 系统保留截屏工具入口', async () => {
     render(<Home />)
     await waitFor(() => expect(screen.getByText('Home.screenshot')).toBeInTheDocument())
-  })
-})
-
-describe('Home 浏览器配对全局提示', () => {
-  beforeEach(() => {
-    vi.useFakeTimers()
-    pendingRef.current = []
-  })
-
-  afterEach(() => {
-    vi.useRealTimers()
-    vi.clearAllMocks()
-    pendingRef.current = []
-  })
-
-  it('初次出现 pending id 时通知，点击依次打开 AI Agent 浏览器页签', async () => {
-    const { rerender } = render(<Home />)
-    expect(yakitNotify).not.toHaveBeenCalled()
-
-    pendingRef.current = [{ id: 'pair-1' }]
-    await act(async () => {
-      rerender(<Home />)
-    })
-    expect(yakitNotify).toHaveBeenCalledTimes(1)
-    expect(yakitNotify).toHaveBeenCalledWith(
-      'info',
-      expect.objectContaining({
-        onClick: expect.any(Function),
-      }),
-    )
-
-    const payload = vi.mocked(yakitNotify).mock.calls[0][1] as { onClick: () => void }
-    act(() => payload.onClick())
-    expect(emiter.emit).toHaveBeenCalledWith('menuOpenPage', JSON.stringify({ route: YakitRoute.AI_Agent }))
-    expect(emiter.emit).toHaveBeenCalledWith(
-      'switchAIAgentTab',
-      JSON.stringify({
-        type: SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE,
-        params: { active: AIAgentTabListEnum.Browser, show: true },
-      }),
-    )
-  })
-
-  it('pending 更新但无新 id 时不重复通知', async () => {
-    const { rerender } = render(<Home />)
-    pendingRef.current = [{ id: 'pair-1' }]
-    await act(async () => {
-      rerender(<Home />)
-    })
-    expect(yakitNotify).toHaveBeenCalledTimes(1)
-
-    pendingRef.current = [{ id: 'pair-1' }]
-    await act(async () => {
-      rerender(<Home />)
-    })
-    expect(yakitNotify).toHaveBeenCalledTimes(1)
-  })
-
-  it('自动批准后通知，并可进入 AI Agent 浏览器页签', async () => {
-    render(<Home />)
-    const calls = vi.mocked(emiter.on).mock.calls as unknown as Array<[string, (value: string) => void]>
-    const listener = calls.find(([event]) => event === 'onBrowserExtensionAutoApproved')?.[1] as (
-      identity: string,
-    ) => void
-
-    act(() => listener('A'))
-
-    expect(yakitNotify).toHaveBeenCalledWith(
-      'success',
-      expect.objectContaining({
-        onClick: expect.any(Function),
-      }),
-    )
-    const payload = vi.mocked(yakitNotify).mock.calls[0][1] as { onClick: () => void }
-    act(() => payload.onClick())
-    expect(emiter.emit).toHaveBeenCalledWith('menuOpenPage', JSON.stringify({ route: YakitRoute.AI_Agent }))
-    expect(emiter.emit).toHaveBeenCalledWith(
-      'switchAIAgentTab',
-      JSON.stringify({
-        type: SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE,
-        params: { active: AIAgentTabListEnum.Browser, show: true },
-      }),
-    )
   })
 })

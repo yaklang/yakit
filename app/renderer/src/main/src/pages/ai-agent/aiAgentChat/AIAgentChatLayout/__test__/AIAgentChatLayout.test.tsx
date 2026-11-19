@@ -57,6 +57,18 @@ vi.mock('@/pages/risks/YakitRiskTable/utils', () => ({ apiRiskFieldGroup: queryR
 vi.mock('@/pages/ai-agent/useContext/useDispatcher', () => ({
   default: () => ({ getSetting: () => ({ Source: 'ai' }) }),
 }))
+vi.mock('@/pages/ai-agent/browserInstances/browserInstanceStore', () => ({
+  useBrowserInstances: () => ({
+    instances: [],
+    history: [],
+    pending: [],
+    selectedId: '',
+    loading: false,
+    error: '',
+    historyError: '',
+    autoApprovalErrors: {},
+  }),
+}))
 vi.mock('@/pages/ai-agent/aiChatContent/hooks/useCasualTaskTab', () => ({
   useCasualTaskTab: () => ({ currentChatStatusQuestionID: '', syncCasualTaskTab: vi.fn() }),
 }))
