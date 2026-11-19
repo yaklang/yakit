@@ -78,8 +78,7 @@ PR 模式只有 diff 没有本地上下文：结合文件清单审；本地有�
 
 | 改动位置 | 命令 |
 | --- | --- |
-| `app/renderer/src/main/` | `cd app/renderer/src/main && yarn type-check` |
-| `app/renderer/engine-link-startup/` | `cd app/renderer/engine-link-startup && yarn type-check` |
+| `app/renderer/src/main/`（含 `src/engineLinkStartup/`） | `cd app/renderer/src/main && yarn type-check` |
 | 仅 `app/main/` 或不含 TS 子项目 | 跳过，注明原因（主进程纯 JS 无 tsconfig / 本次无 TS） |
 
 通过 → 1 条 ✅；失败 → 1 条 ❌ P0（附 `文件:行号` 摘要）；PR 模式 head 失败但 base 同样失败不记 P0。

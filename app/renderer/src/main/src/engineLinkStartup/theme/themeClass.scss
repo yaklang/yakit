@@ -1,0 +1,13 @@
+// Link 只需要启动页实际使用的 antd/业务组件主题，避免引入主窗口完整的 globalClass.scss。
+@use '../../theme/componentsTheme/notification.scss';
+@use '../../theme/componentsTheme/input.scss';
+@use '../../theme/componentsTheme/menu.scss';
+@use '../../theme/componentsTheme/modal.scss';
+@use '../../theme/componentsTheme/progress.scss';
+@use '../../theme/componentsTheme/radio.scss';
+@use '../../theme/componentsTheme/space.scss';
+@use '../../theme/componentsTheme/dropdown.scss';
+@use '../../theme/componentsTheme/tooltip.scss';
+@use '../../theme/componentsTheme/tag.scss';
+@use '../../theme/componentsTheme/divider.scss';
+@use '../../theme/componentsTheme/upload.scss';

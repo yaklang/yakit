@@ -15,8 +15,6 @@ on:
       - '!yarn.lock'
       - '!app/renderer/src/main/package.json'
       - '!app/renderer/src/main/yarn.lock'
-      - '!app/renderer/engine-link-startup/package.json'
-      - '!app/renderer/engine-link-startup/yarn.lock'
       - '!README.md'
       - '!README-EN.md'
       - '!README_LEGACY.md'
@@ -125,34 +123,6 @@ jobs:
           path: i18n-output.log
           if-no-files-found: warn
 
-  ci-i18n-engine-link:
-    name: i18n（engine-link zh/zh-TW/en）
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
-          ref: ${{ github.event.pull_request.head.ref }}
-          token: ${{ secrets.GITHUB_TOKEN }}
-          fetch-depth: 0
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22.22.1
-
-      - name: Check i18n parity (engine-link zh/zh-TW/en)
-        shell: bash
-        run: |
-          set -o pipefail
-          (cd app/renderer/engine-link-startup && node scripts/locale-parity.cjs) 2>&1 | tee i18n-engine-link-output.log
-
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: ci-log-i18n-engine-link
-          path: i18n-engine-link-output.log
-          if-no-files-found: warn
-
   ci-eslint-renderer:
     name: ESLint（renderer src/main）
     uses: ./.github/workflows/pr-ci-yarn-check.yml
@@ -177,8 +147,9 @@ jobs:
       log_filename: tsc-output.log
       artifact_name: ci-log-tsc-renderer
 
+  # 单测：用 fake electron-builder/asar 验证构建脚本逻辑；真实产物由发布流水线覆盖
   ci-electron:
-    name: Electron 类型与构建
+    name: Electron 类型与构建脚本单测
     uses: ./.github/workflows/pr-ci-yarn-check.yml
     secrets: inherit
     with:
@@ -188,30 +159,6 @@ jobs:
       run_command: yarn ci:electron
       log_filename: electron-build-output.log
       artifact_name: ci-log-electron-build
-
-  ci-eslint-engine-link:
-    name: ESLint（engine-link-startup）
-    uses: ./.github/workflows/pr-ci-yarn-check.yml
-    secrets: inherit
-    with:
-      pr_repository: ${{ github.event.pull_request.head.repo.full_name }}
-      pr_ref: ${{ github.event.pull_request.head.ref }}
-      workdir: app/renderer/engine-link-startup
-      run_command: yarn lint
-      log_filename: eslint-engine-link-output.log
-      artifact_name: ci-log-eslint-engine-link
-
-  ci-tsc-engine-link:
-    name: TypeScript（engine-link-startup）
-    uses: ./.github/workflows/pr-ci-yarn-check.yml
-    secrets: inherit
-    with:
-      pr_repository: ${{ github.event.pull_request.head.repo.full_name }}
-      pr_ref: ${{ github.event.pull_request.head.ref }}
-      workdir: app/renderer/engine-link-startup
-      run_command: yarn type-check
-      log_filename: tsc-engine-link-output.log
-      artifact_name: ci-log-tsc-engine-link
 
   ci-media:
     name: 图片/视频体积
@@ -375,12 +322,9 @@ jobs:
     needs:
       - prepare
       - ci-i18n
-      - ci-i18n-engine-link
       - ci-eslint-renderer
       - ci-tsc-renderer
       - ci-electron
-      - ci-eslint-engine-link
-      - ci-tsc-engine-link
       - ci-media
       - ci-vitest
       - ci-prettier
@@ -420,12 +364,9 @@ jobs:
         id: pr_comment
         env:
           OUTCOME_I18N: ${{ needs.ci-i18n.result }}
-          OUTCOME_I18N_ENGINE_LINK: ${{ needs.ci-i18n-engine-link.result }}
           OUTCOME_ESLINT: ${{ needs.ci-eslint-renderer.result }}
           OUTCOME_TSC: ${{ needs.ci-tsc-renderer.result }}
           OUTCOME_ELECTRON: ${{ needs.ci-electron.result }}
-          OUTCOME_ESLINT_ENGINE_LINK: ${{ needs.ci-eslint-engine-link.result }}
-          OUTCOME_TSC_ENGINE_LINK: ${{ needs.ci-tsc-engine-link.result }}
           OUTCOME_MEDIA: ${{ needs.ci-media.result }}
           OUTCOME_VITEST: ${{ steps.map_vitest.outputs.outcome }}
           OUTCOME_FORMAT: ${{ needs.ci-prettier.result }}

@@ -67,26 +67,24 @@ this CDN-only task.
 yarn check-deps
 yarn test:engine-startup
 yarn test:vitest app/main/handlers/__test__/newEngineStatus.test.js --run --maxWorkers=1
-cd app/renderer/engine-link-startup
-yarn type-check
 yarn i18n:check
-yarn test run src/pages/StartupPage --maxWorkers=1
-cd ../../..
+yarn test:vitest app/renderer/src/main/src/engineLinkStartup/pages/StartupPage --run --maxWorkers=1
+(cd app/renderer/src/main && yarn type-check)
 yarn test:e2e:preflight
 yarn test:e2e:build
 yarn test:e2e:electron:smoke
 yarn test:e2e:electron:ipc
 ```
 
-For development-renderer acceptance, start both renderers using
+For development-renderer acceptance, start the renderer dev service using
 `yarn cli start -v yakit`, then:
 
 ```sh
 node scripts/run-electron-e2e.mjs --dev-renderers --with-cdn-engine --suite ipc-startup
 ```
 
-The runner verifies HTTP 200 and root/script content on ports 3000/5173 before
-starting Electron. Its CDN fixture installs into disposable userData/YAKIT_HOME,
+The runner verifies HTTP 200 and root/script content for `/` and `/engine-link.html`
+on port 3000 before starting Electron. Its CDN fixture installs into disposable userData/YAKIT_HOME,
 does not pre-start the engine, and never uses the user's installed engine/database.
 `YAKIT_E2E_CDN_BINARY` may point to an already downloaded binary; the same manifest
 hash is still mandatory. `YAKIT_E2E_STARTUP_POLICY=auto|ipc|tcp` selects the initial

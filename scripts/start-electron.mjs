@@ -19,7 +19,7 @@ const pageReady = (url) =>
   })
 
 export async function waitForRenderers({
-  urls = ['http://127.0.0.1:3000', 'http://127.0.0.1:5173'],
+  urls = ['http://127.0.0.1:3000', 'http://127.0.0.1:3000/engine-link.html'],
   timeoutMs = 120000,
 } = {}) {
   const deadline = Date.now() + timeoutMs

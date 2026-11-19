@@ -84,7 +84,6 @@ jobs:
                   cache-dependency-path: |
                       yarn.lock
                       app/renderer/src/main/yarn.lock
-                      app/renderer/engine-link-startup/yarn.lock
 
             - run: echo ${{ github.ref_name }}
             - run: cp buildutil/zip /usr/local/bin/zip

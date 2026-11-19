@@ -1,0 +1,96 @@
+@use '../assets/global.scss' as global;
+@use './componentsTheme/dropdown.scss';
+@use './componentsTheme/tooltip.scss';
+@use './componentsTheme/modal.scss';
+@use './componentsTheme/list.scss';
+@use './componentsTheme/notification.scss';
+@use './componentsTheme/input.scss';
+@use './componentsTheme/descriptions.scss';
+@use './componentsTheme/pagination.scss';
+@use './componentsTheme/slider.scss';
+@use './componentsTheme/progress.scss';
+@use './componentsTheme/menu.scss';
+@use './componentsTheme/card.scss';
+@use './componentsTheme/result.scss';
+@use './componentsTheme/alert.scss';
+@use './componentsTheme/divider.scss';
+@use './componentsTheme/typography.scss';
+@use './componentsTheme/radio.scss';
+@use './componentsTheme/space.scss';
+@use './componentsTheme/collapse.scss';
+@use './componentsTheme/datepicker.scss';
+@use './componentsTheme/tree.scss';
+@use './componentsTheme/table.scss';
+@use './componentsTheme/upload.scss';
+@use './componentsTheme/badge.scss';
+@use './componentsTheme/tag.scss';
+
+// typography
+body {
+  --antd-wave-shadow-color: var(--Colors-Use-Main-Primary);
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  background-color: var(--Colors-Use-Neutral-Bg);
+  overflow: hidden;
+  font-size: 14px;
+  line-height: 1.5715;
+  font-family: var(--ant-font-family);
+  font-variant: tabular-nums;
+  font-feature-settings: 'tnum';
+}
+
+a {
+  color: var(--Colors-Use-Main-Primary);
+  &:hover {
+    color: var(--Colors-Use-Main-Hover);
+  }
+}
+
+/* 内容过长省略样式 */
+.content-ellipsis {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  word-break: break-all;
+}
+
+.justify-space-between {
+  display: flex;
+  justify-content: space-between;
+}
+
+.divider-style {
+  width: 1px;
+  height: 16px;
+  background-color: var(--Colors-Use-Neutral-Border);
+}
+
+.flex-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.flex-card .ant-card-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+// ========================== color ==========================
+$colors: global.$colors;
+$keyColor: map-keys($colors);
+@for $c from 1 through length($keyColor) {
+  $name: nth($keyColor, $c);
+  $currentColor: map-get($colors, $name);
+  .color-bg-#{'' + $name} {
+    background-color: map-get($currentColor, 'backgroundColor');
+  }
+  .color-opacity-bg-#{'' + $name} {
+    background-color: map-get($currentColor, 'opacityBackgroundColor');
+  }
+  .color-text-#{'' + $name} {
+    color: map-get($currentColor, 'textColor') !important;
+  }
+  .color-font-weight-#{'' + $name} {
+    font-weight: map-get($currentColor, 'fontWeight');
+  }
+}

@@ -10,7 +10,7 @@ import { useTheme } from '@/hook/useTheme'
  * 主色 / 成功 / 警告 / 错误必须用颜色系统解析后的 hex：
  * antd palette 算法解析不了 var()，会算成 #000000。
  *
- * 注意：主渲染端与 Link 端各有一份，主题调整时同步修改两处。
+ * 主窗口与 Link 窗口共用本实现。
  * 必须按当前主题现算，不能在模块加载时冻结：入口先 import 本文件、后 import useTheme，
  * 此时 dataset.theme 尚未设置；IRify/Memfit 的 GetMainColor 亮暗 hex 不同，
  * .yakit cssVar 还会压过 html 上的 --ant-color-primary。

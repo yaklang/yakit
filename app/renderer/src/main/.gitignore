@@ -7,9 +7,12 @@
 
 # testing
 /coverage
+/src/__test__/fixtures/yakitUiIconsOldIconPerIcon-*/
+/src/engineLinkStartup/__test__/.tmp-yakit-link-oldicon-*/
 
 # production
 /build
+/.link-public
 
 # misc
 .DS_Store

@@ -7,25 +7,14 @@ const fs = require('fs')
 const delim = 'PR_CI_COMMENT_BODY_' + Math.random().toString(36).slice(2, 11)
 
 const checks = [
-  { envKey: 'OUTCOME_ELECTRON', title: 'Electron 类型与构建', log: 'electron-build-output.log' },
+  { envKey: 'OUTCOME_ELECTRON', title: 'Electron 类型与构建脚本单测', log: 'electron-build-output.log' },
   { envKey: 'OUTCOME_I18N', title: 'i18n（renderer src/main zh/zh-TW/en）', log: 'i18n-output.log' },
-  {
-    envKey: 'OUTCOME_I18N_ENGINE_LINK',
-    title: 'i18n（engine-link zh/zh-TW/en）',
-    log: 'i18n-engine-link-output.log',
-  },
   { envKey: 'OUTCOME_ESLINT', title: 'ESLint（renderer src/main）', log: 'eslint-output.log' },
   { envKey: 'OUTCOME_TSC', title: 'TypeScript（renderer src/main）', log: 'tsc-output.log' },
-  {
-    envKey: 'OUTCOME_ESLINT_ENGINE_LINK',
-    title: 'ESLint（engine-link-startup）',
-    log: 'eslint-engine-link-output.log',
-  },
-  { envKey: 'OUTCOME_TSC_ENGINE_LINK', title: 'TypeScript（engine-link-startup）', log: 'tsc-engine-link-output.log' },
   { envKey: 'OUTCOME_MEDIA', title: '图片/视频体积', log: 'media-output.log' },
   {
     envKey: 'OUTCOME_VITEST',
-    title: 'Vitest（main / renderer / engine-link；__test__ 同目录·别名·相对路径）',
+    title: 'Vitest（main / renderer；__test__ 同目录·别名·相对路径）',
     log: 'vitest-output.log',
   },
   { envKey: 'OUTCOME_FORMAT', title: 'Prettier', log: 'format-output.log' },

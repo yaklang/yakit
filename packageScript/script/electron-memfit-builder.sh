@@ -18,7 +18,6 @@ edition="memfit"
 electron_version=$(node -p "require('./package.json').devDependencies.electron")
 [ -n "$electron_version" ] && [ "$electron_version" != "undefined" ] || { echo "Failed to read electron version from package.json" >&2; exit 1; }
 
-rm -rf ./app/renderer/engine-link-startup/dist
 rm -rf ./app/renderer/pages
 rm -rf ./release
 

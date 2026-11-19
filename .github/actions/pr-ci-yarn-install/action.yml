@@ -1,5 +1,5 @@
 name: PR CI yarn install
-description: Root + renderer main + engine-link-startup（与 pull-request-test 一致，含重试）
+description: Root + renderer main（与 pull-request-test 一致，含重试）
 runs:
   using: composite
   steps:
@@ -11,8 +11,7 @@ runs:
         ok=false
         for attempt in 1 2 3 4 5; do
           if yarn install --frozen-lockfile --registry "$reg" && \
-             yarn install --ignore-scripts --cwd app/renderer/src/main --registry "$reg" && \
-             yarn install --ignore-scripts --cwd app/renderer/engine-link-startup --registry "$reg"; then
+             yarn install --ignore-scripts --cwd app/renderer/src/main --registry "$reg"; then
             ok=true
             break
           fi

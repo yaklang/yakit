@@ -34,7 +34,8 @@ const wdioArgs = rawArgs.filter(
 const rendererBuildMetadataPath = path.join(repoRoot, 'app/renderer/pages/main/yakit-e2e-build.json')
 const requiredRendererArtifacts = [
   path.join(repoRoot, 'app/renderer/pages/main/index.html'),
-  path.join(repoRoot, 'app/renderer/engine-link-startup/dist/index.html'),
+  path.join(repoRoot, 'app/renderer/pages/link/engine-link.html'),
+  path.join(repoRoot, 'app/renderer/pages/link/theme.css'),
   rendererBuildMetadataPath,
 ]
 
@@ -62,11 +63,11 @@ if (missingArtifacts.length) {
 let rendererBuildMetadata
 try {
   if (devRenderers) {
-    for (const port of [3000, 5173]) {
-      const response = await fetch(`http://127.0.0.1:${port}`, { signal: AbortSignal.timeout(30000) })
+    for (const url of ['http://127.0.0.1:3000', 'http://127.0.0.1:3000/engine-link.html']) {
+      const response = await fetch(url, { signal: AbortSignal.timeout(30000) })
       const html = await response.text()
       if (!response.ok || !html.includes('<script') || !html.includes('id="root"'))
-        throw new Error(`Renderer :${port} is not ready; run yarn cli start -v yakit first`)
+        throw new Error(`Renderer ${url} is not ready; run yarn cli start -v yakit first`)
     }
     rendererBuildMetadata = { mode: 'development', source: await getRendererBuildIdentity(repoRoot) }
   } else

@@ -2,10 +2,10 @@
 /**
  * CI：根据 PR 变更选择 Vitest 目标。
  *
- * 仓库内三个子项目（与根目录 vitest.config.ts 的 alias / include 一致）：
+ * 仓库内两个子项目（与根目录 vitest.config.ts 的 alias / include 一致）：
  * 1) app/main — Electron 主进程
  * 2) app/renderer/src/main — renderer 主包；业务根 app/renderer/src/main/src
- * 3) app/renderer/engine-link-startup — 业务根 …/src
+ *    （link 窗口源码位于 …/src/engineLinkStartup，随主包一起选择/执行）
  *
  * 单测约定：与业务文件同目录下建 **__test__/** 目录，内放同名 `*.test.*` / `*.spec.*`（如 `Foo.tsx` → `__test__/Foo.test.tsx`）。
  *
@@ -24,8 +24,8 @@ const TEST_SUFFIXES = ['test.ts', 'test.tsx', 'test.js', 'test.jsx', 'spec.ts', 
 const SKIP_DIR_NAMES = new Set(['node_modules', 'dist', 'build', '.git', 'coverage'])
 const DEDICATED_ICON_MIGRATION_TESTS = new Set([
   'app/renderer/src/main/src/__test__/yakitUiIconsPurePlugin.test.ts',
-  'app/renderer/engine-link-startup/src/__test__/yakitUiIconsPurePlugin.test.ts',
-  'app/renderer/engine-link-startup/src/__test__/iconMigrationConsumerContract.test.tsx',
+  'app/renderer/src/main/src/engineLinkStartup/__test__/yakitUiIconsPurePlugin.test.ts',
+  'app/renderer/src/main/src/engineLinkStartup/__test__/iconMigrationConsumerContract.test.tsx',
 ])
 
 function isVitestSelectDebug() {
@@ -33,7 +33,7 @@ function isVitestSelectDebug() {
   return v === '1' || v === 'true' || v === 'yes'
 }
 
-/** 顺序：主进程 → renderer 主包 → engine-link */
+/** 顺序：主进程 → renderer 主包 */
 const PACKAGES = [
   {
     id: 'app-main',
@@ -46,12 +46,6 @@ const PACKAGES = [
     label: 'app/renderer/src/main',
     src: 'app/renderer/src/main/src',
     importPrefixes: ['@/', '@renderer/'],
-  },
-  {
-    id: 'engine-link',
-    label: 'app/renderer/engine-link-startup',
-    src: 'app/renderer/engine-link-startup/src',
-    importPrefixes: ['@engine/', '@engne/'],
   },
 ]
 

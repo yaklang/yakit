@@ -102,7 +102,7 @@ jobs:
           version=$(curl -fsSL --retry 3 https://yaklang.oss-accelerate.aliyuncs.com/chrome-extension/latest-version.txt | tr -d '\r\n')
           [[ "$version" =~ ^[0-9A-Za-z.-]+$ ]]
           curl -fsSL --retry 3 "https://yaklang.oss-accelerate.aliyuncs.com/chrome-extension/yakit-chrome-extension-v${version}.zip" -o bins/scripts/google-chrome-plugin.zip
-          tar -czf .release-render.tgz app/renderer/pages app/renderer/engine-link-startup/dist dist/electron bins/scripts/google-chrome-plugin.zip
+          tar -czf .release-render.tgz app/renderer/pages dist/electron bins/scripts/google-chrome-plugin.zip
       - uses: actions/upload-artifact@v4
         with:
           name: release-render-${{ matrix.edition }}

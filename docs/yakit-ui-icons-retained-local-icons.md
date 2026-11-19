@@ -169,10 +169,6 @@ Yakit、Memfit、IRify 横向 Logo 的本地文字颜色会跟随 `var(--Colors-
 
 `TraceSvgSvgIcon`
 
-### `app/renderer/src/main/src/assets/newIcon.tsx`（2）
-
-`PolygonIcon`；`ResizerIcon`
-
 ### `app/renderer/src/main/src/components/basics/icon.tsx`（1）
 
 `YakitLoadingSvgIcon`
@@ -220,10 +216,6 @@ Yakit、Memfit、IRify 横向 Logo 的本地文字颜色会跟随 `var(--Colors-
 ### `app/renderer/src/main/src/pages/webShell/icon.tsx`（4）
 
 `DragonFailIcon`；`DragonSuccessIcon`；`ScorpioFailIcon`；`ScorpioSuccessIcon`
-
-### `app/renderer/engine-link-startup/src/assets/newIcon.tsx`（3）
-
-`GooglePhotosLogoSvgIcon`；`MacUIOpCloseSvgIcon`；`ResizerIcon`
 
 ### `app/renderer/src/main/src/pages/pluginHub/pluginLog/PluginLogOpt.tsx`（1）
 
