@@ -25,6 +25,7 @@ module.exports = (win, getClient) => {
     'GetAICodingWorkspace',
     'UpdateAICodingWorkspace',
     'GetAICodingWorktree',
+    'DeleteAICodingWorktree',
     'ListAICodingSessions',
     'ListAICodingBranches',
   ]) {

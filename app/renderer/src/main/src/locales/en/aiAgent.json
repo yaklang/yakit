@@ -1320,5 +1320,20 @@
     "stepDone": "Done",
     "stepError": "Failed",
     "invalidQuestion": "Invalid question format"
+  },
+  "CodingWorktreeCard": {
+    "creating": "Creating worktree",
+    "ready": "Worktree created",
+    "failed": "Worktree creation failed",
+    "startFailed": "Worktree created; conversation failed to start",
+    "queued": "Connecting to the engine to prepare your worktree…",
+    "workspace": "Prepare workspace",
+    "checkout": "Check out files",
+    "base": "Starting point",
+    "location": "Worktree location",
+    "details": "Details",
+    "waitingDetails": "Waiting for worktree details from the engine…",
+    "retry": "Retry",
+    "cancel": "Cancel"
   }
 }

@@ -126,6 +126,7 @@ service Yak {
   rpc QueryAICodingWorkspaces(Empty) returns (QueryAICodingWorkspacesResponse);
   rpc ListAICodingWorktrees(AICodingWorkspaceRequest) returns (ListAICodingWorktreesResponse);
   rpc GetAICodingWorktree(GetAICodingWorktreeRequest) returns (AICodingWorktree);
+  rpc DeleteAICodingWorktree(DeleteAICodingWorktreeRequest) returns (Empty);
   rpc ListAICodingBranches(AICodingWorkspaceRequest) returns (ListAICodingBranchesResponse);
   rpc ListAICodingSessions(AICodingWorkspaceRequest) returns (ListAICodingSessionsResponse);
 
@@ -10764,7 +10765,7 @@ message AICodingWorktree {
   string WorkingDirectory = 14;
   string BaseRef = 15;
   string BaseCommit = 16;
-  string State = 17; // creating, ready, failed; query may report unavailable.
+  string State = 17; // creating, ready, failed, deleting; query may report unavailable.
   string LastError = 18;
   repeated string SessionIDs = 19;
 }
@@ -10772,6 +10773,7 @@ message ListAICodingWorktreesResponse { repeated AICodingWorktree Data = 1; }
 message GetAICodingWorktreeRequest {
   string WorktreeID = 1;
   string Path = 2; // Alternatively resolve a managed checkout or a directory within it.
+  string WorkspaceID = 3; // Optional scope; omitted for reverse lookup of the owning project.
 }
 message AICodingSession {
   string SessionID = 1;
@@ -10797,4 +10799,9 @@ message ListAICodingBranchesResponse {
   string CurrentCommit = 3;
   string DefaultRef = 4;
   bool HasLocalChanges = 5;
+}
+
+message DeleteAICodingWorktreeRequest {
+  string WorkspaceID = 1;
+  string WorktreeID = 2;
 }

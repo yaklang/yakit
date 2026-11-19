@@ -39,6 +39,7 @@ import { yakitNotify } from '@/utils/notification'
 import emiter from '@/utils/eventBus/eventBus'
 import {
   type AIChatQSData,
+  type CodingWorktreeProgress,
   AIChatQSDataTypeEnum,
   type AIFileSystemPin,
   type AIToolResult,
@@ -414,6 +415,10 @@ export class ChatMultiSessionController {
     this.releaseConnection(connection, error !== undefined)
     // 失败后再次取消只需清理草稿，避免重复取消已经停止的流。
     if (wasCurrent) void ipcRenderer.invoke('cancel-ai-re-act', connection.token).catch(() => {})
+    const worktree = connection.data.rawData.contents.get(`coding-worktree:${connection.sessionId}`)
+    if (error && worktree?.type === AIChatQSDataTypeEnum.CODING_WORKTREE && worktree.data.stage !== 'ready') {
+      this.updateWorktreeProgress(connection, { ...worktree.data, stage: 'failed', error })
+    }
     connection.data.store.getState().updateState({ execute: false, initLoading: false, pendingReply: false })
     connection.callbacks?.onPendingChange?.({
       streamToken: connection.token,
@@ -469,18 +474,29 @@ export class ChatMultiSessionController {
         .catch((error) => this.failConnection(connection, error))
     })
     ipcRenderer.on(`${token}-error`, (_event, error: unknown) => {
-      if (current()) this.failConnection(connection, error)
+      if (!current()) return
+      if (!connection.registered && data.request.AgentMode === 'coding' && data.request.CodingCreateWorktree) {
+        void lifecycle.events.then(() => this.failConnection(connection, error))
+      } else this.failConnection(connection, error)
     })
     ipcRenderer.on(`${token}-end`, () => {
       if (this.connectionsByToken.get(token) !== connection) return
       if (connection.registered) void this.handleSessionEnd(connection.sessionId)
-      else this.failConnection(connection, new Error(tAgent('ChatSessionNotify.endedBeforeReady')))
+      else if (data.request.AgentMode === 'coding' && data.request.CodingCreateWorktree) {
+        void lifecycle.events.then(() => {
+          if (connection.registered) void this.handleSessionEnd(connection.sessionId)
+          else this.failConnection(connection, new Error(tAgent('ChatSessionNotify.endedBeforeReady')))
+        })
+      } else this.failConnection(connection, new Error(tAgent('ChatSessionNotify.endedBeforeReady')))
     })
     lifecycle.started = true
     // 主进程在 start 后发送初始 ping；迟迟收不到有效 pong 时退出等待状态。
-    connection.timer = setTimeout(() => {
-      this.failConnection(connection, new Error(tAgent('ChatSessionNotify.initTimeout')))
-    }, 30000)
+    connection.timer = setTimeout(
+      () => {
+        this.failConnection(connection, new Error(tAgent('ChatSessionNotify.initTimeout')))
+      },
+      params.Params.AgentMode === 'coding' && params.Params.CodingCreateWorktree ? 120000 : 30000,
+    )
     return ipcRenderer.invoke('start-ai-re-act', token, {
       ...params,
       Params: withServerRuntimeContextLimit(toServerAIStartParams(params.Params)),
@@ -501,6 +517,25 @@ export class ChatMultiSessionController {
     const id = res.SessionId?.trim()
     // 身份已由前端固定；旧引擎可以不回传 ID，但不能返回另一个会话的 ID。
     if (id && id !== connection.sessionId) throw new Error(tAgent('ChatSessionNotify.sessionIdMismatch'))
+    if (
+      res.Type === 'coding_worktree_progress' &&
+      input.kind === 'new' &&
+      data.request.AgentMode === 'coding' &&
+      data.request.CodingCreateWorktree
+    ) {
+      const progress = JSON.parse(Uint8ArrayToString(res.Content) || '{}') as CodingWorktreeProgress
+      if (['workspace', 'checkout', 'ready', 'failed'].includes(progress.stage)) {
+        this.updateWorktreeProgress(connection, progress)
+        if (connection.timer) clearTimeout(connection.timer)
+        connection.timer = setTimeout(
+          () => {
+            this.failConnection(connection, new Error(tAgent('ChatSessionNotify.initTimeout')))
+          },
+          progress.stage === 'ready' || progress.stage === 'failed' ? 30000 : 120000,
+        )
+      }
+      return
+    }
     if (res.Type !== 'pong') {
       connection.buffered.push(res)
       return
@@ -516,6 +551,39 @@ export class ChatMultiSessionController {
     await this.processGrpcOutputEvent(connection.sessionId!, res, data.meta)
   }
 
+  private updateWorktreeProgress(connection: SessionConnection, progress: CodingWorktreeProgress) {
+    const { data, sessionId } = connection
+    const id = `coding-worktree:${sessionId}`
+    const previous = data.rawData.contents.get(id)
+    const old = previous?.type === AIChatQSDataTypeEnum.CODING_WORKTREE ? previous.data : undefined
+    const item: AIChatQSData = {
+      id,
+      type: AIChatQSDataTypeEnum.CODING_WORKTREE,
+      chatType: 'reAct',
+      Timestamp: previous?.Timestamp ?? moment().unix(),
+      AIService: '',
+      AIModelName: '',
+      data: {
+        ...old,
+        ...progress,
+        failed_stage:
+          progress.stage === 'failed'
+            ? (old?.failed_stage ?? (old?.stage !== 'ready' && old?.stage !== 'failed' ? old?.stage : undefined))
+            : undefined,
+      },
+    }
+    data.rawData.contents.set(id, item)
+    if (previous) data.store.getState().incrementNodeVersion(id, 'item')
+    else
+      data.store
+        .getState()
+        .dispatchStreamingNode({ chatType: 'reAct', node: { token: id, kind: 'item', type: item.type } })
+    // initializeNewSession persists this same card together with the first prompt.
+    data.store.getState().updateCurrentLoadingTitle({
+      casualTitle: progress.stage === 'ready' ? tAgent('AIChatLoading.connectingSession') : '',
+    })
+  }
+
   /** 新会话握手后登记原数据、补写 IDB，发布 UI 并发送首问。 */
   private async initializeNewSession(connection: SessionConnection) {
     const { data, input, sessionId } = connection
@@ -523,6 +591,10 @@ export class ChatMultiSessionController {
     const existing = this.storePool.get(sessionId)
     if (existing && existing !== data.store) {
       throw new Error(tAgent('ChatSessionNotify.sessionIdOccupied'))
+    }
+    const worktree = data.rawData.contents.get(`coding-worktree:${sessionId}`)
+    if (worktree?.type === AIChatQSDataTypeEnum.CODING_WORKTREE && worktree.data.stage !== 'ready') {
+      this.updateWorktreeProgress(connection, { stage: 'ready', error: undefined })
     }
     connection.registered = true
     this.tokenBySessionId.set(sessionId, connection.token)
@@ -1348,6 +1420,9 @@ export class ChatMultiSessionController {
       // 同步发布首问及连接中状态，握手成功后再登记到正式会话池。
       this.showFirstQuestion(data)
       data.store.getState().updateCurrentLoadingTitle({ casualTitle: tAgent('AIChatLoading.connectingSession') })
+      if (startParams.Params.AgentMode === 'coding' && startParams.Params.CodingCreateWorktree) {
+        this.updateWorktreeProgress(connection, { stage: 'queued', base_ref: startParams.Params.CodingWorktreeBaseRef })
+      }
       cb?.onPendingChange?.({
         streamToken: token,
         data,

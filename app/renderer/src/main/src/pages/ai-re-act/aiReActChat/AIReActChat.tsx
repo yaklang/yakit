@@ -290,19 +290,20 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                 )}
                 <AIToDoListWrapper />
                 <AIReActChatContents ref={aiReActChatContentsRef} />
-                {pendingChat?.status === 'failed' && (
-                  <div className={styles['connection-error']} role="status">
-                    {pendingChat.error || t('ChatSessionNotify.connectionStopped')}
-                    <YakitButton
-                      type="text"
-                      onClick={() => {
-                        pendingChat.retry?.()
-                      }}
-                    >
-                      {t('YakitButton.retry')}
-                    </YakitButton>
-                  </div>
-                )}
+                {pendingChat?.status === 'failed' &&
+                  !pendingChat.data?.rawData.contents.has(`coding-worktree:${sessionId}`) && (
+                    <div className={styles['connection-error']} role="status">
+                      {pendingChat.error || t('ChatSessionNotify.connectionStopped')}
+                      <YakitButton
+                        type="text"
+                        onClick={() => {
+                          pendingChat.retry?.()
+                        }}
+                      >
+                        {t('YakitButton.retry')}
+                      </YakitButton>
+                    </div>
+                  )}
                 <AIReActTaskChatReview />
               </div>
               <div className={classNames(styles['chat-footer'])}>

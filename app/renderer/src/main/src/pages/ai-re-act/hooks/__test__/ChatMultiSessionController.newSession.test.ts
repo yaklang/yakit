@@ -75,6 +75,91 @@ describe('frontend allocated session identity', () => {
     vi.useRealTimers()
   })
 
+  it('shows worktree stages before pong, keeps the card after binding and sends the first prompt once', async () => {
+    const token = controller.handleStartSession(
+      {
+        kind: 'new',
+        sessionId: 'coding-progress',
+        route: YakitRoute.AI_Agent,
+        pageId: 'page',
+        params: { IsStart: true, Params: { AgentMode: 'coding', CodingCreateWorktree: true, UserQuery: 'build it' } },
+      },
+      { onPendingChange: (pending) => pendings.set(pending.streamToken, pending), onLinkSuccess: success },
+    ) as string
+    await tick()
+    const pending = pendings.get(token)!
+    const card = () => pending.data.rawData.contents.get('coding-worktree:coding-progress')!
+    expect(card().data).toMatchObject({ stage: 'queued' })
+    expect([...pending.data.rawData.contents.values()].map((item) => item.type)).toEqual([
+      'question',
+      'coding_worktree',
+    ])
+    const listener = ipcRendererMock.on.mock.calls.find(([name]) => name === `${token}-data`)![1]
+    listener(
+      {},
+      makeGrpcJsonRes(
+        'coding_worktree_progress',
+        { stage: 'checkout', path: '/worktree', base_ref: 'main' },
+        { SessionId: 'coding-progress' },
+      ),
+    )
+    await tick()
+    expect(card().data).toMatchObject({ stage: 'checkout', path: '/worktree' })
+    expect(success).not.toHaveBeenCalled()
+    // Real Git operations may exceed the ordinary 30s handshake deadline.
+    await vi.advanceTimersByTimeAsync(31000)
+    expect(pendings.get(token)?.status).toBe('connecting')
+    listener(
+      {},
+      makeGrpcJsonRes(
+        'coding_worktree_progress',
+        { stage: 'ready', path: '/worktree' },
+        { SessionId: 'coding-progress' },
+      ),
+    )
+    await emit(token, 'pong', 'coding-progress')
+    expect(success).toHaveBeenCalledOnce()
+    expect(controller.ensureSession('coding-progress').rawData.contents.get(card().id)?.data).toMatchObject({
+      stage: 'ready',
+    })
+    const inputs = ipcRendererMock.invoke.mock.calls.filter(
+      ([name, , input]) => name === 'send-ai-re-act' && input?.IsFreeInput,
+    )
+    expect(inputs).toHaveLength(1)
+    await emit(token, 'pong', 'coding-progress')
+    expect(
+      ipcRendererMock.invoke.mock.calls.filter(([name, , input]) => name === 'send-ai-re-act' && input?.IsFreeInput),
+    ).toHaveLength(1)
+  })
+
+  it('retains the worktree failure and first prompt without binding the session', async () => {
+    const token = controller.handleStartSession(
+      {
+        kind: 'new',
+        sessionId: 'coding-failed',
+        route: YakitRoute.AI_Agent,
+        pageId: 'page',
+        params: { IsStart: true, Params: { AgentMode: 'coding', CodingCreateWorktree: true, UserQuery: 'build it' } },
+      },
+      { onPendingChange: (pending) => pendings.set(pending.streamToken, pending), onLinkSuccess: success },
+    ) as string
+    await tick()
+    const listener = ipcRendererMock.on.mock.calls.find(([name]) => name === `${token}-data`)![1]
+    listener({}, makeGrpcJsonRes('coding_worktree_progress', { stage: 'checkout' }))
+    listener({}, makeGrpcJsonRes('coding_worktree_progress', { stage: 'failed', error: 'disk full' }))
+    ipcRendererMock.on.mock.calls.find(([name]) => name === `${token}-error`)![1]({}, 'disk full')
+    await tick()
+    const pending = pendings.get(token)!
+    expect(pending.status).toBe('failed')
+    expect(pending.data.rawData.contents.get('coding-worktree:coding-failed')?.data).toMatchObject({
+      stage: 'failed',
+      failed_stage: 'checkout',
+      error: 'disk full',
+    })
+    expect([...pending.data.rawData.contents.values()].find((item) => item.type === 'question')?.data).toBe('build it')
+    expect(success).not.toHaveBeenCalled()
+  })
+
   it('欢迎页配置保存在 request，首问保存在 meta，写入和领取不通知渲染订阅', () => {
     const first = controller.ensureSession('first-welcome')
     const second = controller.ensureSession('second-welcome')

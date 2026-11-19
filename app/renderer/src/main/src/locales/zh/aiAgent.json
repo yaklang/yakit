@@ -1318,5 +1318,20 @@
     "stepDone": "完成",
     "stepError": "失败",
     "invalidQuestion": "提问格式无效"
+  },
+  "CodingWorktreeCard": {
+    "creating": "正在建立工作树",
+    "ready": "工作树已建立",
+    "failed": "建立工作树失败",
+    "startFailed": "工作树已建立，会话启动失败",
+    "queued": "正在连接引擎，准备创建工作树…",
+    "workspace": "准备工作区",
+    "checkout": "签出文件",
+    "base": "起点",
+    "location": "工作树位置",
+    "details": "详细信息",
+    "waitingDetails": "等待引擎返回工作树信息…",
+    "retry": "重试",
+    "cancel": "取消"
   }
 }

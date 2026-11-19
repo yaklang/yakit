@@ -1,4 +1,5 @@
 import React from 'react'
+import { CodingWorktreeCard } from '@/pages/ai-agent/coding/CodingWorktreeCard'
 import { QuestionSummary } from '@/pages/ai-re-act/clarification/QuestionSummary/QuestionSummary'
 import { ComponentCard } from '@/pages/ai-re-act/display-ui/ComponentCard/ComponentCard'
 import type { AINodeItemProps } from './type'
@@ -25,6 +26,8 @@ const AINodeItem: React.FC<AINodeItemProps> = React.memo((props) => {
   const { itemData, renderNum, groupIndex } = props
   const { t } = useI18nNamespaces(['aiAgent'])
   switch (itemData.type) {
+    case AIChatQSDataTypeEnum.CODING_WORKTREE:
+      return <CodingWorktreeCard item={itemData} />
     case AIChatQSDataTypeEnum.UI_COMPONENT:
       return <ComponentCard key={itemData.id} item={itemData} />
     case AIChatQSDataTypeEnum.UI_QUESTION:

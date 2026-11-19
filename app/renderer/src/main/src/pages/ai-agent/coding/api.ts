@@ -18,7 +18,7 @@ export interface CodingWorktree {
   GitCommonDir: string
   BaseRef: string
   BaseCommit: string
-  State: 'creating' | 'ready' | 'failed' | 'unavailable'
+  State: 'creating' | 'ready' | 'failed' | 'deleting' | 'unavailable'
   LastError: string
   SessionIDs: string[]
   Head: string

@@ -367,6 +367,7 @@ export interface BrowserHandoffCardData {
 
 // #region chat 问答内容组件的类型集合(包括了类型推导)
 export enum AIChatQSDataTypeEnum {
+  CODING_WORKTREE = 'coding_worktree',
   UI_COMPONENT = 'ui_component',
   UI_QUESTION = 'ui_question',
   /**用户的自由输入 */
@@ -498,7 +499,20 @@ type ChatStreamGroup = AIChatQSDataBase<
   { NodeId: AIOutputEvent['NodeId']; NodeIdVerbose: AIOutputEvent['NodeIdVerbose']; lastToken: string }
 >
 
+/** Actual engine startup stages plus the local request/connection states. */
+export interface CodingWorktreeProgress {
+  stage: 'queued' | 'workspace' | 'checkout' | 'ready' | 'failed'
+  worktree_id?: string
+  path?: string
+  base_ref?: string
+  base_commit?: string
+  error?: string
+  failed_stage?: 'queued' | 'workspace' | 'checkout'
+}
+export type ChatCodingWorktree = AIChatQSDataBase<AIChatQSDataTypeEnum.CODING_WORKTREE, CodingWorktreeProgress>
+
 export type AIChatQSData =
+  | ChatCodingWorktree
   | AIChatQSDataBase<
       AIChatQSDataTypeEnum.UI_COMPONENT,
       {

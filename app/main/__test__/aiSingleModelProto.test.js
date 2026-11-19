@@ -85,6 +85,18 @@ describe('script providers and global controls gRPC contract', () => {
 })
 
 describe('experimental coding gRPC contract', () => {
+  it('decodes workspace-scoped lookup and deletion using backend field numbers', () => {
+    const lookup = ypb.Yak.service.GetAICodingWorktree
+    expect(lookup.requestDeserialize(Buffer.from('0a01741a0177', 'hex'))).toMatchObject({
+      WorktreeID: 't',
+      WorkspaceID: 'w',
+    })
+    const remove = ypb.Yak.service.DeleteAICodingWorktree
+    const wire = Buffer.from('0a0177120174', 'hex')
+    expect(remove.requestDeserialize(wire)).toEqual({ WorkspaceID: 'w', WorktreeID: 't' })
+    expect(remove.requestSerialize({ WorkspaceID: 'w', WorktreeID: 't' })).toEqual(wire)
+  })
+
   it('round-trips mode and workspace binding in starts and history', () => {
     const binding = {
       AgentMode: 'coding',
