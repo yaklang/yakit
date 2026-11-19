@@ -1,3 +1,5 @@
+import type { MentionPointerModifiers } from '../hooks/mentionMultiSelect'
+
 export interface MentionResourceRowProps {
   id?: string
   kind: 'forge' | 'tool' | 'knowledgeBase' | 'file' | 'folder' | 'focusMode'
@@ -6,5 +8,6 @@ export interface MentionResourceRowProps {
   knowledgeIndex?: number
   current?: boolean
   active?: boolean
-  onSelect: () => void
+  checked?: boolean
+  onSelect: (event?: MentionPointerModifiers) => void
 }

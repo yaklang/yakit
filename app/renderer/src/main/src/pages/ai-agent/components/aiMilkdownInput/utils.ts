@@ -201,3 +201,15 @@ export const unescapeUnderscoreInPath = (markdown: string): string =>
       return part
     })
     .join('')
+
+const ENCODED_SPACE = '&(?:amp;)?#x20;'
+/** remark 把行首/换行前的尾随空格写成 &#x20;；只还原这些位置，避免改写正文或代码块里的字面量。 */
+const LINE_EDGE_ENCODED_SPACES = new RegExp(`(?:${ENCODED_SPACE})+(?=\\n|$)|(?<=^|\\n)(?:${ENCODED_SPACE})+`, 'g')
+
+/** 提交用 markdown：还原路径下划线，并把 remark 写在换行前的 &#x20; / &amp;#x20; 还原成空格后去掉文末空白。 */
+export const normalizeSubmittedMarkdown = (markdown: string): string =>
+  unescapeUnderscoreInPath(
+    markdown.replace(LINE_EDGE_ENCODED_SPACES, (chunk) => ' '.repeat(chunk.match(/#x20;/g)?.length ?? 0)),
+  )
+    .replace(/\n+$/, '')
+    .trimEnd()

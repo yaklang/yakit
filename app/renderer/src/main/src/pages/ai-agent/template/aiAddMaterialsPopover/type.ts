@@ -4,6 +4,7 @@ import type { AIChatMentionProps } from '../../components/aiChatMention/type'
 import type { AIMentionCommandParams } from '../../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
 import type { AIMentionTabsEnum } from '../../defaultConstant'
 import type { AIEnabledCapability, AIOutputI18n } from '@/pages/ai-re-act/hooks/grpcApi'
+import type { AIForge } from '../../type/forge'
 
 export type MaterialCategory = Extract<
   AIMentionCommandParams['mentionType'],
@@ -24,6 +25,7 @@ export interface MaterialOption {
   originalName?: string
   verboseNameI18n?: AIOutputI18n
   knowledgeIndex?: number
+  forgeType?: AIForge['ForgeType']
 }
 
 export interface MaterialPanelHeader {

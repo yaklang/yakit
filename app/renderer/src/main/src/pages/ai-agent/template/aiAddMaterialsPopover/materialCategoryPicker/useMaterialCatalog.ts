@@ -45,6 +45,7 @@ const loadMaterialCatalogPage = async (
         name: item.ForgeVerboseName || item.ForgeName,
         originalName: item.ForgeName,
         description: item.Description,
+        forgeType: item.ForgeType,
       })),
       total: Number(result.Total),
       nextPage: page * pagination.Limit < result.Total ? page + 1 : undefined,

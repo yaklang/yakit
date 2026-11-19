@@ -474,6 +474,9 @@
     "tool": "工具",
     "knowledgeBase": "知识库",
     "fileSystem": "文件系统",
+    "loadedFiles": "已加载文件",
+    "openLocalFileHint": "从本地加载文件到提及列表，单次最多 {{max}} 个",
+    "openLocalFolderHint": "从本地加载文件夹到提及列表，单次最多 {{max}} 个",
     "allKnowledgeBase": "@所有知识库",
     "browser": "浏览器"
   },

@@ -260,7 +260,33 @@ vi.mock('../../components/aiMilkdownInput/AIMilkdownInput', () => ({
 
 const { AIChatTextarea } = await compileReactModule<typeof TemplateModule>(import.meta.url, '../template.tsx')
 
+const zeroDomRect = () => ({
+  x: 0,
+  y: 0,
+  top: 0,
+  left: 0,
+  bottom: 0,
+  right: 0,
+  width: 0,
+  height: 0,
+  toJSON: () => ({}),
+})
+const emptyClientRects = () => ({
+  length: 0,
+  item: () => null,
+  [Symbol.iterator]: function* empty() {},
+})
+
 beforeEach(() => {
+  // 提及后的空格把光标放进文本节点。scrollIntoView 会量这个位置，jsdom 没有这些 DOM 矩形方法。
+  for (const prototype of [Text.prototype, Range.prototype, Element.prototype]) {
+    const target = prototype as {
+      getClientRects?: () => ReturnType<typeof emptyClientRects>
+      getBoundingClientRect?: () => ReturnType<typeof zeroDomRect>
+    }
+    if (typeof target.getClientRects !== 'function') target.getClientRects = emptyClientRects
+    if (typeof target.getBoundingClientRect !== 'function') target.getBoundingClientRect = zeroDomRect
+  }
   fileSessions.clear()
   fileSession.id = 'file-session'
   vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'], shouldAdvanceTime: true })

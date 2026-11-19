@@ -15,6 +15,10 @@
   &.active {
     background: var(--Colors-Use-Neutral-Bg-Hover);
   }
+
+  &.checked {
+    background: var(--Colors-Use-Blue-Bg);
+  }
 }
 
 .content {

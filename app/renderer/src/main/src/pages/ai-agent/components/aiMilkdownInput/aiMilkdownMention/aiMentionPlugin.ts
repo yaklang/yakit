@@ -1,5 +1,5 @@
 import { $command, $nodeSchema, $nodeAttr } from '@milkdown/utils'
-import type { Attrs } from '@milkdown/kit/prose/model'
+import { Fragment, type Attrs } from '@milkdown/kit/prose/model'
 import { TextSelection } from '@milkdown/kit/prose/state'
 import type { iconMapType } from '../../aiChatMention/type'
 import { getMentionQueryDeleteRange, mentionTextBeforeCursor } from './mentionQuery'
@@ -148,6 +148,8 @@ export const aiMentionCommand = $command<AIMentionCommandParams, string>(
     const { selection, tr } = state
     if (!(selection instanceof TextSelection)) return false
     const { mentionName, lock } = params
+    const label = `${mentionName ?? ''}`.trim()
+    if (!label) return false
     const { from } = selection
     // 删除光标前整段 @query（含 @）。块边界必须带换行，否则换段后再选会留下 @
     const textBefore = mentionTextBeforeCursor(state.doc, from)
@@ -155,11 +157,38 @@ export const aiMentionCommand = $command<AIMentionCommandParams, string>(
     if (deleteRange) {
       tr.deleteRange(deleteRange.from, deleteRange.to)
     }
-    const fragment = state.schema.text(`${mentionName}`)
+    const fragment = state.schema.text(label)
+    tr.setMeta(aiMentionCustomId, true).replaceSelectionWith(
+      aiMentionCustomSchema.type(ctx).create({ ...params, lock: lock ?? false }, fragment),
+    )
+    // 只在替换 @query 时补空格；资料栏插入/草稿恢复走同一命令，补空格会在删 chip 后残留并累积
+    if (deleteRange) tr.insertText(' ')
+    dispatch?.(tr.scrollIntoView())
+    return true
+  },
+)
+
+export const aiMentionsCommand = $command<AIMentionCommandParams[], string>(
+  `command-${aiMentionCustomId}-many`,
+  (ctx) => (params?: AIMentionCommandParams[]) => (state, dispatch) => {
+    const items = params?.filter((item) => `${item.mentionName ?? ''}`.trim())
+    if (!items?.length || !(state.selection instanceof TextSelection)) return false
+    const { tr } = state
+    const { from } = state.selection
+    const deleteRange = getMentionQueryDeleteRange(from, mentionTextBeforeCursor(state.doc, from))
+    const pos = deleteRange ? deleteRange.from : from
+    if (deleteRange) tr.deleteRange(deleteRange.from, deleteRange.to)
+    const type = aiMentionCustomSchema.type(ctx)
+    const nodes = items.flatMap((item) => [
+      type.create({ ...item, lock: item.lock ?? false }, state.schema.text(`${item.mentionName}`.trim())),
+      state.schema.text(' '),
+    ])
+    tr.insert(pos, Fragment.fromArray(nodes))
+    const end = Math.min(pos + nodes.reduce((size, node) => size + node.nodeSize, 0), tr.doc.content.size)
     dispatch?.(
       tr
+        .setSelection(TextSelection.near(tr.doc.resolve(end)))
         .setMeta(aiMentionCustomId, true)
-        .replaceSelectionWith(aiMentionCustomSchema.type(ctx).create({ ...params, lock: lock ?? false }, fragment))
         .scrollIntoView(),
     )
     return true
@@ -167,5 +196,11 @@ export const aiMentionCommand = $command<AIMentionCommandParams, string>(
 )
 
 export const aiMentionCustomPlugin = () => {
-  return [aiMentionCustomAttr, aiMentionCustomSchema.node, aiMentionCustomSchema.ctx, aiMentionCommand]
+  return [
+    aiMentionCustomAttr,
+    aiMentionCustomSchema.node,
+    aiMentionCustomSchema.ctx,
+    aiMentionCommand,
+    aiMentionsCommand,
+  ]
 }

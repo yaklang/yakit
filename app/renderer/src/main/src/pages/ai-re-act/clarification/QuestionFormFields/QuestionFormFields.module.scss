@@ -24,8 +24,13 @@
     text-align: left;
   }
   :global(.ant-form-item-label > label) {
+    display: block;
     height: auto;
     font-size: 12px;
+    line-height: 20px;
+    white-space: normal;
+    word-break: keep-all;
+    overflow-wrap: break-word;
     color: var(--Colors-Use-Neutral-Text-1-Title);
   }
   :global(.ant-form-item-required::before) {

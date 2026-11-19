@@ -56,6 +56,10 @@
     background: var(--Colors-Use-Neutral-Bg-Hover);
   }
 
+  &.checked {
+    background: var(--Colors-Use-Blue-Bg);
+  }
+
   &[role='option'] {
     padding-inline-end: 8px;
     cursor: pointer;

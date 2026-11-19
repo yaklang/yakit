@@ -16,6 +16,7 @@ import { grpcQueryAIFocus, grpcQueryAIForge, grpcQueryKnowledgeBase } from '../.
 import { grpcGetAIToolList } from '../../../aiToolList/utils'
 import { loadRecentMentionResources } from '../recentListOfMention/recentListOfMentionData'
 import { defaultFolder, useCustomFolder } from '../../aiFileSystemList/store/useCustomFolder'
+import { yakitNotify } from '@/utils/notification'
 
 vi.hoisted(() => {
   vi.stubGlobal(
@@ -40,6 +41,8 @@ vi.mock('ahooks', async (importOriginal) => ({
 
 const i18n = vi.hoisted(() => ({ language: 'en' }))
 const session = vi.hoisted(() => ({ id: 'session-test' }))
+const openDialog = vi.hoisted(() => vi.fn())
+const addHistoryItem = vi.hoisted(() => vi.fn())
 
 vi.mock('@/i18n/useI18nNamespaces', () => ({
   useI18nNamespaces: () => ({
@@ -61,6 +64,11 @@ vi.mock('../../../browserInstances/browserInstanceStore', () => ({
   useBrowserInstances: vi.fn(),
   browserInstanceMentionName: (instance: AIBrowserInstance) => instance.name,
   selectBrowserInstance: vi.fn(),
+}))
+vi.mock('@/utils/fileSystemDialog', () => ({ handleOpenFileSystemDialog: openDialog }))
+vi.mock('@/utils/notification', () => ({ yakitNotify: vi.fn() }))
+vi.mock('../../aiFileSystemList/store/useHistoryFolder', () => ({
+  historyStore: { addHistoryItem },
 }))
 vi.mock('../../aiFileSystemList/store/useCustomFolder', () => ({
   defaultFolder: vi.fn(),
@@ -136,6 +144,9 @@ beforeEach(() => {
   vi.mocked(useBrowserInstances).mockReturnValue(emptyBrowserState)
   vi.mocked(useCustomFolder).mockReturnValue([])
   vi.mocked(defaultFolder).mockResolvedValue(null)
+  openDialog.mockReset()
+  addHistoryItem.mockReset()
+  openDialog.mockResolvedValue({ canceled: true, filePaths: [] })
   vi.mocked(loadRecentMentionResources).mockResolvedValue({
     attachments: [],
     files: [],
@@ -238,10 +249,10 @@ describe('AIChatMention', () => {
       </HistoryAIReActChatContext.Provider>,
     )
 
-    expect(screen.queryByRole('button', { name: 'AIMentionTabs.fileSystem' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'AIMentionTabs.fileSystem' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'AIMentionTabs.skill' })).toBeInTheDocument()
-    fireEvent.click(await screen.findByRole('button', { name: 'AIMentionTabs.fileSystem' }))
-    expect(screen.getByRole('tree', { name: '/default/code' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'AIMentionTabs.fileSystem' }))
+    expect(await screen.findByRole('tree', { name: '/default/code' })).toBeInTheDocument()
   })
 
   it('updates tool labels in recent results and the tool catalog when the language changes', async () => {
@@ -271,7 +282,7 @@ describe('AIChatMention', () => {
     expect(onSelect).toHaveBeenCalledWith('tool', expect.objectContaining({ originalName: 'query-tool' }))
   })
 
-  it('hides filesystem and browser tabs without opened paths or online browsers', async () => {
+  it('keeps the filesystem tab visible without opened paths and hides browser without online instances', async () => {
     const offline = browser('offline', 'Offline browser', false)
     const online = browser('online', 'Online browser', true)
     vi.mocked(useBrowserInstances).mockReturnValue({ ...emptyBrowserState, instances: [offline] })
@@ -279,7 +290,7 @@ describe('AIChatMention', () => {
     const { rerender } = render(<AIChatMention onSelect={onSelect} />)
 
     await screen.findByText('recent-summary')
-    expect(screen.queryByRole('button', { name: 'AIMentionTabs.fileSystem' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'AIMentionTabs.fileSystem' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'AIMentionTabs.browser' })).not.toBeInTheDocument()
 
     vi.mocked(useBrowserInstances).mockReturnValue({ ...emptyBrowserState, instances: [online, offline] })
@@ -404,18 +415,104 @@ describe('AIChatMention', () => {
     render(<AIChatMention onSelect={vi.fn()} />)
     fireEvent.click(screen.getByRole('button', { name: 'AIMentionTabs.fileSystem' }))
     expect(screen.getAllByRole('tree')).toHaveLength(2)
+    expect(screen.getByText('AIMentionTabs.loadedFiles')).toBeInTheDocument()
     expect(defaultFolder).not.toHaveBeenCalled()
 
     fireEvent.change(screen.getByRole('textbox'), { target: { value: 'NOTES' } })
     expect(screen.getByRole('tree')).toHaveAccessibleName('/docs/notes.md')
+    expect(screen.getByText('AIMentionTabs.loadedFiles')).toBeInTheDocument()
 
     fireEvent.change(screen.getByRole('textbox'), { target: { value: 'missing' } })
     expect(screen.queryByRole('tree')).not.toBeInTheDocument()
+    expect(screen.queryByText('AIMentionTabs.loadedFiles')).not.toBeInTheDocument()
     expect(screen.getByRole('status')).toHaveTextContent('AIMentionTabs.searchEmpty')
     expect(screen.getByRole('button', { name: 'AIMentionTabs.fileSystem' })).toBeInTheDocument()
 
     fireEvent.change(screen.getByRole('textbox'), { target: { value: '' } })
     expect(screen.getAllByRole('tree')).toHaveLength(2)
+    expect(screen.getByText('AIMentionTabs.loadedFiles')).toBeInTheDocument()
+  })
+
+  it.each([
+    {
+      isFolder: false,
+      path: '/tmp/notes.txt',
+      button: 'YakitButton.openFile',
+      property: 'openFile',
+    },
+    {
+      isFolder: true,
+      path: '/tmp/code',
+      button: 'YakitButton.openFolder',
+      property: 'openDirectory',
+    },
+  ])('opens a local $property from the filesystem tab', async ({ isFolder, path, button, property }) => {
+    const onSelect = vi.fn()
+    openDialog.mockResolvedValueOnce({ canceled: false, filePaths: [path] })
+    render(<AIChatMention onSelect={onSelect} />)
+    fireEvent.click(screen.getByRole('button', { name: 'AIMentionTabs.fileSystem' }))
+    expect(screen.queryByText('AIMentionTabs.loadedFiles')).not.toBeInTheDocument()
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: new RegExp(`^${button}`) }))
+    })
+    expect(openDialog).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: button,
+        properties: [property, 'multiSelections'],
+      }),
+    )
+    expect(addHistoryItem).toHaveBeenCalledWith({ path, isFolder })
+    expect(onSelect).toHaveBeenCalledWith(
+      isFolder ? 'folder' : 'file',
+      expect.objectContaining({ id: path, name: path }),
+    )
+  })
+
+  it('adds a local batch to the input in one selection', async () => {
+    const onSelect = vi.fn()
+    const onSelectMany = vi.fn()
+    const filePaths = ['/tmp/a.txt', '/tmp/b.txt']
+    openDialog.mockResolvedValueOnce({ canceled: false, filePaths })
+    render(<AIChatMention onSelect={onSelect} onSelectMany={onSelectMany} />)
+    fireEvent.click(screen.getByRole('button', { name: 'AIMentionTabs.fileSystem' }))
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /^YakitButton.openFile/ }))
+    })
+    expect(addHistoryItem).toHaveBeenCalledTimes(2)
+    expect(onSelect).not.toHaveBeenCalled()
+    expect(onSelectMany.mock.calls[0][0].map((item: { type?: string; value?: { name?: string } }) => item)).toEqual([
+      expect.objectContaining({
+        type: 'file',
+        value: expect.objectContaining({ id: '/tmp/a.txt', name: '/tmp/a.txt' }),
+      }),
+      expect.objectContaining({
+        type: 'file',
+        value: expect.objectContaining({ id: '/tmp/b.txt', name: '/tmp/b.txt' }),
+      }),
+    ])
+  })
+
+  it('rejects more than 10 local paths without adding history', async () => {
+    const filePaths = Array.from({ length: 11 }, (_, index) => `/tmp/file-${index}.txt`)
+    openDialog.mockResolvedValueOnce({ canceled: false, filePaths })
+    render(<AIChatMention onSelect={vi.fn()} />)
+    fireEvent.click(screen.getByRole('button', { name: 'AIMentionTabs.fileSystem' }))
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /^YakitButton.openFile/ }))
+    })
+    expect(yakitNotify).toHaveBeenCalledWith('warning', 'AIAddMaterialsPopover.attachmentLimitExceeded')
+    expect(addHistoryItem).not.toHaveBeenCalled()
+  })
+
+  it('notifies when the local file dialog fails', async () => {
+    openDialog.mockRejectedValueOnce(new Error('picker closed'))
+    render(<AIChatMention onSelect={vi.fn()} />)
+    fireEvent.click(screen.getByRole('button', { name: 'AIMentionTabs.fileSystem' }))
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /^YakitButton.openFile/ }))
+    })
+    expect(yakitNotify).toHaveBeenCalledWith('error', 'AIAddMaterialsPopover.attachmentFailed')
+    expect(addHistoryItem).not.toHaveBeenCalled()
   })
 
   it('passes the existing scene search to the default file tree when switching tabs', async () => {
@@ -520,6 +617,151 @@ describe('AIChatMention', () => {
       'data-mention-tab-active',
       'true',
     )
+  })
+
+  it('ctrl 或 shift 点击多选，回车一次性提交，普通点击仍立即提交', async () => {
+    const editor = document.createElement('div')
+    const onSelect = vi.fn()
+    const onSelectMany = vi.fn()
+    await act(async () => {
+      render(<AIChatMention keyboardTarget={() => editor} onSelect={onSelect} onSelectMany={onSelectMany} />)
+    })
+    const first = await screen.findByRole('option', { name: /^recent-summary\b/ })
+    const second = screen.getByRole('option', { name: /^recent-translate\b/ })
+
+    fireEvent.click(second)
+    expect(onSelect).toHaveBeenCalledWith('forge', expect.objectContaining({ name: 'recent-translate' }))
+    expect(onSelectMany).not.toHaveBeenCalled()
+
+    fireEvent.click(first, { ctrlKey: true })
+    fireEvent.click(second, { ctrlKey: true })
+    fireEvent.click(second, { ctrlKey: true })
+    fireEvent.click(first, { ctrlKey: true })
+    fireEvent.keyDown(editor, { key: 'Enter', keyCode: 13 })
+    expect(onSelect).toHaveBeenLastCalledWith('forge', expect.objectContaining({ name: 'recent-summary' }))
+    expect(onSelectMany).not.toHaveBeenCalled()
+
+    await act(() => new Promise((resolve) => setTimeout(resolve, 250)))
+    fireEvent.click(second, { shiftKey: true })
+    expect(first).toHaveAttribute('aria-selected', 'true')
+    expect(second).toHaveAttribute('aria-selected', 'true')
+    fireEvent.keyDown(editor, { key: 'Enter', keyCode: 13 })
+    expect(onSelect).toHaveBeenCalledTimes(2)
+    expect(onSelectMany.mock.calls[0][0].map((item: { value?: { name?: string } }) => item.value?.name)).toEqual([
+      'recent-summary',
+      'recent-translate',
+    ])
+  })
+
+  it('Ctrl+Enter 把当前高亮项加入多选，回车再一次性提交', async () => {
+    const editor = document.createElement('div')
+    const onSelect = vi.fn()
+    const onSelectMany = vi.fn()
+    await act(async () => {
+      render(<AIChatMention keyboardTarget={() => editor} onSelect={onSelect} onSelectMany={onSelectMany} />)
+    })
+    const first = await screen.findByRole('option', { name: /^recent-summary\b/ })
+    const second = screen.getByRole('option', { name: /^recent-translate\b/ })
+
+    fireEvent.keyDown(editor, { key: 'Enter', keyCode: 13, ctrlKey: true })
+    fireEvent.keyDown(editor, { key: 'ArrowDown', keyCode: 40 })
+    fireEvent.keyDown(editor, { key: 'Enter', keyCode: 13, ctrlKey: true })
+
+    expect(onSelect).not.toHaveBeenCalled()
+    expect(first).toHaveAttribute('aria-selected', 'true')
+    expect(second).toHaveAttribute('aria-selected', 'true')
+    fireEvent.keyDown(editor, { key: 'Enter', keyCode: 13 })
+    expect(onSelectMany.mock.calls[0][0].map((item: { value?: { name?: string } }) => item.value?.name)).toEqual([
+      'recent-summary',
+      'recent-translate',
+    ])
+  })
+
+  it('Ctrl 的 mousedown 多选，随后的 click 被捕获吞掉且不会反选', async () => {
+    const editor = document.createElement('div')
+    const onSelect = vi.fn()
+    const onSelectMany = vi.fn()
+    await act(async () => {
+      render(<AIChatMention keyboardTarget={() => editor} onSelect={onSelect} onSelectMany={onSelectMany} />)
+    })
+    const first = await screen.findByRole('option', { name: /^recent-summary\b/ })
+    const second = screen.getByRole('option', { name: /^recent-translate\b/ })
+
+    const toggle = (option: HTMLElement) => {
+      fireEvent.mouseDown(option, { ctrlKey: true })
+      fireEvent.mouseUp(option, { ctrlKey: true })
+      fireEvent.click(option, { ctrlKey: true })
+    }
+    toggle(first)
+    toggle(second)
+
+    expect(onSelect).not.toHaveBeenCalled()
+    expect(first).toHaveAttribute('aria-selected', 'true')
+    expect(second).toHaveAttribute('aria-selected', 'true')
+    fireEvent.keyDown(editor, { key: 'Enter', keyCode: 13 })
+    expect(onSelectMany.mock.calls[0][0].map((item: { value?: { name?: string } }) => item.value?.name)).toEqual([
+      'recent-summary',
+      'recent-translate',
+    ])
+  })
+
+  it('Ctrl 按下后在弹层外松开，下一次普通点击仍会提交', async () => {
+    const onSelect = vi.fn()
+    await act(async () => {
+      render(<AIChatMention onSelect={onSelect} onSelectMany={vi.fn()} />)
+    })
+    const first = await screen.findByRole('option', { name: /^recent-summary\b/ })
+    const second = screen.getByRole('option', { name: /^recent-translate\b/ })
+
+    fireEvent.mouseDown(first, { ctrlKey: true })
+    fireEvent.mouseDown(second)
+    fireEvent.click(second)
+    expect(onSelect).toHaveBeenCalledWith('forge', expect.objectContaining({ name: 'recent-translate' }))
+  })
+
+  it('切到工具并多选后，输入框回车只提交工具，不把回车留给发送', async () => {
+    vi.mocked(grpcQueryAIForge).mockImplementation(async ({ Pagination }) => ({
+      Data: [skill(11, 'skill-a'), skill(12, 'skill-b')],
+      Pagination,
+      Total: 2,
+    }))
+    vi.mocked(grpcGetAIToolList).mockImplementation(async ({ Pagination }) => ({
+      Tools: [
+        { ID: 21, Name: 'tool-a', VerboseName: 'Tool A' },
+        { ID: 22, Name: 'tool-b', VerboseName: 'Tool B' },
+      ] as AITool[],
+      Pagination,
+      Total: 2,
+    }))
+    const editor = document.createElement('div')
+    const onSelectMany = vi.fn()
+    await act(async () => {
+      render(<AIChatMention keyboardTarget={() => editor} onSelect={vi.fn()} onSelectMany={onSelectMany} />)
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'AIMentionTabs.skill' }))
+    const skillA = await screen.findByRole('option', { name: /skill-a/ })
+    const skillB = screen.getByRole('option', { name: /skill-b/ })
+    fireEvent.click(skillA, { ctrlKey: true })
+    fireEvent.click(skillB, { ctrlKey: true })
+
+    const toolTab = screen.getByRole('button', { name: 'AIMentionTabs.tool' })
+    act(() => toolTab.focus())
+    fireEvent.click(toolTab)
+    const toolA = await screen.findByRole('option', { name: /Tool A/ })
+    const toolB = screen.getByRole('option', { name: /Tool B/ })
+    fireEvent.click(toolA, { ctrlKey: true })
+    fireEvent.click(toolB, { ctrlKey: true })
+
+    expect(fireEvent.keyDown(editor, { key: 'Enter', keyCode: 13 })).toBe(false)
+    expect(onSelectMany).toHaveBeenCalledTimes(1)
+    expect(
+      onSelectMany.mock.calls[0][0].map((item: { type?: string; value?: { name?: string } }) => item.type),
+    ).toEqual(['tool', 'tool'])
+    expect(onSelectMany.mock.calls[0][0].map((item: { value?: { name?: string } }) => item.value?.name)).toEqual([
+      'Tool A',
+      'Tool B',
+    ])
   })
 
   it('moves focus from the clicked scene tab when switching tabs with the keyboard', () => {
@@ -661,6 +903,40 @@ describe('AIChatMention', () => {
       expect.objectContaining({ id: '1', name: 'Tool 1', originalName: 'tool-1' }),
     )
   })
+
+  it.each(['all', 'added'] as const)(
+    'keeps forgeType when selecting a yak template from the %s skill filter',
+    async (filter) => {
+      vi.mocked(grpcQueryAIForge).mockImplementation(async ({ Pagination }) => ({
+        Data: [
+          { Id: 11, ForgeName: 'skill-a', ForgeVerboseName: 'Skill A', ForgeType: 'skillmd', Description: 'skill' },
+          { Id: 12, ForgeName: 'forge-a', ForgeVerboseName: 'Forge A', ForgeType: 'yak', Description: 'template' },
+        ],
+        Pagination,
+        Total: 2,
+      }))
+      const editor = document.createElement('div')
+      const onSelect = vi.fn()
+      await act(async () => {
+        render(
+          <AIChatMention
+            keyboardTarget={() => editor}
+            onSelect={onSelect}
+            materials={[{ mentionType: 'forge', mentionId: '12', mentionName: 'Forge A', name: 'forge-a' }]}
+          />,
+        )
+      })
+      fireEvent.click(screen.getByRole('button', { name: 'AIMentionTabs.skill' }))
+      expect(await screen.findByRole('option', { name: /Forge A/ })).toBeInTheDocument()
+      if (filter === 'added') {
+        fireEvent.click(screen.getByRole('button', { name: 'test-added-filter' }))
+        expect(screen.queryByRole('option', { name: /Skill A/ })).not.toBeInTheDocument()
+      }
+      fireEvent.click(await screen.findByRole('option', { name: /Forge A/ }))
+      fireEvent.keyDown(editor, { key: 'Enter', keyCode: 13 })
+      expect(onSelect).toHaveBeenCalledWith('forge', expect.objectContaining({ id: '12', forgeType: 'yak' }))
+    },
+  )
 
   it('sends catalog keywords to the backend and filters already-added rows locally', async () => {
     render(

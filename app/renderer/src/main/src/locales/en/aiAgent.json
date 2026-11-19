@@ -474,6 +474,9 @@
     "tool": "Tool",
     "knowledgeBase": "Knowledge Base",
     "fileSystem": "File System",
+    "loadedFiles": "Loaded files",
+    "openLocalFileHint": "Load local files into the mention list, up to {{max}} at a time",
+    "openLocalFolderHint": "Load local folders into the mention list, up to {{max}} at a time",
     "allKnowledgeBase": "@All Knowledge Bases",
     "browser": "Browser"
   },
