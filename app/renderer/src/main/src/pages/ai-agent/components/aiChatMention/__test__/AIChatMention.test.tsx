@@ -16,6 +16,7 @@ import { grpcQueryAIFocus, grpcQueryAIForge, grpcQueryKnowledgeBase } from '../.
 import { grpcGetAIToolList } from '../../../aiToolList/utils'
 import { loadRecentMentionResources } from '../recentListOfMention/recentListOfMentionData'
 import { defaultFolder, useCustomFolder } from '../../aiFileSystemList/store/useCustomFolder'
+import { yakitNotify } from '@/utils/notification'
 
 vi.hoisted(() => {
   vi.stubGlobal(
@@ -40,6 +41,8 @@ vi.mock('ahooks', async (importOriginal) => ({
 
 const i18n = vi.hoisted(() => ({ language: 'en' }))
 const session = vi.hoisted(() => ({ id: 'session-test' }))
+const openDialog = vi.hoisted(() => vi.fn())
+const addHistoryItem = vi.hoisted(() => vi.fn())
 
 vi.mock('@/i18n/useI18nNamespaces', () => ({
   useI18nNamespaces: () => ({
@@ -61,6 +64,11 @@ vi.mock('../../../browserInstances/browserInstanceStore', () => ({
   useBrowserInstances: vi.fn(),
   browserInstanceMentionName: (instance: AIBrowserInstance) => instance.name,
   selectBrowserInstance: vi.fn(),
+}))
+vi.mock('@/utils/fileSystemDialog', () => ({ handleOpenFileSystemDialog: openDialog }))
+vi.mock('@/utils/notification', () => ({ yakitNotify: vi.fn() }))
+vi.mock('../../aiFileSystemList/store/useHistoryFolder', () => ({
+  historyStore: { addHistoryItem },
 }))
 vi.mock('../../aiFileSystemList/store/useCustomFolder', () => ({
   defaultFolder: vi.fn(),
@@ -136,6 +144,9 @@ beforeEach(() => {
   vi.mocked(useBrowserInstances).mockReturnValue(emptyBrowserState)
   vi.mocked(useCustomFolder).mockReturnValue([])
   vi.mocked(defaultFolder).mockResolvedValue(null)
+  openDialog.mockReset()
+  addHistoryItem.mockReset()
+  openDialog.mockResolvedValue({ canceled: true, filePaths: [] })
   vi.mocked(loadRecentMentionResources).mockResolvedValue({
     attachments: [],
     files: [],
@@ -238,10 +249,10 @@ describe('AIChatMention', () => {
       </HistoryAIReActChatContext.Provider>,
     )
 
-    expect(screen.queryByRole('button', { name: 'AIMentionTabs.fileSystem' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'AIMentionTabs.fileSystem' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'AIMentionTabs.skill' })).toBeInTheDocument()
-    fireEvent.click(await screen.findByRole('button', { name: 'AIMentionTabs.fileSystem' }))
-    expect(screen.getByRole('tree', { name: '/default/code' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'AIMentionTabs.fileSystem' }))
+    expect(await screen.findByRole('tree', { name: '/default/code' })).toBeInTheDocument()
   })
 
   it('updates tool labels in recent results and the tool catalog when the language changes', async () => {
@@ -271,7 +282,7 @@ describe('AIChatMention', () => {
     expect(onSelect).toHaveBeenCalledWith('tool', expect.objectContaining({ originalName: 'query-tool' }))
   })
 
-  it('hides filesystem and browser tabs without opened paths or online browsers', async () => {
+  it('keeps the filesystem tab visible without opened paths and hides browser without online instances', async () => {
     const offline = browser('offline', 'Offline browser', false)
     const online = browser('online', 'Online browser', true)
     vi.mocked(useBrowserInstances).mockReturnValue({ ...emptyBrowserState, instances: [offline] })
@@ -279,7 +290,7 @@ describe('AIChatMention', () => {
     const { rerender } = render(<AIChatMention onSelect={onSelect} />)
 
     await screen.findByText('recent-summary')
-    expect(screen.queryByRole('button', { name: 'AIMentionTabs.fileSystem' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'AIMentionTabs.fileSystem' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'AIMentionTabs.browser' })).not.toBeInTheDocument()
 
     vi.mocked(useBrowserInstances).mockReturnValue({ ...emptyBrowserState, instances: [online, offline] })
@@ -404,18 +415,75 @@ describe('AIChatMention', () => {
     render(<AIChatMention onSelect={vi.fn()} />)
     fireEvent.click(screen.getByRole('button', { name: 'AIMentionTabs.fileSystem' }))
     expect(screen.getAllByRole('tree')).toHaveLength(2)
+    expect(screen.getByText('AIMentionTabs.loadedFiles')).toBeInTheDocument()
     expect(defaultFolder).not.toHaveBeenCalled()
 
     fireEvent.change(screen.getByRole('textbox'), { target: { value: 'NOTES' } })
     expect(screen.getByRole('tree')).toHaveAccessibleName('/docs/notes.md')
+    expect(screen.getByText('AIMentionTabs.loadedFiles')).toBeInTheDocument()
 
     fireEvent.change(screen.getByRole('textbox'), { target: { value: 'missing' } })
     expect(screen.queryByRole('tree')).not.toBeInTheDocument()
+    expect(screen.queryByText('AIMentionTabs.loadedFiles')).not.toBeInTheDocument()
     expect(screen.getByRole('status')).toHaveTextContent('AIMentionTabs.searchEmpty')
     expect(screen.getByRole('button', { name: 'AIMentionTabs.fileSystem' })).toBeInTheDocument()
 
     fireEvent.change(screen.getByRole('textbox'), { target: { value: '' } })
     expect(screen.getAllByRole('tree')).toHaveLength(2)
+    expect(screen.getByText('AIMentionTabs.loadedFiles')).toBeInTheDocument()
+  })
+
+  it.each([
+    {
+      isFolder: false,
+      path: '/tmp/notes.txt',
+      button: 'YakitButton.openFile',
+      property: 'openFile',
+    },
+    {
+      isFolder: true,
+      path: '/tmp/code',
+      button: 'YakitButton.openFolder',
+      property: 'openDirectory',
+    },
+  ])('opens a local $property from the filesystem tab', async ({ isFolder, path, button, property }) => {
+    openDialog.mockResolvedValueOnce({ canceled: false, filePaths: [path] })
+    render(<AIChatMention onSelect={vi.fn()} />)
+    fireEvent.click(screen.getByRole('button', { name: 'AIMentionTabs.fileSystem' }))
+    expect(screen.queryByText('AIMentionTabs.loadedFiles')).not.toBeInTheDocument()
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: new RegExp(`^${button}`) }))
+    })
+    expect(openDialog).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: button,
+        properties: [property, 'multiSelections'],
+      }),
+    )
+    expect(addHistoryItem).toHaveBeenCalledWith({ path, isFolder })
+  })
+
+  it('rejects more than 10 local paths without adding history', async () => {
+    const filePaths = Array.from({ length: 11 }, (_, index) => `/tmp/file-${index}.txt`)
+    openDialog.mockResolvedValueOnce({ canceled: false, filePaths })
+    render(<AIChatMention onSelect={vi.fn()} />)
+    fireEvent.click(screen.getByRole('button', { name: 'AIMentionTabs.fileSystem' }))
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /^YakitButton.openFile/ }))
+    })
+    expect(yakitNotify).toHaveBeenCalledWith('warning', 'AIAddMaterialsPopover.attachmentLimitExceeded')
+    expect(addHistoryItem).not.toHaveBeenCalled()
+  })
+
+  it('notifies when the local file dialog fails', async () => {
+    openDialog.mockRejectedValueOnce(new Error('picker closed'))
+    render(<AIChatMention onSelect={vi.fn()} />)
+    fireEvent.click(screen.getByRole('button', { name: 'AIMentionTabs.fileSystem' }))
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /^YakitButton.openFile/ }))
+    })
+    expect(yakitNotify).toHaveBeenCalledWith('error', 'AIAddMaterialsPopover.attachmentFailed')
+    expect(addHistoryItem).not.toHaveBeenCalled()
   })
 
   it('passes the existing scene search to the default file tree when switching tabs', async () => {

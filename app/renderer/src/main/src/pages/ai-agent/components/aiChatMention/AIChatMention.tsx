@@ -104,7 +104,6 @@ export const AIChatMention: FC<AIChatMentionProps> = ({
   const hasRecent = availableTabs.some(({ value }) => recentCounts[value])
   const tabs = availableTabs.filter(({ value }) => {
     if (value === AIMentionTabsEnum.Recent) return !recent || hasRecent
-    if (value === AIMentionTabsEnum.File_System) return openedPaths.length > 0
     if (value === AIMentionTabsEnum.Browser) return onlineBrowsers.length > 0
     return true
   })

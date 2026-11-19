@@ -1,4 +1,5 @@
 @use '../../resourcePickerDimensions' as resourcePicker;
+@use '../../materialMenuRows' as rows;
 
 .popover:global(.ant-popover) {
   .body {
@@ -25,82 +26,36 @@
   height: resourcePicker.$content-height;
 }
 
-.header,
-.menu .item:global(.yakit.ant-btn.ant-btn-default) {
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
-  gap: 8px;
-}
-
 .header {
-  padding: 4px 0 0 8px;
+  @include rows.header;
 }
 
 .menu-header {
-  padding-inline-end: 4px;
+  @include rows.menu-header;
 }
 
 .menu {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.title,
-.item-title {
-  flex-shrink: 0;
-  font-weight: 500;
+  @include rows.menu;
 }
 
 .title {
-  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  @include rows.title;
+}
+
+.item-title {
+  @include rows.item-title;
 }
 
 .description {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: var(--Colors-Use-Neutral-Text-4-Help-text);
+  @include rows.description;
 }
 
-.menu .item:global(.yakit.ant-btn.ant-btn-default) {
-  justify-content: flex-start;
-  height: 28px;
-  padding: 0 8px;
-  border: 0;
-  border-radius: 8px;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  letter-spacing: inherit;
-  text-align: start;
-  cursor: pointer;
-
-  &:not(:disabled):hover,
-  &:not(:disabled):focus {
-    background: var(--Colors-Use-Neutral-Bg-Hover);
-  }
-
-  &:not(:disabled):focus-visible {
-    outline: none;
-    box-shadow: none;
-  }
+.item:global(.yakit.ant-btn.ant-btn-default) {
+  @include rows.item;
 }
 
 .icon {
-  display: grid;
-  flex-shrink: 0;
-  place-items: center;
-  width: 20px;
-  height: 20px;
-
-  svg[width='40'] {
-    width: 20px;
-    height: 20px;
-  }
+  @include rows.icon;
 }
 
 .external {

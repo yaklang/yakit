@@ -474,6 +474,9 @@
     "tool": "工具",
     "knowledgeBase": "知識庫",
     "fileSystem": "檔案系統",
+    "loadedFiles": "已載入檔案",
+    "openLocalFileHint": "從本機載入檔案到提及列表，單次最多 {{max}} 個",
+    "openLocalFolderHint": "從本機載入資料夾到提及列表，單次最多 {{max}} 個",
     "allKnowledgeBase": "@所有知識庫",
     "browser": "瀏覽器"
   },

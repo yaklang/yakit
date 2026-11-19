@@ -1,4 +1,5 @@
 @use '../../resourcePickerDimensions' as resourcePicker;
+@use '../../materialMenuRows' as rows;
 
 .ai-chat-mention {
   display: flex;
@@ -64,6 +65,47 @@
   text-align: center;
 }
 
+.file-system-of-mention {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.open-local-actions {
+  @include rows.menu(1px);
+  flex-shrink: 0;
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0.5px;
+}
+
+.open-local-item:global(.yakit.ant-btn.ant-btn-default) {
+  @include rows.item;
+}
+
+.open-local-icon {
+  @include rows.icon;
+}
+
+.open-local-title {
+  @include rows.item-title;
+}
+
+.open-local-description {
+  @include rows.description;
+}
+
+.loaded-files-header {
+  @include rows.header;
+  @include rows.menu-header;
+}
+
+.loaded-files-title {
+  @include rows.title;
+}
+
 .file-system-tree-of-mention {
   padding: 0 2px;
   height: 100%;
@@ -86,8 +128,8 @@
       padding: 0 8px;
       background-color: var(--Colors-Use-Basic-Background);
     }
-    .ant-tree-node-content-wrapper {
-      padding: 0;
+    .ant-tree.ant-tree-directory .ant-tree-node-content-wrapper {
+      padding: 0 0 0 8px;
     }
     .ant-tree-switcher {
       width: 16px;
