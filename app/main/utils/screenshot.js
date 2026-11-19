@@ -5,6 +5,7 @@ const { randomUUID } = require('crypto')
 const { getConfig, setConfig, getYakitHome } = require('../filePath')
 const { captureYakitScreenshot } = require('../yakitScreenshot')
 const { assertTrustedAppSender } = require('../security')
+const { writeClipboardImage } = require('../clipboardCompat')
 
 const watermarkPositions = ['top-left', 'top-right', 'bottom-left', 'bottom-right']
 
@@ -32,19 +33,32 @@ const saveScreenshot = async (win) => {
     clearTimeout(timer)
   }
 
+  const png = Buffer.from(screenshot.data, 'base64')
   const timestamp = screenshot.capturedAt.slice(0, 19).replace(/[: ]/g, '-')
   const filename = path.join(directory, `screenshot-${timestamp}-${randomUUID()}.png`)
   await fs.mkdir(directory, { recursive: true, mode: 0o750 })
   const file = await fs.open(filename, 'wx', 0o600)
   try {
-    await file.writeFile(Buffer.from(screenshot.data, 'base64'))
+    await file.writeFile(png)
     await file.close()
   } catch (error) {
     await file.close().catch(() => {})
     await fs.unlink(filename).catch(() => {})
     throw error
   }
-  return { path: filename, capturedAt: screenshot.capturedAt, width: screenshot.width, height: screenshot.height }
+  // 剪贴板不可用（如无桌面会话/权限受限）不应让已保存的截图失败
+  const clipboardError = await writeClipboardImage(png)
+    .then(() => '')
+    .catch((error) => error?.message || String(error))
+
+  return {
+    path: filename,
+    capturedAt: screenshot.capturedAt,
+    width: screenshot.width,
+    height: screenshot.height,
+    clipboardCopied: !clipboardError,
+    clipboardError,
+  }
 }
 
 module.exports = {
@@ -63,8 +77,8 @@ module.exports = {
         throw new Error('Invalid screenshot watermark settings')
       }
       const current = getScreenshotSettings()
-      const enabled = options.watermarkEnabled ?? current.watermarkEnabled
-      const position = options.watermarkPosition ?? current.watermarkPosition
+      const enabled = options.watermarkEnabled !== undefined ? options.watermarkEnabled : current.watermarkEnabled
+      const position = options.watermarkPosition !== undefined ? options.watermarkPosition : current.watermarkPosition
       if (typeof enabled !== 'boolean' || !watermarkPositions.includes(position)) {
         throw new Error('Invalid screenshot watermark settings')
       }

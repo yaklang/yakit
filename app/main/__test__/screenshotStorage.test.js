@@ -6,6 +6,9 @@ import vm from 'node:vm'
 import { createRequire } from 'node:module'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+// CI 选测试的静态关联锚点（本测试用 vm 沙箱加载，mock 不参与执行）
+vi.mock('../utils/screenshot', () => ({}))
+
 const require = createRequire(import.meta.url)
 let directory
 
@@ -21,6 +24,7 @@ const loadBridge = () => {
   })
   const select = vi.fn()
   const open = vi.fn().mockResolvedValue('')
+  const copyImage = vi.fn().mockResolvedValue(undefined)
   const persist = vi.fn((key, value) => {
     config[key] = value
     return true
@@ -41,6 +45,7 @@ const loadBridge = () => {
       }
       if (name === '../filePath') return { getYakitHome: () => directory, getConfig: () => config, setConfig: persist }
       if (name === '../yakitScreenshot') return { captureYakitScreenshot: capture }
+      if (name === '../clipboardCompat') return { writeClipboardImage: copyImage }
       if (name === '../security') return require('../security')
       if (name === 'crypto') return { randomUUID: () => 'fixed-id' }
       return require(name)
@@ -54,11 +59,24 @@ const loadBridge = () => {
   const preload = {
     process: { argv: [], on: (_event, callback) => (loaded = callback) },
     window: { addEventListener: vi.fn() },
-    require: () => ({ ipcRenderer: { invoke, on: vi.fn() } }),
+    require: (name) => {
+      if (name === './preloadFilePath') return { installFilePath: () => {} }
+      return { ipcRenderer: { invoke, on: vi.fn() } }
+    },
   }
   vm.runInNewContext(fs.readFileSync(new URL('../preload.js', import.meta.url), 'utf8'), preload)
   loaded()
-  return { bridge: preload.window.yakitBridge.screenshot, capture, select, open, persist, config, handlers, win }
+  return {
+    bridge: preload.window.yakitBridge.screenshot,
+    capture,
+    select,
+    open,
+    copyImage,
+    persist,
+    config,
+    handlers,
+    win,
+  }
 }
 
 beforeEach(() => {
@@ -72,7 +90,7 @@ afterEach(() => {
 
 describe('desktop screenshot storage through the preload bridge', () => {
   it('saves original watermarked bytes under local screenshots without returning image data or overwriting', async () => {
-    const { bridge, capture, win } = loadBridge()
+    const { bridge, capture, copyImage, win } = loadBridge()
     expect((await bridge.getSettings()).directory).toBe(path.join(directory, 'screenshots'))
     const result = await bridge.captureAndSave()
     expect(capture).toHaveBeenCalledWith(win, expect.any(AbortSignal), {
@@ -82,8 +100,18 @@ describe('desktop screenshot storage through the preload bridge', () => {
     expect(result.path).toBe(path.join(directory, 'screenshots', 'screenshot-2026-11-10-12-34-56-fixed-id.png'))
     expect(fs.readFileSync(result.path, 'utf8')).toBe('watermarked PNG')
     expect(result).not.toHaveProperty('data')
+    expect(copyImage).toHaveBeenCalledWith(Buffer.from('watermarked PNG'))
+    expect(result).toMatchObject({ clipboardCopied: true, clipboardError: '' })
     await expect(bridge.captureAndSave()).rejects.toMatchObject({ code: 'EEXIST' })
     expect(fs.readFileSync(result.path, 'utf8')).toBe('watermarked PNG')
+  })
+
+  it('keeps a saved screenshot when clipboard copy fails and reports the clipboard error', async () => {
+    const { bridge, copyImage } = loadBridge()
+    copyImage.mockRejectedValueOnce(new Error('clipboard unavailable'))
+    const result = await bridge.captureAndSave()
+    expect(fs.readFileSync(result.path, 'utf8')).toBe('watermarked PNG')
+    expect(result).toMatchObject({ clipboardCopied: false, clipboardError: 'clipboard unavailable' })
   })
 
   it('persists a selected folder, keeps it on cancellation, saves there, and restores the workspace default', async () => {
@@ -138,7 +166,14 @@ describe('desktop screenshot storage through the preload bridge', () => {
 
   it('rejects invalid watermark options and reports persistence failures', async () => {
     const { bridge, persist } = loadBridge()
-    for (const options of [null, [], { watermarkEnabled: 'false' }, { watermarkPosition: 'center' }]) {
+    for (const options of [
+      null,
+      [],
+      { watermarkEnabled: 'false' },
+      { watermarkEnabled: null },
+      { watermarkPosition: null },
+      { watermarkPosition: 'center' },
+    ]) {
       await expect(bridge.updateWatermark(options)).rejects.toThrow('Invalid')
     }
     expect(persist).not.toHaveBeenCalled()

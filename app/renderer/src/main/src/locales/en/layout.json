@@ -515,6 +515,8 @@
     "stopScreen": "Stop Recording",
     "screenRecorder": "Recording Manager",
     "screenshot": "Screenshot",
+    "screenshotSelect": "Select Area to Capture",
+    "screenshotFullscreen": "Capture Full Screen",
     "settings": "Global Settings",
     "signOutSuccess": "Successfully signed out",
     "signOutRemoteConfirm": "Clicking sign out will automatically exit remote control, are you sure you want to exit?",
@@ -734,9 +736,11 @@
     "closing": "Closing processes, please wait..."
   },
   "Screenshot": {
-    "capture": "Take screenshot",
     "saved": "Screenshot saved",
     "failed": "Screenshot failed: {{error}}",
-    "openDirectory": "Open screenshot folder"
+    "openDirectory": "Open screenshot folder",
+    "openFileLocated": "Click to locate the file in File Manager",
+    "openFileFailed": "Failed to open file location: {{error}}",
+    "clipboardFailed": "Screenshot saved, but failed to copy to clipboard: {{error}}"
   }
 }

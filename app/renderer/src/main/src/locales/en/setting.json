@@ -106,7 +106,7 @@
       "title": "Screenshot settings",
       "selectDirectory": "Choose folder",
       "resetDirectory": "Restore default",
-      "description": "Use the camera button in the top bar to save the visible page as a PNG. Files are saved in the local workspace screenshots folder by default. Folder changes apply immediately; existing screenshots are not moved.",
+      "description": "Use the settings menu \"Screenshot → Capture Full Screen\" to save the visible page as a PNG. Files are saved in the local workspace screenshots folder by default. Folder changes apply immediately; existing screenshots are not moved.",
       "failed": "Screenshot settings operation failed: {{error}}",
       "watermarkEnabled": "Enable timestamp watermark",
       "watermarkDescription": "Uses this computer’s system time and time zone.",

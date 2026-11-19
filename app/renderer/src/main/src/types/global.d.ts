@@ -785,7 +785,14 @@ declare global {
 
   interface YakitBridge {
     screenshot: {
-      captureAndSave: () => Promise<{ path: string; capturedAt: string; width: number; height: number }>
+      captureAndSave: () => Promise<{
+        path: string
+        capturedAt: string
+        width: number
+        height: number
+        clipboardCopied: boolean
+        clipboardError: string
+      }>
       getSettings: () => Promise<YakitScreenshotSettings>
       updateWatermark: (
         options: Partial<Pick<YakitScreenshotSettings, 'watermarkEnabled' | 'watermarkPosition'>>,

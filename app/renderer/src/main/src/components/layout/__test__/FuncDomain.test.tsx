@@ -44,6 +44,9 @@ const {
   screenRecorderState,
   performanceSamplingState,
   setSampling,
+  screenshotCapture,
+  screenshotOpenDirectory,
+  screenshotOpenSpecifiedFile,
 } = vi.hoisted(() => {
   // UIOpNotice 更新链路的可变 mock 状态（describe「UIOpNotice 更新按钮状态与文案」中按用例赋值）
   const eeConfig = { value: [] as Array<{ configName: string; isOpen: boolean }> }
@@ -78,6 +81,9 @@ const {
     setSampling: vi.fn((b: boolean) => {
       performanceSamplingState.isPerformanceSampling = b
     }),
+    screenshotCapture: vi.fn(),
+    screenshotOpenDirectory: vi.fn().mockResolvedValue(undefined),
+    screenshotOpenSpecifiedFile: vi.fn().mockResolvedValue(undefined),
     eeConfig,
     versionSlots,
     engineList,
@@ -107,6 +113,16 @@ vi.mock('@/services/electronBridge', async (importOriginal) => {
       refreshMainMenu: vi.fn(),
       requestOpenScreenCapModal: vi.fn(),
       activateScreenshot: vi.fn(),
+    },
+    yakitScreenshot: {
+      captureAndSave: screenshotCapture,
+      openDirectory: screenshotOpenDirectory,
+    },
+    yakitShell: {
+      openSpecifiedFile: screenshotOpenSpecifiedFile,
+      openExternal: vi.fn(),
+      checkYakitInstallFile: vi.fn().mockResolvedValue(false),
+      openYakitPath: vi.fn().mockResolvedValue(undefined),
     },
     yakitEngine: new Proxy(
       { fetchYaklangVersionList: engineFetchList },
@@ -373,7 +389,7 @@ import { FuncDomain, MoreYaklangVersion, UIOpNotice } from '../FuncDomain'
 import type { FuncDomainProp } from '../FuncDomain'
 import { yakitUILayout } from '@/services/electronBridge'
 import emiter from '@/utils/eventBus/eventBus'
-import { yakitNotify } from '@/utils/notification'
+import { failed, yakitNotify } from '@/utils/notification'
 
 const baseProps: FuncDomainProp = {
   isEngineLink: true,
@@ -584,6 +600,7 @@ describe('FuncDomain 设置菜单（UIOpSetting）', () => {
 describe('FuncDomain 设置菜单录屏/截屏', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    screenshotCapture.mockReset()
     queryRisks.mockResolvedValue({ Data: [] })
     screenRecorderState.isRecording = false
   })
@@ -616,7 +633,23 @@ describe('FuncDomain 设置菜单录屏/截屏', () => {
     await waitFor(() => expect(yakitUILayout.cancelScreenRecorder).toHaveBeenCalledWith('t'))
   })
 
-  it('点击截屏触发 activateScreenshot，1 秒内 loading 不重复触发', async () => {
+  /** 展开「截屏」二级菜单 */
+  const openScreenshotSubmenu = async () => {
+    const parent = await screen.findByText('FuncDomain.screenshot')
+    const title = parent.closest('.ant-menu-submenu-title') ?? parent
+    fireEvent.mouseEnter(title)
+    fireEvent.mouseMove(title)
+    await screen.findByText('FuncDomain.screenshotSelect')
+  }
+
+  type CaptureResult = { path: string; clipboardCopied: boolean; clipboardError: string }
+  const shot = (path: string, clipboardError = ''): CaptureResult => ({
+    path,
+    clipboardCopied: !clipboardError,
+    clipboardError,
+  })
+
+  it('一级「截屏」标题点击等同于「选取截屏」，1 秒内 loading 不重复触发', async () => {
     render(<FuncDomain {...baseProps} />)
     openSettingMenu()
 
@@ -627,6 +660,88 @@ describe('FuncDomain 设置菜单录屏/截屏', () => {
     // loading 期间再次点击不触发第二次
     fireEvent.click(screen.getByText('FuncDomain.screenshot'))
     expect(yakitUILayout.activateScreenshot).toHaveBeenCalledTimes(1)
+  })
+
+  it('「选取截屏」与「截全屏」为并列二级菜单，选取截屏触发 activateScreenshot', async () => {
+    render(<FuncDomain {...baseProps} />)
+    openSettingMenu()
+    await openScreenshotSubmenu()
+
+    expect(screen.getByText('FuncDomain.screenshotSelect')).toBeInTheDocument()
+    expect(screen.getByText('FuncDomain.screenshotFullscreen')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByText('FuncDomain.screenshotSelect'))
+    await waitFor(() => expect(yakitUILayout.activateScreenshot).toHaveBeenCalledTimes(1))
+    expect(screenshotCapture).not.toHaveBeenCalled()
+  })
+
+  it('「截全屏」调用 captureAndSave，截图中重复点击不触发第二次并提示可点击的保存路径', async () => {
+    let resolveCapture!: (result: CaptureResult) => void
+    screenshotCapture.mockReturnValue(
+      new Promise((done) => {
+        resolveCapture = done
+      }),
+    )
+    render(<FuncDomain {...baseProps} />)
+    openSettingMenu()
+    await openScreenshotSubmenu()
+
+    const fullscreenItem = screen.getByText('FuncDomain.screenshotFullscreen')
+    fireEvent.click(fullscreenItem)
+    fireEvent.click(fullscreenItem)
+    await waitFor(() => expect(screenshotCapture).toHaveBeenCalledTimes(1))
+    expect(yakitNotify).not.toHaveBeenCalledWith('success', expect.anything())
+
+    await act(async () => resolveCapture(shot('/local/screenshots/test.png')))
+    await waitFor(() =>
+      expect(yakitNotify).toHaveBeenCalledWith('success', expect.objectContaining({ description: expect.anything() })),
+    )
+    const successCall = (yakitNotify as ReturnType<typeof vi.fn>).mock.calls.find(([type]) => type === 'success')
+    const description = successCall?.[1]?.description
+    expect(description.props.children).toBe('/local/screenshots/test.png')
+    await act(async () => {
+      await description.props.onClick()
+    })
+    expect(screenshotOpenSpecifiedFile).toHaveBeenCalledWith('/local/screenshots/test.png')
+    expect(yakitNotify).not.toHaveBeenCalledWith('warning', expect.anything())
+  })
+
+  it('「截全屏」剪贴板写入失败时单独提示但不影响保存成功', async () => {
+    screenshotCapture.mockResolvedValueOnce(shot('/saved.png', 'clipboard unavailable'))
+    render(<FuncDomain {...baseProps} />)
+    openSettingMenu()
+    await openScreenshotSubmenu()
+
+    fireEvent.click(screen.getByText('FuncDomain.screenshotFullscreen'))
+    await waitFor(() =>
+      expect(yakitNotify).toHaveBeenCalledWith('warning', expect.stringContaining('clipboard unavailable')),
+    )
+    expect(yakitNotify).toHaveBeenCalledWith('success', expect.anything())
+  })
+
+  it('截全屏快捷键触发截图并复用同一逻辑', async () => {
+    screenshotCapture.mockResolvedValueOnce(shot('/shortcut.png'))
+    render(<FuncDomain {...baseProps} />)
+    act(() => {
+      emiter.emit('onGlobalShortcutKey', JSON.stringify({ eventName: 'screenshotFullscreen', currentFocus: null }))
+    })
+
+    await waitFor(() => expect(screenshotCapture).toHaveBeenCalledTimes(1))
+    await waitFor(() => expect(yakitNotify).toHaveBeenCalledWith('success', expect.anything()))
+  })
+
+  it('「截全屏」失败时提示错误且允许再次点击', async () => {
+    screenshotCapture.mockRejectedValueOnce(new Error('disk full')).mockResolvedValueOnce(shot('/saved.png'))
+    render(<FuncDomain {...baseProps} />)
+    openSettingMenu()
+    await openScreenshotSubmenu()
+
+    fireEvent.click(screen.getByText('FuncDomain.screenshotFullscreen'))
+    await waitFor(() => expect(failed).toHaveBeenCalled())
+    expect(yakitNotify).not.toHaveBeenCalledWith('success', expect.anything())
+
+    fireEvent.click(screen.getByText('FuncDomain.screenshotFullscreen'))
+    await waitFor(() => expect(yakitNotify).toHaveBeenCalledWith('success', expect.anything()))
   })
 
   it('Linux 不展示截屏入口（主进程未注册处理器），录屏入口保留', async () => {

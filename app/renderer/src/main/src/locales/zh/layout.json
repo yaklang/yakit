@@ -515,6 +515,8 @@
     "stopScreen": "停止录屏",
     "screenRecorder": "录屏管理",
     "screenshot": "截屏",
+    "screenshotSelect": "选取截屏",
+    "screenshotFullscreen": "截全屏",
     "settings": "全局设置",
     "signOutSuccess": "已成功退出账号",
     "signOutRemoteConfirm": "点击退出登录将自动退出远程控制，是否确认退出",
@@ -734,9 +736,11 @@
     "closing": "进程关闭中，请稍等 ..."
   },
   "Screenshot": {
-    "capture": "一键截图",
     "saved": "截图已保存",
     "failed": "截图失败：{{error}}",
-    "openDirectory": "打开截图目录"
+    "openDirectory": "打开截图目录",
+    "openFileLocated": "点击在文件管理器中定位该文件",
+    "openFileFailed": "打开文件位置失败：{{error}}",
+    "clipboardFailed": "截图已保存，但写入剪贴板失败：{{error}}"
   }
 }

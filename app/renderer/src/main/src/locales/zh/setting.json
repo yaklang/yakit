@@ -106,7 +106,7 @@
       "title": "截图设置",
       "selectDirectory": "选择目录",
       "resetDirectory": "恢复默认",
-      "description": "点击顶部相机按钮，将当前可见页面保存为 PNG。默认保存在本机工作空间的 screenshots 文件夹；更改目录立即生效，已有截图不会移动。",
+      "description": "通过设置菜单「截屏 → 截全屏」，将当前可见页面保存为 PNG。默认保存在本机工作空间的 screenshots 文件夹；更改目录立即生效，已有截图不会移动。",
       "failed": "截图设置操作失败：{{error}}",
       "watermarkEnabled": "启用时间水印",
       "watermarkDescription": "使用当前电脑的系统时间和时区。",
