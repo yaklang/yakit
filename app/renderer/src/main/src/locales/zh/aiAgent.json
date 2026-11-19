@@ -972,6 +972,7 @@
     "multiMode": "多模式",
     "configuration": "执行模式配置",
     "configurationTip": "按任务需要组合使用 Plan、Multi-Agent 和 Goal 模式",
+    "planTip": "允许 AI 制定计划并按计划执行",
     "multiAgentTip": "优先使用 SubAgent 派发完成任务",
     "goalHint": "请选择一种目标模式并设定参数",
     "switchGoalModeContent": "切换后，当前选中项的值将恢复为默认值，是否继续？",

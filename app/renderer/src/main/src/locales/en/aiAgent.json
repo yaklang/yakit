@@ -972,6 +972,7 @@
     "multiMode": "Multi-mode",
     "configuration": "Execution modes",
     "configurationTip": "Combine Plan, Multi-Agent and Goal modes for your task",
+    "planTip": "Allow AI to create a plan and execute it",
     "multiAgentTip": "Prefer delegating tasks to SubAgents",
     "goalHint": "Choose a goal mode and set its parameters",
     "switchGoalModeContent": "Switching will reset the value of the currently selected option to its default. Continue?",

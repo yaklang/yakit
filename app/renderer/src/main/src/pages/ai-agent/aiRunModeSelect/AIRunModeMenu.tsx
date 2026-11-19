@@ -263,19 +263,25 @@ export const AIRunModeMenu: FC<AIRunModeMenuProps> = ({ fullWidth }) => {
         {ModeOptionList.map((item) => {
           const Icon = item.key === 'plan' ? IntentionOutlined : item.icon
           const checked = isModeSelected(item.key)
+          const modeTip =
+            item.key === 'plan'
+              ? t('AIRunModeSelect.planTip')
+              : item.key === 'multiAgent'
+                ? t('AIRunModeSelect.multiAgentTip')
+                : undefined
           return (
             <Fragment key={item.key}>
               <div className={styles['mode-option']}>
                 <div className={styles['mode-option-left']}>
                   <Icon size={16} color="currentColor" />
                   <span>{t(MODE_LABEL_KEY[item.key])}</span>
-                  {item.key === 'multiAgent' && (
-                    <Tooltip title={t('AIRunModeSelect.multiAgentTip')} trigger={['hover', 'focus']}>
+                  {modeTip && (
+                    <Tooltip title={modeTip} trigger={['hover', 'focus']}>
                       <QuestionMarkCircleOutlined
                         size={12}
                         color="var(--Colors-Use-Neutral-Text-3-Secondary)"
                         tabIndex={0}
-                        aria-label={t('AIRunModeSelect.multiAgentTip')}
+                        aria-label={modeTip}
                       />
                     </Tooltip>
                   )}
