@@ -91,4 +91,12 @@ describe('normalizeSubmittedMarkdown', () => {
     expect(normalizeSubmittedMarkdown('正文&#x20;\n下一行&#x20;\n')).toBe('正文 \n下一行')
     expect(normalizeSubmittedMarkdown('D:\\\\work\\_file.txt&#x20;\n')).toBe('D:\\\\work_file.txt')
   })
+
+  it('把 &amp;#x20; 还原成空格，并去掉文末换行和文末空白', () => {
+    expect(normalizeSubmittedMarkdown('正文&amp;#x20;\n')).toBe('正文')
+    expect(normalizeSubmittedMarkdown('&amp;#x20;正文\n')).toBe(' 正文')
+    expect(normalizeSubmittedMarkdown('正文&amp;#x20;\n下一行&amp;#x20;\n')).toBe('正文 \n下一行')
+    expect(normalizeSubmittedMarkdown('D:\\\\work\\_file.txt&amp;#x20;\n')).toBe('D:\\\\work_file.txt')
+    expect(normalizeSubmittedMarkdown('正文&#x20;&amp;#x20;\n')).toBe('正文')
+  })
 })
