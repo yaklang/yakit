@@ -81,23 +81,18 @@ describe('formatAIAgentSetting', () => {
     expect(result.Strategy?.GoalAcceptanceCriteria).toBe('接口 200')
   })
 
-  it('不再下发已废弃的 TimelineContentSizeLimit，运行时上下文走新字段', () => {
+  it('启动时剥离两个旧上下文阈值', () => {
     const result = formatAIAgentSetting({
       ...AIAgentSettingDefault,
       TimelineContentSizeLimit: 60,
       RuntimeContextSizeLimit: 300,
     })
     expect(result).not.toHaveProperty('TimelineContentSizeLimit')
-    // 内存配置保持 KB，仅发送后端时转换。
-    expect(result.RuntimeContextSizeLimit).toBe(300)
+    expect(result).not.toHaveProperty('RuntimeContextSizeLimit')
     expect(result.AICallTokenLimit).toBe(AIAgentSettingDefault.AICallTokenLimit)
   })
 
-  it('运行时上下文留空时不覆盖服务端默认阈值', () => {
-    const { RuntimeContextSizeLimit: _omit, ...rest } = AIAgentSettingDefault
-    expect(formatAIAgentSetting(rest).RuntimeContextSizeLimit).toBe(0)
-    expect(formatAIAgentSetting({ ...AIAgentSettingDefault, RuntimeContextSizeLimit: 0 }).RuntimeContextSizeLimit).toBe(
-      0,
-    )
+  it('未设置阈值时不添加默认字段', () => {
+    expect(formatAIAgentSetting(AIAgentSettingDefault)).not.toHaveProperty('RuntimeContextSizeLimit')
   })
 })

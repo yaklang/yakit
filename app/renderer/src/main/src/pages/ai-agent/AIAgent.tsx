@@ -18,6 +18,7 @@ import {
 } from './defaultConstant'
 import cloneDeep from 'lodash/cloneDeep'
 import omit from 'lodash/omit'
+import { omitLegacyAIContextLimits } from '@/pages/ai-re-act/hooks/grpcApi'
 import { grpcQueryAISession } from './grpc'
 import {
   applyAIAgentChatSettingBroadcast,
@@ -145,17 +146,10 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
     if (setting === lastInitializedSettingRef.current) return
     // 只有配置变化了才更新，SessionID不管
     if (activeChat.SessionID) {
-      const { RuntimeContextSizeLimit, ...config } = getSetting()
-      const sessionLimit = isChatSession(activeChat)
-        ? activeChat.StartParams?.RuntimeContextSizeLimit
-        : RuntimeContextSizeLimit
-      globalSessionEngine.updateSessionConfig(activeChat.SessionID, {
-        ...config,
-        ...(sessionLimit !== undefined ? { RuntimeContextSizeLimit: sessionLimit } : {}),
-      })
+      globalSessionEngine.updateSessionConfig(activeChat.SessionID, omitLegacyAIContextLimits(getSetting()))
     }
     persistAIAgentChatSetting(getSetting())
-  }, [setting, activeChat?.StartParams?.RuntimeContextSizeLimit])
+  }, [setting])
 
   const { onStart, onSend, onClose, onUpdatePageId, pendingChat, cancelPendingChat, detachPendingChat } = useChatIPC(
     YakitRoute.AI_Agent,
@@ -273,7 +267,14 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
         const params = session.StartParams
         initializeSetting({
           ...cloneDeep(AIAgentSettingDefault),
-          ...omit(params, ['CoordinatorId', 'Sequence', 'McpServers', 'UserQuery', 'TimelineContentSizeLimit']),
+          ...omit(params, [
+            'CoordinatorId',
+            'Sequence',
+            'McpServers',
+            'UserQuery',
+            'TimelineContentSizeLimit',
+            'RuntimeContextSizeLimit',
+          ]),
           Strategy: { ...AIAgentSettingDefault.Strategy, ...params?.Strategy },
         })
         updateActiveChat((current) =>

@@ -31,9 +31,13 @@
   pointer-events: none;
   user-select: none;
   white-space: nowrap;
+
+  :global(.ProseMirror[contenteditable='false']) & {
+    display: none;
+  }
 }
 
-.placeholder-mention {
+.placeholder-symbol {
   display: inline-flex;
   align-items: center;
   justify-content: center;

@@ -13,7 +13,6 @@ import type { PendingAIChat } from '@/pages/ai-re-act/hooks/ChatMultiSessionCont
 import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
 import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
 import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
-import useRuntimeContextSizeLimit from '@/pages/ai-agent/useContext/useRuntimeContextSizeLimit'
 
 const ipc = vi.hoisted(() => ({
   useChatIPC: vi.fn(),
@@ -87,17 +86,17 @@ function Consumer() {
   )
 }
 
-function RuntimeContextConsumer({ session }: { session: AISession }) {
+const SettingsConsumer = ({ session }: { session: AISession }) => {
   const { setting, activeChat } = useAIAgentStore()
   const { setSetting, setActiveChat } = useAIAgentDispatcher()
-  const runtimeLimit = useRuntimeContextSizeLimit()
   return (
     <>
-      <span data-testid="global-limit">{setting.RuntimeContextSizeLimit}</span>
-      <span data-testid="runtime-limit">{runtimeLimit}</span>
+      <span data-testid="global-setting">{JSON.stringify(setting)}</span>
       <span data-testid="session-params">{JSON.stringify(activeChat?.StartParams)}</span>
-      <button onClick={() => setSetting((current) => ({ ...current, RuntimeContextSizeLimit: 900 }))}>
-        change-default-limit
+      <button
+        onClick={() => setSetting((current) => ({ ...current, RuntimeContextSizeLimit: 900, AICallTokenLimit: 40 }))}
+      >
+        change-default-setting
       </button>
       <button onClick={() => setActiveChat(session)}>select-session</button>
       <button
@@ -132,7 +131,7 @@ function verifyProvider(Provider: typeof HistoryAIReActChatProvider) {
 }
 
 describe('HistoryAIReActChatProvider', () => {
-  it.each([120, 0, undefined])('全局默认值变化时保留会话原始字节阈值 %s', (limit) => {
+  it.each([120, 0, undefined])('旧会话上下文阈值 %s 不会随全局设置同步', (limit) => {
     const session = {
       SessionID: 'history',
       StartParams: { EnablePlan: true, ...(limit === undefined ? {} : { RuntimeContextSizeLimit: limit }) },
@@ -144,29 +143,24 @@ describe('HistoryAIReActChatProvider', () => {
         pageId={YakitRoute.AI_REPOSITORY}
         focusModeLoop=""
       >
-        <RuntimeContextConsumer session={session} />
+        <SettingsConsumer session={session} />
       </HistoryAIReActChatProvider>,
     )
-    fireEvent.click(screen.getByRole('button', { name: 'change-default-limit' }))
+    fireEvent.click(screen.getByRole('button', { name: 'change-default-setting' }))
     expect(globalSessionEngine.updateSessionConfig).not.toHaveBeenCalled()
     fireEvent.click(screen.getByRole('button', { name: 'select-session' }))
     vi.mocked(globalSessionEngine.updateSessionConfig).mockClear()
 
-    fireEvent.click(screen.getByRole('button', { name: 'change-default-limit' }))
+    fireEvent.click(screen.getByRole('button', { name: 'change-default-setting' }))
 
-    expect(screen.getByTestId('global-limit')).toHaveTextContent(/^900$/)
-    expect(screen.getByTestId('runtime-limit')).toHaveTextContent(limit ? /^120$/ : /^300$/)
     expect(JSON.parse(screen.getByTestId('session-params').textContent!)).toEqual(session.StartParams)
     expect(globalSessionEngine.updateSessionConfig).toHaveBeenCalledExactlyOnceWith('history', expect.any(Object))
     const config = vi.mocked(globalSessionEngine.updateSessionConfig).mock.calls[0][1]
-    if (limit === undefined) {
-      expect(config).not.toHaveProperty('RuntimeContextSizeLimit')
-    } else {
-      expect(config.RuntimeContextSizeLimit).toBe(limit)
-    }
+    expect(config).not.toHaveProperty('RuntimeContextSizeLimit')
+    expect(config.AICallTokenLimit).toBe(40)
   })
 
-  it('函数式更新会话阈值后同步字节值，连续更新保留其他参数且不修改全局默认值', () => {
+  it('连续更新保留会话参数，旧阈值元数据不再触发设置同步', () => {
     const session = {
       SessionID: 'history',
       StartParams: { RuntimeContextSizeLimit: 120, SyncPerceptionTrigger: true, EnablePlan: true },
@@ -178,26 +172,23 @@ describe('HistoryAIReActChatProvider', () => {
         pageId={YakitRoute.AI_REPOSITORY}
         focusModeLoop=""
       >
-        <RuntimeContextConsumer session={session} />
+        <SettingsConsumer session={session} />
       </HistoryAIReActChatProvider>,
     )
-    fireEvent.click(screen.getByRole('button', { name: 'change-default-limit' }))
+    fireEvent.click(screen.getByRole('button', { name: 'change-default-setting' }))
     fireEvent.click(screen.getByRole('button', { name: 'select-session' }))
     vi.mocked(globalSessionEngine.updateSessionConfig).mockClear()
 
+    const globalSetting = screen.getByTestId('global-setting').textContent
     fireEvent.click(screen.getByRole('button', { name: 'change-session-config' }))
 
-    expect(screen.getByTestId('runtime-limit')).toHaveTextContent(/^600$/)
-    expect(screen.getByTestId('global-limit')).toHaveTextContent(/^900$/)
+    expect(screen.getByTestId('global-setting').textContent).toBe(globalSetting)
     expect(JSON.parse(screen.getByTestId('session-params').textContent!)).toEqual({
       RuntimeContextSizeLimit: 600,
       SyncPerceptionTrigger: false,
       EnablePlan: true,
     })
-    expect(globalSessionEngine.updateSessionConfig).toHaveBeenCalledExactlyOnceWith(
-      'history',
-      expect.objectContaining({ RuntimeContextSizeLimit: 600 }),
-    )
+    expect(globalSessionEngine.updateSessionConfig).not.toHaveBeenCalled()
     expect(session.StartParams).toEqual({
       RuntimeContextSizeLimit: 120,
       SyncPerceptionTrigger: true,

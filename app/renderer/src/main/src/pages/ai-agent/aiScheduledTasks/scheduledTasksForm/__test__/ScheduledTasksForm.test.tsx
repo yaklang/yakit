@@ -46,10 +46,7 @@ afterEach(() => {
 })
 
 describe('ScheduledTasksForm 保存运行时上下文参数', () => {
-  it.each([
-    { limit: 300, expected: 300 },
-    { limit: undefined, expected: 0 },
-  ])('新建任务将 $limit KB 以 $expected KB 交给发送层', async ({ limit, expected }) => {
+  it.each([300, undefined])('新建任务不发送旧阈值 %s', async (limit) => {
     getSetting.mockReturnValue({
       ...AIAgentSettingDefault,
       RuntimeContextSizeLimit: limit,
@@ -69,8 +66,8 @@ describe('ScheduledTasksForm 保存运行时上下文参数', () => {
     const [{ Schedule: schedule }, hiddenError] = vi.mocked(grpcCreateAIReActSchedule).mock.calls[0]
     expect(hiddenError).toBe(true)
     expect(schedule.Name).toBe('new task')
+    expect(schedule.Payload.StartParams).not.toHaveProperty('RuntimeContextSizeLimit')
     expect(schedule.Payload.StartParams).toMatchObject({
-      RuntimeContextSizeLimit: expected,
       AICallAutoRetry: 7,
       ReviewPolicy: 'yolo',
       DisallowRequireForUserPrompt: true,
@@ -81,7 +78,7 @@ describe('ScheduledTasksForm 保存运行时上下文参数', () => {
     expect(onSuccess).toHaveBeenCalledTimes(1)
   })
 
-  it.each(['307200', undefined])('编辑任务仅修改名称时保留响应转换后的 KB 阈值 %s', async (limit) => {
+  it.each(['307200', undefined])('编辑任务仅修改名称时去除旧阈值 %s', async (limit) => {
     const startParams = {
       ...AIAgentSettingDefault,
       TimelineContentSizeLimit: 123,
@@ -101,7 +98,7 @@ describe('ScheduledTasksForm 保存运行时上下文参数', () => {
     }
     ipcRendererMock.invoke.mockResolvedValue(response)
     const editing = await grpcGetAIReActSchedule({ UUID: response.UUID })
-    expect(editing.Payload.StartParams.RuntimeContextSizeLimit).toBe(Number(limit ?? 0) / 1024)
+    expect(editing.Payload.StartParams).not.toHaveProperty('RuntimeContextSizeLimit')
     const onSuccess = vi.fn()
     render(<ScheduledTasksForm editing={editing} onClose={vi.fn()} onSuccess={onSuccess} />)
     fireEvent.change(screen.getByPlaceholderText('AIScheduledTasks.namePlaceholder'), {
@@ -116,10 +113,10 @@ describe('ScheduledTasksForm 保存运行时上下文参数', () => {
     expect(schedule.Payload.Prompt).toBe(editing.Payload.Prompt)
     expect(schedule.Schedule).toEqual(editing.Schedule)
     expect(schedule.Payload.StartParams).toMatchObject({
-      RuntimeContextSizeLimit: Number(limit ?? 0) / 1024,
       AICallAutoRetry: 7,
     })
     expect(schedule.Payload.StartParams).not.toHaveProperty('TimelineContentSizeLimit')
+    expect(schedule.Payload.StartParams).not.toHaveProperty('RuntimeContextSizeLimit')
     expect(startParams.TimelineContentSizeLimit).toBe(123)
     expect(startParams.RuntimeContextSizeLimit).toBe(limit)
     expect(getSetting).not.toHaveBeenCalled()

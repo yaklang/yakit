@@ -6,6 +6,30 @@ const path = require('path')
 const { discardAIImageDraft } = require('./utils/aiImageDraft')
 
 module.exports = (win, getClient) => {
+  ipcMain.handle('GetAIModelContext', (e, params) => {
+    return new Promise((resolve, reject) => {
+      getClient().GetAIModelContext(params, (err, data) => {
+        if (err) {
+          reject(err)
+          return
+        }
+        resolve(data)
+      })
+    })
+  })
+
+  ipcMain.handle('SetAIModelContext', (e, params) => {
+    return new Promise((resolve, reject) => {
+      getClient().SetAIModelContext(params, (err, data) => {
+        if (err) {
+          reject(err)
+          return
+        }
+        resolve(data)
+      })
+    })
+  })
+
   ipcMain.handle('GetAISessionCurrentResources', (e, params) => {
     return new Promise((resolve, reject) => {
       getClient().GetAISessionCurrentResources(params, (err, data) => {

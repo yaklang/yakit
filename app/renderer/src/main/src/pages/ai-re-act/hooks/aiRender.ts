@@ -3,8 +3,48 @@ import type { AIAgentGrpcApi, AIOutputEvent, AITaskStatusType, AIOutputI18n } fr
 import type { CustomPluginExecuteFormValue } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
 import type { QuestionRequest, UISubmission } from '../interactive-ui/types'
 import type { UIDiagnostic } from '../interactive-ui/validate'
+import type { AIModelConfig } from '@/pages/ai-agent/aiModelList/utils'
 
 // #region AI-Agent 非会话列表外的渲染数据
+export type AIModelContextSource = 'settings' | 'stream'
+
+/** 由 GetAIModelContext 返回的设置，独立于会话用量。 */
+export interface ModelContextSnapshot {
+  context_key: string
+  provider: string
+  model: string
+  threshold_tokens: number
+  minimum_threshold_tokens: number
+  disable_auto_adjust: boolean
+}
+
+export type ModelContextPatch = Partial<Pick<ModelContextSnapshot, 'threshold_tokens' | 'disable_auto_adjust'>>
+
+export interface PendingModelContextChange {
+  patch: ModelContextPatch
+  queuedPatch?: ModelContextPatch
+  queuedRetry?: boolean
+  timer?: ReturnType<typeof setTimeout>
+  baseline?: ModelContextSnapshot
+  onHotpatchError?: (error: string) => void
+}
+
+export interface ModelContextState {
+  /** 当前查询、保存及已确认配置所属的主模型。 */
+  primaryModel?: AIModelConfig
+  status: 'idle' | 'loading' | 'ready' | 'unbound' | 'unsupported' | 'error'
+  /** 会话、模型或读写请求切换时，用于丢弃过期的异步结果。 */
+  generation: number
+  /** 最近一次 model_context 上报的已用 token 数。 */
+  promptTokens?: number
+  /** 触发 GET 的流事件阈值；界面继续显示 saved 中的配置。 */
+  refreshThreshold?: number
+  saved?: ModelContextSnapshot
+  pending?: PendingModelContextChange
+  failedPatch?: ModelContextPatch
+  error?: string
+}
+
 /** 自由对话-实时问题队列 */
 export interface AIQuestionQueues {
   total: number
@@ -608,6 +648,7 @@ export interface ChatStoreState {
   availableSkillsUpdate: number
   /** aiChat.d.ts AIAgentChatData draftMaterials */
   draftMaterialsUpdate: number
+  modelContextUpdate: number
 
   /** 接口运行过程中的数据文件夹合集 */
   grpcFolders: AIFileSystemPin[]
@@ -722,6 +763,7 @@ export interface ChatStoreState {
       | 'loadedSkillsUpdate'
       | 'availableSkillsUpdate'
       | 'draftMaterialsUpdate'
+      | 'modelContextUpdate'
       | 'currentPlanReviewExtraUpdate'
       | 'chatTodoListUpdate'
       | 'taskDetailsUpdate',
@@ -756,6 +798,7 @@ export interface ChatStoreState {
         | 'loadedSkillsUpdate'
         | 'availableSkillsUpdate'
         | 'draftMaterialsUpdate'
+        | 'modelContextUpdate'
         | 'grpcFolders'
         | 'reActTimelines'
         | 'httpTabShow'

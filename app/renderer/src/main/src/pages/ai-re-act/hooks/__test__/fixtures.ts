@@ -23,6 +23,7 @@ const emptyTierConsumption = {
 export const createTestRawData = (): AIAgentChatData => {
   const defaultData: AIAgentChatData = {
     draftMaterials: DefaultDraftMaterials,
+    modelContext: { status: 'idle', generation: 0 },
     httpFuzzRequest: undefined,
     httpFlowFuzzStatus: undefined,
     sessionTitle: '',

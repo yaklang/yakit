@@ -8,7 +8,7 @@ import { YakitRoute } from '@/enums/yakitRoute'
 import { ipcRendererMock, resetIpcMocks } from './setupElectron'
 import { makeGrpcJsonRes } from './fixtures'
 import aiChatPersistStore from '../persist/aiChatPersistStore'
-import { grpcQueryAIEvent } from '@/pages/ai-agent/grpc'
+import { grpcGetAIModelContext, grpcQueryAIEvent, grpcSetAIModelContext } from '@/pages/ai-agent/grpc'
 import { yakitNotify } from '@/utils/notification'
 import { AIChatQSDataTypeEnum } from '../aiRender'
 import { AISourceEnum } from '../grpcApi'
@@ -20,7 +20,11 @@ import cloneDeep from 'lodash/cloneDeep'
 import { DefaultDraftMaterials } from '../defaultConstant'
 
 vi.mock('@/utils/notification', () => ({ yakitNotify: vi.fn() }))
-vi.mock('@/pages/ai-agent/grpc', () => ({ grpcQueryAIEvent: vi.fn().mockResolvedValue({ Events: [] }) }))
+vi.mock('@/pages/ai-agent/grpc', () => ({
+  grpcGetAIModelContext: vi.fn(),
+  grpcSetAIModelContext: vi.fn(),
+  grpcQueryAIEvent: vi.fn().mockResolvedValue({ Events: [] }),
+}))
 vi.mock('../AIAgentLogEmitter', () => ({ aiAgentLogEmitter: { dispatch: vi.fn() } }))
 vi.mock('../persist/aiChatPersistStore', () => ({
   default: {
@@ -155,28 +159,31 @@ describe('frontend allocated session identity', () => {
     expect(controller.getSessionPageId('client-session', YakitRoute.AI_Agent)).toBe('page')
   })
 
-  it('stores KB and converts only outgoing start and hotpatch copies', async () => {
+  it('omits the legacy context limit on start and converts token limit copies', async () => {
     const config = { RuntimeContextSizeLimit: 300, AICallTokenLimit: 40 }
     const input: AIChatIPCStartParams = {
       kind: 'new',
       sessionId: 'unit-session',
       route: YakitRoute.AI_Agent,
       pageId: 'page',
-      params: { Params: { ...config, Source: 'ai', UserQuery: '' } },
+      params: { Params: { ...config, Source: AISourceEnum.webFuzzer, UserQuery: '' } },
     }
     const token = controller.handleStartSession(input, {
       onPendingChange: (pending) => pendings.set(pending.streamToken, pending),
     }) as string
     await tick()
     const data = pendings.get(token)!.data
-    expect(data.request).toMatchObject(config)
+    expect(data.request).toMatchObject({ AICallTokenLimit: 40 })
+    expect(data.request).not.toHaveProperty('RuntimeContextSizeLimit')
     expect(ipcRendererMock.invoke).toHaveBeenCalledWith(
       'start-ai-re-act',
       token,
       expect.objectContaining({
-        Params: expect.objectContaining({ RuntimeContextSizeLimit: 307200, AICallTokenLimit: 40960 }),
+        Params: expect.objectContaining({ AICallTokenLimit: 40960 }),
       }),
     )
+    const startRequest = ipcRendererMock.invoke.mock.calls.find(([method]) => method === 'start-ai-re-act')![2]
+    expect(startRequest.Params).not.toHaveProperty('RuntimeContextSizeLimit')
     expect(input.params.Params).toMatchObject(config)
     await emit(token, 'pong', 'unit-session')
     const patch = {
@@ -188,11 +195,153 @@ describe('frontend allocated session identity', () => {
     expect(ipcRendererMock.invoke).toHaveBeenCalledWith(
       'send-ai-re-act',
       token,
-      expect.objectContaining({ Params: { RuntimeContextSizeLimit: 614400 } }),
+      expect.objectContaining({ Params: { RuntimeContextSizeLimit: 600 } }),
     )
     expect(patch.Params.RuntimeContextSizeLimit).toBe(600)
-    expect(data.request).toMatchObject(config)
+    expect(data.request).toMatchObject({ AICallTokenLimit: 40 })
+    expect(data.request).not.toHaveProperty('RuntimeContextSizeLimit')
     await controller.handleSessionEnd('unit-session')
+  })
+
+  it('starts the stream without requesting model context', async () => {
+    const token = await start()
+    expect(ipcRendererMock.invoke).toHaveBeenCalledWith(
+      'start-ai-re-act',
+      token,
+      expect.objectContaining({
+        Params: expect.not.objectContaining({ RuntimeContextSizeLimit: expect.anything() }),
+      }),
+    )
+    expect(grpcGetAIModelContext).not.toHaveBeenCalled()
+  })
+
+  it('drops draft context and its pending save before the first connection', async () => {
+    const { rawData } = controller.ensureSession('client-session')
+    const timeout = vi.fn()
+    const saved = {
+      provider: 'openai',
+      model: 'primary',
+      context_key: 'draft-key',
+      threshold_tokens: 500000,
+      disable_auto_adjust: false,
+      minimum_threshold_tokens: 100000,
+    }
+    rawData.modelContext = {
+      status: 'ready',
+      generation: 4,
+      saved,
+      pending: { patch: { threshold_tokens: 600000 }, timer: setTimeout(() => timeout(), 10000) },
+    }
+
+    const token = await start()
+    await emit(token, 'pong', 'client-session')
+
+    expect(rawData.modelContext).toEqual({ status: 'idle', generation: 5 })
+    await vi.advanceTimersByTimeAsync(10000)
+    expect(timeout).not.toHaveBeenCalled()
+    await controller.handleSessionEnd('client-session')
+  })
+
+  it('preserves model context feedback across pong', async () => {
+    const token = await start()
+    try {
+      const pending = pendings.get(token)!
+      Object.assign(pending.data.rawData.modelContext, {
+        error: 'AIContextUsage.missingContextKey',
+        failedPatch: { threshold_tokens: 600000 },
+      })
+      await emit(token, 'pong', 'client-session')
+      const session = controller.ensureSession('client-session')
+      expect(session.rawData.modelContext).toMatchObject({
+        status: 'idle',
+        error: 'AIContextUsage.missingContextKey',
+        failedPatch: { threshold_tokens: 600000 },
+      })
+      expect(grpcSetAIModelContext).not.toHaveBeenCalled()
+      expect(ipcRendererMock.invoke).not.toHaveBeenCalledWith(
+        'send-ai-re-act',
+        token,
+        expect.objectContaining({ IsConfigHotpatch: true }),
+      )
+    } finally {
+      await controller.handleSessionEnd('client-session')
+    }
+  })
+
+  it.each([
+    { patch: { threshold_tokens: 600001 }, wire: { RuntimeContextSizeLimit: 600001 } },
+    { patch: { disable_auto_adjust: true }, wire: { RuntimeContextSizeLimit: 0, DisableContextAutoAdjust: true } },
+    { patch: { disable_auto_adjust: false }, wire: { RuntimeContextSizeLimit: 0, DisableContextAutoAdjust: false } },
+  ])('sends a key-only model update with $wire', async ({ wire }) => {
+    const token = await start()
+    await emit(token, 'pong', 'client-session')
+    const contextKey = 'Opaque/Key:V2'
+    const session = controller.ensureSession('client-session')
+    const before = session.rawData.contents.size
+    const previousPollingTimer = session.meta.queuePollingTimer
+    const concurrencyCheck = vi.spyOn(controller, 'canStartExecutingSession').mockReturnValue(false)
+    expect(
+      controller.handleSendMessage({
+        token: 'client-session',
+        type: 'casual',
+        params: {
+          IsConfigHotpatch: true,
+          HotpatchType: 'RuntimeContextSizeLimit',
+          Params: { ModelContextKey: contextKey, ...wire },
+        },
+      }),
+    ).toBe(true)
+    expect(ipcRendererMock.invoke).toHaveBeenCalledWith('send-ai-re-act', token, {
+      IsConfigHotpatch: true,
+      HotpatchType: 'RuntimeContextSizeLimit',
+      Params: { ModelContextKey: contextKey, ...wire },
+    })
+    expect(session.rawData.contents.size).toBe(before)
+    expect(session.meta.queuePollingTimer).toBe(previousPollingTimer)
+    expect(concurrencyCheck).not.toHaveBeenCalled()
+    await controller.handleSessionEnd('client-session')
+  })
+
+  it('rejects an unavailable channel without sending a model update', async () => {
+    const token = await start()
+    await emit(token, 'pong', 'client-session')
+    ipcRendererMock.invoke.mockClear()
+    expect(
+      controller.handleSendMessage({
+        token: 'missing-session',
+        type: 'casual',
+        params: {
+          IsConfigHotpatch: true,
+          HotpatchType: 'RuntimeContextSizeLimit',
+          Params: { ModelContextKey: 'owner:model', RuntimeContextSizeLimit: 600000 },
+        },
+      }),
+    ).toBe(false)
+    expect(ipcRendererMock.invoke).not.toHaveBeenCalled()
+    await controller.handleSessionEnd('client-session')
+  })
+
+  it('surfaces asynchronous model-update send rejection', async () => {
+    const token = await start()
+    await emit(token, 'pong', 'client-session')
+    ipcRendererMock.invoke.mockRejectedValueOnce(new Error('send rejected'))
+    const onSendError = vi.fn()
+    expect(
+      controller.handleSendMessage({
+        token: 'client-session',
+        type: 'casual',
+        params: {
+          IsConfigHotpatch: true,
+          HotpatchType: 'RuntimeContextSizeLimit',
+          Params: { ModelContextKey: 'owner:model', RuntimeContextSizeLimit: 600000 },
+        },
+        onSendError,
+      }),
+    ).toBe(true)
+    await tick()
+    expect(onSendError).toHaveBeenCalledExactlyOnceWith(new Error('send rejected'))
+    expect(controller.ensureSession('client-session').meta.lifecycle).toMatchObject({ current: true, closing: false })
+    await controller.handleSessionEnd('client-session')
   })
 
   it('retrying a failed start converts the original KB input only once', async () => {
@@ -201,7 +350,7 @@ describe('frontend allocated session identity', () => {
       sessionId: 'retry-units',
       route: YakitRoute.AI_Agent,
       pageId: 'page',
-      params: { Params: { Source: 'ai', RuntimeContextSizeLimit: 300, AICallTokenLimit: 40 } },
+      params: { Params: { Source: AISourceEnum.webFuzzer, RuntimeContextSizeLimit: 300, AICallTokenLimit: 40 } },
     }
     const callbacks = { onPendingChange: (pending: PendingAIChat) => pendings.set(pending.streamToken, pending) }
     const first = controller.handleStartSession(input, callbacks) as string
@@ -214,10 +363,11 @@ describe('frontend allocated session identity', () => {
     const sent = ipcRendererMock.invoke.mock.calls.filter(([name]) => name === 'start-ai-re-act')
     expect(sent).toHaveLength(2)
     for (const [, , event] of sent) {
-      expect(event.Params.RuntimeContextSizeLimit).toBe(307200)
+      expect(event.Params).not.toHaveProperty('RuntimeContextSizeLimit')
       expect(event.Params.AICallTokenLimit).toBe(40960)
     }
-    expect(pendings.get(second)!.data.request.RuntimeContextSizeLimit).toBe(300)
+    expect(pendings.get(second)!.data.request).not.toHaveProperty('RuntimeContextSizeLimit')
+    expect(input.params.Params?.RuntimeContextSizeLimit).toBe(300)
     expect(input.params.Params?.AICallTokenLimit).toBe(40)
   })
 
@@ -479,11 +629,11 @@ describe('frontend allocated session identity', () => {
         TimelineSessionID: 'client-session',
         Attach: false,
         PreferSessionCachedConfig: false,
-        RuntimeContextSizeLimit: 0,
         ClientUI: expect.stringContaining('"protocol":"memfit.ui/1"'),
       },
     })
     const [, , startRequest] = ipcRendererMock.invoke.mock.calls.find(([method]) => method === 'start-ai-re-act')!
+    expect(startRequest.Params).not.toHaveProperty('RuntimeContextSizeLimit')
     expect(startRequest.Params).not.toHaveProperty('TimelineContentSizeLimit')
     expect(params).toEqual(original)
     controller.cancelPendingConnection(token)

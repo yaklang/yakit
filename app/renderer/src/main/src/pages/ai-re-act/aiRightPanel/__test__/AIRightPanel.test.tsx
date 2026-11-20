@@ -312,9 +312,8 @@ vi.mock('i18next-resources-to-backend', () => {
 
 import { compileReactModule } from '@/utils/__test__/helpers/compileReactModule'
 import { clearSessionSnapshotExecutionClocks } from '../../hooks/sessionSnapshotExecution'
-const { AIRightPanel } = await compileReactModule<typeof AIRightPanelModule>(import.meta.url, '../AIRightPanel.tsx')
 import { AIRightPanelPane } from '../AIRightPanelPane'
-import type { AIRightPanelProps } from '../type'
+const { AIRightPanel } = await compileReactModule<typeof AIRightPanelModule>(import.meta.url, '../AIRightPanel.tsx')
 
 vi.mock('@/pages/ai-agent/chatTemplate/historyTaskTree/TaskListPane', () => ({
   TaskListPane: () => <div data-testid="task-list-pane" />,
@@ -1543,7 +1542,7 @@ describe('AIRightPanel', () => {
 
   it('当正常态面板会遮挡列表时切换为小屏态', async () => {
     const listElement = document.createElement('div')
-    let listWidth = 1108
+    let listWidth = 1188
     Object.defineProperty(listElement, 'clientWidth', {
       configurable: true,
       get: () => listWidth,
@@ -1567,12 +1566,12 @@ describe('AIRightPanel', () => {
 
     try {
       render(<AIRightPanel layoutRef={layoutRef} />)
-      // 1108 - 325 = 783 < 784 进入小屏（仅图标）；宽度到 1109 恢复正常态后菜单文案出现
+      // 1188 - 325 = 863，小于内容最大宽度，仅显示图标。
       await waitFor(() => expect(screen.getByLabelText('文件系统')).toBeInTheDocument())
       expect(screen.queryByText('文件系统')).not.toBeInTheDocument()
 
-      // 1108 - 325 = 783，小于列表最大宽度，进入小屏；达到 784px 后恢复正常态。
-      listWidth = 1109
+      // 剩余 864px 时恢复正常态，显示菜单文案。
+      listWidth = 1189
       act(() => resizeCallback?.())
       await waitFor(() => expect(screen.getByText('文件系统')).toBeInTheDocument())
     } finally {
@@ -1583,7 +1582,7 @@ describe('AIRightPanel', () => {
   it('小屏判断跟随聊天容器宽度并在最大宽度边界切换', async () => {
     const listElement = document.createElement('div')
 
-    let listWidth = 783
+    let listWidth = 864
     Object.defineProperty(listElement, 'clientWidth', {
       configurable: true,
       get: () => listWidth,
@@ -1609,8 +1608,8 @@ describe('AIRightPanel', () => {
       render(<AIRightPanel layoutRef={layoutRef} />)
       await waitFor(() => expect(screen.queryByText('文件系统')).not.toBeInTheDocument())
 
-      // 聊天容器宽度达到 1109px 后，扣除 325px 面板槽位正好剩余 784px，恢复正常态。
-      listWidth = 1109
+      // 容器宽度达到 1189px 后，扣除 325px 面板槽位正好剩余 864px。
+      listWidth = 1189
       act(() => resizeCallback?.())
       await waitFor(() => expect(screen.getByText('文件系统')).toBeInTheDocument())
     } finally {

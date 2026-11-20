@@ -1,7 +1,8 @@
 import type React from 'react'
 import { memo, useCallback, useEffect, useMemo, useRef } from 'react'
 import { useCreation, useMemoizedFn, useSafeState, useUpdateEffect } from 'ahooks'
-import { clone, cloneDeep } from 'lodash'
+import clone from 'lodash/clone'
+import cloneDeep from 'lodash/cloneDeep'
 
 import AIAgentContext, {
   type AIAgentContextDispatcher,
@@ -22,7 +23,8 @@ import type {
   AISendParams,
   AISendResProps,
 } from '@/pages/ai-re-act/aiReActChat/AIReActChatType'
-import { AITaskStatus, type AIAgentGrpcApi, type AIInputEvent, type AISource } from '@/pages/ai-re-act/hooks/grpcApi'
+import { AITaskStatus, omitLegacyAIContextLimits } from '@/pages/ai-re-act/hooks/grpcApi'
+import type { AIAgentGrpcApi, AIInputEvent, AISource } from '@/pages/ai-re-act/hooks/grpcApi'
 import { YakitRoute, type YakitRouteType } from '@/enums/yakitRoute'
 import {
   applyHttpFuzzRequestChangeToWebFuzzerPage,
@@ -228,15 +230,9 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   useUpdateEffect(() => {
     // 只有配置变化了才更新，SessionID不管
     if (activeChat?.SessionID) {
-      const { RuntimeContextSizeLimit: _defaultLimit, ...config } = getSetting()
-      globalSessionEngine.updateSessionConfig(activeChat.SessionID, {
-        ...config,
-        ...(activeChat.StartParams?.RuntimeContextSizeLimit !== undefined
-          ? { RuntimeContextSizeLimit: activeChat.StartParams.RuntimeContextSizeLimit }
-          : {}),
-      })
+      globalSessionEngine.updateSessionConfig(activeChat.SessionID, omitLegacyAIContextLimits(getSetting()))
     }
-  }, [setting, activeChat?.StartParams?.RuntimeContextSizeLimit])
+  }, [setting])
 
   useEffect(() => {
     if (!showFreeChat) {

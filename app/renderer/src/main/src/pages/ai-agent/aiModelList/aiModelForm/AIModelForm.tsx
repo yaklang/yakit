@@ -7,29 +7,28 @@ import type {
   AIModelFormUpdateOptions,
 } from './AIModelFormType'
 import { useCreation, useDebounceFn, useInViewport, useMemoizedFn } from 'ahooks'
-import { Form, type FormInstance } from 'antd'
-import {
-  type AIThirdPartyApplicationConfig,
-  NewAIThirdPartyApplicationConfigBase,
-} from '@/components/configNetwork/NewAIThirdPartyApplicationConfig'
+import { Form } from 'antd'
+import type { FormInstance } from 'antd'
+import type { AIThirdPartyApplicationConfig } from '@/components/configNetwork/NewAIThirdPartyApplicationConfig'
+import { NewAIThirdPartyApplicationConfigBase } from '@/components/configNetwork/NewAIThirdPartyApplicationConfig'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import {
-  type AIGlobalConfig,
-  type AIModelConfig,
-  type AIModelTypeFileName,
-  type AIProvider,
-  grpcQueryAIProviderAll,
-  grpcAIConfigHealthCheck,
-  normalizeAIAPIType,
-  type AIConfigHealthCheckResponse,
+import type {
+  AIGlobalConfig,
+  AIModelConfig,
+  AIModelTypeFileName,
+  AIProvider,
+  AIConfigHealthCheckResponse,
 } from '../utils'
+import { grpcQueryAIProviderAll, grpcAIConfigHealthCheck, normalizeAIAPIType } from '../utils'
 import { YakitAutoComplete } from '@/components/yakitUI/YakitAutoComplete/YakitAutoComplete'
 import type { YakitAutoCompleteProps } from '@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
-import { AIModelTypeEnum, type AIModelTypeEnumType, AIModelTypeInterFileNameEnum } from '../../defaultConstant'
+import { AIModelTypeEnum, AIModelTypeInterFileNameEnum } from '../../defaultConstant'
+import type { AIModelTypeEnumType } from '../../defaultConstant'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { yakitNotify } from '@/utils/notification'
-import { cloneDeep, isNil } from 'lodash'
+import cloneDeep from 'lodash/cloneDeep'
+import isNil from 'lodash/isNil'
 import type { ThirdPartyApplicationConfig } from '@/components/configNetwork/ConfigNetworkPage'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import styles from './AIModelForm.module.scss'
@@ -38,7 +37,8 @@ import type { YakitTagColor } from '@/components/yakitUI/YakitTag/YakitTagType'
 import { XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { HorizontalScrollCard } from '@/pages/plugins/operator/horizontalScrollCard/HorizontalScrollCard'
 import type { HoldGRPCStreamProps } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
-import { NewHTTPPacketEditor, type RenderTypeOptionVal } from '@/utils/editors'
+import { NewHTTPPacketEditor } from '@/utils/editors'
+import type { RenderTypeOptionVal } from '@/utils/editors'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { setRemoteValue } from '@/utils/kv'
@@ -333,6 +333,7 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
 
       const hasCurrentEffortProbe = res._EffortProbed && res._EffortProbeKey === getAIModelFormEffortKey(res)
       const newItem: AIModelConfig = {
+        ...(!isAdd && item?.ContextOwnerId ? { ContextOwnerId: item.ContextOwnerId } : {}),
         ProviderId: res.api_key_id,
         Provider: {
           ...formValueToAIConfigProvider(res),

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import type { FC } from 'react'
 import { useRequest } from 'ahooks'
 import { CheckCircleOutlined } from '@yakit-libs/yakit-ui-icons/outline'
@@ -10,14 +10,7 @@ import type { ResourceFilterValue } from '../../../resourceFilter'
 import { useMentionRowsKeyboard } from '../../../components/aiChatMention/hooks/useMentionRowsKeyboard'
 import { matchesMentionKeyword, sceneMentionRow } from '../../../components/aiChatMention/mentionListData'
 import type { MentionListControls } from '../../../components/aiChatMention/type'
-import MaterialListPanel from '../materialListPanel/MaterialListPanel'
-import type { MaterialPanelHeader, SelectedFocusMode } from '../type'
 import styles from '../materialCategoryPicker/MaterialCategoryPicker.module.scss'
-
-interface MaterialFocusModeListProps extends MaterialPanelHeader {
-  selectedId?: string
-  onChange: (focusMode?: SelectedFocusMode) => void
-}
 
 interface FocusModeOptionsProps {
   query: string
@@ -25,7 +18,7 @@ interface FocusModeOptionsProps {
   selectedId?: string
   filterValue?: ResourceFilterValue
   keyboard?: Pick<MentionListControls, 'getContainer' | 'extraContainer' | 'keyboardEnabled'>
-  onSelect: (focusMode: SelectedFocusMode) => void
+  onSelect: (focusMode: { id: string; label: string }) => void
   onTotalChange?: (total: number) => void
 }
 
@@ -123,18 +116,3 @@ export const FocusModeOptions: FC<FocusModeOptionsProps> = ({
     </div>
   )
 }
-
-const MaterialFocusModeList: FC<MaterialFocusModeListProps> = ({ selectedId, onChange, ...header }) => {
-  const [search, setSearch] = useState('')
-  return (
-    <MaterialListPanel {...header} search={search} onSearchChange={setSearch} variant="scenario">
-      <FocusModeOptions
-        query={search}
-        selectedId={selectedId}
-        onSelect={(item) => onChange(item.id === selectedId ? undefined : item)}
-      />
-    </MaterialListPanel>
-  )
-}
-
-export default MaterialFocusModeList

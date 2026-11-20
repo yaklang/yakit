@@ -1,6 +1,7 @@
 import type { AIAgentSetting } from '../aiAgentType'
 import isNil from 'lodash/isNil'
 import { AIAgentSettingDefault, AttachedResourceKeyEnum, AttachedResourceTypeEnum } from '../defaultConstant'
+import { omitLegacyAIContextLimits } from '../../ai-re-act/hooks/grpcApi'
 import type { AIAgentGrpcApi, AIInputEvent, AIStartParams, AttachedResourceInfo } from '../../ai-re-act/hooks/grpcApi'
 import type { AITaskInfoProps } from '../../ai-re-act/hooks/aiRender'
 import type { AIChatSubmitParams } from '../aiAgentChat/type'
@@ -77,10 +78,16 @@ export const formatNumberUnits = (num: number) => {
 /** 整理会话配置，容量保持前端 KB 单位。 */
 export const formatAIAgentSetting = (setting: AIAgentSetting): AIAgentSetting => {
   /**
-   * AIService/AIModelName/TimelineItemLimit/TimelineContentSizeLimit 已经废弃，下发前剥离。
+   * AIService/AIModelName/TimelineItemLimit 及旧上下文阈值 已经废弃，下发前剥离。
    */
   let data: AIAgentSetting = { ...setting }
-  data = omit(data, ['AIService', 'AIModelName', 'TimelineItemLimit', 'TimelineContentSizeLimit'])
+  data = omit(data, [
+    'AIService',
+    'AIModelName',
+    'TimelineItemLimit',
+    'TimelineContentSizeLimit',
+    'RuntimeContextSizeLimit',
+  ])
   try {
     data.EnableSystemFileSystemOperator =
       setting.EnableSystemFileSystemOperator ?? AIAgentSettingDefault.EnableSystemFileSystemOperator
@@ -131,7 +138,6 @@ export const formatAIAgentSetting = (setting: AIAgentSetting): AIAgentSetting =>
     if (!isNil(setting?.ReActMaxIteration)) {
       data.ReActMaxIteration = setting.ReActMaxIteration || AIAgentSettingDefault.ReActMaxIteration
     }
-    data.RuntimeContextSizeLimit = setting.RuntimeContextSizeLimit ?? 0
     data.AICallTokenLimit = setting.AICallTokenLimit ?? AIAgentSettingDefault.AICallTokenLimit
     if (!isNil(setting?.UserInteractLimit)) {
       data.UserInteractLimit = setting.UserInteractLimit || AIAgentSettingDefault.UserInteractLimit
@@ -302,7 +308,7 @@ export const onReStart = (props: ReStartParams) => {
     const aiInputEvent: AIInputEvent = {
       IsStart: true,
       Params: {
-        ...request,
+        ...omitLegacyAIContextLimits(request),
         TimelineSessionID: activeChat.SessionID,
       },
     }

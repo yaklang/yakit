@@ -1,5 +1,5 @@
 import React from 'react'
-import { act, render, waitFor } from '@testing-library/react'
+import { act, render, screen, within } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
 // 组件依赖链上有模块在顶层 window.require('electron')，测试环境注入 stub
@@ -17,12 +17,12 @@ vi.hoisted(() => {
 vi.mock('i18next-resources-to-backend', () => {
   const resources: Record<string, Record<string, unknown>> = {
     zh: {
-      aiAgent: { AIReasoningEffort: { selectQuality: '思考质量选择' } },
-      configNetwork: { ConfigNetworkPage: { effortDefault: '默认' } },
+      aiAgent: { AIReasoningEffort: { selectQuality: '思考强度', effortDefault: '默认' } },
+      configNetwork: { ConfigNetworkPage: { effortMedium: '中' } },
     },
     en: {
-      aiAgent: { AIReasoningEffort: { selectQuality: 'Reasoning quality' } },
-      configNetwork: { ConfigNetworkPage: { effortDefault: 'Default' } },
+      aiAgent: { AIReasoningEffort: { selectQuality: 'Thinking effort', effortDefault: 'Default' } },
+      configNetwork: { ConfigNetworkPage: { effortMedium: 'Medium' } },
     },
   }
   return {
@@ -55,21 +55,21 @@ describe('AIReasoningEffortSelect 语言切换', () => {
     'changeLanguage 后标题和当前档位随语言更新（aiAgent + 懒加载 configNetwork 双命名空间）',
     { timeout: 20000 },
     async () => {
-      const { container } = render(
+      render(
         <React.Suspense fallback={null}>
           <Probe />
         </React.Suspense>,
       )
-      const trigger = () => container.querySelector('[role="button"][aria-haspopup="menu"]')
-
-      await waitFor(() => expect(trigger()).toHaveTextContent('默认'), { timeout: 5000 })
-      expect(trigger()).toHaveTextContent('思考质量选择')
+      const group = await screen.findByRole('group', { name: '思考强度' }, { timeout: 5000 })
+      expect(within(group).getByRole('button', { name: '默认' })).toHaveAttribute('aria-pressed', 'true')
+      expect(within(group).getByRole('button', { name: '中' })).toBeInTheDocument()
 
       await act(async () => {
         await captured.i18n?.changeLanguage('en')
       })
-      await waitFor(() => expect(trigger()).toHaveTextContent('Default'), { timeout: 5000 })
-      expect(trigger()).toHaveTextContent('Reasoning quality')
+      const translatedGroup = await screen.findByRole('group', { name: 'Thinking effort' }, { timeout: 5000 })
+      expect(within(translatedGroup).getByRole('button', { name: 'Default' })).toHaveAttribute('aria-pressed', 'true')
+      expect(within(translatedGroup).getByRole('button', { name: 'Medium' })).toBeInTheDocument()
     },
   )
 })

@@ -8,14 +8,14 @@ import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeB
 import { YakitSideTab } from '@/components/yakitSideTab/YakitSideTab'
 import type { YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
 import { useHistoryAIReActChat } from '@/components/historyAIReActChat'
-import { AIInputFooterRightEnum } from '@/pages/ai-agent/template/type'
+import { AIInputInnerFeatureEnum, getFooterLeftTypesWithItem } from '@/pages/ai-agent/template/type'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import classNames from 'classnames'
 import styles from './IrifyAiCodeAuditSidePanelLayout.module.scss'
 import { resolveIrifyAuditDefaultChatSeed } from './irifyAiCodeAuditConstants'
-import { IrifyAiAuditStyleToggle } from './IrifyAiAuditStyleToggle'
 import emiter from '@/utils/eventBus/eventBus'
 import type { IrifyAiCodeAuditStyle } from './irifyAiCodeAuditStyle'
+import { normalizeIrifyAuditStyleForSidebar } from './irifyAiCodeAuditStyle'
 
 const defaultAiTabs: YakitTabsProps[] = [
   {
@@ -137,20 +137,22 @@ const IrifyAiCodeAuditSidePanelLayoutInner: React.FC<
           ),
           taskDetails: true,
         },
-        footerRightTypes: [
-          { type: AIInputFooterRightEnum.AIModelSelect, props: { isOpen: false } },
-          {
-            type: AIInputFooterRightEnum.Custom,
-            key: 'audit-style',
-            component: (
-              <IrifyAiAuditStyleToggle
-                value={auditStyle ?? 'unset'}
-                locked={auditStyleLocked}
-                onChange={(style) => onAuditStyleChange?.(style)}
-              />
-            ),
+        footerRightTypes: [],
+        footerLeftTypes: getFooterLeftTypesWithItem({
+          type: AIInputInnerFeatureEnum.AIFocusMode,
+          props: {
+            options: [
+              { value: 'code', label: t('styleToggle.code'), description: t('onboarding.styleCodeDesc') },
+              { value: 'skill', label: t('styleToggle.skill'), description: t('onboarding.styleSkillDesc') },
+            ],
+            value: normalizeIrifyAuditStyleForSidebar(auditStyle),
+            disabled: auditStyleLocked,
+            allowClear: false,
+            onChange: (style) => {
+              if (!auditStyleLocked && (style === 'code' || style === 'skill')) onAuditStyleChange?.(style)
+            },
           },
-        ],
+        }),
       },
     })
 

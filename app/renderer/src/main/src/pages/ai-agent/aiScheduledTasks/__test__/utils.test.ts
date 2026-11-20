@@ -27,7 +27,7 @@ const scheduleFixture = (): AIReActSchedule => ({
   Name: 'n',
   Status: 'active',
   TargetMode: 'new_session_per_run',
-  Payload: { Prompt: 'run task', StartParams: { RuntimeContextSizeLimit: 0, AICallAutoRetry: 7 } },
+  Payload: { Prompt: 'run task', StartParams: { AICallAutoRetry: 7 } },
   Schedule: { RRule: 'RRULE:FREQ=DAILY;INTERVAL=1', Timezone: 'UTC', StartAt: 1800000000 },
 })
 
@@ -104,9 +104,11 @@ describe('AI 定时任务 grpc 封装：IPC 通道与参数透传', () => {
       },
     }
     ipcRendererMock.invoke.mockResolvedValue(serverSchedule)
-    await expect(invoke({ Schedule: schedule })).resolves.toEqual(schedule)
-    await expect(invoke({ Schedule: schedule })).resolves.toEqual(schedule)
-    expect(ipcRendererMock.invoke).toHaveBeenLastCalledWith(channel, { Schedule: serverSchedule })
+    const result = await invoke({ Schedule: schedule })
+    expect(result.Payload.StartParams).toEqual({ AICallTokenLimit: 40 })
+    expect(ipcRendererMock.invoke).toHaveBeenLastCalledWith(channel, {
+      Schedule: { ...serverSchedule, Payload: { ...serverSchedule.Payload, StartParams: { AICallTokenLimit: 40960 } } },
+    })
     expect(schedule.Payload.StartParams).toEqual({ RuntimeContextSizeLimit: 300, AICallTokenLimit: 40 })
     expect(serverSchedule.Payload.StartParams).toEqual({ RuntimeContextSizeLimit: 307200, AICallTokenLimit: 40960 })
   })
@@ -121,7 +123,7 @@ describe('AI 定时任务 grpc 封装：IPC 通道与参数透传', () => {
     { name: '更新', invoke: () => grpcUpdateAIReActSchedule({ Schedule: scheduleFixture() }) },
     { name: '详情', invoke: () => grpcGetAIReActSchedule({ UUID: 'u1' }) },
     { name: '启停', invoke: () => grpcSetAIReActScheduleEnabled({ UUID: 'u1', Enabled: false }) },
-  ])('$name返回后先将字符串阈值转换为数字，不改动原始响应', async ({ invoke }) => {
+  ])('$name返回后过滤旧阈值，不改动原始响应', async ({ invoke }) => {
     const schedule = scheduleFixture()
     const response = {
       ...schedule,
@@ -136,13 +138,13 @@ describe('AI 定时任务 grpc 封装：IPC 通道与参数透传', () => {
       ...schedule,
       Payload: {
         ...schedule.Payload,
-        StartParams: { ...schedule.Payload.StartParams, RuntimeContextSizeLimit: 300 },
+        StartParams: schedule.Payload.StartParams,
       },
     })
     expect(response.Payload.StartParams.RuntimeContextSizeLimit).toBe('307200')
   })
 
-  it('列表逐项转换阈值，转换失败使用默认值，并保留分页及其他字段', async () => {
+  it('列表逐项过滤旧阈值，并保留分页及其他字段', async () => {
     const limits = ['307200', 'invalid', undefined, 4096]
     const schedule = scheduleFixture()
     const response = {
@@ -162,11 +164,11 @@ describe('AI 定时任务 grpc 封装：IPC 通道与参数透传', () => {
     const result = await grpcQueryAIReActSchedules(queryReq() as never)
     expect(result).toEqual({
       ...response,
-      Data: response.Data.map((item, index) => ({
+      Data: response.Data.map((item) => ({
         ...item,
         Payload: {
           ...item.Payload,
-          StartParams: { ...item.Payload.StartParams, RuntimeContextSizeLimit: [300, 0, 0, 4][index] },
+          StartParams: schedule.Payload.StartParams,
         },
       })),
     })

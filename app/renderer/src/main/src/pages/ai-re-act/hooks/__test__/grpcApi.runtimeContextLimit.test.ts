@@ -1,87 +1,33 @@
 import { describe, expect, it } from 'vitest'
-import { withServerRuntimeContextLimit, toServerAIStartParams, fromServerAIStartParams } from '../grpcApi'
+import { fromServerAIStartParams, omitLegacyAIContextLimits, toServerAIStartParams } from '../grpcApi'
 
-describe('withServerRuntimeContextLimit', () => {
-  it.each([307200, Number.MAX_SAFE_INTEGER, '307200', String(Number.MAX_SAFE_INTEGER)])(
-    '将合法正数字节阈值 %s 规范化为 number，不重复换算单位',
-    (limit) => {
-      expect(withServerRuntimeContextLimit({ RuntimeContextSizeLimit: limit }).RuntimeContextSizeLimit).toBe(
-        Number(limit),
-      )
-    },
-  )
-
-  it.each([
-    undefined,
-    0,
-    -1,
-    1.5,
-    NaN,
-    Infinity,
-    -Infinity,
-    Number.MAX_SAFE_INTEGER + 1,
-    '',
-    '   ',
-    '0',
-    '-1',
-    '1.5',
-    'NaN',
-    'Infinity',
-    '307200bytes',
-    '9007199254740992',
-    '9007199254740993',
-    '9223372036854775807',
-    '9223372036854775808',
-  ])('缺省、非正数或非法阈值 %s 使用服务端默认值', (limit) => {
-    expect(withServerRuntimeContextLimit({ RuntimeContextSizeLimit: limit }).RuntimeContextSizeLimit).toBe(0)
-  })
-
-  it('去掉字符串周围空白后保留字节值', () => {
-    expect(withServerRuntimeContextLimit({ RuntimeContextSizeLimit: ' 307200 ' }).RuntimeContextSizeLimit).toBe(307200)
-  })
-
-  it.each([
-    { limit: '0x100', expected: 256 },
-    { limit: '1e3', expected: 1000 },
-  ])('使用 Number 将 $limit 转换为 $expected', ({ limit, expected }) => {
-    expect(withServerRuntimeContextLimit({ RuntimeContextSizeLimit: limit }).RuntimeContextSizeLimit).toBe(expected)
-  })
-
-  it('删除旧字段，保留其他参数且不修改入参', () => {
-    const params = Object.freeze({
-      TimelineContentSizeLimit: 61440,
-      RuntimeContextSizeLimit: '307200',
-      UserQuery: '保持原来的任务',
-      Strategy: { EnableGoalMode: true },
-    })
-    const result = withServerRuntimeContextLimit(params)
-    expect(result).toEqual({
-      RuntimeContextSizeLimit: 307200,
-      UserQuery: params.UserQuery,
-      Strategy: params.Strategy,
-    })
-    expect(result).not.toHaveProperty('TimelineContentSizeLimit')
-    expect(params.TimelineContentSizeLimit).toBe(61440)
-    expect(params.RuntimeContextSizeLimit).toBe('307200')
-  })
-
-  it('仅有旧字段时不迁移旧阈值，交给服务端默认值', () => {
-    expect(withServerRuntimeContextLimit({ TimelineContentSizeLimit: 61440 })).toEqual({ RuntimeContextSizeLimit: 0 })
-    expect(withServerRuntimeContextLimit({})).toEqual({ RuntimeContextSizeLimit: 0 })
-  })
-})
-
-describe('AI start parameter units', () => {
-  it.each([0, 40, 0.5, undefined])('round trips KB %s without mutating inputs', (limit) => {
-    const input = Object.freeze({ RuntimeContextSizeLimit: limit, AICallTokenLimit: limit })
-    const wire = toServerAIStartParams(input)
-    expect(wire.RuntimeContextSizeLimit).toBe(limit === undefined ? undefined : limit * 1024)
-    expect(wire.AICallTokenLimit).toBe(limit === undefined ? undefined : limit * 1024)
-    expect(fromServerAIStartParams(wire)).toEqual(input)
+describe('会话启动参数', () => {
+  it.each([0, 300, undefined])('启动和恢复时剥离两个旧阈值 %s，保留其他设置', (limit) => {
+    const input = Object.freeze({ RuntimeContextSizeLimit: limit, TimelineContentSizeLimit: 60, AICallTokenLimit: 40 })
+    const wire = toServerAIStartParams(omitLegacyAIContextLimits(input))
+    expect(wire).toEqual({ AICallTokenLimit: 40960 })
+    expect(fromServerAIStartParams({ ...input, AICallTokenLimit: 40960 })).toEqual({ AICallTokenLimit: 40 })
     expect(input.RuntimeContextSizeLimit).toBe(limit)
   })
-  it('preserves omitted fields', () => {
-    expect(toServerAIStartParams({ EnablePlan: true })).toEqual({ EnablePlan: true })
-    expect(fromServerAIStartParams({ EnablePlan: true })).toEqual({ EnablePlan: true })
+
+  it('不补充缺省字段', () => {
+    expect(toServerAIStartParams({})).toEqual({})
+    expect(fromServerAIStartParams({})).toEqual({})
+  })
+
+  it.each([0, 600000, 600001])('热补丁原样传递 %s 个 token 并保留显式 false', (tokens) => {
+    expect(
+      toServerAIStartParams({
+        ModelContextKey: 'owner:model',
+        RuntimeContextSizeLimit: tokens,
+        DisableContextAutoAdjust: false,
+        AICallTokenLimit: 40,
+      }),
+    ).toEqual({
+      ModelContextKey: 'owner:model',
+      RuntimeContextSizeLimit: tokens,
+      DisableContextAutoAdjust: false,
+      AICallTokenLimit: 40960,
+    })
   })
 })

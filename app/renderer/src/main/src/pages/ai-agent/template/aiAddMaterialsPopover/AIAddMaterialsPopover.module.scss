@@ -38,6 +38,32 @@
   @include rows.menu;
 }
 
+.shortcut-group {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin-bottom: 4px;
+
+  .header {
+    min-height: 28px;
+  }
+}
+
+.item .shortcut-symbol {
+  display: grid;
+  box-sizing: border-box;
+  place-items: center;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--Colors-Use-Neutral-Border);
+  border-radius: 8px;
+  color: var(--Colors-Use-Neutral-Text-2-Primary);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 18px;
+}
+
 .title {
   @include rows.title;
 }
@@ -63,32 +89,18 @@
   color: var(--Colors-Use-Neutral-Text-4-Help-text);
 }
 
-.current:global(.ant-tag) {
-  max-width: 50%;
-  margin-inline-end: 0;
-  gap: 4px;
-  background: var(--Colors-Use-Success-Focus);
-  line-height: 14px;
-  letter-spacing: 0.5px;
-}
-
-.current-prefix {
-  flex-shrink: 0;
-}
-
-.current-name {
-  min-width: 0;
-  overflow: hidden;
-  color: var(--Colors-Use-Neutral-Text-1-Title);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .attachment-header {
   padding-inline-end: 4px;
 
   .description {
     flex: 0 1 auto;
+  }
+}
+
+.attachment-search {
+  :global(.ant-input) {
+    font-size: 14px;
+    line-height: 20px;
   }
 }
 
@@ -120,23 +132,4 @@
   flex: 0 0 1px;
   height: 16px;
   background: var(--Colors-Use-Neutral-Border);
-}
-
-.scenario-search {
-  :global(.ant-input-affix-wrapper.ant-input-borderless > input.ant-input) {
-    font-size: 14px;
-    line-height: 20px;
-    letter-spacing: 0.1px;
-  }
-
-  :global(.ant-input-prefix) {
-    margin-inline-end: 6px;
-  }
-}
-
-.attachment-search {
-  :global(.ant-input) {
-    font-size: 14px;
-    line-height: 20px;
-  }
 }

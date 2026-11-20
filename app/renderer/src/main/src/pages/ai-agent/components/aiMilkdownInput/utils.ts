@@ -1,10 +1,7 @@
 import type { EditorMilkdownProps } from '@/components/MilkdownEditor/MilkdownEditorType'
-import { imgTypes } from '@/components/MilkdownEditor/utils/utils'
 import { editorViewCtx, parserCtx } from '@milkdown/kit/core'
-import { insertImageCommand } from '@milkdown/kit/preset/commonmark'
 import type { Node } from '@milkdown/kit/prose/model'
-import { callCommand } from '@milkdown/kit/utils'
-import { aiMentionCommand, aiMentionCustomId } from './aiMilkdownMention/aiMentionPlugin'
+import { aiMentionCustomId } from './aiMilkdownMention/aiMentionPlugin'
 import type { AIMentionCommandParams } from './aiMilkdownMention/aiMentionPlugin'
 import { aiResourceReferenceCustomId } from './aiMilkdownResourceReference/aiResourceReferencePlugin'
 import type { AIResourceReferenceParams } from './aiMilkdownResourceReference/aiResourceReferencePlugin'
@@ -16,20 +13,6 @@ export const IMAGE_ATTACHMENT_TITLE = 'ai-attachment'
 
 export const isImageAttachmentNode = (node: Node) =>
   node.type.name === 'image' && node.attrs.title === IMAGE_ATTACHMENT_TITLE
-
-export const insertAIMention = (editor: EditorMilkdownProps, params: AIMentionCommandParams) => {
-  const path = params.mentionId
-  if (
-    params.mentionType === 'file' &&
-    params.mentionSource === 'attachment' &&
-    !params.lock &&
-    imgTypes.some((suffix) => path.toLowerCase().endsWith(suffix))
-  ) {
-    editor.action(callCommand(insertImageCommand.key, { src: path, alt: path, title: IMAGE_ATTACHMENT_TITLE }))
-    return
-  }
-  editor.action(callCommand(aiMentionCommand.key, params))
-}
 
 /**md编辑器中匹配出提及相关数据/纯文本 */
 export const extractDataWithMilkdown = (editor: EditorMilkdownProps) => {

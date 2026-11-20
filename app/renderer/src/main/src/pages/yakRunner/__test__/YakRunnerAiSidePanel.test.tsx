@@ -1,6 +1,7 @@
 import { cleanup, render } from '@testing-library/react'
 import { afterEach, expect, it, vi } from 'vitest'
 import type { HistoryAIReActChatSlotOptions } from '@/components/historyAIReActChat'
+import { AIInputInnerFeatureEnum } from '@/pages/ai-agent/template/type'
 import { AuditCodeRuleGenChat } from '@/pages/yakRunnerAuditCode/AuditCodeRuleGenChat'
 import { YakRunnerAiSidePanel } from '../YakRunnerAiSidePanel'
 
@@ -13,12 +14,14 @@ vi.hoisted(() => {
 
 const renderHistoryAIReActChat = vi.fn((_options: HistoryAIReActChatSlotOptions) => null)
 const setShowFreeChat = vi.fn()
+let focusModeLoop = ''
 
 vi.mock('@/components/historyAIReActChat', () => ({
   useHistoryAIReActChat: () => ({
     renderHistoryAIReActChat,
     setShowFreeChat,
     historyAIReActChatBridge: { onNewChat: vi.fn() },
+    focusModeLoop,
   }),
 }))
 vi.mock('@/components/yakitUI/YakitResizeBox/YakitResizeBox', () => ({ YakitResizeBox: () => null }))
@@ -32,11 +35,18 @@ afterEach(() => {
 })
 
 it.each([
-  ['Yak Runner', <YakRunnerAiSidePanel>{null}</YakRunnerAiSidePanel>],
-  ['规则生成', <AuditCodeRuleGenChat />],
-])('%s 侧栏沿用输入框默认的模型选择', (_, sidebar) => {
+  ['Yak Runner', <YakRunnerAiSidePanel>{null}</YakRunnerAiSidePanel>, 'code_security_audit'],
+  ['规则生成', <AuditCodeRuleGenChat />, 'write_syntaxflow'],
+] as const)('%s 侧栏配置默认场景并禁止修改，同时保留模型入口', (_, sidebar, scene) => {
+  focusModeLoop = scene
   render(sidebar)
 
   expect(renderHistoryAIReActChat).toHaveBeenCalled()
-  expect(renderHistoryAIReActChat.mock.lastCall?.[0].externalParameters).not.toHaveProperty('footerRightTypes')
+  const parameters = renderHistoryAIReActChat.mock.lastCall?.[0].externalParameters
+  expect(parameters).not.toHaveProperty('footerRightTypes')
+  expect(parameters?.footerLeftTypes).toContain(AIInputInnerFeatureEnum.AIModelSelect)
+  expect(parameters?.footerLeftTypes).toContainEqual({
+    type: AIInputInnerFeatureEnum.AIFocusMode,
+    props: { value: scene, disabled: true },
+  })
 })

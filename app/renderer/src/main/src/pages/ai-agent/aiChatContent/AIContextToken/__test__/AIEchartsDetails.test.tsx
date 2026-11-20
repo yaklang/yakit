@@ -6,12 +6,11 @@ import type { AIEchartsDetailsProps } from '../AIEchartsDetails'
 const mocks = vi.hoisted(() => ({
   aitokensProps: [] as Array<Record<string, unknown>>,
   config: {} as Record<string, unknown>,
-  settings: { RuntimeContextSizeLimit: 300 as number | undefined },
-  activeChat: undefined as { SessionID: string; StartParams?: { RuntimeContextSizeLimit?: number } } | undefined,
+  thresholdTokens: 500000 as number | undefined,
 }))
 
-vi.mock('@/pages/ai-agent/useContext/useStore', () => ({
-  default: () => ({ setting: mocks.settings, activeChat: mocks.activeChat }),
+vi.mock('@/pages/ai-agent/useContext/useAIModelContext', () => ({
+  default: () => ({ thresholdTokens: mocks.thresholdTokens }),
 }))
 
 vi.mock('@/pages/ai-re-act/hooks/useAIGlobalConfig', () => ({
@@ -38,7 +37,7 @@ vi.mock('../AIMainModelTokens', () => ({
 
 vi.mock('@/pages/ai-agent/chatTemplate/AIEcharts', () => ({
   AICostDetailsEcharts: () => null,
-  AIPressureDetailsEcharts: ({ threshold }: { threshold: number }) => (
+  AIPressureDetailsEcharts: ({ threshold }: { threshold?: number }) => (
     <div data-testid="pressure-threshold">{threshold}</div>
   ),
   TokenCountEcharts: () => null,
@@ -70,8 +69,7 @@ const renderAndCollect = (consumption?: Record<string, unknown>) => {
 
 describe('AIEchartsDetails 辅助模型用量展示回退', () => {
   beforeEach(() => {
-    mocks.settings = { RuntimeContextSizeLimit: 300 }
-    mocks.activeChat = undefined
+    mocks.thresholdTokens = 500000
   })
 
   it('旧引擎未返回单模型统计时传递类别用量', () => {
@@ -151,8 +149,7 @@ describe('AIEchartsDetails 辅助模型用量展示回退', () => {
     expect(getByTestId('main-model-tokens')).toBeInTheDocument()
   })
 
-  it('上下文大小配置变化时，按最新配置换算字节阈值', () => {
-    mocks.settings = { RuntimeContextSizeLimit: 300 }
+  it('收到新的 token 阈值时更新图表，不做字节换算', () => {
     const pressure: NonNullable<AIEchartsDetailsProps['pressure']> = {
       intelligent: [
         {
@@ -166,23 +163,17 @@ describe('AIEchartsDetails 辅助模型用量展示回退', () => {
       lightweight: [],
       vision: [],
     }
-    const { getByTestId, rerender } = render(<AIEchartsDetails {...baseProps} pressure={pressure} />)
-    expect(getByTestId('pressure-threshold')).toHaveTextContent(/^307200$/)
-
-    pressure.intelligent[0].pressure_token_size = 200
-    mocks.settings = { RuntimeContextSizeLimit: 600 }
-    rerender(<AIEchartsDetails {...baseProps} pressure={pressure} overallToken={[10, 5, 2]} />)
-
-    expect(getByTestId('pressure-threshold')).toHaveTextContent(/^614400$/)
+    const { getByTestId, getByText, rerender } = render(<AIEchartsDetails {...baseProps} pressure={pressure} />)
+    expect(getByTestId('pressure-threshold')).toHaveTextContent(/^500000$/)
+    expect(getByText('AIContextToken.limit:500K')).toBeVisible()
+    mocks.thresholdTokens = 240000
+    rerender(<AIEchartsDetails {...baseProps} pressure={pressure} renderNumber={1} />)
+    expect(getByTestId('pressure-threshold')).toHaveTextContent(/^240000$/)
+    expect(getByText('AIContextToken.limit:240K')).toBeVisible()
   })
 
-  it.each([
-    [undefined, '307200'],
-    [60, '61440'],
-    [0, '307200'],
-    [-1, '307200'],
-  ])('详情图配置为 %s 时使用对应的默认值和单位规则', (limit, expected) => {
-    mocks.settings = { RuntimeContextSizeLimit: limit }
+  it('阈值缺失时保留图表且不显示默认阈值', () => {
+    mocks.thresholdTokens = undefined
     const pressure: NonNullable<AIEchartsDetailsProps['pressure']> = {
       intelligent: [
         {
@@ -196,35 +187,8 @@ describe('AIEchartsDetails 辅助模型用量展示回退', () => {
       lightweight: [],
       vision: [],
     }
-    const { getByTestId } = render(<AIEchartsDetails {...baseProps} pressure={pressure} />)
-    expect(getByTestId('pressure-threshold').textContent).toBe(expected)
-  })
-
-  it.each([
-    [undefined, '307200'],
-    [0, '307200'],
-    [-1, '307200'],
-    [120, '122880'],
-    [600, '614400'],
-  ])('已有会话阈值为 %s KB 时显示换算后的字节值或默认值，不使用全局设置', (limit, expected) => {
-    mocks.settings = { RuntimeContextSizeLimit: 900 }
-    mocks.activeChat = { SessionID: 'session-id', StartParams: { RuntimeContextSizeLimit: limit } }
-    const pressure: NonNullable<AIEchartsDetailsProps['pressure']> = {
-      intelligent: [
-        {
-          current_cost_token_size: 10,
-          model_name: 'main',
-          model_tier: 'intelligent',
-          pressure_token_size: 100,
-          timestamp: 1,
-        },
-      ],
-      lightweight: [],
-      vision: [],
-    }
-    const { getByTestId } = render(<AIEchartsDetails {...baseProps} pressure={pressure} />)
-
-    expect(getByTestId('pressure-threshold').textContent).toBe(expected)
-    expect(mocks.activeChat.StartParams?.RuntimeContextSizeLimit).toBe(limit)
+    const { getByTestId, queryByText } = render(<AIEchartsDetails {...baseProps} pressure={pressure} />)
+    expect(getByTestId('pressure-threshold')).toBeEmptyDOMElement()
+    expect(queryByText('AIContextToken.limit', { exact: false })).not.toBeInTheDocument()
   })
 })

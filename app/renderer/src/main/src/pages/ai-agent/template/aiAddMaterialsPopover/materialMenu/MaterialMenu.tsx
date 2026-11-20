@@ -3,19 +3,26 @@ import { useEffect, useRef, useState } from 'react'
 import { useKeyPress } from 'ahooks'
 import { ArrowUpRightOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import type { AIAddMaterialsPopoverProps, MaterialCategory, MaterialMenuItem } from '../type'
+import type { AIAddMaterialsPopoverProps, MaterialCategory, MaterialMenuItem, MaterialShortcut } from '../type'
 import styles from '../AIAddMaterialsPopover.module.scss'
 
 interface MaterialMenuProps {
   items: MaterialMenuItem[]
   filterMode?: AIAddMaterialsPopoverProps['filterMode']
   onOpenCategory: (category: MaterialCategory) => void
+  onShortcut: (shortcut: MaterialShortcut) => void
 }
 
-const MaterialMenu: FC<MaterialMenuProps> = ({ items, filterMode, onOpenCategory }) => {
+const shortcuts = [
+  { symbol: '@', label: 'AIAddMaterialsPopover.mentionShortcut' },
+  { symbol: '/', label: 'AIAddMaterialsPopover.modeShortcut' },
+] as const
+
+const MaterialMenu: FC<MaterialMenuProps> = ({ items, filterMode, onOpenCategory, onShortcut }) => {
   const { t } = useI18nNamespaces(['aiAgent'])
+  const shortcutsLabel = t('AIAddMaterialsPopover.shortcuts')
+  const materialsLabel = t('AIChatTextarea.addMaterials')
   const menuRef = useRef<HTMLDivElement>(null)
   const [activeIndex, setActiveIndex] = useState(0)
   const visibleItems = items.filter(({ tab }) => !tab || !filterMode?.includes(tab))
@@ -47,21 +54,42 @@ const MaterialMenu: FC<MaterialMenuProps> = ({ items, filterMode, onOpenCategory
   })
 
   return (
-    <>
-      <header className={`${styles.header} ${styles['menu-header']}`}>
-        <span className={styles['title']}>{t('AIChatTextarea.addMaterials')}</span>
-        <span className={styles['description']}>{t('AIAddMaterialsPopover.contextHint')}</span>
-      </header>
-      <div ref={menuRef} role="menu" aria-label={t('AIChatTextarea.addMaterials')} className={styles.menu}>
-        {visibleItems.map(({ label, description, icon, action, external, current, category }, index) => (
+    <div ref={menuRef} role="menu" aria-label={materialsLabel}>
+      <div role="group" aria-label={shortcutsLabel} className={styles['shortcut-group']}>
+        <header className={`${styles.header} ${styles['menu-header']}`}>
+          <span className={styles['title']}>{shortcutsLabel}</span>
+        </header>
+        {shortcuts.map(({ symbol, label }, index) => (
+          <YakitButton
+            type="text2"
+            key={symbol}
+            role="menuitem"
+            tabIndex={index === activeIndex ? 0 : -1}
+            className={styles.item}
+            onFocus={() => setActiveIndex(index)}
+            onClick={() => onShortcut(symbol)}
+          >
+            <span className={styles['shortcut-symbol']} aria-hidden="true">
+              {symbol}
+            </span>
+            <span className={styles['item-title']}>{t(label)}</span>
+          </YakitButton>
+        ))}
+      </div>
+      <div role="group" aria-label={materialsLabel} className={styles.menu}>
+        <header className={`${styles.header} ${styles['menu-header']}`}>
+          <span className={styles['title']}>{materialsLabel}</span>
+          <span className={styles['description']}>{t('AIAddMaterialsPopover.contextHint')}</span>
+        </header>
+        {visibleItems.map(({ label, description, icon, action, external, category }, index) => (
           <YakitButton
             type="text2"
             key={label}
             role="menuitem"
-            tabIndex={index === activeIndex ? 0 : -1}
+            tabIndex={index + shortcuts.length === activeIndex ? 0 : -1}
             aria-haspopup={category ? 'dialog' : undefined}
             className={styles['item']}
-            onFocus={() => setActiveIndex(index)}
+            onFocus={() => setActiveIndex(index + shortcuts.length)}
             onClick={action ?? (() => category && onOpenCategory(category))}
           >
             <span className={styles['icon']} aria-hidden="true">
@@ -70,23 +98,10 @@ const MaterialMenu: FC<MaterialMenuProps> = ({ items, filterMode, onOpenCategory
             <span className={styles['item-title']}>{label}</span>
             <span className={styles['description']}>{description}</span>
             {external && <ArrowUpRightOutlined size={16} className={styles['external']} />}
-            {current && (
-              <YakitTag
-                className={styles['current']}
-                size="small"
-                color="success"
-                border={false}
-                fullRadius
-                title={current}
-              >
-                <span className={styles['current-prefix']}>{t('AIAddMaterialsPopover.current')}</span>
-                <span className={styles['current-name']}>{current}</span>
-              </YakitTag>
-            )}
           </YakitButton>
         ))}
       </div>
-    </>
+    </div>
   )
 }
 

@@ -30,6 +30,8 @@ export interface AIChatSendParams {
   type: ChatListRenderType | 'casual' | ''
   params: AIInputEvent
   optionValue?: string
+  /** 本次发送失败由调用方处理时，交回错误并保留会话连接。 */
+  onSendError?: (error: unknown) => void
 }
 
 export const toAIChatSendType = (chatType: ChatListRenderType): 'casual' | 'task' => {

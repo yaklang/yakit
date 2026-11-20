@@ -129,17 +129,14 @@ export interface AIStartParams {
   /** @deprecated 选择 AI 服务模型名称 */
   AIModelName?: string
   ReActMaxIteration?: number
-  /**
-   * @deprecated 前端下发的非零值会覆盖服务端默认阈值。
-   * 请改用 RuntimeContextSizeLimit；请求里不再携带本字段。
-   */
+  /** @deprecated 旧会话阈值，仅用于识别历史数据。 */
   TimelineContentSizeLimit?: number
-  /**
-   * 运行时上下文（普通历史、Skill 正文、Evidence 等）压缩阈值，单位字节。
-   * >0 覆盖服务端默认；<=0 或不传时使用服务端默认值。
-   * 下发前将 gRPC 数字字符串规范化为安全整数。
-   */
+  /** 模型上下文压缩阈值，单位为 token。启动和恢复会话时忽略历史配置中的旧阈值。 */
   RuntimeContextSizeLimit?: number
+  /** 热更新所针对的模型上下文键。 */
+  ModelContextKey?: string
+  /** 热更新时是否禁用上下文阈值的自动调整。 */
+  DisableContextAutoAdjust?: boolean
   /** 用户交互的最大次数限制,超过这个次数，AI 将不再被允许问用户问题 */
   UserInteractLimit?: number
   /** timeline sessionID  用于多轮对话保持上下文 */
@@ -219,38 +216,18 @@ export interface AIEnabledCapability {
   Type: string
 }
 
-/**
- * 丢掉已废弃的 TimelineContentSizeLimit，并规范化运行时上下文阈值：
- * 合法正整数覆盖服务端默认阈值；其他值表示不覆盖，由服务端决定。
- * 入参已是字节，兼容 gRPC int64 字符串，输出安全整数，不进行单位换算。
- */
-export const withServerRuntimeContextLimit = <
-  T extends Omit<AIStartParams, 'RuntimeContextSizeLimit'> & { RuntimeContextSizeLimit?: number | string },
->(
-  params: T,
-): Omit<T, 'TimelineContentSizeLimit' | 'RuntimeContextSizeLimit'> & { RuntimeContextSizeLimit: number } => {
-  const { RuntimeContextSizeLimit: limit } = params
-  const value = Number(limit)
-  return {
-    ...omit(params, ['TimelineContentSizeLimit', 'RuntimeContextSizeLimit']),
-    RuntimeContextSizeLimit: Number.isSafeInteger(value) && value > 0 ? value : 0,
-  }
-}
+/** 启动参数及历史配置不再携带旧会话级压缩阈值。 */
+export const omitLegacyAIContextLimits = <T extends object>(params: T) =>
+  omit(params, ['TimelineContentSizeLimit', 'RuntimeContextSizeLimit'] as const)
 
-/** 内存使用 KB，仅在传输边界转换；保留缺省字段及服务端默认值 0。 */
+/** 仅换算以 KB 存储的 AICallTokenLimit，RuntimeContextSizeLimit 直接传 token 数。 */
 export const toServerAIStartParams = <T extends AIStartParams>(params: T): T => ({
   ...params,
-  ...(params.RuntimeContextSizeLimit !== undefined
-    ? { RuntimeContextSizeLimit: params.RuntimeContextSizeLimit * 1024 }
-    : {}),
   ...(params.AICallTokenLimit !== undefined ? { AICallTokenLimit: params.AICallTokenLimit * 1024 } : {}),
 })
 
-export const fromServerAIStartParams = <T extends AIStartParams>(params: T): T => ({
-  ...params,
-  ...(params.RuntimeContextSizeLimit !== undefined
-    ? { RuntimeContextSizeLimit: params.RuntimeContextSizeLimit / 1024 }
-    : {}),
+export const fromServerAIStartParams = <T extends AIStartParams>(params: T) => ({
+  ...omitLegacyAIContextLimits(params),
   ...(params.AICallTokenLimit !== undefined ? { AICallTokenLimit: params.AICallTokenLimit / 1024 } : {}),
 })
 
@@ -353,7 +330,7 @@ export const isReadonlySyncQuery = (syncType?: `${AIInputEventSyncTypeEnum}`): b
 export interface AIInputEvent {
   UserInteraction?: string
   IsStart?: boolean
-  Params?: AIStartParams // 提问问题相关
+  Params?: AIStartParams
 
   IsConfigHotpatch?: boolean
   HotpatchType?: `${AIInputEventHotPatchTypeEnum}`
@@ -463,6 +440,16 @@ export enum AINotifyType {
 }
 
 export declare namespace AIAgentGrpcApi {
+  /** 会话用量和热更新失败回执；配置从 GetAIModelContext 获取。 */
+  export interface ModelContext {
+    prompt_tokens?: number
+    /** 与已显示的阈值不同时重新查询配置。 */
+    threshold_tokens?: number
+    error?: string
+    /** 用于核对阈值变化或失败回执所属的模型。 */
+    context_key?: string
+  }
+
   export type AIModelTier = AIModelTypeEnumType | (string & {})
 
   export interface AIConsumptionStats {

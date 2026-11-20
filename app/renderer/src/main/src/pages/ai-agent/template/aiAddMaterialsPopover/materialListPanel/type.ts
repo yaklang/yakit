@@ -9,7 +9,7 @@ export interface MaterialListPanelProps extends MaterialPanelHeader {
     value: ResourceFilterValue
     onChange: (value: ResourceFilterValue) => void
   }
-  variant?: 'scenario' | 'attachments'
+  variant?: 'attachments'
   headerAction?: ReactNode
   children: ReactNode
 }

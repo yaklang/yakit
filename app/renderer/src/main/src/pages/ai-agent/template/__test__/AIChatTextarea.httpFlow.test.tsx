@@ -1,10 +1,15 @@
 import React, { createRef, useEffect, useImperativeHandle, useRef } from 'react'
 import type { ContextType } from 'react'
+import { getLocalFileLinkInfo } from '@/components/MilkdownEditor/CustomFile/utils'
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type * as OutlineIcons from '@yakit-libs/yakit-ui-icons/outline'
 import { Editor, defaultValueCtx, editorViewCtx, parserCtx, rootCtx } from '@milkdown/kit/core'
 import { DOMParser, DOMSerializer } from '@milkdown/kit/prose/model'
+import { TextSelection } from '@milkdown/kit/prose/state'
+import { SlashProvider } from '@milkdown/kit/plugin/slash'
+import { extractMentionFilterKeyword } from '../../components/aiMilkdownInput/aiMilkdownMention/mentionQuery'
+import { extractModeSlashFilterKeyword } from '../../components/aiMilkdownInput/aiMilkdownModeSlash/modeSlashQuery'
 import { commonmark } from '@milkdown/kit/preset/commonmark'
 import { listener, listenerCtx } from '@milkdown/kit/plugin/listener'
 import { $remark, callCommand, getMarkdown } from '@milkdown/kit/utils'
@@ -16,14 +21,17 @@ import {
   aiResourceReferenceCustomPlugin,
 } from '../../components/aiMilkdownInput/aiMilkdownResourceReference/aiResourceReferencePlugin'
 import { extractDataWithMilkdown, parseMentions } from '../../components/aiMilkdownInput/utils'
+import { insertAIShortcutCommand } from '../../components/aiMilkdownInput/customPlugin'
 import {
   aiMentionCommand,
   aiMentionCustomId,
   aiMentionCustomPlugin,
 } from '../../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
 import type { AIChatInputDraft, AIChatTextareaRefProps, AIChatTextareaSubmit } from '../type'
-import { AIInputFooterRightEnum } from '../type'
+import { AIInputFooterRightEnum, AIInputInnerFeatureEnum, getFooterLeftTypesWithItem } from '../type'
 import type * as TemplateModule from '../template'
+import type * as ReviewRuleSelectModule from '@/pages/ai-re-act/aiReviewRuleSelect/AIReviewRuleSelect'
+import buttonStyles from '@/components/yakitUI/YakitButton/yakitButton.module.scss'
 import { compileReactModule } from '@/utils/__test__/helpers/compileReactModule'
 import { useHttpFlowSelection } from '@/components/useHttpFlowSelection'
 import { HistoryAIReActChatContext } from '@/components/historyAIReActChat/context'
@@ -33,19 +41,32 @@ import { handleOpenFileSystemDialog } from '@/utils/fileSystemDialog'
 import emiter from '@/utils/eventBus/eventBus'
 import * as edition from '@/utils/envfile'
 import { AIAgentTabListEnum, AITabsEnum, SwitchAIAgentTabEventEnum } from '../../defaultConstant'
-import {
-  grpcGetAIReActRecommendedSkills,
-  grpcQueryAIFocus,
-  grpcQueryAIForge,
-  grpcResetAIReActRecommendedSkill,
-  grpcUpdateAIReActRecommendedSkill,
-} from '../../grpc'
+import { grpcGetAIReActRecommendedSkills, grpcQueryAIFocus, grpcQueryAIForge } from '../../grpc'
 import { grpcGetAIToolList } from '../../aiToolList/utils'
 import { useKnowledgeBase } from '@/pages/KnowledgeBase/hooks/useKnowledgeBase'
 import type { KnowledgeBaseItem } from '@/pages/KnowledgeBase/hooks/useKnowledgeBase'
-import { getLocalFileLinkInfo } from '@/components/MilkdownEditor/CustomFile/utils'
 import { useBrowserInstances } from '../../browserInstances/browserInstanceStore'
 import type { AIBrowserInstance } from '../../browserInstances/browserInstanceStore'
+import { createChatStore } from '@/pages/ai-re-act/hooks/chatStore'
+import { AIInputEventSyncTypeEnum, AITaskStatus } from '@/pages/ai-re-act/hooks/grpcApi'
+import type * as CurrentDataBySession from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import type * as AIAgentStoreModule from '@/pages/ai-agent/useContext/useStore'
+import type * as AIAgentDispatcherModule from '@/pages/ai-agent/useContext/useDispatcher'
+
+const modelContext = vi.hoisted(() => ({
+  enabled: true,
+  thresholdTokens: 500000,
+  promptTokens: 125000 as number | undefined,
+
+  loading: false,
+
+  retry: vi.fn(),
+  save: vi.fn(),
+}))
+vi.mock('@/pages/ai-agent/useContext/useAIModelContext', () => ({
+  default: () => modelContext,
+  useCurrentModelContextReset: vi.fn(),
+}))
 
 vi.mock('../../browserInstances/browserInstanceStore', () => ({
   useBrowserInstances: vi.fn(() => ({
@@ -77,6 +98,9 @@ vi.mock('../../browserInstances/BrowserInstancesGuideEmpty/BrowserInstancesGuide
   BrowserInstancesGuideManual: () => null,
 }))
 vi.mock('../../components/aiAgentSideBox/AIAgentSideBox', () => ({ default: () => null }))
+vi.mock('@/components/yakitUI/YakitButton/yakitButton.module.scss', () => ({
+  default: { 'yakit-active-button': 'yakit-active-button' },
+}))
 
 const editors: Editor[] = []
 const fileSessions = new Map<
@@ -84,6 +108,37 @@ const fileSessions = new Map<
   { rawData: { draftMaterials: { files: { path: string; isFolder: boolean }[] } } }
 >()
 const fileSession = { id: 'file-session' }
+let sessionStore: ReturnType<typeof createChatStore>
+const sessionControls = vi.hoisted(() => ({ pending: false, onSend: vi.fn(), cancelPendingChat: vi.fn() }))
+const startSessionTask = () =>
+  sessionStore.setState((state) => ({
+    execute: true,
+    currentChatStatus: { ...state.currentChatStatus, status: AITaskStatus.inProgress, questionID: 'task-1' },
+  }))
+
+vi.mock('@/pages/ai-re-act/hooks/useCurrentDataBySession', async (importOriginal) => ({
+  ...(await importOriginal<typeof CurrentDataBySession>()),
+  useCurrentStore: () => sessionStore,
+}))
+vi.mock('@/pages/ai-agent/useContext/useStore', async (importOriginal) => {
+  const actual = await importOriginal<typeof AIAgentStoreModule>()
+  return {
+    default: () => ({
+      ...actual.default(),
+      pendingChat: sessionControls.pending ? { status: 'connecting' } : undefined,
+    }),
+  }
+})
+vi.mock('@/pages/ai-agent/useContext/useDispatcher', async (importOriginal) => {
+  const actual = await importOriginal<typeof AIAgentDispatcherModule>()
+  return {
+    default: () => ({
+      ...actual.default(),
+      onSend: sessionControls.onSend,
+      cancelPendingChat: sessionControls.cancelPendingChat,
+    }),
+  }
+})
 vi.mock('@/pages/ai-re-act/hooks/useCurrentSessionId', () => ({ default: () => fileSession.id }))
 vi.mock('@/pages/ai-re-act/hooks/ChatMultiSessionController', () => ({
   globalSessionEngine: {
@@ -96,7 +151,11 @@ vi.mock('@/pages/ai-re-act/hooks/ChatMultiSessionController', () => ({
     },
   },
 }))
-const { deferEditor, i18n } = vi.hoisted(() => ({ deferEditor: { value: false }, i18n: { language: 'zh' } }))
+const { deferEditor, i18n, notifyElementResize } = vi.hoisted(() => ({
+  deferEditor: { value: false },
+  i18n: { language: 'zh' },
+  notifyElementResize: new WeakMap<Element, (width: number) => void>(),
+}))
 
 vi.hoisted(() => {
   vi.stubGlobal(
@@ -105,6 +164,10 @@ vi.hoisted(() => {
       constructor(private readonly onResize: ResizeObserverCallback) {}
 
       observe(target: Element) {
+        notifyElementResize.set(target, (width) => {
+          Object.defineProperty(target, 'clientWidth', { configurable: true, value: width })
+          this.onResize([{ target, contentRect: { width } } as ResizeObserverEntry], this)
+        })
         this.onResize([{ target, contentRect: target.getBoundingClientRect() } as ResizeObserverEntry], this)
       }
 
@@ -113,6 +176,19 @@ vi.hoisted(() => {
     },
   )
 })
+
+const resizeObservedElement = (element: Element, width: number) => {
+  act(() => {
+    notifyElementResize.get(element)!(width)
+    vi.advanceTimersByTime(100)
+  })
+}
+
+const clickSceneSelector = (combobox: HTMLElement) => {
+  const selector = combobox.closest('.ant-select-selector')!
+  fireEvent.mouseDown(selector)
+  fireEvent.click(selector)
+}
 
 vi.mock('@/i18n/useI18nNamespaces', () => ({
   useI18nNamespaces: () => ({
@@ -137,13 +213,20 @@ vi.mock('@/components/MilkdownEditor/utils/utils', () => ({ imgTypes: ['.png'] }
 vi.mock('@/utils/notification', () => ({ success: vi.fn(), yakitNotify: vi.fn() }))
 vi.mock('@/utils/clipboard', () => ({ setClipboardText: vi.fn() }))
 vi.mock('../../aiModelList/aiModelSelect/AIModelSelect', () => ({
-  AIModelSelect: () => <button type="button">默认模型选择</button>,
+  AIModelSelect: ({ iconOnly = false }: { iconOnly?: boolean }) => (
+    <button type="button" data-icon-only={iconOnly}>
+      默认模型选择
+    </button>
+  ),
 }))
-vi.mock('@/pages/ai-re-act/aiReviewRuleSelect/AIReviewRuleSelect', () => ({ default: () => null }))
+vi.mock('@/pages/ai-re-act/aiReviewRuleSelect/AIReviewRuleSelect', async (importOriginal) => ({
+  ...(await importOriginal<typeof ReviewRuleSelectModule>()),
+  default: () => <button type="button">协同</button>,
+}))
 vi.mock('@/pages/ai-re-act/aiReasoningEffortSelect/AIReasoningEffortSelect', () => ({
   AIReasoningEffortSelect: () => null,
 }))
-vi.mock('../../aiRunModeSelect/AIRunModeSelect', () => ({ default: () => null }))
+vi.mock('../../aiRunModeSelect/AIRunModeSelect', () => ({ default: () => <button>执行模式</button> }))
 vi.mock('../../aiRunModeSelect/useAIRunMode', () => ({
   useAIRunMode: () => ({
     execute: false,
@@ -218,7 +301,23 @@ vi.mock('@/pages/ai-re-act/aiRightPanel/AISkillLoadingPane/aiSkillList/AISkillDe
   ),
 }))
 vi.mock('../../aiToolList/utils', () => ({ grpcGetAIToolList: vi.fn() }))
-vi.mock('@/pages/ai-re-act/aiReActTaskChat/AIReActTaskChat', () => ({ AIInputSettingPopover: () => null }))
+vi.mock('@/pages/ai-re-act/aiReActTaskChat/AIReActTaskChat', () => ({
+  AIInputSettingPopover: ({
+    children,
+    visible,
+    setVisible,
+  }: {
+    children: React.ReactElement<{ onClick?: React.MouseEventHandler<HTMLButtonElement> }>
+    visible: boolean
+    setVisible: (visible: boolean) => void
+  }) =>
+    React.cloneElement(children, {
+      onClick: (event) => {
+        children.props.onClick?.(event)
+        setVisible(!visible)
+      },
+    }),
+}))
 
 // 保留真实 Milkdown 文档、解析与序列化，仅隔离文件上传、提及面板等外围 UI。
 vi.mock('../../components/aiMilkdownInput/AIMilkdownInput', () => ({
@@ -243,6 +342,7 @@ vi.mock('../../components/aiMilkdownInput/AIMilkdownInput', () => ({
         .use($remark('test-http-flow-directive', () => directive))
         .use(aiResourceReferenceCustomPlugin())
         .use(aiMentionCustomPlugin())
+        .use(insertAIShortcutCommand)
       editors.push(editor)
       void editor.create().then(() => {
         if (!cancelled) {
@@ -254,7 +354,7 @@ vi.mock('../../components/aiMilkdownInput/AIMilkdownInput', () => ({
         cancelled = true
       }
     }, [])
-    return <div ref={root} data-testid="editor" />
+    return <div ref={root} data-testid="editor" data-mention-filter={props.filterMode?.join(',')} />
   }),
 }))
 
@@ -287,8 +387,12 @@ beforeEach(() => {
     if (typeof target.getClientRects !== 'function') target.getClientRects = emptyClientRects
     if (typeof target.getBoundingClientRect !== 'function') target.getBoundingClientRect = zeroDomRect
   }
+  modelContext.promptTokens = 125000
+  modelContext.enabled = true
   fileSessions.clear()
   fileSession.id = 'file-session'
+  sessionStore = createChatStore()
+  sessionControls.pending = false
   vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'], shouldAdvanceTime: true })
   vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockImplementation(function (this: HTMLElement) {
     return this.classList.contains('container') ? 480 : 0
@@ -346,7 +450,6 @@ async function setup(defaultValue = '', showScenarioCapabilities = false) {
         }}
         onWorkspaceAddedChange={onWorkspaceAddedChange}
         chatDataStoreKey="test"
-        inputFooterLeft={<span />}
         footer={<span />}
       />
     )
@@ -370,6 +473,36 @@ const codeReview = {
 }
 
 describe('输入框资料栏', () => {
+  it.each([
+    ['@', 'AIAddMaterialsPopover.mentionShortcut', '', '@'],
+    ['/', 'AIAddMaterialsPopover.modeShortcut', '', '/'],
+    ['@', 'AIAddMaterialsPopover.mentionShortcut', '现有正文', '现有正文 @'],
+    ['/', 'AIAddMaterialsPopover.modeShortcut', '现有正文', '现有正文 /'],
+  ] as const)('快捷入口 %s（%s），草稿「%s」插入后激活已有弹窗触发条件', async (shortcut, label, draft, expected) => {
+    const { onSubmit } = await setup(draft)
+    const editorView = editors[0].action((ctx) => ctx.get(editorViewCtx))
+    editorView.setProps({ handleScrollToSelection: () => true })
+    await act(async () => {
+      editorView.dispatch(editorView.state.tr.setSelection(TextSelection.atEnd(editorView.state.doc)))
+      editorView.focus()
+    })
+    const trigger = screen.getByRole('button', { name: 'AIChatTextarea.addMaterials' })
+    fireEvent.click(trigger)
+    const row = await screen.findByRole('menuitem', { name: new RegExp(label) })
+    await act(async () => fireEvent.click(row))
+
+    expect(trigger).toHaveAttribute('aria-expanded', 'false')
+    expect(editorView.state.doc.textContent).toBe(expected)
+    expect(editorView.hasFocus()).toBe(true)
+    expect(editorView.state.selection.empty).toBe(true)
+    const provider = new SlashProvider({ content: document.createElement('div'), trigger: shortcut })
+    const content = provider.getContent(editorView)
+    const extractQuery = shortcut === '@' ? extractMentionFilterKeyword : extractModeSlashFilterKeyword
+    expect(extractQuery(content)).toBe('')
+    expect(onSubmit).not.toHaveBeenCalled()
+    provider.destroy()
+  })
+
   it('将添加资料弹窗挂在页面根节点并跟随输入框宽度', async () => {
     const { container } = await setup()
     container.style.overflowY = 'auto'
@@ -420,7 +553,7 @@ describe('输入框资料栏', () => {
         onSubmitWithDraft={onSubmitWithDraft}
       />,
     )
-    await screen.findByRole('button', { name: '能力 1' })
+    await waitFor(() => expect(grpcGetAIReActRecommendedSkills).toHaveBeenCalled())
     await waitFor(() =>
       expect(screen.getByTestId('editor').querySelector('.ProseMirror')).toHaveTextContent(draft.markdown),
     )
@@ -442,23 +575,72 @@ describe('输入框资料栏', () => {
     )
   })
 
-  it('默认显示模型选择，显式清空右侧配置后保留发送按钮', () => {
-    const { rerender } = render(<AIChatTextarea chatDataStoreKey="test" />)
+  it('自定义左侧内容替换配置的底栏控件，移除后恢复配置项', () => {
+    const footerLeftTypes = [
+      AIInputInnerFeatureEnum.AIRunModeSelect,
+      AIInputInnerFeatureEnum.AIReviewRuleSelect,
+      AIInputInnerFeatureEnum.AIInputSettings,
+    ]
+    const { rerender } = render(
+      <AIChatTextarea
+        chatDataStoreKey="test"
+        inputFooterLeft={<span>自定义左侧</span>}
+        footerLeftTypes={footerLeftTypes}
+      />,
+    )
 
-    expect(screen.getByRole('button', { name: '默认模型选择' })).toBeInTheDocument()
+    expect(screen.getByText('自定义左侧')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '执行模式' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '协同' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'AIRightPanel.aiSettings' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'YakitButton.send' })).toBeInTheDocument()
 
-    rerender(<AIChatTextarea chatDataStoreKey="test" footerRightTypes={[]} />)
+    rerender(<AIChatTextarea chatDataStoreKey="test" footerLeftTypes={footerLeftTypes} />)
+    expect(screen.queryByText('自定义左侧')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '执行模式' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '协同' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'AIRightPanel.aiSettings' })).toBeInTheDocument()
+  })
+
+  it('左侧依次显示协同、模型、场景和设置，支持隐藏模型选择', () => {
+    const { rerender } = render(<AIChatTextarea chatDataStoreKey="test" footerRightTypes={[]} />)
+
+    const review = screen.getByRole('button', { name: '协同' })
+    const add = screen.getByRole('button', { name: 'AIChatTextarea.addMaterials' })
+    const mode = screen.getByRole('button', { name: '执行模式' })
+    expect(add.parentElement).toBe(review.parentElement)
+    expect(add.compareDocumentPosition(mode) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(mode.compareDocumentPosition(review) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    const model = screen.getByRole('button', { name: '默认模型选择' })
+    const scene = screen.getByRole('combobox', { name: 'AiAgengt.focusMode' })
+    const settings = screen.getByRole('button', { name: 'AIRightPanel.aiSettings' })
+    expect(review.parentElement).toContainElement(scene)
+    expect(review.parentElement).toContainElement(settings)
+    expect(review.compareDocumentPosition(model) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(model.compareDocumentPosition(scene) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(scene.compareDocumentPosition(settings) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+
+    rerender(
+      <AIChatTextarea
+        chatDataStoreKey="test"
+        footerLeftTypes={[AIInputInnerFeatureEnum.AIReviewRuleSelect, AIInputInnerFeatureEnum.AIFocusMode]}
+      />,
+    )
 
     expect(screen.queryByRole('button', { name: '默认模型选择' })).toBeNull()
+    expect(screen.getByRole('combobox', { name: 'AiAgengt.focusMode' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'YakitButton.send' })).toBeInTheDocument()
   })
 
-  it('右侧依次显示模型选择、审计模式、停止和发送按钮', () => {
+  it('自定义模型仍位于左侧，右侧依次显示审计模式、停止和发送按钮', () => {
     render(
       <AIChatTextarea
         chatDataStoreKey="test"
+        footerLeftTypes={getFooterLeftTypesWithItem({
+          type: AIInputInnerFeatureEnum.AIModelSelect,
+          component: <button type="button">自定义模型</button>,
+        })}
         footerRightTypes={[
-          { type: AIInputFooterRightEnum.AIModelSelect, props: { isOpen: false } },
           {
             type: AIInputFooterRightEnum.Custom,
             key: 'audit-style',
@@ -469,13 +651,303 @@ describe('输入框资料栏', () => {
       />,
     )
 
-    const model = screen.getByRole('button', { name: '默认模型选择' })
+    const model = screen.getByRole('button', { name: '自定义模型' })
+    const scene = screen.getByRole('combobox', { name: 'AiAgengt.focusMode' })
     const auditStyle = screen.getByRole('button', { name: '审计模式' })
     const stop = screen.getByRole('button', { name: '停止' })
     const send = screen.getByRole('button', { name: 'YakitButton.send' })
+    expect(model.parentElement).not.toContainElement(auditStyle)
+    expect(screen.queryByRole('button', { name: '默认模型选择' })).not.toBeInTheDocument()
+    expect(model.compareDocumentPosition(scene) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(send.parentElement).toContainElement(auditStyle)
     expect(model.compareDocumentPosition(auditStyle) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     expect(auditStyle.compareDocumentPosition(stop) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     expect(stop.compareDocumentPosition(send) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('上下文单独显示时独占状态区，排队和停止按钮不计入状态项', () => {
+    const { container, rerender } = render(<AIChatTextarea chatDataStoreKey="test" />)
+
+    expect(screen.getByRole('progressbar', { name: 'AIContextUsage.label' })).toBeInTheDocument()
+    expect(screen.queryByRole('status', { name: 'AIRunningStatus.label' })).not.toBeInTheDocument()
+    const contextButton = screen.getByRole('button', { name: 'AIContextUsage.label' })
+    const statusItems = contextButton.parentElement!
+    expect(Array.from(statusItems.children)).toEqual([contextButton])
+    expect(screen.getByRole('button', { name: '默认模型选择' })).toHaveAttribute('data-icon-only', 'false')
+    expect(screen.getByTitle('AiAgengt.focusMode').querySelector('svg')).toBeInTheDocument()
+    expect(screen.getByText('AiAgengt.focusMode')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'AIRightPanel.aiSettings' })).toHaveTextContent('AIRightPanel.aiSettings')
+
+    rerender(
+      <AIChatTextarea
+        chatDataStoreKey="test"
+        footerRightTypes={[AIInputFooterRightEnum.AIContextUsage, AIInputFooterRightEnum.AIRunningStatus]}
+      />,
+    )
+    expect(Array.from(statusItems.children)).toEqual([contextButton, screen.getByRole('status')])
+
+    rerender(<AIChatTextarea chatDataStoreKey="test" footerRightTypes={[]} />)
+    expect(container.querySelector('button[data-ai-context-usage]')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '默认模型选择' })).toHaveAttribute('data-icon-only', 'false')
+    expect(screen.getByText('AiAgengt.focusMode')).toBeVisible()
+    expect(screen.getByRole('button', { name: 'AIRightPanel.aiSettings' })).toHaveTextContent('AIRightPanel.aiSettings')
+  })
+
+  it('上下文用量控制实际按钮，布局文字保留给 CSS 决定显隐', () => {
+    modelContext.promptTokens = undefined
+    const { rerender } = render(<AIChatTextarea chatDataStoreKey="test" />)
+    expect(screen.queryByRole('progressbar', { name: 'AIContextUsage.label' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '默认模型选择' })).toHaveAttribute('data-icon-only', 'false')
+    expect(screen.getByText('AiAgengt.focusMode')).toBeVisible()
+    expect(screen.getByRole('button', { name: 'AIRightPanel.aiSettings' })).toHaveTextContent('AIRightPanel.aiSettings')
+    modelContext.promptTokens = 125000
+    rerender(<AIChatTextarea chatDataStoreKey="test" className="usage-ready" />)
+    expect(screen.getByRole('progressbar', { name: 'AIContextUsage.label' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'AIContextUsage.label' })).toHaveAttribute('data-ai-context-usage')
+    expect(screen.getByRole('button', { name: '默认模型选择' })).toHaveAttribute('data-icon-only', 'false')
+    expect(screen.getByText('AiAgengt.focusMode')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'AIRightPanel.aiSettings' })).toHaveTextContent('AIRightPanel.aiSettings')
+    modelContext.enabled = false
+    rerender(<AIChatTextarea chatDataStoreKey="test" className="usage-unsupported" />)
+    expect(screen.queryByRole('progressbar', { name: 'AIContextUsage.label' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '默认模型选择' })).toHaveAttribute('data-icon-only', 'false')
+  })
+
+  it('无上下文入口时保留文字，场景仍可选择和清空', async () => {
+    vi.mocked(grpcQueryAIFocus).mockResolvedValue({
+      Data: [
+        {
+          Name: 'scene',
+          VerboseNameZh: '测试场景',
+          VerboseName: 'Scene',
+          Description: '',
+          DescriptionZh: '',
+          OutputExamplePrompt: '',
+          UsagePrompt: '',
+        },
+      ],
+    })
+    render(<AIChatTextarea chatDataStoreKey="test" footerRightTypes={[]} />)
+    const label = 'AiAgengt.focusMode'
+    const model = screen.getByRole('button', { name: '默认模型选择' })
+    expect(model).toHaveAttribute('data-icon-only', 'false')
+    const scene = screen.getByRole('combobox', { name: label })
+    expect(screen.getByText(label)).toBeVisible()
+    const sceneIcon = (title: string) => within(screen.getByTitle(title)).getByRole('img')
+    expect(sceneIcon(label)).toHaveStyle({ color: 'var(--Colors-Use-Neutral-Text-2-Primary)' })
+
+    clickSceneSelector(scene)
+    fireEvent.click(await screen.findByText('测试场景'))
+    expect(scene).toHaveAttribute('aria-expanded', 'false')
+    expect(screen.getByTitle('测试场景')).toHaveTextContent('测试场景')
+    expect(sceneIcon('测试场景')).toHaveStyle({ color: 'var(--Colors-Use-Main-Primary)' })
+    fireEvent.mouseDown(scene.closest('.ant-select')!.querySelector('.ant-select-clear')!)
+    expect(sceneIcon(label)).toHaveStyle({ color: 'var(--Colors-Use-Neutral-Text-2-Primary)' })
+
+    expect(model).toHaveAttribute('data-icon-only', 'false')
+    expect(within(model.parentElement!).getByText(label)).toBeVisible()
+  })
+
+  it('场景标题栏可清空选择，点击选项可选中或取消', async () => {
+    const onChange = vi.fn()
+    const input = (value?: string) => (
+      <AIChatTextarea
+        chatDataStoreKey="test"
+        footerLeftTypes={[
+          {
+            type: AIInputInnerFeatureEnum.AIFocusMode,
+            props: {
+              options: [
+                { value: 'a', label: '场景 A' },
+                { value: 'b', label: '场景 B' },
+              ],
+              value,
+              onChange,
+            },
+          },
+        ]}
+      />
+    )
+    const { rerender } = render(input('a'))
+    const scene = screen.getByRole('combobox', { name: 'AiAgengt.focusMode' })
+    clickSceneSelector(scene)
+    const rowB = (await screen.findByText('场景 B')).closest('.ant-select-item-option')!
+    const clear = screen.getByRole('button', { name: 'AIFocusMode.clearSelection' })
+    expect(clear).toHaveTextContent('YakitButton.cancel')
+    expect(clear.closest('.ant-select-item-option')).toBeNull()
+    const selectedOption = () => document.querySelector('.ant-select-item-option-selected')!
+    const selectedRow = selectedOption()
+    expect(selectedRow.querySelector('button')).toBeNull()
+    expect(selectedRow).toHaveTextContent('场景 A')
+    expect(selectedRow.querySelector('.ant-select-item-option-state svg')).toBeInTheDocument()
+    expect(rowB.querySelector('button, .ant-select-item-option-state svg')).toBeNull()
+    fireEvent.mouseDown(clear)
+    fireEvent.click(clear)
+    expect(onChange).toHaveBeenCalledExactlyOnceWith(undefined)
+    expect(scene).toHaveAttribute('aria-expanded', 'false')
+    rerender(input())
+    clickSceneSelector(scene)
+    expect(screen.queryByRole('button', { name: 'AIFocusMode.clearSelection' })).not.toBeInTheDocument()
+    fireEvent.click(await screen.findByText('场景 A'))
+    expect(onChange).toHaveBeenLastCalledWith('a')
+    rerender(input('a'))
+    clickSceneSelector(scene)
+    fireEvent.click(selectedOption())
+    expect(onChange.mock.calls).toEqual([[undefined], ['a'], [undefined]])
+    expect(scene).toHaveAttribute('aria-expanded', 'false')
+  })
+
+  it('左侧底栏小于 360px 时在更多菜单中显示模型、场景和设置，恢复宽度后回到底栏', async () => {
+    vi.mocked(grpcQueryAIFocus).mockResolvedValue({
+      Data: [
+        {
+          Name: 'overflow-scene',
+          VerboseNameZh: '更多菜单场景',
+          VerboseName: 'Overflow scene',
+          Description: '',
+          DescriptionZh: '',
+          OutputExamplePrompt: '',
+          UsagePrompt: '',
+        },
+      ],
+    })
+    render(<AIChatTextarea chatDataStoreKey="test" />)
+    const footerLeft = screen.getByRole('button', { name: '协同' }).parentElement!
+
+    resizeObservedElement(footerLeft, 359)
+    const more = within(footerLeft).getByRole('button', { name: 'YakitButton.more' })
+    expect(more).toHaveAttribute('aria-expanded', 'false')
+    expect(more).not.toHaveClass(buttonStyles['yakit-active-button'])
+    expect(within(footerLeft).queryByRole('button', { name: '默认模型选择' })).not.toBeInTheDocument()
+    expect(within(footerLeft).queryByRole('combobox', { name: 'AiAgengt.focusMode' })).not.toBeInTheDocument()
+    expect(within(footerLeft).queryByRole('button', { name: 'AIRightPanel.aiSettings' })).not.toBeInTheDocument()
+    expect(within(footerLeft).getByRole('button', { name: '执行模式' })).toBeInTheDocument()
+
+    fireEvent.click(more)
+    const menu = await screen.findByRole('dialog', { name: 'YakitButton.more' })
+    expect(more).toHaveAttribute('aria-expanded', 'true')
+    expect(more).toHaveClass(buttonStyles['yakit-active-button'])
+    expect(menu.closest('.ant-popover')).toHaveStyle({ width: '180px' })
+    expect(menu.closest('.ant-popover-inner')).toHaveStyle({ padding: '4px', borderRadius: '12px' })
+    expect(within(menu).getByRole('button', { name: '默认模型选择' })).toHaveAttribute('data-icon-only', 'false')
+    expect(within(menu).getByRole('button', { name: 'AIRightPanel.aiSettings' })).toBeInTheDocument()
+    const scene = within(menu).getByRole('combobox', { name: 'AiAgengt.focusMode' })
+    clickSceneSelector(scene)
+    expect(scene).toHaveAttribute('aria-expanded', 'true')
+    await screen.findByText('更多菜单场景')
+    clickSceneSelector(scene)
+    expect(scene).toHaveAttribute('aria-expanded', 'false')
+    expect(screen.getByRole('dialog', { name: 'YakitButton.more' })).toBe(menu)
+    clickSceneSelector(scene)
+    fireEvent.click(await screen.findByText('更多菜单场景'))
+    const sceneTrigger = scene.closest('.ant-select')
+    expect(sceneTrigger?.querySelector('.ant-select-clear')).toBeInTheDocument()
+    expect(sceneTrigger?.querySelector('.ant-select-arrow')).toBeInTheDocument()
+
+    fireEvent.click(more)
+    expect(more).toHaveAttribute('aria-expanded', 'false')
+    expect(more).not.toHaveClass(buttonStyles['yakit-active-button'])
+    fireEvent.click(more)
+    const menuSettings = await screen.findByRole('button', { name: 'AIRightPanel.aiSettings' })
+    fireEvent.click(menuSettings)
+    expect(menuSettings).toHaveAttribute('aria-expanded', 'true')
+
+    resizeObservedElement(footerLeft, 360)
+    expect(screen.queryByRole('dialog', { name: 'YakitButton.more' })).not.toBeInTheDocument()
+    expect(within(footerLeft).queryByRole('button', { name: 'YakitButton.more' })).not.toBeInTheDocument()
+    expect(within(footerLeft).getByRole('button', { name: '默认模型选择' })).toHaveAttribute('data-icon-only', 'false')
+    expect(await within(footerLeft).findByTitle('更多菜单场景')).toBeInTheDocument()
+    const inlineSettings = within(footerLeft).getByRole('button', { name: 'AIRightPanel.aiSettings' })
+    expect(inlineSettings).toHaveAttribute('aria-expanded', 'false')
+    fireEvent.click(inlineSettings)
+    expect(inlineSettings).toHaveAttribute('aria-expanded', 'true')
+
+    resizeObservedElement(footerLeft, 359)
+    const reopenedMore = within(footerLeft).getByRole('button', { name: 'YakitButton.more' })
+    expect(reopenedMore).toHaveAttribute('aria-expanded', 'false')
+    fireEvent.click(reopenedMore)
+    const reopenedSettings = await screen.findByRole('button', { name: 'AIRightPanel.aiSettings' })
+    expect(reopenedSettings).toHaveAttribute('aria-expanded', 'false')
+  })
+
+  it('默认显示上下文并隐藏运行状态，运行时展示排队发送和固定停止按钮', async () => {
+    const onSubmit = vi.fn()
+    const view = render(<AIChatTextarea chatDataStoreKey="test" defaultValue="follow up" onSubmit={onSubmit} />)
+    expect(screen.getByRole('progressbar', { name: 'AIContextUsage.label' })).toHaveAttribute('aria-valuenow', '25')
+    expect(screen.queryByRole('status', { name: 'AIRunningStatus.label' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'YakitButton.send' })).toBeInTheDocument()
+    act(startSessionTask)
+    expect(screen.queryByRole('status', { name: 'AIRunningStatus.label' })).not.toBeInTheDocument()
+    const contextUsage = screen.getByRole('progressbar', { name: 'AIContextUsage.label' })
+    const queue = screen.getByRole('button', { name: 'AIChatTextarea.queueSend' })
+    const stop = screen.getByRole('button', { name: 'YakitButton.stop' })
+    expect(contextUsage.compareDocumentPosition(queue) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(queue.compareDocumentPosition(stop) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    fireEvent.click(stop)
+    expect(sessionControls.onSend).toHaveBeenCalledExactlyOnceWith({
+      token: 'file-session',
+      type: 'casual',
+      params: {
+        IsSyncMessage: true,
+        SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_CANCEL_TASK,
+        SyncJsonInput: JSON.stringify({ task_id: 'task-1' }),
+        SyncID: expect.any(String),
+      },
+    })
+    expect(sessionStore.getState().cancelChatLoading).toBe(true)
+    await waitFor(() => expect(view.container.querySelector('.ProseMirror')).toBeTruthy())
+    fireEvent.keyDown(stop, { key: 'Enter', code: 'Enter' })
+    expect(onSubmit).not.toHaveBeenCalled()
+    fireEvent.click(queue)
+    expect(onSubmit).toHaveBeenCalledTimes(1)
+    act(() =>
+      sessionStore.setState((state) => ({
+        execute: false,
+        currentChatStatus: { ...state.currentChatStatus, status: AITaskStatus.success },
+      })),
+    )
+    expect(screen.queryByRole('status', { name: 'AIRunningStatus.label' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'YakitButton.send' })).toBeInTheDocument()
+    act(startSessionTask)
+    view.rerender(<AIChatTextarea chatDataStoreKey="test" footerRightTypes={[]} />)
+    expect(screen.queryByText('AIContextUsage.label')).not.toBeInTheDocument()
+    expect(screen.queryByRole('status', { name: 'AIRunningStatus.label' })).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'YakitButton.stop' }))
+    expect(sessionControls.onSend).toHaveBeenCalledTimes(1)
+    expect(screen.getByRole('button', { name: 'AIChatTextarea.queueSend' })).toBeInTheDocument()
+  })
+
+  it('停止待连接的会话时走取消连接入口，欢迎页保留普通发送入口', () => {
+    sessionControls.pending = true
+    startSessionTask()
+    const { rerender } = render(<AIChatTextarea chatDataStoreKey="test" />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'YakitButton.stop' }))
+    expect(sessionControls.cancelPendingChat).toHaveBeenCalledTimes(1)
+    expect(sessionControls.onSend).not.toHaveBeenCalled()
+
+    rerender(<AIChatTextarea chatDataStoreKey="test" onSubmitWithDraft={vi.fn()} />)
+    expect(screen.getByRole('button', { name: 'YakitButton.send' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'YakitButton.stop' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('status', { name: 'AIRunningStatus.label' })).not.toBeInTheDocument()
+  })
+
+  it('右侧配置支持调整状态组件顺序和自定义内容', () => {
+    render(
+      <AIChatTextarea
+        chatDataStoreKey="test"
+        footerRightTypes={[
+          AIInputFooterRightEnum.AIRunningStatus,
+          { type: AIInputFooterRightEnum.AIContextUsage, component: <span>custom context</span> },
+        ]}
+      />,
+    )
+    expect(
+      screen
+        .getByRole('status', { name: 'AIRunningStatus.label' })
+        .compareDocumentPosition(screen.getByText('custom context')) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
+    expect(screen.queryByText('AIContextUsage.label')).not.toBeInTheDocument()
   })
 
   it('普通会话不查询场景能力', async () => {
@@ -484,31 +956,10 @@ describe('输入框资料栏', () => {
     expect(screen.queryByRole('button', { name: /^能力 \d+$/ })).toBeNull()
   })
 
-  it.each(['请求失败', '返回空列表'])('场景能力%s时仍可在面板标题旁刷新', async (outcome) => {
-    const request = vi.mocked(grpcGetAIReActRecommendedSkills)
-    if (outcome === '请求失败') request.mockRejectedValueOnce(new Error('unavailable'))
-    else request.mockResolvedValueOnce({ Data: [] })
-    request.mockResolvedValueOnce({ Data: [codeReview] })
-
-    await setup('', true)
-    fireEvent.click(await screen.findByRole('button', { name: '能力 0' }))
-    const panel = await screen.findByRole('dialog', { name: '能力' })
-    expect(within(panel).queryByRole('listitem')).not.toBeInTheDocument()
-
-    const refresh = within(panel).getByRole('button', { name: 'YakitButton.refresh' })
-    expect(refresh.closest('header')).toBeInTheDocument()
-    fireEvent.click(refresh)
-
-    expect(await within(panel).findByText('代码审计')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '能力 1' })).toHaveAttribute('aria-expanded', 'true')
-    expect(request).toHaveBeenCalledTimes(2)
-  })
-
   it('场景能力面板未打开时，默认选中的能力也随首问提交', async () => {
     vi.mocked(grpcGetAIReActRecommendedSkills).mockResolvedValueOnce({ Data: [codeReview] })
     const { send, onSubmit } = await setup('正文', true)
-    const badge = await screen.findByRole('button', { name: '能力 1' })
-    expect(badge).toHaveAttribute('aria-expanded', 'false')
+    await act(async () => {})
 
     fireEvent.click(send)
     expect(onSubmit).toHaveBeenCalledWith(
@@ -516,83 +967,48 @@ describe('输入框资料栏', () => {
     )
   })
 
-  it('场景能力按接口返回的名称显示对应图标', async () => {
-    vi.mocked(grpcGetAIReActRecommendedSkills).mockResolvedValueOnce({
-      Data: [
-        codeReview,
-        { ...codeReview, Name: 'security-engineering', DisplayNameZhCN: '安全领域' },
-        { ...codeReview, Name: 'pentest-task-design', DisplayNameZhCN: '渗透测试' },
-        { ...codeReview, Name: 'risk-review', DisplayNameZhCN: '风险审查' },
-      ],
-    })
-    await setup('', true)
-    fireEvent.click(await screen.findByRole('button', { name: '能力 1' }))
-    const dialog = await screen.findByRole('dialog', { name: '能力' })
-    const rows = within(dialog).getAllByRole('listitem')
-    expect(within(rows[0]).getByTestId('markdown-icon')).toBeInTheDocument()
-    expect(within(rows[1]).getByTestId('shield-icon')).toBeInTheDocument()
-    expect(within(rows[2]).getByTestId('flow-icon')).toBeInTheDocument()
-    expect(within(rows[3]).getByTestId('wrench-icon')).toBeInTheDocument()
-  })
-
-  it('场景能力显示在技能前，默认勾选首项并随首问提交当前选择', async () => {
-    const pentest = { ...codeReview, Name: 'pentest-task-design', DisplayNameZhCN: '渗透测试' }
-    vi.mocked(grpcGetAIReActRecommendedSkills).mockResolvedValueOnce({ Data: [codeReview, pentest] })
-    const { ref, send, onSubmit } = await setup('', true)
-    const capability = await screen.findByRole('button', { name: '能力 1' })
-    expect(send).toBeDisabled()
-    act(() => ref.current?.setMention({ mentionType: 'forge', mentionId: '1', mentionName: '普通技能' }))
-    const skill = await screen.findByRole('button', { name: 'AIMentionTabs.skill 1' })
-    expect(capability.compareDocumentPosition(skill) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
-
-    fireEvent.click(capability)
-    const dialog = await screen.findByRole('dialog', { name: '能力' })
-    expect(within(dialog).queryByText('AIAddMaterialsPopover.goToAdd')).toBeNull()
-    const first = within(dialog).getByRole('button', { name: 'YakitButton.cancel 代码审计', pressed: true })
-    const second = within(dialog).getByRole('button', { name: 'YakitButton.add 渗透测试', pressed: false })
-    const edit = within(dialog).getByRole('button', { name: 'YakitButton.edit 代码审计' })
-    expect(first.compareDocumentPosition(edit) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
-    fireEvent.click(first)
-    fireEvent.click(second)
-    act(() => ref.current?.setValue('正文'))
-    await waitFor(() => expect(send).toBeEnabled())
-    fireEvent.click(send)
-    expect(onSubmit).toHaveBeenCalledWith(
-      expect.objectContaining({ enabledCapabilities: [{ Name: 'pentest-task-design', Type: 'skill' }] }),
+  it('点击能力、技能、知识库和其他资料的摘要可以查看已添加内容', async () => {
+    vi.mocked(grpcGetAIReActRecommendedSkills).mockResolvedValueOnce({ Data: [codeReview] })
+    vi.mocked(handleOpenFileSystemDialog).mockResolvedValueOnce({ canceled: false, filePaths: ['/tmp/summary.txt'] })
+    render(
+      <AIChatTextarea
+        chatDataStoreKey="test"
+        showScenarioCapabilities
+        initialDraft={{
+          markdown: '正文',
+          selectedMaterials: [
+            { mentionType: 'forge', mentionId: '1', mentionName: '已添加技能样例' },
+            { mentionType: 'knowledgeBase', mentionId: '2', mentionName: '已添加知识库样例' },
+          ],
+          hiddenInlineKeys: [],
+          selectedResourceIds: { http: [], risk: [] },
+        }}
+      />,
     )
-  })
+    const add = screen.getByRole('button', { name: 'AIChatTextarea.addMaterials' })
+    fireEvent.click(add)
+    const addFile = await screen.findByRole('menuitem', { name: /^AIAddMaterialsPopover\.attachment / })
+    await act(async () => fireEvent.click(addFile))
 
-  it('场景能力可恢复默认和保存，刷新列表时保留当前勾选', async () => {
-    const resetSkill = { ...codeReview, Content: '默认正文' }
-    const savedSkill = { ...codeReview, Content: '修改正文' }
-    vi.mocked(grpcGetAIReActRecommendedSkills)
-      .mockResolvedValueOnce({ Data: [codeReview] })
-      .mockResolvedValueOnce({ Data: [resetSkill] })
-      .mockResolvedValueOnce({ Data: [savedSkill] })
-    vi.mocked(grpcResetAIReActRecommendedSkill).mockResolvedValueOnce(resetSkill)
-    vi.mocked(grpcUpdateAIReActRecommendedSkill).mockResolvedValueOnce(savedSkill)
-    const { send, onSubmit } = await setup('正文', true)
-    fireEvent.click(await screen.findByRole('button', { name: '能力 1' }))
-    const list = await screen.findByRole('dialog', { name: '能力' })
-    fireEvent.click(within(list).getByRole('button', { name: 'YakitButton.cancel 代码审计' }))
-    fireEvent.click(within(list).getByRole('button', { name: 'YakitButton.edit 代码审计' }))
-    const dialog = screen.getByRole('dialog', { name: '代码审计' })
-    expect(screen.getByRole('button', { name: '能力 0' })).toHaveAttribute('aria-expanded', 'false')
-    await waitFor(() => expect(screen.queryByRole('dialog', { name: '能力' })).toBeNull())
-    const editor = within(dialog).getByRole('textbox', { name: '能力正文' })
-    expect(editor).toHaveValue('现有正文')
+    for (const [badgeName, panelName, itemName] of [
+      ['能力 1', '能力', '代码审计'],
+      ['AIMentionTabs.skill 1', 'AIAddMaterialsPopover.addedSkills', '已添加技能样例'],
+      ['AIMentionTabs.knowledgeBase 1', 'AIAddMaterialsPopover.addedKnowledgeBases', '已添加知识库样例'],
+    ]) {
+      const badge = await screen.findByRole('button', { name: badgeName })
+      fireEvent.click(badge)
+      expect(
+        await within(await screen.findByRole('dialog', { name: panelName })).findByText(itemName),
+      ).toBeInTheDocument()
+      fireEvent.click(badge)
+    }
 
-    fireEvent.click(within(dialog).getByRole('button', { name: '恢复默认' }))
-    await waitFor(() => expect(editor).toHaveValue('默认正文'))
-    expect(grpcResetAIReActRecommendedSkill).toHaveBeenCalledWith({ Name: 'code-review' })
-    fireEvent.change(editor, { target: { value: '修改正文' } })
-    fireEvent.click(within(dialog).getByRole('button', { name: '保存' }))
-    await waitFor(() => expect(screen.queryByRole('dialog', { name: '代码审计' })).toBeNull())
-    expect(grpcUpdateAIReActRecommendedSkill).toHaveBeenCalledWith({ Name: 'code-review', Content: '修改正文' })
-    expect(grpcGetAIReActRecommendedSkills).toHaveBeenCalledTimes(3)
-    expect(screen.getByRole('button', { name: '能力 0' })).toBeInTheDocument()
-    fireEvent.click(send)
-    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ enabledCapabilities: [] }))
+    fireEvent.click(await screen.findByRole('button', { name: 'AIChatTextarea.otherMaterials 1' }))
+    const other = await screen.findByRole('dialog', { name: 'AIAddMaterialsPopover.addedOtherMaterials' })
+    fireEvent.click(within(other).getByRole('button', { name: 'AIAddMaterialsPopover.attachments' }))
+    const attachments = await screen.findByRole('dialog', { name: 'AIChatTextarea.addMaterials' })
+    expect(within(attachments).getByText('AIAddMaterialsPopover.addedAttachments')).toBeInTheDocument()
+    expect(await within(attachments).findByTitle('/tmp/summary.txt')).toBeInTheDocument()
   })
 
   it.each([
@@ -658,20 +1074,34 @@ describe('输入框资料栏', () => {
     expect(within(menu).queryByText('AIMentionTabs.fileSystem')).not.toBeInTheDocument()
     expect(within(menu).queryByText('AIMentionTabs.browser')).not.toBeInTheDocument()
     expect(within(menu).getByText('AIAddMaterialsPopover.attachment')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'AIChatTextarea.otherMaterials 1' })).toBeInTheDocument()
   })
 
-  it('在其他资料中显示侧栏的默认场景，但不提供修改入口', async () => {
-    vi.spyOn(edition, 'isIRify').mockReturnValue(false)
+  it('提及过滤只传给 @ 菜单，底栏由 footerLeftTypes 决定', async () => {
+    const { rerender } = render(
+      <AIChatTextarea chatDataStoreKey="test" filterMentionType={['focusMode', 'knowledgeBase']} />,
+    )
+    expect(screen.getByTestId('editor')).toHaveAttribute('data-mention-filter', 'focusMode,knowledgeBase')
+    expect(screen.getByRole('combobox', { name: 'AiAgengt.focusMode' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '默认模型选择' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'AIChatTextarea.addMaterials' }))
+    const menu = await screen.findByRole('menu')
+    expect(within(menu).getByText('AIMentionTabs.knowledgeBase')).toBeInTheDocument()
+    expect(within(menu).queryByText('AiAgengt.focusMode')).not.toBeInTheDocument()
+    rerender(<AIChatTextarea chatDataStoreKey="test" footerLeftTypes={[]} />)
+    expect(screen.queryByRole('combobox', { name: 'AiAgengt.focusMode' })).not.toBeInTheDocument()
+  })
+
+  it.each([false, true])('侧栏固定场景只在底栏展示且不可修改（IRify: %s）', async (isIRify) => {
+    vi.spyOn(edition, 'isIRify').mockReturnValue(isIRify)
     const sidebarContext = {
-      focusModeLoop: 'http_flow_analyze',
+      focusModeLoop: 'fixed_scene',
     } as NonNullable<ContextType<typeof HistoryAIReActChatContext>>
     vi.mocked(grpcQueryAIFocus).mockResolvedValueOnce({
       Data: [
         {
-          Name: 'http_flow_analyze',
-          VerboseNameZh: 'HTTP 流量分析',
-          VerboseName: 'HTTP Flow Analysis',
+          Name: 'fixed_scene',
+          VerboseNameZh: '侧栏固定场景',
+          VerboseName: 'Fixed scene',
           Description: '',
           DescriptionZh: '',
           OutputExamplePrompt: '',
@@ -681,61 +1111,75 @@ describe('输入框资料栏', () => {
     })
     render(
       <HistoryAIReActChatContext.Provider value={sidebarContext}>
-        <AIChatTextarea chatDataStoreKey="test" />
+        <AIChatTextarea
+          chatDataStoreKey="test"
+          selectedHttpFlowIds={['12']}
+          filterMentionType={['focusMode']}
+          footerLeftTypes={[
+            AIInputInnerFeatureEnum.AddMaterials,
+            { type: AIInputInnerFeatureEnum.AIFocusMode, props: { value: 'fixed_scene', disabled: true } },
+          ]}
+        />
       </HistoryAIReActChatContext.Provider>,
     )
 
-    fireEvent.click(screen.getByRole('button', { name: 'AIChatTextarea.otherMaterials 1' }))
-    const summary = await screen.findByRole('dialog', { name: 'AIAddMaterialsPopover.addedOtherMaterials' })
-    const row = within(summary).getByRole('listitem')
-    expect(row).toHaveTextContent('AiAgengt.focusMode')
-    expect(await within(row).findByText('HTTP 流量分析')).toBeInTheDocument()
-    expect(within(row).queryByRole('button')).not.toBeInTheDocument()
-    fireEvent.click(row)
-    expect(summary).toBeInTheDocument()
+    expect(screen.getByRole('combobox', { name: 'AiAgengt.focusMode' })).toBeDisabled()
+    expect(await screen.findByTitle('侧栏固定场景')).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'AIChatTextarea.addMaterials' }))
     const menu = await screen.findByRole('menu')
     expect(within(menu).queryByText('AiAgengt.focusMode')).not.toBeInTheDocument()
   })
 
-  it('IRify 侧栏不把固定场景计入其他资料，仍显示已选流量', async () => {
-    vi.spyOn(edition, 'isIRify').mockReturnValue(true)
-    const sidebarContext = {
-      focusModeLoop: 'code_security_audit',
-    } as NonNullable<ContextType<typeof HistoryAIReActChatContext>>
-    const { rerender } = render(
-      <HistoryAIReActChatContext.Provider value={sidebarContext}>
-        <AIChatTextarea chatDataStoreKey="test" />
-      </HistoryAIReActChatContext.Provider>,
+  it('侧栏可用自定义场景列表切换固定场景，锁定时只展示当前值', async () => {
+    const onChange = vi.fn()
+    const options = [
+      { value: 'code', label: '代码审计' },
+      { value: 'skill', label: '技能审计' },
+    ]
+    const input = (value: string, disabled = false) => (
+      <AIChatTextarea
+        chatDataStoreKey="test"
+        filterMentionType={['focusMode']}
+        footerLeftTypes={[
+          {
+            type: AIInputInnerFeatureEnum.AIFocusMode,
+            props: { options, value, onChange, disabled, allowClear: false },
+          },
+        ]}
+      />
     )
-    expect(screen.queryByRole('button', { name: /AIChatTextarea.otherMaterials/ })).not.toBeInTheDocument()
+    const { rerender } = render(input('code'))
+    const scene = screen.getByRole('combobox', { name: 'AiAgengt.focusMode' })
+    expect(screen.getByTitle('代码审计')).toBeInTheDocument()
+    expect(scene.closest('.ant-select')?.querySelector('.ant-select-clear')).toBeNull()
+
+    clickSceneSelector(scene)
+    expect(screen.queryByRole('button', { name: 'AIFocusMode.clearSelection' })).not.toBeInTheDocument()
+    fireEvent.click(document.querySelector('.ant-select-item-option-selected')!)
+    expect(onChange).not.toHaveBeenCalled()
+    clickSceneSelector(scene)
+    fireEvent.click(await screen.findByText('技能审计'))
+    expect(onChange).toHaveBeenCalledExactlyOnceWith('skill')
     expect(grpcQueryAIFocus).not.toHaveBeenCalled()
 
-    rerender(
-      <HistoryAIReActChatContext.Provider value={sidebarContext}>
-        <AIChatTextarea chatDataStoreKey="test" selectedHttpFlowIds={['12']} />
-      </HistoryAIReActChatContext.Provider>,
-    )
-    fireEvent.click(screen.getByRole('button', { name: 'AIChatTextarea.otherMaterials 1' }))
-    const summary = await screen.findByRole('dialog', { name: 'AIAddMaterialsPopover.addedOtherMaterials' })
-    const row = within(summary).getByRole('listitem')
-    expect(row).toHaveTextContent('AIAddMaterialsPopover.flow')
-    expect(row).not.toHaveTextContent('AiAgengt.focusMode')
+    rerender(input('skill', true))
+    expect(screen.getByRole('combobox', { name: 'AiAgengt.focusMode' })).toBeDisabled()
+    expect(screen.getByTitle('技能审计')).toBeInTheDocument()
   })
 
-  it('点击文案或加号都能打开资料弹窗，选择或取消附件时保持打开', async () => {
+  it('底栏加号打开资料弹窗，选择或取消附件时保持打开', async () => {
     const { ref } = await setup()
     const trigger = screen.getByRole('button', { name: 'AIChatTextarea.addMaterials' })
-    const label = screen.getByText('AIChatTextarea.addMaterials')
+    expect(screen.queryByText('AIChatTextarea.addMaterials')).toBeNull()
     expect(trigger).not.toHaveTextContent('AIChatTextarea.addMaterials')
-    fireEvent.click(label)
+    fireEvent.click(trigger)
     const panel = await screen.findByRole('dialog', { name: 'AIChatTextarea.addMaterials' })
     expect(trigger).toHaveAttribute('aria-expanded', 'true')
     expect(trigger).toHaveAttribute('data-menu-open', 'true')
     expect(within(panel).getByText('AIMentionTabs.skill')).toBeInTheDocument()
     expect(within(panel).queryByRole('button', { name: 'YakitButton.back' })).toBeNull()
-    fireEvent.click(label)
+    fireEvent.click(trigger)
     expect(trigger).toHaveAttribute('aria-expanded', 'false')
     expect(trigger).not.toHaveAttribute('data-menu-open')
 
@@ -759,99 +1203,25 @@ describe('输入框资料栏', () => {
     expect(trigger).toHaveAttribute('aria-expanded', 'true')
   })
 
-  it('其他资料分别统计本地附件和文件系统资料', async () => {
-    const { ref } = await setup()
-    editors[0].action((ctx) => ctx.get(editorViewCtx).setProps({ handleScrollToSelection: () => true }))
-    const file = { mentionType: 'file' as const, mentionId: '/tmp/context.txt', mentionName: '/tmp/context.txt' }
-    act(() => ref.current?.setMention(file))
-    const fileSystemMarkdown = ref.current?.getValue() ?? ''
-
-    vi.mocked(handleOpenFileSystemDialog).mockResolvedValueOnce({ canceled: false, filePaths: [file.mentionId] })
+  it('从底栏资料菜单添加文件夹后随消息发送', async () => {
+    vi.mocked(handleOpenFileSystemDialog).mockResolvedValueOnce({ canceled: false, filePaths: ['/tmp/context'] })
+    const { send, onSubmit } = await setup('正文')
     fireEvent.click(screen.getByRole('button', { name: 'AIChatTextarea.addMaterials' }))
-    const attachment = await screen.findByRole('menuitem', { name: /^AIAddMaterialsPopover\.attachment / })
-    await act(async () => fireEvent.click(attachment))
-    const saved = ref.current?.getValue() ?? ''
-    act(() => ref.current?.setValue(saved))
-
-    fireEvent.click(screen.getByRole('button', { name: 'AIChatTextarea.otherMaterials 2' }))
-    const summary = await screen.findByRole('dialog', { name: 'AIAddMaterialsPopover.addedOtherMaterials' })
-    expect(
-      within(summary)
-        .getAllByRole('listitem')
-        .map((row) => row.textContent),
-    ).toEqual(['AIAddMaterialsPopover.attachments1', 'AIMentionTabs.fileSystem1'])
-    expect(extractDataWithMilkdown(editors[0]).mentions.map(({ mentionType }) => mentionType)).toEqual(['file', 'file'])
-
-    act(() => ref.current?.setValue(fileSystemMarkdown))
-    expect(screen.getByRole('button', { name: 'AIChatTextarea.otherMaterials 1' })).toBeInTheDocument()
-    expect(within(summary).queryByText('AIAddMaterialsPopover.attachments')).toBeNull()
-  })
-
-  it('文件和文件夹共用附件列表，从继续添加菜单选择后随草稿恢复和发送', async () => {
-    const { ref, send, onSubmit } = await setup('正文')
-    editors[0].action((ctx) => ctx.get(editorViewCtx).setProps({ handleScrollToSelection: () => true }))
-    const folder = '/tmp/resources.png'
-    const anotherFolder = '/tmp/notes'
-    const file = '/tmp/context.txt'
-    vi.mocked(handleOpenFileSystemDialog)
-      .mockResolvedValueOnce({ canceled: false, filePaths: [folder] })
-      .mockResolvedValueOnce({ canceled: false, filePaths: [anotherFolder] })
-      .mockResolvedValueOnce({ canceled: false, filePaths: [file] })
-
-    fireEvent.click(screen.getByRole('button', { name: 'AIChatTextarea.addMaterials' }))
-    const menu = await screen.findByRole('menu', { name: 'AIChatTextarea.addMaterials' })
-    const menuItems = within(menu).getAllByRole('menuitem')
-    expect(menuItems[0]).toHaveAccessibleName(/^AIAddMaterialsPopover\.attachment /)
-    expect(menuItems[1]).toHaveAccessibleName(/^AIAddMaterialsPopover\.addFolder /)
-    await act(async () => fireEvent.click(menuItems[1]))
-    expect(handleOpenFileSystemDialog).toHaveBeenCalledExactlyOnceWith({
+    const menu = await screen.findByRole('menu')
+    await act(async () => fireEvent.click(within(menu).getByText('AIAddMaterialsPopover.addFolder')))
+    expect(handleOpenFileSystemDialog).toHaveBeenCalledWith({
       title: 'AIAddMaterialsPopover.addFolder',
       properties: ['openDirectory', 'multiSelections'],
     })
-
-    fireEvent.click(screen.getByRole('button', { name: 'AIChatTextarea.otherMaterials 1' }))
-    const summary = await screen.findByRole('dialog', { name: 'AIAddMaterialsPopover.addedOtherMaterials' })
-    expect(within(summary).getAllByRole('listitem')).toHaveLength(1)
-    fireEvent.click(within(summary).getByText('AIAddMaterialsPopover.attachments'))
-    const panel = await screen.findByRole('dialog', { name: 'AIChatTextarea.addMaterials' })
-    const addMore = within(panel).getByRole('button', { name: 'AIAddMaterialsPopover.continueAdding' })
-    fireEvent.click(addMore)
-    expect(handleOpenFileSystemDialog).toHaveBeenCalledTimes(1)
-    await act(async () =>
-      fireEvent.click(await screen.findByRole('menuitem', { name: 'AIAddMaterialsPopover.addFolder' })),
-    )
-    expect(handleOpenFileSystemDialog).toHaveBeenLastCalledWith({
-      title: 'AIAddMaterialsPopover.addFolder',
-      properties: ['openDirectory', 'multiSelections'],
-    })
-    fireEvent.click(addMore)
-    await act(async () =>
-      fireEvent.click(await screen.findByRole('menuitem', { name: 'AIAddMaterialsPopover.attachment' })),
-    )
-    expect(handleOpenFileSystemDialog).toHaveBeenLastCalledWith({
-      title: 'AIAddMaterialsPopover.attachment',
-      properties: ['openFile', 'multiSelections'],
-    })
-
-    const saved = ref.current?.getValue() ?? ''
-    act(() => ref.current?.setValue(saved))
-    expect(within(panel).getByText('(3)')).toBeInTheDocument()
-    for (const path of [folder, anotherFolder, file]) expect(within(panel).getByTitle(path)).toBeInTheDocument()
-    for (const path of [folder, anotherFolder]) {
-      const row = within(panel).getByTitle(path).parentElement!.parentElement!
-      expect(within(row).getByText('-')).toBeInTheDocument()
-      expect(row.querySelector('img')).toHaveAttribute('src', './icons/folders/default.svg')
-    }
-    expect(within(panel).queryByRole('img', { name: 'resources.png' })).toBeNull()
-    expect(getLocalFileLinkInfo).not.toHaveBeenCalledWith(folder, true)
     fireEvent.click(send)
     expect(onSubmit).toHaveBeenCalledWith(
       expect.objectContaining({
-        imageList: [],
         mentionList: [
-          expect.objectContaining({ mentionType: 'folder', mentionId: folder, mentionSource: 'attachment' }),
-          expect.objectContaining({ mentionType: 'folder', mentionId: anotherFolder, mentionSource: 'attachment' }),
-          expect.objectContaining({ mentionType: 'file', mentionId: file, mentionSource: 'attachment' }),
+          expect.objectContaining({
+            mentionId: '/tmp/context',
+            mentionType: 'folder',
+            mentionSource: 'attachment',
+          }),
         ],
       }),
     )
@@ -972,7 +1342,6 @@ describe('输入框资料栏', () => {
     expect(extractDataWithMilkdown(editors[0]).mentions).toHaveLength(0)
 
     await act(async () => fireEvent.click(attachment))
-    expect(screen.getByRole('button', { name: 'AIChatTextarea.otherMaterials 10' })).toBeInTheDocument()
     fireEvent.click(send)
     expect(onSubmit.mock.calls[0][0].mentionList?.map((item) => item.mentionId)).toEqual(filePaths.slice(0, 10))
   })
@@ -995,59 +1364,6 @@ describe('输入框资料栏', () => {
     act(() => ref.current?.setMention({ mentionType: 'file', mentionId: path, mentionName: path }))
     act(() => ref.current?.setValue('正文'))
     expect(fileSessions.get('file-session')!.rawData.draftMaterials.files).toEqual([])
-  })
-
-  it('其他资料中的附件可搜索、隐藏和重新添加，同路径的正文引用均保留', async () => {
-    vi.mocked(getLocalFileLinkInfo).mockResolvedValue({ size: 2048 })
-    const { ref, send, onSubmit } = await setup('正文')
-    editors[0].action((ctx) => ctx.get(editorViewCtx).setProps({ handleScrollToSelection: () => true }))
-    const path = 'C:\\files\\context.pdf'
-    act(() => {
-      ref.current?.setMention({ mentionType: 'file', mentionId: path, mentionName: path })
-      ref.current?.setMention({ mentionType: 'file', mentionId: path, mentionName: path, mentionSource: 'attachment' })
-      ref.current?.setMention({
-        mentionType: 'file',
-        mentionId: '/tmp/stats.xlsx',
-        mentionName: '/tmp/stats.xlsx',
-        mentionSource: 'attachment',
-      })
-    })
-    fireEvent.click(screen.getByRole('button', { name: 'AIChatTextarea.otherMaterials 3' }))
-    const summary = await screen.findByRole('dialog', { name: 'AIAddMaterialsPopover.addedOtherMaterials' })
-    fireEvent.click(within(summary).getByText('AIAddMaterialsPopover.attachments'))
-    const panel = await screen.findByRole('dialog', { name: 'AIChatTextarea.addMaterials' })
-    expect(within(panel).getByText('AIAddMaterialsPopover.addedAttachments')).toBeInTheDocument()
-    expect(within(panel).queryByRole('button', { name: 'YakitButton.back' })).toBeNull()
-    expect(await within(panel).findByTitle('/tmp/stats.xlsx')).toBeInTheDocument()
-    await waitFor(() => expect(getLocalFileLinkInfo).toHaveBeenCalledWith(path, true))
-    const search = within(panel).getByRole('textbox', { name: 'YakitInput.search' })
-    fireEvent.change(search, { target: { value: 'context' } })
-    expect(within(panel).queryByTitle('/tmp/stats.xlsx')).toBeNull()
-    expect(getLocalFileLinkInfo).toHaveBeenCalledTimes(2)
-    fireEvent.click(within(panel).getByRole('button', { name: 'YakitButton.delete context.pdf' }))
-    const mentions = extractDataWithMilkdown(editors[0]).mentions
-    expect(mentions.filter((item) => item.mentionId === path).map((item) => item.mentionSource)).toEqual([
-      undefined,
-      'attachment',
-    ])
-    expect(within(panel).queryByTitle(path)).toBeNull()
-    expect(screen.getByRole('button', { name: 'AIChatTextarea.otherMaterials 2' })).toBeInTheDocument()
-    vi.mocked(handleOpenFileSystemDialog).mockResolvedValueOnce({ canceled: false, filePaths: [path, '/tmp/new.txt'] })
-    fireEvent.click(within(panel).getByRole('button', { name: 'AIAddMaterialsPopover.continueAdding' }))
-    await act(async () =>
-      fireEvent.click(await screen.findByRole('menuitem', { name: 'AIAddMaterialsPopover.attachment' })),
-    )
-    expect(panel).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'AIChatTextarea.otherMaterials 4' })).toBeInTheDocument()
-    fireEvent.change(search, { target: { value: 'new' } })
-    expect(await within(panel).findByRole('button', { name: 'YakitButton.delete new.txt' })).toBeInTheDocument()
-    expect(getLocalFileLinkInfo).toHaveBeenCalledWith('/tmp/new.txt', true)
-    fireEvent.click(send)
-    expect(
-      onSubmit.mock.calls[0][0].mentionList
-        ?.filter((item) => item.mentionSource === 'attachment')
-        .map((item) => item.mentionId),
-    ).toEqual([path, '/tmp/stats.xlsx', '/tmp/new.txt'])
   })
 
   it('列表添加的技能只进资料栏，正文提及同时显示在两处并随消息发送', async () => {
@@ -1079,34 +1395,24 @@ describe('输入框资料栏', () => {
     })
     expect(ref.current?.getValue()).toContain('正文技能')
     expect(ref.current?.getValue()).not.toContain('目标技能')
-    const badge = await screen.findByRole('button', { name: 'AIMentionTabs.skill 2' })
     fireEvent.click(send)
     const submitted = onSubmit.mock.calls[0][0]
     expect(submitted.mentionList?.map(({ mentionName }) => mentionName)).toEqual(['目标技能', '正文技能'])
     expect(parseMentions(submitted.qs).map(({ mentionId }) => mentionId)).toEqual(['1', '2'])
 
-    fireEvent.click(badge)
-    const summary = await screen.findByRole('dialog', { name: 'AIAddMaterialsPopover.addedSkills' })
-    expect(within(summary).getByText('目标技能')).toBeInTheDocument()
-    expect(within(summary).getByText('正文技能')).toBeInTheDocument()
-    expect(within(summary).getByText('技能说明')).toBeInTheDocument()
-    fireEvent.click(within(summary).getByRole('button', { name: 'AIAddMaterialsPopover.goToAdd' }))
-    const picker = await screen.findByRole('dialog', { name: 'AIChatTextarea.addMaterials' })
-    expect(within(picker).queryByRole('button', { name: 'YakitButton.back' })).toBeNull()
+    fireEvent.change(within(panel).getByRole('textbox', { name: 'YakitInput.search' }), { target: { value: '' } })
+    const picker = panel
     const cancel = await within(picker).findByRole('button', { name: 'YakitButton.cancel 初始技能' })
     expect(cancel).toHaveAttribute('aria-pressed', 'true')
     fireEvent.click(cancel)
     expect(ref.current?.getValue()).toContain('正文技能')
-    expect(screen.getByRole('button', { name: 'AIMentionTabs.skill 1' })).toBeInTheDocument()
 
     fireEvent.click(within(picker).getByRole('button', { name: 'YakitButton.cancel 正文技能' }))
-    expect(screen.queryByRole('button', { name: 'AIMentionTabs.skill 1' })).toBeNull()
     expect(ref.current?.getValue()).toContain('正文技能')
     fireEvent.click(send)
     expect(onSubmit.mock.calls[1][0].mentionList?.map(({ mentionId }) => mentionId)).toEqual(['2'])
 
     fireEvent.click(within(picker).getByRole('button', { name: 'YakitButton.add 正文技能' }))
-    expect(screen.getByRole('button', { name: 'AIMentionTabs.skill 1' })).toBeInTheDocument()
     act(() => {
       editors[0].action((ctx) => {
         const view = ctx.get(editorViewCtx)
@@ -1121,36 +1427,12 @@ describe('输入框资料栏', () => {
     })
     fireEvent.click(send)
     expect(onSubmit.mock.calls[2][0].mentionList).toEqual([])
-    await waitFor(() => expect(screen.queryByRole('button', { name: 'AIMentionTabs.skill 1' })).toBeNull())
     expect(ref.current?.getValue()).toBe('正文')
     fireEvent.click(trigger)
     fireEvent.click(trigger)
     const menu = await screen.findByRole('dialog', { name: 'AIChatTextarea.addMaterials' })
     expect(within(menu).queryByRole('button', { name: 'YakitButton.back' })).toBeNull()
     expect(within(menu).getByText('AIMentionTabs.tool')).toBeInTheDocument()
-  })
-
-  it.each(['tool', 'knowledgeBase'] as const)('从已添加资料打开 %s 列表时不显示返回', async (category) => {
-    vi.mocked(grpcGetAIToolList).mockImplementation(async ({ Pagination }) => ({ Pagination, Tools: [], Total: 0 }))
-    const { ref } = await setup()
-    act(() => ref.current?.setMention({ mentionType: category, mentionId: '1', mentionName: '已添加资料' }))
-    const knowledge = category === 'knowledgeBase'
-    fireEvent.click(
-      screen.getByRole('button', {
-        name: knowledge ? 'AIMentionTabs.knowledgeBase 1' : 'AIChatTextarea.otherMaterials 1',
-      }),
-    )
-    const summary = await screen.findByRole('dialog', {
-      name: knowledge ? 'AIAddMaterialsPopover.addedKnowledgeBases' : 'AIAddMaterialsPopover.addedOtherMaterials',
-    })
-    fireEvent.click(
-      within(summary).getByRole('button', { name: knowledge ? 'AIAddMaterialsPopover.goToAdd' : 'AIMentionTabs.tool' }),
-    )
-    const picker = await screen.findByRole('dialog', { name: 'AIChatTextarea.addMaterials' })
-    expect(
-      within(picker).getByText(knowledge ? 'AIMentionTabs.knowledgeBase' : 'AIMentionTabs.tool'),
-    ).toBeInTheDocument()
-    expect(within(picker).queryByRole('button', { name: 'YakitButton.back' })).toBeNull()
   })
 
   it('资料筛选默认显示全部，已添加可搜索未加载的提及并取消', async () => {
@@ -1226,37 +1508,6 @@ describe('输入框资料栏', () => {
     await act(async () => vi.advanceTimersByTimeAsync(300))
     expect(screen.queryByTestId('skill-preview')).not.toBeInTheDocument()
     fireEvent.click(cancel)
-    expect(screen.queryByRole('button', { name: 'AIMentionTabs.skill 1' })).not.toBeInTheDocument()
-  })
-
-  it('已添加技能明细 hover 不弹出正文预览，保留名称和取消操作', async () => {
-    const { ref } = await setup('正文')
-    editors[0].action((ctx) => ctx.get(editorViewCtx).setProps({ handleScrollToSelection: () => true }))
-    act(() => {
-      ref.current?.setMention({
-        mentionType: 'forge',
-        mentionId: '1',
-        mentionName: '审计技能',
-        name: 'review-skill',
-      })
-    })
-    fireEvent.click(screen.getByRole('button', { name: 'AIMentionTabs.skill 1' }))
-    const summary = await screen.findByRole('dialog', { name: 'AIAddMaterialsPopover.addedSkills' })
-    const row = within(summary).getByRole('listitem')
-    expect(within(row).getByText('审计技能')).toBeInTheDocument()
-    expect(screen.queryByTestId('skill-preview')).not.toBeInTheDocument()
-    fireEvent.mouseEnter(row)
-    await act(async () => vi.advanceTimersByTimeAsync(300))
-    expect(screen.queryByTestId('skill-preview')).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'AIMentionTabs.skill 1' })).toHaveAttribute('aria-expanded', 'true')
-    fireEvent.mouseLeave(row)
-    expect(screen.getByRole('button', { name: 'AIMentionTabs.skill 1' })).toHaveAttribute('aria-expanded', 'true')
-    fireEvent.mouseEnter(row)
-    await act(async () => vi.advanceTimersByTimeAsync(300))
-    expect(screen.queryByTestId('skill-preview')).not.toBeInTheDocument()
-    fireEvent.click(within(row).getByRole('button', { name: 'YakitButton.cancel 审计技能' }))
-    await waitFor(() => expect(screen.queryByTestId('skill-preview')).not.toBeInTheDocument())
-    expect(screen.queryByRole('button', { name: 'AIMentionTabs.skill 1' })).not.toBeInTheDocument()
   })
 
   it('从旧 Markdown 和 DOM 技能引用恢复原名', async () => {
@@ -1335,50 +1586,13 @@ describe('输入框资料栏', () => {
       })
       expect(within(panel).queryByText('测试知识库')).toBeNull()
       fireEvent.click(await within(panel).findByRole('button', { name: `YakitButton.add ${allName}` }))
-      expect(screen.getByRole('button', { name: 'AIMentionTabs.knowledgeBase 1' })).toBeInTheDocument()
       expect(ref.current?.getValue()).toBe('')
       fireEvent.click(await within(panel).findByRole('button', { name: `YakitButton.cancel ${allName}` }))
-      expect(screen.queryByRole('button', { name: 'AIMentionTabs.knowledgeBase 1' })).toBeNull()
       fireEvent.click(await within(panel).findByRole('button', { name: `YakitButton.add ${allName}` }))
       fireEvent.click(send)
       expect(onSubmit.mock.calls[0][0].mentionList).toEqual([
         expect.objectContaining({ mentionId: '@所有知识库', mentionType: 'knowledgeBase' }),
       ])
-    } finally {
-      act(() => useKnowledgeBase.getState().clearAll())
-    }
-  })
-
-  it('添加知识库时保存图标索引，目录清空后摘要及恢复的消息仍使用原图标', async () => {
-    useKnowledgeBase.setState({
-      knowledgeBases: [{ ID: '1', KnowledgeBaseName: '测试知识库' } as KnowledgeBaseItem],
-    })
-    try {
-      const { ref, send, onSubmit } = await setup()
-      fireEvent.click(screen.getByRole('button', { name: 'AIChatTextarea.addMaterials' }))
-      const panel = await screen.findByRole('dialog', { name: 'AIChatTextarea.addMaterials' })
-      fireEvent.click(within(panel).getByText('AIMentionTabs.knowledgeBase'))
-      const add = await within(panel).findByRole('button', { name: 'YakitButton.add 测试知识库' })
-      const catalogIcon = within(panel)
-        .getByText('测试知识库')
-        .parentElement?.querySelector('svg path')
-        ?.getAttribute('d')
-      expect(catalogIcon).toBeTruthy()
-      fireEvent.click(add)
-      act(() => useKnowledgeBase.getState().clearAll())
-      const openSummary = async () => {
-        fireEvent.click(screen.getByRole('button', { name: 'AIMentionTabs.knowledgeBase 1' }))
-        const summary = await screen.findByRole('dialog', { name: 'AIAddMaterialsPopover.addedKnowledgeBases' })
-        return within(summary).getByRole('listitem').querySelector('svg path')?.getAttribute('d')
-      }
-      expect(await openSummary()).toBe(catalogIcon)
-      fireEvent.click(send)
-      const submitted = onSubmit.mock.calls[0][0]
-      expect(submitted.mentionList).toEqual([expect.objectContaining({ mentionId: '1', knowledgeIndex: 0 })])
-      fireEvent.click(screen.getByRole('button', { name: 'AIMentionTabs.knowledgeBase 1' }))
-      act(() => ref.current?.setValue(submitted.qs))
-      expect(extractDataWithMilkdown(editors[0]).mentions[0]?.knowledgeIndex).toBe(0)
-      expect(await openSummary()).toBe(catalogIcon)
     } finally {
       act(() => useKnowledgeBase.getState().clearAll())
     }
@@ -1409,7 +1623,7 @@ describe('输入框资料栏', () => {
     }
   })
 
-  it('工具、知识库和场景使用各自的数据源，选中场景后关闭弹窗', async () => {
+  it('工具和知识库使用各自的数据源，选中后可随消息发送', async () => {
     vi.mocked(grpcGetAIToolList).mockImplementation(async ({ Pagination }) => ({
       Pagination,
       Tools: [
@@ -1423,28 +1637,6 @@ describe('输入框资料栏', () => {
       ],
       Total: 1,
     }))
-    vi.mocked(grpcQueryAIFocus).mockResolvedValue({
-      Data: [
-        {
-          Name: 'focus',
-          VerboseName: 'Focus',
-          VerboseNameZh: '测试场景',
-          Description: 'Scene',
-          DescriptionZh: '场景说明',
-          OutputExamplePrompt: '',
-          UsagePrompt: '',
-        },
-        {
-          Name: 'research',
-          VerboseName: 'Research',
-          VerboseNameZh: '调研场景',
-          Description: 'Research scene',
-          DescriptionZh: '调研说明',
-          OutputExamplePrompt: '',
-          UsagePrompt: '',
-        },
-      ],
-    })
     useKnowledgeBase.setState({
       knowledgeBases: [
         { ID: '3', KnowledgeBaseName: '测试知识库', KnowledgeBaseDescription: '知识库说明' } as KnowledgeBaseItem,
@@ -1472,8 +1664,6 @@ describe('输入框资料栏', () => {
       expect(grpcGetAIToolList).toHaveBeenCalledTimes(1)
       expect(grpcQueryAIForge).not.toHaveBeenCalled()
       expect(ref.current?.getValue()).toBe('')
-      expect(screen.getByRole('button', { name: 'AIChatTextarea.otherMaterials 1' })).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: 'AIMentionTabs.knowledgeBase 1' })).toBeInTheDocument()
       expect(send).toBeEnabled()
       fireEvent.click(send)
       const submitted = onSubmit.mock.calls[0][0]
@@ -1490,154 +1680,52 @@ describe('输入框资料栏', () => {
         expect(restored.firstChild!.firstChild!.attrs).toMatchObject({ mentionName: '查询工具', name: 'query-tool' })
       })
       expect(grpcQueryAIFocus).not.toHaveBeenCalled()
-      fireEvent.click(within(panel).getByText('AiAgengt.focusMode'))
-      const firstScenario = await within(panel).findByRole('button', { name: '测试场景' })
-      expect(grpcQueryAIFocus).toHaveBeenCalledTimes(1)
-      expect(within(panel).queryByRole('button', { name: 'AIMentionTabs.all' })).toBeNull()
-      expect(within(firstScenario).getByText('场景说明')).toBeInTheDocument()
-      expect(firstScenario.querySelector('svg')).toBeNull()
-      expect(within(panel).queryByRole('button', { name: /^YakitButton.add / })).toBeNull()
-      fireEvent.click(firstScenario)
-      expect(trigger).toHaveAttribute('aria-expanded', 'false')
-      fireEvent.click(send)
-      expect(onSubmit).toHaveBeenLastCalledWith(expect.objectContaining({ focusMode: 'focus' }))
-      act(() => ref.current?.setMention({ mentionType: 'focusMode', mentionId: 'focus', mentionName: 'focus' }))
-      const reopened = await openPopover()
-      expect(within(reopened).getByTitle('测试场景')).toBeInTheDocument()
-      act(() => ref.current?.setMention({ mentionType: 'focusMode', mentionId: 'research', mentionName: 'research' }))
-      expect(within(reopened).getByTitle('research')).toBeInTheDocument()
-      act(() => ref.current?.setMention({ mentionType: 'focusMode', mentionId: 'focus', mentionName: 'focus' }))
-      expect(within(reopened).getByTitle('focus')).toBeInTheDocument()
-      expect(grpcQueryAIFocus).toHaveBeenCalledTimes(1)
-      fireEvent.click(within(reopened).getByText('AiAgengt.focusMode'))
-      const selected = await within(reopened).findByRole('button', { name: '测试场景', pressed: true })
-      expect(within(selected).getByText('AIAddMaterialsPopover.currentScenario')).toBeInTheDocument()
-      const researchScenario = within(reopened).getByRole('button', { name: '调研场景' })
-      expect(researchScenario).toHaveAttribute('tabindex', '0')
-      fireEvent.keyDown(researchScenario, { key: 'Enter' })
-      expect(trigger).toHaveAttribute('aria-expanded', 'false')
-
-      fireEvent.click(screen.getByRole('button', { name: 'AIChatTextarea.otherMaterials 2' }))
-      const otherSummary = await screen.findByRole('dialog', { name: 'AIAddMaterialsPopover.addedOtherMaterials' })
-      expect(grpcQueryAIFocus).toHaveBeenCalledTimes(2)
-      expect(
-        within(otherSummary)
-          .getAllByRole('listitem')
-          .map((row) => row.textContent),
-      ).toEqual(['AIMentionTabs.tool1', 'AiAgengt.focusMode调研场景'])
-      expect(within(otherSummary).queryByText('research')).toBeNull()
-      fireEvent.click(within(otherSummary).getByRole('button', { name: 'AiAgengt.focusMode' }))
-      const updated = await screen.findByRole('dialog', { name: 'AIChatTextarea.addMaterials' })
-      expect(within(updated).queryByRole('button', { name: 'YakitButton.back' })).toBeNull()
-      fireEvent.keyDown(await within(updated).findByRole('button', { name: '调研场景', pressed: true }), { key: ' ' })
-      fireEvent.click(trigger)
-      const menu = await openPopover()
-      expect(within(menu).queryByText('AIAddMaterialsPopover.current')).toBeNull()
-      expect(screen.getByRole('button', { name: 'AIChatTextarea.otherMaterials 1' })).toBeInTheDocument()
+      expect(within(panel).queryByText('AiAgengt.focusMode')).not.toBeInTheDocument()
       act(() => ref.current?.setValue(''))
-      expect(screen.queryByRole('button', { name: 'AIChatTextarea.otherMaterials 1' })).toBeNull()
-      expect(screen.queryByRole('button', { name: 'AIMentionTabs.knowledgeBase 1' })).toBeNull()
     } finally {
       act(() => useKnowledgeBase.getState().clearAll())
     }
   })
 
-  it('外部只提供场景标识时，菜单直接显示标识', async () => {
-    const { ref } = await setup()
-    act(() => ref.current?.setMention({ mentionType: 'focusMode', mentionId: 'research', mentionName: 'research' }))
-    const trigger = screen.getByRole('button', { name: 'AIChatTextarea.addMaterials' })
-    fireEvent.click(trigger)
-    const menu = await screen.findByRole('dialog', { name: 'AIChatTextarea.addMaterials' })
-    expect(within(menu).getByTitle('research')).toBeInTheDocument()
-    expect(grpcQueryAIFocus).not.toHaveBeenCalled()
-  })
-
   it.each([
-    ['zh-TW', '場景名稱', '場景說明', 'YakitEmpty.noDescription'],
-    ['en', 'research', 'Research scene', undefined],
-  ])('专注模式使用 %s 对应的名称和说明', async (language, name, description, missingDescription) => {
+    ['zh', '测试场景'],
+    ['zh-TW', '测试场景'],
+    ['en', 'scene'],
+  ])('在底栏选择、同步和清空场景（%s）', async (language, label) => {
     i18n.language = language
-    const scenario = {
-      Name: 'research',
-      VerboseName: 'Research',
-      VerboseNameZh: '場景名稱',
-      Description: 'Research scene',
-      DescriptionZh: '場景說明',
-      OutputExamplePrompt: '',
-      UsagePrompt: '',
-    }
     vi.mocked(grpcQueryAIFocus).mockResolvedValue({
-      Data: [scenario, { ...scenario, Name: 'empty', VerboseNameZh: '', Description: '', DescriptionZh: '' }],
+      Data: [
+        {
+          Name: 'scene',
+          VerboseName: 'Scene',
+          VerboseNameZh: '测试场景',
+          Description: 'Scenario description',
+          DescriptionZh: '场景说明',
+          OutputExamplePrompt: '',
+          UsagePrompt: '',
+        },
+      ],
     })
 
-    await setup()
-    const [trigger] = screen.getAllByRole('button', { name: 'AIChatTextarea.addMaterials' })
-    fireEvent.click(trigger)
-    const panel = await screen.findByRole('dialog', { name: 'AIChatTextarea.addMaterials' })
-    fireEvent.click(within(panel).getByText('AiAgengt.focusMode'))
+    const { ref, send, onSubmit } = await setup('正文')
+    const scene = screen.getByRole('combobox', { name: 'AiAgengt.focusMode' })
+    expect(grpcQueryAIFocus).not.toHaveBeenCalled()
+    if (language === 'en') fireEvent.keyDown(scene, { key: 'ArrowDown', keyCode: 40 })
+    else clickSceneSelector(scene)
+    fireEvent.click(await screen.findByText(label))
+    expect(scene).toHaveAttribute('aria-expanded', 'false')
+    expect(screen.getByTitle(label)).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /AIChatTextarea.otherMaterials/ })).not.toBeInTheDocument()
+    fireEvent.click(send)
+    expect(onSubmit).toHaveBeenLastCalledWith(expect.objectContaining({ focusMode: 'scene' }))
 
-    const option = await within(panel).findByRole('button', { name })
-    expect(within(option).getByText(description)).toBeInTheDocument()
-    const emptyOption = within(panel).getByRole('button', { name: 'empty' })
-    expect(emptyOption).toHaveTextContent(missingDescription ? `empty${missingDescription}` : /^empty$/)
-  })
-
-  it('已添加技能按 ForgeName 合并不同 ID，取消时保留正文提及', async () => {
-    vi.mocked(grpcQueryAIForge).mockImplementation(async ({ Pagination }) => ({
-      Pagination,
-      Data: [{ Id: 1, ForgeName: 'shared-skill', ForgeVerboseName: '列表技能', ForgeType: 'skillmd' }],
-      Total: 1,
-    }))
-    const { ref } = await setup()
-    editors[0].action((ctx) => ctx.get(editorViewCtx).setProps({ handleScrollToSelection: () => true }))
-    const [trigger] = screen.getAllByRole('button', { name: 'AIChatTextarea.addMaterials' })
-    fireEvent.click(trigger)
-    const picker = await screen.findByRole('dialog', { name: 'AIChatTextarea.addMaterials' })
-    fireEvent.click(within(picker).getByText('AIMentionTabs.skill'))
-    fireEvent.click(await within(picker).findByRole('button', { name: 'YakitButton.add 列表技能' }))
-    act(() => {
-      ref.current?.setMention({
-        mentionType: 'forge',
-        mentionId: '2',
-        mentionName: '正文技能',
-        name: 'shared-skill',
-      })
-      ref.current?.setMention({
-        mentionType: 'forge',
-        mentionId: '3',
-        mentionName: '列表技能',
-        name: 'other-skill',
-      })
-    })
-
-    fireEvent.click(screen.getByRole('button', { name: 'AIMentionTabs.skill 2' }))
-    const summary = await screen.findByRole('dialog', { name: 'AIAddMaterialsPopover.addedSkills' })
-    const rows = within(summary).getAllByRole('listitem')
-    expect(rows).toHaveLength(2)
-    expect(within(summary).queryByText('正文技能')).toBeNull()
-    fireEvent.click(within(rows[0]).getByRole('button', { name: 'YakitButton.cancel 列表技能' }))
-    expect(screen.getByRole('button', { name: 'AIMentionTabs.skill 1' })).toBeInTheDocument()
-    expect(ref.current?.getValue()).toContain('正文技能')
-  })
-
-  it('已添加知识库明细可以取消单项，正文提及保留', async () => {
-    const { ref } = await setup()
-    editors[0].action((ctx) => ctx.get(editorViewCtx).setProps({ handleScrollToSelection: () => true }))
-    act(() => {
-      ref.current?.setMention({ mentionType: 'knowledgeBase', mentionId: '1', mentionName: '可取消知识库' })
-      ref.current?.setMention({ mentionType: 'knowledgeBase', mentionId: '2', mentionName: '锁定知识库', lock: true })
-    })
-    fireEvent.click(screen.getByRole('button', { name: 'AIMentionTabs.knowledgeBase 2' }))
-    const summary = await screen.findByRole('dialog', { name: 'AIAddMaterialsPopover.addedKnowledgeBases' })
-    expect(within(summary).queryByRole('button', { name: 'YakitButton.cancel 锁定知识库' })).toBeNull()
-    fireEvent.click(within(summary).getByRole('button', { name: 'YakitButton.cancel 可取消知识库' }))
-    expect(screen.getByRole('button', { name: 'AIMentionTabs.knowledgeBase 1' })).toHaveAttribute(
-      'aria-expanded',
-      'true',
-    )
-    expect(within(summary).queryByText('可取消知识库')).toBeNull()
-    expect(within(summary).getByText('锁定知识库')).toBeInTheDocument()
-    expect(ref.current?.getValue()).toContain('可取消知识库')
+    act(() => ref.current?.setMention({ mentionType: 'focusMode', mentionId: 'fallback', mentionName: 'fallback' }))
+    expect(screen.getByTitle('fallback')).toBeInTheDocument()
+    const clear = scene.closest('.ant-select')!.querySelector('.ant-select-clear')!
+    fireEvent.mouseDown(clear)
+    expect(scene).toHaveAttribute('aria-expanded', 'false')
+    fireEvent.click(send)
+    expect(onSubmit).toHaveBeenLastCalledWith(expect.objectContaining({ focusMode: undefined }))
   })
 
   it('同一知识库重复加入时不追加', async () => {
@@ -1672,7 +1760,9 @@ describe('输入框资料栏', () => {
     const panel = await screen.findByRole('dialog', { name: 'AIChatTextarea.addMaterials' })
     expect(within(panel).getByText('AIAddMaterialsPopover.addedBrowsers (1)')).toBeInTheDocument()
     expect(within(panel).queryByRole('textbox', { name: 'YakitInput.search' })).toBeNull()
-    expect(screen.getByRole('button', { name: 'AIChatTextarea.addMaterials' })).not.toHaveAttribute('data-menu-open')
+    const addMaterials = screen.getByRole('button', { name: 'AIChatTextarea.addMaterials' })
+    expect(addMaterials).toHaveAttribute('aria-expanded', 'true')
+    expect(addMaterials).not.toHaveAttribute('data-menu-open')
     expect(within(panel).getByText(browserName)).toBeInTheDocument()
     expect(within(panel).queryByText('浏览器 B')).toBeNull()
     expect(within(panel).queryByRole('button', { name: 'BrowserInstances.reference' })).toBeNull()
@@ -1706,8 +1796,6 @@ describe('输入框资料栏', () => {
       ref.current?.setMention({ mentionType: 'browser', mentionId: 'browser-A', mentionName: 'A' })
       ref.current?.setMention({ mentionType: 'forge', mentionId: 'skill-1', mentionName: '技能 A' })
     })
-    const browserBadge = screen.getByRole('button', { name: 'AIChatTextarea.otherMaterials 1' })
-    const skillBadge = screen.getByRole('button', { name: 'AIMentionTabs.skill 1' })
 
     const removeMention = (mentionId: string) => {
       act(() =>
@@ -1724,68 +1812,13 @@ describe('输入框资料栏', () => {
       )
     }
     removeMention('browser-A')
-    await waitFor(() => expect(browserBadge).not.toBeInTheDocument())
-    expect(skillBadge).toBeInTheDocument()
+    expect(ref.current?.getValue()).not.toContain('browser-A')
+    expect(ref.current?.getValue()).toContain('skill-1')
     removeMention('skill-1')
-    await waitFor(() => expect(skillBadge).not.toBeInTheDocument())
+
     expect(ref.current?.getValue()).toBe('正文')
   })
 
-  it('在编辑器上方显示添加入口，其他资料只统计指定分类', async () => {
-    const { ref } = await setup()
-    const [addMaterials] = screen.getAllByRole('button', { name: 'AIChatTextarea.addMaterials' })
-    const editor = screen.getByTestId('editor')
-    expect(addMaterials.compareDocumentPosition(editor) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
-    expect(screen.queryByText('AIMentionTabs.skill')).toBeNull()
-
-    act(() => {
-      ref.current?.setValue(
-        ':risk[#21]{ids="21" displayText="#21"} :httpFlow[#7]{flowId="7" displayText="#7"} ![截图](screenshot.png)',
-      )
-      ref.current?.setMention({ mentionType: 'forge', mentionId: 'skill-1', mentionName: '技能 A' })
-      ref.current?.setMention({ mentionType: 'knowledgeBase', mentionId: 'kb-1', mentionName: '知识库 A' })
-      ref.current?.setMention({ mentionType: 'file', mentionId: 'file-1', mentionName: '文件 A' })
-      ref.current?.setMention({ mentionType: 'folder', mentionId: 'folder-1', mentionName: '目录 A' })
-      ref.current?.setMention({ mentionType: 'tool', mentionId: 'tool-1', mentionName: '工具 A' })
-      ref.current?.setMention({ mentionType: 'browser', mentionId: 'browser-1', mentionName: '浏览器 A' })
-      ref.current?.setHttpFlow(['1', '2'])
-    })
-    await waitFor(() => {
-      expect(screen.getByText('AIMentionTabs.skill')).toHaveTextContent('AIMentionTabs.skill 1')
-      expect(screen.getByText('AIMentionTabs.knowledgeBase')).toHaveTextContent('AIMentionTabs.knowledgeBase 1')
-      expect(screen.getByText('AIChatTextarea.otherMaterials')).toHaveTextContent('AIChatTextarea.otherMaterials 8')
-      expect(screen.queryByText('AIChatTextarea.addMaterials')).toBeNull()
-      expect(screen.getByRole('button', { name: 'AIChatTextarea.addMaterials' })).toBe(addMaterials)
-    })
-
-    fireEvent.click(screen.getByRole('button', { name: 'AIMentionTabs.knowledgeBase 1' }))
-    const knowledgeSummary = await screen.findByRole('dialog', { name: 'AIAddMaterialsPopover.addedKnowledgeBases' })
-    expect(within(knowledgeSummary).getByText('知识库 A')).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: 'AIChatTextarea.otherMaterials 8' }))
-    const otherSummary = await screen.findByRole('dialog', { name: 'AIAddMaterialsPopover.addedOtherMaterials' })
-    const rows = within(otherSummary).getAllByRole('listitem')
-    expect(rows.map((row) => row.textContent)).toEqual([
-      'AIAddMaterialsPopover.risk1',
-      'AIAddMaterialsPopover.flow3',
-      'AIMentionTabs.tool1',
-      'AIMentionTabs.fileSystem2',
-      'AIMentionTabs.browser1',
-    ])
-
-    act(() => {
-      ref.current?.setValue('')
-      ref.current?.setHttpFlow([])
-    })
-    await waitFor(() => {
-      expect(screen.queryByText('AIMentionTabs.skill')).toBeNull()
-      expect(screen.queryByText('AIMentionTabs.knowledgeBase')).toBeNull()
-      expect(screen.queryByText('AIChatTextarea.otherMaterials')).toBeNull()
-      expect(screen.getByText('AIChatTextarea.addMaterials')).toBeInTheDocument()
-    })
-  })
-})
-
-describe('图片保存期间的提交保护', () => {
   it.each(['点击', '回车'])('%s 提交等待所有图片路径写回后，才读取最新正文和附件', async (method) => {
     const { ref, onSubmit, send } = await setup('正文')
     act(() => ref.current?.setValue('正文 ![一](blob:first) ![二](blob:second)'))
@@ -1849,7 +1882,6 @@ describe('流量勾选引用逻辑', () => {
   ])('风险勾选以一个引用发送和回显（摘要：$isSummary）', async (reference) => {
     const onSubmit = vi.fn()
     const onWorkspaceAddedChange = vi.fn()
-    const emit = vi.spyOn(emiter, 'emit')
     const view = render(
       <AIChatTextarea
         chatDataStoreKey="test"
@@ -1865,13 +1897,6 @@ describe('流量勾选引用逻辑', () => {
       traffic: 0,
       fileSystem: 0,
     })
-    const materialsName = `AIChatTextarea.otherMaterials ${reference.ids.length}`
-    fireEvent.click(screen.getByRole('button', { name: materialsName }))
-    fireEvent.click(screen.getByText('AIAddMaterialsPopover.risk'))
-    expect(emit).toHaveBeenCalledWith(
-      'switchAIActTab',
-      JSON.stringify({ key: AITabsEnum.Risk, showSelectedRisks: true }),
-    )
     fireEvent.click(screen.getByRole('button', { name: 'YakitButton.send' }))
     const payload: AIChatTextareaSubmit = onSubmit.mock.calls[0][0]
     expect(payload.resourceReferences).toEqual([reference])
@@ -1891,7 +1916,6 @@ describe('流量勾选引用逻辑', () => {
       expect(restored.firstChild!.firstChild!.attrs).toMatchObject(reference)
     })
     view.rerender(<AIChatTextarea chatDataStoreKey="test" selectedRiskIds={[]} onSubmit={onSubmit} />)
-    expect(screen.queryByRole('button', { name: materialsName })).toBeNull()
   })
 
   it.each([
@@ -1909,7 +1933,7 @@ describe('流量勾选引用逻辑', () => {
     )
     const view = render(renderInput(['7', '8', '8']))
     await act(async () => {})
-    await screen.findByRole('button', { name: 'AIChatTextarea.otherMaterials 2' })
+    await waitFor(() => expect(screen.getByTestId('editor').querySelector('.ProseMirror')).not.toBeNull())
     const send = screen.getByRole('button', { name: 'YakitButton.send' })
     fireEvent.click(send)
     expect(onSubmit.mock.calls[0][0].resourceReferences).toMatchObject([
@@ -1918,7 +1942,6 @@ describe('流量勾选引用逻辑', () => {
     ])
 
     view.rerender(renderInput([]))
-    expect(screen.getByRole('button', { name: 'AIChatTextarea.otherMaterials 1' })).toBeInTheDocument()
     fireEvent.click(send)
     expect(onSubmit.mock.calls[1][0].resourceReferences).toMatchObject([{ type, ids: ['7'] }])
   })
@@ -1939,31 +1962,12 @@ describe('流量勾选引用逻辑', () => {
     const view = render(<AIChatTextarea chatDataStoreKey="" selectedHttpFlowIds={['21', '22']} onSubmit={onSubmit} />)
     await waitFor(() => expect(screen.getByTestId('editor').querySelector('.ProseMirror')).not.toBeNull())
     await act(async () => {})
-    expect(screen.getByRole('button', { name: 'AIChatTextarea.otherMaterials 2' })).toBeInTheDocument()
     view.rerender(<AIChatTextarea chatDataStoreKey="" selectedHttpFlowIds={['22']} onSubmit={onSubmit} />)
-    expect(screen.getByRole('button', { name: 'AIChatTextarea.otherMaterials 1' })).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'YakitButton.send' }))
     expect(onSubmit.mock.calls[0][0].resourceReferences).toEqual([
       expect.objectContaining({ type: 'http', ids: ['22'] }),
     ])
     view.rerender(<AIChatTextarea chatDataStoreKey="" selectedHttpFlowIds={[]} onSubmit={onSubmit} />)
-    expect(screen.queryByRole('button', { name: 'AIChatTextarea.otherMaterials 1' })).toBeNull()
-  })
-
-  it('同步流量数量并从其他资料打开已选流量', async () => {
-    const emit = vi.spyOn(emiter, 'emit')
-    const { ref } = await setup('正文')
-    act(() => ref.current?.setHttpFlow(['11', '12']))
-    fireEvent.click(screen.getByRole('button', { name: 'AIChatTextarea.otherMaterials 2' }))
-    fireEvent.click(screen.getByText('AIAddMaterialsPopover.flow'))
-    expect(emit).toHaveBeenCalledWith(
-      'switchAIActTab',
-      JSON.stringify({ key: AITabsEnum.HTTP, showSelectedHttpFlows: true }),
-    )
-    act(() => ref.current?.setHttpFlow(['12']))
-    expect(screen.getByRole('button', { name: 'AIChatTextarea.otherMaterials 1' })).toBeInTheDocument()
-    act(() => ref.current?.setHttpFlow([]))
-    expect(screen.queryByRole('button', { name: 'AIChatTextarea.otherMaterials 1' })).toBeNull()
   })
 
   it.each([1, 2, 3, 5, 6, 10])('%i 条流量不再显示标签，但保留提交数据、正文和撤销记录', async (count) => {

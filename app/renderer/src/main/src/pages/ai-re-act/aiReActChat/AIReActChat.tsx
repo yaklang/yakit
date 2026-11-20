@@ -10,18 +10,17 @@ import { yakitNotify } from '@/utils/notification'
 import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
 import classNames from 'classnames'
 import { ChevrondownButton } from './AIReActComponent'
-import { type AIInputEvent, AIInputEventSyncTypeEnum, AINotifyType } from '../hooks/grpcApi'
+import { AINotifyType } from '../hooks/grpcApi'
+import type { AIInputEvent } from '../hooks/grpcApi'
 import { AITaskQuery } from '@/pages/ai-agent/components/aiTaskQuery/AITaskQuery'
 import type { AIChatSubmitParams } from '@/pages/ai-agent/aiAgentChat/type'
 import { createActiveChatSessionId, getAIReActRequestParams } from '@/pages/ai-agent/utils'
 import { isChatSession } from '@/pages/ai-agent/utils/isChatSession'
 import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
-import { randomString } from '@/utils/randomUtil'
 import useAINodeLabel from '../hooks/useAINodeLabel'
 import emiter from '@/utils/eventBus/eventBus'
 import { useCurrentStore } from '../hooks/useCurrentDataBySession'
 import { useStore } from 'zustand'
-import useCurrentSessionId from '../hooks/useCurrentSessionId'
 import { AIReactChatTextarea } from './aiReactChatTextarea/AIReactChatTextarea'
 import { AIReActChatHeader } from './aiReActChatHeader/AIReActChatHeader'
 import { AIToDoListWrapper } from './aiToDoListWrapper/AIToDoListWrapper'
@@ -53,9 +52,8 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
       rightPanelLayoutRef,
     } = props
     const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
-    const { onSend, cancelPendingChat } = useAIAgentDispatcher()
+    const { onSend } = useAIAgentDispatcher()
 
-    const sessionId = useCurrentSessionId()
     const store = useCurrentStore()
 
     const wrapperRef = useRef<HTMLDivElement>(null)
@@ -237,26 +235,6 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
       }
     })
 
-    const handleStopCasualTask = useMemoizedFn(() => {
-      if (pendingChat) {
-        cancelPendingChat()
-        return
-      }
-      const currentCasualTaskID = store.getState().currentChatStatus.questionID
-      if (!store.getState().execute || !currentCasualTaskID) return
-
-      store.getState().updateState({
-        cancelChatLoading: true,
-      })
-      const info: AIInputEvent = {
-        IsSyncMessage: true,
-        SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_CANCEL_TASK,
-        SyncJsonInput: JSON.stringify({ task_id: currentCasualTaskID }),
-        SyncID: randomString(8),
-      }
-      onSend({ token: sessionId, type: 'casual', params: info })
-    })
-
     const aiReActChatContentsRef = useRef<AIReActChatContentsRef>(null)
     const scrollToItemIndex = useMemoizedFn<AIReActChatContentsRef['scrollToItemIndex']>((index, behavior) => {
       aiReActChatContentsRef.current?.scrollToItemIndex(index, behavior)
@@ -316,7 +294,6 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                         ref={aiChatTextareaRef}
                         handleSubmit={handleSubmit}
                         externalParameters={externalParameters}
-                        handleStopCasualTask={handleStopCasualTask}
                       />
                     </div>
                   </div>

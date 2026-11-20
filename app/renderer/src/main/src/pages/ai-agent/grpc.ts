@@ -31,6 +31,7 @@ import { convertNodeIdToVerbose } from '../ai-re-act/hooks/defaultConstant'
 import { JSONParseLog } from '@/utils/tool'
 import type { DeleteAISessionRequest, QueryAISessionRequest, QueryAISessionResponse } from './type/aiChat'
 import { fromServerAIStartParams } from '../ai-re-act/hooks/grpcApi'
+import type { AIModelContextResponse, GetAIModelContextRequest, SetAIModelContextRequest } from './type/modelContext'
 import type {
   GetAISessionCurrentResourcesRequest,
   GetAISessionCurrentResourcesResponse,
@@ -39,6 +40,28 @@ import type {
 } from './type/sessionResources'
 
 const { ipcRenderer } = window.require('electron')
+
+const requestAIModelContext = async (
+  method: 'GetAIModelContext' | 'SetAIModelContext',
+  params: GetAIModelContextRequest | SetAIModelContextRequest,
+  hiddenError?: boolean,
+): Promise<AIModelContextResponse> => {
+  try {
+    return await ipcRenderer.invoke(method, params)
+  } catch (error) {
+    if (!hiddenError) {
+      const message = method === 'GetAIModelContext' ? '获取模型上下文失败:' : '保存模型上下文失败:'
+      yakitNotify('error', message + error)
+    }
+    throw error
+  }
+}
+
+export const grpcGetAIModelContext: APIFunc<GetAIModelContextRequest, AIModelContextResponse> = (params, hiddenError) =>
+  requestAIModelContext('GetAIModelContext', params, hiddenError)
+
+export const grpcSetAIModelContext: APIFunc<SetAIModelContextRequest, AIModelContextResponse> = (params, hiddenError) =>
+  requestAIModelContext('SetAIModelContext', params, hiddenError)
 
 export const grpcGetAISessionCurrentResources: APIFunc<
   GetAISessionCurrentResourcesRequest,

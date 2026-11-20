@@ -124,6 +124,14 @@ describe('Yak script model configuration', () => {
   })
 
   it('adds a script model with the default editor template through the real save flow', async () => {
+    const existing: AIModelConfig = {
+      ContextOwnerId: 'saved-owner',
+      ModelName: 'existing-script',
+      ProviderId: '',
+      Provider: provider,
+      ExtraParams: [],
+    }
+    mocks.config.IntelligentModels = [existing]
     render(<AIModelForm onClose={vi.fn()} />)
     fireEvent.change(await screen.findByRole('combobox', { name: 'ConfigNetworkPage.typeLabel' }), {
       target: { value: 'yak-script' },
@@ -138,7 +146,9 @@ describe('Yak script model configuration', () => {
     expect(screen.queryByRole('button', { name: 'ConfigNetworkPage.loadProviderExample' })).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'AIModelList.confirmAddBtn' }))
     await waitFor(() => expect(mocks.save).toHaveBeenCalledOnce())
-    const saved = mocks.save.mock.calls[0][0].IntelligentModels[0]
+    const [unchanged, saved] = mocks.save.mock.calls[0][0].IntelligentModels
+    expect(unchanged).toEqual(existing)
+    expect(saved).not.toHaveProperty('ContextOwnerId')
     expect(saved.ModelName).toBe('script-model')
     expect(saved.Provider).toEqual({
       Type: 'yak-script',
@@ -215,6 +225,7 @@ describe('Yak script model configuration', () => {
     const moveTier = enableNative
     const edited = 'chat = func(req, emit) { emit("edited"); return nil }'
     const item = {
+      ContextOwnerId: 'saved-owner',
       ModelName: 'my-script',
       Provider: provider,
       ExtraParams: [{ Key: 'unrelated', Value: 'keep' }],
@@ -242,6 +253,7 @@ describe('Yak script model configuration', () => {
     const config = mocks.save.mock.calls[0][0]
     const saved = (moveTier ? config.LightweightModels : config.IntelligentModels)[0]
     if (moveTier) expect(config.IntelligentModels).toEqual([])
+    expect(saved.ContextOwnerId).toBe(item.ContextOwnerId)
     expect(saved.ExtraParams).toEqual([])
     expect(saved.Provider).toEqual({ Type: 'yak-script', Script: edited, EnableNativeToolCalling: enableNative })
     expect(onClose).toHaveBeenCalledOnce()

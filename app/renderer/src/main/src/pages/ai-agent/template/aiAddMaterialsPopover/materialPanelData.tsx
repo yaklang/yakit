@@ -1,7 +1,6 @@
 import groupBy from 'lodash/groupBy'
 import {
   BookOpenTextOutlined,
-  BoxOutlined,
   ChromeOutlined,
   FolderOpenOutlined,
   PaperClipOutlined,
@@ -31,7 +30,6 @@ interface MaterialMenuOptions extends Pick<
 > {
   t: TFunction
   browserCount: number
-  currentFocusMode?: string
   addAttachments: (type: 'file' | 'folder') => void
   close: () => void
 }
@@ -43,7 +41,6 @@ export const getMaterialMenuItems = ({
   selectedResourceIds,
   t,
   browserCount,
-  currentFocusMode,
   addAttachments,
   close,
 }: MaterialMenuOptions) => {
@@ -144,15 +141,6 @@ export const getMaterialMenuItems = ({
       count: browserCount,
       summaryPanel: 'browser',
     },
-    focusMode: {
-      label: t('AiAgengt.focusMode'),
-      description: t('AIAddMaterialsPopover.sceneHint'),
-      icon: <BoxOutlined size={16} />,
-      tab: AIMentionTabsEnum.FocusMode,
-      category: 'focusMode',
-      current: currentFocusMode,
-      count: currentFocusMode ? 1 : 0,
-    },
   } satisfies Record<string, MaterialMenuItem>
 }
 
@@ -220,7 +208,7 @@ export const getMaterialSummaryGroups = ({
     ]
   })
   const otherRows = items.flatMap<MaterialSummaryRow>(
-    ({ label, icon, count, action, summaryAction, category, tab, current, summaryPanel }) =>
+    ({ label, icon, count, action, summaryAction, category, tab, summaryPanel }) =>
       count && count > 0
         ? [
             {
@@ -228,8 +216,6 @@ export const getMaterialSummaryGroups = ({
               name: label,
               icon,
               count,
-              hideCount: category === 'focusMode',
-              description: current,
               onOpen:
                 tab && filterMode?.includes(tab)
                   ? undefined
