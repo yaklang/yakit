@@ -975,6 +975,8 @@
     "multiMode": "多模式",
     "configuration": "執行模式配置",
     "configurationTip": "按任務需要組合使用 Plan、Multi-Agent 和 Goal 模式",
+    "planTip": "允許 AI 制定計畫並按計畫執行",
+    "multiAgentTip": "優先使用 SubAgent 派發完成任務",
     "goalHint": "請選擇一種目標模式並設定參數",
     "switchGoalModeContent": "切換後，目前選取項目的值將恢復為預設值，是否繼續？",
     "durationHint": "設定「繼續深入」時間來增加輪次",
