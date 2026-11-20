@@ -325,7 +325,7 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
     })
   })
 
-  const onOk = useMemoizedFn(() => {
+  const onOk = useMemoizedFn((testedVision?: { key: string; result: ModelVisionProbeResult }) => {
     formRef.current?.form?.validateFields().then((res) => {
       if (!aiGlobalConfigData?.aiGlobalConfigRef.current) {
         yakitNotify('error', 'AI全局配置获取失败，请稍后再试')
@@ -345,7 +345,8 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
       const key = getAIModelFormEffortKey(res)
       const previous =
         item && getAIModelFormEffortKey(formValues as AIThirdPartyApplicationConfig) === key ? item : undefined
-      const vision = visionProbe?.key === key ? visionProbe.result : undefined
+      const probe = testedVision ?? visionProbe
+      const vision = probe?.key === key ? probe.result : undefined
       const newItem: AIModelConfig = {
         SupportsImageInput: vision?.SupportsImageInput ?? previous?.SupportsImageInput,
         SupportsImageToolCalling: vision?.SupportsImageToolCalling ?? previous?.SupportsImageToolCalling,
@@ -459,15 +460,49 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
         Config: config,
         Content: '测试成功',
       })
-        .then((response) => {
-          const isSuccess = response.Success
-          if (isSuccess) {
-            yakitNotify('success', '测试成功')
-            isShowSaveLoadingRef.current = false
-            onOk()
-          } else {
+        .then(async (response) => {
+          if (!response.Success) {
             onOpenCheckResult(response)
+            return
           }
+          const form = formRef.current?.form
+          const key = getAIModelFormEffortKey(res)
+          const existing =
+            visionProbe?.key === key
+              ? visionProbe.result
+              : item && getAIModelFormEffortKey(formValues as AIThirdPartyApplicationConfig) === key
+                ? item
+                : undefined
+          let testedVision: { key: string; result: ModelVisionProbeResult } | undefined
+          if (
+            res.model &&
+            existing?.SupportsImageInput !== false &&
+            (existing?.SupportsImageInput === undefined || existing.SupportsImageToolCalling === undefined)
+          ) {
+            const result = await grpcProbeModelVision(formValueToAIConfigProvider(res), res.model).catch(
+              () => undefined,
+            )
+            if (result) {
+              testedVision = {
+                key,
+                result: {
+                  ...result,
+                  SupportsImageInput: result.SupportsImageInput ?? existing?.SupportsImageInput,
+                  SupportsImageToolCalling: result.SupportsImageToolCalling ?? existing?.SupportsImageToolCalling,
+                },
+              }
+            }
+          }
+          // The test results only apply to the connection that was tested.
+          if (
+            !form ||
+            formRef.current?.form !== form ||
+            key !== getAIModelFormEffortKey(form.getFieldsValue(true) as AIThirdPartyApplicationConfig)
+          )
+            return
+          yakitNotify('success', '测试成功')
+          isShowSaveLoadingRef.current = false
+          onOk(testedVision)
         })
         .finally(() => {
           setTimeout(() => {
@@ -550,13 +585,19 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
           >
             {t('ModelVision.detect')}
           </YakitButton>
-          <YakitButton size="large" type="outline2" onClick={onCheckAndSave} loading={testLoading}>
+          <YakitButton
+            size="large"
+            type="outline2"
+            onClick={onCheckAndSave}
+            loading={testLoading}
+            disabled={visionLoading || loading}
+          >
             {t('AIModelList.testAndAddBtn')}
           </YakitButton>
           <YakitButton
             size="large"
             type={'primary'}
-            onClick={onOk}
+            onClick={() => onOk()}
             loading={loading}
             disabled={testLoading || visionLoading || !isShowSaveLoadingRef.current}
           >
