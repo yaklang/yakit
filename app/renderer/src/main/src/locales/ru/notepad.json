@@ -1,0 +1,47 @@
+{
+  "NotepadAction": {
+    "createdAt": "Дата создания",
+    "updatedAt": "Обновлено",
+    "confirmDelete": "Вы уверены, что хотите удалить этот документ?"
+  },
+  "NotepadManageOnline": {
+    "fileName": "Имя файла",
+    "author": "Автор",
+    "collaborator": "Соавтор",
+    "updatedAt": "Обновлено",
+    "createdAt": "Дата создания",
+    "confirmBatchDelete": "Вы уверены, что хотите удалить выбранные заметки?",
+    "noData": "Нажмите кнопку [Создать] в правом верхнем углу, чтобы добавить данные"
+  },
+  "NotepadManageLocal": {
+    "fullTextSearch": "Полнотекстовый поиск"
+  },
+  "NotepadManageLocalList": {
+    "title": "Название",
+    "updatedAt": "Обновлено",
+    "createdAt": "Дата создания",
+    "confirmDeleteSelected": "Вы уверены, что хотите удалить выбранные документы?",
+    "confirmDeleteAll": "Вы уверены, что хотите удалить все документы?"
+  },
+  "NotepadLocalList": {
+    "title": "Название",
+    "lastUpdateTime": "Последнее обновление"
+  },
+  "ModifyNotepad": {
+    "list": "Список",
+    "catalogue": "Каталог",
+    "unnamedDocument": "Документ без названия",
+    "dataErrorMissingDeleted": "Ошибка данных / документ отсутствует / уже удалён",
+    "errorReason": "Причина ошибки: {{message}}",
+    "saveCurrentDocument": "Сохранить текущий документ",
+    "noteIdMissing": "Отсутствует NoteId",
+    "titleTooLong": "Название не должно превышать 50 символов",
+    "enterTitle": "Введите название",
+    "noPermissionMessage": "Нет разрешения на чтение или редактирование. Свяжитесь с автором {{userName}}",
+    "online": "Онлайн",
+    "savedToCloud": "Сохранено в облаке",
+    "saving": "Сохранение...",
+    "connecting": "Подключение...",
+    "offline": "Не в сети"
+  }
+}

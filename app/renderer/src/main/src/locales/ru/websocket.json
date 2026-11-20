@@ -1,0 +1,24 @@
+{
+  "WebsocketFuzzer": {
+    "clear_send_data": "Очистить данные отправки",
+    "selectDataFrame": "Выберите кадр данных WebSocket, чтобы просмотреть сведения",
+    "request": "Запрос",
+    "response": "Ответ",
+    "connected": "Подключено",
+    "notConnected": "Соединение не установлено",
+    "extraParams": "Дополнительные параметры",
+    "setProxy": "Настроить прокси",
+    "setTimeout": "Установить время ожидания (с)",
+    "closeConnectionConfirm": "Вы уверены, что хотите закрыть соединение WebSocket?",
+    "disconnect": "Отключиться",
+    "connect": "Подключить",
+    "buildingConnection": "Установка соединения WebSocket",
+    "sendData": "Отправить данные",
+    "sendToServer": "Отправить на сервер",
+    "realtimePreview": "Предварительный просмотр кадров данных WebSocket в реальном времени",
+    "serverResponse": "Ответ сервера",
+    "clientRequest": "Запрос клиента",
+    "frameDetails": "Сведения о кадре данных",
+    "dataSize": "Размер данных: {{size}}"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "pageInfo": {
+    "aiAgentCacheFailed": "Не удалось сохранить вкладки AI Agent: {{error}}",
+    "parseFailed": "Ошибка разбора данных page-info: {{error}}",
+    "webFuzzerCacheFailed": "Не удалось сохранить данные кэша webFuzzer: {{error}}"
+  },
+  "fuzzerSequence": {
+    "cacheFailed": "Не удалось сохранить данные кэша последовательности webFuzzer: {{error}}"
+  }
+}

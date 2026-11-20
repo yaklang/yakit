@@ -1,0 +1,40 @@
+{
+  "BruteTypeTreeList": {
+    "availableBruteTypes": "Доступные типы подбора"
+  },
+  "BruteExecute": {
+    "bruteForceDetection": "Обнаружение методом подбора",
+    "types": "Типы"
+  },
+  "BruteExecuteContent": {
+    "logs": "Журналы",
+    "inputTarget": "Целевые объекты ввода",
+    "targetPlaceholder": "Правила содержимого: домен(:порт)/IP(:порт)/диапазон IP; для пакетного ввода разделяйте значения запятыми",
+    "targetConcurrentLabel": "Параллельное выполнение для целей:",
+    "stopOnSuccess": "Остановить при успехе",
+    "continueOnSuccess": "Продолжить при успехе",
+    "randomPause": "Случайная пауза:",
+    "extraParams": "Дополнительные параметры"
+  },
+  "BruteSettings": {
+    "bruteUserDict": "Словарь имен пользователей для подбора",
+    "bruteUser": "Имя пользователя для подбора",
+    "bruteUserPlaceholder": "Введите имена пользователей, разделяя их переводами строк",
+    "useDefaultUserDict": "Одновременно использовать стандартный словарь имен пользователей",
+    "brutePasswordDict": "Словарь паролей для подбора",
+    "brutePassword": "Пароль для подбора",
+    "brutePasswordPlaceholder": "Введите пароли, разделяя их переводами строк",
+    "useDefaultPasswordDict": "Одновременно использовать стандартный словарь паролей",
+    "targetConcurrent": "Параллельное выполнение для целей",
+    "targetConcurrentHelp": "Одновременный подбор для нескольких целей",
+    "innerTargetConcurrent": "Параллельное выполнение внутри цели",
+    "innerTargetConcurrentHelp": "Количество задач подбора, одновременно выполняемых для каждой цели",
+    "autoStop": "Автоматическая остановка",
+    "autoStopHelp": "Завершить задачу, когда будет найден первый результат подбора",
+    "minDelay": "Минимальная задержка",
+    "maxDelay": "Максимальная задержка"
+  },
+  "SelectPayload": {
+    "fetchDictFailed": "Не удалось получить список словарей"
+  }
+}

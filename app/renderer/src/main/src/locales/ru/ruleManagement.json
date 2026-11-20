@@ -1,0 +1,75 @@
+{
+  "LocalRuleGroupList": {
+    "title": "Управление правилами",
+    "searchPlaceholder": "Введите название группы",
+    "uploadTitle": "Подсказки по загрузке",
+    "uploadContent": "Если библиотека правил с таким же названием уже существует, она будет перезаписана.",
+    "uploadConfirm": "Подтвердить загрузку",
+    "renameFailed": "Не удалось переименовать локальную группу правил"
+  },
+  "EditRuleDrawer": {
+    "formMissing": "Данные формы не найдены. Закройте диалоговое окно и попробуйте ещё раз.",
+    "saveAndCloseConfirm": "Сохранить правило и закрыть диалоговое окно?",
+    "formRequired": "Заполните все обязательные поля правила",
+    "logTab": "Журналы",
+    "auditResultTab": "Результаты аудита",
+    "rule": " Правило",
+    "auditDetail": "Подробности аудита",
+    "relatedHoles": "Связанные уязвимости",
+    "ruleContent": "Содержимое правила",
+    "executionResult": "Результат выполнения",
+    "basicInfo": "Основная информация",
+    "collapseBasicInfo": "Свернуть основную информацию",
+    "ruleName": "Название правила",
+    "ruleNameRequired": "Необходимо указать название правила",
+    "enterRuleName": "Введите название правила",
+    "language": "Язык",
+    "languageRequired": "Необходимо указать язык",
+    "groupName": "Группа",
+    "selectGroup": "Выберите группу",
+    "description": "Описание",
+    "expandBasicInfo": "Развернуть основную информацию",
+    "executionProgress": "Ход выполнения",
+    "autoDetect": "Автоматическое обнаружение",
+    "projectName": "Название проекта",
+    "selectProjectToDebug": "Выберите проект для отладки",
+    "syntaxflowCheck": "Проверка правил SyntaxFlow",
+    "scoreHint1": "Базовая проверка компиляции, чтобы убедиться в корректности синтаксиса правила SyntaxFlow и его успешной компиляции.",
+    "scoreHint2": "Проверить, содержит ли описание поля desc и solution.",
+    "scoreHint3": "Проверить, содержит ли правило операторы alert, формирующие результаты.",
+    "scoreHint4": "Проверить, проходят ли тестовые случаи проверку правила: положительные случаи должны вызывать alert, а отрицательные — нет."
+  },
+  "UpdateRuleToGroup": {
+    "groupCount": "Группа правил {{count}}",
+    "hint": "Отмеченные элементы будут добавлены в группу, а снятые отметки приведут к их удалению из группы. Чтобы создать новую группу, введите её имя и нажмите Enter.",
+    "addGroup": "Добавить группу «{{search}}»",
+    "addGroupButton": "Добавить группу"
+  },
+  "RuleDebugAuditDetail": {
+    "readFailed": "Не удалось прочитать",
+    "openError": "Не удалось открыть: {{error}}",
+    "selectLeft": "Выберите элемент слева"
+  },
+  "RuleDebugAuditList": {
+    "title": "Список результатов аудита"
+  },
+  "RuleUploadAndDownloadModal": {
+    "streamError": "Ошибка: {{error}}",
+    "ruleUpload": "Загрузка правил",
+    "ruleDownload": "Скачивание правил",
+    "progress": "Прогресс: {{percent}}%"
+  },
+  "OnlineRuleGroupList": {
+    "noPermissionTitle": "Нет прав на просмотр",
+    "noPermissionDesc": "Войдите в систему, чтобы просмотреть",
+    "loginNow": "Войти",
+    "searchPlaceholder": "Введите название группы",
+    "downloadTitle": "Подсказки по скачиванию",
+    "downloadContent": "Если идентификатор правила совпадает, оно будет перезаписано. Подтвердить скачивание?"
+  },
+  "RelatedHoleList": {
+    "type": "Тип",
+    "description": "Описание уязвимости",
+    "solution": "Рекомендация по исправлению"
+  }
+}

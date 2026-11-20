@@ -42,7 +42,7 @@ if (useI18nInline) {
     .init({
       lng: 'zh',
       fallbackLng: false,
-      supportedLngs: ['zh', 'en', 'zh-TW'],
+      supportedLngs: ['zh', 'en', 'zh-TW', 'ru'],
       ns: [
         'yakitUi',
         'yakitRoute',

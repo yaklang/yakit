@@ -1,0 +1,259 @@
+{
+  "basic": {
+    "StartExecYakCodeModal": {
+      "executing": "Выполняется:"
+    },
+    "StartToExecYakScriptViewer": {
+      "executeSuccess": "Выполнение {{verbose}} завершено успешно",
+      "executeError": "При выполнении {{verbose}} возникла проблема:"
+    },
+    "ConfigGlobalReverse": {
+      "dnslogSuccess": "Глобальная конфигурация DNSLog успешно настроена",
+      "dnslogFailed": "Не удалось настроить глобальный DNSLog: {{error}}",
+      "localReverseIP": "Локальный обратный IP",
+      "updateYakEngineLocalIP": "Обновить локальный IP-адрес движка Yak",
+      "publicReverseConfig": "Конфигурация публичного обратного подключения",
+      "runOnPublicServer": "Запуск на публичном сервере",
+      "or": "или",
+      "configured": "Настроено",
+      "yakBridgeAddress": "Адрес Yak Bridge",
+      "yakBridgeAddressHelp": "Формат: хост:порт, например cybertunnel.run:64333",
+      "yakBridgePassword": "Пароль Yak Bridge",
+      "yakBridgePasswordHelp": "Значение параметра --secret для команды yak bridge",
+      "globalDNSLogConfig": "Глобальная конфигурация DNSLog",
+      "reuseYakBridgeConfig": "Повторно использовать конфигурацию Yak Bridge",
+      "dnslogConfig": "Конфигурация DNSLog",
+      "dnslogAddressHelp": "Адрес системы DNSLog, настроенный в Yak Bridge: [ip]:[port]",
+      "dnslogPassword": "Пароль DNSLog",
+      "configureReverseConnection": "Настроить обратное подключение"
+    }
+  },
+  "ConfigYaklangEnvironment": {
+    "variableName": "Имя переменной",
+    "variableValue": "Значение переменной",
+    "setEnvironmentVariable": "Установить переменную среды",
+    "environmentVariableList": "Список переменных среды",
+    "setNewVariable": "Установить новую переменную",
+    "environmentVariableName": "Имя переменной среды",
+    "expiredTime": "Срок действия",
+    "deleteThisEnvironmentVariable": "Удалить эту переменную среды",
+    "configYaklangSystemEnvironmentVariable": "Настройка системных переменных среды Yaklang",
+    "newVariableTitle": "Установить новую переменную",
+    "editVariableTitle": "Изменить переменную"
+  },
+  "ConfigSystemProxy": {
+    "getSystemProxyFailed": "Не удалось получить системный прокси: {{error}}",
+    "setSystemProxySuccess": "Системный прокси успешно настроен",
+    "setSystemProxyFailed": "Не удалось настроить системный прокси: {{error}}",
+    "configSystemProxy": "Настроить системный прокси",
+    "currentSystemProxyStatus": "Текущий статус системного прокси:",
+    "systemProxy": "Системный прокси",
+    "oneClickConfig": "Настроить системный прокси одним нажатием",
+    "proxyHint": "Из-за ограничений ОС и ядра Yak нельзя использовать нативный интерфейс MacOS OC/Swift для настройки прокси. Движок Yak откроет окно авторизации osascript для изменения системного прокси. Пользователи MacOS могут предоставить необходимые разрешения.",
+    "chromeStartPath": "Путь запуска Chrome",
+    "chromeStartPathHint": "Если Chrome не запускается, укажите путь для его запуска",
+    "startPath": "Путь запуска",
+    "selectStartPath": "Выбрать путь запуска",
+    "setChromeStartPathSuccess": "Путь запуска Chrome успешно задан"
+  },
+  "ConfigPcapPermission": {
+    "unavailable": "Не удалось получить сведения о поддержке PCAP",
+    "fetchStatusFailed": "Не удалось получить статус разрешений Pcap: {{error}}",
+    "fetchPlatformFailed": "Не удалось определить операционную систему для {{name}}: {{error}}",
+    "promoteFailed": "Не удалось повысить права пользователя Pcap: {{error}}",
+    "tooltip": "Принцип работы: в MacOS настройте разрешения для групп /dev/bpf*; см. конфигурацию ChmodBPF в Wireshark. В Linux можно использовать setcap для настройки разрешений pcap. В Windows рекомендуется запускать программу с повышенными правами администратора через UAC.",
+    "windowsHint": "В Windows можно запустить {{name}} с правами администратора, чтобы получить доступ к Pcap",
+    "unixHint": "В Linux и MacOS можно предоставить пользователю полный доступ к сетевым интерфейсам с помощью настроек разрешений и групп",
+    "privilegedHint": "Такие функции, как SYN-сканирование, можно использовать без дополнительных настроек",
+    "notPrivilegedHint": "У текущего движка нет разрешений на доступ к сетевым интерфейсам",
+    "enablePcap": "Включить разрешения PCAP",
+    "modalTitle": "Исправить разрешения Pcap"
+  },
+  "ConfigEngineProxy": {
+    "saveSuccess": "Прокси движка успешно настроен",
+    "currentProxy": "Текущий прокси движка:",
+    "hint": "Эта конфигурация будет автоматически применяться к большинству плагинов Yak. Если прокси задан в модуле сканирования, обычно он имеет приоритет над этой настройкой.",
+    "proxyLabel": "Прокси",
+    "proxyHelp": "Например, http://127.0.0.1:7890 и socks://127.0.0.1:7890 — допустимые адреса",
+    "updateProxy": "Обновить прокси движка",
+    "modalTitle": "Настроить прокси для сканирования движком"
+  },
+  "ConfigSystemMcp": {
+    "modal_title": "Yak MCP",
+    "startAddress": "Адрес запуска:",
+    "tool_name": "Название инструмента",
+    "tool_description": "Описание",
+    "enable_tool": "Включить инструмент",
+    "detailed_config": "Подробная конфигурация",
+    "stdio_remote_disabled_tip": "Для STDIO требуется локально запущенный процесс движка Yak; в режиме удалённого подключения функция недоступна",
+    "enable_tool_success": "Инструмент {{name}} успешно включён",
+    "disable_tool_success": "Инструмент {{name}} успешно отключён",
+    "enable_tool_failed": "Не удалось включить инструмент {{name}}",
+    "disable_tool_failed": "Не удалось отключить инструмент {{name}}",
+    "tool_config_title": "Конфигурация инструментов",
+    "tool_config_desc": "Фильтровать инструменты по включённым уровням возможностей; отключённые инструменты не предоставляются при запуске",
+    "parameters_title": "Параметры",
+    "tool_source": "Источник",
+    "source_legacy": "Встроенные инструменты MCP",
+    "source_aitool": "Встроенные инструменты ИИ",
+    "source_bridge": "Мост",
+    "enable_legacy_mcp_tools": "Инструменты Yak MCP",
+    "enable_legacy_mcp_tools_desc": "Предоставлять инструменты Yak MCP, например port_scan, httpflow и расширение браузера",
+    "enable_ai_tool_framework": "Инфраструктура инструментов ИИ",
+    "enable_ai_tool_framework_desc": "Предоставлять встроенные инструменты ИИ, например fs, ssa и yakscript",
+    "enable_bridge_external_mcp": "Подключение внешнего MCP",
+    "enable_bridge_external_mcp_desc": "Подключать инструменты внешних серверов MCP, включённые в AI Agent",
+    "auto_start": "Автозапуск Yak MCP",
+    "auto_start_desc": "Автоматически запускать службу MCP при запуске приложения",
+    "no_tool_tier_title": "Не включены возможности инструментов",
+    "no_tool_tier_desc": "Включите хотя бы одну возможность инструментов, чтобы настроить отдельные инструменты",
+    "refresh_tools": "Обновить",
+    "force_sync": "Принудительная синхронизация"
+  },
+  "servicesFetch": {
+    "requestTimeout": "Время ожидания запроса истекло. Повторите попытку.",
+    "loginExpired": "401: срок действия входа истёк или вы не вошли в систему. Войдите снова."
+  },
+  "envfile": {
+    "setReleaseEditionSuccess": "Выпуск {{edition}} успешно установлен"
+  },
+  "InputUtil": {
+    "rawString": "RawString",
+    "keyValue": "KeyValue",
+    "parameterIndex": "Параметр[{{index}}]",
+    "splitArrayHint": "Используйте символ | для разделения элементов массива",
+    "addKeyValuePair": "Добавить пару ключ–значение",
+    "enterAbsolutePath": "Введите абсолютный путь",
+    "deleteTag": "Удалить тег",
+    "operations": "Операции"
+  },
+  "SelectItem": {
+    "fetchListFailed": "Не удалось получить список словарей!",
+    "fetchContentFailed": "Не удалось получить содержимое словаря: {{error}}"
+  },
+  "OpenWebsite": {
+    "openingNewWindow": "Открывается новое окно…"
+  },
+  "Exporter": {
+    "exportData": "Экспортировать данные"
+  },
+  "InvalidCacheAndUserData": {
+    "title": "Сброс пользовательских данных и кэша",
+    "resetHint": "Если {{name}} работает некорректно, воспользуйтесь этой функцией, чтобы удалить весь локальный кэш и пользовательские данные, а затем подключиться повторно и перезапустить приложение.",
+    "warning": "Предупреждение: это действие безвозвратно удалит данные кэша, и восстановить их будет сложно. Действуйте с осторожностью.",
+    "syncDeleteDatabase": "Также удалить все данные из базы данных",
+    "confirmDelete": "Я понимаю риск, удалить сейчас",
+    "resetSuccess": "Пользовательские данные успешно сброшены"
+  },
+  "TimeRange": {
+    "setTimePoint": "Установить момент времени",
+    "setStartTime": "Нажмите здесь, чтобы задать время начала",
+    "setEndTime": "Нажмите здесь, чтобы задать время окончания"
+  },
+  "TimeUtil": {
+    "secondsAgo": "секунд назад",
+    "minutesAgo": "минут назад",
+    "hoursAgo": "часов назад",
+    "daysAgo": "дней назад"
+  },
+  "ProxyConfigUtil": {
+    "engineVersionTooLow": "Версия движка слишком старая. Обновите её до {{version}} или выше",
+    "checkEngineVersionFailed": "Не удалось проверить версию движка"
+  },
+  "Encodec": {
+    "selectContent": "Выбрать содержимое",
+    "decodeStep": "Шаг декодирования [{{index}}]: {{verbose}} ({{type}})",
+    "originText": "Исходный текст",
+    "viewOriginalText": "Просмотреть исходный текст",
+    "autoDecodeFailed": "Не удалось выполнить автоматическое декодирование: {{error}}",
+    "autoDecodeSmart": "Автоматическое декодирование (интеллектуальное декодирование)",
+    "codeResult": "Результат кодирования",
+    "replaceContent": "Заменить содержимое",
+    "codecExecutionFailed": "Не удалось выполнить CODEC[{{type}}]: {{error}}"
+  },
+  "ShortcutKey": {
+    "editorConflict": "Конфликт в редакторе: {{name}} — это сочетание клавиш будет переопределено в редакторе",
+    "contextMenuPluginConflict": "Конфликт с контекстным меню плагина: {{name}} — измените сочетание клавиш, чтобы избежать конфликта с сочетаниями плагина",
+    "screenshot": "Снимок выбранной области",
+    "screenshotFullscreen": "Снимок всего экрана",
+    "closeCurrentPage": "Закрыть текущую страницу",
+    "addSubPage": "Добавить вложенную страницу",
+    "switchSubPageNext": "Перейти к следующей вложенной странице",
+    "switchSubPagePrev": "Перейти к предыдущей вложенной странице",
+    "sendAndJump": "Отправить и перейти",
+    "sendOnly": "Только отправить",
+    "tableVirtualUp": "Выбрать строку таблицы выше",
+    "tableVirtualDown": "Выбрать строку таблицы ниже",
+    "undo": "Отменить",
+    "redo": "Повторить",
+    "cut": "Вырезать",
+    "copy": "Копировать",
+    "paste": "Вставить",
+    "selectAll": "Выбрать всё",
+    "openCommandPalette": "Открыть палитру команд",
+    "jumpToLine": "Перейти к строке",
+    "quickOpenFile": "Быстро открыть файл",
+    "find": "Найти",
+    "findNext": "Найти следующее",
+    "findPrev": "Найти предыдущее",
+    "selectNextMatch": "Выбрать следующее совпадение",
+    "selectAllMatches": "Выбрать все совпадения",
+    "selectAllWords": "Выбрать все совпадающие слова",
+    "expandSelection": "Расширить выделение",
+    "shrinkSelection": "Сузить выделение",
+    "matchBracket": "Перейти к парной скобке",
+    "addCursorUp": "Добавить курсор выше",
+    "addCursorDown": "Добавить курсор ниже",
+    "selectCurrentLine": "Выбрать текущую строку",
+    "undoLastCursor": "Отменить последнее действие с курсором",
+    "selectUp": "Выделить выше",
+    "selectDown": "Выделить ниже",
+    "replace": "Заменить",
+    "commentToggle": "Переключить комментарий",
+    "indent": "Увеличить отступ",
+    "outdent": "Уменьшить отступ",
+    "deleteLine": "Удалить строку",
+    "moveLineUp": "Переместить строку вверх",
+    "moveLineDown": "Переместить строку вниз",
+    "copyLineUp": "Скопировать строку вверх",
+    "copyLineDown": "Скопировать строку вниз",
+    "replaceAll": "Заменить все совпадения",
+    "goToDefinition": "Перейти к определению",
+    "triggerAutoHijacked": "Переключиться в режим автоматического перехвата",
+    "forwardResponse": "Переслать этот HTTP-ответ",
+    "hijackResponse": "Перехватить ответ",
+    "dropData": "Отбросить",
+    "submitData": "Переслать",
+    "newTemporaryFile": "Создать временный файл",
+    "saveFile": "Сохранить файл",
+    "closeOpenedFile": "Закрыть открытый файл",
+    "openTerminal": "Открыть терминал",
+    "renameFile": "Переименовать файл",
+    "deleteFile": "Удалить файл",
+    "copyFile": "Копировать файл",
+    "pasteFile": "Вставить файл",
+    "sendRequest": "Отправить запрос",
+    "saveWebFuzzerHistory": "Сохранить данные истории WebFuzzer",
+    "exitChatCS": "Выйти из chatCS",
+    "chatCSNewLine": "Новая строка в поле вопроса",
+    "chatCSSubmit": "Задать вопрос",
+    "newPlugin": "Новый плагин",
+    "openSearchDoubleClick": "Открыть поиск (двойной щелчок)",
+    "switchSearchBar": "Переключить строку поиска",
+    "searchListUp": "Переместиться вверх по списку результатов поиска",
+    "searchListDown": "Переместиться вниз по списку результатов поиска",
+    "closeSearch": "Закрыть поиск",
+    "searchJump": "Перейти к результату поиска",
+    "startAudit": "Начать аудит",
+    "savePlugin": "Сохранить плагин"
+  },
+  "YakEditor": {
+    "yakFormat": "Форматирование кода Yak"
+  },
+  "PrettifyPacket": {
+    "lossyBeautifyWarning": "В исходных данных могут быть ошибки; при форматировании часть содержимого была утрачена"
+  },
+  "Duplex": {
+    "databaseTooLarge": "Обнаружена низкая скорость записи данных, а база данных текущего проекта слишком велика. Можно удалить записи HTTPFlow History и нажать верхнюю настройку, чтобы освободить место в базе данных."
+  }
+}

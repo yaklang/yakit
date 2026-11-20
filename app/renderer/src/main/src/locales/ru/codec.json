@@ -1,0 +1,41 @@
+{
+  "NewCodecRightEditorBox": {
+    "noSavedContent": "Нет сохраненного содержимого",
+    "selectFolder": "Выберите папку",
+    "autoWordwrap": "Автоматический перенос строк",
+    "noAutoWordwrap": "Без автоматического переноса строк",
+    "largeInput": "Большой объем ввода",
+    "replaceOutputToInput": "Заменить входные данные выходными",
+    "largeOutputTip": "Слишком большой объем выходных данных. Нажмите «Сохранить», чтобы скачать файл и просмотреть его",
+    "dataDistortion": "Искажение данных",
+    "hexRawText": "Исходный текст в шестнадцатеричном формате"
+  },
+  "NewCodecMiddleTypeItem": {
+    "enableBreakpoint": "Включить точку останова",
+    "disableBreakpoint": "Отключить точку останова"
+  },
+  "CodecRunListHistoryStore": {
+    "historyStore": "Хранилище истории",
+    "clearHistoryConfirm": "Вы уверены, что хотите очистить хранилище истории?",
+    "copySuccess": "Скопировано как fuzztag codecflow"
+  },
+  "NewCodecMiddleRunList": {
+    "dragHint": "Перетащите инструменты Codec из списка слева, чтобы использовать их",
+    "pleaseEnterName": "Введите название",
+    "nameAlreadyExists": "Запись истории с таким названием уже существует. Измените название",
+    "regexCheckFailed": "Проверка {{title}}-{{regex}} не пройдена",
+    "expandCodecCategory": "Развернуть категории Codec",
+    "codecOrder": "Порядок Codec",
+    "saveCodecOrder": "Сохранить порядок Codec",
+    "codecOrderNamePlaceholder": "Укажите название порядка Codec..."
+  },
+  "NewCodecLeftDragList": {
+    "codecCategory": "Категории Codec",
+    "collapseCodecCategory": "Свернуть категории Codec",
+    "myFavoriteTools": "Мои избранные инструменты"
+  },
+  "NewCodec": {
+    "saveUpdateConfirm": "Сохранить изменения текущего шаблона?",
+    "unrecognizedData": "Нераспознанные данные"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "YakPoC": {
+    "byKeyword": "По ключевому слову",
+    "byGroup": "По группам",
+    "selectPlugin": "Выбрать плагины"
+  },
+  "PluginListByGroup": {
+    "selectPrompt": "Выберите ключевые слова или группы плагинов для сканирования"
+  },
+  "PluginGroupByKeyWord": {
+    "noDataDesc": "Нажмите, чтобы получить стандартные ключевые слова и плагины. После загрузки перезапустите {{edition}}."
+  },
+  "PluginGroupGrid": {
+    "searchGroupNamePlaceholder": "Введите название группы для поиска",
+    "manage": "Управление",
+    "noGroupDataDesc": "Нажмите, чтобы получить стандартные группы и плагины, или выберите «Управление», чтобы создать их вручную"
+  },
+  "PluginGroupByKeyWordItem": {
+    "plugins": " Плагины"
+  },
+  "YakPoCExecuteContent": {
+    "selectedPlugin": "Выбранные плагины",
+    "pluginLog": "Журнал плагина",
+    "taskList": "Список задач",
+    "pluginExecute": "Выполнение плагина"
+  },
+  "PluginExecuteLog": {
+    "target": "Цель",
+    "timeConsuming": "Затраченное время",
+    "timeout": "Время ожидания"
+  }
+}

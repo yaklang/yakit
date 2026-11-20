@@ -1,0 +1,45 @@
+{
+  "DomainAssetPage": {
+    "domain": "Домен",
+    "sendToVulnDetection": "Отправить на обнаружение уязвимостей",
+    "sendToBruteForce": "Отправить на подбор паролей",
+    "sendTo": "Отправить в...",
+    "deleteSelectedConfirm": "Вы уверены, что хотите удалить выбранные данные?",
+    "clearListConfirm": "Вы уверены, что хотите очистить список?",
+    "exportFailed": "Не удалось экспортировать данные: {{error}}",
+    "batchNotSupportSelectAll": "Эта пакетная операция не поддерживает выбор всех элементов",
+    "exportName": "Активы доменов"
+  },
+  "PortAssetTable": {
+    "title": "Активы портов",
+    "searchPlaceholder": "Поиск портов / хостов / названий",
+    "confirmDeleteSelected": "Вы уверены, что хотите удалить выбранные данные?",
+    "confirmClearList": "Вы уверены, что хотите очистить список?"
+  },
+  "PortAssetQuery": {
+    "noFingerprint": "Информация об отпечатке отсутствует."
+  },
+  "PortAssetDescription": {
+    "detailTitle": "Сведения об активе порта",
+    "state": "Статус",
+    "application": "Приложение",
+    "failureReason": "Причина сбоя",
+    "fingerprintInfo": "Информация об отпечатке",
+    "advancedQuery": "Расширенный запрос"
+  },
+  "ReportViewerPage": {
+    "reportList": "Список отчетов",
+    "clickToInspect": "Нажмите на отчет в списке, чтобы просмотреть его содержимое",
+    "deleteSelectedConfirm": "Вы уверены, что хотите удалить выбранные отчеты? Восстановить их будет невозможно",
+    "deleteAllConfirm": "Вы уверены, что хотите удалить все отчеты? Восстановить их будет невозможно",
+    "generateReport": "Создать отчет",
+    "selectToDelete": "Нажмите, чтобы выбрать, затем удалите",
+    "owner": "Владелец",
+    "source": "Источник",
+    "selectReport": "Выберите отчет для просмотра содержимого",
+    "pages": "Всего страниц: {{total}}",
+    "selectFolder": "Выберите папку",
+    "exportSuccess": "Отчет успешно экспортирован",
+    "emptyReportData": "Данные отчета пусты, экспорт недоступен"
+  }
+}

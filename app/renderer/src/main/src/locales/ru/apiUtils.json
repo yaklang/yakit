@@ -1,0 +1,22 @@
+{
+  "apiUtilsHttp": {
+    "parameterError": "Ошибка параметра",
+    "notepadFiledHashRequired": "Для типа notepad требуется filedHash",
+    "uploadImgFailed": "Не удалось загрузить изображение: {{error}}",
+    "uploadFileFailed": "Не удалось загрузить файл: {{error}}",
+    "deleteOSSFailed": "Не удалось удалить ресурс OSS: {{error}}"
+  },
+  "grpc": {
+    "fetchLatestYakitVersionFailed": "Не удалось получить последнюю версию программного обеспечения: {{error}}",
+    "fetchIntranetYakitVersionFailed": "Не удалось получить последнюю версию программного обеспечения для внутренней сети: {{error}}",
+    "fetchLatestYakVersionFailed": "Не удалось получить последнюю версию движка: {{error}}",
+    "fetchLocalYakitVersionFailed": "Не удалось получить локальную версию программного обеспечения: {{error}}",
+    "fetchLocalYakVersionFailed": "Не удалось получить локальную версию движка: {{error}}",
+    "fetchYakInstallResultFailed": "Не удалось получить результат установки локального движка: {{error}}",
+    "fetchBuildInYakVersionFailed": "Не удалось получить версию встроенного движка: {{error}}",
+    "fetchSpecifiedYakVersionHashFailed": "Не удалось получить последнюю версию программного обеспечения: {{error}}",
+    "fetchLocalYakVersionHashFailed": "Не удалось получить хеш локального движка: {{error}}",
+    "fetchAvailablePortFailed": "Не удалось получить доступный порт: {{error}}",
+    "determineAdaptedVersionEngineFailed": "Не удалось определить совместимую версию запущенного движка: {{error}}"
+  }
+}

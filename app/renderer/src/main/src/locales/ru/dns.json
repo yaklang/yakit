@@ -1,0 +1,19 @@
+{
+  "DNSLogPage": {
+    "generateAvailableDomainFirst": "Сначала создайте доступный домен",
+    "title": "DNSLog",
+    "subtitle": "Использовать встроенную службу обратных вызовов DNSLog выпуска {{edition}}",
+    "builtIn": "Встроенный",
+    "custom": "Пользовательский",
+    "builtInDnsLog": "Встроенный DNSLog",
+    "useLocal": "Использовать локальный",
+    "generateDomain": "Создать доступный домен",
+    "dnslogPlugin": "Плагин DNSLog",
+    "activeDomain": "Активный домен:",
+    "onlyARecord": "Только записи A",
+    "autoRefreshRecords": "Автоматически обновлять записи",
+    "domain": "Домен",
+    "type": "Тип",
+    "remoteIP": "Удаленный IP-адрес"
+  }
+}
