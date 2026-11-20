@@ -1,0 +1,38 @@
+{
+  "CustomizeMenu": {
+    "getMenuFailed": "Не удалось получить меню:",
+    "max_limit": "Можно задать не более {{UpperLimit}} элементов",
+    "selectLeftMenuFirst": "Сначала выберите основное меню слева",
+    "primaryMenuNameCannotBeEmpty": "Название основного меню не может быть пустым",
+    "menuNameDuplicate": "Название «{{repeatMenu}}» уже используется. Измените его",
+    "saveMenuFailed": "Не удалось сохранить меню:",
+    "updateMenuFailed": "Не удалось обновить меню:",
+    "saveMenuConfirm": "Сохранить меню и закрыть страницу?",
+    "editCommonPlugins": "Изменить часто используемые плагины",
+    "editExpertMode": "Изменить экспертный режим",
+    "editScanMode": "Изменить режим сканирования",
+    "editMenuName": "Изменить название меню",
+    "emptyMenuDetected": "Обнаружено пустое меню",
+    "emptyMenuWarning": "Обнаружено пустых элементов меню: {{emptyMenuLength}}. Пустые меню не будут {{tip}}. Все равно продолжить {{tip}}?",
+    "unnamedMenuPrefix": "Без названия",
+    "SecondMenu": {
+      "unnamedMenu1": "Без названия 1 (для наилучшего результата рекомендуется использовать в названии меню 4–16 английских символов)",
+      "deleteMenuConfirm": "Удалить это меню?",
+      "featureAdded": "Функция добавлена",
+      "noFeatureAdded": "Функции пока не добавлены",
+      "addFeatureHint": "Добавьте функции сюда, перетащив их или нажав кнопку добавления"
+    },
+    "FeaturesAndPlugin": {
+      "pluginStore": "Магазин плагинов",
+      "systemFunctions": "Системные функции",
+      "plugin": "Плагины",
+      "addFunctionTip": "Можно перетащить функции или нажать кнопку добавления, чтобы добавить их в левое меню.",
+      "pluginStoreSortByUsage": "Сортировать по частоте использования"
+    },
+    "PluginLocalInfoIcon": {
+      "officialPlugin": "Официальный плагин",
+      "privatePlugin": "Частный плагин",
+      "cloudPlugin": "Облачный плагин"
+    }
+  }
+}

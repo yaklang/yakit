@@ -1,0 +1,10 @@
+{
+  "UserTable": {
+    "userName": "Имя пользователя",
+    "nickName": "Псевдоним",
+    "lastLoginTime": "Время последнего входа",
+    "usageDurationHours": "Продолжительность использования (ч)",
+    "organization": "Организация",
+    "ipColumn": "IP-адрес"
+  }
+}

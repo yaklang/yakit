@@ -1,0 +1,161 @@
+{
+  "PluginDebugBody": {
+    "plugin_info_missing_close_debug_try_again": "Не удалось получить сведения о плагине. Закройте окно отладки и попробуйте ещё раз.",
+    "extra_parameters_optional": "Дополнительные параметры (необязательно)",
+    "debug_task_started_with_id": "Задача отладки успешно запущена, идентификатор выполнения:",
+    "parameter_list": "Список параметров",
+    "auto_detection": "Автоматическое обнаружение",
+    "get_parameters": "Получить параметры",
+    "source_code": "Исходный код",
+    "execution_result": "Результат выполнения",
+    "click_execute_to_start": "Нажмите «Выполнить», чтобы начать"
+  },
+  "FormContentItemByType": {
+    "parameter_config_data_error": "Ошибка при получении данных конфигурации параметров. Откройте эту страницу повторно.",
+    "enter_content_comma_separated": "Введите содержимое; несколько элементов разделяйте запятой (английская запятая)"
+  },
+  "PluginFixFormParams": {
+    "data_packet": "Пакет данных",
+    "original_request": "Исходный запрос",
+    "request_configuration": "Конфигурация запроса",
+    "request_id": "Идентификатор запроса",
+    "request_type": "Тип запроса",
+    "scan_target": "Цель сканирования",
+    "please_enter_scan_target": "Введите цели сканирования; несколько целей разделяйте запятой (английская запятая) или переводом строки",
+    "enter_request_id_comma_separated": "Введите идентификаторы запросов; несколько идентификаторов разделяйте запятой (английская запятая)",
+    "simulation_response": "Имитация ответа"
+  },
+  "FixExtraParamsNode": {
+    "http_method": "Метод HTTP",
+    "request_path": "Путь запроса",
+    "get_parameters": "Параметры GET",
+    "post_parameters": "Параметры POST"
+  },
+  "CodeScoreModal": {
+    "plugin_basic_detection": "Базовая проверка плагина"
+  },
+  "CodeScoreModule": {
+    "plugin_basic_test_failed": "Не удалось выполнить базовую проверку плагина:",
+    "detection_items_include": "Проверка включает следующие пункты:",
+    "basic_compile_test_description": "Базовая проверка компиляции для определения соответствия синтаксиса стандарту и выявления синтаксических ошибок;",
+    "use_basic_false_positive_server": "Использование базового сервера предотвращения ложных срабатываний в качестве эталона тестирования, чтобы избежать ложных срабатываний из-за слишком мягких условий;",
+    "check_plugin_crash": "Проверка того, приведёт ли выполнение плагина к сбою.",
+    "detecting_please_wait": "Выполняется проверка, подождите...",
+    "check_error_try_again": "Для проверки ошибок закройте окно и попробуйте снова!",
+    "score": "Оценка",
+    "uploading_plugin_good_performance": "(Производительность хорошая, начинается загрузка плагина...)",
+    "unable_to_judge_manual_review": "(Невозможно определить автоматически, требуется ручная проверка?)",
+    "upload_failed_fix_and_retry": "(Не удалось загрузить, исправьте ошибки и повторите попытку)",
+    "manual_review": "Ручная проверка",
+    "detection_expected_duration": "Обычно проверка завершается в течение <duration>10–20 с</duration>"
+  },
+  "PluginExecuteLog": {
+    "plugin_log": "Журнал плагина",
+    "statistical_chart": "Статистическая диаграмма",
+    "output_text": "Выходной текст",
+    "log_query_result": "Результат поиска по журналу"
+  },
+  "LocalPluginLog": {
+    "no_log_information": "Информация о журнале отсутствует"
+  },
+  "PluginExecutePortTable": {
+    "portAssetManagement": "Управление активами портов"
+  },
+  "PluginExecuteHttpFlow": {
+    "httpSearchPlaceholder": "Поиск по домену, например baidu.com"
+  },
+  "PluginExecuteCustomTable": {
+    "logicCrashRetry": "Произошёл сбой логики диалогового окна. Закройте его и попробуйте снова.",
+    "outputTable": "Выходная таблица",
+    "exportAll": "Экспортировать всё"
+  },
+  "PluginTabName": {
+    "allPlugin": "Онлайн-плагин",
+    "officialPlugin": "Официальный плагин",
+    "localPlugin": "Локальный плагин"
+  },
+  "PluginHasParamsDrawer": {
+    "parameter_Settings": "Настройки параметров: ",
+    "jsonSchemaValidateFailed": "Проверка JSON Schema не пройдена"
+  },
+  "PluginHasParamsModal": {
+    "execute_and_save": "Выполнить и сохранить",
+    "executeWithoutSaving": "Выполнить без сохранения"
+  },
+  "PluginEditor": {
+    "newPlugin": "Новый плагин",
+    "helpDoc": "Справочная документация",
+    "copyToCloud": "Копировать в облако",
+    "submitAndSave": "Отправить и сохранить",
+    "syncToCloud": "Синхронизировать с облаком",
+    "saveAndExit": "Сохранить и выйти",
+    "loadingPluginDetail": "Загрузка сведений о плагине...",
+    "oldDataMigrationTitle": "Запрос на перенос старых данных",
+    "oldDataMigrationContent": "Дизайн параметров был обновлён. Параметры, сохранённые в базе данных, отличаются от параметров исходного кода плагина. Это может привести к проблемам. Нажмите «Копировать код», чтобы скопировать параметры в исходный код плагина.",
+    "copyCode": "Копировать код",
+    "fetchOldDataFailed": "Не удалось получить сведения о переносе старых данных: ",
+    "fetchPluginDetailEmpty": "Ошибка запроса сведений о плагине: запрос пуст",
+    "fetchPluginNameEmpty": "Ошибка запроса сведений о плагине: имя плагина пустое",
+    "copyToCloudDesc": "Скопировать плагин в личную облачную библиотеку плагинов без одобрения автора и сохранить изменённое содержимое в облаке.",
+    "pluginName": "Имя плагина",
+    "enterCopyName": "Введите имя плагина для копирования",
+    "pluginNameMaxLength": "Имя плагина не должно превышать 100 символов"
+  },
+  "EditorInfo": {
+    "basicInfo": "Основная информация",
+    "collapseBasicInfo": "Свернуть основную информацию",
+    "functionError": "Ошибка функции, попробуйте ещё раз",
+    "templateExamples": "Примеры шаблонов",
+    "faq": "Часто задаваемые вопросы",
+    "scriptType": "Тип скрипта",
+    "scriptTypeRequired": "Необходимо указать тип скрипта",
+    "pluginName": "Имя плагина",
+    "pluginNameRequired": "Необходимо указать имя плагина",
+    "nameMaxLength": "Имя не должно превышать 100 символов",
+    "descriptionLabel": "Описание:",
+    "descriptionRequired": "Необходимо указать описание плагина",
+    "tagsRequired": "Необходимо указать теги",
+    "pluginConfig": "Конфигурация плагина:",
+    "enablePluginSelectorUI": "Включить интерфейс взаимодействия плагинов",
+    "invalidItem": "Недопустимый элемент",
+    "linkedPluginType": "Тип связанного плагина",
+    "linkedPluginTypeRequired": "Необходимо указать тип связанного плагина",
+    "switchScriptType": "Переключить тип скрипта",
+    "switchScriptTypeContent": "При переключении типа скрипта исходный код будет очищен. Продолжить?",
+    "aiGenerateHint": "Следующее содержимое можно сгенерировать с помощью ИИ: ",
+    "aiGenerateClick": "Нажмите, чтобы сгенерировать, ",
+    "aiNotConfiguredHint": "Если ИИ не настроен, ",
+    "aiConfigureClick": "настройте здесь",
+    "pluginSourceEmpty": "Исходный код плагина не может быть пустым",
+    "parseAIResultFailed": "Не удалось обработать результат генерации ИИ",
+    "debugTaskStarted": "Задача отладки успешно запущена, идентификатор среды выполнения: {{rId}}"
+  },
+  "TempExampleHelp": {
+    "fileRead": "Чтение файла (сопоставление строк)",
+    "codeExecution": "Выполнение кода (сопоставление обработанного результата)",
+    "binaryData": "Запрос двоичных данных",
+    "noEchoByDelay": "Обнаружение без эхо-ответа (задержка)",
+    "noEchoByDnslog": "Обнаружение без эхо-ответа (DNSLOG)"
+  },
+  "FuncTemplate": {
+    "author": "Автор",
+    "applicant": "Заявитель",
+    "expandFilter": "Развернуть фильтр",
+    "switchToGrid": "Переключиться в режим сетки",
+    "switchToList": "Переключиться в режим списка",
+    "loginRequiredDelete": "Для удаления необходимо войти в систему",
+    "loginRequiredRestore": "Для восстановления необходимо войти в систему",
+    "restore": "Восстановить",
+    "resetSearch": "Сбросить поиск",
+    "sourceCode": "Исходный код",
+    "sourceCodeDesc": "Здесь можно определить принцип обработки входных данных плагина и создать интерфейс вывода",
+    "escFullScreen": "Нажмите Esc, чтобы выйти из полноэкранного режима",
+    "anonymous": "анонимный",
+    "filterCondition": "Условие фильтрации",
+    "codecInput": "ВВОД"
+  },
+  "PluginExecResultDefaultTabs": {
+    "HTTPtraffic": "HTTP-трафик",
+    "log": "Журнал"
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "Login": {
+    "loginError": "Ошибка входа: {{error}}",
+    "dataSync": "Синхронизация данных",
+    "syncDataConfirm": "Синхронизировать удаленные данные с локальными?",
+    "login": "Войти",
+    "loginWithGithub": "Войти через учетную запись GitHub",
+    "loginWithWechat": "Войти через учетную запись WeChat"
+  },
+  "EnterpriseJudgeLogin": {
+    "reActivateNotice": "Повторно активируйте лицензию",
+    "verifyingLicense": "Проверка лицензии"
+  },
+  "LicensePage": {
+    "getLicenseFailed": "Не удалось получить лицензию: {{error}}",
+    "loadingLicense": "Загрузка лицензии",
+    "emptyLicense": "Лицензия отсутствует...",
+    "registerProduct": "Зарегистрируйте продукт с помощью лицензии",
+    "licenseRequestCode": "Код запроса лицензии",
+    "requestCodeHelp": "При подаче заявки на лицензию передайте этот код запроса менеджеру по продажам, чтобы он создал для вас персональную лицензию",
+    "copyRequestCode": "Нажмите, чтобы скопировать код запроса лицензии",
+    "yourLicense": "Ваша лицензия",
+    "activateProduct": "Нажмите, чтобы активировать продукт с помощью лицензии"
+  },
+  "SetPassword": {
+    "passwordMismatch": "Новые пароли не совпадают. Проверьте их и повторите попытку",
+    "updateSuccess": "Пароль успешно изменен. Войдите в систему повторно",
+    "updateFailed": "Не удалось изменить пароль: {{error}}",
+    "passwordRule": "Пароль должен содержать от 8 до 20 символов, включая заглавные и строчные буквы, цифры и специальные символы",
+    "oldPassword": "Старый пароль",
+    "inputOldPassword": "Введите старый пароль",
+    "newPassword": "Новый пароль",
+    "inputNewPassword": "Введите новый пароль",
+    "confirmPassword": "Подтвердите пароль",
+    "inputConfirmPassword": "Подтвердите пароль",
+    "updatePassword": "Изменить пароль"
+  },
+  "SelectUpload": {
+    "uploadSuccess": "Данные успешно загружены",
+    "uploadFailed": "Не удалось загрузить проект",
+    "cancelSuccess": "Загрузка успешно отменена",
+    "processDataFailed": "Не удалось обработать данные проекта: {{error}}",
+    "queryProjectsFailed": "Не удалось выполнить запрос проектов: {{error}}",
+    "project": "Проект",
+    "selectProject": "Выберите проект"
+  }
+}

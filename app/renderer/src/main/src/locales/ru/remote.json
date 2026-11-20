@@ -1,0 +1,26 @@
+{
+  "RemoteEngine": {
+    "remoteMode": "Удалённый режим",
+    "connectionHistory": "История подключений",
+    "selectPlaceholder": "Выберите...",
+    "hostLabel": "Хост Yak gRPC:",
+    "portLabel": "Порт Yak gRPC:",
+    "tlsLabel": "Включить TLS:",
+    "pemLabel": "Корневой сертификат gRPC Root-CA (PEM)",
+    "passwordLabel": "Пароль",
+    "saveHistoryLabel": "Сохранить как подключение в истории",
+    "connectionNameLabel": "Название подключения:",
+    "connectionNameHelp": "После заполнения эта запись будет сохранена в истории подключений для быстрого использования в дальнейшем",
+    "connectButton": "Начать подключение"
+  },
+  "PEMExample": {
+    "pemTitle": "Требуется сертификат в формате PEM",
+    "pemContent": "При запуске основного сервера с помощью <code>yak grpc --tls</code> сертификат RootCA будет выведен на экран. Скопируйте его и вставьте в это поле:",
+    "pemExample": "Например:"
+  },
+  "PEMHint": {
+    "saveHistoryNote": "Примечание: {{appName}} не будет загружать историю в интернет",
+    "saveHistoryLocation": "Данные для удалённого входа можно найти в локальном каталоге (каталоге клиента)",
+    "openLocation": "Открыть расположение хранилища удалённых данных"
+  }
+}

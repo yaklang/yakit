@@ -1,0 +1,32 @@
+{
+  "AnalysisMain": {
+    "cancel_traffic_analysis_error": "Ошибка отмены анализа трафика:",
+    "confirm_reset_hot_reload_code": "Подтвердить сброс кода горячей перезагрузки?",
+    "execution_result": "Результат выполнения",
+    "set_hot_reload_or_rules_then_execute": "Настройте горячую перезагрузку или правила, затем нажмите «Выполнить» для обработки",
+    "data_type": "Тип данных:",
+    "filter_traffic": "Фильтровать трафик",
+    "packet": "Пакет",
+    "select_traffic_to_view_packet": "Выберите трафик, чтобы просмотреть содержимое пакета",
+    "filter_traffic_analysis_tip": "Выберите трафик выше для анализа; если ничего не выбрано, по умолчанию будет проанализирован весь трафик",
+    "concurrency": "Параллелизм:",
+    "deduplicate_within_single_record": "Удалять дубликаты данных внутри одной записи:",
+    "matcher": "Сопоставитель",
+    "discard_or_keep_traffic_analysis_tip": "Операция [Отбросить/Сохранить] не удаляет данные трафика из истории, а определяет, будет ли трафик передан на анализ",
+    "rule": "Правило",
+    "hot_reload": "Горячая перезагрузка"
+  },
+  "HttpRuleTable": {
+    "packet_id": "Идентификатор пакета",
+    "method": "Метод",
+    "statusCode": "Код состояния",
+    "rule_name": "Название правила",
+    "rule_data": "Данные правила",
+    "export_rule_data": "Экспортировать данные правила",
+    "query_in_database": "Выполняется запрос к базе данных",
+    "export_failed_path_not_found": "Не удалось выполнить экспорт: путь не найден"
+  },
+  "MatchersAndExtractorsListItemOperate": {
+    "debug": "Отладка"
+  }
+}

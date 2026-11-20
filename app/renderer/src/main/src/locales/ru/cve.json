@@ -1,0 +1,19 @@
+{
+  "CVEQuery": {
+    "advancedQuery": "Расширенный запрос",
+    "cveQueryConditions": "Условия запроса CVE",
+    "exploitPath": "Путь эксплуатации",
+    "exploitDifficulty": "Сложность эксплуатации",
+    "vulnerabilityLevel": "Уровень критичности уязвимости",
+    "network": "Сеть",
+    "adjacentNetwork": "Смежная сеть",
+    "local": "Локально",
+    "physical": "Физический доступ",
+    "difficult": "Сложно",
+    "medium": "Средний",
+    "easy": "Легко",
+    "critical": "Критический",
+    "high": "Высокий",
+    "low": "Низкий"
+  }
+}

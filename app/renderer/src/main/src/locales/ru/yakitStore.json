@@ -1,0 +1,11 @@
+{
+  "viewers": {
+    "base": {
+      "PluginResultUI": {
+        "taskProgressID": "Идентификатор выполнения задачи:",
+        "log": "Журнал",
+        "taskExtraLogAndResult": "Дополнительные журналы и результаты задачи"
+      }
+    }
+  }
+}
