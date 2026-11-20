@@ -1,8 +1,9 @@
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import type { ButtonHTMLAttributes, ChangeEvent, ReactNode } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const state = vi.hoisted(() => ({
+  sessionId: 'session-a',
   enablePlan: false,
   enableMultiAgent: false,
   enableGoalMode: false,
@@ -104,6 +105,7 @@ afterEach(cleanup)
 beforeEach(() => {
   vi.resetAllMocks()
   Object.assign(state, {
+    sessionId: 'session-a',
     enablePlan: false,
     enableMultiAgent: false,
     enableGoalMode: false,
@@ -335,19 +337,56 @@ describe('AIRunModeMenu', () => {
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
   })
 
-  it('persists every inline acceptance edit without Save or Cancel controls', () => {
+  it.each([
+    ['close', 'final criteria'],
+    ['unmount', ''],
+  ])('saves the final acceptance edit only on %s', (close, finalValue) => {
     state.enableGoalMode = true
     state.goalAcceptanceCriteria = 'old criteria'
-    const { rerender } = render(<AIRunModeMenu />)
-    for (const value of ['new', 'new criteria', '']) {
-      fireEvent.change(screen.getByRole('textbox', { name: label('acceptance') }), { target: { value } })
-      expect(state.onSetStrategy).toHaveBeenLastCalledWith({ GoalAcceptanceCriteria: value }, true)
-      state.goalAcceptanceCriteria = value
-      rerender(<AIRunModeMenu />)
-      expect(screen.getByRole('textbox', { name: label('acceptance') })).toHaveValue(value)
+    const { rerender, unmount } = render(<AIRunModeMenu open />)
+    const input = screen.getByRole('textbox', { name: label('acceptance') })
+    vi.useFakeTimers()
+    try {
+      for (const value of ['new', 'new criteria', finalValue]) {
+        fireEvent.change(input, { target: { value } })
+        expect(input).toHaveValue(value)
+      }
+      fireEvent.blur(input)
+      act(() => vi.advanceTimersByTime(1000))
+      expect(state.onSetStrategy).not.toHaveBeenCalled()
+      if (close === 'close') {
+        rerender(<AIRunModeMenu open={false} />)
+        expect(state.onSetStrategy).toHaveBeenCalledTimes(1)
+      }
+      unmount()
+      expect(state.onSetStrategy).toHaveBeenCalledExactlyOnceWith({ GoalAcceptanceCriteria: finalValue }, true)
+    } finally {
+      vi.useRealTimers()
     }
-    expect(screen.queryByRole('button', { name: 'YakitButton.save' })).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'YakitButton.cancel' })).not.toBeInTheDocument()
+  })
+
+  it('skips saving when the acceptance draft returns to its original value', () => {
+    state.enableGoalMode = true
+    state.goalAcceptanceCriteria = 'original'
+    const { unmount } = render(<AIRunModeMenu />)
+    const input = screen.getByRole('textbox', { name: label('acceptance') })
+    fireEvent.change(input, { target: { value: 'draft' } })
+    fireEvent.change(input, { target: { value: 'original' } })
+    unmount()
+    expect(state.onSetStrategy).not.toHaveBeenCalled()
+  })
+
+  it('does not submit the previous session’s draft after switching sessions', () => {
+    state.enableGoalMode = true
+    state.goalAcceptanceCriteria = 'original'
+    const { rerender, unmount } = render(<AIRunModeMenu />)
+    const input = screen.getByRole('textbox', { name: label('acceptance') })
+    fireEvent.change(input, { target: { value: 'session A draft' } })
+    state.sessionId = 'session-b'
+    rerender(<AIRunModeMenu />)
+    expect(input).toHaveValue('original')
+    unmount()
+    expect(state.onSetStrategy).not.toHaveBeenCalled()
   })
 
   it('opens a stored nonpreset duration as custom hours and minutes', () => {

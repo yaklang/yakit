@@ -41,7 +41,8 @@ const AIRunModeSelect: React.FC<AIRunModeSelectProps> = (props) => {
   return (
     <div className={styles['run-mode-trigger']} data-goal-kind={goal.kind ?? undefined}>
       <YakitPopover
-        content={<AIRunModeMenu />}
+        content={<AIRunModeMenu open={open} />}
+        fresh
         trigger="click"
         placement="topLeft"
         arrow={false}

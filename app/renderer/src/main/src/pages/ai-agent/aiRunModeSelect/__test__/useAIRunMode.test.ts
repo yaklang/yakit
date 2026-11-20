@@ -171,7 +171,7 @@ describe('useAIRunMode', () => {
     )
   })
 
-  it('立即提交内联验收条件的最后一次修改，关闭菜单后仍保留', () => {
+  it('显式立即提交的策略在卸载前生效', () => {
     const { result, unmount } = renderHook(() => useAIRunMode())
 
     act(() => {

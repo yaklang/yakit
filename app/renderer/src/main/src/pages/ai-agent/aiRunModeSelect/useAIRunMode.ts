@@ -165,6 +165,7 @@ export const useAIRunMode = () => {
     goalMinIterations,
     goalDurationSeconds,
     goalAcceptanceCriteria,
+    sessionId: activeChat?.SessionID,
     strategy,
     maxSubAgents,
     selectedModes,

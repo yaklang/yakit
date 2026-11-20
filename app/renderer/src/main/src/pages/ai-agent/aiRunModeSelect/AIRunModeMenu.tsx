@@ -1,5 +1,5 @@
 import type { FC } from 'react'
-import { Fragment, useState } from 'react'
+import { Fragment, useLayoutEffect, useState } from 'react'
 import { Tooltip } from 'antd'
 import { useMemoizedFn, useUpdateEffect } from 'ahooks'
 import {
@@ -29,6 +29,7 @@ import { deriveGoalTagFromStrategy } from '../components/aiMilkdownInput/aiMilkd
 import styles from './AIRunModeSelect.module.scss'
 
 export type AIRunModeMenuProps = {
+  open?: boolean
   /** 嵌入输入框弹层时铺满容器宽度 */
   fullWidth?: boolean
 }
@@ -42,7 +43,7 @@ const goalConditions = [
 type GoalCondition = (typeof goalConditions)[number]['value']
 
 /** Plan / Multi-Agent / Goal 菜单体：按钮下拉与输入框 / 弹层复用 */
-export const AIRunModeMenu: FC<AIRunModeMenuProps> = ({ fullWidth }) => {
+export const AIRunModeMenu: FC<AIRunModeMenuProps> = ({ fullWidth, open = true }) => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const {
     isModeSelected,
@@ -53,8 +54,10 @@ export const AIRunModeMenu: FC<AIRunModeMenuProps> = ({ fullWidth }) => {
     goalMinIterations,
     goalDurationSeconds,
     goalAcceptanceCriteria,
+    sessionId,
   } = useAIRunMode()
   const [acceptanceSelected, setAcceptanceSelected] = useState(false)
+  const [acceptanceDraft, setAcceptanceDraft] = useState<string>()
   const [customDuration, setCustomDuration] = useState(false)
   const storedGoalMode = deriveGoalTagFromStrategy({
     EnableGoalMode: enableGoalMode,
@@ -63,6 +66,25 @@ export const AIRunModeMenu: FC<AIRunModeMenuProps> = ({ fullWidth }) => {
     GoalAcceptanceCriteria: goalAcceptanceCriteria,
   }).kind
   const goalMode = acceptanceSelected ? 'acceptance' : (storedGoalMode ?? (enableGoalMode ? 'iterations' : null))
+  const saveAcceptance = useMemoizedFn((owner: typeof sessionId) => {
+    if (
+      owner === sessionId &&
+      enableGoalMode &&
+      goalMode === 'acceptance' &&
+      acceptanceDraft !== undefined &&
+      acceptanceDraft !== goalAcceptanceCriteria
+    ) {
+      onSetStrategy({ GoalAcceptanceCriteria: acceptanceDraft }, true)
+    }
+  })
+  useLayoutEffect(() => {
+    if (open) {
+      return () => {
+        saveAcceptance(sessionId)
+        setAcceptanceDraft(undefined)
+      }
+    }
+  }, [open, sessionId])
   const durationKey = goalDurationSecondsToKey(goalDurationSeconds) ?? '1h'
   const showCustomDuration = customDuration || !isGoalDurationPresetKey(durationKey)
   const selectedDurationKey = showCustomDuration ? 'custom' : durationKey
@@ -70,7 +92,10 @@ export const AIRunModeMenu: FC<AIRunModeMenuProps> = ({ fullWidth }) => {
   const minutes = Math.floor((Math.max(0, goalDurationSeconds) % 3600) / 60)
 
   useUpdateEffect(() => {
-    if (!enableGoalMode || goalMinIterations > 0 || goalDurationSeconds !== 0) setAcceptanceSelected(false)
+    if (!enableGoalMode || goalMinIterations > 0 || goalDurationSeconds !== 0) {
+      setAcceptanceSelected(false)
+      setAcceptanceDraft(undefined)
+    }
   }, [enableGoalMode, goalMinIterations, goalDurationSeconds])
   useUpdateEffect(() => {
     if (goalMode !== 'duration') setCustomDuration(false)
@@ -83,6 +108,7 @@ export const AIRunModeMenu: FC<AIRunModeMenuProps> = ({ fullWidth }) => {
     !!goalAcceptanceCriteria
 
   const applyGoalMode = (mode: GoalCondition) => {
+    setAcceptanceDraft(undefined)
     setCustomDuration(false)
     setAcceptanceSelected(mode === 'acceptance')
     onSetStrategy(
@@ -96,6 +122,7 @@ export const AIRunModeMenu: FC<AIRunModeMenuProps> = ({ fullWidth }) => {
     )
   }
   const onReset = useMemoizedFn(() => {
+    setAcceptanceDraft(undefined)
     if (isModeSelected('plan')) onToggleMode('plan')
     onSetStrategy({ EnableMultiAgent: false, MaxSubAgents: 0, ...clearGoalStrategy() })
     setAcceptanceSelected(false)
@@ -159,10 +186,10 @@ export const AIRunModeMenu: FC<AIRunModeMenuProps> = ({ fullWidth }) => {
           className={styles['goal-acceptance']}
           aria-label={t('AIMilkdownModeSlash.acceptance')}
           placeholder={t('AIMilkdownModeSlash.acceptancePlaceholder')}
-          value={goalAcceptanceCriteria}
+          value={acceptanceDraft ?? goalAcceptanceCriteria}
           onChange={(event) => {
             setAcceptanceSelected(true)
-            onSetStrategy({ GoalAcceptanceCriteria: event.target.value }, true)
+            setAcceptanceDraft(event.target.value)
           }}
           rows={3}
           isShowResize={false}
@@ -275,6 +302,7 @@ export const AIRunModeMenu: FC<AIRunModeMenuProps> = ({ fullWidth }) => {
                   checked={checked}
                   onChange={() => {
                     if (item.key === 'goal' && checked) {
+                      setAcceptanceDraft(undefined)
                       setAcceptanceSelected(false)
                       setCustomDuration(false)
                     }
