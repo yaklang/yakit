@@ -20,7 +20,14 @@ const providerExampleTextareaValue = providerExample.replace(/\r\n/g, '\n')
 const mocks = vi.hoisted(() => {
   const invoke = vi.fn()
   window.require = (() => ({ ipcRenderer: { invoke } })) as unknown as typeof window.require
-  return { invoke, healthCheck: vi.fn(), probe: vi.fn(), save: vi.fn(), config: {} as AIGlobalConfig }
+  return {
+    invoke,
+    healthCheck: vi.fn(),
+    probe: vi.fn(),
+    visionProbe: vi.fn(),
+    save: vi.fn(),
+    config: {} as AIGlobalConfig,
+  }
 })
 
 vi.mock('@/i18n/useI18nNamespaces', () => ({
@@ -72,6 +79,7 @@ vi.mock('@/pages/ai-agent/aiModelList/utils', async () => {
     grpcAIConfigHealthCheck: mocks.healthCheck,
     grpcQueryAIProviderAll: async () => ({ Providers: [] }),
     grpcProbeReasoningEffort: mocks.probe,
+    grpcProbeModelVision: mocks.visionProbe,
     sortMemfitNameFirst: (names: string[]) => names,
   }
 })
@@ -80,6 +88,7 @@ beforeEach(() => {
   mocks.invoke.mockReset().mockResolvedValue({ ModelName: ['remote-model'] })
   mocks.healthCheck.mockReset().mockResolvedValue({ Success: true })
   mocks.probe.mockReset().mockResolvedValue({ MaxSupported: false, XhighSupported: true })
+  mocks.visionProbe.mockReset().mockResolvedValue({})
   mocks.save.mockReset().mockResolvedValue(undefined)
   mocks.config = { IntelligentModels: [], LightweightModels: [], VisionModels: [] } as unknown as AIGlobalConfig
   vi.stubGlobal(
@@ -419,6 +428,7 @@ describe('Ordinary provider extension parameters', () => {
   const provider = { Type: 'openai', APIKey: 'fixture-key', ExtraParams: extras }
 
   it('preserves unknown parameters through editing and saving, replacing the stale model in health checks', async () => {
+    mocks.visionProbe.mockResolvedValue({ SupportsImageInput: true, SupportsImageToolCalling: false })
     const item: AIModelConfig = {
       ProviderId: '',
       ModelName: 'current-model',
@@ -432,6 +442,7 @@ describe('Ordinary provider extension parameters', () => {
     await screen.findByRole('combobox', { name: 'ConfigNetworkPage.typeLabel' })
     fireEvent.click(screen.getByRole('button', { name: 'AIModelList.testAndAddBtn' }))
     await waitFor(() => expect(mocks.save).toHaveBeenCalledOnce())
+    expect(mocks.visionProbe).toHaveBeenCalledWith(expect.objectContaining({ Type: 'openai' }), 'current-model')
     const health = mocks.healthCheck.mock.calls[0][0].Config
     expect(health.ExtraParams).toEqual(
       expect.arrayContaining([
@@ -441,6 +452,8 @@ describe('Ordinary provider extension parameters', () => {
     )
     expect(health.ExtraParams.filter(({ Key }) => Key === 'model')).toEqual([{ Key: 'model', Value: 'current-model' }])
     const saved = mocks.save.mock.calls[0][0].IntelligentModels[0]
+    expect(saved.SupportsImageInput).toBe(true)
+    expect(saved.SupportsImageToolCalling).toBe(false)
     expect(saved.Provider.ExtraParams).toEqual(extras)
     expect(saved.ExtraParams).toEqual(item.ExtraParams)
     expect(provider.ExtraParams).toEqual(extras)
