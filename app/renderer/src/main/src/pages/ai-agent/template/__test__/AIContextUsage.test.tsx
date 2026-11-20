@@ -16,13 +16,16 @@ const mocks = vi.hoisted(() => ({
     disableAutoAdjust: false,
     loading: false,
     saving: false,
+    identityRetryAvailable: false,
+    error: undefined as string | undefined,
   },
   save: vi.fn(),
+  retry: vi.fn(),
   getModel: vi.fn(),
   session: { rawData: { modelContext: {} } },
 }))
 vi.mock('@/pages/ai-agent/useContext/useAIModelContext', () => ({
-  default: () => ({ ...mocks.context, save: mocks.save, retry: vi.fn() }),
+  default: () => ({ ...mocks.context, save: mocks.save, retry: mocks.retry }),
 }))
 vi.mock('@/pages/ai-re-act/hooks/useCurrentDataBySession', () => ({ useCurrentRawData: () => mocks.session.rawData }))
 vi.mock('../../grpc', () => ({ grpcGetAIModelContext: mocks.getModel }))
@@ -63,7 +66,10 @@ describe('AIContextUsage', () => {
     mocks.context.enabled = true
     mocks.context.promptTokens = 125000
     mocks.context.thresholdTokens = 500000
+    mocks.context.identityRetryAvailable = false
+    mocks.context.error = undefined
     mocks.save.mockClear()
+    mocks.retry.mockClear()
     mocks.getModel.mockClear()
   })
 
@@ -132,6 +138,28 @@ describe('AIContextUsage', () => {
     expect(container).toBeEmptyDOMElement()
     mocks.context.promptTokens = 125000
     rerender(<AIContextUsage />)
+    expect(screen.getByRole('button', { name: 'Context 25%' })).toBeInTheDocument()
+  })
+
+  it('身份查询失败且无实测用量时提供重试入口，恢复后显示用量', () => {
+    mocks.context.enabled = false
+    mocks.context.promptTokens = undefined
+    mocks.context.thresholdTokens = undefined
+    mocks.context.identityRetryAvailable = true
+    mocks.context.error = 'identity lookup failed'
+    const { rerender } = render(<AIContextUsage />)
+    const retry = screen.getByRole('button', { name: en.AIContextUsage.retryUsage })
+    expect(retry).toHaveAttribute('data-ai-context-usage')
+    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument()
+    fireEvent.click(retry)
+    expect(mocks.retry).toHaveBeenCalledOnce()
+    expect(mocks.save).not.toHaveBeenCalled()
+    mocks.context.identityRetryAvailable = false
+    mocks.context.enabled = true
+    mocks.context.promptTokens = 125000
+    mocks.context.thresholdTokens = 500000
+    rerender(<AIContextUsage />)
+    expect(screen.queryByRole('button', { name: en.AIContextUsage.retryUsage })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Context 25%' })).toBeInTheDocument()
   })
 

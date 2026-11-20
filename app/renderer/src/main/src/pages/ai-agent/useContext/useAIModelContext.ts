@@ -24,7 +24,9 @@ const createModelContextReader = (selected: AIModelConfig, waitForSave: boolean)
   const read = async () => {
     const config = waitForSave ? (await getCanonicalAIGlobalConfig()).IntelligentModels[0] : selected
     if (!sameModel(selected, config)) return
-    return grpcGetAIModelContext({ Config: config }, true)
+    const response = await grpcGetAIModelContext({ Config: config }, true)
+    if (!response.ContextKey) throw new Error('AIContextUsage.missingContextKey')
+    return response
   }
   let request: ReturnType<typeof read> | undefined
   return () =>
@@ -114,6 +116,7 @@ const useAIModelContext = (source: AIModelContextSource = 'settings', open?: boo
   const runtime = streamReady ? state.runtime : undefined
   const retainedThreshold = streamReady ? state.retainedThresholdTokens : undefined
   const switchingWithUsage = retainedThreshold !== undefined
+  const identityRetryAvailable = streamReady && !!state.retryModelIdentity
   const snapshot = streamOnly ? (streamReady ? getStreamModelContext(state) : undefined) : state.context
   // 用量统计只使用流事件；编辑器在回执到达前继续显示已提交的修改。
   const pending =
@@ -149,14 +152,19 @@ const useAIModelContext = (source: AIModelContextSource = 'settings', open?: boo
     disableAutoAdjust: snapshot?.disable_auto_adjust ?? false,
     loading: !streamOnly && status === 'loading',
     saving: !!state.pending,
-    error: translateError(streamOnly && !state.failedPatch && !switchingWithUsage ? undefined : state.error),
+    error:
+      streamOnly && identityRetryAvailable
+        ? t('AIContextUsage.identityLookupFailed')
+        : translateError(streamOnly && !state.failedPatch && !switchingWithUsage ? undefined : state.error),
+    ...(identityRetryAvailable ? { identityRetryAvailable: true } : {}),
     refresh,
     save: submit,
     setThreshold: (tokens: number) => submit({ threshold_tokens: tokens }),
     setAutoAdjust: (enabled: boolean) => submit({ disable_auto_adjust: !enabled }),
     retry: () => {
-      const { failedPatch } = rawData.modelContext
-      if (failedPatch) submit(failedPatch)
+      const { failedPatch, retryModelIdentity } = rawData.modelContext
+      if (streamOnly && retryModelIdentity) retryModelIdentity()
+      else if (failedPatch) submit(failedPatch)
       else void refresh()
     },
   }

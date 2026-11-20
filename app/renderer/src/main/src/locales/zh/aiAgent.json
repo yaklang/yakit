@@ -258,6 +258,8 @@
     "missingContextKey": "没有 context_key，更新失败",
     "waitingContext": "等待后端返回数据",
     "loadFailed": "读取上下文设置失败",
+    "retryUsage": "用量加载失败，重试",
+    "identityLookupFailed": "无法确认当前模型的用量，请重试。",
     "saveFailed": "保存上下文设置失败"
   },
   "AIRunningStatus": {

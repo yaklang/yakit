@@ -258,6 +258,8 @@
     "missingContextKey": "Update failed: missing context_key",
     "waitingContext": "Waiting for data from the backend",
     "loadFailed": "Failed to load context settings",
+    "retryUsage": "Usage unavailable, retry",
+    "identityLookupFailed": "Unable to verify usage for the current model. Please retry.",
     "saveFailed": "Failed to save context settings"
   },
   "AIRunningStatus": {

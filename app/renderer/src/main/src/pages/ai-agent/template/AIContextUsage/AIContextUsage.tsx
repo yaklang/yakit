@@ -1,6 +1,6 @@
 import type { FC } from 'react'
 import { useRef, useState } from 'react'
-import { Progress } from 'antd'
+import { Progress, Tooltip } from 'antd'
 import classNames from 'classnames'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -28,6 +28,24 @@ const AIContextUsage: FC<AIContextUsageProps> = ({ className }) => {
 
   if (!usage) {
     if (open) setOpen(false)
+    if (context.identityRetryAvailable) {
+      return (
+        <Tooltip title={context.error} trigger={['hover', 'focus']}>
+          <YakitButton
+            type="outline2"
+            htmlType="button"
+            data-ai-context-usage
+            className={classNames(styles.badge, className)}
+            onClick={(event) => {
+              event.stopPropagation()
+              context.retry()
+            }}
+          >
+            {t('AIContextUsage.retryUsage')}
+          </YakitButton>
+        </Tooltip>
+      )
+    }
     return null
   }
 

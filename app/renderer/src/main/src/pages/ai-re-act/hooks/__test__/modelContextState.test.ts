@@ -14,6 +14,9 @@ import { grpcAIMessageHandlers } from '../grpcStreamHandler/grpcAIOutputEventHan
 import { makeGrpcJsonRes, makeHandlerRequest } from './fixtures'
 
 const { getModel, setModel } = vi.hoisted(() => ({ getModel: vi.fn(), setModel: vi.fn() }))
+vi.mock('../useAIGlobalConfig', () => ({
+  getCanonicalAIGlobalConfig: vi.fn().mockResolvedValue({ IntelligentModels: [] }),
+}))
 vi.mock('@/pages/ai-agent/grpc', () => ({ grpcGetAIModelContext: getModel, grpcSetAIModelContext: setModel }))
 let currentSession: ReturnType<typeof globalSessionEngine.ensureSession>
 let currentSessionId = 'session-a'
@@ -40,10 +43,12 @@ describe('component model context saving and stream acknowledgements', () => {
   const controller = globalSessionEngine
   let session: ReturnType<typeof controller.ensureSession>
   let submit: ReturnType<typeof useSaveModelContext>
+  const pushLog = vi.fn()
   const push = (data: Record<string, unknown> = {}, isSync = false) =>
     grpcAIMessageHandlers.model_context(
       makeHandlerRequest({
         ...session,
+        pushLog,
         sessionId: 'session-a',
         res: makeGrpcJsonRes(
           'model_context',
@@ -57,6 +62,7 @@ describe('component model context saving and stream acknowledgements', () => {
     )
   beforeEach(() => {
     vi.useFakeTimers()
+    pushLog.mockClear()
     useAIGlobalConfigStore.setState({
       configSavePending: false,
       persistedAiGlobalConfig: {
@@ -128,14 +134,102 @@ describe('component model context saving and stream acknowledgements', () => {
     )
   })
 
-  it('discards a late key lookup after another model switch', async () => {
+  it('reports a failed identity lookup and recovers usage on the next matching event', async () => {
+    const config = useAIGlobalConfigStore.getState().persistedAiGlobalConfig!
+    const target = { ...config.IntelligentModels[0], ContextOwnerId: 'owner-b' }
+    getModel
+      .mockReset()
+      .mockRejectedValueOnce(new Error('identity lookup failed'))
+      .mockResolvedValue({ ContextKey: 'key-b' })
+    renderHook(() => useCurrentModelContextReset(true))
+    useAIGlobalConfigStore.setState({ persistedAiGlobalConfig: { ...config, IntelligentModels: [target] } })
+
+    push({ context_key: 'key-b', prompt_tokens: 100000 })
+    await vi.advanceTimersByTimeAsync(0)
+    expect(pushLog).toHaveBeenCalledWith({ level: 'error', message: expect.stringContaining('identity lookup failed') })
+    expect(session.rawData.modelContext.runtime).toBeUndefined()
+
+    push({ context_key: 'key-b', prompt_tokens: 150000 })
+    await vi.advanceTimersByTimeAsync(0)
+    expect(getModel).toHaveBeenCalledTimes(2)
+    expect(session.rawData.modelContext.runtime).toMatchObject({ context_key: 'key-b', prompt_tokens: 150000 })
+    expect(session.rawData.modelContext.status).toBe('ready')
+  })
+
+  it('retries a failed identity check without another usage event and replays only the matching key', async () => {
+    const config = useAIGlobalConfigStore.getState().persistedAiGlobalConfig!
+    const target = { ...config.IntelligentModels[0], ContextOwnerId: 'owner-b' }
+    getModel
+      .mockReset()
+      .mockRejectedValueOnce(new Error('offline'))
+      .mockResolvedValueOnce({ ContextKey: '' })
+      .mockResolvedValue({ ContextKey: 'key-b' })
+    renderHook(() => useCurrentModelContextReset(true))
+    useAIGlobalConfigStore.setState({ persistedAiGlobalConfig: { ...config, IntelligentModels: [target] } })
+    push({ context_key: 'key-b', prompt_tokens: 10000 })
+    push({ context_key: 'key-b', prompt_tokens: 0 })
+    push({ context_key: 'key-a', prompt_tokens: 90000 })
+    await vi.advanceTimersByTimeAsync(0)
+    expect(session.rawData.modelContext.runtime).toBeUndefined()
+    const retry = session.rawData.modelContext.retryModelIdentity
+    expect(retry).toBeTypeOf('function')
+    retry?.()
+    retry?.()
+    await vi.advanceTimersByTimeAsync(0)
+    expect(getModel).toHaveBeenCalledTimes(2)
+    expect(session.rawData.modelContext.runtime).toBeUndefined()
+    session.rawData.modelContext.retryModelIdentity?.()
+    await vi.advanceTimersByTimeAsync(0)
+    expect(getModel).toHaveBeenCalledTimes(3)
+    expect(session.rawData.modelContext.runtime).toMatchObject({ context_key: 'key-b', prompt_tokens: 10000 })
+    expect(session.rawData.modelContext.retryModelIdentity).toBeUndefined()
+  })
+
+  it('ignores a retry that fails after switching away from the model', async () => {
+    const config = useAIGlobalConfigStore.getState().persistedAiGlobalConfig!
+    const target = { ...config.IntelligentModels[0], ContextOwnerId: 'owner-b' }
+    let rejectRetry!: (error: Error) => void
+    getModel
+      .mockReset()
+      .mockRejectedValueOnce('offline')
+      .mockImplementationOnce(
+        () =>
+          new Promise((_, reject) => {
+            rejectRetry = reject
+          }),
+      )
+    renderHook(() => useCurrentModelContextReset(true))
+    useAIGlobalConfigStore.setState({ persistedAiGlobalConfig: { ...config, IntelligentModels: [target] } })
+    push({ context_key: 'key-b', prompt_tokens: 10000 })
+    await vi.advanceTimersByTimeAsync(0)
+    const retry = session.rawData.modelContext.retryModelIdentity
+    retry?.()
+    await vi.advanceTimersByTimeAsync(0)
+    useAIGlobalConfigStore.setState({
+      persistedAiGlobalConfig: { ...config, IntelligentModels: [{ ...target, ModelName: 'model-c' }] },
+    })
+    const nextState = session.rawData.modelContext
+    pushLog.mockClear()
+    rejectRetry(new Error('late failure'))
+    retry?.()
+    await vi.advanceTimersByTimeAsync(0)
+    expect(session.rawData.modelContext).toBe(nextState)
+    expect(nextState.retryModelIdentity).toBeUndefined()
+    expect(pushLog).not.toHaveBeenCalled()
+    expect(getModel).toHaveBeenCalledTimes(2)
+  })
+
+  it.each(['resolve', 'reject'])('discards a late key lookup (%s) after another model switch', async (outcome) => {
     const config = useAIGlobalConfigStore.getState().persistedAiGlobalConfig!
     const original = config.IntelligentModels[0]
-    let finishLookup!: (value: { ContextKey: string }) => void
+    let finishLookup!: () => void
     getModel.mockReset().mockImplementation(
       () =>
-        new Promise((resolve) => {
-          finishLookup = resolve
+        new Promise((resolve, reject) => {
+          finishLookup = () => {
+            if (outcome === 'resolve') resolve({ ContextKey: 'key-b' })
+            else reject(new Error('old owner'))
+          }
         }),
     )
     renderHook(() => useCurrentModelContextReset(true))
@@ -147,8 +241,11 @@ describe('component model context saving and stream acknowledgements', () => {
     useAIGlobalConfigStore.setState({
       persistedAiGlobalConfig: { ...config, IntelligentModels: [{ ...original, ModelName: 'model-c' }] },
     })
-    finishLookup({ ContextKey: 'key-b' })
+    const activeState = session.rawData.modelContext
+    finishLookup()
     await vi.advanceTimersByTimeAsync(0)
+    expect(pushLog).not.toHaveBeenCalled()
+    expect(session.rawData.modelContext).toBe(activeState)
     expect(session.rawData.modelContext.saved).toBeUndefined()
     push({ model: 'model-c', context_key: 'key-c' })
     expect(session.rawData.modelContext.saved?.context_key).toBe('key-c')

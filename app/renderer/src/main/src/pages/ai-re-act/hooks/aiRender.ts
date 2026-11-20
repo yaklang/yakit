@@ -30,7 +30,15 @@ export interface ModelContextState {
   /** 状态版本号，用于忽略过期的异步结果和排队修改。 */
   generation: number
   /** 主模型切换后的流事件目标；同一提供方有同名配置时，通过引擎核对上下文键。 */
-  expectedModel?: { provider: string; model: string; resolveKey?: () => Promise<string> }
+  expectedModel?: {
+    provider: string
+    model: string
+    resolveKey?: () => Promise<string>
+    /** 身份查询期间收到的事件，仅在引擎确认 context_key 后应用。 */
+    unverifiedEvents?: AIAgentGrpcApi.ModelContext[]
+  }
+  /** 身份查询失败后的重试入口，成功后可恢复尚未确认归属的用量。 */
+  retryModelIdentity?: () => void
   /** 会话已有用量时，切换模型期间暂用的上限，新配置返回后以新阈值为准。 */
   retainedThresholdTokens?: number
   /** 当前会话最近一次测得的提示词 token 数。 */

@@ -35,6 +35,7 @@ const rawData = {
     saved: undefined as typeof settings | undefined,
     runtime: undefined as typeof stream | undefined,
     error: undefined as string | undefined,
+    retryModelIdentity: undefined as (() => void) | undefined,
     pending: undefined as
       | {
           baseline?: typeof stream
@@ -70,6 +71,7 @@ describe('上下文设置的数据来源', () => {
     currentRawData = rawData
     rawData.modelContext.generation = 0
     rawData.modelContext.error = undefined
+    rawData.modelContext.retryModelIdentity = undefined
     rawData.modelContext.context = settings
     rawData.modelContext.saved = undefined
     store.setState({ execute: true, initLoading: false })
@@ -144,6 +146,40 @@ describe('上下文设置的数据来源', () => {
     result.current.retry()
     expect(operations.submit).toHaveBeenCalledExactlyOnceWith({ threshold_tokens: 680000 })
     expect(operations.saveSource).toHaveBeenLastCalledWith('stream')
+  })
+
+  it.each([undefined, stream])('暴露身份查询错误并重试最新事件，用量为 %o', (runtime) => {
+    rawData.modelContext.retryModelIdentity = vi.fn()
+    rawData.modelContext.runtime = runtime
+    const { result, rerender } = renderHook(() => useAIModelContext('stream'))
+    expect(result.current).toMatchObject({
+      enabled: !!runtime,
+      identityRetryAvailable: true,
+      promptTokens: runtime?.prompt_tokens,
+      error: 'AIContextUsage.identityLookupFailed',
+    })
+    const retry = result.current.retry
+    const latestRetry = vi.fn()
+    rawData.modelContext.retryModelIdentity = latestRetry
+    retry()
+    expect(latestRetry).toHaveBeenCalledOnce()
+    expect(operations.getModel).not.toHaveBeenCalled()
+    act(() => store.setState({ execute: false }))
+    rerender()
+    expect(result.current.identityRetryAvailable).toBeUndefined()
+    expect(result.current.error).toBeUndefined()
+  })
+
+  it('设置弹窗保留保存失败的重试，身份恢复由用量入口处理', () => {
+    const retryIdentity = vi.fn()
+    rawData.modelContext.retryModelIdentity = retryIdentity
+    rawData.modelContext.failedPatch = { threshold_tokens: 710000 }
+    rawData.modelContext.error = 'save failed'
+    const { result } = renderHook(() => useAIModelContext('settings'))
+    expect(result.current.error).toBe('save failed')
+    result.current.retry()
+    expect(operations.submit).toHaveBeenCalledExactlyOnceWith({ threshold_tokens: 710000 })
+    expect(retryIdentity).not.toHaveBeenCalled()
   })
 
   it('只有可见输入区的当前会话响应主模型变化', () => {

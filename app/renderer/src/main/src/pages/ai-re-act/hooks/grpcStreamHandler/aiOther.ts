@@ -1,5 +1,5 @@
 import type { AIAgentChatMetaData } from '@/pages/ai-agent/type/aiChat'
-import type { ModelContextPatch } from '../aiRender'
+import type { ModelContextPatch, ModelContextState } from '../aiRender'
 import type { AIMessageHandler, AIMessageHandlerParams } from '../type'
 import { AIInputEventSyncTypeEnum, AINotifyType, AITaskStatus } from '../grpcApi'
 import type { AITaskStatusType, AIAgentGrpcApi } from '../grpcApi'
@@ -22,6 +22,67 @@ import { yakitNotify } from '@/utils/notification'
 
 const tAgent = i18n.getFixedT(null, 'aiAgent')
 
+const verifyModelUsage = (
+  request: AIMessageHandlerParams,
+  event: AIAgentGrpcApi.ModelContext,
+  target: NonNullable<ModelContextState['expectedModel']>,
+  resolveKey: () => Promise<string>,
+) => {
+  const { rawData } = request
+  if (target.unverifiedEvents) {
+    target.unverifiedEvents.push(event)
+    rawData.modelContext.retryModelIdentity?.()
+    return
+  }
+
+  const events = [event]
+  target.unverifiedEvents = events
+  let checking = false
+  const verify = async () => {
+    if (checking || rawData.modelContext.expectedModel !== target || target.unverifiedEvents !== events) return
+    checking = true
+    let key = rawData.modelContext.saved?.context_key
+    try {
+      key ??= await resolveKey()
+      if (!key) throw new Error(tAgent('AIContextUsage.missingContextKey'))
+    } catch (error) {
+      if (rawData.modelContext.expectedModel !== target) return
+      key = rawData.modelContext.saved?.context_key
+      if (!key) {
+        // 连续失败时，每个候选 key 只留下最新快照和最近测得的用量。
+        const latest = new Map<string, AIAgentGrpcApi.ModelContext>()
+        for (const sample of events) {
+          const measured = latest.get(sample.context_key)?.prompt_tokens
+          latest.set(
+            sample.context_key,
+            !sample.prompt_tokens && measured ? { ...sample, prompt_tokens: measured } : sample,
+          )
+        }
+        events.length = 0
+        for (const sample of latest.values()) events.push(sample)
+        const reason = error instanceof Error ? error.message : typeof error === 'string' ? error : ''
+        request.pushLog({
+          level: 'error',
+          message: `model_context (${target.provider}/${target.model}): ${reason || tAgent('AIContextUsage.loadFailed')}`,
+        })
+        updateModelContextState(request, { retryModelIdentity: verify })
+        return
+      }
+    } finally {
+      checking = false
+    }
+    if (rawData.modelContext.expectedModel !== target) return
+    target.unverifiedEvents = undefined
+    if (rawData.modelContext.retryModelIdentity) updateModelContextState(request, { retryModelIdentity: undefined })
+    const confirmedKey = rawData.modelContext.saved?.context_key ?? key
+    for (const sample of events) {
+      if (rawData.modelContext.expectedModel !== target) return
+      if (sample.context_key === confirmedKey) applyModelContext(request, sample)
+    }
+  }
+  void verify()
+}
+
 const handleModelContext: AIMessageHandler = (request) => {
   const { res, rawData } = request
   if (res.Type !== 'model_context' || res.NodeId !== 'model_context' || res.IsSync) return
@@ -37,17 +98,8 @@ const handleModelContext: AIMessageHandler = (request) => {
   const { expectedModel, saved } = rawData.modelContext
   if (expectedModel) {
     if (data.provider !== expectedModel.provider || data.model !== expectedModel.model) return
-    if (!saved && expectedModel.resolveKey) {
-      const event = data
-      // 查询同名配置的归属期间，其他会话事件可以继续处理。
-      void expectedModel.resolveKey().then(
-        (key) => {
-          if (rawData.modelContext.expectedModel === expectedModel && key === event.context_key) {
-            applyModelContext(request, event)
-          }
-        },
-        () => undefined,
-      )
+    if (expectedModel.resolveKey && (!saved || expectedModel.unverifiedEvents)) {
+      verifyModelUsage(request, data, expectedModel, expectedModel.resolveKey)
       return
     }
   }
