@@ -115,6 +115,122 @@ describe('useAIGlobalConfig', () => {
     expect(setMock.mock.calls[1][0]).toMatchObject({ DisableFallback: true })
   })
 
+  it.each([true, false])('写入和恢复读取均失败时结束保存并恢复可信配置，已有快照为 %s', async (hasSnapshot) => {
+    const persisted = {
+      ...defaultAIGlobalConfig,
+      IntelligentModels: [{ ProviderId: '0', Provider: { Type: 'openai' }, ModelName: 'model-a', ExtraParams: [] }],
+    }
+    useAIGlobalConfigStore.setState({
+      aiGlobalConfig: persisted,
+      persistedAiGlobalConfig: hasSnapshot ? persisted : undefined,
+    })
+    setMock.mockRejectedValueOnce(new Error('save-fail'))
+    getMock.mockRejectedValueOnce(new Error('recovery-fail'))
+    const { result } = renderHook(() => useAIGlobalConfig())
+    await act(async () => {
+      await expect(
+        result.current[1].setAIGlobalConfig({
+          IntelligentModels: [{ ...persisted.IntelligentModels[0], ModelName: 'model-b' }],
+        }),
+      ).rejects.toThrow('save-fail')
+    })
+    const restored = persisted
+    expect(useAIGlobalConfigStore.getState()).toMatchObject({
+      aiGlobalConfig: restored,
+      persistedAiGlobalConfig: hasSnapshot ? persisted : undefined,
+      configSavePending: false,
+    })
+    expect(result.current[0].aiGlobalConfigRef.current).toEqual(restored)
+    expect(result.current[0].total).toBe(restored.IntelligentModels.length)
+    await act(async () => {
+      await result.current[1].setAIGlobalConfig({ DisableFallback: true })
+    })
+    expect(setMock.mock.calls[1][0].IntelligentModels).toEqual(restored.IntelligentModels)
+  })
+
+  it('旧保存的恢复读取失败不会回滚新的在途保存', async () => {
+    let rejectRecovery!: (error: Error) => void
+    let finishSave!: (value: null) => void
+    setMock.mockRejectedValueOnce(new Error('save-fail')).mockReturnValueOnce(
+      new Promise<null>((resolve) => {
+        finishSave = resolve
+      }),
+    )
+    getMock.mockReturnValueOnce(
+      new Promise<AIGlobalConfig>((_, reject) => {
+        rejectRecovery = reject
+      }),
+    )
+    const { result } = renderHook(() => useAIGlobalConfig())
+    await act(async () => {
+      await expect(result.current[1].setAIGlobalConfig({ DisableFallback: true })).rejects.toThrow('save-fail')
+    })
+    let saving!: Promise<void>
+    await act(async () => {
+      saving = result.current[1].setAIGlobalConfig({ RoutingPolicy: AIModelPolicyEnum.PolicyPerformance })
+    })
+    await act(async () => rejectRecovery(new Error('recovery-fail')))
+    expect(useAIGlobalConfigStore.getState()).toMatchObject({
+      aiGlobalConfig: { RoutingPolicy: AIModelPolicyEnum.PolicyPerformance, DisableFallback: true },
+      configSavePending: true,
+    })
+    await act(async () => {
+      finishSave(null)
+      await saving
+    })
+    expect(useAIGlobalConfigStore.getState().configSavePending).toBe(false)
+  })
+
+  it.each([
+    [true, true],
+    [true, false],
+    [false, true],
+    [false, false],
+  ])('连续切换模型后最新写入和恢复读取失败，前次成功 %s、已有快照 %s', async (firstSucceeded, hasSnapshot) => {
+    const original = {
+      ...defaultAIGlobalConfig,
+      IntelligentModels: [{ ProviderId: '0', Provider: { Type: 'openai' }, ModelName: 'model-a', ExtraParams: [] }],
+    }
+    useAIGlobalConfigStore.setState({
+      aiGlobalConfig: original,
+      persistedAiGlobalConfig: hasSnapshot ? original : undefined,
+    })
+    let finishFirst!: () => void
+    setMock
+      .mockReturnValueOnce(
+        new Promise<null>((resolve, reject) => {
+          finishFirst = () => (firstSucceeded ? resolve(null) : reject(new Error('first-save-fail')))
+        }),
+      )
+      .mockRejectedValueOnce(new Error('last-save-fail'))
+    getMock.mockRejectedValueOnce(new Error('recovery-fail'))
+    const { result } = renderHook(() => useAIGlobalConfig())
+    let first!: Promise<void>
+    let last!: Promise<void>
+    await act(async () => {
+      first = result.current[1]
+        .setAIGlobalConfig({ IntelligentModels: [{ ...original.IntelligentModels[0], ModelName: 'model-b' }] })
+        .catch(() => undefined)
+      last = result.current[1]
+        .setAIGlobalConfig({ IntelligentModels: [{ ...original.IntelligentModels[0], ModelName: 'model-c' }] })
+        .catch(() => undefined)
+    })
+    await act(async () => {
+      finishFirst()
+      await Promise.all([first, last])
+    })
+    const restoredModel = firstSucceeded ? 'model-b' : 'model-a'
+    expect(useAIGlobalConfigStore.getState().configSavePending).toBe(false)
+    expect(useAIGlobalConfigStore.getState().aiGlobalConfig.IntelligentModels[0].ModelName).toBe(restoredModel)
+    expect(useAIGlobalConfigStore.getState().persistedAiGlobalConfig).toEqual(
+      hasSnapshot && !firstSucceeded ? original : undefined,
+    )
+    await act(async () => {
+      await result.current[1].setAIGlobalConfig({ DisableFallback: true })
+    })
+    expect(setMock.mock.calls[2][0].IntelligentModels[0].ModelName).toBe(restoredModel)
+  })
+
   it('写入成功即可关闭表单，首次回读失败只重试读取并更新引擎分配的归属', async () => {
     const model = { ProviderId: '0', Provider: { Type: 'openai' }, ModelName: 'model', ExtraParams: [] }
     const persisted = { ...defaultAIGlobalConfig, IntelligentModels: [{ ...model, ContextOwnerId: 'owner' }] }

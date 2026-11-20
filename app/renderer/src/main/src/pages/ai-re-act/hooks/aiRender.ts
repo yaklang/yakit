@@ -23,6 +23,7 @@ export type ModelContextPatch = Partial<Pick<ModelContextSnapshot, 'threshold_to
 export interface PendingModelContextChange {
   patch: ModelContextPatch
   queuedPatch?: ModelContextPatch
+  queuedRetry?: boolean
   timer?: ReturnType<typeof setTimeout>
   baseline?: ModelContextSnapshot
   onHotpatchError?: (error: string) => void

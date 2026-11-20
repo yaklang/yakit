@@ -706,8 +706,58 @@ describe('model context GET settings and session saves', () => {
     expect(controller.handleSendMessage).toHaveBeenCalledTimes(2)
     expect(session.rawData.modelContext.saved?.threshold_tokens).toBe(700000)
     expect(session.rawData.modelContext.pending).toBeUndefined()
+    expect(session.rawData.modelContext.failedPatch).toBeUndefined()
+    expect(session.rawData.modelContext.error).toBeUndefined()
     await act(async () => vi.advanceTimersByTimeAsync(10000))
     expect(controller.handleSendMessage).toHaveBeenCalledTimes(2)
+  })
+
+  it.each(['rejected', 'timeout'])('keeps a %s threshold retryable after a queued switch succeeds', async (outcome) => {
+    getModel.mockReturnValueOnce(new Promise(() => {})).mockResolvedValue(response({ DisableAutoAdjust: true }))
+    const threshold = { threshold_tokens: 600000 }
+    submit(threshold)
+    submit({ disable_auto_adjust: true })
+    await flush()
+    if (outcome === 'timeout') await act(async () => vi.advanceTimersByTimeAsync(10000))
+    else push({ context_key: saved.context_key, error: 'threshold rejected' })
+    await flush()
+
+    const editor = renderHook(() => useAIModelContext('settings'))
+    expect(editor.result.current.error).toBe(
+      outcome === 'timeout' ? 'AIContextUsage.saveTimeout' : 'threshold rejected',
+    )
+    expect(session.rawData.modelContext.failedPatch).toEqual(threshold)
+    expect(session.rawData.modelContext.saved).toMatchObject({ threshold_tokens: 500000, disable_auto_adjust: true })
+    getModel.mockResolvedValue(response({ ThresholdTokens: 600000, DisableAutoAdjust: true }))
+    act(() => editor.result.current.retry())
+    await flush()
+    expect(controller.handleSendMessage).toHaveBeenCalledTimes(3)
+    expect(session.rawData.modelContext.saved).toMatchObject({ threshold_tokens: 600000, disable_auto_adjust: true })
+    expect(editor.result.current.error).toBeUndefined()
+    expect(session.rawData.modelContext.failedPatch).toBeUndefined()
+  })
+
+  it('keeps an explicit editor retry queued during an unrelated save even when its values match the readback', async () => {
+    let finishSwitch!: (value: AIModelContextResponse) => void
+    getModel
+      .mockRejectedValueOnce(new Error('threshold rejected'))
+      .mockReturnValueOnce(
+        new Promise<AIModelContextResponse>((resolve) => {
+          finishSwitch = resolve
+        }),
+      )
+      .mockResolvedValue(response({ DisableAutoAdjust: true }))
+    submit({ threshold_tokens: 600000 })
+    submit({ disable_auto_adjust: true })
+    await flush()
+    const editor = renderHook(() => useAIModelContext('settings'))
+    expect(editor.result.current.error).toBe('threshold rejected')
+    act(() => editor.result.current.retry({ threshold_tokens: 500000, disable_auto_adjust: true }))
+    finishSwitch(response({ DisableAutoAdjust: true }))
+    await flush()
+    expect(controller.handleSendMessage).toHaveBeenCalledTimes(3)
+    expect(editor.result.current.error).toBeUndefined()
+    expect(session.rawData.modelContext.failedPatch).toBeUndefined()
   })
 
   it('continues a save after the editor closes and updates only its initiating session', async () => {

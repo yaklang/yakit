@@ -46,17 +46,31 @@ export const useSaveModelContext = () => {
     const current = rawData.modelContext
     const { execute } = store.getState()
     if (execute && !sessionId) {
-      updateModelContextState(session, { failedPatch: patch, error: 'AIContextUsage.sessionUnavailable' })
+      updateModelContextState(session, {
+        failedPatch: { ...current.failedPatch, ...patch },
+        error: 'AIContextUsage.sessionUnavailable',
+      })
       yakitNotify('error', t('AIContextUsage.sessionUnavailable'))
       return false
     }
     if (current.pending) {
       current.pending.queuedPatch = { ...current.pending.queuedPatch, ...patch }
+      if (retryFailedSave) current.pending.queuedRetry = true
       updateModelContextState(session, { pending: current.pending })
       return true
     }
     const baseline = current.status === 'ready' && current.saved?.context_key ? current.saved : undefined
-    if (!Object.keys(patch).length || (!retryFailedSave && baseline && matchesPatch(baseline, patch))) return false
+    if (patch.threshold_tokens === undefined && patch.disable_auto_adjust === undefined) return false
+    // 新提交只替代它包含的字段，其他字段的保存错误仍可重试。
+    const remaining = { ...current.failedPatch }
+    if (patch.threshold_tokens !== undefined) delete remaining.threshold_tokens
+    if (patch.disable_auto_adjust !== undefined) delete remaining.disable_auto_adjust
+    const failedPatch = Object.keys(remaining).length ? remaining : undefined
+    const retainedError = failedPatch ? current.error : undefined
+    if (!retryFailedSave && baseline && matchesPatch(baseline, patch)) {
+      if (current.failedPatch) updateModelContextState(session, { failedPatch, error: retainedError })
+      return false
+    }
     // 重试展示中的自动学习阈值时，保留引擎阈值，避免将低于手动下限的值重新写入。
     const writePatchFor = (saved?: ModelContextSnapshot): ModelContextPatch =>
       retryFailedSave &&
@@ -83,23 +97,23 @@ export const useSaveModelContext = () => {
       const latest = rawData.modelContext
       const key = pending.baseline?.context_key
       if (latest.generation !== generation || latest.pending || (key && key !== latest.saved?.context_key)) return
-      if (pending.queuedPatch) submit(pending.queuedPatch)
+      if (pending.queuedPatch) submit(pending.queuedPatch, pending.queuedRetry)
     }
     const fail = (error: unknown) => {
       settle({
         status: pending.baseline ? 'ready' : 'error',
         saved: pending.baseline,
-        failedPatch: patch,
+        failedPatch: { ...patch, ...failedPatch },
         error: error instanceof Error ? error.message : String(error),
       })
     }
-    const finish = (saved: ModelContextSnapshot) => settle({ status: 'ready', saved, error: undefined })
+    const finish = (saved: ModelContextSnapshot) => settle({ status: 'ready', saved })
     pending.timer = setTimeout(() => fail('AIContextUsage.saveTimeout'), 10000)
     updateModelContextState(session, {
       generation,
       pending,
-      error: undefined,
-      failedPatch: undefined,
+      error: retainedError,
+      failedPatch,
     })
 
     const send = async () => {

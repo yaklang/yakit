@@ -20,6 +20,8 @@ const AI_MODEL_CONFIG_KEYS = [
 
 let saveQueue: Promise<unknown> = Promise.resolve()
 let saveEpoch = 0
+/** 本批保存开始前的配置，成功写入后推进到最后一次已写入的快照。 */
+let saveRollbackConfig: AIGlobalConfig | undefined
 let canonicalRead: { epoch: number; promise: Promise<AIGlobalConfig> } | undefined
 
 /** 等待配置保存完成，读取引擎确认的主模型。 */
@@ -142,8 +144,12 @@ function useAIGlobalConfig(params) {
 
   const setAIGlobalConfig = useMemoizedFn(async (data: Partial<AIGlobalConfig>): Promise<void> => {
     const epoch = ++saveEpoch
+    const previous = useAIGlobalConfigStore.getState()
+    if (!previous.configSavePending) {
+      saveRollbackConfig = previous.persistedAiGlobalConfig ?? previous.aiGlobalConfig
+    }
     const next: AIGlobalConfig = {
-      ...useAIGlobalConfigStore.getState().aiGlobalConfig,
+      ...previous.aiGlobalConfig,
       ...data,
     }
     const snapshot = fixEmptyNumber(next)
@@ -154,6 +160,7 @@ function useAIGlobalConfig(params) {
 
     const task = saveQueue.then(async () => {
       await grpcSetAIGlobalConfig(snapshot)
+      saveRollbackConfig = snapshot
     })
     saveQueue = task.catch(() => undefined)
     try {
@@ -162,7 +169,17 @@ function useAIGlobalConfig(params) {
       if (epoch === saveEpoch) {
         getCanonicalAIGlobalConfig()
           .then((res) => applyFetchedConfig(res, epoch))
-          .catch(() => undefined)
+          .catch(() => {
+            if (epoch !== saveEpoch) return
+            const restored = saveRollbackConfig ?? previous.aiGlobalConfig
+            const persisted = useAIGlobalConfigStore.getState().persistedAiGlobalConfig
+            useAIGlobalConfigStore.setState({
+              aiGlobalConfig: restored,
+              persistedAiGlobalConfig: restored === persisted ? persisted : undefined,
+              configSavePending: false,
+            })
+            applyFetchedConfig(restored, epoch)
+          })
       }
       throw err
     } finally {
