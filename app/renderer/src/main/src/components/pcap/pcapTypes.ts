@@ -9,14 +9,33 @@ export interface PCAPDatabase {
   State: string
   PacketCount: string
   LastError: string
+  PreviewTruncated: boolean
   ProtocolsIndexed: boolean
+  SourceKind: string
+  CaptureInterface: string
+  CaptureBPF: string
+  ProtocolCount: string
+  SessionCount: string
+  StreamCount: string
+  StreamChunkCount: string
+  StreamsIndexed: boolean
+  CreatedAt: string
+}
+
+export interface Paging {
+  Page: string
+  Limit: string
+  OrderBy: string
+  Order: string
+  RawOrder: string
+  BeforeId: string
+  AfterId: string
 }
 
 export interface DatabasePage {
   Data: PCAPDatabase[]
   Total: string
-  NextCursor: string
-  HasMore: boolean
+  Pagination: Paging
 }
 
 export interface ImportProgress {
@@ -55,16 +74,11 @@ export interface LiveCaptureRequest {
 }
 
 export interface LiveCaptureProgress {
-  DatasetID: string
-  State: string
-  BytesIndexed: string
-  TotalBytes: string
   PacketFrameCounter: string
   NetInterfaceTransferKBPerSeconds: string
-  ProtocolCount: string
-  SessionCount: string
-  StreamCount: string
-  StreamChunkCount: string
+  TCPReassembledCount: string
+  TrafficSessionCount: string
+  Database?: PCAPDatabase
   Finished: boolean
   Error: string
 }
@@ -127,8 +141,7 @@ export interface PCAPPacketSummary {
 export interface PacketPage {
   Data: PCAPPacketSummary[]
   Total?: string
-  NextCursor: string
-  HasMore: boolean
+  Pagination: Paging
 }
 
 export interface PCAPFieldRange {

@@ -82,9 +82,9 @@ describe('PCAP main-process transport', () => {
     const request = { NetInterfaceList: ['eth0'] }
     handlers.get('PcapX')(event, request, 'live-test')
     expect(stream.write).toHaveBeenCalledWith(request)
-    stream.emit('data', { DatasetID: 'dataset-live', Finished: false })
+    stream.emit('data', { Database: { DatasetID: 'dataset-live' }, Finished: false })
     expect(window.webContents.send).toHaveBeenCalledWith('live-test-data', {
-      DatasetID: 'dataset-live',
+      Database: { DatasetID: 'dataset-live' },
       Finished: false,
     })
     await handlers.get('cancel-PcapX')({ sender: { id: 7 } }, 'live-test')
@@ -122,8 +122,16 @@ describe('extended legacy protobuf contract', () => {
       Details: '{"Result":[],"Messages":[]}',
     }
     expect(
-      method.responseDeserialize(method.responseSerialize({ Data: [packet], NextCursor: packet.Id, HasMore: true })),
-    ).toMatchObject({ Data: [packet], NextCursor: packet.Id, HasMore: true })
+      method.responseDeserialize(
+        method.responseSerialize({
+          Data: [packet],
+          Pagination: { Page: '1', Limit: '100', OrderBy: 'id', Order: 'asc', AfterId: packet.Id },
+        }),
+      ),
+    ).toMatchObject({
+      Data: [packet],
+      Pagination: { Page: '1', Limit: '100', OrderBy: 'id', Order: 'asc', AfterId: packet.Id },
+    })
   })
 
   it('exposes the new packet query, detail and bounded byte methods', () => {
@@ -157,7 +165,7 @@ describe('extended legacy protobuf contract', () => {
     expect(read.responseDeserialize(read.responseSerialize(response))).toMatchObject(response)
   })
 
-  it('carries live capture controls and DatasetID progress over PcapX', () => {
+  it('carries live capture controls and database progress over PcapX', () => {
     const method = service.PcapX
     const request = {
       NetInterfaceList: ['eth0'],
@@ -170,13 +178,54 @@ describe('extended legacy protobuf contract', () => {
     }
     expect(method.requestDeserialize(method.requestSerialize(request))).toMatchObject(request)
     const response = {
-      DatasetID: 'dataset-live',
-      State: 'ready',
       PacketFrameCounter: '42',
-      ProtocolCount: '8',
       NetInterfaceTransferKBPerSeconds: '1024',
+      TCPReassembledCount: '7',
+      TrafficSessionCount: '3',
+      Database: {
+        DatasetID: 'dataset-live',
+        State: 'ready',
+        PacketCount: '42',
+        ProtocolCount: '8',
+        SessionCount: '3',
+        StreamCount: '5',
+        StreamChunkCount: '7',
+        SourceKind: 'live',
+        CaptureInterface: 'eth0',
+        CaptureBPF: 'tcp port 80',
+        StreamsIndexed: true,
+        CreatedAt: '1700000000',
+      },
       Finished: false,
+      Error: '',
     }
     expect(method.responseDeserialize(method.responseSerialize(response))).toMatchObject(response)
+  })
+
+  it('round-trips PCAP database source and index metadata', () => {
+    const method = service.QueryPCAPDatabase
+    const database = {
+      DatasetID: 'dataset-live',
+      SourceKind: 'live',
+      CaptureInterface: 'eth0',
+      CaptureBPF: 'tcp port 80',
+      ProtocolCount: '8',
+      SessionCount: '3',
+      StreamCount: '5',
+      StreamChunkCount: '7',
+      StreamsIndexed: true,
+      CreatedAt: '1700000000',
+    }
+    expect(
+      method.responseDeserialize(
+        method.responseSerialize({
+          Data: [database],
+          Pagination: { Page: '1', Limit: '100', OrderBy: 'id', Order: 'asc', AfterId: '24' },
+        }),
+      ),
+    ).toMatchObject({
+      Data: [database],
+      Pagination: { Page: '1', Limit: '100', OrderBy: 'id', Order: 'asc', AfterId: '24' },
+    })
   })
 })

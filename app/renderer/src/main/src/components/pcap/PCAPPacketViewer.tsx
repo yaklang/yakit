@@ -2,16 +2,20 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Alert, Checkbox, Progress, Spin, Tooltip } from 'antd'
 import {
   DatabaseOutlined,
-  FileOutlined,
-  ImportOutlined,
-  ReloadOutlined,
-  ExportOutlined,
-  DeleteOutlined,
+  DocumentDownloadOutlined,
+  FileArchiveOutlined,
+  FileUpOutlined,
+  InboxOutlined,
+  LibraryOutlined,
+  RefreshOutlined,
+  RssOutlined,
   SearchOutlined,
-  WifiOutlined,
-} from '@ant-design/icons'
+  Trash2Outlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import { YakitAutoComplete } from '@/components/yakitUI/YakitAutoComplete/YakitAutoComplete'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
+import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
@@ -30,6 +34,7 @@ import type {
   PacketQuery,
   PCAPDatabase,
   PCAPPacketDetail,
+  Paging,
   PcapMetadata,
 } from './pcapTypes'
 import { emptyFilters, fileName, formatBytes, packetQuery } from './pcapUtils'
@@ -44,11 +49,194 @@ const stateNames: Record<string, string> = {
   interrupted: '已中断',
   deleting: '删除中',
 }
-const initialPage: PacketPage = { Data: [], NextCursor: '0', HasMore: false }
+const pcapPageSize = 100
+const initialPaging: Paging = {
+  Page: '1',
+  Limit: String(pcapPageSize),
+  OrderBy: 'id',
+  Order: 'asc',
+  RawOrder: '',
+  BeforeId: '0',
+  AfterId: '0',
+}
+type PacketListPage = PacketPage & { NextCursor: string; HasMore: boolean }
+const initialPage: PacketListPage = { Data: [], Pagination: initialPaging, NextCursor: '0', HasMore: false }
+const packetPageView = (response: PacketPage, loadedCount = 0): PacketListPage => {
+  const limit = Number(response.Pagination?.Limit || pcapPageSize)
+  const total = response.Total !== undefined && response.Total !== '' ? Number(response.Total) : undefined
+  return {
+    ...response,
+    NextCursor: response.Pagination?.AfterId || '0',
+    HasMore: response.Data.length >= limit && (total === undefined || loadedCount + response.Data.length < total),
+  }
+}
 const filterQueryDelay = 400
+const liveRefreshInterval = 1000
+const libraryRefreshInterval = 2000
+const commonProtocols = [
+  'TCP',
+  'UDP',
+  'SCTP',
+  'ARP',
+  'ICMPv4',
+  'ICMPv6',
+  'HTTP',
+  'TLS',
+  'DNS',
+  'DHCP',
+  'FTP',
+  'SMTP',
+  'POP3',
+  'IMAP',
+  'SSH',
+  'NTP',
+]
+const protocolOptions = commonProtocols.map((value) => ({ value, label: value }))
+const normalizeDatabase = (database: PCAPDatabase): PCAPDatabase => ({
+  ...database,
+  SourceKind: database.SourceKind || (database.SourcePath ? 'file' : 'live'),
+})
+const databaseFields = [
+  'Id',
+  'DatasetID',
+  'SourcePath',
+  'SourceSize',
+  'Format',
+  'State',
+  'PacketCount',
+  'LastError',
+  'PreviewTruncated',
+  'ProtocolsIndexed',
+  'SourceKind',
+  'CaptureInterface',
+  'CaptureBPF',
+  'ProtocolCount',
+  'SessionCount',
+  'StreamCount',
+  'StreamChunkCount',
+  'StreamsIndexed',
+  'CreatedAt',
+] as const satisfies readonly (keyof PCAPDatabase)[]
+const sameDatabases = (left: PCAPDatabase[], right: PCAPDatabase[]) =>
+  left.length === right.length &&
+  left.every((database, index) => databaseFields.every((field) => database[field] === right[index]?.[field]))
+const isLiveDatabase = (database?: PCAPDatabase) =>
+  Boolean(database && (database.SourceKind === 'live' || database.Format === 'live'))
 const databaseName = (database?: PCAPDatabase) =>
-  fileName(database?.SourcePath || '') ||
-  (database?.DatasetID ? `实时抓包 ${database.DatasetID.slice(0, 8)}` : '捕获数据集')
+  isLiveDatabase(database)
+    ? database?.CaptureInterface
+      ? [database.CaptureInterface, database.CaptureBPF.trim()].filter(Boolean).join(' · ')
+      : database?.DatasetID
+        ? `实时抓包 ${database.DatasetID.slice(0, 8)}`
+        : '实时抓包'
+    : fileName(database?.SourcePath || '') || '捕获数据集'
+const formatPacketCount = (value: string) => {
+  const count = Number(value)
+  if (!Number.isFinite(count)) return '0'
+  if (count < 10000) return count.toLocaleString()
+  const unit = count >= 1000000000000 ? 1000000000000 : count >= 100000000 ? 100000000 : 10000
+  const suffix = unit === 1000000000000 ? '万亿' : unit === 100000000 ? '亿' : '万'
+  return `${(count / unit).toFixed(1).replace(/\.0$/, '')}${suffix}`
+}
+const formatCreatedAt = (value: string) => {
+  const seconds = Number(value)
+  if (!Number.isFinite(seconds) || seconds <= 0) return ''
+  const date = new Date(seconds * 1000)
+  const now = new Date()
+  const pad = (part: number) => String(part).padStart(2, '0')
+  const time = `${pad(date.getHours())}:${pad(date.getMinutes())}`
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const dateStart = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+  const dayDiff = Math.round((today.getTime() - dateStart.getTime()) / 86400000)
+  if (dayDiff === 0) return `今天 ${time}`
+  if (dayDiff === 1) return `昨天 ${time}`
+  if (date.getFullYear() === now.getFullYear()) return `${date.getMonth() + 1}月${date.getDate()}日 ${time}`
+  return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日 ${time}`
+}
+const formatCreatedAtFull = (value: string) => {
+  const seconds = Number(value)
+  if (!Number.isFinite(seconds) || seconds <= 0) return '—'
+  const date = new Date(seconds * 1000)
+  const pad = (part: number) => String(part).padStart(2, '0')
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(
+    date.getMinutes(),
+  )}:${pad(date.getSeconds())}`
+}
+const DatabaseDetailsContent = ({
+  database,
+  capture,
+}: {
+  database: PCAPDatabase
+  capture?: { speed: string; stopping: boolean; onStop: () => void }
+}) => {
+  const live = isLiveDatabase(database)
+  return (
+    <section className={styles['database-details']} aria-label={`${databaseName(database)} 详细信息`}>
+      <header className={styles['database-details-header']}>
+        <div>
+          <strong>{databaseName(database)}</strong>
+          <span>{live ? '实时抓包' : 'PCAP 文件'}</span>
+        </div>
+        <span className={styles['database-details-state']} data-ready={database.State === 'ready'}>
+          {stateNames[database.State] || database.State}
+        </span>
+      </header>
+      <dl className={styles['database-details-list']}>
+        <dt>创建时间</dt>
+        <dd>{formatCreatedAtFull(database.CreatedAt)}</dd>
+        <dt>数据包</dt>
+        <dd>{Number(database.PacketCount || 0).toLocaleString()} 个</dd>
+        <dt>数据大小</dt>
+        <dd>{formatBytes(database.SourceSize)}</dd>
+        <dt>存储格式</dt>
+        <dd>{database.Format ? database.Format.toUpperCase() : '—'}</dd>
+        {live ? (
+          <>
+            <dt>网卡</dt>
+            <dd>{database.CaptureInterface || '—'}</dd>
+            <dt>BPF</dt>
+            <dd className={styles.mono}>{database.CaptureBPF || '未设置'}</dd>
+          </>
+        ) : (
+          <>
+            <dt>文件路径</dt>
+            <dd className={styles['database-details-path']}>{database.SourcePath || '—'}</dd>
+          </>
+        )}
+        <dt>协议消息</dt>
+        <dd>{Number(database.ProtocolCount || 0).toLocaleString()}</dd>
+        <dt>会话</dt>
+        <dd>{Number(database.SessionCount || 0).toLocaleString()}</dd>
+        <dt>重组流</dt>
+        <dd>{Number(database.StreamCount || 0).toLocaleString()}</dd>
+        <dt>重组块</dt>
+        <dd>{Number(database.StreamChunkCount || 0).toLocaleString()}</dd>
+        <dt>索引</dt>
+        <dd>
+          协议{database.ProtocolsIndexed ? '已完成' : '未完成'} · 流{database.StreamsIndexed ? '已完成' : '未完成'}
+        </dd>
+        <dt>DatasetID</dt>
+        <dd className={styles.mono}>{database.DatasetID}</dd>
+      </dl>
+      {database.LastError ? <div className={styles['database-details-error']}>{database.LastError}</div> : null}
+      {database.PreviewTruncated ? (
+        <div className={styles['database-details-note']}>部分元信息过长，已截断。</div>
+      ) : null}
+      {capture ? (
+        <div className={styles['database-details-capture']}>
+          <span>
+            <i />
+            正在抓包
+          </span>
+          <strong>{Number(capture.speed || 0).toLocaleString()} KB/s</strong>
+          <YakitButton danger size="small" loading={capture.stopping} onClick={capture.onStop}>
+            停止抓包
+          </YakitButton>
+        </div>
+      ) : null}
+    </section>
+  )
+}
 const sameFilters = (left: PacketFilters, right: PacketFilters) =>
   Object.keys(emptyFilters).every((key) => left[key as keyof PacketFilters] === right[key as keyof PacketFilters])
 
@@ -60,7 +248,7 @@ export default function PCAPPacketViewer() {
   const [draft, setDraft] = useState<PacketFilters>(emptyFilters)
   const [filters, setFilters] = useState<PacketFilters>(emptyFilters)
   const [cursor, setCursor] = useState('0')
-  const [page, setPage] = useState<PacketPage>(initialPage)
+  const [page, setPage] = useState<PacketListPage>(initialPage)
   const [totalKnown, setTotalKnown] = useState<string>()
   const [loading, setLoading] = useState(false)
   const [loadingMore, setLoadingMore] = useState(false)
@@ -85,6 +273,7 @@ export default function PCAPPacketViewer() {
   const [captureProgress, setCaptureProgress] = useState<LiveCaptureProgress>()
   const [captureError, setCaptureError] = useState('')
   const [captureStopping, setCaptureStopping] = useState(false)
+  const [liveRefreshNonce, setLiveRefreshNonce] = useState(0)
   const [exportOpen, setExportOpen] = useState(false)
   const [exportPacket, setExportPacket] = useState(false)
   const [exportPath, setExportPath] = useState('')
@@ -93,51 +282,96 @@ export default function PCAPPacketViewer() {
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const libraryRequest = useRef(0)
+  const libraryLoadingRef = useRef(false)
+  const libraryPolling = useRef(false)
   const detailRequest = useRef(0)
   const loadMorePending = useRef(false)
+  const liveRequestInFlight = useRef(false)
   const captureStopRequested = useRef(false)
   const loadedPacketIDs = useRef(new Set<string>())
+  const captureDatabase = captureProgress?.Database
   const dataset = databases.find((item) => item.DatasetID === datasetID)
-  const datasetQueryable = dataset?.State === 'ready' || Boolean(capture && captureProgress?.DatasetID === datasetID)
+  const datasetQueryable = dataset?.State === 'ready' || Boolean(capture && captureDatabase?.DatasetID === datasetID)
 
-  const loadLibrary = useCallback(async (preferred?: string) => {
-    const request = ++libraryRequest.current
-    setLibraryLoading(true)
-    try {
-      const all: PCAPDatabase[] = []
-      let after = '0'
-      do {
-        const response = await yakitTraffic.queryDatabases({ Pagination: { Limit: 100, AfterId: after } })
-        if (request !== libraryRequest.current) return
-        all.push(...response.Data)
-        if (!response.HasMore) break
-        if (response.NextCursor === after) throw new Error('数据集分页游标未前进，请更新引擎')
-        after = response.NextCursor
-      } while (request === libraryRequest.current)
-      setDatabases((current) => {
-        if (preferred && !all.some((item) => item.DatasetID === preferred)) {
-          const pending = current.find((item) => item.DatasetID === preferred)
-          if (pending) return [pending, ...all]
-        }
-        return all
+  const fetchLibrary = useCallback(async () => {
+    const all: PCAPDatabase[] = []
+    let after = '0'
+    while (true) {
+      const response = await yakitTraffic.queryDatabases({
+        Pagination: { Limit: pcapPageSize, AfterId: after },
       })
-      setCursor('0')
-      setPage(initialPage)
-      setDatasetID(
-        (current) =>
-          preferred ||
-          (all.some((d) => d.DatasetID === current)
-            ? current
-            : all.find((d) => d.State === 'ready')?.DatasetID || all[0]?.DatasetID || ''),
-      )
-      setError('')
-    } catch (e) {
-      if (request === libraryRequest.current)
-        setError(`无法加载 PCAP 数据集：${errorText(e)}。请确认已连接支持 PCAP 数据库的引擎。`)
-    } finally {
-      if (request === libraryRequest.current) setLibraryLoading(false)
+      all.push(...response.Data.map(normalizeDatabase))
+      const nextCursor = response.Pagination?.AfterId || '0'
+      const limit = Number(response.Pagination?.Limit || pcapPageSize)
+      if (response.Data.length < limit) break
+      if (nextCursor === after) throw new Error('数据集分页游标未前进，请更新引擎')
+      after = nextCursor
     }
+    return all
   }, [])
+
+  const loadLibrary = useCallback(
+    async (preferred?: string) => {
+      const request = ++libraryRequest.current
+      libraryLoadingRef.current = true
+      setLibraryLoading(true)
+      try {
+        const all = await fetchLibrary()
+        if (request !== libraryRequest.current) return
+        setDatabases((current) => {
+          if (preferred && !all.some((item) => item.DatasetID === preferred)) {
+            const pending = current.find((item) => item.DatasetID === preferred)
+            if (pending) return [pending, ...all]
+          }
+          return all
+        })
+        if (!preferred) {
+          setCursor('0')
+          setPage(initialPage)
+        }
+        setDatasetID(
+          (current) =>
+            preferred ||
+            (all.some((d) => d.DatasetID === current)
+              ? current
+              : all.find((d) => d.State === 'ready')?.DatasetID || all[0]?.DatasetID || ''),
+        )
+        setError('')
+      } catch (e) {
+        if (request === libraryRequest.current)
+          setError(`无法加载 PCAP 数据集：${errorText(e)}。请确认已连接支持 PCAP 数据库的引擎。`)
+      } finally {
+        if (request === libraryRequest.current) {
+          libraryLoadingRef.current = false
+          setLibraryLoading(false)
+        }
+      }
+    },
+    [fetchLibrary],
+  )
+
+  const refreshLibrary = useCallback(async () => {
+    if (libraryLoadingRef.current || libraryPolling.current) return
+    const request = ++libraryRequest.current
+    libraryPolling.current = true
+    try {
+      const all = await fetchLibrary()
+      if (request === libraryRequest.current) {
+        setDatabases((current) => (sameDatabases(current, all) ? current : all))
+      }
+    } catch {
+      // Keep the last successful catalog; the manual refresh reports failures.
+    } finally {
+      libraryPolling.current = false
+    }
+  }, [fetchLibrary])
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      if (document.visibilityState !== 'hidden') void refreshLibrary()
+    }, libraryRefreshInterval)
+    return () => clearInterval(timer)
+  }, [refreshLibrary])
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- Starts the external catalog request on mount.
@@ -185,47 +419,17 @@ export default function PCAPPacketViewer() {
         if (!current) return
         setCaptureProgress(event)
         if (event.Error) setCaptureError(event.Error)
-        if (event.DatasetID) {
-          setDatabases((items) => {
-            const index = items.findIndex((item) => item.DatasetID === event.DatasetID)
-            if (index < 0) {
-              return [
-                {
-                  Id: event.DatasetID,
-                  DatasetID: event.DatasetID,
-                  SourcePath: '',
-                  SourceSize: event.BytesIndexed || '0',
-                  Format: 'live',
-                  State: event.State || 'ready',
-                  PacketCount: event.PacketFrameCounter || '0',
-                  LastError: event.Error || '',
-                  ProtocolsIndexed: true,
-                },
-                ...items,
-              ]
-            }
-            return items.map((item, itemIndex) =>
-              itemIndex === index
-                ? {
-                    ...item,
-                    SourceSize: event.BytesIndexed || item.SourceSize,
-                    State: event.State || item.State,
-                    PacketCount: event.PacketFrameCounter || item.PacketCount,
-                    LastError: event.Error || item.LastError,
-                  }
-                : item,
-            )
-          })
-        }
-        if (event.DatasetID && !datasetOpened) {
+        const database = event.Database ? normalizeDatabase(event.Database) : undefined
+        // PcapX is live progress only. The catalog is authoritative and must come from QueryPCAPDatabase.
+        if (database?.DatasetID && !datasetOpened) {
           datasetOpened = true
-          setDatasetID(event.DatasetID)
+          setDatasetID(database.DatasetID)
           setDraft(emptyFilters)
           setFilters(emptyFilters)
           setCursor('0')
           setPage(initialPage)
           setTotalKnown(undefined)
-          loadLibrary(event.DatasetID)
+          loadLibrary(database.DatasetID)
           setRevision((value) => value + 1)
         }
         if (event.Finished) {
@@ -233,8 +437,8 @@ export default function PCAPPacketViewer() {
           captureStopRequested.current = false
           setCapture(undefined)
           setCaptureStopping(false)
-          if (event.DatasetID) {
-            loadLibrary(event.DatasetID)
+          if (database?.DatasetID) {
+            loadLibrary(database.DatasetID)
             setRevision((value) => value + 1)
           }
         }
@@ -298,7 +502,7 @@ export default function PCAPPacketViewer() {
     setLoadingMore(append)
     let query: PacketQuery
     try {
-      query = packetQuery(datasetID, filters, cursor, 100)
+      query = packetQuery(datasetID, filters, cursor, pcapPageSize)
     } catch (e) {
       setError(`数据包查询失败：${errorText(e)}`)
       setPage(initialPage)
@@ -319,14 +523,15 @@ export default function PCAPPacketViewer() {
               return true
             })
             setPage((currentPage) => {
+              const nextPage = packetPageView(response, currentPage.Data.length)
               return {
-                ...response,
+                ...nextPage,
                 Data: [...currentPage.Data, ...additions],
               }
             })
           } else {
             loadedPacketIDs.current = new Set(response.Data.map((packet) => packet.Id))
-            setPage(response)
+            setPage(packetPageView(response))
           }
           if (response.Total !== undefined && response.Total !== '') setTotalKnown(response.Total)
           setError('')
@@ -354,6 +559,70 @@ export default function PCAPPacketViewer() {
       current = false
     }
   }, [datasetID, datasetQueryable, filters, cursor, revision])
+
+  const lastPacketID = page.Data[page.Data.length - 1]?.Id || '0'
+  useEffect(() => {
+    if (!capture || captureDatabase?.DatasetID !== datasetID || selectedID || loading || loadingMore) {
+      return
+    }
+    let current = true
+    let query: PacketQuery
+    try {
+      query = packetQuery(datasetID, filters, lastPacketID, pcapPageSize)
+    } catch {
+      return
+    }
+    const timer = setTimeout(() => {
+      if (!current) return
+      if (liveRequestInFlight.current) {
+        setLiveRefreshNonce((value) => value + 1)
+        return
+      }
+      liveRequestInFlight.current = true
+      yakitTraffic
+        .queryPackets(query)
+        .then((response) => {
+          if (!current) return
+          const loaded = loadedPacketIDs.current
+          const additions = response.Data.filter((packet) => {
+            if (loaded.has(packet.Id)) return false
+            loaded.add(packet.Id)
+            return true
+          })
+          setPage((currentPage) => {
+            const nextPage = packetPageView(response, currentPage.Data.length)
+            return {
+              ...nextPage,
+              Data: [...currentPage.Data, ...additions],
+              Total: response.Total ?? currentPage.Total,
+            }
+          })
+          if (response.Total !== undefined && response.Total !== '') setTotalKnown(response.Total)
+          setListError('')
+        })
+        .catch((e) => {
+          if (current) setListError(`实时刷新失败：${errorText(e)}`)
+        })
+        .finally(() => {
+          liveRequestInFlight.current = false
+          if (current) setLiveRefreshNonce((value) => value + 1)
+        })
+    }, liveRefreshInterval)
+    return () => {
+      current = false
+      clearTimeout(timer)
+    }
+  }, [
+    capture,
+    captureDatabase?.DatasetID,
+    datasetID,
+    filters,
+    lastPacketID,
+    liveRefreshNonce,
+    loading,
+    loadingMore,
+    selectedID,
+  ])
 
   const applyQueryFilters = useCallback((next: PacketFilters) => {
     setFilters(next)
@@ -422,6 +691,7 @@ export default function PCAPPacketViewer() {
     setTotalKnown(undefined)
     setDraft(emptyFilters)
     setFilters(emptyFilters)
+    setRevision((value) => value + 1)
   }
   const selectPacket = useCallback(
     async (id: string) => {
@@ -501,7 +771,7 @@ export default function PCAPPacketViewer() {
     setCaptureStopping(true)
     try {
       await yakitStream.cancel('PcapX', capture.token)
-      const stoppedDatasetID = captureProgress?.DatasetID
+      const stoppedDatasetID = captureDatabase?.DatasetID
       setCapture(undefined)
       setCaptureStopping(false)
       setRevision((value) => value + 1)
@@ -593,7 +863,8 @@ export default function PCAPPacketViewer() {
         <aside className={styles.sidebar} aria-label="PCAP 数据集">
           <div className={styles['sidebar-heading']}>
             <span>
-              捕获文件 <small>{databases.length}</small>
+              <LibraryOutlined size={15} />
+              流量分析 <small>{databases.length}</small>
             </span>
             <div className={styles['sidebar-actions']}>
               <Tooltip title="刷新数据集与当前列表">
@@ -601,7 +872,7 @@ export default function PCAPPacketViewer() {
                   type="text2"
                   size="small"
                   aria-label="刷新"
-                  icon={<ReloadOutlined />}
+                  icon={<RefreshOutlined size={16} />}
                   loading={libraryLoading}
                   onClick={() => {
                     loadLibrary()
@@ -609,14 +880,19 @@ export default function PCAPPacketViewer() {
                   }}
                 />
               </Tooltip>
-              <Tooltip title="启动实时抓包">
+              <Tooltip title={capture ? '停止实时抓包' : '启动实时抓包'}>
                 <YakitButton
                   type="text2"
                   size="small"
-                  aria-label="实时抓包"
-                  icon={<WifiOutlined />}
-                  disabled={!!capture}
+                  danger={!!capture}
+                  loading={captureStopping}
+                  aria-label={capture ? '停止实时抓包' : '实时抓包'}
+                  icon={<RssOutlined size={16} />}
                   onClick={() => {
+                    if (capture) {
+                      void stopLiveCapture()
+                      return
+                    }
                     setCaptureError('')
                     setCaptureOpen(true)
                   }}
@@ -627,7 +903,7 @@ export default function PCAPPacketViewer() {
                   type="text2"
                   size="small"
                   aria-label="导入 PCAP"
-                  icon={<ImportOutlined />}
+                  icon={<FileUpOutlined size={16} />}
                   onClick={() => {
                     setImportOpen(true)
                     setImportError('')
@@ -636,136 +912,135 @@ export default function PCAPPacketViewer() {
               </Tooltip>
             </div>
           </div>
-          {capture && (
-            <div className={styles['capture-status']} role="status" aria-live="polite">
-              <div className={styles['capture-heading']}>
-                <span>
-                  <i /> 实时抓包
-                </span>
-                <small>
-                  {captureProgress?.State === 'ready' ? '运行中' : stateNames[captureProgress?.State || ''] || '启动中'}
-                </small>
-              </div>
-              {captureProgress ? (
-                <>
-                  <span>
-                    {Number(captureProgress.PacketFrameCounter || 0).toLocaleString()} 帧 ·{' '}
-                    {Number(captureProgress.ProtocolCount || 0).toLocaleString()} 条协议消息
-                  </span>
-                  <small>
-                    {formatBytes(captureProgress.BytesIndexed)} ·{' '}
-                    {Number(captureProgress.NetInterfaceTransferKBPerSeconds || 0).toLocaleString()} KB/s
-                  </small>
-                </>
-              ) : (
-                <small>正在打开网卡并创建实时数据集…</small>
-              )}
-              <div className={styles['capture-actions']}>
-                <YakitButton
-                  type="outline2"
-                  size="small"
-                  onClick={() => {
-                    if (captureProgress?.DatasetID) loadLibrary(captureProgress.DatasetID)
-                    setRevision((value) => value + 1)
-                  }}
-                >
-                  刷新列表
-                </YakitButton>
-                <YakitButton danger size="small" loading={captureStopping} onClick={stopLiveCapture}>
-                  停止抓包
-                </YakitButton>
-              </div>
-            </div>
-          )}
           <div className={styles['dataset-list']}>
             {libraryLoading && !databases.length ? (
               <Spin />
             ) : !databases.length ? (
               <div className={styles['sidebar-empty']}>
-                <FileOutlined />
+                <InboxOutlined size={30} />
                 <span>还没有捕获文件</span>
                 <small>支持 .pcap / .pcapng / .cap</small>
               </div>
             ) : (
               databases.map((db) => (
-                <div
+                <YakitPopover
                   key={db.DatasetID}
-                  className={`${styles['dataset-item']} ${datasetID === db.DatasetID ? styles['active-dataset'] : ''}`}
-                  title={db.SourcePath}
+                  trigger="hover"
+                  placement="rightTop"
+                  mouseEnterDelay={0.35}
+                  classNames={{ root: styles['database-details-overlay'] }}
+                  content={
+                    <DatabaseDetailsContent
+                      database={db}
+                      capture={
+                        capture && captureDatabase?.DatasetID === db.DatasetID
+                          ? {
+                              speed: captureProgress?.NetInterfaceTransferKBPerSeconds || '0',
+                              stopping: captureStopping,
+                              onStop: () => void stopLiveCapture(),
+                            }
+                          : undefined
+                      }
+                    />
+                  }
                 >
-                  <button
-                    type="button"
-                    className={styles['dataset-select']}
-                    onClick={() => selectDataset(db.DatasetID)}
-                    aria-pressed={datasetID === db.DatasetID}
+                  <div
+                    className={`${styles['dataset-item']} ${datasetID === db.DatasetID ? styles['active-dataset'] : ''}`}
+                    data-capturing={capture && captureDatabase?.DatasetID === db.DatasetID ? 'true' : undefined}
                   >
-                    <FileOutlined />
-                    <div>
-                      <strong>{databaseName(db)}</strong>
-                      <span>
-                        {Number(db.PacketCount).toLocaleString()} 个包 <i>·</i> {formatBytes(db.SourceSize)}
-                      </span>
-                      <small className={db.State === 'ready' ? styles['ready-state'] : styles.warning}>
-                        {stateNames[db.State] || db.State} <i>·</i> {db.Format.toUpperCase()}
-                      </small>
+                    <button
+                      type="button"
+                      className={styles['dataset-select']}
+                      onClick={() => selectDataset(db.DatasetID)}
+                      aria-pressed={datasetID === db.DatasetID}
+                    >
+                      {isLiveDatabase(db) ? <RssOutlined size={19} /> : <FileArchiveOutlined size={19} />}
+                      <div>
+                        <strong>{databaseName(db)}</strong>
+                        <div
+                          className={styles['dataset-summary']}
+                          title={`${
+                            formatCreatedAt(db.CreatedAt) ? `${formatCreatedAtFull(db.CreatedAt)} · ` : ''
+                          }${Number(db.PacketCount).toLocaleString()} 个包`}
+                        >
+                          {formatCreatedAt(db.CreatedAt) ? (
+                            <>
+                              <time
+                                className={styles['dataset-created']}
+                                dateTime={new Date(Number(db.CreatedAt) * 1000).toISOString()}
+                              >
+                                {formatCreatedAt(db.CreatedAt)}
+                              </time>
+                              <i>·</i>
+                            </>
+                          ) : null}
+                          <span className={styles['dataset-packet-count']}>{formatPacketCount(db.PacketCount)}包</span>
+                        </div>
+                        {capture && captureDatabase?.DatasetID === db.DatasetID ? (
+                          <div className={styles['dataset-capture-live']}>
+                            <span>
+                              <i />
+                              抓包中
+                            </span>
+                            <strong>
+                              {Number(captureProgress?.NetInterfaceTransferKBPerSeconds || 0).toLocaleString()} KB/s
+                            </strong>
+                          </div>
+                        ) : null}
+                        {db.State !== 'ready' ? (
+                          <small className={styles.warning}>{stateNames[db.State] || db.State}</small>
+                        ) : null}
+                      </div>
+                    </button>
+                    <div className={styles['dataset-actions']}>
+                      <Tooltip title="导出此文件">
+                        <YakitButton
+                          type="text2"
+                          size="small"
+                          aria-label={`导出 ${databaseName(db)}`}
+                          icon={<DocumentDownloadOutlined size={15} />}
+                          disabled={db.State !== 'ready'}
+                          onClick={() => {
+                            if (db.DatasetID !== datasetID) selectDataset(db.DatasetID)
+                            setExportPacket(false)
+                            setExportPath('')
+                            setExportError('')
+                            setExportOpen(true)
+                          }}
+                        />
+                      </Tooltip>
+                      <Tooltip title="删除此数据集">
+                        <YakitButton
+                          type="text2"
+                          size="small"
+                          danger
+                          aria-label={`删除 ${databaseName(db)}`}
+                          icon={<Trash2Outlined size={15} />}
+                          onClick={() => {
+                            if (db.DatasetID !== datasetID) selectDataset(db.DatasetID)
+                            setDeleteOpen(true)
+                          }}
+                        />
+                      </Tooltip>
                     </div>
-                  </button>
-                  <div className={styles['dataset-actions']}>
-                    <Tooltip title="导出此文件">
-                      <YakitButton
-                        type="text2"
-                        size="small"
-                        aria-label={`导出 ${databaseName(db)}`}
-                        icon={<ExportOutlined />}
-                        disabled={db.State !== 'ready'}
-                        onClick={() => {
-                          if (db.DatasetID !== datasetID) selectDataset(db.DatasetID)
-                          setExportPacket(false)
-                          setExportPath('')
-                          setExportError('')
-                          setExportOpen(true)
-                        }}
-                      />
-                    </Tooltip>
-                    <Tooltip title="删除此数据集">
-                      <YakitButton
-                        type="text2"
-                        size="small"
-                        danger
-                        aria-label={`删除 ${databaseName(db)}`}
-                        icon={<DeleteOutlined />}
-                        onClick={() => {
-                          if (db.DatasetID !== datasetID) selectDataset(db.DatasetID)
-                          setDeleteOpen(true)
-                        }}
-                      />
-                    </Tooltip>
                   </div>
-                </div>
+                </YakitPopover>
               ))
             )}
-          </div>
-          <div className={styles['sidebar-note']}>
-            <span className={styles['status-dot']} /> PCAPDB 驱动
-            <small>
-              数据保存在当前引擎
-              <br />
-              原始包与协议消息关联展示
-            </small>
           </div>
         </aside>
         <main className={styles.main}>
           {!dataset ? (
             <div className={styles.welcome}>
               <div className={styles['welcome-icon']}>
-                <DatabaseOutlined />
+                <DatabaseOutlined size={36} />
               </div>
               <h3>每个数据包，都有迹可循</h3>
               <p>导入一个捕获文件，查看协议层次、原始字节与重组消息。</p>
-              <YakitButton icon={<ImportOutlined />} onClick={() => setImportOpen(true)}>
+              <YakitButton icon={<FileUpOutlined size={16} />} onClick={() => setImportOpen(true)}>
                 导入第一个 PCAP 文件
               </YakitButton>
-              <YakitButton icon={<WifiOutlined />} type="outline2" onClick={() => setCaptureOpen(true)}>
+              <YakitButton icon={<RssOutlined size={16} />} type="outline2" onClick={() => setCaptureOpen(true)}>
                 开始实时抓包
               </YakitButton>
               <small>也可以将本地文件拖入此处 · 远程引擎请填写引擎端路径</small>
@@ -790,16 +1065,17 @@ export default function PCAPPacketViewer() {
                       applyFilters()
                     }}
                   >
-                    <YakitSelect
+                    <YakitAutoComplete
                       aria-label="协议过滤"
                       value={draft.Protocol}
-                      wrapperStyle={{ width: 120, flexShrink: 0 }}
+                      allowClear
+                      placeholder="全部协议（可输入）"
+                      wrapperStyle={{ width: 150, flexShrink: 0 }}
                       style={{ width: '100%' }}
-                      options={['', 'TCP', 'UDP', 'HTTP', 'DNS', 'TLS', 'ARP', 'ICMPv4', 'ICMPv6'].map((value) => ({
-                        value,
-                        label: value || '全部协议',
-                      }))}
-                      onChange={updateProtocol}
+                      options={protocolOptions}
+                      notFoundContent="回车使用自定义协议"
+                      onChange={(value) => setDraft((current) => ({ ...current, Protocol: value }))}
+                      onSelect={(value) => updateProtocol(value)}
                     />
                     {(
                       [
@@ -821,7 +1097,7 @@ export default function PCAPPacketViewer() {
                     ))}
                     <YakitInput
                       aria-label="摘要关键词"
-                      prefix={<SearchOutlined />}
+                      prefix={<SearchOutlined size={16} />}
                       placeholder="地址 / 协议摘要"
                       allowClear
                       value={draft.Keyword}
@@ -857,6 +1133,7 @@ export default function PCAPPacketViewer() {
                           loading={loading}
                           loadingMore={loadingMore}
                           hasMore={page.HasMore && !listError}
+                          followLive={Boolean(capture && captureDatabase?.DatasetID === datasetID)}
                           error={listError}
                           onSelect={selectPacket}
                           onLoadMore={loadMore}
