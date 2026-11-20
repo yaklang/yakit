@@ -54,7 +54,8 @@ import { getRowScrollTop, parseCellStyleVars, parseColorTag, resetEmptyVirtualTa
 import useShortcutKeyTrigger from '@/utils/globalShortcutKey/events/useShortcutKeyTrigger'
 import ShortcutKeyFocusHook from '@/utils/globalShortcutKey/shortcutKeyFocusHook/ShortcutKeyFocusHook'
 import { v4 as uuidv4 } from 'uuid'
-import { ShortcutKeyFocusType } from '@/utils/globalShortcutKey/events/global'
+import { ShortcutKeyFocusType, GlobalShortcutKey } from '@/utils/globalShortcutKey/events/global'
+import { convertKeyEventToKeyCombination, parseShortcutKeyEvent } from '@/utils/globalShortcutKey/utils'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { shouldRenderVirtualTableCellForHover } from './TableVirtualResize.memo'
 import { FilterOutlined, QuestionMarkCircleOutlined } from '@yakit-libs/yakit-ui-icons/outline'
@@ -465,15 +466,21 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
 
   const downKey = useDebounceFn((index: number) => scrollRowIntoView(index), { wait: 200, leading: true }).run
 
-  // 方向键的选中已由表格自身处理，必须阻止浏览器默认的按键滚动：
-  // 否则原生滚动会和表格的逐行滚动叠加，把选中行带到表头后面
+  // 方向键的选中已由表格自身处理，需要阻止浏览器默认的按键滚动，
+  // 否则原生滚动会和表格的逐行滚动叠加，把选中行带到表头后面。
+  // 仅当按键确实绑定到表格上下键、且选中逻辑会生效时才拦截：
+  // 快捷键可在设置页改绑，改绑后或带修饰键时应保留浏览器默认滚动
   const onTableKeyDown = useMemoizedFn((e: React.KeyboardEvent<HTMLDivElement>) => {
     if (!useUpAndDown) return
+    if (!mouseEnter && inMouseEnterTable) return
     if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return
     const target = e.target as HTMLElement | null
     if (!target) return
     const tag = target.tagName
     if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target.isContentEditable) return
+    const keys = convertKeyEventToKeyCombination(e.nativeEvent)
+    const eventName = keys ? parseShortcutKeyEvent(keys) : null
+    if (eventName !== GlobalShortcutKey.TableVirtualUP && eventName !== GlobalShortcutKey.TableVirtualDown) return
     e.preventDefault()
   })
   useEffect(() => {
@@ -1512,7 +1519,6 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         className={classNames(styles['virtual-table'])}
         ref={tableRef}
         tabIndex={-1}
-        onKeyDown={onTableKeyDown}
         onMouseMove={(e) => onMouseMoveLine(e)}
         onMouseEnter={() => {
           setMouseEnter(true)
@@ -1604,6 +1610,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
               <div
                 ref={containerRef}
                 tabIndex={-1}
+                onKeyDown={onTableKeyDown}
                 className={classNames(
                   styles['virtual-table-list-container'],
                   {
