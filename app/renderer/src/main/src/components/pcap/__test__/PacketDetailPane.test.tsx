@@ -1,7 +1,12 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { PCAPPacketDetail } from '../pcapTypes'
 
+const { copySelection, saveSelection } = vi.hoisted(() => ({
+  copySelection: vi.fn(),
+  saveSelection: vi.fn(),
+}))
+vi.mock('../pcapByteActions', () => ({ copySelection, saveSelection }))
 vi.mock('@/services/electronBridge', async (importOriginal) => ({
   ...(await importOriginal<Record<string, unknown>>()),
   yakitClipboard: { setText: vi.fn() },
@@ -9,6 +14,13 @@ vi.mock('@/services/electronBridge', async (importOriginal) => ({
 }))
 
 import { PacketDetailPane } from '../PacketDetailPane'
+
+const expandTreeNode = (name: string) => {
+  const node = screen.getAllByRole('treeitem').find((item) => within(item).queryByText(name, { exact: true }))
+  const switcher = node?.querySelector('.ant-tree-switcher')
+  if (!switcher) throw new Error(`Tree node ${name} is not expandable`)
+  fireEvent.click(switcher)
+}
 
 const response = new TextEncoder().encode('HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n')
 const detail: PCAPPacketDetail = {
@@ -33,7 +45,14 @@ const detail: PCAPPacketDetail = {
     Info: 'HTTP/1.1 200 OK',
     DecodeError: '',
   },
-  Nodes: [{ Name: 'Frame 6', DisplayValue: '60 bytes', Children: [], Ranges: [] }],
+  Nodes: [
+    {
+      Name: 'Frame 6',
+      DisplayValue: '60 bytes',
+      Children: [{ Name: 'Frame length', DisplayValue: '60 bytes', Children: [], Ranges: [] }],
+      Ranges: [],
+    },
+  ],
   Messages: [
     {
       MessageId: '51',
@@ -90,6 +109,9 @@ const detail: PCAPPacketDetail = {
 }
 
 beforeEach(() => {
+  vi.clearAllMocks()
+  copySelection.mockResolvedValue(3)
+  saveSelection.mockResolvedValue('/tmp/status-code.bin')
   vi.stubGlobal(
     'ResizeObserver',
     class {
@@ -105,16 +127,81 @@ afterEach(() => {
 })
 
 describe('typed PCAP detail pane', () => {
-  it('switches to a reassembled message and selects its field range', () => {
+  it('switches between the physical frame and the message completed here', async () => {
     render(<PacketDetailPane datasetID="dataset" detail={detail} onJump={vi.fn()} onClose={vi.fn()} />)
-    fireEvent.click(screen.getByRole('tab', { name: 'HTTP重组' }))
-    fireEvent.click(screen.getByText('Status Code: 200'))
-    expect(screen.getByText(/已选中 9–11/)).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: '物理帧' })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByRole('tab', { name: '重组流' })).toBeInTheDocument()
+    expect(screen.queryByText('Frame length')).not.toBeInTheDocument()
+    expandTreeNode('Frame 6')
+    expect(screen.getByText('Frame length')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('tab', { name: '重组流' }))
+    expect(screen.getByRole('tab', { name: '重组流' })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.queryByText('Status Code')).not.toBeInTheDocument()
+    expandTreeNode('HTTP')
+    fireEvent.click(screen.getByText('Status Code'))
+    expect(screen.getByText(/已选中 Status Code · 9–11/)).toBeInTheDocument()
+    fireEvent.contextMenu(screen.getByText('Status Code'))
+    expect(await screen.findByText('保存原始字节 (.bin)')).toBeInTheDocument()
+    expect(screen.getByText('复制 Base64')).toBeInTheDocument()
+    await act(async () => {
+      fireEvent.click(screen.getByText('复制 HEX'))
+      await Promise.resolve()
+    })
+    await vi.waitFor(() =>
+      expect(copySelection).toHaveBeenCalledWith(
+        'dataset',
+        expect.objectContaining({
+          sourceID: 'message:51',
+          ranges: [[9, 12]],
+          label: 'Status Code',
+        }),
+        'hex',
+      ),
+    )
     expect(screen.getByRole('button', { name: '#5' })).toBeInTheDocument()
     expect(screen.queryByText('事务级')).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('tab', { name: '物理帧' }))
+    expect(screen.getByRole('tab', { name: '物理帧' })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.queryByText('Frame length')).not.toBeInTheDocument()
+    expandTreeNode('Frame 6')
+    expect(screen.getByText('Frame length')).toBeInTheDocument()
   })
 
-  it('shows a single-frame protocol directly without a reassembly switch', () => {
+  it('keeps the physical frame when its byte source is omitted', () => {
+    const withoutFrameSource: PCAPPacketDetail = {
+      ...detail,
+      ByteSources: detail.ByteSources.filter((source) => source.Kind !== 'frame'),
+    }
+    render(<PacketDetailPane datasetID="dataset" detail={withoutFrameSource} onJump={vi.fn()} onClose={vi.fn()} />)
+    expect(screen.getByRole('tab', { name: '物理帧' })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.queryByText('Frame length')).not.toBeInTheDocument()
+    expandTreeNode('Frame 6')
+    expect(screen.getByText('Frame length')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('tab', { name: '重组流' }))
+    expandTreeNode('HTTP')
+    expect(screen.getByText('Status Code')).toBeInTheDocument()
+  })
+
+  it('collapses a long contributor list into a jumpable popover', async () => {
+    const onJump = vi.fn()
+    const contributorIDs = Array.from({ length: 12 }, (_, index) => String(index + 1))
+    const longMessage: PCAPPacketDetail = {
+      ...detail,
+      ByteSources: detail.ByteSources.map((source) =>
+        source.ID === 'message:51' ? { ...source, ContributorPacketIds: contributorIDs } : source,
+      ),
+    }
+    render(<PacketDetailPane datasetID="dataset" detail={longMessage} onJump={onJump} onClose={vi.fn()} />)
+    fireEvent.click(screen.getByRole('tab', { name: '重组流' }))
+
+    const more = screen.getByRole('button', { name: '查看全部 12 个重组贡献帧' })
+    expect(more).toHaveTextContent('+9')
+    fireEvent.click(more)
+    fireEvent.click(await screen.findByRole('button', { name: '跳转到物理帧 #12' }))
+    expect(onJump).toHaveBeenCalledWith('12')
+  })
+
+  it('keeps the physical frame available for a single-frame protocol message', () => {
     const dnsDetail: PCAPPacketDetail = {
       ...detail,
       Packet: { ...detail.Packet, Transport: 'udp', Protocol: 'DNS' },
@@ -140,7 +227,10 @@ describe('typed PCAP detail pane', () => {
       ],
     }
     render(<PacketDetailPane datasetID="dataset" detail={dnsDetail} onJump={vi.fn()} onClose={vi.fn()} />)
-    expect(screen.queryByRole('tablist')).not.toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: '物理帧' })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByText('Frame 6')).toBeInTheDocument()
+    expect(screen.queryByText(/DNS Query/)).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('tab', { name: '重组流' }))
     expect(screen.getByText(/DNS Query/)).toBeInTheDocument()
     expect(screen.queryByText('DNS重组')).not.toBeInTheDocument()
   })

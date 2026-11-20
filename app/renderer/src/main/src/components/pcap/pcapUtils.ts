@@ -8,8 +8,9 @@ export const fileName = (path: string) => path.split(/[/\\]/).pop() || path
 export const formatBytes = (value: string | number) => {
   const size = Number(value)
   if (!size) return '0 B'
-  const index = Math.min(Math.floor(Math.log(size) / Math.log(1024)), 3)
-  return `${(size / 1024 ** index).toFixed(index ? 1 : 0)} ${['B', 'KB', 'MB', 'GB'][index]}`
+  const units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB']
+  const index = Math.min(Math.floor(Math.log(size) / Math.log(1024)), units.length - 1)
+  return `${(size / 1024 ** index).toFixed(index ? 1 : 0)} ${units[index]}`
 }
 
 export const formatTimestamp = (value?: string) => {
@@ -70,6 +71,27 @@ export type ByteRange = [number, number]
 export interface FieldSelection {
   sourceID: string
   ranges: ByteRange[]
+  label?: string
+}
+
+export type PCAPFieldTone = 'frame' | 'link' | 'network' | 'transport' | 'tls' | 'application' | 'default'
+export interface PCAPFieldTreeNode extends TreeDataNode {
+  fieldName: string
+  fieldValue?: string
+  fieldDepth: number
+  fieldTone: PCAPFieldTone
+  children?: PCAPFieldTreeNode[]
+}
+
+const fieldTone = (name: string): PCAPFieldTone => {
+  const normalized = name.toLowerCase()
+  if (normalized.startsWith('frame')) return 'frame'
+  if (/(ethernet|arp|vlan)/.test(normalized)) return 'link'
+  if (/(ipv4|ipv6|icmp)/.test(normalized)) return 'network'
+  if (/(tcp|udp|sctp)/.test(normalized)) return 'transport'
+  if (/(tls|ssl)/.test(normalized)) return 'tls'
+  if (/(http|dns|dhcp|ftp|smtp|pop3|imap|ssh|ntp)/.test(normalized)) return 'application'
+  return 'default'
 }
 
 const rangeForField = (range: PCAPFieldNode['Ranges'][number]): ByteRange | undefined => {
@@ -82,17 +104,23 @@ const rangeForField = (range: PCAPFieldNode['Ranges'][number]): ByteRange | unde
 
 export const fieldTree = (fields: PCAPFieldNode[]) => {
   const selections: Record<string, FieldSelection> = {}
-  const walk = (items: PCAPFieldNode[], path: string): TreeDataNode[] =>
+  const walk = (
+    items: PCAPFieldNode[],
+    path: string,
+    depth = 0,
+    inheritedTone: PCAPFieldTone = 'default',
+  ): PCAPFieldTreeNode[] =>
     items.map((field, index) => {
       const key = `${path}/${index}`
-      const children = walk(field.Children || [], key)
+      const tone = depth === 0 ? fieldTone(field.Name) : inheritedTone
+      const children = walk(field.Children || [], key, depth + 1, tone)
       const sourceID = field.Ranges?.[0]?.SourceID || ''
       const ownRanges = (field.Ranges || [])
         .filter((range) => range.SourceID === sourceID)
         .map(rangeForField)
         .filter((range): range is ByteRange => Boolean(range))
       if (sourceID && ownRanges.length) {
-        selections[key] = { sourceID, ranges: ownRanges }
+        selections[key] = { sourceID, ranges: ownRanges, label: field.Name }
       } else if (children.length) {
         const childSelections = children.map((child) => selections[String(child.key)]).filter(Boolean)
         const childSource = childSelections[0]?.sourceID
@@ -101,11 +129,21 @@ export const fieldTree = (fields: PCAPFieldNode[]) => {
           selections[key] = {
             sourceID: childSource,
             ranges: [[Math.min(...ranges.map((range) => range[0])), Math.max(...ranges.map((range) => range[1]))]],
+            label: field.Name,
           }
         }
       }
       const title = field.DisplayValue ? `${field.Name}: ${field.DisplayValue}` : field.Name
-      return children.length ? { key, title, children } : { key, title, isLeaf: true }
+      return {
+        key,
+        title,
+        fieldName: field.Name,
+        fieldValue: field.DisplayValue,
+        fieldDepth: depth,
+        fieldTone: tone,
+        ...(depth === 0 ? { className: 'pcap-protocol-root' } : {}),
+        ...(children.length ? { children } : { isLeaf: true }),
+      }
     })
   return { nodes: walk(fields, 'root'), selections }
 }

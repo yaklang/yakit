@@ -59,8 +59,19 @@ describe('PCAP viewer contracts', () => {
         Ranges: [],
       },
     ])
-    expect(tree.selections['root/0/0']).toEqual({ sourceID: 'frame:1', ranges: [[34, 36]] })
-    expect(tree.selections['root/0']).toEqual({ sourceID: 'frame:1', ranges: [[34, 36]] })
+    expect(tree.nodes[0]).toMatchObject({
+      fieldName: 'TCP',
+      fieldDepth: 0,
+      fieldTone: 'transport',
+    })
+    expect(tree.nodes[0].children?.[0]).toMatchObject({
+      fieldName: 'Source port',
+      fieldValue: '80',
+      fieldDepth: 1,
+      fieldTone: 'transport',
+    })
+    expect(tree.selections['root/0/0']).toEqual({ sourceID: 'frame:1', ranges: [[34, 36]], label: 'Source port' })
+    expect(tree.selections['root/0']).toEqual({ sourceID: 'frame:1', ranges: [[34, 36]], label: 'TCP' })
     expect(tree.selections['root/1']).toBeUndefined()
   })
 })

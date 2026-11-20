@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Virtuoso, type VirtuosoHandle } from 'react-virtuoso'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { yakitClipboard, yakitTraffic } from '@/services/electronBridge'
+import { yakitTraffic } from '@/services/electronBridge'
 import type { PCAPByteSource } from './pcapTypes'
 import { decodeBytes, type FieldSelection } from './pcapUtils'
 import styles from './PCAPPacketViewer.module.scss'
@@ -28,8 +28,6 @@ export const PacketByteViewer = ({
   }))
   const [mode, setMode] = useState<'hex' | 'text'>('hex')
   const [loading, setLoading] = useState(false)
-  const [copied, setCopied] = useState(false)
-  const [copyError, setCopyError] = useState('')
   const [readError, setReadError] = useState('')
   const ranges = selection?.sourceID === source.ID ? selection.ranges : emptyRanges
   const text = useMemo(() => (mode === 'text' ? new TextDecoder().decode(loaded.bytes) : ''), [loaded.bytes, mode])
@@ -83,29 +81,6 @@ export const PacketByteViewer = ({
     }
   }, [loaded.offset, loadedEnd, ranges, readWindow])
 
-  useEffect(() => {
-    if (!copied) return
-    const timer = setTimeout(() => setCopied(false), 1500)
-    return () => clearTimeout(timer)
-  }, [copied])
-
-  const copy = async () => {
-    setCopyError('')
-    try {
-      const selected = ranges.length
-        ? ranges.flatMap(([start, end]) => {
-            const from = Math.max(start, loaded.offset)
-            const to = Math.min(end, loadedEnd)
-            return from < to ? Array.from(loaded.bytes.subarray(from - loaded.offset, to - loaded.offset)) : []
-          })
-        : Array.from(loaded.bytes)
-      await yakitClipboard.setText(selected.map((byte) => byte.toString(16).padStart(2, '0')).join(' '))
-      setCopied(true)
-    } catch {
-      setCopyError('复制失败，请重试')
-    }
-  }
-
   const loadMore = () => {
     if (loadedEnd < totalLength) void readWindow(loadedEnd, readWindowSize, true)
   }
@@ -158,9 +133,10 @@ export const PacketByteViewer = ({
       <div className={`${styles['byte-status']} ${styles['byte-footer']}`}>
         <span>
           {readError ||
-            copyError ||
             (ranges.length
-              ? `已选中 ${ranges.map(([start, end]) => `${start}–${end - 1}`).join(', ')}`
+              ? `已选中 ${selection?.label || '字段'} · ${ranges
+                  .map(([start, end]) => `${start}–${end - 1}`)
+                  .join(', ')}`
               : `已加载 ${loaded.offset}–${Math.max(loaded.offset, loadedEnd - 1)} / ${totalLength} bytes`)}
         </span>
         <div className={styles['byte-actions']}>
@@ -175,9 +151,6 @@ export const PacketByteViewer = ({
               加载后续
             </YakitButton>
           )}
-          <YakitButton type="text2" size="small" onClick={copy}>
-            {copied ? '已复制' : ranges.length ? '复制选中 HEX' : '复制已加载 HEX'}
-          </YakitButton>
         </div>
       </div>
     </section>

@@ -5,7 +5,6 @@ import type { PCAPByteSource } from '../pcapTypes'
 const { readBytes } = vi.hoisted(() => ({ readBytes: vi.fn() }))
 vi.mock('@/services/electronBridge', async (importOriginal) => ({
   ...(await importOriginal<Record<string, unknown>>()),
-  yakitClipboard: { setText: vi.fn() },
   yakitTraffic: { readBytes },
 }))
 
@@ -25,11 +24,15 @@ const source: PCAPByteSource = {
 }
 
 beforeEach(() => {
-  readBytes.mockResolvedValue({
-    Data: new Uint8Array(Array.from({ length: 20 }, (_, index) => index)),
-    Offset: '0',
-    TotalLength: '20',
-    EOF: true,
+  readBytes.mockImplementation(async ({ Offset, Length }) => {
+    const offset = Number(Offset)
+    const length = Number(Length)
+    return {
+      Data: new Uint8Array(Array.from({ length }, (_, index) => offset + index)),
+      Offset,
+      TotalLength: '20',
+      EOF: offset + length >= 20,
+    }
   })
 })
 afterEach(() => {
@@ -40,7 +43,11 @@ afterEach(() => {
 describe('bounded PCAP byte viewer', () => {
   it('loads a source window when a selected field is outside the initial prefix', async () => {
     render(
-      <PacketByteViewer datasetID="dataset" source={source} selection={{ sourceID: source.ID, ranges: [[15, 17]] }} />,
+      <PacketByteViewer
+        datasetID="dataset"
+        source={source}
+        selection={{ sourceID: source.ID, ranges: [[15, 17]], label: 'Payload' }}
+      />,
     )
     await waitFor(() =>
       expect(readBytes).toHaveBeenCalledWith({
@@ -50,7 +57,7 @@ describe('bounded PCAP byte viewer', () => {
         Length: '20',
       }),
     )
-    expect(screen.getByText(/已选中 15–16/)).toBeInTheDocument()
+    expect(screen.getByText(/已选中 Payload · 15–16/)).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: '加载后续' })).not.toBeInTheDocument()
   })
 })
