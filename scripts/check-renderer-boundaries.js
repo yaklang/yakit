@@ -89,7 +89,7 @@ const browserBoundaryPatterns = [
 ]
 
 const engineLinkRoot = path.join(rendererRoot, 'engineLinkStartup')
-const engineLinkBridgeAdapter = path.join(engineLinkRoot, 'utils/electronBridge.ts')
+const engineLinkBridgeAdapter = path.join(engineLinkRoot, 'utils/bridgeFacade.ts')
 const engineLinkModuleRules = [
   {
     matches: (moduleName) => moduleName.startsWith('@/pages/') || moduleName.startsWith('@/newApp/'),
@@ -97,7 +97,7 @@ const engineLinkModuleRules = [
   },
   {
     matches: (moduleName) => moduleName === '@/services/electronBridge',
-    reason: 'engineLinkStartup must use its own narrow bridge adapter (utils/electronBridge)',
+    reason: 'engineLinkStartup must use its own narrow bridge adapter (utils/bridgeFacade)',
   },
 ]
 
@@ -125,7 +125,7 @@ for (const absolutePath of sourceFiles(engineLinkRoot).filter((file) => !file.sp
       violations.push({
         file: relativePath(absolutePath),
         line: lineAt(source, match.index),
-        reason: 'engineLinkStartup must import utils/electronBridge instead of reading window.yakitBridge',
+        reason: 'engineLinkStartup must import utils/bridgeFacade instead of reading window.yakitBridge',
       })
     }
   }

@@ -13,7 +13,7 @@ const disposeLinkAppSync = registerLinkAppSyncHandlers()
 if (import.meta.hot) import.meta.hot.dispose(disposeLinkAppSync)
 
 createRoot(document.getElementById('root')!).render(
-  <Suspense fallback={'loading'}>
+  <Suspense fallback={null}>
     <YakitAntdProvider>
       <NotificationProvider>
         <App />
