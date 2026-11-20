@@ -14,6 +14,60 @@ const definitions = protoLoader.loadSync(path.resolve(process.cwd(), 'app/protos
 })
 const { ypb } = grpc.loadPackageDefinition(definitions)
 
+// Wire fixtures generated with protoc from yaklang/yaklang@ccf05f9e1e
+// common/yakgrpc/yakgrpc.proto. A client-only round trip cannot detect tag
+// collisions with the engine's image fields.
+describe('context and image engine wire compatibility', () => {
+  it.each([
+    ['SetAIGlobalConfig', 'request', '32221a056d6f64656c40014a077061746368333250005a0c737461626c652d6f776e6572'],
+    ['GetAIGlobalConfig', 'response', '32221a056d6f64656c40014a077061746368333250005a0c737461626c652d6f776e6572'],
+    ['GetAIModelContext', 'request', '1a221a056d6f64656c40014a077061746368333250005a0c737461626c652d6f776e6572'],
+  ])('keeps provider ownership and image capabilities separate in %s', (rpc, direction, hex) => {
+    const model = {
+      ModelName: 'model',
+      SupportsImageInput: true,
+      ImageTokenEstimator: 'patch32',
+      SupportsImageToolCalling: false,
+      ContextOwnerId: 'stable-owner',
+    }
+    const payload = rpc === 'GetAIModelContext' ? { Config: model } : { IntelligentModels: [model] }
+    const method = ypb.Yak.service[rpc]
+    const wire = Buffer.from(hex, 'hex')
+    expect(method[direction + 'Deserialize'](wire)).toMatchObject(payload)
+    expect(method[direction + 'Serialize'](payload)).toEqual(wire)
+  })
+
+  describe.each(['StartAIReAct', 'StartAITask'])('%s', (rpc) => {
+    it.each([
+      [undefined, '1b', ''],
+      [false, '1e', 'c00300'],
+      [true, '1e', 'c00301'],
+    ])('keeps automatic adjustment presence independent of image policy (%s)', (disabled, length, flag) => {
+      // Params: RuntimeContextSizeLimit=51, ImageInput=54,
+      // ModelContextKey=55, DisableContextAutoAdjust=56.
+      const wire = Buffer.from(
+        `12${length}9803c0cf24b203060a046175746fba030a6f70617175652d6b6579${flag}40014a1752756e74696d65436f6e7465787453697a654c696d6974`,
+        'hex',
+      )
+      const payload = {
+        IsConfigHotpatch: true,
+        HotpatchType: 'RuntimeContextSizeLimit',
+        Params: {
+          RuntimeContextSizeLimit: '600000',
+          ImageInput: { Mode: 'auto' },
+          ModelContextKey: 'opaque-key',
+          ...(disabled === undefined ? {} : { DisableContextAutoAdjust: disabled }),
+        },
+      }
+      const method = ypb.Yak.service[rpc]
+      const decoded = method.requestDeserialize(wire)
+      expect(decoded).toMatchObject(payload)
+      if (disabled === undefined) expect(decoded.Params).not.toHaveProperty('DisableContextAutoAdjust')
+      expect(method.requestSerialize(payload)).toEqual(wire)
+    })
+  })
+})
+
 describe('model context protocol', () => {
   it.each([undefined, false, true])('preserves optional automatic adjustment (%s)', (disabled) => {
     const method = ypb.Yak.service.SetAIModelContext

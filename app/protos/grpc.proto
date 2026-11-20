@@ -779,6 +779,7 @@ service Yak {
   rpc ListAiModel(ListAiModelRequest) returns (ListAiModelResponse);
   rpc AIConfigHealthCheck(AIConfigHealthCheckRequest) returns (AIConfigHealthCheckResponse);
   rpc ProbeReasoningEffort(ProbeReasoningEffortRequest) returns (ProbeReasoningEffortResponse);
+  rpc ProbeModelVision(ProbeModelVisionRequest) returns (ProbeModelVisionResponse);
   rpc GetAIGlobalConfig(Empty) returns (AIGlobalConfig);
   rpc SetAIGlobalConfig(AIGlobalConfig) returns (Empty);
   rpc ListAIProviders(Empty) returns (ListAIProvidersResponse);
@@ -944,6 +945,7 @@ service Yak {
 
   // AI Task
   rpc StartAIReAct(stream AIInputEvent) returns(stream AIOutputEvent);
+  rpc ReadAIImage(AIImageRequest) returns(AIImageResponse);
   rpc StartAITask(stream AIInputEvent) returns(stream AIOutputEvent);
   rpc QueryAITask(AITaskQueryRequest) returns (AITaskQueryResponse);
   rpc DeleteAITask(AITaskDeleteRequest) returns (DbOperateMessage);
@@ -2197,6 +2199,9 @@ message AIInputEvent {
   string TaskId = 17;
   // JSON metadata for a question/form submission. FreeInput remains human-readable.
   string UserInteraction = 18;
+  // Runtime goal-time mutation. Unlike AIExecutionStrategy.GoalDurationSeconds,
+  // this is an imperative patch and is not persisted into session start params.
+  AIGoalTimePatch GoalTimePatch = 19;
 }
 
 message AttachedResourceInfo {
@@ -2319,7 +2324,7 @@ message AIStartParams {
   // 上下文的时间线不会被过早压缩。
   int64 RuntimeContextSizeLimit = 51;
   // Model-scoped hotpatch only; absent preserves the saved automatic adjustment preference.
-  optional bool DisableContextAutoAdjust = 54;
+  optional bool DisableContextAutoAdjust = 56;
   string ModelContextKey = 55;
 
   // 用户交互的最大次数限制,超过这个次数，AI 将不再被允许问用户问题
@@ -2379,6 +2384,7 @@ message AIStartParams {
   optional bool NetworkDebug = 52;
   // Connection-local, build-generated component catalog and interaction capabilities.
   string ClientUI = 53;
+	AIImageInputConfig ImageInput = 54;
 }
 
 message AIExecutionStrategy {
@@ -2401,6 +2407,7 @@ message AIExecutionStrategy {
 
   // Goal 模式时间窗口（秒）。>0 时在时间窗口内无条件拒绝 finish；-1 表示永不自动放行。
   // 0 或省略表示不启用时间窗口 gate，仅依赖迭代数和验收条件。
+  // 该字段是声明式配置；运行时延长或缩短当前 deadline 请使用 AIInputEvent.GoalTimePatch。
   int64 GoalDurationSeconds = 5;
 
   // Goal 模式验收条件。非空时，时间窗口过后（或未设时间窗口时）每次 finish
@@ -9622,8 +9629,12 @@ message AIModelConfig {
   // 是否已对 xhigh/max 做过探测。false=未探测（首次操作下拉框时触发）；
   // true=已探测（ProbedExtendedEfforts 即最终结果，不再重复探测）。
   bool EffortProbed = 7;
+  // Unset means unknown, not false. Auto mode uses separate vision for unknown models.
+  optional bool SupportsImageInput = 8;
+  string ImageTokenEstimator = 9; // conservative (default), patch32, tile512
+  optional bool SupportsImageToolCalling = 10; // Unset means unknown.
   // Stable owner for this configured provider entry, independent of the selected model.
-  string ContextOwnerId = 8;
+  string ContextOwnerId = 11;
 }
 
 message AIGlobalConfig {
@@ -10697,6 +10708,32 @@ message HTTPPreviewResourceResponse {
   bytes Data = 3;
 }
 
+// Session image policy. Zero limits use bounded server defaults.
+message AIImageInputConfig {
+  string Mode = 1; // auto (default), native, describe
+  optional bool MainModelSupportsImages = 2; // override for custom callbacks
+  // Legacy compatibility only; image retention now follows Timeline.
+  int64 MaxActiveImages = 3;
+  int64 VisualTokenLimit = 4;
+  int64 MaxLongEdge = 5;
+  int64 OutputReserveTokens = 6;
+  int64 MaxRequestBytes = 7;
+}
+
+message AIImageRequest {
+  string SessionID = 1;
+  string ImageID = 2; // resource ID or content ID, scoped to this session
+  string Variant = 3; // thumbnail (default), original; model is a legacy overview alias
+  string Scope = 4; // optional child-agent namespace, owned by SessionID
+}
+message AIImageResponse {
+  bytes Data = 1;
+  string MIMEType = 2;
+  int64 Width = 3;
+  int64 Height = 4;
+  string ImageID = 5;
+}
+
 message QueryAIToolRequest {
   AIToolFilter Filter = 1;
   Paging Pagination = 2;
@@ -10725,6 +10762,39 @@ message QueryKnowledgeBaseResponse {
   Paging Pagination = 1;
   repeated KnowledgeBaseInfo Data = 2;
   int64 Total = 3;
+}
+
+enum AIGoalTimeAction {
+  AI_GOAL_TIME_ACTION_UNSPECIFIED = 0;
+  // Extend the active deadline by ExtendSeconds. If the deadline has not
+  // started, extend the configured duration and preserve lazy startup.
+  AI_GOAL_TIME_ACTION_EXTEND = 1;
+  // Set the active deadline to the absolute Unix timestamp in DeadlineUnix.
+  AI_GOAL_TIME_ACTION_SET_DEADLINE = 2;
+  // Disable the goal time-window gate.
+  AI_GOAL_TIME_ACTION_DISABLE = 3;
+  // Keep the goal time-window gate open indefinitely.
+  AI_GOAL_TIME_ACTION_NEVER_ENDING = 4;
+}
+
+message AIGoalTimePatch {
+  AIGoalTimeAction Action = 1;
+  // Signed extension in seconds for AI_GOAL_TIME_ACTION_EXTEND.
+  int64 ExtendSeconds = 2;
+  // Absolute Unix timestamp for AI_GOAL_TIME_ACTION_SET_DEADLINE.
+  int64 DeadlineUnix = 3;
+}
+
+message ProbeModelVisionRequest {
+  ThirdPartyApplicationConfig Config = 1;
+  string Model = 2;
+}
+
+message ProbeModelVisionResponse {
+  optional bool SupportsImageInput = 1;
+  optional bool SupportsImageToolCalling = 2;
+  string ImageInputStatus = 3;
+  string ImageToolCallingStatus = 4;
 }
 
 message GetAIModelContextRequest {
