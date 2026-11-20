@@ -19,7 +19,6 @@ import {
   useThrottleFn,
   useUpdateEffect,
   useVirtualList,
-  useInViewport,
 } from 'ahooks'
 import classNames from 'classnames'
 import type {
@@ -51,11 +50,12 @@ import cloneDeep from 'lodash/cloneDeep'
 import locale from 'antd/es/date-picker/locale/zh_CN'
 import { YakitDatePicker } from '@/components/yakitUI/YakitDatePicker/YakitDatePicker'
 import { YakitSpin } from '../yakitUI/YakitSpin/YakitSpin'
-import { parseCellStyleVars, parseColorTag, resetEmptyVirtualTableViewport } from './utils'
+import { getRowScrollTop, parseCellStyleVars, parseColorTag, resetEmptyVirtualTableViewport } from './utils'
 import useShortcutKeyTrigger from '@/utils/globalShortcutKey/events/useShortcutKeyTrigger'
 import ShortcutKeyFocusHook from '@/utils/globalShortcutKey/shortcutKeyFocusHook/ShortcutKeyFocusHook'
 import { v4 as uuidv4 } from 'uuid'
-import { ShortcutKeyFocusType } from '@/utils/globalShortcutKey/events/global'
+import { ShortcutKeyFocusType, GlobalShortcutKey } from '@/utils/globalShortcutKey/events/global'
+import { convertKeyEventToKeyCombination, parseShortcutKeyEvent } from '@/utils/globalShortcutKey/utils'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { shouldRenderVirtualTableCellForHover } from './TableVirtualResize.memo'
 import { FilterOutlined, QuestionMarkCircleOutlined } from '@yakit-libs/yakit-ui-icons/outline'
@@ -217,7 +217,6 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
   const [currentRow, setCurrentRow] = useState<T>()
   const [selectedRows, setSelectedRows] = useState<T[]>([])
   const [width, setWidth] = useState<number>(0) //表格所在div宽度
-  const [height, setHeight] = useState<number>(300) //表格所在div高度
   const [bodyHeight, setBodyHeight] = useState<number>(73) //表格body高度
   const [defColumns, setDefColumns] = useState<ColumnsTypeProps[]>(props.columns) // 表头
   const [columns, setColumns, getColumns] = useGetState<ColumnsTypeProps[]>(props.columns) // 表头
@@ -255,10 +254,6 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     left: 0,
     top: 0,
   }) // 表格距离左边的距离
-  const containerRefPosition = useRef<tablePosition>({
-    left: 0,
-    top: 0,
-  })
 
   const [list, scrollTo] = useVirtualList(data, {
     containerTarget: containerRef,
@@ -275,6 +270,16 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     if (!resetEmptyVirtualTableViewport(data.length, containerRef.current, wrapperRef.current)) return
     scrollTo(0)
   }, [data.length, scrollTo])
+
+  // ahooks useVirtualList 在 useEffect（绘制之后）才写入 wrapper 的 marginTop/height，
+  // 滚动时新一批行会先按旧的偏移绘制一帧，表现为滚动闪烁；这里在绘制前同步写入同一组值
+  useLayoutEffect(() => {
+    const wrapper: HTMLElement | null = wrapperRef.current
+    if (!wrapper || !list.length) return
+    const start = list[0].index
+    wrapper.style.marginTop = `${start * defItemHeight}px`
+    wrapper.style.height = `${(data.length - start) * defItemHeight}px`
+  }, [list, defItemHeight, data.length])
 
   const checkboxPropsMap = useCreation(() => {
     const map = new Map<React.Key, Partial<YakitProtoCheckboxProps>>()
@@ -317,42 +322,6 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
   useEffect(() => {
     scrollTo(0)
   }, [isRefresh])
-
-  // 性能优化：ResizeObserver 用 useRef 创建一次，避免每次渲染创建新实例导致内存泄漏
-  const resizeObserverRef = useRef<ResizeObserver>()
-  if (!resizeObserverRef.current) {
-    resizeObserverRef.current = new ResizeObserver((entries: ResizeObserverEntry[]) => {
-      entries.forEach((entry) => {
-        const target = entry.target
-        containerRefPosition.current = target.getBoundingClientRect()
-      })
-    })
-  }
-
-  const [inViewport] = useInViewport(containerRef)
-
-  // 隐藏页或切走时不 observe，减少 ResizeObserver 回调
-  useEffect(() => {
-    const observer = resizeObserverRef.current
-    const el = containerRef.current
-    if (!observer || !el) return
-
-    if (inViewport && height) {
-      observer.observe(el)
-    } else {
-      observer.unobserve(el)
-    }
-
-    return () => {
-      observer.unobserve(el)
-    }
-  }, [height, inViewport])
-
-  useEffect(() => {
-    return () => {
-      resizeObserverRef.current?.disconnect()
-    }
-  }, [])
 
   useDebounceEffect(
     () => {
@@ -471,51 +440,49 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     }
   })
 
-  const upKey = useDebounceFn(
-    (index: number) => {
-      if (!currentRow) {
-        return
-      }
-      const currentDom = document.getElementById(currentRow[renderKey])
-      if (!currentDom) {
-        const dom = containerRef.current
-        //  长按up
-        // scrollTo(index) // 缓慢滑到
-        if (dom) dom.scrollTop = index * defItemHeight //滑动方式：马上滑到
-        return
-      }
-      const currentPosition: tablePosition = currentDom.getBoundingClientRect()
-      const top = containerRefPosition.current.top + (containerRefPosition.current.height || 0)
-      const inViewport = currentPosition.top - 28 <= top && currentPosition.top - 28 >= containerRefPosition.current.top
+  // 表头在滚动容器内部且 position: sticky，会盖住内容顶部，因此可见区要从表头下沿算起；
+  // 用行元素的实时 rect 判断是否可见，避免把行停在表头后面
+  const scrollRowIntoView = useMemoizedFn((index: number) => {
+    const container: HTMLElement | null = containerRef.current
+    if (!container) return
+    const headerHeight = columnsRef.current?.offsetHeight || defItemHeight
+    const containerRect = container.getBoundingClientRect()
+    const visibleHeight = container.clientHeight - headerHeight
+    const rowDom = data[index] ? document.getElementById(data[index][renderKey]) : null
+    const rowRect = rowDom?.getBoundingClientRect()
+    const target = getRowScrollTop({
+      rowTop: rowRect
+        ? rowRect.top - containerRect.top - container.clientTop - headerHeight
+        : index * defItemHeight - container.scrollTop,
+      rowHeight: rowRect?.height || defItemHeight,
+      visibleHeight,
+      scrollTop: container.scrollTop,
+    })
+    if (target === null) return
+    container.scrollTop = Math.max(target, 0)
+  })
 
-      if (!inViewport) scrollTo(index)
-    },
-    { wait: 100, leading: true },
-  ).run
+  const upKey = useDebounceFn((index: number) => scrollRowIntoView(index), { wait: 100, leading: true }).run
 
-  const downKey = useDebounceFn(
-    (index: number) => {
-      if (!currentRow) {
-        return
-      }
-      const dom = containerRef.current
-      const currentDom = document.getElementById(currentRow[renderKey])
-      if (!currentDom) {
-        //  长按up
-        scrollTo(index)
-        // if (dom) dom.scrollTop = index * defItemHeight
-        return
-      }
+  const downKey = useDebounceFn((index: number) => scrollRowIntoView(index), { wait: 200, leading: true }).run
 
-      const currentPosition: tablePosition = currentDom.getBoundingClientRect()
-      const rowNumber = (containerRef.current.clientHeight - 28) / defItemHeight // 28 表头高度
-      const y = 1 - (rowNumber - Math.trunc(rowNumber))
-      const top = containerRefPosition.current.top + (containerRefPosition.current.height || 0)
-      const inViewport = currentPosition.top + 28 <= top && currentPosition.top + 28 >= containerRefPosition.current.top
-      if (!inViewport) dom.scrollTop = (index - Math.floor(rowNumber) + y) * defItemHeight + 1 + 6 // 1px border被外圈的border挡住了，所以+1,滚动条边角高度6
-    },
-    { wait: 200, leading: true },
-  ).run
+  // 方向键的选中已由表格自身处理，需要阻止浏览器默认的按键滚动，
+  // 否则原生滚动会和表格的逐行滚动叠加，把选中行带到表头后面。
+  // 仅当按键确实绑定到表格上下键、且选中逻辑会生效时才拦截：
+  // 快捷键可在设置页改绑，改绑后或带修饰键时应保留浏览器默认滚动
+  const onTableKeyDown = useMemoizedFn((e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (!useUpAndDown) return
+    if (!mouseEnter && inMouseEnterTable) return
+    if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return
+    const target = e.target as HTMLElement | null
+    if (!target) return
+    const tag = target.tagName
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target.isContentEditable) return
+    const keys = convertKeyEventToKeyCombination(e.nativeEvent)
+    const eventName = keys ? parseShortcutKeyEvent(keys) : null
+    if (eventName !== GlobalShortcutKey.TableVirtualUP && eventName !== GlobalShortcutKey.TableVirtualDown) return
+    e.preventDefault()
+  })
   useEffect(() => {
     if (isRightClickBatchOperate) document.addEventListener('mousedown', handleShiftMousedown)
     return () => {
@@ -1567,7 +1534,6 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
             }
             onScrollContainer()
             setWidth(w)
-            setHeight(h)
           }}
           handleWidth={true}
           handleHeight={true}
@@ -1644,6 +1610,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
               <div
                 ref={containerRef}
                 tabIndex={-1}
+                onKeyDown={onTableKeyDown}
                 className={classNames(
                   styles['virtual-table-list-container'],
                   {

@@ -187,6 +187,34 @@ export const shouldUseParamsIconText3 = (content?: string) => {
   return getSingleColorType(content) !== 'red'
 }
 
+export interface RowScrollTargetParams {
+  /** 行顶相对可见区（表头下沿）顶部的距离 */
+  rowTop: number
+  /** 行高 */
+  rowHeight: number
+  /** 可见区高度（已扣掉表头） */
+  visibleHeight: number
+  /** 容器当前 scrollTop */
+  scrollTop: number
+}
+
+/**
+ * @name 计算把某一行滚进可见区所需的 scrollTop
+ * @description 表头在滚动容器内部且 position: sticky，可见区要从表头下沿算起，不能直接用容器顶部对齐
+ * @returns 需要设置的 scrollTop；行已完整可见时返回 null
+ */
+export const getRowScrollTop = ({
+  rowTop,
+  rowHeight,
+  visibleHeight,
+  scrollTop,
+}: RowScrollTargetParams): number | null => {
+  if (visibleHeight <= 0) return null
+  if (rowTop < 0) return scrollTop + rowTop
+  if (rowTop + rowHeight > visibleHeight) return scrollTop + rowTop + rowHeight - visibleHeight
+  return null
+}
+
 /**
  * Clear the DOM state retained by a virtual list after its data becomes empty.
  * Returns true when the caller should also ask the virtual-list hook to

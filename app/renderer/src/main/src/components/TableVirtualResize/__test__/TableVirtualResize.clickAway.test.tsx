@@ -7,7 +7,17 @@ import { TableVirtualResize } from '../TableVirtualResize'
 import styles from '../TableVirtualResize.module.scss'
 
 vi.mock('@/utils/globalShortcutKey/events/useShortcutKeyTrigger', () => ({ default: () => {} }))
-vi.mock('@/utils/globalShortcutKey/events/global', () => ({ ShortcutKeyFocusType: { TableVirtual: 'table' } }))
+vi.mock('@/utils/globalShortcutKey/events/global', () => ({
+  ShortcutKeyFocusType: { TableVirtual: 'table' },
+  GlobalShortcutKey: {
+    TableVirtualUP: 'tableVirtualUP*common',
+    TableVirtualDown: 'tableVirtualDown*common',
+  },
+}))
+vi.mock('@/utils/globalShortcutKey/utils', () => ({
+  convertKeyEventToKeyCombination: () => null,
+  parseShortcutKeyEvent: () => null,
+}))
 vi.mock('@/utils/globalShortcutKey/shortcutKeyFocusHook/ShortcutKeyFocusHook', () => ({
   default: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }))
