@@ -9,6 +9,7 @@ import {
   currentPrimaryModel,
   getConfirmedAIConfig,
   sameModel,
+  syncModelContextModel,
   toModelContextSnapshot,
   updateModelContextState,
 } from '@/pages/ai-re-act/hooks/modelContext'
@@ -23,7 +24,16 @@ export const useRefreshModelContext = (source: AIModelContextSource, open?: bool
   const state = useStore(store, () => rawData.modelContext)
   const streamReady = useStore(store, (state) => state.execute && !state.initLoading)
   const queryRef = useRef<{ generation: number } | undefined>(undefined)
+  const releaseQuery = (query: typeof queryRef.current) => {
+    if (!query || queryRef.current !== query) return
+    queryRef.current = undefined
+    const state = rawData.modelContext
+    if (state.generation === query.generation && state.status === 'loading' && !state.pending) {
+      updateModelContextState(session, { status: 'idle' })
+    }
+  }
   const refresh = useMemoizedFn(async () => {
+    syncModelContextModel(session, currentPrimaryModel(useAIGlobalConfigStore.getState()))
     const previous = rawData.modelContext
     if (previous.pending || previous.status === 'loading') return
     const lifecycle = meta.lifecycle
@@ -44,6 +54,7 @@ export const useRefreshModelContext = (source: AIModelContextSource, open?: bool
       const config = getConfirmedAIConfig(useAIGlobalConfigStore.getState()) ?? (await getCanonicalAIGlobalConfig())
       if (!canApply()) return
       const model = config.IntelligentModels?.[0]
+      rawData.modelContext.primaryModel = model
       if (!model?.Provider?.Type || !model.ModelName) {
         updateModelContextState(session, { saved: undefined, refreshThreshold: undefined, status: 'unbound' })
         return
@@ -76,18 +87,14 @@ export const useRefreshModelContext = (source: AIModelContextSource, open?: bool
         error:
           (rawData.modelContext.failedPatch && rawData.modelContext.error) || message || 'AIContextUsage.loadFailed',
       })
+    } finally {
+      releaseQuery(query)
     }
   })
   useEffect(() => {
     if (open) void refresh()
-    return () => {
-      const query = queryRef.current
-      queryRef.current = undefined
-      if (query?.generation === rawData.modelContext.generation && rawData.modelContext.status === 'loading') {
-        updateModelContextState(session, { status: 'idle' })
-      }
-    }
-  }, [open, source, rawData, primaryModel])
+    return () => releaseQuery(queryRef.current)
+  }, [open, source, rawData, primaryModel, meta.lifecycle, meta.lifecycle.current, meta.lifecycle.closing])
 
   const needsInitialSettings =
     source === 'stream' && state.promptTokens !== undefined && !state.saved && state.status === 'idle'

@@ -1740,6 +1740,55 @@ describe('输入框资料栏', () => {
     expect(extractDataWithMilkdown(editors[0]).mentions.map((item) => item.mentionId)).toEqual(['kb-a', 'kb-b'])
   })
 
+  it.each([
+    ['browser-A', 'A', '浏览器 A'],
+    ['missing-browser', '离线浏览器', '离线浏览器'],
+  ])('浏览器引用 %s 从其他资料删除时保留正文和提交引用', async (mentionId, mentionName, browserName) => {
+    const { ref, onSubmit, send } = await setup('保留正文')
+    editors[0].action((ctx) => ctx.get(editorViewCtx).setProps({ handleScrollToSelection: () => true }))
+    act(() => {
+      emiter.emit(
+        'setAIInputByType',
+        JSON.stringify({ type: 'mention', params: { mentionType: 'browser', mentionId, mentionName } }),
+      )
+    })
+    await waitFor(() => expect(ref.current?.getValue()).toContain(mentionId))
+    fireEvent.click(screen.getByRole('button', { name: 'AIChatTextarea.otherMaterials 1' }))
+    const summary = await screen.findByRole('dialog', { name: 'AIAddMaterialsPopover.addedOtherMaterials' })
+    expect(within(summary).getByRole('listitem')).toHaveTextContent('AIMentionTabs.browser1')
+    fireEvent.click(within(summary).getByText('AIMentionTabs.browser'))
+    const panel = await screen.findByRole('dialog', { name: 'AIChatTextarea.addMaterials' })
+    expect(within(panel).getByText('AIAddMaterialsPopover.addedBrowsers (1)')).toBeInTheDocument()
+    expect(within(panel).queryByRole('textbox', { name: 'YakitInput.search' })).toBeNull()
+    const addMaterials = screen.getByRole('button', { name: 'AIChatTextarea.addMaterials' })
+    expect(addMaterials).toHaveAttribute('aria-expanded', 'true')
+    expect(addMaterials).not.toHaveAttribute('data-menu-open')
+    expect(within(panel).getByText(browserName)).toBeInTheDocument()
+    expect(within(panel).queryByText('浏览器 B')).toBeNull()
+    expect(within(panel).queryByRole('button', { name: 'BrowserInstances.reference' })).toBeNull()
+    expect(within(panel).queryByRole('button', { name: 'BrowserInstances.focus' })).toBeNull()
+    expect(within(panel).queryByRole('button', { name: 'BrowserInstances.more' })).toBeNull()
+    if (mentionId === 'browser-A') {
+      expect(within(panel).getByText('Google Chrome 156.0')).toBeInTheDocument()
+      expect(within(panel).getByText('BrowserInstances.inUse')).toBeInTheDocument()
+    } else {
+      expect(within(panel).getByText('BrowserInstances.offline')).toBeInTheDocument()
+    }
+    await act(async () =>
+      fireEvent.click(within(panel).getByRole('button', { name: `YakitButton.delete ${mentionName}` })),
+    )
+    expect(ref.current?.getValue()).toContain(mentionId)
+    expect(within(panel).queryByText(browserName)).toBeNull()
+    expect(screen.queryByRole('button', { name: 'AIChatTextarea.otherMaterials 1' })).toBeNull()
+    fireEvent.click(send)
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        qs: expect.stringContaining(mentionId),
+        mentionList: [expect.objectContaining({ mentionId, mentionType: 'browser' })],
+      }),
+    )
+  })
+
   it('从输入框删除浏览器实例或技能时同步移除对应的资料', async () => {
     const { ref } = await setup('正文')
     editors[0].action((ctx) => ctx.get(editorViewCtx).setProps({ handleScrollToSelection: () => true }))

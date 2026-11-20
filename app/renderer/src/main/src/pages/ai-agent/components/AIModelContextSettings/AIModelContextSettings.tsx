@@ -51,11 +51,21 @@ const AIModelContextSettings: FC<AIModelContextSettingsProps> = ({ ref, source, 
       updateDraft({ tokens: tokens == null || !Number.isFinite(tokens) ? undefined : normalizeTokens(tokens) })
   }
   const value = draft.tokens === undefined ? editorThresholdTokens : draft.tokens
+  const clearDraft = () => {
+    draftRef.current = {}
+    setDraft(draftRef.current)
+  }
+  const retryFromEditor = () => {
+    const { tokens, disableAutoAdjust } = draftRef.current
+    const threshold = tokens != null && Number.isFinite(tokens) ? normalizeTokens(tokens) : editorThresholdTokens
+    if (retry({ threshold_tokens: threshold, disable_auto_adjust: disableAutoAdjust ?? editorDisableAutoAdjust })) {
+      clearDraft()
+    }
+  }
   useImperativeHandle(ref, () => ({
     save: () => {
       const { tokens, disableAutoAdjust } = draftRef.current
-      draftRef.current = {}
-      setDraft(draftRef.current)
+      clearDraft()
       const patch: ModelContextPatch = {}
       if (tokens != null && Number.isFinite(tokens) && normalizeTokens(tokens) !== editorThresholdTokens)
         patch.threshold_tokens = normalizeTokens(tokens)
@@ -97,7 +107,7 @@ const AIModelContextSettings: FC<AIModelContextSettingsProps> = ({ ref, source, 
                 content={
                   <div className={styles.feedback}>
                     <span>{error}</span>
-                    <YakitButton className={styles.retryButton} type="primary" size="small" onClick={retry}>
+                    <YakitButton className={styles.retryButton} type="primary" size="small" onClick={retryFromEditor}>
                       {t('AIContextUsage.retry')}
                     </YakitButton>
                   </div>

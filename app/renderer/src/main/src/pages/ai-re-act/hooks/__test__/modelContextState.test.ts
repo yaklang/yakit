@@ -395,6 +395,75 @@ describe('model context GET settings and session saves', () => {
     expect(setModel).not.toHaveBeenCalled()
   })
 
+  it.each([true, false])(
+    'retries displayed settings matching the cache and confirms them through GET (execute=%s)',
+    async (execute) => {
+      session.store.getState().updateState({ execute })
+      session.rawData.modelContext.failedPatch = { threshold_tokens: 800000, disable_auto_adjust: true }
+      session.rawData.modelContext.error = 'save timeout'
+      const displayed = { threshold_tokens: saved.threshold_tokens, disable_auto_adjust: saved.disable_auto_adjust }
+      expect(submit(displayed, true)).toBe(true)
+      await flush()
+      if (execute) {
+        expect(controller.handleSendMessage).toHaveBeenCalledWith(
+          expect.objectContaining({
+            params: expect.objectContaining({
+              Params: {
+                ModelContextKey: saved.context_key,
+                RuntimeContextSizeLimit: 500000,
+                DisableContextAutoAdjust: false,
+              },
+            }),
+          }),
+        )
+      } else {
+        expect(setModel).toHaveBeenCalledWith({ ...identity, ThresholdTokens: 500000, DisableAutoAdjust: false }, true)
+      }
+      expect(getModel).toHaveBeenCalledWith(identity, true)
+      expect(session.rawData.modelContext).toMatchObject({
+        saved,
+        pending: undefined,
+        failedPatch: undefined,
+        error: undefined,
+      })
+    },
+  )
+
+  it.each([true, false])(
+    'retries the switch while preserving a learned threshold below the manual floor (execute=%s)',
+    async (execute) => {
+      session.store.getState().updateState({ execute })
+      session.rawData.modelContext.saved = { ...saved, threshold_tokens: 80000 }
+      getModel.mockResolvedValue(response({ ThresholdTokens: 80000, DisableAutoAdjust: true }))
+      expect(submit({ threshold_tokens: 80000, disable_auto_adjust: true }, true)).toBe(true)
+      await flush()
+      if (execute) {
+        expect(controller.handleSendMessage).toHaveBeenCalledWith(
+          expect.objectContaining({
+            params: expect.objectContaining({
+              Params: {
+                ModelContextKey: saved.context_key,
+                RuntimeContextSizeLimit: 0,
+                DisableContextAutoAdjust: true,
+              },
+            }),
+          }),
+        )
+      } else {
+        expect(setModel).toHaveBeenCalledWith({ ...identity, ThresholdTokens: 0, DisableAutoAdjust: true }, true)
+      }
+      expect(session.rawData.modelContext.pending).toBeUndefined()
+      expect(session.rawData.modelContext.saved).toMatchObject({ threshold_tokens: 80000, disable_auto_adjust: true })
+    },
+  )
+
+  it('rejects a manually changed threshold below the minimum even during retry', async () => {
+    expect(submit({ threshold_tokens: 80000, disable_auto_adjust: true }, true)).toBe(false)
+    await flush()
+    expect(controller.handleSendMessage).not.toHaveBeenCalled()
+    expect(setModel).not.toHaveBeenCalled()
+  })
+
   it('reads Config before a hotpatch when the GET key is unavailable', async () => {
     session.rawData.modelContext = { status: 'idle', generation: 0 }
     getModel

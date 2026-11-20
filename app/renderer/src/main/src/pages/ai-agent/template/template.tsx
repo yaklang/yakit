@@ -553,7 +553,11 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
       setInputSettingVisible(false)
     }, [compactFooterLeft])
 
-    const renderFooterLeftTypes = ({ open: materialsOpen, toggle: toggleMaterials }: AddMaterialsControls) => {
+    const renderFooterLeftTypes = ({
+      open: materialsOpen,
+      menuOpen,
+      toggle: toggleMaterials,
+    }: AddMaterialsControls) => {
       const renderItem = (item: (typeof inlineItems)[number]): ReactNode => {
         switch (item.type) {
           case AIInputInnerFeatureEnum.AddMaterials:
@@ -563,7 +567,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                   <YakitButton
                     type="text2"
                     className={styles['material-add']}
-                    data-menu-open={materialsOpen || undefined}
+                    data-menu-open={menuOpen || undefined}
                     aria-label={t('AIChatTextarea.addMaterials')}
                     aria-expanded={materialsOpen}
                     aria-haspopup="dialog"

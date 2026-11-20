@@ -3,12 +3,11 @@ import { useStore } from 'zustand'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useAIGlobalConfigStore } from '@/store/aiGlobalConfig'
 import {
-  clearModelContextSaveTimer,
   currentPrimaryModel,
   DEFAULT_MINIMUM_THRESHOLD_TOKENS,
-  sameModel,
+  syncModelContextModel,
 } from '@/pages/ai-re-act/hooks/modelContext'
-import type { AIModelContextSource } from '@/pages/ai-re-act/hooks/aiRender'
+import type { AIModelContextSource, ModelContextPatch } from '@/pages/ai-re-act/hooks/aiRender'
 import { useCurrentRawData, useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import { useSaveModelContext } from '../template/AIContextUsage/useSaveModelContext'
 import { useRefreshModelContext } from './useRefreshModelContext'
@@ -19,15 +18,10 @@ export const useCurrentModelContextReset = (visible: boolean) => {
   const store = useCurrentStore()
   useLayoutEffect(() => {
     if (!visible) return
-    return useAIGlobalConfigStore.subscribe((next, previous) => {
-      if (sameModel(currentPrimaryModel(previous), currentPrimaryModel(next))) return
-      const state = rawData.modelContext
-      // 首次取到主模型配置时，让仍在等待该配置的查询或保存继续完成。
-      if (!currentPrimaryModel(previous) && !previous.persistedAiGlobalConfig && !state.saved) return
-      clearModelContextSaveTimer(state.pending)
-      rawData.modelContext = { status: 'idle', generation: state.generation + 1, promptTokens: state.promptTokens }
-      store.getState().updateStateCount('modelContextUpdate')
-    })
+    const sync = (state = useAIGlobalConfigStore.getState()) =>
+      syncModelContextModel({ rawData, store }, currentPrimaryModel(state))
+    sync()
+    return useAIGlobalConfigStore.subscribe(sync)
   }, [visible, rawData, store])
 }
 
@@ -68,10 +62,10 @@ const useAIModelContext = (source: AIModelContextSource = 'settings', open?: boo
     loading: status === 'loading',
     error: translateError(state.error),
     save: submit,
-    retry: () => {
+    retry: (displayed?: ModelContextPatch) => {
       const { failedPatch } = rawData.modelContext
-      if (failedPatch) submit(failedPatch)
-      else void refresh()
+      if (failedPatch) return submit(displayed ?? failedPatch, true)
+      void refresh()
     },
   }
 }

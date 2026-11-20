@@ -42,6 +42,7 @@ export interface MaterialMenuItem {
 
 export interface AddMaterialsControls {
   open: boolean
+  menuOpen: boolean
   toggle: () => void
   summary?: ReactElement
 }

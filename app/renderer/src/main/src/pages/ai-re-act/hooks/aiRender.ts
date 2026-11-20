@@ -3,6 +3,7 @@ import type { AIAgentGrpcApi, AIOutputEvent, AITaskStatusType, AIOutputI18n } fr
 import type { CustomPluginExecuteFormValue } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
 import type { QuestionRequest, UISubmission } from '../interactive-ui/types'
 import type { UIDiagnostic } from '../interactive-ui/validate'
+import type { AIModelConfig } from '@/pages/ai-agent/aiModelList/utils'
 
 // #region AI-Agent 非会话列表外的渲染数据
 export type AIModelContextSource = 'settings' | 'stream'
@@ -28,6 +29,8 @@ export interface PendingModelContextChange {
 }
 
 export interface ModelContextState {
+  /** 当前查询、保存及已确认配置所属的主模型。 */
+  primaryModel?: AIModelConfig
   status: 'idle' | 'loading' | 'ready' | 'unbound' | 'unsupported' | 'error'
   /** 会话、模型或读写请求切换时，用于丢弃过期的异步结果。 */
   generation: number

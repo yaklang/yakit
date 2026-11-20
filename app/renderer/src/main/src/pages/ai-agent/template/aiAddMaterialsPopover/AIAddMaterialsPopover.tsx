@@ -193,6 +193,7 @@ const AIAddMaterialsPopover: FC<AIAddMaterialsPopoverProps> = ({
       >
         {children({
           open,
+          menuOpen: open && (!picker || picker.fromMenu),
           toggle: () => (open ? close() : setOpen(true)),
           summary: groups.length ? <MaterialSummary groups={groups} onOpen={close} /> : undefined,
         })}

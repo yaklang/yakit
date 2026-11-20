@@ -7,8 +7,10 @@ import { useCurrentRawData, useCurrentRequest, useCurrentStore } from '@/pages/a
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
 import { getCanonicalAIGlobalConfig } from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
 import {
+  currentPrimaryModel,
   getConfirmedAIConfig,
   sameModelContextIdentity,
+  syncModelContextModel,
   toModelContextSnapshot,
   updateModelContextState,
 } from '@/pages/ai-re-act/hooks/modelContext'
@@ -40,7 +42,7 @@ export const useSaveModelContext = () => {
   const session = { rawData, store }
   const { t } = useI18nNamespaces(['aiAgent'])
 
-  const submit = (patch: ModelContextPatch): boolean => {
+  const submit = (patch: ModelContextPatch, retryFailedSave = false): boolean => {
     const current = rawData.modelContext
     const { execute } = store.getState()
     if (execute && !sessionId) {
@@ -54,12 +56,21 @@ export const useSaveModelContext = () => {
       return true
     }
     const baseline = current.status === 'ready' && current.saved?.context_key ? current.saved : undefined
-    if (!Object.keys(patch).length || (baseline && matchesPatch(baseline, patch))) return false
+    if (!Object.keys(patch).length || (!retryFailedSave && baseline && matchesPatch(baseline, patch))) return false
+    // 重试展示中的自动学习阈值时，保留引擎阈值，避免将低于手动下限的值重新写入。
+    const writePatchFor = (saved?: ModelContextSnapshot): ModelContextPatch =>
+      retryFailedSave &&
+      saved &&
+      patch.threshold_tokens === saved.threshold_tokens &&
+      saved.threshold_tokens < saved.minimum_threshold_tokens
+        ? { ...patch, threshold_tokens: undefined }
+        : patch
+    let writePatch = writePatchFor(baseline)
     if (
-      patch.threshold_tokens !== undefined &&
-      (!Number.isSafeInteger(patch.threshold_tokens) ||
-        patch.threshold_tokens < (baseline?.minimum_threshold_tokens ?? 0) ||
-        patch.threshold_tokens > 1000000)
+      writePatch.threshold_tokens !== undefined &&
+      (!Number.isSafeInteger(writePatch.threshold_tokens) ||
+        writePatch.threshold_tokens < (baseline?.minimum_threshold_tokens ?? 0) ||
+        writePatch.threshold_tokens > 1000000)
     )
       return false
 
@@ -101,6 +112,7 @@ export const useSaveModelContext = () => {
           const config = getConfirmedAIConfig(useAIGlobalConfigStore.getState()) ?? (await getCanonicalAIGlobalConfig())
           if (!isPending()) return
           const model = config.IntelligentModels?.[0]
+          rawData.modelContext.primaryModel = model
           if (!model?.Provider?.Type || !model.ModelName) throw new Error('AIContextUsage.sessionUnavailable')
           target = { Config: model }
         }
@@ -109,8 +121,10 @@ export const useSaveModelContext = () => {
           await grpcSetAIModelContext(
             {
               ...target,
-              ThresholdTokens: patch.threshold_tokens ?? 0,
-              ...(patch.disable_auto_adjust === undefined ? {} : { DisableAutoAdjust: patch.disable_auto_adjust }),
+              ThresholdTokens: writePatch.threshold_tokens ?? 0,
+              ...(writePatch.disable_auto_adjust === undefined
+                ? {}
+                : { DisableAutoAdjust: writePatch.disable_auto_adjust }),
             },
             true,
           )
@@ -119,10 +133,14 @@ export const useSaveModelContext = () => {
           if (!isPending()) return
           pending.baseline = saved
           target = modelTarget(saved)
-          if (patch.threshold_tokens !== undefined && patch.threshold_tokens < saved.minimum_threshold_tokens) {
+          writePatch = writePatchFor(saved)
+          if (
+            writePatch.threshold_tokens !== undefined &&
+            writePatch.threshold_tokens < saved.minimum_threshold_tokens
+          ) {
             throw new Error('AIContextUsage.saveFailed')
           }
-          if (matchesPatch(saved, patch)) {
+          if (!retryFailedSave && matchesPatch(saved, writePatch)) {
             finish(saved)
             return
           }
@@ -135,10 +153,10 @@ export const useSaveModelContext = () => {
               HotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_RuntimeContextSizeLimit,
               Params: {
                 ModelContextKey: saved.context_key,
-                RuntimeContextSizeLimit: patch.threshold_tokens ?? 0,
-                ...(patch.disable_auto_adjust === undefined
+                RuntimeContextSizeLimit: writePatch.threshold_tokens ?? 0,
+                ...(writePatch.disable_auto_adjust === undefined
                   ? {}
-                  : { DisableContextAutoAdjust: patch.disable_auto_adjust }),
+                  : { DisableContextAutoAdjust: writePatch.disable_auto_adjust }),
               },
             },
             onSendError: fail,
@@ -153,7 +171,7 @@ export const useSaveModelContext = () => {
           if (pending.baseline && !sameModelContextIdentity(pending.baseline, saved)) {
             throw new Error('AIContextUsage.loadFailed')
           }
-          if (!execute || matchesPatch(saved, patch)) {
+          if (!execute || matchesPatch(saved, writePatch)) {
             finish(saved)
             return
           }
@@ -167,5 +185,8 @@ export const useSaveModelContext = () => {
     return true
   }
 
-  return submit
+  return (patch: ModelContextPatch, retryFailedSave = false) => {
+    syncModelContextModel(session, currentPrimaryModel(useAIGlobalConfigStore.getState()))
+    return submit(patch, retryFailedSave)
+  }
 }

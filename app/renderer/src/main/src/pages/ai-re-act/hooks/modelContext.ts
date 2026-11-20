@@ -52,6 +52,24 @@ type ModelContextSession = {
   store: Pick<AIMessageHandlerParams['store'], 'getState'>
 }
 
+/** 会话重新可见或开始读写时，核对当前主模型与这份配置的归属。 */
+export const syncModelContextModel = ({ rawData, store }: ModelContextSession, model: AIModelConfig | undefined) => {
+  const state = rawData.modelContext
+  if (sameModel(state.primaryModel, model) || (!state.primaryModel && state.status !== 'unbound')) {
+    // 首次取得配置或引擎补齐归属 ID 时，继续同一模型正在进行的读写。
+    state.primaryModel = model
+    return
+  }
+  clearModelContextSaveTimer(state.pending)
+  rawData.modelContext = {
+    primaryModel: model,
+    status: 'idle',
+    generation: state.generation + 1,
+    promptTokens: state.promptTokens,
+  }
+  store.getState().updateStateCount('modelContextUpdate')
+}
+
 /** 合并会话状态并通知订阅者。替换或结束待确认的保存时，一并清除它的超时定时器。 */
 export const updateModelContextState = ({ rawData, store }: ModelContextSession, patch: Partial<ModelContextState>) => {
   if ('pending' in patch && patch.pending !== rawData.modelContext.pending) {

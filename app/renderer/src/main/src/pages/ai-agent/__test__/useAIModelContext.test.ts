@@ -132,12 +132,19 @@ describe('上下文设置的数据来源', () => {
     retry()
     rawData.modelContext.failedPatch = { threshold_tokens: 720000 }
     retry()
-    expect(operations.submit.mock.calls).toEqual([[{ threshold_tokens: 710000 }], [{ threshold_tokens: 720000 }]])
+    expect(operations.submit.mock.calls).toEqual([
+      [{ threshold_tokens: 710000 }, true],
+      [{ threshold_tokens: 720000 }, true],
+    ])
+    const displayed = { threshold_tokens: 450000, disable_auto_adjust: false }
+    retry(displayed)
+    expect(operations.submit).toHaveBeenLastCalledWith(displayed, true)
     rawData.modelContext.failedPatch = undefined
     await act(async () => {
-      retry()
+      retry(displayed)
     })
     expect(operations.getModel).toHaveBeenCalledOnce()
+    expect(operations.submit).toHaveBeenCalledTimes(3)
   })
 
   it('待保存和排队修改只影响编辑值', () => {
@@ -197,6 +204,59 @@ describe('上下文设置的数据来源', () => {
     expect(rawData.modelContext.saved).toBe(settings)
   })
 
+  it('后台切换到同名不同归属的主模型，返回会话后自动刷新阈值并保留用量', async () => {
+    const config = useAIGlobalConfigStore.getState().persistedAiGlobalConfig!
+    const modelA = { ...primary, ContextOwnerId: 'owner-a' }
+    const modelB = { ...primary, ContextOwnerId: 'owner-b' }
+    useAIGlobalConfigStore.setState({ persistedAiGlobalConfig: { ...config, IntelligentModels: [modelA] } })
+    rawData.modelContext = { status: 'idle', generation: 0, promptTokens: 50000 }
+    operations.getModel
+      .mockResolvedValueOnce({ ...response, ContextKey: 'key-a', ThresholdTokens: 100000 })
+      .mockResolvedValueOnce({ ...response, ContextKey: 'key-b', ThresholdTokens: 500000 })
+    const { result, rerender } = renderHook(
+      ({ visible }) => {
+        useCurrentModelContextReset(visible)
+        return useAIModelContext('stream')
+      },
+      { initialProps: { visible: true } },
+    )
+    await waitFor(() => expect(result.current.thresholdTokens).toBe(100000))
+    rerender({ visible: false })
+    act(() => useAIGlobalConfigStore.setState({ persistedAiGlobalConfig: { ...config, IntelligentModels: [modelB] } }))
+    expect(operations.getModel).toHaveBeenCalledOnce()
+    rerender({ visible: true })
+    await waitFor(() => expect(result.current.thresholdTokens).toBe(500000))
+    expect(operations.getModel).toHaveBeenCalledTimes(2)
+    expect(operations.getModel).toHaveBeenLastCalledWith({ Config: modelB }, true)
+    expect(result.current.promptTokens).toBe(50000)
+  })
+
+  it('后台已读取当前主模型时，恢复可见保留该模型正在保存的修改', async () => {
+    const { rerender } = renderHook(({ visible }) => useCurrentModelContextReset(visible), {
+      initialProps: { visible: true },
+    })
+    rerender({ visible: false })
+    const modelB = { ...primary, ModelName: 'model-b' }
+    act(() =>
+      useAIGlobalConfigStore.setState({
+        persistedAiGlobalConfig: {
+          ...useAIGlobalConfigStore.getState().persistedAiGlobalConfig!,
+          IntelligentModels: [modelB],
+        },
+      }),
+    )
+    operations.getModel.mockResolvedValueOnce({ ...response, Model: 'model-b', ContextKey: 'key-b' })
+    const panel = renderHook(() => useAIModelContext('settings', true))
+    await waitFor(() => expect(rawData.modelContext.saved?.context_key).toBe('key-b'))
+    panel.unmount()
+    const pending = { patch: { threshold_tokens: 800000 }, baseline: rawData.modelContext.saved }
+    act(() => publish({ pending }))
+    rerender({ visible: true })
+    expect(rawData.modelContext.pending).toBe(pending)
+    expect(rawData.modelContext.saved).toBe(pending.baseline)
+    expect(operations.getModel).toHaveBeenCalledOnce()
+  })
+
   it('模型切换后丢弃旧 GET 返回', async () => {
     let resolveOld!: (value: typeof response) => void
     operations.getModel.mockReturnValueOnce(
@@ -222,17 +282,55 @@ describe('上下文设置的数据来源', () => {
     expect(result.current.thresholdTokens).toBe(750000)
   })
 
-  it('生命周期变化后丢弃旧 GET 返回', async () => {
+  it('生命周期替换后，旧 GET 返回时释放加载状态并保留已确认的阈值', async () => {
     let resolve!: (value: typeof response) => void
     operations.getModel.mockReturnValueOnce(
       new Promise((done) => {
         resolve = done
       }),
     )
-    renderHook(() => useAIModelContext('settings', true))
+    const { result } = renderHook(() => useAIModelContext('settings'))
+    act(() => result.current.retry())
+    expect(result.current.loading).toBe(true)
     meta.lifecycle = { current: true, closing: false }
     await act(async () => resolve(response))
     expect(rawData.modelContext.saved).toBe(settings)
+    expect(result.current.loading).toBe(false)
+  })
+
+  it.each(['成功', '失败'])('断连后可立即打开设置重新 GET，旧请求%s时不打断新查询', async (outcome) => {
+    let finishOld!: () => void
+    let finishNew!: () => void
+    operations.getModel
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve, reject) => {
+            finishOld = () => (outcome === '成功' ? resolve(response) : reject(new Error('connection closed')))
+          }),
+      )
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            finishNew = () => resolve({ ...response, ThresholdTokens: 800000 })
+          }),
+      )
+    rawData.modelContext = { status: 'idle', generation: 0, promptTokens: 125000 }
+    renderHook(() => useAIModelContext('stream'))
+    expect(operations.getModel).toHaveBeenCalledOnce()
+
+    act(() => {
+      meta.lifecycle.closing = true
+      store.setState({ execute: false })
+    })
+    expect(rawData.modelContext.status).toBe('idle')
+    const { result } = renderHook(() => useAIModelContext('settings', true))
+    expect(operations.getModel).toHaveBeenCalledTimes(2)
+    await act(async () => finishOld())
+    expect(result.current.loading).toBe(true)
+    expect(result.current.error).toBeUndefined()
+    expect(result.current.thresholdTokens).toBeUndefined()
+    await act(async () => finishNew())
+    expect(result.current).toMatchObject({ loading: false, thresholdTokens: 800000 })
   })
 
   it('关闭弹层后丢弃尚未返回的 GET', async () => {

@@ -4,7 +4,7 @@ import { createRef } from 'react'
 import { createStore } from 'zustand/vanilla'
 import { useAIGlobalConfigStore } from '@/store/aiGlobalConfig'
 import { defaultAIGlobalConfig } from '../../defaultConstant'
-import type { ModelContextState } from '@/pages/ai-re-act/hooks/aiRender'
+import type { ModelContextPatch, ModelContextState } from '@/pages/ai-re-act/hooks/aiRender'
 import type { AIModelContextResponse } from '../../type/modelContext'
 import { toModelContextSnapshot } from '@/pages/ai-re-act/hooks/modelContext'
 import AIModelContextSettings from '../AIModelContextSettings/AIModelContextSettings'
@@ -53,9 +53,9 @@ const mockContext = (context: ReturnType<typeof props>) => {
     return {
       ...context,
       save: mocks.save,
-      retry: () => {
+      retry: (displayed?: ModelContextPatch) => {
         const { failedPatch } = session.rawData.modelContext
-        if (failedPatch) mocks.save(failedPatch)
+        if (failedPatch) return mocks.save(displayed ?? failedPatch)
         else void refresh()
       },
     }
@@ -457,21 +457,26 @@ describe('AIModelContextSettings', () => {
   })
 
   it('有错误时在标题旁悬停查看原因并重试', async () => {
-    const callbacks = { ...props(), editorThresholdTokens: 870000 }
-    const { rerender } = render(editor(callbacks))
+    const callbacks = { ...props(), editorThresholdTokens: 870000, editorDisableAutoAdjust: true }
+    callbacks.save.mockReturnValue(true)
+    const ref = createRef<AIModelContextSettingsRef>()
+    const { rerender } = render(editor(callbacks, ref))
     expect(screen.getByRole('spinbutton')).toHaveValue('870')
     expect(useAIModelContext).toHaveBeenLastCalledWith('stream', true)
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
-    rerender(editor({ ...callbacks, waitingForContext: true, error: '保存失败' }))
+    rerender(editor({ ...callbacks, waitingForContext: true, error: '保存失败' }, ref))
     const badge = screen.getByText('保存失败')
     expect(screen.getByText('AIContextUsage.threshold').parentElement).toContainElement(badge)
     expect(badge).toBeVisible()
     expect(screen.queryByRole('img', { name: 'AIContextUsage.waitingContext' })).not.toBeInTheDocument()
     fireEvent.mouseEnter(badge)
     await waitFor(() => expect(screen.getAllByText('保存失败')).toHaveLength(2))
-    rawData.modelContext.failedPatch = { threshold_tokens: 870000 }
+    rawData.modelContext.failedPatch = { threshold_tokens: 600000, disable_auto_adjust: true }
+    fireEvent.change(screen.getByRole('spinbutton'), { target: { value: '450' } })
+    fireEvent.click(screen.getByRole('switch'))
     fireEvent.click(screen.getByRole('button', { name: 'AIContextUsage.retry' }))
-    expect(callbacks.save).toHaveBeenCalledExactlyOnceWith({ threshold_tokens: 870000 })
+    act(() => ref.current?.save())
+    expect(callbacks.save).toHaveBeenCalledExactlyOnceWith({ threshold_tokens: 450000, disable_auto_adjust: false })
     rerender(editor(callbacks))
     expect(screen.queryByText('保存失败')).not.toBeInTheDocument()
   })
