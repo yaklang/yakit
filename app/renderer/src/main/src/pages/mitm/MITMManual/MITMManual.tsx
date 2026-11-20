@@ -1620,6 +1620,7 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
       onEditor={setPacketEditor}
       noMinimap={!isResponse}
       noHeader={false}
+      showHeaderVisibilityToggle
       noPacketModifier={true}
       readOnly={disabled}
       isResponse={isResponse}
@@ -1709,61 +1710,63 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
       }
       extra={
         <div className={styles['mitm-v2-manual-editor-btn']}>
-          <>
-            {!disabled && (
-              <>
-                {!isResponse && !info.IsWebsocket && (
-                  <YakitButton disabled={btnDisable} type="outline1" size="small" onClick={onHijackCurrentResponse}>
-                    劫持响应
-                    {convertKeyboardToUIKey(getMitmShortcutKeyEvents()[MitmShortcutKey.HijackResponseMitm].keys)}
-                  </YakitButton>
-                )}
-                <YakitButton
-                  disabled={btnDisable}
-                  type="outline1"
-                  size="small"
-                  onClick={() => onDiscardData && onDiscardData(info)}
-                >
-                  丢弃
-                  {convertKeyboardToUIKey(getMitmShortcutKeyEvents()[MitmShortcutKey.DropDataMitm].keys)}
-                </YakitButton>
-                <YakitButton
-                  disabled={btnDisable}
-                  type="primary"
-                  size="small"
-                  onClick={() => onSubmitData && onSubmitData(info)}
-                >
-                  放行
-                  {convertKeyboardToUIKey(getMitmShortcutKeyEvents()[MitmShortcutKey.SubmitDataMitm].keys)}
-                </YakitButton>
-              </>
-            )}
+          {!disabled && (
             <>
-              <YakitButton type="primary" size="small" onClick={onSetBeautify}>
-                美化
+              {!isResponse && !info.IsWebsocket && (
+                <YakitButton disabled={btnDisable} type="outline1" size="small" onClick={onHijackCurrentResponse}>
+                  劫持响应
+                  {convertKeyboardToUIKey(getMitmShortcutKeyEvents()[MitmShortcutKey.HijackResponseMitm].keys)}
+                </YakitButton>
+              )}
+              <YakitButton
+                disabled={btnDisable}
+                type="outline1"
+                size="small"
+                onClick={() => onDiscardData && onDiscardData(info)}
+              >
+                丢弃
+                {convertKeyboardToUIKey(getMitmShortcutKeyEvents()[MitmShortcutKey.DropDataMitm].keys)}
               </YakitButton>
-              <div>
-                {renderAndHexTypeOptions.map((item) => (
-                  <YakitCheckableTag
-                    key={item.value}
-                    checked={renderAndHexTag === item.value}
-                    onChange={(checked) => {
-                      if (checked) {
-                        setRenderAndHexTag(item.value as RenderAndHexTypeOptionVal)
-                      } else {
-                        setRenderAndHexTag(undefined)
-                      }
-                    }}
-                  >
-                    {item.label}
-                  </YakitCheckableTag>
-                ))}
-              </div>
+              <YakitButton
+                disabled={btnDisable}
+                type="primary"
+                size="small"
+                onClick={() => onSubmitData && onSubmitData(info)}
+              >
+                放行
+                {convertKeyboardToUIKey(getMitmShortcutKeyEvents()[MitmShortcutKey.SubmitDataMitm].keys)}
+              </YakitButton>
             </>
-          </>
+          )}
+        </div>
+      }
+      AfterBeautifyRenderBtn={
+        <div className={styles['mitm-v2-manual-editor-btn']}>
+          <YakitButton type="primary" size="small" onClick={onSetBeautify}>
+            美化
+          </YakitButton>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            {renderAndHexTypeOptions.map((item) => (
+              <YakitCheckableTag
+                key={item.value}
+                checked={renderAndHexTag === item.value}
+                style={{ marginRight: 0 }}
+                onChange={(checked) => {
+                  if (checked) {
+                    setRenderAndHexTag(item.value as RenderAndHexTypeOptionVal)
+                  } else {
+                    setRenderAndHexTag(undefined)
+                  }
+                }}
+              >
+                {item.label}
+              </YakitCheckableTag>
+            ))}
+          </div>
         </div>
       }
       noShowHex={renderAndHexTag != 'hex'}
+      extraGap={4}
       renderHtml={renderHtml}
       defaultHttps={info.IsHttps}
       url={info.URL}

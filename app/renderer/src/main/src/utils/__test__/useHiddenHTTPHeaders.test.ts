@@ -85,22 +85,32 @@ describe('useHiddenHTTPHeaders', () => {
     expect(onSearchReveal).toHaveBeenCalledOnce()
   })
 
-  it.each(['content', 'model'] as const)(
-    'initial load stays hidden; subsequent %s changes reveal instead of refolding',
-    (event) => {
-      const instance = createEditor('GET / HTTP/1.1\nAccept: */*\n\nbody')
-      const onDocumentChange = vi.fn()
-      renderHook(() => useHiddenHTTPHeaders(instance.editor, true, false, undefined, onDocumentChange))
-      expect(onDocumentChange).not.toHaveBeenCalled()
-      expect(instance.hiddenAreas.mock.lastCall?.[0]).toHaveLength(1)
-      instance.hiddenAreas.mockClear()
-      act(() => instance.change('GET / HTTP/1.1\nAccept: text/plain\n\nchanged', event))
-      expect(instance.hiddenAreas).toHaveBeenCalledExactlyOnceWith([], expect.any(Object))
-      expect(onDocumentChange).toHaveBeenCalledOnce()
-      act(() => instance.change('GET / HTTP/1.1\nAccept: */*\n\nbody'))
-      expect(instance.hiddenAreas).toHaveBeenCalledTimes(1)
-    },
-  )
+  it('initial load stays hidden; a content edit reveals instead of refolding', () => {
+    const instance = createEditor('GET / HTTP/1.1\nAccept: */*\n\nbody')
+    const onDocumentChange = vi.fn()
+    renderHook(() => useHiddenHTTPHeaders(instance.editor, true, false, undefined, onDocumentChange))
+    expect(onDocumentChange).not.toHaveBeenCalled()
+    expect(instance.hiddenAreas.mock.lastCall?.[0]).toHaveLength(1)
+    instance.hiddenAreas.mockClear()
+    act(() => instance.change('GET / HTTP/1.1\nAccept: text/plain\n\nchanged'))
+    expect(instance.hiddenAreas).toHaveBeenCalledExactlyOnceWith([], expect.any(Object))
+    expect(onDocumentChange).toHaveBeenCalledOnce()
+    act(() => instance.change('GET / HTTP/1.1\nAccept: */*\n\nbody'))
+    expect(instance.hiddenAreas).toHaveBeenCalledTimes(1)
+  })
+
+  it('reapplies the saved state instead of revealing when the model is replaced', () => {
+    const instance = createEditor('GET / HTTP/1.1\nAccept: */*\n\nbody')
+    const onDocumentChange = vi.fn()
+    renderHook(() => useHiddenHTTPHeaders(instance.editor, true, false, undefined, onDocumentChange))
+    instance.hiddenAreas.mockClear()
+    act(() => instance.change('GET / HTTP/1.1\nHost: example.com\nAccept: */*\n\nbody', 'model'))
+    expect(onDocumentChange).not.toHaveBeenCalled()
+    expect(instance.hiddenAreas).toHaveBeenLastCalledWith(
+      [{ startLineNumber: 3, startColumn: 1, endLineNumber: 3, endColumn: 1 }],
+      expect.any(Object),
+    )
+  })
 
   it('reuses one hidden-area source across toggles and edited lists', () => {
     const instance = createEditor('GET / HTTP/1.1\nAccept: */*\nHost: example.com\n\n')

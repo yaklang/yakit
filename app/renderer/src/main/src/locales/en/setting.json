@@ -120,24 +120,21 @@
     }
   },
   "HTTPHeaderVisibilitySettings": {
-    "description": "Changes display only, preserving the original packet and sent content. Header names are case-insensitive.",
+    "description": "Headers in this list are collapsed in WebFuzzer, History (including traffic analysis and other flow details), and MITM editors once header hiding is enabled there. This only affects the display and never changes the original packet or sent content. Header names are case-insensitive.",
     "request": "Request headers",
     "response": "Response headers",
     "count": "{{count}} headers",
-    "hideByDefault": "Hide the following headers by default",
     "remove": "Remove {{header}}",
-    "empty": "The list is empty. All headers will be shown.",
     "placeholder": "Header name, e.g. x-custom-header",
     "newHeader": "New {{role}} name",
     "add": "Add",
+    "cancelAdd": "Cancel",
     "clear": "Clear list",
     "restoreDefaults": "Restore defaults",
-    "save": "Save",
     "invalidName": "Enter a valid HTTP header name without colons, spaces, or values",
     "duplicateName": "This header is already listed (case-insensitive)",
     "saveFailed": "Could not save header visibility settings: {{error}}",
     "loadFailed": "Could not load settings. Please retry.",
-    "retry": "Retry",
-    "saved": "HTTP header visibility settings saved"
+    "retry": "Retry"
   }
 }

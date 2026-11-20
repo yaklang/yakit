@@ -1,4 +1,3 @@
-import type React from 'react'
 import type { editor } from 'monaco-editor'
 import { act, cleanup, fireEvent, render, renderHook, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -6,12 +5,16 @@ import { HTTPHeaderVisibilitySettings } from '../HTTPHeaderVisibilitySettings'
 import { useEditorHeaderVisibility, type HeaderRole } from '@/store/editorHeaderVisibility'
 import { DEFAULT_HIDDEN_HTTP_HEADERS } from '@/utils/hiddenHTTPHeaders'
 import { useHiddenHTTPHeaders } from '@/utils/useHiddenHTTPHeaders'
-import { FuzzerRemoteGV } from '@/enums/fuzzer'
+import { RemoteHistoryGV } from '@/enums/history'
 
-const mocks = vi.hoisted(() => ({ read: vi.fn(), write: vi.fn(), failed: vi.fn(), notify: vi.fn() }))
+const mocks = vi.hoisted(() => ({ read: vi.fn(), write: vi.fn(), failed: vi.fn() }))
 vi.mock('@/utils/kv', () => ({ getRemoteValue: mocks.read, setRemoteValue: mocks.write }))
-vi.mock('@/utils/notification', () => ({ yakitFailed: mocks.failed, yakitNotify: mocks.notify }))
-vi.mock('@yakit-libs/yakit-ui-icons/outline', () => ({ TrashOutlined: () => null }))
+vi.mock('@/utils/notification', () => ({ yakitFailed: mocks.failed }))
+vi.mock('@yakit-libs/yakit-ui-icons/outline', () => ({
+  PlusOutlined: () => null,
+  RefreshOutlined: () => null,
+  TrashOutlined: () => null,
+}))
 vi.mock('@/i18n/useI18nNamespaces', () => ({
   useI18nNamespaces: () => ({
     t: (key: string, params?: Record<string, unknown>) => {
@@ -28,14 +31,6 @@ vi.mock('@/components/yakitUI/YakitButton/YakitButton', () => ({
     <button disabled={disabled || loading} {...props} />
   ),
 }))
-vi.mock('@/components/yakitUI/YakitCheckbox/YakitCheckbox', () => ({
-  YakitCheckbox: ({ children, ...props }: React.PropsWithChildren<React.InputHTMLAttributes<HTMLInputElement>>) => (
-    <label>
-      <input type="checkbox" {...props} />
-      {children}
-    </label>
-  ),
-}))
 vi.mock('@/components/yakitUI/YakitInput/YakitInput', () => ({
   YakitInput: ({ onPressEnter, ...props }) => (
     <input {...props} onKeyDown={(event) => event.key === 'Enter' && onPressEnter()} />
@@ -44,7 +39,7 @@ vi.mock('@/components/yakitUI/YakitInput/YakitInput', () => ({
 vi.mock('@/components/yakitUI/YakitSpin/YakitSpin', () => ({ YakitSpin: () => <span role="status">Loading</span> }))
 
 const saved = new Map<string, string>()
-const persistedSettings = () => JSON.parse(saved.get(FuzzerRemoteGV.WebFuzzerHeaderVisibility)!)
+const persistedSettings = () => JSON.parse(saved.get(RemoteHistoryGV.HTTPHeaderVisibility)!)
 const baseHeader = { request: 'accept', response: 'server' }
 
 // Keep the real settings component, store, normalization and editor hiding hook together.
@@ -59,14 +54,13 @@ const preview = (role: HeaderRole) => {
     getLineContent: (n: number) => packet.split('\n')[n - 1],
   }
   const hiddenAreas = vi.fn()
-  const subscribe = () => ({ dispose: vi.fn() })
   const instance = {
     getModel: () => model,
-    getContribution: () => undefined,
     setHiddenAreas: hiddenAreas,
-    onDidChangeModelContent: subscribe,
-    onDidChangeModel: subscribe,
-    onDidDispose: subscribe,
+    getContribution: () => undefined,
+    onDidChangeModelContent: () => ({ dispose: vi.fn() }),
+    onDidChangeModel: () => ({ dispose: vi.fn() }),
+    onDidDispose: () => ({ dispose: vi.fn() }),
   }
   const importedRequestHidden = useEditorHeaderVisibility.getState().hidden.request
   renderHook(() => {
@@ -114,35 +108,29 @@ const open = async () => {
     response: within(screen.getByRole('region', { name: 'response' })),
   }
 }
-const save = async () => {
-  const calls = mocks.notify.mock.calls.length
-  fireEvent.click(screen.getByRole('button', { name: 'save' }))
-  await waitFor(() => expect(mocks.notify).toHaveBeenCalledTimes(calls + 1))
-  expect(mocks.notify).toHaveBeenLastCalledWith('success', 'saved')
-}
 
 describe.each<HeaderRole>(['request', 'response'])('%s 全局 HTTP 头部隐藏设置', (role) => {
-  it('新增名称去除首尾空格并转小写；保存后隐藏匹配头部，正文和原始报文保持完整', async () => {
+  it('新增名称去除首尾空格并转小写，改动立即写入并隐藏匹配头部', async () => {
+    useEditorHeaderVisibility.setState({ hidden: { request: true, response: true } })
     const live = preview(role)
     const panel = (await open())[role]
-    fireEvent.change(panel.getByRole('textbox'), { target: { value: ' X-Custom ' } })
     fireEvent.click(panel.getByRole('button', { name: 'add' }))
+    fireEvent.change(panel.getByRole('textbox'), { target: { value: ' X-Custom ' } })
+    fireEvent.keyDown(panel.getByRole('textbox'), { key: 'Enter' })
+    await waitFor(() =>
+      expect(persistedSettings()[role].headers).toEqual(['x-custom', ...DEFAULT_HIDDEN_HTTP_HEADERS[role]]),
+    )
+    expect(persistedSettings()[role].hidden).toBe(true)
     expect(panel.getByText('x-custom')).toBeInTheDocument()
-    fireEvent.click(panel.getByRole('checkbox'))
-    expect(mocks.write).not.toHaveBeenCalled()
-    expect(live.hiddenAreas).not.toHaveBeenCalled()
-    await save()
-    expect(persistedSettings()[role].headers).toEqual([...DEFAULT_HIDDEN_HTTP_HEADERS[role], 'x-custom'])
-    if (role === 'request') expect(live.hiddenAreas).not.toHaveBeenCalled()
-    else expect(live.hiddenAreas).toHaveBeenLastCalledWith([range(2, 3)], expect.any(Object))
+    expect(live.hiddenAreas).toHaveBeenLastCalledWith([range(2, 3)], expect.any(Object))
     expect(preview(role).hiddenAreas).toHaveBeenLastCalledWith([range(2, 3)], expect.any(Object))
     expect(
       Array.from({ length: live.model.getLineCount() }, (_, n) => live.model.getLineContent(n + 1)).join('\n'),
     ).toBe(live.packet)
-    expect(panel.getByRole('textbox')).toHaveValue('')
+    expect(panel.queryByRole('textbox')).toBeNull()
   })
 
-  it('删除头部只影响该侧隐藏列表，保存后该头部重新显示', async () => {
+  it('删除头部立即生效，且只影响该侧隐藏列表', async () => {
     useEditorHeaderVisibility.setState({ hidden: { request: true, response: true } })
     const live = preview(role)
     const other = role === 'request' ? 'response' : 'request'
@@ -150,34 +138,32 @@ describe.each<HeaderRole>(['request', 'response'])('%s 全局 HTTP 头部隐藏�
     const panel = (await open())[role]
     expect(live.hiddenAreas).toHaveBeenLastCalledWith([range(2)], expect.any(Object))
     fireEvent.click(panel.getByRole('button', { name: `Remove ${baseHeader[role]}` }))
-    expect(panel.queryByText(baseHeader[role])).not.toBeInTheDocument()
-    await save()
-    expect(persistedSettings()[role].headers).toEqual(
-      DEFAULT_HIDDEN_HTTP_HEADERS[role].filter((name) => name !== baseHeader[role]),
+    await waitFor(() =>
+      expect(persistedSettings()[role].headers).toEqual(
+        DEFAULT_HIDDEN_HTTP_HEADERS[role].filter((name) => name !== baseHeader[role]),
+      ),
     )
+    expect(panel.queryByText(baseHeader[role])).not.toBeInTheDocument()
     expect(live.hiddenAreas).toHaveBeenLastCalledWith([], expect.any(Object))
     expect(useEditorHeaderVisibility.getState().headers[other]).toEqual(DEFAULT_HIDDEN_HTTP_HEADERS[other])
     expect(otherLive.hiddenAreas).toHaveBeenLastCalledWith([range(2)], expect.any(Object))
   })
 
-  it('清空会保存空列表，不自动回填默认值，也不隐藏任何头部', async () => {
+  it('清空会立即保存空列表，不自动回填默认值，也不隐藏任何头部', async () => {
     useEditorHeaderVisibility.setState({ hidden: { request: true, response: true } })
     const live = preview(role)
     const panel = (await open())[role]
-    fireEvent.change(panel.getByRole('textbox'), { target: { value: 'X-Pending' } })
     fireEvent.click(panel.getByRole('button', { name: 'clear' }))
-    expect(panel.getByRole('textbox')).toHaveValue('')
-    await save()
-    expect(persistedSettings()[role].headers).toEqual([])
+    await waitFor(() => expect(persistedSettings()[role].headers).toEqual([]))
     expect(persistedSettings()[role].hidden).toBe(true)
     expect(live.hiddenAreas).toHaveBeenLastCalledWith([], expect.any(Object))
     cleanup()
     const reopened = (await open())[role]
-    expect(reopened.getByText('empty')).toBeInTheDocument()
+    expect(reopened.getByText('noData')).toBeInTheDocument()
     expect(reopened.queryAllByRole('button', { name: /^Remove / })).toHaveLength(0)
   })
 
-  it('恢复默认重置该侧完整预置列表和默认隐藏开关，清理输入及错误，不改变另一侧', async () => {
+  it('恢复默认只重置该侧完整预置列表，保留当前隐藏状态，清理输入及错误，不改变另一侧', async () => {
     const other = role === 'request' ? 'response' : 'request'
     useEditorHeaderVisibility.setState({
       hidden: { request: true, response: true },
@@ -185,149 +171,118 @@ describe.each<HeaderRole>(['request', 'response'])('%s 全局 HTTP 头部隐藏�
     })
     const live = preview(role)
     const panel = (await open())[role]
-    fireEvent.change(panel.getByRole('textbox'), { target: { value: 'bad:header' } })
     fireEvent.click(panel.getByRole('button', { name: 'add' }))
+    fireEvent.change(panel.getByRole('textbox'), { target: { value: 'bad:header' } })
+    fireEvent.keyDown(panel.getByRole('textbox'), { key: 'Enter' })
     expect(panel.getByRole('alert')).toHaveTextContent('invalidName')
     fireEvent.click(panel.getByRole('button', { name: 'restoreDefaults' }))
     expect(panel.queryByRole('alert')).not.toBeInTheDocument()
-    expect(panel.getByRole('textbox')).toHaveValue('')
-    expect(panel.getByRole('checkbox')).not.toBeChecked()
+    expect(panel.queryByRole('textbox')).toBeNull()
+    await waitFor(() => expect(persistedSettings()[role].headers).toEqual(DEFAULT_HIDDEN_HTTP_HEADERS[role]))
+    expect(persistedSettings()[role].hidden).toBe(true)
     expect(panel.getAllByRole('button', { name: /^Remove / })).toHaveLength(DEFAULT_HIDDEN_HTTP_HEADERS[role].length)
-    await save()
-    expect(persistedSettings()[role].headers).toEqual(DEFAULT_HIDDEN_HTTP_HEADERS[role])
-    expect(persistedSettings()[role].hidden).toBe(false)
-    expect(live.hiddenAreas).toHaveBeenLastCalledWith(role === 'request' ? [range(2)] : [], expect.any(Object))
+    expect(live.hiddenAreas).toHaveBeenLastCalledWith([range(2)], expect.any(Object))
     expect(useEditorHeaderVisibility.getState().headers[other]).toEqual(['x-custom'])
     expect(useEditorHeaderVisibility.getState().hidden[other]).toBe(true)
   })
-
-  it('请求默认值只用于后续导入，响应保持同步；修改默认值不切换已有请求', async () => {
-    const live = preview(role)
-    const other = preview(role === 'request' ? 'response' : 'request')
-    const panel = (await open())[role]
-    expect(panel.getByRole('checkbox')).not.toBeChecked()
-    fireEvent.click(panel.getByRole('checkbox'))
-    await save()
-    expect(persistedSettings()[role].hidden).toBe(true)
-    if (role === 'request') expect(live.hiddenAreas).not.toHaveBeenCalled()
-    else expect(live.hiddenAreas).toHaveBeenLastCalledWith([range(2)], expect.any(Object))
-    expect(other.hiddenAreas).not.toHaveBeenCalled()
-    const newlyOpened = preview(role)
-    expect(newlyOpened.hiddenAreas).toHaveBeenLastCalledWith([range(2)], expect.any(Object))
-    fireEvent.click(panel.getByRole('checkbox'))
-    await save()
-    expect(persistedSettings()[role].hidden).toBe(false)
-    if (role === 'request') expect(live.hiddenAreas).not.toHaveBeenCalled()
-    else expect(live.hiddenAreas).toHaveBeenLastCalledWith([], expect.any(Object))
-    expect(newlyOpened.hiddenAreas).toHaveBeenLastCalledWith(role === 'request' ? [range(2)] : [], expect.any(Object))
-    expect(preview(role).hiddenAreas).not.toHaveBeenCalled()
-  })
 })
 
-describe('全局设置的提交、丢弃和失败处理', () => {
-  it('响应工具栏更新默认开关时，未保存的表单修改不会被覆盖', async () => {
-    const { response, unmount } = await open()
-    await act(async () => {
-      await useEditorHeaderVisibility.getState().toggle('response')
-    })
-    expect(response.getByRole('checkbox')).toBeChecked()
-    fireEvent.click(response.getByRole('button', { name: 'Remove server' }))
-    await act(async () => {
-      await useEditorHeaderVisibility.getState().toggle('response')
-    })
-    expect(response.queryByText('server')).not.toBeInTheDocument()
-    expect(response.getByRole('checkbox')).toBeChecked()
-    unmount()
-    const reopened = (await open()).response
-    expect(reopened.getByText('server')).toBeInTheDocument()
-    expect(reopened.getByRole('checkbox')).not.toBeChecked()
-  })
-
-  it.each<HeaderRole>(['request', 'response'])(
-    '%s 未保存就关闭：丢弃新增、删除、开关、输入与错误，不写入存储或影响编辑器',
-    async (role) => {
-      const live = preview(role)
-      const page = await open()
-      const panel = page[role]
-      expect(screen.queryByRole('button', { name: 'cancel' })).not.toBeInTheDocument()
-      fireEvent.change(panel.getByRole('textbox'), { target: { value: 'X-Draft' } })
-      fireEvent.click(panel.getByRole('button', { name: 'add' }))
-      fireEvent.click(panel.getByRole('button', { name: `Remove ${baseHeader[role]}` }))
-      fireEvent.click(panel.getByRole('checkbox'))
-      fireEvent.change(panel.getByRole('textbox'), { target: { value: 'Bad: header' } })
-      fireEvent.click(panel.getByRole('button', { name: 'add' }))
-      expect(panel.getByRole('alert')).toHaveTextContent('invalidName')
-      page.unmount()
-      const reopened = (await open())[role]
-      expect(reopened.queryByText('x-draft')).not.toBeInTheDocument()
-      expect(reopened.getByText(baseHeader[role])).toBeInTheDocument()
-      expect(reopened.getByRole('checkbox')).not.toBeChecked()
-      expect(reopened.getByRole('textbox')).toHaveValue('')
-      expect(reopened.queryByRole('alert')).not.toBeInTheDocument()
-      expect(mocks.write).not.toHaveBeenCalled()
-      expect(useEditorHeaderVisibility.getState().headers[role]).toEqual(DEFAULT_HIDDEN_HTTP_HEADERS[role])
-      expect(useEditorHeaderVisibility.getState().hidden[role]).toBe(false)
-      expect(live.hiddenAreas).not.toHaveBeenCalled()
-    },
-  )
-
-  it('只有点击保存才提交；之后清空或恢复默认但未保存，重新打开仍显示上次提交的配置', async () => {
+describe('全局设置的即时保存与失败处理', () => {
+  it('设置页不提供保存按钮，列表改动即时写入，工具栏切换不会覆盖名单', async () => {
     const page = await open()
-    fireEvent.change(page.request.getByRole('textbox'), { target: { value: 'X-Saved' } })
+    expect(screen.queryByRole('button', { name: 'save' })).toBeNull()
     fireEvent.click(page.request.getByRole('button', { name: 'add' }))
-    fireEvent.click(page.request.getByRole('checkbox'))
-    expect(mocks.write).not.toHaveBeenCalled()
-    await save()
-    const writesAfterSave = mocks.write.mock.calls.length
-    const stored = new Map(saved)
-    fireEvent.click(page.request.getByRole('button', { name: 'clear' }))
-    fireEvent.click(page.request.getByRole('button', { name: 'restoreDefaults' }))
-    expect(page.request.queryByText('x-saved')).not.toBeInTheDocument()
-    expect(page.request.getByRole('checkbox')).not.toBeChecked()
-    page.unmount()
-    const reopened = (await open()).request
-    expect(reopened.getByText('x-saved')).toBeInTheDocument()
-    expect(reopened.getByRole('checkbox')).toBeChecked()
-    expect(mocks.write).toHaveBeenCalledTimes(writesAfterSave)
-    expect(saved).toEqual(stored)
+    fireEvent.change(page.request.getByRole('textbox'), { target: { value: 'X-Live' } })
+    fireEvent.keyDown(page.request.getByRole('textbox'), { key: 'Enter' })
+    await waitFor(() => expect(persistedSettings().request.headers).toContain('x-live'))
+    await act(async () => {
+      await useEditorHeaderVisibility.getState().toggle('response')
+    })
+    expect(persistedSettings().response.hidden).toBe(true)
+    expect(useEditorHeaderVisibility.getState().headers.request).toContain('x-live')
   })
 
-  it('大小写不同的同名头部不能重复新增；非法名称阻止保存', async () => {
+  it('新增输入框失焦时也会提交', async () => {
     const { request } = await open()
-    fireEvent.change(request.getByRole('textbox'), { target: { value: ' ACCEPT ' } })
+    const addButton = request.getByRole('button', { name: 'add' })
+    fireEvent.mouseDown(addButton)
+    fireEvent.click(addButton)
+    fireEvent.change(request.getByRole('textbox'), { target: { value: 'X-Blur' } })
+    fireEvent.blur(request.getByRole('textbox'))
+    await waitFor(() =>
+      expect(persistedSettings().request.headers).toEqual(['x-blur', ...DEFAULT_HIDDEN_HTTP_HEADERS.request]),
+    )
+    expect(request.queryByRole('textbox')).toBeNull()
+  })
+
+  it.each([
+    ['clear', []],
+    ['restoreDefaults', [...DEFAULT_HIDDEN_HTTP_HEADERS.request]],
+  ])('草稿存在时点击 %s 先失焦也不会提交草稿', async (action, expected) => {
+    const { request } = await open()
     fireEvent.click(request.getByRole('button', { name: 'add' }))
+    fireEvent.change(request.getByRole('textbox'), { target: { value: 'X-Draft' } })
+    const button = request.getByRole('button', { name: action })
+    fireEvent.mouseDown(button)
+    fireEvent.blur(request.getByRole('textbox'))
+    fireEvent.click(button)
+    await waitFor(() => expect(persistedSettings().request.headers).toEqual(expected))
+    expect(useEditorHeaderVisibility.getState().headers.request).toEqual(expected)
+    expect(request.queryByRole('textbox')).toBeNull()
+  })
+
+  it('取消新增丢弃草稿且不写入远端', async () => {
+    const { request } = await open()
+    fireEvent.click(request.getByRole('button', { name: 'add' }))
+    fireEvent.change(request.getByRole('textbox'), { target: { value: 'X-Draft' } })
+    const cancel = request.getByRole('button', { name: 'cancelAdd' })
+    fireEvent.mouseDown(cancel)
+    fireEvent.blur(request.getByRole('textbox'))
+    fireEvent.click(cancel)
+    expect(request.queryByRole('textbox')).toBeNull()
+    expect(mocks.write).not.toHaveBeenCalled()
+    expect(useEditorHeaderVisibility.getState().headers.request).toEqual(DEFAULT_HIDDEN_HTTP_HEADERS.request)
+  })
+
+  it('大小写不同的同名头部不能重复新增；非法名称不写入', async () => {
+    const { request } = await open()
+    fireEvent.click(request.getByRole('button', { name: 'add' }))
+    fireEvent.change(request.getByRole('textbox'), { target: { value: ' ACCEPT ' } })
+    fireEvent.keyDown(request.getByRole('textbox'), { key: 'Enter' })
     expect(request.getByRole('alert')).toHaveTextContent('duplicateName')
     expect(request.getAllByRole('button', { name: 'Remove accept' })).toHaveLength(1)
+    expect(mocks.write).not.toHaveBeenCalled()
     fireEvent.change(request.getByRole('textbox'), { target: { value: 'Bad: header' } })
-    fireEvent.click(screen.getByRole('button', { name: 'save' }))
+    fireEvent.keyDown(request.getByRole('textbox'), { key: 'Enter' })
     expect(request.getByRole('alert')).toHaveTextContent('invalidName')
     expect(mocks.write).not.toHaveBeenCalled()
   })
 
-  it('保存包含尚未点击新增的合法输入；失败保留草稿，重试成功后才更新配置', async () => {
+  it('写入失败时保留输入和原列表，重试成功后即时生效', async () => {
     const { request } = await open()
     mocks.write.mockRejectedValueOnce(new Error('save failed'))
+    fireEvent.click(request.getByRole('button', { name: 'add' }))
     fireEvent.change(request.getByRole('textbox'), { target: { value: 'X-Pending' } })
-    fireEvent.click(screen.getByRole('button', { name: 'save' }))
+    fireEvent.keyDown(request.getByRole('textbox'), { key: 'Enter' })
     await waitFor(() => expect(mocks.failed).toHaveBeenCalled())
-    expect(mocks.notify).not.toHaveBeenCalled()
     expect(request.getByRole('textbox')).toHaveValue('X-Pending')
     expect(useEditorHeaderVisibility.getState().headers.request).not.toContain('x-pending')
-    expect(screen.getByRole('button', { name: 'save' })).toBeEnabled()
-    await save()
-    expect(persistedSettings().request.headers).toEqual([...DEFAULT_HIDDEN_HTTP_HEADERS.request, 'x-pending'])
-    expect(request.getByRole('textbox')).toHaveValue('')
+    fireEvent.keyDown(request.getByRole('textbox'), { key: 'Enter' })
+    await waitFor(() =>
+      expect(persistedSettings().request.headers).toEqual(['x-pending', ...DEFAULT_HIDDEN_HTTP_HEADERS.request]),
+    )
+    expect(request.queryByRole('textbox')).toBeNull()
     expect(request.getByText('x-pending')).toBeInTheDocument()
   })
 
-  it('加载失败时禁止保存，重试加载成功后才允许编辑', async () => {
+  it('加载失败后可重试，成功后直接显示列表', async () => {
     useEditorHeaderVisibility.setState({ ready: { request: false, response: false } })
     render(<HTTPHeaderVisibilitySettings />)
     await screen.findByRole('button', { name: 'retry' })
-    expect(screen.getByRole('button', { name: 'save' })).toBeDisabled()
+    expect(screen.queryByRole('region', { name: 'request' })).toBeNull()
     useEditorHeaderVisibility.setState({ ready: { request: true, response: true } })
     fireEvent.click(screen.getByRole('button', { name: 'retry' }))
     await screen.findByRole('region', { name: 'request' })
-    expect(screen.getByRole('button', { name: 'save' })).toBeEnabled()
+    expect(screen.queryByRole('button', { name: 'save' })).toBeNull()
   })
 })

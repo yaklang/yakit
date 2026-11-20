@@ -38,6 +38,7 @@ import { ChromeSvgIcon } from '@yakit-libs/yakit-ui-icons/oldicon/ChromeSvgIcon'
 import { YakitEmpty } from './yakitUI/YakitEmpty/YakitEmpty'
 import classNames from 'classnames'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
+import { getEditorViewCache, setEditorViewCache } from '@/utils/editorViewCache'
 import { binaryDisplayEnabledStore, useBinaryDisplayEnabled } from '@/store/binaryDisplayEnabled'
 import { YakitResizeBox } from './yakitUI/YakitResizeBox/YakitResizeBox'
 import { BrowserHTTPGateway } from './BrowserHTTPGateway'
@@ -538,6 +539,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                         fromMITM={fromMITM}
                         readOnly={true}
                         noHeader={true}
+                        isResponse={true}
                         originValue={flow.ResponseString}
                         defaultHttps={flow?.IsHTTPS}
                         // actions={[...actionFuzzer]}
@@ -1736,9 +1738,23 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
     }
   })
 
-  // 编辑器美化缓存
-  const [reqTypeOptionVal, setReqTypeOptionVal, getReqTypeOptionVal] = useGetSetState<RenderTypeOptionVal>()
-  const [resTypeOptionVal, setResTypeOptionVal, getResTypeOptionVal] = useGetSetState<RenderTypeOptionVal>()
+  // 编辑器美化缓存：首帧同步读取本地镜像，避免先文本后美化的闪动
+  const cachedReqTypeOptionVal = useMemo(
+    () => (getEditorViewCache(RemoteGV.HistoryRequestEditorBeautify) || undefined) as RenderTypeOptionVal | undefined,
+    [],
+  )
+  const cachedResTypeOptionVal = useMemo(
+    () => (getEditorViewCache(RemoteGV.HistoryResponseEditorBeautify) || undefined) as RenderTypeOptionVal | undefined,
+    [],
+  )
+  const [reqTypeOptionVal, setReqTypeOptionVal] = useGetSetState<RenderTypeOptionVal | undefined>(
+    cachedReqTypeOptionVal,
+  )
+  const [resTypeOptionVal, setResTypeOptionVal] = useGetSetState<RenderTypeOptionVal | undefined>(
+    cachedResTypeOptionVal,
+  )
+  const reqViewSyncedRef = useRef(false)
+  const resViewSyncedRef = useRef(false)
   // 编辑器编码
   const [codeKey, setCodeKey] = useState<string>('utf-8')
   const [codeLoading, setCodeLoading] = useState<boolean>(false)
@@ -1750,14 +1766,13 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
     if (reqArr.length) {
       setReqTypeOptionVal(undefined)
       setRemoteValue(RemoteGV.HistoryRequestEditorBeautify, '')
+      setEditorViewCache(RemoteGV.HistoryRequestEditorBeautify, '')
     } else {
-      if (!getReqTypeOptionVal()) {
+      if (!reqViewSyncedRef.current) {
+        reqViewSyncedRef.current = true
         getRemoteValue(RemoteGV.HistoryRequestEditorBeautify).then((res) => {
-          if (res) {
-            setReqTypeOptionVal(res)
-          } else {
-            setReqTypeOptionVal(undefined)
-          }
+          setReqTypeOptionVal(res || undefined)
+          setEditorViewCache(RemoteGV.HistoryRequestEditorBeautify, res || '')
         })
       }
     }
@@ -1765,14 +1780,13 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
     if (resArr.length) {
       setResTypeOptionVal(undefined)
       setRemoteValue(RemoteGV.HistoryResponseEditorBeautify, '')
+      setEditorViewCache(RemoteGV.HistoryResponseEditorBeautify, '')
     } else {
-      if (!getResTypeOptionVal()) {
+      if (!resViewSyncedRef.current) {
+        resViewSyncedRef.current = true
         getRemoteValue(RemoteGV.HistoryResponseEditorBeautify).then((res) => {
-          if (res) {
-            setResTypeOptionVal(res)
-          } else {
-            setResTypeOptionVal(undefined)
-          }
+          setResTypeOptionVal(res || undefined)
+          setEditorViewCache(RemoteGV.HistoryResponseEditorBeautify, res || '')
         })
       }
     }
@@ -1999,6 +2013,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
           <NewHTTPPacketEditor
             fromMITM={fromMITM}
             keepSearchName={`${pageType}-request`}
+            showHeaderVisibilityToggle={true}
             isShowBeautifyRender={!flow?.IsTooLargeRequest}
             title={(() => {
               const titleEle: ReactNode[] = []
@@ -2106,9 +2121,11 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
               if (typeOptionVal !== undefined) {
                 setReqTypeOptionVal(typeOptionVal)
                 setRemoteValue(RemoteGV.HistoryRequestEditorBeautify, typeOptionVal)
+                setEditorViewCache(RemoteGV.HistoryRequestEditorBeautify, typeOptionVal)
               } else {
                 setReqTypeOptionVal(undefined)
                 setRemoteValue(RemoteGV.HistoryRequestEditorBeautify, '')
+                setEditorViewCache(RemoteGV.HistoryRequestEditorBeautify, '')
               }
             }}
             highLightText={realReqHighLightText}
@@ -2146,15 +2163,18 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
             fromMITM={fromMITM}
             downstreamProxyStr={props.downstreamProxyStr}
             keepSearchName={`${pageType}-response`}
+            showHeaderVisibilityToggle={true}
             language={flow?.DisableRenderStyles ? 'text' : undefined}
             typeOptionVal={resTypeOptionVal}
             onTypeOptionVal={(typeOptionVal) => {
               if (typeOptionVal !== undefined) {
                 setResTypeOptionVal(typeOptionVal)
                 setRemoteValue(RemoteGV.HistoryResponseEditorBeautify, typeOptionVal)
+                setEditorViewCache(RemoteGV.HistoryResponseEditorBeautify, typeOptionVal)
               } else {
                 setResTypeOptionVal(undefined)
                 setRemoteValue(RemoteGV.HistoryResponseEditorBeautify, '')
+                setEditorViewCache(RemoteGV.HistoryResponseEditorBeautify, '')
               }
             }}
             isShowBeautifyRender={!flow?.IsTooLargeResponse}

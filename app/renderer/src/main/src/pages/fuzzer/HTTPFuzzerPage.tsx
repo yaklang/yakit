@@ -24,6 +24,8 @@ import {
   useUpdateEffect,
 } from 'ahooks'
 import { getRemoteValue, setRemoteValue } from '../../utils/kv'
+import { getEditorViewCache, setEditorViewCache } from '../../utils/editorViewCache'
+import { patchPageHeaderVisibility } from '../../utils/pageHeaderVisibility'
 import type { HTTPFuzzerTaskDetail } from './HTTPFuzzerHistory'
 import type { HotPatchTempItem } from './hotPatchShared'
 import { exportHTTPFuzzerResponse, exportPayloadResponse, exportExtractedDataResponse } from './HTTPFuzzerPageExport'
@@ -1022,15 +1024,40 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
   )
   const setRequestHeadersHidden = useMemoizedFn((hidden: boolean) => {
     updateRequestHeadersHidden(hidden)
-    const currentItem = queryPagesDataById(YakitRoute.HTTPFuzzer, props.id)
-    if (!currentItem?.pageParamsInfo.webFuzzerPageInfo) return
-    updatePagesDataCacheById(YakitRoute.HTTPFuzzer, {
-      ...currentItem,
-      pageParamsInfo: {
-        ...currentItem.pageParamsInfo,
-        webFuzzerPageInfo: { ...currentItem.pageParamsInfo.webFuzzerPageInfo, requestHeadersHidden: hidden },
-      },
-    })
+    patchPageHeaderVisibility(props.id, 'requestHeadersHidden', hidden, queryPagesDataById, updatePagesDataCacheById)
+  })
+  const [responseHeadersHidden, updateResponseHeadersHidden] = useState(
+    () => initWebFuzzerPageInfo().responseHeadersHidden ?? false,
+  )
+  const setResponseHeadersHidden = useMemoizedFn((hidden: boolean) => {
+    updateResponseHeadersHidden(hidden)
+    patchPageHeaderVisibility(props.id, 'responseHeadersHidden', hidden, queryPagesDataById, updatePagesDataCacheById)
+  })
+  const [previewRequestHeadersHidden, updatePreviewRequestHeadersHidden] = useState(
+    () => initWebFuzzerPageInfo().previewRequestHeadersHidden ?? false,
+  )
+  const setPreviewRequestHeadersHidden = useMemoizedFn((hidden: boolean) => {
+    updatePreviewRequestHeadersHidden(hidden)
+    patchPageHeaderVisibility(
+      props.id,
+      'previewRequestHeadersHidden',
+      hidden,
+      queryPagesDataById,
+      updatePagesDataCacheById,
+    )
+  })
+  const [previewResponseHeadersHidden, updatePreviewResponseHeadersHidden] = useState(
+    () => initWebFuzzerPageInfo().previewResponseHeadersHidden ?? false,
+  )
+  const setPreviewResponseHeadersHidden = useMemoizedFn((hidden: boolean) => {
+    updatePreviewResponseHeadersHidden(hidden)
+    patchPageHeaderVisibility(
+      props.id,
+      'previewResponseHeadersHidden',
+      hidden,
+      queryPagesDataById,
+      updatePagesDataCacheById,
+    )
   })
   const [browserTransformSelection, updateBrowserTransformSelection] = useState<BrowserTransformSelection | undefined>(
     initWebFuzzerPageInfo().browserTransformSelection,
@@ -2616,7 +2643,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
   }, [firstFull, secondFull])
 
   const firstNodeExtra = useMemo(() => {
-    return () => {
+    return (headerVisibilityToggle?: React.ReactNode) => {
       const preDisabled = !isbuttonIsSendReqStatus || currentPage === 0 || currentPage === 1
       const nextDisabled =
         !isbuttonIsSendReqStatus || !Number(total) || currentPage === 0 || currentPage >= Number(total)
@@ -2674,6 +2701,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                 </YakitCheckableTag>
               </>
             )}
+            {headerVisibilityToggle}
             <YakitButton
               size="small"
               type="outline2"
@@ -3805,6 +3833,8 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 ref={responseViewerRef}
                                 fuzzerResponse={httpResponse}
                                 request={requestRef.current}
+                                responseHeadersHidden={responseHeadersHidden}
+                                onResponseHeadersHiddenChange={setResponseHeadersHidden}
                                 defaultResponseSearch={defaultResponseSearch}
                                 system={props.system}
                                 showMatcherAndExtraction={showMatcherAndExtraction}
@@ -3845,6 +3875,11 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         getPreviewNetwork={getPreviewNetwork}
                                         // onSendToWebFuzzer={onSendToWebFuzzer}
                                         success={true}
+                                        showHeaderVisibilityToggle
+                                        requestHeadersHidden={previewRequestHeadersHidden}
+                                        onRequestHeadersHiddenChange={setPreviewRequestHeadersHidden}
+                                        responseHeadersHidden={previewResponseHeadersHidden}
+                                        onResponseHeadersHiddenChange={setPreviewResponseHeadersHidden}
                                         data={successFuzzer}
                                         query={query}
                                         setQuery={setQuery}
@@ -3862,6 +3897,11 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                                       <HTTPFuzzerPageTable
                                         getPreviewNetwork={getPreviewNetwork}
                                         success={false}
+                                        showHeaderVisibilityToggle
+                                        requestHeadersHidden={previewRequestHeadersHidden}
+                                        onRequestHeadersHiddenChange={setPreviewRequestHeadersHidden}
+                                        responseHeadersHidden={previewResponseHeadersHidden}
+                                        onResponseHeadersHiddenChange={setPreviewResponseHeadersHidden}
                                         data={failedFuzzer}
                                         query={query}
                                         setQuery={setQuery}
@@ -5166,6 +5206,9 @@ interface ResponseViewerProps {
   webFuzzerValue: string
   isHttps?: boolean
   request: string
+  /** 当前页签的响应头显示状态 */
+  responseHeadersHidden?: boolean
+  onResponseHeadersHiddenChange?: (hidden: boolean) => void
   showResponseInfoSecondEditor: boolean
   setShowResponseInfoSecondEditor: (b: boolean) => void
   secondNodeTitle?: () => JSX.Element
@@ -5202,6 +5245,8 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
       secondNodeExtra,
       webFuzzerValue,
       request,
+      responseHeadersHidden,
+      onResponseHeadersHiddenChange,
       inViewport = true,
       keepSearchName,
       onSetOnlyOneResEditor,
@@ -5326,8 +5371,13 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
       setShowMatcherAndExtraction(false)
     })
 
-    // 一个响应的编辑器美化渲染缓存
-    const [resTypeOptionVal, setResTypeOptionVal] = useState<RenderTypeOptionVal>()
+    // 一个响应的编辑器美化渲染缓存：首帧同步读取本地镜像
+    const [resTypeOptionVal, setResTypeOptionVal] = useState<RenderTypeOptionVal | undefined>(
+      () =>
+        (getEditorViewCache(FuzzerRemoteGV.WebFuzzerOneResEditorBeautifyRender) || undefined) as
+          | RenderTypeOptionVal
+          | undefined,
+    )
     // 编辑器编码
     const [codeKey, setCodeKey] = useState<string>('')
     const [codeLoading, setCodeLoading] = useState<boolean>(false)
@@ -5335,11 +5385,8 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
     useEffect(() => {
       if (responsePacket.byteLength || fuzzerResponse?.UUID) {
         getRemoteValue(FuzzerRemoteGV.WebFuzzerOneResEditorBeautifyRender).then((res) => {
-          if (res) {
-            setResTypeOptionVal(res)
-          } else {
-            setResTypeOptionVal(undefined)
-          }
+          setResTypeOptionVal(res || undefined)
+          setEditorViewCache(FuzzerRemoteGV.WebFuzzerOneResEditorBeautifyRender, res || '')
         })
         getRemoteValue(FuzzerRemoteGV.FuzzerCodeEnCoding).then((res) => {
           if (res) {
@@ -5474,6 +5521,8 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
           firstNode={
             <NewHTTPPacketEditor
               showHeaderVisibilityToggle
+              responseHeadersHidden={responseHeadersHidden}
+              onResponseHeadersHiddenChange={onResponseHeadersHiddenChange}
               keepSearchName={keepSearchName}
               language={fuzzerResponse?.DisableRenderStyles ? 'text' : undefined}
               isShowBeautifyRender={!fuzzerResponse?.IsTooLargeResponse}
@@ -5558,9 +5607,11 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                 if (typeOptionVal !== undefined) {
                   setResTypeOptionVal(typeOptionVal)
                   setRemoteValue(FuzzerRemoteGV.WebFuzzerOneResEditorBeautifyRender, typeOptionVal)
+                  setEditorViewCache(FuzzerRemoteGV.WebFuzzerOneResEditorBeautifyRender, typeOptionVal)
                 } else {
                   setResTypeOptionVal(undefined)
                   setRemoteValue(FuzzerRemoteGV.WebFuzzerOneResEditorBeautifyRender, '')
+                  setEditorViewCache(FuzzerRemoteGV.WebFuzzerOneResEditorBeautifyRender, '')
                 }
               }}
               onClickUrlMenu={copyUrl}

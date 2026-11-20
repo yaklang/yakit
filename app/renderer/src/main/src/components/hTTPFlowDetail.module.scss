@@ -269,3 +269,21 @@
     }
   }
 }
+
+.extra-chrome-btn {
+  border-radius: 4px;
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    background-color: var(--Colors-Use-Neutral-Bg);
+  }
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+}

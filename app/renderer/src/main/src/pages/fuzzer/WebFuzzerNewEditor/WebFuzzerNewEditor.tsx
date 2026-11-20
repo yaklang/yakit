@@ -1,5 +1,5 @@
 import React, { useEffect, useImperativeHandle, useMemo, useState } from 'react'
-import { type IMonacoEditor, NewHTTPPacketEditor } from '@/utils/editors'
+import { HeaderVisibilityButton, type IMonacoEditor, NewHTTPPacketEditor } from '@/utils/editors'
 import { insertFileFuzzTag, insertTemporaryFileFuzzTag } from '../InsertFileFuzzTag'
 import { monacoEditorWrite } from '../fuzzerTemplates'
 import type { OtherMenuListProps } from '@/components/yakitUI/YakitEditor/YakitEditorType'
@@ -45,7 +45,7 @@ export interface WebFuzzerNewEditorProps {
   setRequest: (s: string) => void
   setHotPatchCode: (s: string) => void
   setHotPatchCodeWithParamGetter: (s: string) => void
-  firstNodeExtra?: () => JSX.Element
+  firstNodeExtra?: (headerVisibilityToggle?: React.ReactNode) => JSX.Element
   pageId: string
   oneResponseValue?: {
     [key: string]: any
@@ -313,6 +313,7 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
     return (
       <NewHTTPPacketEditor
         showHeaderVisibilityToggle
+        hideHeaderVisibilityButton={!!firstNodeExtra}
         requestHeadersHidden={props.requestHeadersHidden}
         onRequestHeadersHiddenChange={props.onRequestHeadersHiddenChange}
         defaultHttps={isHttps}
@@ -344,7 +345,14 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
             <ByteCountTag selectionByteCount={selectionByteCount} itemKey="httpfuzzerRes" />
           </span>
         }
-        extraEnd={firstNodeExtra && firstNodeExtra()}
+        extraEnd={firstNodeExtra?.(
+          <HeaderVisibilityButton
+            role="request"
+            hidden={!!props.requestHeadersHidden}
+            disabled={hex}
+            onToggle={() => props.onRequestHeadersHiddenChange?.(!props.requestHeadersHidden)}
+          />,
+        )}
         onClickUrlMenu={copyUrl}
         onClickUrlWithoutQueryMenu={copyUrlWithoutQuery}
         onClickOpenBrowserMenu={onClickOpenBrowserMenu}

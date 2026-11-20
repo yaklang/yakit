@@ -58,9 +58,15 @@ export function useHiddenHTTPHeaders(
         reveal(onDocumentChange)
       } else update()
     }
+    const replaceModel = () => {
+      if (disposed) return
+      // 切换报文不是用户编辑：重新应用当前保存的显示状态，避免新报文被强制展开。
+      revealed = false
+      update()
+    }
     const subscriptions = [
       packetEditor.onDidChangeModelContent(change),
-      packetEditor.onDidChangeModel(change),
+      packetEditor.onDidChangeModel(replaceModel),
       packetEditor.onDidDispose(() => {
         disposed = true
       }),

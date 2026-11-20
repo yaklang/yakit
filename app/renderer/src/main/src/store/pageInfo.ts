@@ -208,8 +208,14 @@ export interface PluginBatchExecutorPageInfoProps {
 }
 export interface WebFuzzerPageInfoProps {
   pageId: string
-  /** 当前标签的请求头显示状态；只有发送报文到新标签时才应用全局默认值。 */
+  /** 当前标签的请求头显示状态；新标签默认显示。 */
   requestHeadersHidden?: boolean
+  /** 当前标签的响应头显示状态；新标签默认显示。 */
+  responseHeadersHidden?: boolean
+  /** 快速预览的请求头显示状态；新标签默认显示。 */
+  previewRequestHeadersHidden?: boolean
+  /** 快速预览的响应头显示状态；新标签默认显示。 */
+  previewResponseHeadersHidden?: boolean
   browserTransformSelection?: BrowserTransformSelectionContract
   advancedConfigValue: AdvancedConfigValueProps
   request: string
@@ -752,6 +758,9 @@ export const getFuzzerProcessedCacheData = (pageList) => {
         maxDelaySeconds: advancedConfigValue.maxDelaySeconds,
         request: ele.pageParamsInfo?.webFuzzerPageInfo?.request || defaultPostTemplate,
         requestHeadersHidden: ele.pageParamsInfo?.webFuzzerPageInfo?.requestHeadersHidden ?? false,
+        responseHeadersHidden: ele.pageParamsInfo?.webFuzzerPageInfo?.responseHeadersHidden ?? false,
+        previewRequestHeadersHidden: ele.pageParamsInfo?.webFuzzerPageInfo?.previewRequestHeadersHidden ?? false,
+        previewResponseHeadersHidden: ele.pageParamsInfo?.webFuzzerPageInfo?.previewResponseHeadersHidden ?? false,
         hotPatchCode: hotPatchCode,
         browserTransformSelection: ele.pageParamsInfo?.webFuzzerPageInfo?.browserTransformSelection,
         lastSelectedHistory: ele.pageParamsInfo?.webFuzzerPageInfo?.lastSelectedHistory,

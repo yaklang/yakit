@@ -387,7 +387,6 @@
     "showRequestHeaders": "Show all request headers",
     "hideResponseHeaders": "Hide common response headers (display only)",
     "showResponseHeaders": "Show all response headers",
-    "responseHeaderVisibilityScope": "{{action}}. Applies to WebFuzzer response views and immediately saves the response default.",
     "render": "Render",
     "compare": "Compare",
     "noWrap": "No Wrap",
