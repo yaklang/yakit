@@ -1,21 +1,13 @@
-import { act, renderHook } from '@testing-library/react'
+import { act, renderHook, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createStore } from 'zustand'
 import '../../ai-re-act/hooks/__test__/setupElectron'
 import { useAIGlobalConfigStore } from '@/store/aiGlobalConfig'
+import type { ModelContextState } from '@/pages/ai-re-act/hooks/aiRender'
 import useAIModelContext, { useCurrentModelContextReset } from '../useContext/useAIModelContext'
 
-const operations = vi.hoisted(() => ({
-  submit: vi.fn(),
-  saveSource: vi.fn(),
-  getModel: vi.fn(),
-}))
-vi.mock('../template/AIContextUsage/useSaveModelContext', () => ({
-  useSaveModelContext: (source: string) => {
-    operations.saveSource(source)
-    return operations.submit
-  },
-}))
+const operations = vi.hoisted(() => ({ submit: vi.fn(), getModel: vi.fn() }))
+vi.mock('../template/AIContextUsage/useSaveModelContext', () => ({ useSaveModelContext: () => operations.submit }))
 vi.mock('../grpc', () => ({ grpcGetAIModelContext: operations.getModel }))
 vi.mock('@/i18n/useI18nNamespaces', () => ({ useI18nNamespaces: () => ({ t: (key: string) => key }) }))
 
@@ -23,29 +15,20 @@ const store = createStore(() => ({
   modelContextUpdate: 0,
   execute: true,
   initLoading: false,
-  updateStateCount: vi.fn(),
+  updateStateCount: () => store.setState((state) => ({ modelContextUpdate: state.modelContextUpdate + 1 })),
 }))
-const settings = { context_key: 'model-key', threshold_tokens: 650000, disable_auto_adjust: true }
-const stream = { context_key: 'model-key', threshold_tokens: 500000, disable_auto_adjust: false, prompt_tokens: 125000 }
-const rawData = {
-  modelContext: {
-    status: 'ready',
-    generation: 0,
-    context: settings as typeof settings | undefined,
-    saved: undefined as typeof settings | undefined,
-    runtime: undefined as typeof stream | undefined,
-    error: undefined as string | undefined,
-    retryModelIdentity: undefined as (() => void) | undefined,
-    pending: undefined as
-      | {
-          baseline?: typeof stream
-          queuedPatch?: { threshold_tokens?: number; disable_auto_adjust?: boolean }
-          patch: { threshold_tokens: number; disable_auto_adjust: boolean }
-        }
-      | undefined,
-    failedPatch: undefined as { threshold_tokens: number } | undefined,
-  },
+const settings = {
+  provider: 'openai',
+  model: 'model',
+  context_key: 'model-key',
+  threshold_tokens: 650000,
+  minimum_threshold_tokens: 100000,
+  disable_auto_adjust: true,
+  source: 'manual' as const,
+  pending: false,
 }
+const primary = { ModelName: 'model', ProviderId: '0', Provider: { Type: 'openai' }, ExtraParams: [] }
+const rawData: { modelContext: ModelContextState } = { modelContext: { status: 'ready', generation: 0 } }
 let currentRawData = rawData
 const meta = { lifecycle: { current: true, closing: false } }
 vi.mock('@/pages/ai-re-act/hooks/useCurrentDataBySession', () => ({
@@ -53,57 +36,96 @@ vi.mock('@/pages/ai-re-act/hooks/useCurrentDataBySession', () => ({
   useCurrentStore: () => store,
   useCurrentMeta: () => meta,
 }))
+const response = {
+  Provider: 'openai',
+  Model: 'model',
+  ContextKey: 'model-key',
+  ThresholdTokens: 750000,
+  MinimumThresholdTokens: 100000,
+  DisableAutoAdjust: false,
+  Source: 'manual',
+}
+const publish = (patch: Partial<ModelContextState>) => {
+  rawData.modelContext = { ...rawData.modelContext, ...patch }
+  store.getState().updateStateCount()
+}
 
 describe('上下文设置的数据来源', () => {
   beforeEach(() => {
     operations.submit.mockReset().mockReturnValue(true)
-    operations.saveSource.mockClear()
-    operations.getModel.mockReset().mockResolvedValue({
-      Provider: 'openai',
-      Model: 'model',
-      ContextKey: 'model-key',
-      ThresholdTokens: 750000,
-      MinimumThresholdTokens: 100000,
-      DisableAutoAdjust: false,
-      Source: 'manual',
+    operations.getModel.mockReset().mockResolvedValue(response)
+    const config = useAIGlobalConfigStore.getState().aiGlobalConfig
+    useAIGlobalConfigStore.setState({
+      persistedAiGlobalConfig: { ...config, IntelligentModels: [primary] },
+      configSavePending: false,
     })
-    useAIGlobalConfigStore.setState({ persistedAiGlobalConfig: undefined, configSavePending: false })
     currentRawData = rawData
-    rawData.modelContext.generation = 0
-    rawData.modelContext.error = undefined
-    rawData.modelContext.retryModelIdentity = undefined
-    rawData.modelContext.context = settings
-    rawData.modelContext.saved = undefined
+    rawData.modelContext = { status: 'ready', generation: 0, saved: settings }
+    meta.lifecycle = { current: true, closing: false }
     store.setState({ execute: true, initLoading: false })
-    rawData.modelContext.status = 'ready'
-    rawData.modelContext.pending = undefined
-    rawData.modelContext.runtime = undefined
-    rawData.modelContext.failedPatch = undefined
   })
 
-  it('统一导出保存与阈值操作，并原样提交组合修改', () => {
+  it('统一提交阈值和自动调整组合修改', () => {
     const { result } = renderHook(() => useAIModelContext())
     const patch = { threshold_tokens: 750000, disable_auto_adjust: true }
     expect(result.current.save(patch)).toBe(true)
-    result.current.setThreshold(600000)
-    expect(operations.submit.mock.calls).toEqual([[patch], [{ threshold_tokens: 600000 }]])
-    expect(operations.saveSource).toHaveBeenLastCalledWith('settings')
+    expect(operations.submit).toHaveBeenCalledExactlyOnceWith(patch)
     expect(operations.getModel).not.toHaveBeenCalled()
   })
 
-  it.each([true, false])('设置自动调整为 %s 时转换为禁用标记', (enabled) => {
-    const { result } = renderHook(() => useAIModelContext('stream'))
-    result.current.setAutoAdjust(enabled)
-    expect(operations.submit).toHaveBeenCalledExactlyOnceWith({ disable_auto_adjust: !enabled })
-    expect(operations.saveSource).toHaveBeenLastCalledWith('stream')
+  it.each(['settings', 'stream'] as const)('%s 只从 GET 快照提供配置', (source) => {
+    rawData.modelContext.promptTokens = 125000
+    const { result } = renderHook(() => useAIModelContext(source))
+    expect(result.current).toMatchObject({
+      thresholdTokens: 650000,
+      editorThresholdTokens: 650000,
+      editorDisableAutoAdjust: true,
+      minimumThresholdTokens: 100000,
+      promptTokens: 125000,
+    })
   })
 
-  it('重试读取调用时最新失败修改，清除失败后改为查询', async () => {
-    const config = useAIGlobalConfigStore.getState().aiGlobalConfig
-    const primary = { ModelName: 'model', ProviderId: '0', Provider: { Type: 'openai' }, ExtraParams: [] }
-    useAIGlobalConfigStore.setState({
-      persistedAiGlobalConfig: { ...config, IntelligentModels: [primary] },
+  it('流入口初次收到用量且没有配置时自动读取 GET', async () => {
+    rawData.modelContext = { status: 'idle', generation: 0 }
+    const { result } = renderHook(() => useAIModelContext('stream'))
+    expect(operations.getModel).not.toHaveBeenCalled()
+    act(() => publish({ promptTokens: 125000 }))
+    await waitFor(() => expect(result.current.thresholdTokens).toBe(750000))
+    expect(operations.getModel).toHaveBeenCalledExactlyOnceWith({ Config: primary }, true)
+    expect(result.current.promptTokens).toBe(125000)
+  })
+
+  it('并存的流入口共用加载状态，避免重复自动 GET', async () => {
+    rawData.modelContext = { status: 'idle', generation: 0, promptTokens: 125000 }
+    const { result } = renderHook(() => [useAIModelContext('stream'), useAIModelContext('stream')])
+    await waitFor(() => expect(result.current[0].thresholdTokens).toBe(750000))
+    expect(operations.getModel).toHaveBeenCalledOnce()
+  })
+
+  it.each(['settings', 'stream'] as const)('打开 %s 弹层重新读取 GET，关闭不会读取', async (source) => {
+    const { rerender } = renderHook(({ open }) => useAIModelContext(source, open), { initialProps: { open: false } })
+    expect(operations.getModel).not.toHaveBeenCalled()
+    rerender({ open: true })
+    await waitFor(() => expect(rawData.modelContext.saved?.threshold_tokens).toBe(750000))
+    rerender({ open: false })
+    expect(operations.getModel).toHaveBeenCalledOnce()
+    rerender({ open: true })
+    await waitFor(() => expect(operations.getModel).toHaveBeenCalledTimes(2))
+  })
+
+  it('GET 失败可以从流入口重试，已有用量保持', async () => {
+    operations.getModel.mockRejectedValueOnce(new Error('query failed'))
+    rawData.modelContext = { status: 'idle', generation: 0, promptTokens: 125000 }
+    const { result } = renderHook(() => useAIModelContext('stream'))
+    await waitFor(() => expect(result.current.error).toBe('query failed'))
+    expect(result.current.promptTokens).toBe(125000)
+    await act(async () => {
+      result.current.retry()
     })
+    await waitFor(() => expect(result.current.thresholdTokens).toBe(750000))
+  })
+
+  it('失败修改使用调用时最新值重试，清除后重新 GET', async () => {
     const { result } = renderHook(() => useAIModelContext())
     const retry = result.current.retry
     rawData.modelContext.failedPatch = { threshold_tokens: 710000 }
@@ -111,217 +133,173 @@ describe('上下文设置的数据来源', () => {
     rawData.modelContext.failedPatch = { threshold_tokens: 720000 }
     retry()
     expect(operations.submit.mock.calls).toEqual([[{ threshold_tokens: 710000 }], [{ threshold_tokens: 720000 }]])
-    expect(operations.getModel).not.toHaveBeenCalled()
     rawData.modelContext.failedPatch = undefined
     await act(async () => {
-      await retry()
+      retry()
     })
-    expect(operations.getModel).toHaveBeenCalledExactlyOnceWith({ Config: primary }, true)
-    expect(rawData.modelContext.context?.threshold_tokens).toBe(750000)
+    expect(operations.getModel).toHaveBeenCalledOnce()
   })
 
-  it('显式 refresh 读取设置，默认挂载不会发起查询', async () => {
-    const config = useAIGlobalConfigStore.getState().aiGlobalConfig
-    const primary = { ModelName: 'model', ProviderId: '0', Provider: { Type: 'openai' }, ExtraParams: [] }
-    useAIGlobalConfigStore.setState({
-      persistedAiGlobalConfig: { ...config, IntelligentModels: [primary] },
-    })
-    const { result } = renderHook(() => useAIModelContext())
-    expect(operations.getModel).not.toHaveBeenCalled()
-    await act(async () => {
-      await result.current.refresh()
-    })
-    expect(operations.getModel).toHaveBeenCalledExactlyOnceWith({ Config: primary }, true)
-  })
-
-  it('流来源的刷新和无失败重试不查询设置，保存失败仍提交原修改', async () => {
-    const { result } = renderHook(() => useAIModelContext('stream'))
-    await act(async () => {
-      await result.current.refresh()
-      await result.current.retry()
-    })
-    expect(operations.getModel).not.toHaveBeenCalled()
-    expect(operations.submit).not.toHaveBeenCalled()
-    rawData.modelContext.failedPatch = { threshold_tokens: 680000 }
-    result.current.retry()
-    expect(operations.submit).toHaveBeenCalledExactlyOnceWith({ threshold_tokens: 680000 })
-    expect(operations.saveSource).toHaveBeenLastCalledWith('stream')
-  })
-
-  it.each([undefined, stream])('暴露身份查询错误并重试最新事件，用量为 %o', (runtime) => {
-    rawData.modelContext.retryModelIdentity = vi.fn()
-    rawData.modelContext.runtime = runtime
-    const { result, rerender } = renderHook(() => useAIModelContext('stream'))
-    expect(result.current).toMatchObject({
-      enabled: !!runtime,
-      identityRetryAvailable: true,
-      promptTokens: runtime?.prompt_tokens,
-      error: 'AIContextUsage.identityLookupFailed',
-    })
-    const retry = result.current.retry
-    const latestRetry = vi.fn()
-    rawData.modelContext.retryModelIdentity = latestRetry
-    retry()
-    expect(latestRetry).toHaveBeenCalledOnce()
-    expect(operations.getModel).not.toHaveBeenCalled()
-    act(() => store.setState({ execute: false }))
-    rerender()
-    expect(result.current.identityRetryAvailable).toBeUndefined()
-    expect(result.current.error).toBeUndefined()
-  })
-
-  it('设置弹窗保留保存失败的重试，身份恢复由用量入口处理', () => {
-    const retryIdentity = vi.fn()
-    rawData.modelContext.retryModelIdentity = retryIdentity
-    rawData.modelContext.failedPatch = { threshold_tokens: 710000 }
-    rawData.modelContext.error = 'save failed'
-    const { result } = renderHook(() => useAIModelContext('settings'))
-    expect(result.current.error).toBe('save failed')
-    result.current.retry()
-    expect(operations.submit).toHaveBeenCalledExactlyOnceWith({ threshold_tokens: 710000 })
-    expect(retryIdentity).not.toHaveBeenCalled()
-  })
-
-  it('只有可见输入区的当前会话响应主模型变化', () => {
-    const config = useAIGlobalConfigStore.getState().aiGlobalConfig
-    const setModel = (name: string) =>
-      useAIGlobalConfigStore.setState({
-        aiGlobalConfig: {
-          ...config,
-          IntelligentModels: [{ ModelName: name, ProviderId: '0', Provider: { Type: 'openai' }, ExtraParams: [] }],
-        },
-      })
-    const background = { modelContext: { ...rawData.modelContext } }
-    currentRawData = background
-    renderHook(() => useCurrentModelContextReset(false))
-    act(() => setModel('first'))
-    currentRawData = rawData
-    renderHook(() => useCurrentModelContextReset(true))
-    act(() => setModel('second'))
-    expect(rawData.modelContext).toMatchObject({ status: 'idle', generation: 1 })
-    expect(rawData.modelContext.context).toBeUndefined()
-    expect(background.modelContext.context).toBe(settings)
-    expect(background.modelContext.generation).toBe(0)
-  })
-
-  it('只在查询时加载，等流首包时保留上一次阈值并提示等待', () => {
-    rawData.modelContext.status = 'loading'
-    const { result, rerender } = renderHook(() => useAIModelContext())
-    expect(result.current).toMatchObject({ loading: true, waitingForContext: false })
-    rawData.modelContext.status = 'idle'
-    rerender()
-    expect(result.current).toMatchObject({ loading: false, waitingForContext: true, editorThresholdTokens: 650000 })
-  })
-
-  it('未建流也无已读设置时，编辑器仍显示等待 Set 确认的修改', () => {
-    store.setState({ execute: false })
-    rawData.modelContext.context = undefined
-    rawData.modelContext.pending = { patch: { threshold_tokens: 550000, disable_auto_adjust: true } }
-    const { result } = renderHook(() => useAIModelContext())
-    expect(result.current).toMatchObject({
-      editorThresholdTokens: 550000,
-      editorDisableAutoAdjust: true,
-      waitingForContext: false,
-    })
-  })
-
-  it('热更新等待回执时编辑器保留用户提交的值，用量仍按流计算', () => {
-    rawData.modelContext.runtime = stream
-    rawData.modelContext.pending = { baseline: stream, patch: { threshold_tokens: 700000, disable_auto_adjust: true } }
-    const { result } = renderHook(() => useAIModelContext('stream'))
-    expect(result.current).toMatchObject({
-      loading: false,
-      waitingForContext: true,
-      thresholdTokens: 500000,
-      editorThresholdTokens: 700000,
-      editorDisableAutoAdjust: true,
-    })
-  })
-
-  it('已排队的修改优先显示，未再次编辑的字段沿用待确认的值', () => {
-    rawData.modelContext.runtime = stream
+  it('待保存和排队修改只影响编辑值', () => {
+    rawData.modelContext.promptTokens = 125000
     rawData.modelContext.pending = {
-      baseline: stream,
-      patch: { threshold_tokens: 700000, disable_auto_adjust: true },
-      queuedPatch: { threshold_tokens: 750000 },
+      baseline: settings,
+      patch: { threshold_tokens: 700000, disable_auto_adjust: false },
+      queuedPatch: { threshold_tokens: 800000 },
     }
     const { result } = renderHook(() => useAIModelContext('stream'))
     expect(result.current).toMatchObject({
-      editorThresholdTokens: 750000,
-      editorDisableAutoAdjust: true,
-      thresholdTokens: 500000,
+      thresholdTokens: 650000,
+      editorThresholdTokens: 800000,
+      editorDisableAutoAdjust: false,
+      promptTokens: 125000,
     })
   })
 
-  it('显示缺少 context_key 的具体错误', () => {
-    const { result, unmount } = renderHook(() => useAIModelContext())
-    act(() => {
-      rawData.modelContext = {
-        ...rawData.modelContext,
-        status: 'idle',
-        context: undefined,
-        error: 'AIContextUsage.missingContextKey',
-        failedPatch: { threshold_tokens: 448000 },
-      }
-      store.setState(({ modelContextUpdate }) => ({ modelContextUpdate: modelContextUpdate + 1 }))
-    })
-    expect(result.current.error).toBe('AIContextUsage.missingContextKey')
-    unmount()
-    const reopened = renderHook(() => useAIModelContext())
-    expect(reopened.result.current.error).toBe('AIContextUsage.missingContextKey')
-  })
-
-  it('热更新失败后重新打开，输入框和开关使用更新前确认的设置', () => {
-    rawData.modelContext.failedPatch = { threshold_tokens: 448000 }
-    rawData.modelContext.error = 'rejected'
-    rawData.modelContext.runtime = { ...stream, threshold_tokens: 448000, disable_auto_adjust: false }
-    const { result } = renderHook(() => useAIModelContext('stream'))
-    expect(result.current).toMatchObject({
-      error: 'rejected',
-      editorThresholdTokens: settings.threshold_tokens,
-      editorDisableAutoAdjust: settings.disable_auto_adjust,
-    })
-  })
-
-  it('切换模型后，AI 设置可以使用查询到的新阈值，无需等待下一个流事件', () => {
-    const { result } = renderHook(() => useAIModelContext())
-    expect(result.current).toMatchObject({ thresholdTokens: 650000, disableAutoAdjust: true })
-  })
-
-  it('会话启动时立即读取随会话数据清空的快照', () => {
+  it('未建流时也显示待保存编辑值', () => {
     store.setState({ execute: false })
+    rawData.modelContext.saved = undefined
+    rawData.modelContext.pending = { patch: { threshold_tokens: 550000, disable_auto_adjust: true } }
     const { result } = renderHook(() => useAIModelContext())
-    expect(result.current.thresholdTokens).toBe(650000)
-    act(() => {
-      rawData.modelContext = { ...rawData.modelContext, status: 'idle', context: undefined, runtime: undefined }
-      store.setState({ execute: true })
-    })
-    expect(result.current.thresholdTokens).toBeUndefined()
+    expect(result.current).toMatchObject({ editorThresholdTokens: 550000, editorDisableAutoAdjust: true })
   })
 
-  it('没有流数据时，即使 AI 设置有值也不显示用量', () => {
-    const { result } = renderHook(() => useAIModelContext('stream'))
-    expect(result.current).toMatchObject({ enabled: false, thresholdTokens: undefined })
+  it('可见会话切换模型清空配置并保留会话用量，自动读取新模型', async () => {
+    rawData.modelContext.promptTokens = 125000
+    const { result } = renderHook(() => {
+      useCurrentModelContextReset(true)
+      return useAIModelContext('stream')
+    })
+    const nextModel = { ...primary, ModelName: 'next' }
+    act(() =>
+      useAIGlobalConfigStore.setState({
+        persistedAiGlobalConfig: {
+          ...useAIGlobalConfigStore.getState().persistedAiGlobalConfig!,
+          IntelligentModels: [nextModel],
+        },
+      }),
+    )
+    await waitFor(() => expect(result.current.thresholdTokens).toBe(750000))
+    expect(result.current.promptTokens).toBe(125000)
+    expect(operations.getModel).toHaveBeenCalledExactlyOnceWith({ Config: nextModel }, true)
+  })
+
+  it('后台会话不跟随全局模型清空快照', () => {
+    renderHook(() => useCurrentModelContextReset(false))
+    act(() =>
+      useAIGlobalConfigStore.setState({
+        persistedAiGlobalConfig: {
+          ...useAIGlobalConfigStore.getState().persistedAiGlobalConfig!,
+          IntelligentModels: [{ ...primary, ModelName: 'next' }],
+        },
+      }),
+    )
+    expect(rawData.modelContext.saved).toBe(settings)
+  })
+
+  it('模型切换后丢弃旧 GET 返回', async () => {
+    let resolveOld!: (value: typeof response) => void
+    operations.getModel.mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolveOld = resolve
+      }),
+    )
+    const { result } = renderHook(() => {
+      useCurrentModelContextReset(true)
+      return useAIModelContext('settings', true)
+    })
+    await waitFor(() => expect(operations.getModel).toHaveBeenCalledOnce())
+    act(() =>
+      useAIGlobalConfigStore.setState({
+        persistedAiGlobalConfig: {
+          ...useAIGlobalConfigStore.getState().persistedAiGlobalConfig!,
+          IntelligentModels: [{ ...primary, ModelName: 'next' }],
+        },
+      }),
+    )
+    await waitFor(() => expect(operations.getModel).toHaveBeenCalledTimes(2))
+    await act(async () => resolveOld({ ...response, ThresholdTokens: 900000 }))
+    expect(result.current.thresholdTokens).toBe(750000)
+  })
+
+  it('生命周期变化后丢弃旧 GET 返回', async () => {
+    let resolve!: (value: typeof response) => void
+    operations.getModel.mockReturnValueOnce(
+      new Promise((done) => {
+        resolve = done
+      }),
+    )
+    renderHook(() => useAIModelContext('settings', true))
+    meta.lifecycle = { current: true, closing: false }
+    await act(async () => resolve(response))
+    expect(rawData.modelContext.saved).toBe(settings)
+  })
+
+  it('关闭弹层后丢弃尚未返回的 GET', async () => {
+    let resolve!: (value: typeof response) => void
+    operations.getModel.mockReturnValueOnce(
+      new Promise((done) => {
+        resolve = done
+      }),
+    )
+    const { rerender } = renderHook(({ open }) => useAIModelContext('settings', open), { initialProps: { open: true } })
+    rerender({ open: false })
+    await act(async () => resolve(response))
+    expect(rawData.modelContext.saved).toBe(settings)
+  })
+
+  it('切换会话后旧查询不能写入任一会话', async () => {
+    let resolve!: (value: typeof response) => void
+    operations.getModel.mockReturnValueOnce(
+      new Promise((done) => {
+        resolve = done
+      }),
+    )
+    const { result, rerender } = renderHook(() => useAIModelContext('settings', true))
+    const next = { modelContext: { status: 'idle' as const, generation: 0 } as ModelContextState }
+    currentRawData = next
+    rerender()
+    await waitFor(() => expect(result.current.thresholdTokens).toBe(750000))
+    await act(async () => resolve({ ...response, ThresholdTokens: 900000 }))
+    expect(rawData.modelContext.saved).toBe(settings)
+    expect(next.modelContext.saved?.threshold_tokens).toBe(750000)
+  })
+
+  it('保存开始后丢弃旧 GET，保存中的主动刷新不额外查询', async () => {
+    let resolve!: (value: typeof response) => void
+    operations.getModel.mockReturnValueOnce(
+      new Promise((done) => {
+        resolve = done
+      }),
+    )
+    const { result } = renderHook(() => useAIModelContext('settings', true))
+    act(() =>
+      publish({
+        generation: rawData.modelContext.generation + 1,
+        pending: { baseline: settings, patch: { threshold_tokens: 800000 } },
+      }),
+    )
+    await act(async () => {
+      result.current.retry()
+      resolve(response)
+    })
+    expect(operations.getModel).toHaveBeenCalledOnce()
+    expect(rawData.modelContext.saved).toBe(settings)
+    expect(result.current.editorThresholdTokens).toBe(800000)
   })
 
   it.each([
     { execute: false, initLoading: false },
     { execute: true, initLoading: true },
-  ])('断开或准备重连时不展示旧连接的用量 %o', (connection) => {
+  ])('断开或准备重连时隐藏用量 %o', (connection) => {
     store.setState(connection)
-    rawData.modelContext.runtime = stream
+    rawData.modelContext.promptTokens = 125000
     const { result } = renderHook(() => useAIModelContext('stream'))
-    expect(result.current).toMatchObject({ enabled: false, promptTokens: undefined, thresholdTokens: undefined })
+    expect(result.current).toMatchObject({ enabled: false, promptTokens: undefined })
   })
 
-  it('用量只显示流中返回的值', () => {
-    rawData.modelContext.runtime = stream
-    rawData.modelContext.failedPatch = { threshold_tokens: 700000 }
+  it('没有流用量时不显示用量入口', () => {
     const { result } = renderHook(() => useAIModelContext('stream'))
-    expect(result.current).toMatchObject({
-      thresholdTokens: 500000,
-      promptTokens: 125000,
-      disableAutoAdjust: false,
-    })
+    expect(result.current).toMatchObject({ enabled: false, promptTokens: undefined })
   })
 })

@@ -440,19 +440,14 @@ export enum AINotifyType {
 }
 
 export declare namespace AIAgentGrpcApi {
-  /** model_context 流事件的 Content。 */
+  /** 会话用量和热更新失败回执；配置从 GetAIModelContext 获取。 */
   export interface ModelContext {
-    provider: string
-    model: string
-    context_key: string
-    threshold_tokens: number
-    minimum_threshold_tokens?: number
-    prompt_tokens: number
-    source: 'default' | 'manual' | 'learned'
-    pending: boolean
-    disable_auto_adjust: boolean
+    prompt_tokens?: number
+    /** 与已显示的阈值不同时重新查询配置。 */
+    threshold_tokens?: number
     error?: string
-    change?: { id: string; reason: 'manual' | 'overflow' | 'confirmed' }
+    /** 用于核对阈值变化或失败回执所属的模型。 */
+    context_key?: string
   }
 
   export type AIModelTier = AIModelTypeEnumType | (string & {})

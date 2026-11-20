@@ -28,7 +28,7 @@ const AIContextUsage: FC<AIContextUsageProps> = ({ className }) => {
 
   if (!usage) {
     if (open) setOpen(false)
-    if (context.identityRetryAvailable) {
+    if (context.enabled && context.error) {
       return (
         <Tooltip title={context.error} trigger={['hover', 'focus']}>
           <YakitButton

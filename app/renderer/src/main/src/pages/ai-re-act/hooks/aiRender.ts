@@ -7,53 +7,37 @@ import type { UIDiagnostic } from '../interactive-ui/validate'
 // #region AI-Agent 非会话列表外的渲染数据
 export type AIModelContextSource = 'settings' | 'stream'
 
-/** 查询得到的阈值快照没有流事件中的实时用量。 */
-export type ModelContextSnapshot = Omit<AIAgentGrpcApi.ModelContext, 'prompt_tokens'> &
-  Partial<Pick<AIAgentGrpcApi.ModelContext, 'prompt_tokens'>>
+/** 由 GetAIModelContext 返回的设置，独立于会话用量。 */
+export interface ModelContextSnapshot {
+  context_key: string
+  provider: string
+  model: string
+  threshold_tokens: number
+  minimum_threshold_tokens: number
+  disable_auto_adjust: boolean
+}
 
-export type ModelContextPatch = Partial<Pick<AIAgentGrpcApi.ModelContext, 'threshold_tokens' | 'disable_auto_adjust'>>
+export type ModelContextPatch = Partial<Pick<ModelContextSnapshot, 'threshold_tokens' | 'disable_auto_adjust'>>
 
 export interface PendingModelContextChange {
-  /** 本次提交的阈值或自动调整设置，用于核对引擎回执。 */
   patch: ModelContextPatch
-  /** 上次保存结束前再次关闭弹窗提交的修改，按字段保留最新值。 */
   queuedPatch?: ModelContextPatch
-  /** 等待保存结果的超时定时器，保存结束或状态重置时清除。 */
   timer?: ReturnType<typeof setTimeout>
-  /** 提交前的快照，用于匹配回执，并在缺少已确认快照时回滚。 */
   baseline?: ModelContextSnapshot
+  onHotpatchError?: (error: string) => void
 }
 
 export interface ModelContextState {
-  /** 模型上下文的加载和可用状态；unbound 表示未配置主模型，unsupported 表示引擎不支持查询。 */
   status: 'idle' | 'loading' | 'ready' | 'unbound' | 'unsupported' | 'error'
-  /** 状态版本号，用于忽略过期的异步结果和排队修改。 */
+  /** 会话、模型或读写请求切换时，用于丢弃过期的异步结果。 */
   generation: number
-  /** 主模型切换后的流事件目标；同一提供方有同名配置时，通过引擎核对上下文键。 */
-  expectedModel?: {
-    provider: string
-    model: string
-    resolveKey?: () => Promise<string>
-    /** 身份查询期间收到的事件，仅在引擎确认 context_key 后应用。 */
-    unverifiedEvents?: AIAgentGrpcApi.ModelContext[]
-  }
-  /** 身份查询失败后的重试入口，成功后可恢复尚未确认归属的用量。 */
-  retryModelIdentity?: () => void
-  /** 会话已有用量时，切换模型期间暂用的上限，新配置返回后以新阈值为准。 */
-  retainedThresholdTokens?: number
-  /** 当前会话最近一次测得的提示词 token 数。 */
+  /** 最近一次 model_context 上报的已用 token 数。 */
   promptTokens?: number
-  /** 从引擎查询或由引擎确认的最近快照，保存失败时用于恢复界面。 */
+  /** 触发 GET 的流事件阈值；界面继续显示 saved 中的配置。 */
+  refreshThreshold?: number
   saved?: ModelContextSnapshot
-  /** 当前连接最近一次收到的模型上下文快照，包含流事件上报的设置和用量。 */
-  runtime?: ModelContextSnapshot
-  /** 界面当前展示的快照，保存期间可包含尚待引擎确认的修改。 */
-  context?: ModelContextSnapshot
-  /** 正在等待保存结果的修改，包含等待期间排队的后续修改。 */
   pending?: PendingModelContextChange
-  /** 最近一次保存失败的修改，供用户重试。 */
   failedPatch?: ModelContextPatch
-  /** 加载或保存失败时展示的错误信息，可以是错误文本或翻译键。 */
   error?: string
 }
 

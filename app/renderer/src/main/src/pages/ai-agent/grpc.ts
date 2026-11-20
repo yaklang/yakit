@@ -41,23 +41,20 @@ import type {
 
 const { ipcRenderer } = window.require('electron')
 
-const requestAIModelContext = (
+const requestAIModelContext = async (
   method: 'GetAIModelContext' | 'SetAIModelContext',
   params: GetAIModelContextRequest | SetAIModelContextRequest,
   hiddenError?: boolean,
 ): Promise<AIModelContextResponse> => {
-  return new Promise((resolve, reject) => {
-    ipcRenderer
-      .invoke(method, params)
-      .then(resolve)
-      .catch((error) => {
-        if (!hiddenError) {
-          const message = method === 'GetAIModelContext' ? '获取模型上下文失败:' : '保存模型上下文失败:'
-          yakitNotify('error', message + error)
-        }
-        reject(error)
-      })
-  })
+  try {
+    return await ipcRenderer.invoke(method, params)
+  } catch (error) {
+    if (!hiddenError) {
+      const message = method === 'GetAIModelContext' ? '获取模型上下文失败:' : '保存模型上下文失败:'
+      yakitNotify('error', message + error)
+    }
+    throw error
+  }
 }
 
 export const grpcGetAIModelContext: APIFunc<GetAIModelContextRequest, AIModelContextResponse> = (params, hiddenError) =>

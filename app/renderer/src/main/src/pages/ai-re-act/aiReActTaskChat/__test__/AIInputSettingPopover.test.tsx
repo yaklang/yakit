@@ -28,14 +28,11 @@ const mocks = vi.hoisted(() => ({
     minimumThresholdTokens: 100000,
     editorDisableAutoAdjust: false,
     waitingForContext: false,
-    disableAutoAdjust: false,
+
     loading: false,
-    saving: false,
-    setThreshold: vi.fn(),
-    setAutoAdjust: vi.fn(),
+
     retry: vi.fn(),
     save: vi.fn(),
-    refresh: vi.fn(),
   },
 }))
 
@@ -62,8 +59,8 @@ vi.mock('@/pages/ai-agent/useContext/useStore', () => ({
 
 vi.mock('@/pages/ai-agent/useContext/useAIModelContext', () => {
   const useMockModelContext = (source: AIModelContextSource, open?: boolean) => {
-    const refresh = useRefreshModelContext(source, open)
-    return { ...mocks.modelContext, refresh }
+    useRefreshModelContext(source, open)
+    return mocks.modelContext
   }
   return { default: useMockModelContext }
 })
@@ -189,9 +186,7 @@ const { AIInputSettingPopover } = await import('../AIReActTaskChat')
 describe('AIInputSettingPopover', () => {
   beforeEach(() => {
     mocks.modelContext.enabled = false
-    mocks.modelContext.setThreshold.mockReset()
     mocks.modelContext.save.mockReset()
-    mocks.modelContext.refresh.mockReset()
     mocks.modelContext.editorThresholdTokens = 500000
     mocks.modelContext.editorDisableAutoAdjust = false
     mocks.setting = { SingleModelMode: false, SyncPerceptionTrigger: false, EnablePlan: false }

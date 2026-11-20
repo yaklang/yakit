@@ -7,22 +7,31 @@ import { useCurrentRawData, useCurrentRequest, useCurrentStore } from '@/pages/a
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
 import { getCanonicalAIGlobalConfig } from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
 import {
-  DEFAULT_MINIMUM_THRESHOLD_TOKENS,
-  enqueueModelContextSave,
-  getStreamModelContext,
+  getConfirmedAIConfig,
   sameModelContextIdentity,
   toModelContextSnapshot,
   updateModelContextState,
 } from '@/pages/ai-re-act/hooks/modelContext'
 import type {
-  AIModelContextSource,
   ModelContextPatch,
+  ModelContextSnapshot,
+  ModelContextState,
   PendingModelContextChange,
 } from '@/pages/ai-re-act/hooks/aiRender'
-import { grpcSetAIModelContext } from '../../grpc'
+import { grpcGetAIModelContext, grpcSetAIModelContext } from '../../grpc'
 import type { GetAIModelContextRequest } from '../../type/modelContext'
 
-export const useSaveModelContext = (source: AIModelContextSource) => {
+const matchesPatch = (saved: ModelContextSnapshot, patch: ModelContextPatch) =>
+  (patch.threshold_tokens === undefined || patch.threshold_tokens === saved.threshold_tokens) &&
+  (patch.disable_auto_adjust === undefined || patch.disable_auto_adjust === saved.disable_auto_adjust)
+
+const modelTarget = ({ provider, model, context_key }: ModelContextSnapshot): GetAIModelContextRequest => ({
+  Provider: provider,
+  Model: model,
+  ContextKey: context_key,
+})
+
+export const useSaveModelContext = () => {
   const rawData = useCurrentRawData()
   const store = useCurrentStore()
   const request = useCurrentRequest()
@@ -34,65 +43,90 @@ export const useSaveModelContext = (source: AIModelContextSource) => {
   const submit = (patch: ModelContextPatch): boolean => {
     const current = rawData.modelContext
     const { execute } = store.getState()
-    const streamOnly = source === 'stream'
-    if (!sessionId || (streamOnly && !execute)) {
+    if (execute && !sessionId) {
       updateModelContextState(session, { failedPatch: patch, error: 'AIContextUsage.sessionUnavailable' })
       yakitNotify('error', t('AIContextUsage.sessionUnavailable'))
       return false
     }
-    // 后台会话可能保留旧主模型；设置查询确认前，离线保存由当前 Config 定位目标。
-    const baseline = streamOnly
-      ? getStreamModelContext(current)
-      : current.status === 'ready'
-        ? (current.saved ?? current.runtime)
-        : undefined
-    if (execute && !baseline?.context_key) {
-      updateModelContextState(session, { failedPatch: patch, error: 'AIContextUsage.missingContextKey' })
-      yakitNotify('error', t('AIContextUsage.missingContextKey'))
-      return false
+    if (current.pending) {
+      current.pending.queuedPatch = { ...current.pending.queuedPatch, ...patch }
+      updateModelContextState(session, { pending: current.pending })
+      return true
     }
-    if (enqueueModelContextSave(session, patch, submit)) return true
-    if (
-      (patch.threshold_tokens === undefined || patch.threshold_tokens === baseline?.threshold_tokens) &&
-      (patch.disable_auto_adjust === undefined || patch.disable_auto_adjust === baseline?.disable_auto_adjust)
-    )
-      return false
+    const baseline = current.status === 'ready' && current.saved?.context_key ? current.saved : undefined
+    if (!Object.keys(patch).length || (baseline && matchesPatch(baseline, patch))) return false
     if (
       patch.threshold_tokens !== undefined &&
       (!Number.isSafeInteger(patch.threshold_tokens) ||
-        patch.threshold_tokens < (baseline?.minimum_threshold_tokens ?? DEFAULT_MINIMUM_THRESHOLD_TOKENS) ||
+        patch.threshold_tokens < (baseline?.minimum_threshold_tokens ?? 0) ||
         patch.threshold_tokens > 1000000)
     )
       return false
 
-    const generation = execute ? current.generation : current.generation + 1
     const pending: PendingModelContextChange = { patch, baseline }
-    const fail = (error: unknown) => {
-      if (rawData.modelContext.pending !== pending) return
+    const generation = current.generation + 1
+    const isPending = () => rawData.modelContext.pending === pending
+    const settle = (result: Partial<ModelContextState>) => {
+      if (!isPending()) return
+      updateModelContextState(session, { ...result, pending: undefined })
       const latest = rawData.modelContext
-      const previous = baseline && (latest.saved ?? baseline)
-      updateModelContextState(session, {
-        status: previous ? latest.status : 'error',
-        pending: undefined,
+      const key = pending.baseline?.context_key
+      if (latest.generation !== generation || latest.pending || (key && key !== latest.saved?.context_key)) return
+      if (pending.queuedPatch) submit(pending.queuedPatch)
+    }
+    const fail = (error: unknown) => {
+      settle({
+        status: pending.baseline ? 'ready' : 'error',
+        saved: pending.baseline,
         failedPatch: patch,
-        context: previous && { ...previous, prompt_tokens: latest.runtime?.prompt_tokens },
         error: error instanceof Error ? error.message : String(error),
       })
     }
+    const finish = (saved: ModelContextSnapshot) => settle({ status: 'ready', saved, error: undefined })
+    pending.timer = setTimeout(() => fail('AIContextUsage.saveTimeout'), 10000)
     updateModelContextState(session, {
-      pending,
       generation,
-      context: baseline && { ...baseline, ...patch },
+      pending,
       error: undefined,
       failedPatch: undefined,
     })
-    pending.timer = setTimeout(() => fail('AIContextUsage.saveTimeout'), 10000)
-    const configState = useAIGlobalConfigStore.getState()
-    // 保存绑定提交时的会话，弹窗关闭或切换会话后仍由原会话接收结果。
+
     const send = async () => {
       try {
-        if (rawData.modelContext.pending !== pending) return
-        if (execute && baseline) {
+        if (!isPending()) return
+        let target: GetAIModelContextRequest
+        if (baseline) {
+          target = modelTarget(baseline)
+        } else {
+          const config = getConfirmedAIConfig(useAIGlobalConfigStore.getState()) ?? (await getCanonicalAIGlobalConfig())
+          if (!isPending()) return
+          const model = config.IntelligentModels?.[0]
+          if (!model?.Provider?.Type || !model.ModelName) throw new Error('AIContextUsage.sessionUnavailable')
+          target = { Config: model }
+        }
+
+        if (!execute) {
+          await grpcSetAIModelContext(
+            {
+              ...target,
+              ThresholdTokens: patch.threshold_tokens ?? 0,
+              ...(patch.disable_auto_adjust === undefined ? {} : { DisableAutoAdjust: patch.disable_auto_adjust }),
+            },
+            true,
+          )
+        } else {
+          const saved = baseline ?? toModelContextSnapshot(await grpcGetAIModelContext(target, true))
+          if (!isPending()) return
+          pending.baseline = saved
+          target = modelTarget(saved)
+          if (patch.threshold_tokens !== undefined && patch.threshold_tokens < saved.minimum_threshold_tokens) {
+            throw new Error('AIContextUsage.saveFailed')
+          }
+          if (matchesPatch(saved, patch)) {
+            finish(saved)
+            return
+          }
+          pending.onHotpatchError = fail
           const accepted = globalSessionEngine.handleSendMessage({
             token: sessionId,
             type: 'casual',
@@ -100,7 +134,7 @@ export const useSaveModelContext = (source: AIModelContextSource) => {
               IsConfigHotpatch: true,
               HotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_RuntimeContextSizeLimit,
               Params: {
-                ModelContextKey: baseline.context_key,
+                ModelContextKey: saved.context_key,
                 RuntimeContextSizeLimit: patch.threshold_tokens ?? 0,
                 ...(patch.disable_auto_adjust === undefined
                   ? {}
@@ -109,42 +143,22 @@ export const useSaveModelContext = (source: AIModelContextSource) => {
             },
             onSendError: fail,
           })
-          if (!accepted) fail('AIContextUsage.sessionUnavailable')
-          return
+          if (!accepted) throw new Error('AIContextUsage.sessionUnavailable')
         }
-        let target: GetAIModelContextRequest
-        if (baseline?.context_key) {
-          target = { Provider: baseline.provider, Model: baseline.model, ContextKey: baseline.context_key }
-        } else {
-          const config =
-            configState.persistedAiGlobalConfig && !configState.configSavePending
-              ? configState.persistedAiGlobalConfig
-              : await getCanonicalAIGlobalConfig()
-          const model = config.IntelligentModels?.[0]
-          if (!model?.Provider?.Type || !model.ModelName || rawData.modelContext.pending !== pending) {
-            throw new Error('AIContextUsage.sessionUnavailable')
+
+        // 热更新异步生效；在保存超时前回读同一模型，避免把发送成功当作配置已生效。
+        while (isPending()) {
+          const saved = toModelContextSnapshot(await grpcGetAIModelContext(target, true))
+          if (!isPending()) return
+          if (pending.baseline && !sameModelContextIdentity(pending.baseline, saved)) {
+            throw new Error('AIContextUsage.loadFailed')
           }
-          target = { Config: model }
+          if (!execute || matchesPatch(saved, patch)) {
+            finish(saved)
+            return
+          }
+          await new Promise<void>((resolve) => setTimeout(resolve, 300))
         }
-        const saved = toModelContextSnapshot(
-          await grpcSetAIModelContext(
-            {
-              ...target,
-              ThresholdTokens: patch.threshold_tokens ?? 0,
-              ...(patch.disable_auto_adjust === undefined ? {} : { DisableAutoAdjust: patch.disable_auto_adjust }),
-            },
-            true,
-          ),
-        )
-        if (rawData.modelContext.pending !== pending) return
-        if (baseline?.context_key && !sameModelContextIdentity(baseline, saved)) return
-        updateModelContextState(session, {
-          status: 'ready',
-          pending: undefined,
-          saved,
-          context: saved,
-          error: undefined,
-        })
       } catch (error) {
         fail(error)
       }

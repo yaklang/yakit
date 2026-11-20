@@ -13,10 +13,9 @@ const mocks = vi.hoisted(() => ({
     waitingForContext: false,
     thresholdTokens: 500000 as number | undefined,
     promptTokens: 125000 as number | undefined,
-    disableAutoAdjust: false,
+
     loading: false,
-    saving: false,
-    identityRetryAvailable: false,
+
     error: undefined as string | undefined,
   },
   save: vi.fn(),
@@ -66,7 +65,6 @@ describe('AIContextUsage', () => {
     mocks.context.enabled = true
     mocks.context.promptTokens = 125000
     mocks.context.thresholdTokens = 500000
-    mocks.context.identityRetryAvailable = false
     mocks.context.error = undefined
     mocks.save.mockClear()
     mocks.retry.mockClear()
@@ -141,12 +139,11 @@ describe('AIContextUsage', () => {
     expect(screen.getByRole('button', { name: 'Context 25%' })).toBeInTheDocument()
   })
 
-  it('身份查询失败且无实测用量时提供重试入口，恢复后显示用量', () => {
-    mocks.context.enabled = false
-    mocks.context.promptTokens = undefined
+  it('GET 查询失败时提供重试入口，恢复后显示用量', () => {
+    mocks.context.enabled = true
+    mocks.context.promptTokens = 125000
     mocks.context.thresholdTokens = undefined
-    mocks.context.identityRetryAvailable = true
-    mocks.context.error = 'identity lookup failed'
+    mocks.context.error = 'query failed'
     const { rerender } = render(<AIContextUsage />)
     const retry = screen.getByRole('button', { name: en.AIContextUsage.retryUsage })
     expect(retry).toHaveAttribute('data-ai-context-usage')
@@ -154,7 +151,6 @@ describe('AIContextUsage', () => {
     fireEvent.click(retry)
     expect(mocks.retry).toHaveBeenCalledOnce()
     expect(mocks.save).not.toHaveBeenCalled()
-    mocks.context.identityRetryAvailable = false
     mocks.context.enabled = true
     mocks.context.promptTokens = 125000
     mocks.context.thresholdTokens = 500000

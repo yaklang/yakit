@@ -57,14 +57,11 @@ const modelContext = vi.hoisted(() => ({
   enabled: true,
   thresholdTokens: 500000,
   promptTokens: 125000 as number | undefined,
-  disableAutoAdjust: false,
+
   loading: false,
-  saving: false,
-  setThreshold: vi.fn(),
-  setAutoAdjust: vi.fn(),
+
   retry: vi.fn(),
   save: vi.fn(),
-  refresh: vi.fn(),
 }))
 vi.mock('@/pages/ai-agent/useContext/useAIModelContext', () => ({
   default: () => modelContext,

@@ -259,7 +259,6 @@
     "waitingContext": "等待後端回傳資料",
     "loadFailed": "讀取上下文設定失敗",
     "retryUsage": "用量載入失敗，重試",
-    "identityLookupFailed": "無法確認目前模型的用量，請重試。",
     "saveFailed": "儲存上下文設定失敗"
   },
   "AIRunningStatus": {

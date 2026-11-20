@@ -40,14 +40,11 @@ const props = () => ({
   minimumThresholdTokens: 125000,
   editorDisableAutoAdjust: false,
   waitingForContext: false,
-  disableAutoAdjust: false,
+
   loading: false,
-  saving: false,
-  setThreshold: vi.fn(),
-  setAutoAdjust: vi.fn(),
+
   retry: vi.fn(),
   save: vi.fn(),
-  refresh: vi.fn(),
 })
 
 const mockContext = (context: ReturnType<typeof props>) => {
@@ -55,7 +52,6 @@ const mockContext = (context: ReturnType<typeof props>) => {
     const refresh = useRefreshModelContext(source, open)
     return {
       ...context,
-      refresh,
       save: mocks.save,
       retry: () => {
         const { failedPatch } = session.rawData.modelContext
@@ -114,22 +110,25 @@ describe('AIModelContextSettings', () => {
     expect(screen.getByRole('switch', { name: 'AIContextUsage.autoAdjust' })).toBeChecked()
   })
 
-  it('每次打开读取主模型设置，关闭后的旧查询不会覆盖重新打开的结果', async () => {
-    useAIGlobalConfigStore.setState({ persistedAiGlobalConfig: configFor('owner-a') })
-    mockContext(props())
-    const old = deferred<AIModelContextResponse>()
-    mocks.getModel
-      .mockReturnValueOnce(old.promise)
-      .mockResolvedValueOnce({ ...responseFor('key-a'), ThresholdTokens: 650000 })
-    const view = render(<AIModelContextSettings source="settings" open />)
-    await waitFor(() => expect(mocks.getModel).toHaveBeenCalledOnce())
-    view.rerender(<AIModelContextSettings source="settings" open={false} />)
-    expect(rawData.modelContext.status).toBe('idle')
-    view.rerender(<AIModelContextSettings source="settings" open />)
-    await waitFor(() => expect(rawData.modelContext.context?.threshold_tokens).toBe(650000))
-    await act(async () => old.resolve(responseFor('key-a')))
-    expect(rawData.modelContext.context?.threshold_tokens).toBe(650000)
-  })
+  it.each(['settings', 'stream'] as const)(
+    '%s 面板每次打开读取主模型设置，关闭后的旧查询不会覆盖重新打开的结果',
+    async (source) => {
+      useAIGlobalConfigStore.setState({ persistedAiGlobalConfig: configFor('owner-a') })
+      mockContext(props())
+      const old = deferred<AIModelContextResponse>()
+      mocks.getModel
+        .mockReturnValueOnce(old.promise)
+        .mockResolvedValueOnce({ ...responseFor('key-a'), ThresholdTokens: 650000 })
+      const view = render(<AIModelContextSettings source={source} open />)
+      await waitFor(() => expect(mocks.getModel).toHaveBeenCalledOnce())
+      view.rerender(<AIModelContextSettings source={source} open={false} />)
+      expect(rawData.modelContext.status).toBe('idle')
+      view.rerender(<AIModelContextSettings source={source} open />)
+      await waitFor(() => expect(rawData.modelContext.saved?.threshold_tokens).toBe(650000))
+      await act(async () => old.resolve(responseFor('key-a')))
+      expect(rawData.modelContext.saved?.threshold_tokens).toBe(650000)
+    },
+  )
 
   it('切换主模型后清空未提交草稿，并忽略旧模型查询', async () => {
     useAIGlobalConfigStore.setState({ persistedAiGlobalConfig: configFor('owner-a') })
@@ -140,27 +139,25 @@ describe('AIModelContextSettings', () => {
     render(<AIModelContextSettings source="settings" ref={ref} />)
     fireEvent.change(screen.getByRole('spinbutton'), { target: { value: '700' } })
     act(() => useAIGlobalConfigStore.setState({ persistedAiGlobalConfig: configFor('owner-b') }))
-    await waitFor(() => expect(rawData.modelContext.context?.context_key).toBe('key-b'))
+    await waitFor(() => expect(rawData.modelContext.saved?.context_key).toBe('key-b'))
     await act(async () => old.resolve(responseFor('key-a')))
-    expect(rawData.modelContext.context?.context_key).toBe('key-b')
+    expect(rawData.modelContext.saved?.context_key).toBe('key-b')
     expect(screen.getByRole('spinbutton')).toHaveValue('500')
     act(() => ref.current?.save())
     expect(mocks.save).not.toHaveBeenCalled()
   })
 
-  it('查询期间收到同模型新流事件时保留实时设置和用量', async () => {
+  it('查询期间收到新用量时保留实测用量，阈值使用查询结果', async () => {
     useAIGlobalConfigStore.setState({ persistedAiGlobalConfig: configFor('owner-a') })
     mockContext(props())
     const response = deferred<AIModelContextResponse>()
     mocks.getModel.mockReturnValueOnce(response.promise)
     render(<AIModelContextSettings source="settings" />)
-    const runtime = { ...toModelContextSnapshot(responseFor('key-a')), threshold_tokens: 700000, prompt_tokens: 25000 }
-    rawData.modelContext = { ...rawData.modelContext, runtime, context: runtime, saved: runtime }
+    rawData.modelContext = { ...rawData.modelContext, promptTokens: 25000 }
     await act(async () => response.resolve(responseFor('key-a')))
     expect(rawData.modelContext).toMatchObject({
       status: 'ready',
-      context: { threshold_tokens: 700000 },
-      saved: { threshold_tokens: 700000 },
+      saved: { threshold_tokens: 500000 },
       promptTokens: 25000,
     })
   })
@@ -170,20 +167,19 @@ describe('AIModelContextSettings', () => {
     mockContext(props())
     const response = deferred<AIModelContextResponse>()
     const baseline = toModelContextSnapshot(responseFor('key-a'))
-    rawData.modelContext = { status: 'ready', generation: 0, saved: baseline, runtime: baseline, context: baseline }
-    mocks.getModel
-      .mockImplementationOnce(() =>
-        response.promise.then((value) => {
-          if (result === 'reject') throw new Error('late query failure')
-          return value
-        }),
-      )
-      .mockResolvedValueOnce({ ...responseFor('key-a'), ThresholdTokens: 700000 })
+    rawData.modelContext = { status: 'ready', generation: 0, saved: baseline }
+    mocks.getModel.mockImplementationOnce(() =>
+      response.promise.then((value) => {
+        if (result === 'reject') throw new Error('late query failure')
+        return value
+      }),
+    )
     mocks.save.mockImplementation((patch) => {
       rawData.modelContext = {
         ...rawData.modelContext,
+        generation: rawData.modelContext.generation + 1,
+        status: 'ready',
         pending: { patch, baseline },
-        context: { ...baseline, ...patch },
       }
     })
     const ref = createRef<AIModelContextSettingsRef>()
@@ -192,33 +188,43 @@ describe('AIModelContextSettings', () => {
     act(() => ref.current?.save())
     await act(async () => response.resolve(responseFor('key-a')))
     expect(rawData.modelContext).toMatchObject({
-      context: { threshold_tokens: 700000 },
+      saved: { threshold_tokens: 500000 },
       pending: { patch: { threshold_tokens: 700000 } },
     })
     expect(rawData.modelContext.error).toBeUndefined()
     expect(mocks.getModel).toHaveBeenCalledOnce()
     act(() => {
-      rawData.modelContext = { ...rawData.modelContext, pending: undefined }
+      rawData.modelContext = {
+        ...rawData.modelContext,
+        pending: undefined,
+        saved: { ...baseline, threshold_tokens: 700000 },
+      }
       store.setState({})
     })
     await waitFor(() => expect(rawData.modelContext.status).toBe('ready'))
-    expect(rawData.modelContext.context?.threshold_tokens).toBe(700000)
-    expect(mocks.getModel).toHaveBeenCalledTimes(2)
+    expect(rawData.modelContext.saved?.threshold_tokens).toBe(700000)
+    expect(mocks.getModel).toHaveBeenCalledOnce()
     act(() => store.setState({}))
-    expect(mocks.getModel).toHaveBeenCalledTimes(2)
+    expect(mocks.getModel).toHaveBeenCalledOnce()
   })
 
-  it('查询被热更新阻挡后关闭面板，保存结束不再查询且结束加载状态', async () => {
+  it('保存期间关闭面板，保存结束后不再补充查询', async () => {
     useAIGlobalConfigStore.setState({ persistedAiGlobalConfig: configFor('owner-a') })
     mockContext(props())
     const response = deferred<AIModelContextResponse>()
     const baseline = toModelContextSnapshot(responseFor('key-a'))
     mocks.getModel.mockReturnValueOnce(response.promise)
     const view = render(<AIModelContextSettings source="settings" />)
-    rawData.modelContext = { ...rawData.modelContext, pending: { patch: { threshold_tokens: 700000 }, baseline } }
+    rawData.modelContext = {
+      ...rawData.modelContext,
+      generation: rawData.modelContext.generation + 1,
+      status: 'ready',
+      saved: baseline,
+      pending: { patch: { threshold_tokens: 700000 }, baseline },
+    }
     await act(async () => response.resolve(responseFor('key-a')))
     view.rerender(<AIModelContextSettings source="settings" open={false} />)
-    expect(rawData.modelContext.status).toBe('idle')
+    expect(rawData.modelContext.status).toBe('ready')
     act(() => {
       rawData.modelContext = { ...rawData.modelContext, pending: undefined }
       store.setState({})
@@ -226,16 +232,21 @@ describe('AIModelContextSettings', () => {
     expect(mocks.getModel).toHaveBeenCalledOnce()
   })
 
-  it('保存已经结束后才收到查询结果时直接应用，不重复查询', async () => {
+  it('保存已经结束后才收到旧查询结果时忽略结果，不重复查询', async () => {
     useAIGlobalConfigStore.setState({ persistedAiGlobalConfig: configFor('owner-a') })
     mockContext(props())
     const response = deferred<AIModelContextResponse>()
     mocks.getModel.mockReturnValueOnce(response.promise)
     render(<AIModelContextSettings source="settings" />)
-    const runtime = { ...toModelContextSnapshot(responseFor('key-a')), threshold_tokens: 700000 }
-    rawData.modelContext = { ...rawData.modelContext, runtime, saved: runtime, context: runtime }
+    const saved = { ...toModelContextSnapshot(responseFor('key-a')), threshold_tokens: 700000 }
+    rawData.modelContext = {
+      ...rawData.modelContext,
+      status: 'ready',
+      generation: rawData.modelContext.generation + 1,
+      saved,
+    }
     await act(async () => response.resolve(responseFor('key-a')))
-    expect(rawData.modelContext.context?.threshold_tokens).toBe(700000)
+    expect(rawData.modelContext.saved?.threshold_tokens).toBe(700000)
     expect(rawData.modelContext.status).toBe('ready')
     act(() => store.setState({}))
     expect(mocks.getModel).toHaveBeenCalledOnce()
@@ -279,12 +290,12 @@ describe('AIModelContextSettings', () => {
       .mockResolvedValueOnce({ ...responseFor('key-a'), ThresholdTokens: 'broken' })
     const view = render(<AIModelContextSettings source="settings" />)
     await waitFor(() =>
-      expect(rawData.modelContext.context).toMatchObject({ threshold_tokens: 450000, minimum_threshold_tokens: 75000 }),
+      expect(rawData.modelContext.saved).toMatchObject({ threshold_tokens: 450000, minimum_threshold_tokens: 75000 }),
     )
     view.rerender(<AIModelContextSettings source="settings" open={false} />)
     view.rerender(<AIModelContextSettings source="settings" open />)
     await waitFor(() => expect(rawData.modelContext.status).toBe('error'))
-    expect(rawData.modelContext.context?.threshold_tokens).toBe(450000)
+    expect(rawData.modelContext.saved?.threshold_tokens).toBe(450000)
   })
 
   it('补齐主模型归属时继续当前查询，次要模型变化不重复读取', async () => {
@@ -342,9 +353,9 @@ describe('AIModelContextSettings', () => {
     const nextRawData = { modelContext: { status: 'idle', generation: 0 } as ModelContextState }
     session.rawData = nextRawData
     view.rerender(<AIModelContextSettings source="settings" />)
-    await waitFor(() => expect(nextRawData.modelContext.context?.context_key).toBe('key-b'))
+    await waitFor(() => expect(nextRawData.modelContext.saved?.context_key).toBe('key-b'))
     await act(async () => previous.resolve(responseFor('key-a')))
-    expect(nextRawData.modelContext.context?.context_key).toBe('key-b')
+    expect(nextRawData.modelContext.saved?.context_key).toBe('key-b')
     expect(rawData.modelContext.saved).toBeUndefined()
   })
   it('高级配置内只修改草稿，关闭时一次保存阈值和开关，重复关闭不提交', () => {
@@ -359,12 +370,29 @@ describe('AIModelContextSettings', () => {
     fireEvent.blur(input)
     fireEvent.click(screen.getByRole('switch', { name: 'AIContextUsage.autoAdjust' }))
     expect(input).toHaveValue('600')
-    expect(context.setThreshold).not.toHaveBeenCalled()
-    expect(context.setAutoAdjust).not.toHaveBeenCalled()
     expect(context.save).not.toHaveBeenCalled()
     act(() => ref.current?.save())
     act(() => ref.current?.save())
     expect(context.save).toHaveBeenCalledExactlyOnceWith({ threshold_tokens: 600000, disable_auto_adjust: true })
+  })
+
+  it('上下按钮按 1K 修改草稿并遵守模型下限与最大值', () => {
+    const context = props()
+    const ref = createRef<AIModelContextSettingsRef>()
+    render(editor(context, ref))
+    const input = screen.getByRole('spinbutton')
+    const up = screen.getByRole('button', { name: 'Increase Value' })
+    const down = screen.getByRole('button', { name: 'Decrease Value' })
+    fireEvent.mouseDown(up)
+    fireEvent.mouseUp(up)
+    expect(input).toHaveValue('501')
+    expect(context.save).not.toHaveBeenCalled()
+    act(() => ref.current?.save())
+    expect(context.save).toHaveBeenCalledExactlyOnceWith({ threshold_tokens: 501000 })
+    fireEvent.change(input, { target: { value: '125' } })
+    expect(down).toHaveAttribute('aria-disabled', 'true')
+    fireEvent.change(input, { target: { value: '1000' } })
+    expect(up).toHaveAttribute('aria-disabled', 'true')
   })
 
   it('关闭时提交尚未失焦的输入，重新打开时使用当前模型的值', () => {
@@ -401,24 +429,21 @@ describe('AIModelContextSettings', () => {
     expect(view.container.querySelector('.ant-spin-spinning')).not.toBeInTheDocument()
   })
 
-  it.each([{ loading: true }, { waitingForContext: true }, { waitingForContext: true, saving: true }])(
-    '查询或等待期间仍可编辑草稿，关闭时提交 %o',
-    (state) => {
-      const context = { ...props(), ...state }
-      const ref = createRef<AIModelContextSettingsRef>()
-      render(editor(context, ref))
-      const input = screen.getByRole('spinbutton')
-      expect(input.closest('[inert]')).toBeNull()
-      fireEvent.change(input, { target: { value: '740' } })
-      fireEvent.click(screen.getByRole('switch'))
-      expect(input).toHaveValue('740')
-      expect(context.save).not.toHaveBeenCalled()
-      act(() => ref.current?.save())
-      expect(context.save).toHaveBeenCalledExactlyOnceWith({ threshold_tokens: 740000, disable_auto_adjust: true })
-    },
-  )
+  it.each([{ loading: true }, { waitingForContext: true }])('查询或等待期间仍可编辑草稿，关闭时提交 %o', (state) => {
+    const context = { ...props(), ...state }
+    const ref = createRef<AIModelContextSettingsRef>()
+    render(editor(context, ref))
+    const input = screen.getByRole('spinbutton')
+    expect(input.closest('[inert]')).toBeNull()
+    fireEvent.change(input, { target: { value: '740' } })
+    fireEvent.click(screen.getByRole('switch'))
+    expect(input).toHaveValue('740')
+    expect(context.save).not.toHaveBeenCalled()
+    act(() => ref.current?.save())
+    expect(context.save).toHaveBeenCalledExactlyOnceWith({ threshold_tokens: 740000, disable_auto_adjust: true })
+  })
 
-  it('等待流回执时显示上次编辑的值，在标题旁提示等待原因', async () => {
+  it('等待保存后的查询确认时显示上次编辑的值，在标题旁提示等待原因', async () => {
     const context = props()
     const view = render(
       editor({
@@ -444,7 +469,6 @@ describe('AIModelContextSettings', () => {
     const { rerender } = render(editor(callbacks))
     expect(screen.getByRole('spinbutton')).toHaveValue('870')
     expect(useAIModelContext).toHaveBeenLastCalledWith('stream', true)
-    rerender(editor({ ...callbacks, saving: true }))
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
     rerender(editor({ ...callbacks, waitingForContext: true, error: '保存失败' }))
     const badge = screen.getByText('保存失败')
@@ -472,7 +496,6 @@ describe('AIModelContextSettings', () => {
     fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' })
     fireEvent.blur(input)
     expect(context.save).not.toHaveBeenCalled()
-    expect(context.setThreshold).not.toHaveBeenCalled()
     act(() => ref.current?.save())
     expect(context.save).toHaveBeenCalledExactlyOnceWith({ threshold_tokens: tokens })
   })
@@ -567,7 +590,6 @@ describe('AIModelContextSettings', () => {
     const slider = screen.getByRole('slider', { name: 'AIContextUsage.threshold' })
     fireEvent.keyDown(slider, { key: 'ArrowRight', keyCode: 39 })
     fireEvent.keyUp(slider, { key: 'ArrowRight', keyCode: 39 })
-    expect(context.setThreshold).not.toHaveBeenCalled()
     expect(context.save).not.toHaveBeenCalled()
     act(() => ref.current?.save())
     expect(context.save).toHaveBeenCalledExactlyOnceWith({ threshold_tokens: 501000 })

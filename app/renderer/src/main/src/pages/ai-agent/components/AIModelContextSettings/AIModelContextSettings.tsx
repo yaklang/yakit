@@ -122,8 +122,10 @@ const AIModelContextSettings: FC<AIModelContextSettingsProps> = ({ ref, source, 
             value={value == null ? null : value / 1000}
             placeholder="—"
             suffix="K"
-            controls={false}
-            wrapperClassName={styles.number}
+            min={minimumThresholdTokens / 1000}
+            max={maximumThresholdTokens / 1000}
+            step={1}
+            changeOnBlur={false}
             onChangeCapture={(event) => {
               const input = event.target as HTMLInputElement
               const parsed = input.value.replace(/[^\w.-]+/g, '')

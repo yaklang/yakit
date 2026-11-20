@@ -1,6 +1,5 @@
 import type { AIAgentChatMetaData } from '@/pages/ai-agent/type/aiChat'
-import type { ModelContextPatch, ModelContextState } from '../aiRender'
-import type { AIMessageHandler, AIMessageHandlerParams } from '../type'
+import type { AIMessageHandler } from '../type'
 import { AIInputEventSyncTypeEnum, AINotifyType, AITaskStatus } from '../grpcApi'
 import type { AITaskStatusType, AIAgentGrpcApi } from '../grpcApi'
 import { updateModelContextState } from '../modelContext'
@@ -22,67 +21,6 @@ import { yakitNotify } from '@/utils/notification'
 
 const tAgent = i18n.getFixedT(null, 'aiAgent')
 
-const verifyModelUsage = (
-  request: AIMessageHandlerParams,
-  event: AIAgentGrpcApi.ModelContext,
-  target: NonNullable<ModelContextState['expectedModel']>,
-  resolveKey: () => Promise<string>,
-) => {
-  const { rawData } = request
-  if (target.unverifiedEvents) {
-    target.unverifiedEvents.push(event)
-    rawData.modelContext.retryModelIdentity?.()
-    return
-  }
-
-  const events = [event]
-  target.unverifiedEvents = events
-  let checking = false
-  const verify = async () => {
-    if (checking || rawData.modelContext.expectedModel !== target || target.unverifiedEvents !== events) return
-    checking = true
-    let key = rawData.modelContext.saved?.context_key
-    try {
-      key ??= await resolveKey()
-      if (!key) throw new Error(tAgent('AIContextUsage.missingContextKey'))
-    } catch (error) {
-      if (rawData.modelContext.expectedModel !== target) return
-      key = rawData.modelContext.saved?.context_key
-      if (!key) {
-        // 连续失败时，每个候选 key 只留下最新快照和最近测得的用量。
-        const latest = new Map<string, AIAgentGrpcApi.ModelContext>()
-        for (const sample of events) {
-          const measured = latest.get(sample.context_key)?.prompt_tokens
-          latest.set(
-            sample.context_key,
-            !sample.prompt_tokens && measured ? { ...sample, prompt_tokens: measured } : sample,
-          )
-        }
-        events.length = 0
-        for (const sample of latest.values()) events.push(sample)
-        const reason = error instanceof Error ? error.message : typeof error === 'string' ? error : ''
-        request.pushLog({
-          level: 'error',
-          message: `model_context (${target.provider}/${target.model}): ${reason || tAgent('AIContextUsage.loadFailed')}`,
-        })
-        updateModelContextState(request, { retryModelIdentity: verify })
-        return
-      }
-    } finally {
-      checking = false
-    }
-    if (rawData.modelContext.expectedModel !== target) return
-    target.unverifiedEvents = undefined
-    if (rawData.modelContext.retryModelIdentity) updateModelContextState(request, { retryModelIdentity: undefined })
-    const confirmedKey = rawData.modelContext.saved?.context_key ?? key
-    for (const sample of events) {
-      if (rawData.modelContext.expectedModel !== target) return
-      if (sample.context_key === confirmedKey) applyModelContext(request, sample)
-    }
-  }
-  void verify()
-}
-
 const handleModelContext: AIMessageHandler = (request) => {
   const { res, rawData } = request
   if (res.Type !== 'model_context' || res.NodeId !== 'model_context' || res.IsSync) return
@@ -94,81 +32,27 @@ const handleModelContext: AIMessageHandler = (request) => {
     // 单条诊断事件损坏时仍需继续处理后续会话事件。
     return
   }
-  if (!data?.context_key) return
-  const { expectedModel, saved } = rawData.modelContext
-  if (expectedModel) {
-    if (data.provider !== expectedModel.provider || data.model !== expectedModel.model) return
-    if (expectedModel.resolveKey && (!saved || expectedModel.unverifiedEvents)) {
-      verifyModelUsage(request, data, expectedModel, expectedModel.resolveKey)
-      return
-    }
+  const { pending, saved, refreshThreshold, promptTokens } = rawData.modelContext
+  if (typeof data?.error === 'string' && data.error.trim() && data.context_key === pending?.baseline?.context_key) {
+    pending?.onHotpatchError?.(data.error)
   }
-  applyModelContext(request, data)
-}
-
-const applyModelContext = (request: AIMessageHandlerParams, data: AIAgentGrpcApi.ModelContext) => {
-  const { rawData } = request
-  const state = rawData.modelContext
-  if (state.saved && data.context_key !== state.saved.context_key) return
-  const { pending } = state
-  if (pending && data.context_key !== pending.baseline?.context_key) return
-
-  // 保存回执的用量可能为 0，沿用最近的实测值，包括切换模型时保留的会话用量。
-  const sameContext = !state.runtime || state.runtime.context_key === data.context_key
-  const promptTokens = data.prompt_tokens || (sameContext ? state.promptTokens : undefined)
-  const previous = state.context ?? state.saved
-  const runtime = {
-    ...data,
-    minimum_threshold_tokens:
-      data.minimum_threshold_tokens ??
-      (previous?.context_key === data.context_key ? previous?.minimum_threshold_tokens : undefined),
-    prompt_tokens: promptTokens,
-  }
-  const changeId = data.change?.reason === 'manual' ? data.change.id : undefined
-  const newManualChange = typeof changeId === 'string' && !!changeId && changeId !== pending?.baseline?.change?.id
-  const saved = data.pending || data.error ? state.saved : { ...runtime, prompt_tokens: undefined }
-  const confirmsPatch = (patch: ModelContextPatch) =>
-    newManualChange &&
-    !data.pending &&
-    !data.error &&
-    (patch.threshold_tokens === undefined || patch.threshold_tokens === data.threshold_tokens) &&
-    (patch.disable_auto_adjust === undefined || patch.disable_auto_adjust === data.disable_auto_adjust)
-  // 流事件只能确认运行中的模型，设置查询的加载或失败状态仍由查询负责结束。
-  const awaitingSwitchedModel = state.retainedThresholdTokens !== undefined && !state.saved
-  const update = {
-    status: state.status === 'idle' || awaitingSwitchedModel ? ('ready' as const) : state.status,
-    runtime,
-    retainedThresholdTokens: undefined,
-    promptTokens,
-    saved,
-  }
-  if (!pending) {
-    updateModelContextState(request, {
-      ...update,
-      context: runtime,
-      ...(!data.error &&
-        (state.failedPatch ? confirmsPatch(state.failedPatch) : update.status === 'ready') && {
-          failedPatch: undefined,
-          error: undefined,
-        }),
-    })
-    return
-  }
-
-  const { patch } = pending
-  const rejected = typeof data.error === 'string' && !!data.error
-  const confirmed = confirmsPatch(patch)
-  if (!rejected && !confirmed) {
-    updateModelContextState(request, { ...update, context: { ...runtime, ...patch } })
-    return
-  }
-
+  const threshold = data?.threshold_tokens
+  const thresholdChanged =
+    !pending &&
+    saved &&
+    (!data?.context_key || data.context_key === saved.context_key) &&
+    typeof threshold === 'number' &&
+    Number.isSafeInteger(threshold) &&
+    threshold > 0 &&
+    threshold !== refreshThreshold &&
+    (threshold !== saved.threshold_tokens || refreshThreshold !== undefined)
+  const tokens = data?.prompt_tokens
+  const hasUsage = typeof tokens === 'number' && Number.isSafeInteger(tokens) && tokens >= 0
+  if (!hasUsage && !thresholdChanged) return
   updateModelContextState(request, {
-    ...update,
-    context: rejected ? { ...(state.saved ?? pending.baseline ?? runtime), prompt_tokens: promptTokens } : runtime,
-    pending: undefined,
-    failedPatch: rejected ? patch : undefined,
-    error: rejected ? data.error : undefined,
+    ...(thresholdChanged && { refreshThreshold: threshold }),
+    // 零用量回执沿用本会话最近的实测值。
+    ...(hasUsage && { promptTokens: tokens || promptTokens || 0 }),
   })
 }
 

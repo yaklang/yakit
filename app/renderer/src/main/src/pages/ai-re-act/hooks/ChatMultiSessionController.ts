@@ -435,7 +435,6 @@ export class ChatMultiSessionController {
     if (context.pending) {
       updateModelContextState(connection.data, {
         pending: undefined,
-        context: context.saved,
         generation: context.generation + 1,
       })
     }

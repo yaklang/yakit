@@ -148,21 +148,19 @@ describe('session reconnect / IDB lifecycle', () => {
       context_key: 'owner:primary',
       threshold_tokens: 500000,
       disable_auto_adjust: false,
-      source: 'default' as const,
-      pending: false,
+      minimum_threshold_tokens: 100000,
     }
     rawData.modelContext = {
       status: 'ready',
       generation: 4,
       saved,
-      context: { ...saved, threshold_tokens: 600000 },
       pending: { patch: { threshold_tokens: 600000 }, timer: setTimeout(() => timeout(), 10000) },
     }
 
     await ctrl.handleSessionEnd('context-end')
 
     expect(rawData.modelContext.pending).toBeUndefined()
-    expect(rawData.modelContext.context).toBe(saved)
+    expect(rawData.modelContext.saved).toBe(saved)
     expect(rawData.modelContext.generation).toBe(5)
     await vi.advanceTimersByTimeAsync(10000)
     expect(timeout).not.toHaveBeenCalled()

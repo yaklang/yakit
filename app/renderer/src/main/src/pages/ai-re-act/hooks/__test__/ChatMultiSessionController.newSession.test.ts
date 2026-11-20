@@ -224,14 +224,12 @@ describe('frontend allocated session identity', () => {
       context_key: 'draft-key',
       threshold_tokens: 500000,
       disable_auto_adjust: false,
-      source: 'default' as const,
-      pending: false,
+      minimum_threshold_tokens: 100000,
     }
     rawData.modelContext = {
       status: 'ready',
       generation: 4,
       saved,
-      context: saved,
       pending: { patch: { threshold_tokens: 600000 }, timer: setTimeout(() => timeout(), 10000) },
     }
 

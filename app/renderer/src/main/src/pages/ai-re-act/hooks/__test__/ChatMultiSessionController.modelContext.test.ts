@@ -35,8 +35,7 @@ describe('controller session model context', () => {
     const before = owner.store.getState().modelContextUpdate
     await controller['processGrpcOutputEvent']('session-a', res, owner.meta)
     expect(owner.store.getState().modelContextUpdate).toBe(before + 1)
-    expect(owner.rawData.modelContext.context?.threshold_tokens).toBe(500000)
-    expect(owner.rawData.modelContext.runtime?.prompt_tokens).toBe(125000)
+    expect(owner.rawData.modelContext).toEqual({ status: 'idle', generation: 0, promptTokens: 125000 })
     for (const override of [
       { NodeId: 'other' },
       { IsSync: true },
@@ -45,7 +44,7 @@ describe('controller session model context', () => {
     ]) {
       await controller['processGrpcOutputEvent']('session-a', { ...res, ...override }, owner.meta)
     }
-    expect(owner.rawData.modelContext.runtime?.prompt_tokens).toBe(125000)
+    expect(owner.rawData.modelContext.promptTokens).toBe(125000)
     expect(owner.store.getState().modelContextUpdate).toBe(before + 1)
   })
 
@@ -85,13 +84,13 @@ describe('controller session model context', () => {
       expect(owner.rawData.modelContext).toMatchObject({
         status,
         error: 'query failed',
-        runtime: { prompt_tokens: 125000 },
+        promptTokens: 125000,
       })
     },
   )
 
-  it.each([{}, { context_key: '' }])(
-    'ignores a first event without a context key and accepts the next valid event (%j)',
+  it.each([{}, null, { prompt_tokens: -1 }, { prompt_tokens: 1.5 }, { prompt_tokens: '100' }])(
+    'ignores invalid usage and accepts a following usage-only event (%j)',
     async (empty) => {
       const before = owner.rawData.modelContext
       const updates = owner.store.getState().modelContextUpdate
@@ -103,27 +102,69 @@ describe('controller session model context', () => {
       expect(owner.rawData.modelContext).toBe(before)
       expect(owner.store.getState().modelContextUpdate).toBe(updates)
 
-      const context = {
-        provider: 'openai',
-        model: 'model',
-        context_key: 'owner:model',
-        threshold_tokens: 500000,
-        prompt_tokens: 125000,
-        source: 'default',
-        pending: false,
-        disable_auto_adjust: false,
-      }
+      const context = { prompt_tokens: 125000 }
       await controller['processGrpcOutputEvent'](
         'session-a',
         makeGrpcJsonRes('model_context', context, { NodeId: 'model_context' }),
         owner.meta,
       )
       expect(owner.rawData.modelContext).toMatchObject({
-        status: 'ready',
-        saved: { context_key: context.context_key },
-        runtime: context,
+        status: 'idle',
+        promptTokens: 125000,
       })
       expect(owner.store.getState().modelContextUpdate).toBe(updates + 1)
     },
   )
+
+  it('preserves queried settings and pending saves regardless of event metadata', async () => {
+    const saved = {
+      provider: 'openai',
+      model: 'model',
+      context_key: 'get-key',
+      threshold_tokens: 500000,
+      minimum_threshold_tokens: 100000,
+      disable_auto_adjust: false,
+    }
+    const pending = { patch: { threshold_tokens: 600000 }, baseline: saved }
+    owner.rawData.modelContext = { status: 'ready', generation: 1, saved, pending }
+    await controller['processGrpcOutputEvent'](
+      'session-a',
+      makeGrpcJsonRes(
+        'model_context',
+        {
+          ...saved,
+          context_key: 'event-key',
+          threshold_tokens: 600000,
+          disable_auto_adjust: true,
+          prompt_tokens: 125000,
+          change: { id: 'change-1', reason: 'manual' },
+          error: 'event error',
+        },
+        { NodeId: 'model_context' },
+      ),
+      owner.meta,
+    )
+    expect(owner.rawData.modelContext).toEqual({
+      status: 'ready',
+      generation: 1,
+      saved,
+      pending,
+      promptTokens: 125000,
+    })
+  })
+
+  it('accepts initial zero usage and retains measured usage for zero-value receipts', async () => {
+    for (const [promptTokens, expected] of [
+      [0, 0],
+      [125000, 125000],
+      [0, 125000],
+    ]) {
+      await controller['processGrpcOutputEvent'](
+        'session-a',
+        makeGrpcJsonRes('model_context', { prompt_tokens: promptTokens }, { NodeId: 'model_context' }),
+        owner.meta,
+      )
+      expect(owner.rawData.modelContext.promptTokens).toBe(expected)
+    }
+  })
 })
