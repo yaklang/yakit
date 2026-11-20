@@ -1,8 +1,14 @@
 import { describe, expect, it } from 'vitest'
-import { goalDurationKeyToSeconds, goalDurationSecondsToKey, isGoalDurationPresetKey } from '../constants'
+import {
+  getGoalDurationDisplayLabel,
+  goalDurationKeyToSeconds,
+  goalDurationSecondsToKey,
+  isGoalDurationPresetKey,
+} from '../constants'
 
 describe('goalDurationKeyToSeconds', () => {
   it.each([
+    ['30m', 1800],
     ['1h', 3600],
     ['3h', 10800],
     ['5h', 18000],
@@ -29,6 +35,7 @@ describe('goalDurationSecondsToKey', () => {
   })
 
   it.each([
+    [1800, '30m'],
     [3600, '1h'],
     [10800, '3h'],
     [18000, '5h'],
@@ -52,5 +59,16 @@ describe('isGoalDurationPresetKey', () => {
   it('拒绝未知秒数字符串', () => {
     expect(isGoalDurationPresetKey('7200')).toBe(false)
     expect(isGoalDurationPresetKey('')).toBe(false)
+  })
+})
+
+describe('getGoalDurationDisplayLabel', () => {
+  it.each([
+    ['30m', '30m'],
+    ['7200', '2h'],
+    ['4500', '1h15m'],
+    ['90', '1m30s'],
+  ])('displays Goal duration %s as %s', (key, label) => {
+    expect(getGoalDurationDisplayLabel(key, (value) => value)).toBe(label)
   })
 })

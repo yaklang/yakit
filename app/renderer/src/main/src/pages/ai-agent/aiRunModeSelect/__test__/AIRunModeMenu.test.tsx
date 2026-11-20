@@ -1,8 +1,9 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import type { ButtonHTMLAttributes, ChangeEvent, ReactNode } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const state = vi.hoisted(() => ({
+  sessionId: 'session-a',
   enablePlan: false,
   enableMultiAgent: false,
   enableGoalMode: false,
@@ -12,33 +13,6 @@ const state = vi.hoisted(() => ({
   goalAcceptanceCriteria: '',
   onToggleMode: vi.fn(),
   onSetStrategy: vi.fn(),
-}))
-
-vi.mock('@/components/yakitUI/YakitPopconfirm/YakitPopconfirm', () => ({
-  YakitPopconfirm: ({
-    children,
-    title,
-    open,
-    onConfirm,
-    onCancel,
-  }: {
-    children: ReactNode
-    title: ReactNode
-    open: boolean
-    onConfirm: () => void
-    onCancel: () => void
-  }) => (
-    <div>
-      {children}
-      {open && (
-        <div role="dialog">
-          {title}
-          <button onClick={onCancel}>YakitButton.cancel</button>
-          <button onClick={onConfirm}>YakitButton.ok</button>
-        </div>
-      )}
-    </div>
-  ),
 }))
 
 vi.mock('../useAIRunMode', () => ({
@@ -55,10 +29,10 @@ vi.mock('@/components/yakitUI/YakitButton/YakitButton', () => ({
   YakitButton: ({
     icon,
     children,
-    type: _type,
+    type,
     ...props
   }: Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'type'> & { icon?: ReactNode; type?: string }) => (
-    <button {...props}>
+    <button {...props} data-variant={type}>
       {icon}
       {children}
     </button>
@@ -110,29 +84,6 @@ vi.mock('@/components/yakitUI/YakitInputNumber/YakitInputNumber', () => ({
     />
   ),
 }))
-vi.mock('@/components/yakitUI/YakitSelect/YakitSelect', () => ({
-  YakitSelect: ({
-    value,
-    onChange,
-    options,
-    'aria-label': label,
-    disabled,
-  }: {
-    value: string
-    onChange: (value: string) => void
-    options: Array<{ value: string; label: string }>
-    'aria-label': string
-    disabled?: boolean
-  }) => (
-    <select aria-label={label} value={value} disabled={disabled} onChange={(event) => onChange(event.target.value)}>
-      {options.map((option) => (
-        <option key={option.value} value={option.value}>
-          {option.label}
-        </option>
-      ))}
-    </select>
-  ),
-}))
 vi.mock('@/components/yakitUI/YakitInput/YakitInput', () => ({
   YakitInput: {
     TextArea: ({
@@ -146,46 +97,15 @@ vi.mock('@/components/yakitUI/YakitInput/YakitInput', () => ({
     }) => <textarea aria-label={label} value={value} onChange={onChange} />,
   },
 }))
-vi.mock('@/components/yakitUI/YakitPopover/YakitPopover', () => ({
-  YakitPopover: ({
-    children,
-    content,
-    open,
-    onOpenChange,
-    arrow,
-    trigger,
-  }: {
-    children: ReactNode
-    content: ReactNode
-    open: boolean
-    onOpenChange: (open: boolean) => void
-    arrow: boolean
-    trigger: string | string[]
-  }) => (
-    <div data-testid="acceptance-popover" data-arrow={String(arrow)}>
-      <div
-        onClick={() => trigger.includes('click') && onOpenChange(!open)}
-        onMouseEnter={() => trigger.includes('hover') && onOpenChange(true)}
-      >
-        {children}
-      </div>
-      {open && content}
-    </div>
-  ),
-}))
-
 import { AIRunModeMenu } from '../AIRunModeMenu'
 
 const label = (key: string) => `AIMilkdownModeSlash.${key}`
-const openAcceptance = () => fireEvent.click(screen.getByRole('button', { name: 'AIRunModeSelect.editAcceptance' }))
-const confirmGoalSwitch = () => {
-  fireEvent.click(screen.getByRole('button', { name: 'YakitButton.ok' }))
-}
 
 afterEach(cleanup)
 beforeEach(() => {
-  vi.clearAllMocks()
+  vi.resetAllMocks()
   Object.assign(state, {
+    sessionId: 'session-a',
     enablePlan: false,
     enableMultiAgent: false,
     enableGoalMode: false,
@@ -203,7 +123,7 @@ describe('AIRunModeMenu', () => {
     expect(screen.getAllByRole('switch')).toHaveLength(3)
     screen.getAllByRole('switch').forEach((control) => expect(control).not.toBeChecked())
     expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument()
-    expect(screen.queryByRole('radio')).not.toBeInTheDocument()
+    expect(screen.queryByRole('group', { name: 'AIRunModeSelect.stopCondition' })).not.toBeInTheDocument()
   })
 
   it.each([
@@ -229,8 +149,17 @@ describe('AIRunModeMenu', () => {
     state.enableGoalMode = true
     state.goalMinIterations = 2
     render(<AIRunModeMenu />)
-    expect(screen.getAllByRole('radio')).toHaveLength(3)
-    expect(screen.getAllByRole('radio').filter((radio) => (radio as HTMLInputElement).checked)).toHaveLength(1)
+    expect(
+      within(screen.getByRole('group', { name: 'AIRunModeSelect.stopCondition' })).getAllByRole('button'),
+    ).toHaveLength(3)
+    expect(screen.getByRole('button', { name: label('minIterations'), pressed: true })).toHaveAttribute(
+      'data-variant',
+      'primary',
+    )
+    expect(screen.getByRole('button', { name: label('duration'), pressed: false })).toHaveAttribute(
+      'data-variant',
+      'secondary2',
+    )
     fireEvent.change(screen.getByRole('spinbutton', { name: label('minIterations') }), { target: { value: '4' } })
     expect(state.onSetStrategy).toHaveBeenLastCalledWith(
       expect.objectContaining({
@@ -242,12 +171,12 @@ describe('AIRunModeMenu', () => {
   it('defaults to the minimum iteration option when Goal is enabled without a configured constraint', () => {
     state.enableGoalMode = true
     render(<AIRunModeMenu />)
-    expect(screen.getByRole('radio', { name: label('minIterations') })).toBeChecked()
+    expect(screen.getByRole('button', { name: label('minIterations') })).toHaveAttribute('aria-pressed', 'true')
     const input = screen.getByRole('spinbutton', { name: label('minIterations') })
     expect(input).toBeEnabled()
     expect(input).toHaveValue(1)
-    expect(screen.getByRole('radio', { name: label('acceptance') })).not.toBeChecked()
-    expect(screen.getByRole('radio', { name: label('duration') })).not.toBeChecked()
+    expect(screen.getByRole('button', { name: label('acceptance') })).toHaveAttribute('aria-pressed', 'false')
+    expect(screen.getByRole('button', { name: label('duration') })).toHaveAttribute('aria-pressed', 'false')
   })
 
   it.each(['acceptance', 'duration'])('preserves an existing %s constraint when Goal is enabled', (mode) => {
@@ -255,24 +184,21 @@ describe('AIRunModeMenu', () => {
     if (mode === 'acceptance') state.goalAcceptanceCriteria = 'existing'
     else state.goalDurationSeconds = 3600
     render(<AIRunModeMenu />)
-    expect(screen.getByRole('radio', { name: label(mode) })).toBeChecked()
-    expect(screen.getByRole('radio', { name: label('minIterations') })).not.toBeChecked()
+    expect(screen.getByRole('button', { name: label(mode) })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: label('minIterations') })).toHaveAttribute('aria-pressed', 'false')
   })
 
-  it('applies duration presets to the active duration limit', () => {
+  it.each([
+    ['30m', 1800],
+    ['1h', 3600],
+    ['3h', 10800],
+    ['5h', 18000],
+  ] as const)('applies the %s duration preset', (preset, seconds) => {
     state.enableGoalMode = true
-    state.goalDurationSeconds = 3600
+    state.goalDurationSeconds = 7200
     render(<AIRunModeMenu />)
-    const select = screen.getByRole('combobox', { name: label('duration') })
-    const threeHours = Array.from((select as HTMLSelectElement).options).find((option) =>
-      option.textContent?.includes('3h'),
-    )!
-    fireEvent.change(select, { target: { value: threeHours.value } })
-    expect(state.onSetStrategy).toHaveBeenLastCalledWith(
-      expect.objectContaining({
-        GoalDurationSeconds: 10800,
-      }),
-    )
+    fireEvent.click(screen.getByRole('button', { name: preset }))
+    expect(state.onSetStrategy).toHaveBeenLastCalledWith({ GoalDurationSeconds: seconds }, true)
   })
 
   it.each([0, -2, 1, 3])('shows a minimum iteration value of 1 when the stored value is %s', (iterations) => {
@@ -292,251 +218,255 @@ describe('AIRunModeMenu', () => {
     expect(state.onSetStrategy).toHaveBeenLastCalledWith({ GoalMinIterations: 1 })
   })
 
-  it.each(['minIterations', 'acceptance', 'duration'] as const)(
-    'keeps the selected %s option and its value when switching is cancelled',
-    (mode) => {
-      state.enableGoalMode = true
-      state.goalMinIterations = mode === 'minIterations' ? 5 : 0
-      state.goalAcceptanceCriteria = mode === 'acceptance' ? 'ces' : ''
-      state.goalDurationSeconds = mode === 'duration' ? 10800 : 0
-      render(<AIRunModeMenu />)
-      const nextMode = mode === 'duration' ? 'acceptance' : 'duration'
-
-      fireEvent.click(screen.getByRole('radio', { name: label(nextMode) }))
-
-      expect(screen.getByRole('dialog')).toHaveTextContent('AIRunModeSelect.switchGoalModeContent')
-      expect(screen.getByRole('radio', { name: label(mode) })).toBeChecked()
-      expect(screen.getByRole('radio', { name: label(nextMode) })).not.toBeChecked()
-      expect(state.onSetStrategy).not.toHaveBeenCalled()
-      fireEvent.click(screen.getByRole('button', { name: 'YakitButton.cancel' }))
-
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-      expect(state.onSetStrategy).not.toHaveBeenCalled()
-      expect(screen.getByRole('radio', { name: label(mode) })).toBeChecked()
-      if (mode === 'minIterations') expect(screen.getByRole('spinbutton', { name: label(mode) })).toHaveValue(5)
-      else if (mode === 'acceptance') expect(screen.getByText('ces')).toBeInTheDocument()
-      else expect(screen.getByRole('combobox', { name: label(mode) })).toHaveValue('3h')
-    },
-  )
-
   it.each([
     ['minIterations', 'acceptance', { GoalMinIterations: 0, GoalDurationSeconds: 0, GoalAcceptanceCriteria: '' }],
     ['acceptance', 'duration', { GoalMinIterations: 0, GoalDurationSeconds: 3600, GoalAcceptanceCriteria: '' }],
     ['duration', 'minIterations', { GoalMinIterations: 1, GoalDurationSeconds: 0, GoalAcceptanceCriteria: '' }],
-  ] as const)(
-    'only switches from %s to %s and resets the previous value after confirmation',
-    (mode, nextMode, next) => {
-      state.enableGoalMode = true
-      state.goalMinIterations = mode === 'minIterations' ? 5 : 0
-      state.goalAcceptanceCriteria = mode === 'acceptance' ? 'ces' : ''
-      state.goalDurationSeconds = mode === 'duration' ? 10800 : 0
-      render(<AIRunModeMenu />)
+  ] as const)('switches directly from %s to %s and resets the previous value', (mode, nextMode, next) => {
+    state.enableGoalMode = true
+    state.goalMinIterations = mode === 'minIterations' ? 5 : 0
+    state.goalAcceptanceCriteria = mode === 'acceptance' ? 'ces' : ''
+    state.goalDurationSeconds = mode === 'duration' ? 10800 : 0
+    render(<AIRunModeMenu />)
 
-      fireEvent.click(screen.getByRole('radio', { name: label(nextMode) }))
-      expect(state.onSetStrategy).not.toHaveBeenCalled()
-      expect(screen.getByRole('radio', { name: label(mode) })).toBeChecked()
+    fireEvent.click(screen.getByRole('button', { name: label(nextMode) }))
+    expect(state.onSetStrategy).toHaveBeenCalledExactlyOnceWith({ EnableGoalMode: true, ...next }, true)
+  })
 
-      confirmGoalSwitch()
-
-      expect(state.onSetStrategy).toHaveBeenCalledExactlyOnceWith({ EnableGoalMode: true, ...next })
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-    },
-  )
-
-  it('does not ask for confirmation when clicking the selected Goal option', () => {
+  it('keeps the current value when clicking the selected Goal option', () => {
     state.enableGoalMode = true
     state.goalDurationSeconds = 10800
     render(<AIRunModeMenu />)
 
-    fireEvent.click(screen.getByRole('radio', { name: label('duration') }))
+    fireEvent.click(screen.getByRole('button', { name: label('duration') }))
 
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     expect(state.onSetStrategy).not.toHaveBeenCalled()
-    expect(screen.getByRole('combobox', { name: label('duration') })).toHaveValue('3h')
+    expect(screen.getByRole('button', { name: '3h' })).toHaveAttribute('aria-pressed', 'true')
   })
 
   it('switches between Goal constraints and clears the previous constraint', () => {
     state.enableGoalMode = true
     state.goalAcceptanceCriteria = 'existing'
     const { rerender } = render(<AIRunModeMenu />)
-    fireEvent.click(screen.getByRole('radio', { name: label('minIterations') }))
-    confirmGoalSwitch()
-    expect(state.onSetStrategy).toHaveBeenLastCalledWith({
-      EnableGoalMode: true,
-      GoalMinIterations: 1,
-      GoalDurationSeconds: 0,
-      GoalAcceptanceCriteria: '',
-    })
+    fireEvent.click(screen.getByRole('button', { name: label('minIterations') }))
+    expect(state.onSetStrategy).toHaveBeenLastCalledWith(
+      { EnableGoalMode: true, GoalMinIterations: 1, GoalDurationSeconds: 0, GoalAcceptanceCriteria: '' },
+      true,
+    )
     state.goalAcceptanceCriteria = ''
     state.goalMinIterations = 1
     rerender(<AIRunModeMenu />)
-    expect(screen.getByRole('radio', { name: label('minIterations') })).toBeChecked()
-    expect(screen.getByRole('radio', { name: label('acceptance') })).not.toBeChecked()
-    fireEvent.click(screen.getByRole('radio', { name: label('duration') }))
-    confirmGoalSwitch()
-    expect(state.onSetStrategy).toHaveBeenLastCalledWith({
-      EnableGoalMode: true,
-      GoalMinIterations: 0,
-      GoalDurationSeconds: 3600,
-      GoalAcceptanceCriteria: '',
-    })
+    expect(screen.getByRole('button', { name: label('minIterations') })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: label('acceptance') })).toHaveAttribute('aria-pressed', 'false')
+    fireEvent.click(screen.getByRole('button', { name: label('duration') }))
+    expect(state.onSetStrategy).toHaveBeenLastCalledWith(
+      { EnableGoalMode: true, GoalMinIterations: 0, GoalDurationSeconds: 3600, GoalAcceptanceCriteria: '' },
+      true,
+    )
   })
 
-  it('selects acceptance without opening the editor, including when no criteria have been entered', () => {
+  it('shows an inline empty acceptance field when selected', () => {
     state.enableGoalMode = true
-    state.goalMinIterations = 2
     const { rerender } = render(<AIRunModeMenu />)
-    fireEvent.click(screen.getByText(label('acceptance')))
-    confirmGoalSwitch()
-    expect(screen.getByRole('radio', { name: label('acceptance') })).toBeChecked()
-    expect(screen.getByRole('radio', { name: label('minIterations') })).not.toBeChecked()
-    expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
-    expect(state.onSetStrategy).toHaveBeenCalledWith({
-      EnableGoalMode: true,
-      GoalMinIterations: 0,
-      GoalDurationSeconds: 0,
-      GoalAcceptanceCriteria: '',
-    })
-
-    state.goalMinIterations = 0
+    fireEvent.click(screen.getByRole('button', { name: label('acceptance') }))
+    expect(screen.getByRole('button', { name: label('acceptance') })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('textbox', { name: label('acceptance') })).toHaveValue('')
+    expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument()
+    expect(state.onSetStrategy).toHaveBeenLastCalledWith(
+      { EnableGoalMode: true, GoalMinIterations: 0, GoalDurationSeconds: 0, GoalAcceptanceCriteria: '' },
+      true,
+    )
     rerender(<AIRunModeMenu />)
-    expect(screen.getByRole('radio', { name: label('acceptance') })).toBeChecked()
-
-    fireEvent.click(screen.getByRole('radio', { name: label('duration') }))
-    confirmGoalSwitch()
-    expect(screen.getByRole('radio', { name: label('acceptance') })).not.toBeChecked()
+    expect(screen.getByRole('textbox', { name: label('acceptance') })).toHaveValue('')
   })
 
-  it('uses the theme color for the edit icon only after switching to acceptance is confirmed', () => {
-    state.enableGoalMode = true
-    state.goalDurationSeconds = 10800
-    const { rerender } = render(<AIRunModeMenu />)
-    const icon = screen
-      .getByRole('button', { name: 'AIRunModeSelect.editAcceptance' })
-      .querySelector<SVGElement>('svg')!
-    expect(icon.style.color).toBe('')
-
-    fireEvent.click(screen.getByRole('radio', { name: label('acceptance') }))
-    expect(icon.style.color).toBe('')
-    confirmGoalSwitch()
-    expect(icon.style.color).toBe('var(--Colors-Use-Main-Primary)')
-
-    state.goalDurationSeconds = 0
-    rerender(<AIRunModeMenu />)
-    expect(icon.style.color).toBe('var(--Colors-Use-Main-Primary)')
-    fireEvent.click(screen.getByRole('radio', { name: label('minIterations') }))
-    expect(icon.style.color).toBe('var(--Colors-Use-Main-Primary)')
-    confirmGoalSwitch()
-    expect(icon.style.color).toBe('')
-  })
-
-  it.each(['iterations', 'duration'] as const)('disables acceptance editing while %s is selected', (mode) => {
+  it.each(['iterations', 'duration'] as const)('hides acceptance editing while %s is selected', (mode) => {
     state.enableGoalMode = true
     state.goalMinIterations = mode === 'iterations' ? 3 : 0
     state.goalDurationSeconds = mode === 'duration' ? 10800 : 0
     render(<AIRunModeMenu />)
-    const editButton = screen.getByRole('button', { name: 'AIRunModeSelect.editAcceptance' })
-
-    expect(editButton).toBeDisabled()
-    fireEvent.click(editButton)
-
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
-    expect(state.onSetStrategy).not.toHaveBeenCalled()
+    expect(screen.queryByRole('button', { name: 'AIRunModeSelect.editAcceptance' })).not.toBeInTheDocument()
   })
 
-  it.each(['', 'existing criteria'])('groups summary %s and the edit icon into the popover button', (criteria) => {
+  it('renders stored acceptance and reflects external text changes', () => {
     state.enableGoalMode = true
-    state.goalAcceptanceCriteria = criteria
-    render(<AIRunModeMenu />)
-    if (!criteria) {
-      fireEvent.click(screen.getByRole('radio', { name: label('acceptance') }))
-      confirmGoalSwitch()
-      state.onSetStrategy.mockClear()
-    }
-    const editButton = screen.getByRole('button', { name: 'AIRunModeSelect.editAcceptance' })
-    expect(editButton).toBeEnabled()
-    const summary = screen.getByText(criteria || 'AIRunModeSelect.noAcceptance')
-    expect(editButton).toContainElement(summary)
-    expect(editButton.querySelector('svg')).not.toBeNull()
-    expect(editButton.querySelector<SVGElement>('svg')!.style.color).toBe('var(--Colors-Use-Main-Primary)')
-    expect(screen.getByTestId('acceptance-popover')).toContainElement(editButton)
-    fireEvent.mouseEnter(editButton)
-    expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
-    fireEvent.click(summary)
-    expect(screen.getByRole('textbox', { name: label('acceptance') })).toBeInTheDocument()
-    expect(screen.getByRole('textbox', { name: label('acceptance') })).toHaveValue(criteria)
+    state.goalAcceptanceCriteria = 'existing criteria'
+    const { rerender } = render(<AIRunModeMenu />)
+    expect(screen.getByRole('textbox', { name: label('acceptance') })).toHaveValue('existing criteria')
+    state.goalAcceptanceCriteria = 'externally updated criteria'
+    rerender(<AIRunModeMenu />)
+    expect(screen.getByRole('textbox', { name: label('acceptance') })).toHaveValue('externally updated criteria')
     expect(state.onSetStrategy).not.toHaveBeenCalled()
   })
 
-  it('clears an unsaved acceptance selection when the strategy changes externally', () => {
+  it('clears an empty acceptance selection when the strategy changes externally', () => {
     state.enableGoalMode = true
     const { rerender } = render(<AIRunModeMenu />)
-    fireEvent.click(screen.getByRole('radio', { name: label('acceptance') }))
-    confirmGoalSwitch()
-    expect(screen.getByRole('radio', { name: label('acceptance') })).toBeChecked()
+    fireEvent.click(screen.getByRole('button', { name: label('acceptance') }))
     state.goalDurationSeconds = 3600
     rerender(<AIRunModeMenu />)
-    expect(screen.getByRole('radio', { name: label('duration') })).toBeChecked()
-    expect(screen.getByRole('radio', { name: label('acceptance') })).not.toBeChecked()
+    expect(screen.getByRole('button', { name: label('duration') })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
+    expect(screen.queryByRole('spinbutton', { name: label('minIterations') })).not.toBeInTheDocument()
   })
-  it('closes the acceptance editor when Goal is disabled', () => {
+
+  it('hides acceptance configuration when Goal is disabled', () => {
     state.enableGoalMode = true
     state.goalAcceptanceCriteria = 'existing'
-    render(<AIRunModeMenu />)
-    openAcceptance()
-    expect(screen.getByRole('textbox', { name: label('acceptance') })).toBeInTheDocument()
+    const { rerender } = render(<AIRunModeMenu />)
     fireEvent.click(screen.getByRole('switch', { name: label('goal') }))
     expect(state.onToggleMode).toHaveBeenCalledWith('goal')
-    expect(screen.queryByRole('textbox', { name: label('acceptance') })).not.toBeInTheDocument()
+    state.enableGoalMode = false
+    rerender(<AIRunModeMenu />)
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
     expect(state.onSetStrategy).not.toHaveBeenCalled()
   })
 
-  it.each(['minIterations', 'duration'])('closes the acceptance editor when selecting %s', (constraint) => {
+  it.each(['minIterations', 'duration'])('hides acceptance after selecting %s', (constraint) => {
     state.enableGoalMode = true
     state.goalAcceptanceCriteria = 'existing'
-    render(<AIRunModeMenu />)
-    openAcceptance()
-    expect(screen.getByRole('textbox', { name: label('acceptance') })).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('radio', { name: label(constraint) }))
+    const { rerender } = render(<AIRunModeMenu />)
     expect(screen.getByRole('textbox', { name: label('acceptance') })).toHaveValue('existing')
-    expect(state.onSetStrategy).not.toHaveBeenCalled()
-    confirmGoalSwitch()
-    expect(screen.queryByRole('textbox', { name: label('acceptance') })).not.toBeInTheDocument()
-    expect(state.onSetStrategy).toHaveBeenCalledWith(expect.objectContaining({ GoalAcceptanceCriteria: '' }))
+    fireEvent.click(screen.getByRole('button', { name: label(constraint) }))
+    expect(state.onSetStrategy).toHaveBeenCalledWith(expect.objectContaining({ GoalAcceptanceCriteria: '' }), true)
+    state.goalAcceptanceCriteria = ''
+    state.goalMinIterations = constraint === 'minIterations' ? 1 : 0
+    state.goalDurationSeconds = constraint === 'duration' ? 3600 : 0
+    rerender(<AIRunModeMenu />)
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
   })
-  it('saves trimmed acceptance text and clears competing Goal fields', () => {
+
+  it.each([
+    ['close', 'final criteria'],
+    ['unmount', ''],
+  ])('saves the final acceptance edit only on %s', (close, finalValue) => {
     state.enableGoalMode = true
     state.goalAcceptanceCriteria = 'old criteria'
-    render(<AIRunModeMenu />)
-    openAcceptance()
-    expect(screen.getByTestId('acceptance-popover')).toHaveAttribute('data-arrow', 'false')
-    fireEvent.change(screen.getByRole('textbox', { name: label('acceptance') }), {
-      target: { value: '  new criteria  ' },
-    })
-    fireEvent.click(screen.getByRole('button', { name: 'YakitButton.save' }))
-    expect(state.onSetStrategy).toHaveBeenLastCalledWith(
-      expect.objectContaining({
-        EnableGoalMode: true,
-        GoalMinIterations: 0,
-        GoalDurationSeconds: 0,
-        GoalAcceptanceCriteria: 'new criteria',
-      }),
-    )
-    expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
+    const { rerender, unmount } = render(<AIRunModeMenu open />)
+    const input = screen.getByRole('textbox', { name: label('acceptance') })
+    vi.useFakeTimers()
+    try {
+      for (const value of ['new', 'new criteria', finalValue]) {
+        fireEvent.change(input, { target: { value } })
+        expect(input).toHaveValue(value)
+      }
+      fireEvent.blur(input)
+      act(() => vi.advanceTimersByTime(1000))
+      expect(state.onSetStrategy).not.toHaveBeenCalled()
+      if (close === 'close') {
+        rerender(<AIRunModeMenu open={false} />)
+        expect(state.onSetStrategy).toHaveBeenCalledTimes(1)
+      }
+      unmount()
+      expect(state.onSetStrategy).toHaveBeenCalledExactlyOnceWith({ GoalAcceptanceCriteria: finalValue }, true)
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
-  it('disables saving blank acceptance and cancels without changing the strategy', () => {
+  it('skips saving when the acceptance draft returns to its original value', () => {
     state.enableGoalMode = true
-    state.goalAcceptanceCriteria = 'existing'
-    render(<AIRunModeMenu />)
-    openAcceptance()
-    fireEvent.change(screen.getByRole('textbox', { name: label('acceptance') }), { target: { value: '   ' } })
-    expect(screen.getByRole('button', { name: 'YakitButton.save' })).toBeDisabled()
-    fireEvent.click(screen.getByRole('button', { name: 'YakitButton.cancel' }))
+    state.goalAcceptanceCriteria = 'original'
+    const { unmount } = render(<AIRunModeMenu />)
+    const input = screen.getByRole('textbox', { name: label('acceptance') })
+    fireEvent.change(input, { target: { value: 'draft' } })
+    fireEvent.change(input, { target: { value: 'original' } })
+    unmount()
     expect(state.onSetStrategy).not.toHaveBeenCalled()
-    expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
-    openAcceptance()
-    expect(screen.getByRole('textbox', { name: label('acceptance') })).toHaveValue('existing')
+  })
+
+  it('does not submit the previous session’s draft after switching sessions', () => {
+    state.enableGoalMode = true
+    state.goalAcceptanceCriteria = 'original'
+    const { rerender, unmount } = render(<AIRunModeMenu />)
+    const input = screen.getByRole('textbox', { name: label('acceptance') })
+    fireEvent.change(input, { target: { value: 'session A draft' } })
+    state.sessionId = 'session-b'
+    rerender(<AIRunModeMenu />)
+    expect(input).toHaveValue('original')
+    unmount()
+    expect(state.onSetStrategy).not.toHaveBeenCalled()
+  })
+
+  it('opens a stored nonpreset duration as custom hours and minutes', () => {
+    state.enableGoalMode = true
+    state.goalDurationSeconds = 8100
+    render(<AIRunModeMenu />)
+    expect(screen.getByRole('button', { name: 'AIRunModeSelect.customDuration' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    expect(screen.getByRole('spinbutton', { name: 'AIRunModeSelect.durationHours' })).toHaveValue(2)
+    expect(screen.getByRole('spinbutton', { name: 'AIRunModeSelect.durationMinutes' })).toHaveValue(15)
+  })
+
+  it('preserves the stored never duration and can switch it to custom', () => {
+    state.enableGoalMode = true
+    state.goalDurationSeconds = -1
+    render(<AIRunModeMenu />)
+    expect(screen.getByRole('button', { name: label('durationNever') })).toHaveAttribute('aria-pressed', 'true')
+    expect(state.onSetStrategy).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: 'AIRunModeSelect.customDuration' }))
+    expect(state.onSetStrategy).toHaveBeenLastCalledWith({ GoalDurationSeconds: 3600 }, true)
+  })
+
+  it('does not offer never for a positive duration', () => {
+    state.enableGoalMode = true
+    state.goalDurationSeconds = 3600
+    render(<AIRunModeMenu />)
+    expect(screen.queryByRole('button', { name: label('durationNever') })).not.toBeInTheDocument()
+    expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument()
+  })
+
+  it('updates custom duration and restores its values when the menu reopens', () => {
+    state.enableGoalMode = true
+    state.goalDurationSeconds = 3600
+    const { rerender, unmount } = render(<AIRunModeMenu />)
+    const presetButton = screen.getByRole('button', { name: '1h', pressed: true })
+    const customButton = screen.getByRole('button', { name: 'AIRunModeSelect.customDuration', pressed: false })
+    expect(presetButton).toHaveAttribute('data-variant', 'primary')
+    expect(customButton).toHaveAttribute('data-variant', 'secondary2')
+    fireEvent.click(presetButton)
+    expect(state.onSetStrategy).not.toHaveBeenCalled()
+    fireEvent.click(customButton)
+    expect(customButton).toHaveAttribute('aria-pressed', 'true')
+    expect(customButton).toHaveAttribute('data-variant', 'primary')
+    expect(presetButton).toHaveAttribute('data-variant', 'secondary2')
+    expect(state.onSetStrategy).not.toHaveBeenCalled()
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'AIRunModeSelect.durationHours' }), {
+      target: { value: '2' },
+    })
+    expect(state.onSetStrategy).toHaveBeenLastCalledWith({ GoalDurationSeconds: 7200 }, true)
+    state.goalDurationSeconds = 7200
+    rerender(<AIRunModeMenu />)
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'AIRunModeSelect.durationMinutes' }), {
+      target: { value: '15' },
+    })
+    expect(state.onSetStrategy).toHaveBeenLastCalledWith({ GoalDurationSeconds: 8100 }, true)
+    state.goalDurationSeconds = 8100
+    unmount()
+    render(<AIRunModeMenu />)
+    expect(screen.getByRole('button', { name: 'AIRunModeSelect.customDuration' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    expect(screen.getByRole('spinbutton', { name: 'AIRunModeSelect.durationHours' })).toHaveValue(2)
+    expect(screen.getByRole('spinbutton', { name: 'AIRunModeSelect.durationMinutes' })).toHaveValue(15)
+  })
+
+  it.each([
+    ['durationHours', '-2', 60, 60],
+    ['durationMinutes', '-1', 60, 60],
+    ['durationMinutes', '80', 60, 3540],
+    ['durationHours', '0', 3600, 60],
+  ] as const)('bounds custom %s input %s', (field, value, stored, expected) => {
+    state.enableGoalMode = true
+    state.goalDurationSeconds = stored
+    render(<AIRunModeMenu />)
+    fireEvent.click(screen.getByRole('button', { name: 'AIRunModeSelect.customDuration' }))
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'AIRunModeSelect.' + field }), { target: { value } })
+    expect(state.onSetStrategy).toHaveBeenLastCalledWith({ GoalDurationSeconds: expected }, true)
   })
 
   it.each([false, true])('resets all modes and parameters with Plan enabled=%s', (enablePlan) => {

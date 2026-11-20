@@ -1,7 +1,6 @@
 @use '../../../../../styles/mixin.scss' as mixin;
 
 .drop-select-wrapper {
-  width: 300px;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -49,6 +48,10 @@
     gap: 4px;
   }
 }
+.reasoning-effort-footer {
+  margin: 4px -4px -4px;
+}
+
 .icon-info {
   color: var(--Colors-Use-Neutral-Text-3-Secondary);
   display: flex;

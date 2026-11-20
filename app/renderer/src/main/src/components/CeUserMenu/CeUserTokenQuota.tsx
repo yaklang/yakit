@@ -8,6 +8,7 @@ import { getBalanceYuanText, getTokenRemainingPercent } from './ceTokenQuota'
 import emiter from '@/utils/eventBus/eventBus'
 import styles from './CeUserMenu.module.scss'
 import { YakitButton } from '../yakitUI/YakitButton/YakitButton'
+import YakitStripedProgress from '../YakitStripedProgress/YakitStripedProgress'
 
 export interface CeUserTokenQuotaProps {
   apiKeys: API.ApiKeyDetail
@@ -56,11 +57,7 @@ export const CeUserTokenQuota: React.FC<CeUserTokenQuotaProps> = (props) => {
           </YakitButton>
         </div>
       </div>
-      <div className={styles['ce-user-info-progress-box']}>
-        <div className={styles['ce-user-info-progress-track']}>
-          <div className={styles['ce-user-info-progress-fill']} style={{ width: `${tokenRemainingPercent}%` }} />
-        </div>
-      </div>
+      <YakitStripedProgress percent={tokenRemainingPercent} label={t('CeUserMenu.tokenRemaining')} />
       <div className={styles['ce-user-info-token-row']}>
         <span className={styles['ce-user-info-token-label']}>
           {t('CeUserMenu.tokenRemaining')}

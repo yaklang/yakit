@@ -17,7 +17,13 @@ import classNames from 'classnames'
 import { AIOnlineModelIconMap, defaultAIGlobalConfig } from '../../defaultConstant'
 import { AIModelFreeTag, OutlineAtomIconByStatus, setAIModal } from '../AIModelList'
 import { AIChatSelect } from '@/pages/ai-re-act/aiReviewRuleSelect/AIReviewRuleSelect'
-import { CheckOutlined, CogOutlined, RefreshOutlined, RotateCcwOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import {
+  CheckOutlined,
+  CogOutlined,
+  InformationCircleOutlined,
+  RefreshOutlined,
+  RotateCcwOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import cloneDeep from 'lodash/cloneDeep'
 import isEqual from 'lodash/isEqual'
 import emiter from '@/utils/eventBus/eventBus'
@@ -79,7 +85,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
 
 const CurrentAIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi', 'configNetwork'])
-  const { isOpen = true, className } = props
+  const { isOpen = true, className, iconOnly } = props
   const [aiDraftConfig, setAIDraftConfig] = useState<AIGlobalConfig>(() => cloneDeep(defaultAIGlobalConfig))
   const [open, setOpen] = useState(false)
   const [modelNames, setModelNames] = useState<string[]>([])
@@ -327,22 +333,32 @@ const CurrentAIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
     aiDraftConfig.IntelligentModels.length > 0 ||
     aiDraftConfig.LightweightModels.length > 0 ||
     aiDraftConfig.VisionModels.length > 0
+  const modelName = getModelName(selectIntelligentItem?.ModelName)
 
   return (
     <div ref={refRef} className={className}>
       {isHaveData && (
         <AIChatSelect
+          aria-label={t('AIModelSelect.selectModel')}
           variant="borderless"
-          classNames={{ popup: { root: styles['model-select-popup'] } }}
-          closestClassName="[data-ai-reasoning-effort-menu]"
+          dropdownAlign={{ htmlRegion: 'visible' }}
+          classNames={{
+            popup: { root: classNames(styles['model-select-popup'], styles['community-model-select-popup']) },
+          }}
           dropdownRender={() => (
             <div className={styles['drop-select-wrapper']} onClick={(e) => e.stopPropagation()}>
               <div className={styles['select-title']}>
                 <div className={styles['select-title-left']}>
-                  <span>{t('AIModelSelect.selectModel')}</span>
+                  <span>{t('AIModelSelect.modelTitle')}</span>
+                  <Tooltip title={t('AIModelList.intelligentModelsDesc')}>
+                    <InformationCircleOutlined className={styles['select-title-info']} size={12} color="currentColor" />
+                  </Tooltip>
+                </div>
+                <div className={styles['select-title-right']}>
                   <Tooltip title={t('AIModelSelect.resetModelTooltip')}>
                     <YakitButton
                       icon={<RotateCcwOutlined color="currentColor" />}
+                      iconPosition="end"
                       size="small"
                       type="text2"
                       loading={resetLoading}
@@ -352,17 +368,15 @@ const CurrentAIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                       {t('AIModelSelect.resetModel')}
                     </YakitButton>
                   </Tooltip>
-                </div>
-                <div className={styles['select-title-right']}>
+                  <span className={styles['select-title-divider']} aria-hidden="true" />
                   <Tooltip title={t('AIModelSelect.openConfigTooltip')}>
                     <YakitButton
                       size="small"
                       type="text2"
+                      aria-label={t('AIModelSelect.manageModels')}
                       icon={<CogOutlined color="currentColor" />}
                       onClick={openModelTab}
-                    >
-                      {t('AIModelSelect.manageModels')}
-                    </YakitButton>
+                    />
                   </Tooltip>
                   <Tooltip title={t('YakitButton.refresh')}>
                     <YakitButton
@@ -422,13 +436,15 @@ const CurrentAIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
           <YakitSelect.Option
             value="select"
             label={
-              <div className={styles['select-option']}>
+              <div className={styles['select-option']} title={modelName}>
                 {getIconByAI(selectIntelligentItem?.Provider.Type)}
-                <span className={styles['select-option-text']} title={getModelName(selectIntelligentItem?.ModelName)}>
-                  {getModelName(selectIntelligentItem?.ModelName)}
-                </span>
-                {selectIntelligentItem && (
-                  <span className={styles['select-option-effort']}>{reasoningEffortLabel}</span>
+                {!iconOnly && (
+                  <>
+                    <span className={styles['select-option-text']}>{modelName}</span>
+                    {selectIntelligentItem && (
+                      <span className={styles['select-option-effort']}>{reasoningEffortLabel}</span>
+                    )}
+                  </>
                 )}
               </div>
             }

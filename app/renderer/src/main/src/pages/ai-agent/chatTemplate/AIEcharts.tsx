@@ -5,6 +5,7 @@ import { AIModelTypeEnum, type AIModelTypeEnumType } from '../defaultConstant'
 import { formatTimestamp } from '@/utils/timeUtil'
 import moment from 'moment'
 import { formatNumberUnits } from '../utils'
+import { formatModelContextTokens } from '../utils/modelContextFormat'
 import type EChartsReact from 'echarts-for-react'
 import useGetColorsByTheme from '@/hook/useGetColorsByTheme'
 import type { AIContextStatsDetail } from '../type/aiChat'
@@ -178,7 +179,7 @@ export interface AIPressureDetailsEchartsProps {
     xData: Record<AIModelTypeEnumType, number[]>
     maxValue: Record<AIModelTypeEnumType, number>
   }
-  threshold: number
+  threshold?: number
 }
 export const AIPressureDetailsEcharts: React.FC<AIPressureDetailsEchartsProps> = React.memo((props) => {
   const { dataEcharts, threshold } = props
@@ -252,13 +253,13 @@ const getPressureDetailsOption = (value: PressureDetailsOptionProps): EChartsOpt
         xData: xData.intelligent,
         colors,
         type: AIModelTypeEnum.TierIntelligent,
-        valueFormatter: (v: number) => `${formatNumberUnits(v)}`,
+        valueFormatter: formatModelContextTokens,
       }),
       getDetailsXAxis({
         xData: xData.lightweight,
         colors,
         type: AIModelTypeEnum.TierLightweight,
-        valueFormatter: (v: number) => `${formatNumberUnits(v)}`,
+        valueFormatter: formatModelContextTokens,
       }),
     ],
     yAxis: {
@@ -270,7 +271,7 @@ const getPressureDetailsOption = (value: PressureDetailsOptionProps): EChartsOpt
           if (v >= max) {
             return tOriginal('AIEcharts.pressureValue')
           }
-          return `${formatNumberUnits(v)}`
+          return formatModelContextTokens(v)
         },
       },
       splitLine: {
@@ -289,10 +290,13 @@ const getPressureDetailsOption = (value: PressureDetailsOptionProps): EChartsOpt
         seriesIndex: 0,
         max: intelligent.maxValueIntelligent,
         min: intelligent.minValueIntelligent,
-        pieces: [
-          { gt: threshold, lte: intelligent.yMax, color: intelligent.color }, // 大于部分
-          { lte: threshold, color: intelligent.color }, // 小于等于部分
-        ],
+        pieces:
+          threshold === undefined
+            ? [{ color: intelligent.color }]
+            : [
+                { gt: threshold, lte: intelligent.yMax, color: intelligent.color }, // 大于部分
+                { lte: threshold, color: intelligent.color }, // 小于等于部分
+              ],
       },
       {
         type: 'piecewise',
@@ -301,10 +305,13 @@ const getPressureDetailsOption = (value: PressureDetailsOptionProps): EChartsOpt
         seriesIndex: 1,
         max: lightweight.maxValueLightweight,
         min: lightweight.minValueLightweight,
-        pieces: [
-          { gt: threshold, lte: lightweight.yMax, color: lightweight.color }, // 大于部分
-          { lte: threshold, color: lightweight.color }, // 小于等于部分
-        ],
+        pieces:
+          threshold === undefined
+            ? [{ color: lightweight.color }]
+            : [
+                { gt: threshold, lte: lightweight.yMax, color: lightweight.color }, // 大于部分
+                { lte: threshold, color: lightweight.color }, // 小于等于部分
+              ],
       },
     ],
     series: [
@@ -349,7 +356,10 @@ const getPressureDetailsOption = (value: PressureDetailsOptionProps): EChartsOpt
         }), // 轻量
       },
       {
-        name: tOriginal('AIEcharts.thresholdLine', { value: formatNumberUnits(threshold) }),
+        name:
+          threshold === undefined
+            ? ''
+            : tOriginal('AIEcharts.thresholdLine', { value: formatModelContextTokens(threshold) }),
         type: 'line',
         markLine: {
           silent: true,
@@ -362,11 +372,7 @@ const getPressureDetailsOption = (value: PressureDetailsOptionProps): EChartsOpt
           label: {
             show: false,
           },
-          data: [
-            {
-              yAxis: threshold,
-            },
-          ],
+          data: threshold === undefined ? [] : [{ yAxis: threshold }],
         },
       },
     ],

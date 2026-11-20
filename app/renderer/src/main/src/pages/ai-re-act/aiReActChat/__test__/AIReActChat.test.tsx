@@ -28,7 +28,6 @@ const chat = vi.hoisted(() => ({
   pendingChat: undefined as { status: 'connecting' | 'failed'; error?: string; retry?: () => void } | undefined,
   onStart: vi.fn(),
   onSend: vi.fn(),
-  cancelPendingChat: vi.fn(),
 }))
 
 // CI 的根配置将样式模块替换为空对象；为通知图标用例验证的类名提供稳定映射。
@@ -82,7 +81,6 @@ vi.mock('@/pages/ai-agent/useContext/useDispatcher', () => ({
     getSetting: () => latestSetting.value,
     onStart: chat.onStart,
     onSend: chat.onSend,
-    cancelPendingChat: chat.cancelPendingChat,
   }),
 }))
 
@@ -93,7 +91,6 @@ vi.mock('@/pages/ai-agent/utils', () => ({
 }))
 
 vi.mock('@/utils/notification', () => ({ yakitNotify: vi.fn() }))
-vi.mock('@/utils/randomUtil', () => ({ randomString: () => 'test-id' }))
 vi.mock('@/utils/eventBus/eventBus', () => ({ default: { emit: vi.fn() } }))
 
 vi.mock('../../hooks/useCurrentDataBySession', () => ({
@@ -160,25 +157,22 @@ vi.mock('../aiReActChatHeader/AIReActChatHeader', () => ({
   ),
 }))
 vi.mock('../aiReactChatTextarea/AIReactChatTextarea', () => ({
-  AIReactChatTextarea: React.forwardRef<unknown, AIReactChatTextareaProps>(
-    ({ handleSubmit, handleStopCasualTask }, ref) => {
-      const [value, setValue] = React.useState('question')
-      React.useImperativeHandle(ref, () => ({
-        setValue: (next: string) => {
-          chat.setValue(next)
-          setValue(next)
-        },
-        setMention: vi.fn(),
-      }))
-      return (
-        <div data-testid="chat-textarea">
-          <input aria-label="问题" value={value} onChange={(event) => setValue(event.target.value)} />
-          <button onClick={() => handleSubmit({ qs: value, sessionId: 'draft' })}>提交问题</button>
-          <button onClick={handleStopCasualTask}>停止任务</button>
-        </div>
-      )
-    },
-  ),
+  AIReactChatTextarea: React.forwardRef<unknown, AIReactChatTextareaProps>(({ handleSubmit }, ref) => {
+    const [value, setValue] = React.useState('question')
+    React.useImperativeHandle(ref, () => ({
+      setValue: (next: string) => {
+        chat.setValue(next)
+        setValue(next)
+      },
+      setMention: vi.fn(),
+    }))
+    return (
+      <div data-testid="chat-textarea">
+        <input aria-label="问题" value={value} onChange={(event) => setValue(event.target.value)} />
+        <button onClick={() => handleSubmit({ qs: value, sessionId: 'draft' })}>提交问题</button>
+      </div>
+    )
+  }),
 }))
 vi.mock('../aiToDoListWrapper/AIToDoListWrapper', () => ({
   AIToDoListWrapper: () => <div data-testid="todo-list" />,
@@ -309,14 +303,12 @@ describe('AIReActChat', () => {
     expect(chat.onStart.mock.calls[0][0]).toMatchObject({ kind, sessionId })
   })
 
-  it('连接中阻止重复提交，并将停止操作交给 pending 取消入口', () => {
+  it('连接中阻止重复提交', () => {
     chat.pendingChat = { status: 'connecting' }
     render(<AIReActChat {...baseProps} />)
     fireEvent.click(screen.getByRole('button', { name: '提交问题' }))
     expect(baseProps.startRequest).not.toHaveBeenCalled()
     expect(chat.onSend).not.toHaveBeenCalled()
-    fireEvent.click(screen.getByRole('button', { name: '停止任务' }))
-    expect(chat.cancelPendingChat).toHaveBeenCalledTimes(1)
   })
 
   it('欢迎页提交后挂载的失败视图通过 pending 回调重试', () => {

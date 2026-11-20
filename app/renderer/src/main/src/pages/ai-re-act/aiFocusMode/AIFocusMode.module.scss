@@ -1,0 +1,55 @@
+.trigger:global(.ant-select-single.ant-select-borderless) :global(.ant-select-selector) {
+  :global(.ant-select-selection-item),
+  :global(.ant-select-selection-placeholder) {
+    display: flex;
+    align-items: center;
+    height: 16px;
+    line-height: 16px;
+  }
+}
+
+.trigger.with-clear:global(.ant-select-single.ant-select-borderless) {
+  :global(.ant-select-clear) {
+    inset-inline-end: 6px;
+  }
+
+  &:hover :global(.ant-select-arrow) {
+    opacity: 0;
+  }
+}
+
+.trigger:global(.ant-select-single.ant-select-borderless.ant-select-disabled) {
+  .label,
+  :global(.ant-select-arrow),
+  :global(.ant-select-selector) svg {
+    color: var(--Colors-Use-Neutral-Disable);
+  }
+
+  :global(.ant-select-selector) {
+    cursor: not-allowed;
+  }
+}
+
+.label {
+  display: var(--ai-footer-selector-label-display, inline);
+  min-width: 0;
+  padding-inline-start: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.clearSelection {
+  margin-inline-start: auto;
+}
+
+.sceneOption:global(.ant-select-item-option-selected) {
+  column-gap: 8px;
+}
+
+.optionLabel {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

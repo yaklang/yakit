@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { FuzzerRemoteGV } from '@/enums/fuzzer'
+import { RemoteHistoryGV } from '@/enums/history'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { yakitFailed } from '@/utils/notification'
 import { DEFAULT_HIDDEN_HTTP_HEADERS } from '@/utils/hiddenHTTPHeaders'
@@ -8,7 +8,7 @@ import type { HTTPHeaderVisibilitySettings } from '../editorHeaderVisibility'
 vi.mock('@/utils/kv', () => ({ getRemoteValue: vi.fn(), setRemoteValue: vi.fn() }))
 vi.mock('@/utils/notification', () => ({ yakitFailed: vi.fn() }))
 
-const key = FuzzerRemoteGV.WebFuzzerHeaderVisibility
+const key = RemoteHistoryGV.HTTPHeaderVisibility
 const defaults = (): HTTPHeaderVisibilitySettings => ({
   request: { hidden: false, headers: DEFAULT_HIDDEN_HTTP_HEADERS.request },
   response: { hidden: false, headers: DEFAULT_HIDDEN_HTTP_HEADERS.response },
@@ -31,6 +31,7 @@ const deferred = () => {
 }
 
 beforeEach(() => {
+  localStorage.clear()
   vi.resetModules()
   vi.resetAllMocks()
   persistence()
@@ -63,6 +64,20 @@ describe('persistent HTTP header visibility', () => {
     expect(store.getState().hidden).toEqual({ request: true, response: false })
     expect(getRemoteValue).toHaveBeenCalledExactlyOnceWith(key)
     expect(setRemoteValue).not.toHaveBeenCalled()
+  })
+
+  it('restores the last committed state synchronously from the local mirror', async () => {
+    persistence()
+    let store = await loadStore()
+    await store.getState().initialize()
+    await store.getState().saveSettings({
+      request: { hidden: true, headers: ['x-local'] },
+      response: { hidden: false, headers: [] },
+    })
+    vi.resetModules()
+    store = await loadStore()
+    expect(store.getState().hidden).toEqual({ request: true, response: false })
+    expect(store.getState().headers).toEqual({ request: ['x-local'], response: [] })
   })
 
   it.each(['request', 'response'] as const)(

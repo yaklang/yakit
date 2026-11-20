@@ -1,27 +1,31 @@
 import type React from 'react'
 import { Fragment, forwardRef, memo, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import type { ReactNode, Ref, RefAttributes } from 'react'
-import { AIInputFooterRightEnum, AIInputInnerFeatureEnum } from './type'
+import { AIInputFooterRightEnum, AIInputInnerFeatureEnum, defaultFooterLeftTypes } from './type'
 import type {
   AIChatDraftMaterials,
   AIChatTextareaProps,
   AIChatTextareaSubmit,
   AIResourceIds,
   FileToChatQuestionList,
-  FooterLeftTypesComponentProps,
-  FooterRightTypesComponentProps,
   QSInputTextareaProps,
 } from './type'
 import { Input } from 'antd'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { AdjustmentsOutlined, ArrowUpOutlined, PlusSmOutlined } from '@yakit-libs/yakit-ui-icons/outline'
-import { useCreation, useInViewport, useMemoizedFn } from 'ahooks'
+import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
+import {
+  AdjustmentsOutlined,
+  ArrowUpOutlined,
+  DotsHorizontalOutlined,
+  PlusSmOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
+import { useCreation, useInViewport, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import type { TextAreaRef } from 'antd/lib/input/TextArea'
 import classNames from 'classnames'
 import styles from './template.module.scss'
 import { AIMilkdownInput } from '../components/aiMilkdownInput/AIMilkdownInput'
 import type { EditorMilkdownProps } from '@/components/MilkdownEditor/MilkdownEditorType'
-import { getMarkdown } from '@milkdown/kit/utils'
+import { callCommand, getMarkdown } from '@milkdown/kit/utils'
 import useAIChatDrop from '../aiChatWelcome/hooks/useAIChatDrop'
 import {
   aiMentionCustomId,
@@ -32,30 +36,43 @@ import emiter from '@/utils/eventBus/eventBus'
 import type { AIAgentTriggerEventInfo } from '../aiAgentType'
 import {
   extractDataWithMilkdown,
-  insertAIMention,
   setEditorValue,
-  unescapeUnderscoreInPath,
+  normalizeSubmittedMarkdown,
 } from '../components/aiMilkdownInput/utils'
+import { insertAIMention, insertAIShortcutCommand } from '../components/aiMilkdownInput/customPlugin'
 import { EditorStatus, editorViewCtx, serializerCtx } from '@milkdown/kit/core'
 import type { Node as ProseMirrorNode } from '@milkdown/kit/prose/model'
 import { convertKeyEventToKeyCombination } from '@/utils/globalShortcutKey/utils'
 import { YakitKeyBoard } from '@/utils/globalShortcutKey/keyboard'
 import { AIModelSelect } from '../aiModelList/aiModelSelect/AIModelSelect'
 import AIReviewRuleSelect from '@/pages/ai-re-act/aiReviewRuleSelect/AIReviewRuleSelect'
-import isString from 'lodash/isString'
+import { AIFocusMode } from '@/pages/ai-re-act/aiFocusMode/AIFocusMode'
 import isEqual from 'lodash/isEqual'
 import AIAddMaterialsPopover from './aiAddMaterialsPopover/AIAddMaterialsPopover'
+import type { AddMaterialsControls, MaterialShortcut } from './aiAddMaterialsPopover/type'
 import { AIInputSettingPopover } from '@/pages/ai-re-act/aiReActTaskChat/AIReActTaskChat'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { yakitNotify } from '@/utils/notification'
 import type { AIMilkdownInputRef } from '../components/aiMilkdownInput/type'
 import type { AICodeBlockCommandParams } from '../components/aiMilkdownInput/aiCodeBlock/aiCustomCodeBlockPlugin'
 import AIRunModeSelect from '../aiRunModeSelect/AIRunModeSelect'
+import AIContextUsage from './AIContextUsage/AIContextUsage'
+import { useCurrentModelContextReset } from '../useContext/useAIModelContext'
+import AIRunningStatus from './AIRunningStatus/AIRunningStatus'
+import { RoundedStopButton } from '@/pages/ai-re-act/aiReActChat/AIReActComponent'
 import { aiResourceReferenceCustomSchema } from '../components/aiMilkdownInput/aiMilkdownResourceReference/aiResourceReferencePlugin'
 import type { AIResourceReferenceParams } from '../components/aiMilkdownInput/aiMilkdownResourceReference/aiResourceReferencePlugin'
 import { parseResourceReferenceIds } from '../components/aiMilkdownInput/aiMilkdownResourceReference/resourceReferenceIds'
 import { AI_RESOURCE_REFERENCE_SUMMARY_THRESHOLD } from '../components/aiMilkdownInput/constants'
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
+import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import { AIInputEventSyncTypeEnum, AITaskStatus } from '@/pages/ai-re-act/hooks/grpcApi'
+import type { AIInputEvent } from '@/pages/ai-re-act/hooks/grpcApi'
+import useAIAgentStore from '../useContext/useStore'
+import useAIAgentDispatcher from '../useContext/useDispatcher'
+import { randomString } from '@/utils/randomUtil'
+import { useStore } from 'zustand'
+import useListenWidth from '@/pages/pluginHub/hooks/useListenWidth'
 import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
 import { getWorkspaceAddedCounts, type WorkspaceAddedCounts } from './aiAddMaterialsPopover/workspaceAddedCounts'
 
@@ -66,6 +83,10 @@ const getMaterialKey = ({ mentionType, mentionSource, mentionId }: AIMentionComm
   `${mentionType}:${mentionSource ?? ''}:${mentionId}`
 
 const resourceTypes = ['http', 'risk'] as const
+const defaultFooterRightTypes = [
+  AIInputFooterRightEnum.AIContextUsage,
+  // AIInputFooterRightEnum.AIRunningStatus,
+]
 
 const getResourceIds = (references: AIResourceReferenceParams[]): AIResourceIds => {
   const ids: AIResourceIds = { http: [], risk: [] }
@@ -117,36 +138,35 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
     const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
 
     const sessionId = useCurrentSessionId()
-    const [inputSettingVisible, setInputSettingVisible] = useState<boolean>(false)
-    const [runModeOpen, setRunModeOpen] = useState(false)
-
-    const footerLeftTypes: FooterLeftTypesComponentProps[] = useCreation(() => {
-      if (props.footerLeftTypes?.length) {
-        const list = props.footerLeftTypes
-          .map((item) => {
-            let node: FooterLeftTypesComponentProps = {} as FooterLeftTypesComponentProps
-            if (isString(item)) {
-              switch (item) {
-                case AIInputInnerFeatureEnum.AIReviewRuleSelect:
-                  node = { type: AIInputInnerFeatureEnum.AIReviewRuleSelect }
-                  break
-                default:
-                  break
-              }
-            } else {
-              node = item
-            }
-            return node
-          })
-          .filter((ele) => !!ele?.type)
-        return list
+    const { pendingChat } = useAIAgentStore()
+    const { onSend, cancelPendingChat } = useAIAgentDispatcher()
+    const store = useCurrentStore()
+    const running = useStore(
+      store,
+      (state) => !onSubmitWithDraft && state.currentChatStatus.status === AITaskStatus.inProgress,
+    )
+    const stopLoading = useStore(store, (state) => state.cancelChatLoading)
+    const onStop = useMemoizedFn(() => {
+      if (pendingChat) {
+        cancelPendingChat()
+        return
       }
-      return [{ type: AIInputInnerFeatureEnum.AIReviewRuleSelect }]
-    }, [props.footerLeftTypes, isOpen])
+      const { execute, currentChatStatus, updateState } = store.getState()
+      if (!execute || !currentChatStatus.questionID) return
 
-    const footerRightTypes: FooterRightTypesComponentProps[] = props.footerRightTypes ?? [
-      { type: AIInputFooterRightEnum.AIModelSelect, props: { isOpen } },
-    ]
+      updateState({ cancelChatLoading: true })
+      const params: AIInputEvent = {
+        IsSyncMessage: true,
+        SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_CANCEL_TASK,
+        SyncJsonInput: JSON.stringify({ task_id: currentChatStatus.questionID }),
+        SyncID: randomString(8),
+      }
+      onSend({ token: sessionId, type: 'casual', params })
+    })
+    const [inputSettingVisible, setInputSettingVisible] = useState<boolean>(false)
+    const [footerMoreOpen, setFooterMoreOpen] = useState(false)
+    const [runModeOpen, setRunModeOpen] = useState(false)
+    const footerLeftRef = useRef<HTMLDivElement>(null)
 
     const [disabled, setDisabled] = useState<boolean>(!defaultValue?.trim())
     const [draftMaterials, setDraftMaterials] = useState<AIChatDraftMaterials>({
@@ -165,7 +185,11 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
     const { isHovering, dropRef } = useAIChatDrop({
       onFilesChange: (v) => onFilesChange(v),
     })
-    const [inViewport = true] = useInViewport(dropRef)
+    const footerLeftWidth = useListenWidth(footerLeftRef)
+    const compactFooterLeft = footerLeftWidth > 0 && footerLeftWidth < 360
+    const [inputVisible] = useInViewport(dropRef)
+    const inViewport = inputVisible ?? true
+    useCurrentModelContextReset(inputVisible === true)
     const editorMilkdown = useRef<EditorMilkdownProps>()
 
     useImperativeHandle(ref, () => {
@@ -300,6 +324,16 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
 
     // 编辑器未就绪时的 mention 先排队，就绪后补插（挂载即注入场景）
     const pendingMentionsRef = useRef<AIMentionCommandParams[]>([])
+    const pendingShortcutRef = useRef<MaterialShortcut>()
+    const onInsertShortcut = useMemoizedFn((shortcut: MaterialShortcut) => {
+      const editor = editorMilkdown.current
+      if (editor?.status !== EditorStatus.Created) {
+        pendingShortcutRef.current = shortcut
+        return
+      }
+      editor.action(callCommand(insertAIShortcutCommand.key, shortcut))
+    })
+
     const updateDraftMaterials = (editor: EditorMilkdownProps) => {
       const { mentions, draftMentions: materials, resourceReferences } = extractDataWithMilkdown(editor)
       if (sessionId) {
@@ -352,6 +386,9 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
       pendingMentionsRef.current = []
       pending.forEach((item) => insertAIMention(editor, item))
       updateDraftMaterials(editor)
+      const shortcut = pendingShortcutRef.current
+      pendingShortcutRef.current = undefined
+      if (shortcut) onInsertShortcut(shortcut)
     })
 
     const onFilesChange = useMemoizedFn((files: FileToChatQuestionList[]) => {
@@ -458,9 +495,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
     })
     const getMarkdownValue = useMemoizedFn(() => {
       const value = editorMilkdown.current?.action(getMarkdown()) || ''
-      // remark-stringify 会将下划线 _ 转义为 \_（强调字符），
-      // 导致路径等含下划线的纯文本被破坏，此处仅对路径上下文反转义还原
-      return unescapeUnderscoreInPath(value.replace(/\n+$/, ''))
+      return normalizeSubmittedMarkdown(value)
     })
 
     const onUpdateContent = useMemoizedFn((value: string) => {
@@ -483,54 +518,194 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
       setFocusMode(mentionName)
     })
 
-    const renderFooterLeftTypes = useMemoizedFn((types: FooterLeftTypesComponentProps[]) => {
-      const node: ReactNode[] = []
-      types?.forEach((item, index) => {
+    const { inlineItems, moreItems, footerRightItems, showFooterMore } = useCreation(() => {
+      const footerLeftItems = (props.footerLeftTypes ?? defaultFooterLeftTypes).map((item) =>
+        typeof item === 'string' ? { type: item, props: undefined, component: undefined } : item,
+      )
+      const inlineItems: typeof footerLeftItems = []
+      const moreItems: typeof footerLeftItems = []
+      for (const item of footerLeftItems) {
+        const { type } = item
+        const inMoreMenu =
+          compactFooterLeft &&
+          (type === AIInputInnerFeatureEnum.AIModelSelect ||
+            type === AIInputInnerFeatureEnum.AIFocusMode ||
+            type === AIInputInnerFeatureEnum.AIInputSettings)
+        const items = inMoreMenu ? moreItems : inlineItems
+        items.push(item)
+      }
+
+      const footerRightItems = (props.footerRightTypes ?? defaultFooterRightTypes).map((item) =>
+        typeof item === 'string' ? { type: item } : item,
+      )
+      return {
+        inlineItems,
+        moreItems,
+        footerRightItems,
+        showFooterMore: inputFooterLeft == null && moreItems.length > 0,
+      }
+    }, [props.footerLeftTypes, props.footerRightTypes, compactFooterLeft, inputFooterLeft])
+
+    useEffect(() => {
+      if (!showFooterMore) setFooterMoreOpen(false)
+    }, [showFooterMore])
+    useUpdateEffect(() => {
+      setInputSettingVisible(false)
+    }, [compactFooterLeft])
+
+    const renderFooterLeftTypes = ({
+      open: materialsOpen,
+      menuOpen,
+      toggle: toggleMaterials,
+    }: AddMaterialsControls) => {
+      const renderItem = (item: (typeof inlineItems)[number]): ReactNode => {
         switch (item.type) {
+          case AIInputInnerFeatureEnum.AddMaterials:
+            return (
+              <Fragment key={item.type}>
+                {item.component ?? (
+                  <YakitButton
+                    type="text2"
+                    className={styles['material-add']}
+                    data-menu-open={menuOpen || undefined}
+                    aria-label={t('AIChatTextarea.addMaterials')}
+                    aria-expanded={materialsOpen}
+                    aria-haspopup="dialog"
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      toggleMaterials()
+                    }}
+                    onKeyDown={(event) => event.stopPropagation()}
+                    icon={<PlusSmOutlined />}
+                  />
+                )}
+              </Fragment>
+            )
+          case AIInputInnerFeatureEnum.AIRunModeSelect:
+            return (
+              <Fragment key={item.type}>
+                {item.component ?? <AIRunModeSelect open={runModeOpen} onOpenChange={setRunModeOpen} />}
+              </Fragment>
+            )
           case AIInputInnerFeatureEnum.AIReviewRuleSelect:
-            node.push(
-              item.component || (
-                <AIReviewRuleSelect
-                  key={item.type}
-                  {...item.props}
-                  className={classNames(styles['review-rule-self-adaptive'], item.props?.className)}
-                />
-              ),
+            return (
+              <Fragment key={item.type}>
+                {item.component ?? (
+                  <AIReviewRuleSelect
+                    {...item.props}
+                    className={classNames(styles['review-rule-self-adaptive'], item.props?.className)}
+                  />
+                )}
+                {!compactFooterLeft && <div className={styles['divider-style']} />}
+              </Fragment>
             )
-            node.push(<div className={styles['divider-style']} key={`divider-${index}`} />)
-            break
-
+          case AIInputInnerFeatureEnum.AIModelSelect:
+            return (
+              <Fragment key={item.type}>
+                {item.component ?? (
+                  <AIModelSelect
+                    isOpen={isOpen}
+                    {...item.props}
+                    className={classNames(styles['model-self-adaptive'], item.props?.className)}
+                  />
+                )}
+              </Fragment>
+            )
+          case AIInputInnerFeatureEnum.AIFocusMode:
+            return (
+              <Fragment key={item.type}>
+                {item.component ?? (
+                  <AIFocusMode
+                    value={focusMode}
+                    {...item.props}
+                    onChange={item.props?.onChange ?? setFocusMode}
+                    className={classNames(styles['focus-mode-self-adaptive'], item.props?.className)}
+                  />
+                )}
+              </Fragment>
+            )
+          case AIInputInnerFeatureEnum.AIInputSettings:
+            return (
+              <Fragment key={item.type}>
+                {item.component ?? (
+                  <AIInputSettingPopover visible={inputSettingVisible} setVisible={setInputSettingVisible}>
+                    <YakitButton
+                      type="text2"
+                      aria-label={t('AIRightPanel.aiSettings')}
+                      aria-expanded={inputSettingVisible}
+                      icon={<AdjustmentsOutlined color="currentColor" />}
+                      onClick={(event) => event.stopPropagation()}
+                      className={styles['settings-button']}
+                      isActive={inputSettingVisible}
+                    >
+                      <span className={styles['settings-label']}>{t('AIRightPanel.aiSettings')}</span>
+                    </YakitButton>
+                  </AIInputSettingPopover>
+                )}
+              </Fragment>
+            )
           default:
-            break
+            return null
         }
-      })
-      return node
-    })
-    const renderFooterRightTypes = useMemoizedFn((types: FooterRightTypesComponentProps[]) => {
-      const node: ReactNode[] = []
-      types?.forEach((item) => {
+      }
+
+      return (
+        <>
+          {inlineItems.map(renderItem)}
+          {showFooterMore && (
+            <YakitPopover
+              open={footerMoreOpen}
+              trigger="click"
+              placement="topLeft"
+              arrow={false}
+              destroyOnHidden
+              styles={{ root: { width: 180 }, body: { padding: 4, borderRadius: 12 } }}
+              onOpenChange={(open) => {
+                setFooterMoreOpen(open)
+                if (!open) setInputSettingVisible(false)
+              }}
+              content={
+                <div
+                  className={styles['footer-more-menu']}
+                  role="dialog"
+                  aria-label={t('YakitButton.more')}
+                  onClick={(event) => event.stopPropagation()}
+                  onKeyDown={(event) => event.stopPropagation()}
+                >
+                  {moreItems.map(renderItem)}
+                </div>
+              }
+            >
+              <YakitButton
+                type="text2"
+                isActive={footerMoreOpen}
+                className={styles['footer-more-button']}
+                aria-label={t('YakitButton.more')}
+                aria-expanded={footerMoreOpen}
+                aria-haspopup="dialog"
+                icon={<DotsHorizontalOutlined color="currentColor" />}
+                onClick={(event) => event.stopPropagation()}
+                onKeyDown={(event) => event.stopPropagation()}
+              />
+            </YakitPopover>
+          )}
+        </>
+      )
+    }
+    const renderFooterRightTypes = () =>
+      footerRightItems.map((item) => {
+        const component = 'component' in item ? item.component : undefined
         switch (item.type) {
-          case AIInputFooterRightEnum.AIModelSelect:
-            node.push(
-              item.component || (
-                <AIModelSelect
-                  key={item.type}
-                  {...item.props}
-                  className={classNames(styles['model-self-adaptive'], item.props?.className)}
-                />
-              ),
-            )
-            break
+          case AIInputFooterRightEnum.AIContextUsage:
+            return <Fragment key={item.type}>{component ?? <AIContextUsage key={sessionId} />}</Fragment>
+          case AIInputFooterRightEnum.AIRunningStatus:
+            return <Fragment key={item.type}>{component ?? <AIRunningStatus />}</Fragment>
           case AIInputFooterRightEnum.Custom:
-            node.push(<Fragment key={item.key}>{item.component}</Fragment>)
-            break
+            return 'key' in item ? <Fragment key={item.key}>{item.component}</Fragment> : null
           default:
-            break
+            return null
         }
       })
-      return node
-    })
-
     const visibleInlineMaterials = draftMaterials.mentions.filter(
       (mention) => !draftMaterials.hiddenInlineKeys.includes(getMaterialKey(mention)),
     )
@@ -583,44 +758,16 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
           showScenarioCapabilities={showScenarioCapabilities}
           initialEnabledCapabilities={initialDraft?.enabledCapabilities}
           onEnabledCapabilitiesChange={onEnabledCapabilitiesChange}
+          onShortcut={onInsertShortcut}
           onAdd={onAddMaterial}
           onRemove={onRemoveMaterial}
           mentions={[...selectedMaterials, ...visibleInlineMaterials]}
           resourceIds={draftMaterials.resourceIds}
           selectedResourceIds={selectedResourceIds}
-          focusMode={focusMode}
-          onFocusModeChange={setFocusMode}
-          filterMode={filterMentionType}
         >
-          {(materialsOpen, toggleMaterials, summary, materialsMenuOpen) => (
+          {(materialControls) => (
             <div className={classNames(styles['textarea-wrapper'])} onKeyDown={handleTextareaKeyDown}>
-              <div className={styles['materials-row']}>
-                <YakitButton
-                  type="text2"
-                  className={styles['material-add']}
-                  data-menu-open={materialsMenuOpen || undefined}
-                  aria-label={t('AIChatTextarea.addMaterials')}
-                  aria-expanded={materialsOpen}
-                  aria-haspopup="dialog"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    toggleMaterials()
-                  }}
-                  onKeyDown={(e) => e.stopPropagation()}
-                  icon={<PlusSmOutlined />}
-                />
-                {summary ?? (
-                  <div
-                    className={styles['material-add-label']}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      toggleMaterials()
-                    }}
-                  >
-                    {t('AIChatTextarea.addMaterials')}
-                  </div>
-                )}
-              </div>
+              {materialControls.summary && <div className={styles['materials-row']}>{materialControls.summary}</div>}
               <AIMilkdownInput
                 ref={aiMilkdownInputRef}
                 classNameWrapper={milkdownClassName}
@@ -635,41 +782,50 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                 onModeChangeComplete={() => setRunModeOpen(true)}
               />
               <div className={styles['footer']}>
-                {inputFooterLeft ?? (
-                  <div className={styles['footer-left']}>
-                    {renderFooterLeftTypes(footerLeftTypes)}
-                    <AIRunModeSelect open={runModeOpen} onOpenChange={setRunModeOpen} />
-                    <AIInputSettingPopover visible={inputSettingVisible} setVisible={setInputSettingVisible}>
-                      <YakitButton
-                        type="text2"
-                        icon={<AdjustmentsOutlined color="currentColor" />}
-                        onClick={(e) => e.stopPropagation()}
-                        className={styles['btn-base']}
-                        isActive={inputSettingVisible}
-                      />
-                    </AIInputSettingPopover>
-                  </div>
-                )}
+                <div className={styles['footer-left']} ref={footerLeftRef}>
+                  {inputFooterLeft ?? renderFooterLeftTypes(materialControls)}
+                </div>
 
                 <div className={styles['footer-right']}>
-                  {renderFooterRightTypes(footerRightTypes)}
-                  {inputFooterRight}
+                  <div className={styles['footer-status-items']}>
+                    {renderFooterRightTypes()}
+                    {inputFooterRight}
+                  </div>
                   <YakitButton
-                    className={styles['round-btn']}
-                    aria-label={t('YakitButton.send')}
-                    radius="50%"
+                    type={running ? 'outline2' : undefined}
+                    className={styles[running ? 'queue-send-btn' : 'round-btn']}
+                    aria-label={t(running ? 'AIChatTextarea.queueSend' : 'YakitButton.send')}
+                    radius={running ? '16px' : 9999}
                     loading={loading}
                     disabled={
                       disabled &&
                       !resourceTypes.some((type) => selectedResourceIds[type].length) &&
                       !selectedMaterials.length
                     }
-                    icon={<ArrowUpOutlined color="currentColor" />}
+                    icon={
+                      <ArrowUpOutlined
+                        color={running ? 'var(--Colors-Use-Neutral-Text-3-Secondary)' : 'currentColor'}
+                      />
+                    }
                     onClick={(e) => {
                       e.stopPropagation()
                       handleSubmit()
                     }}
-                  />
+                  >
+                    {running && <span className={styles['queue-send-label']}>{t('AIChatTextarea.queueSend')}</span>}
+                  </YakitButton>
+                  {running && (
+                    <RoundedStopButton
+                      aria-label={t('YakitButton.stop')}
+                      loading={stopLoading}
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        onStop()
+                      }}
+                      onKeyDown={(event) => event.stopPropagation()}
+                      style={{ width: 24, height: 24 }}
+                    />
+                  )}
                 </div>
               </div>
             </div>

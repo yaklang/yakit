@@ -7,6 +7,17 @@ import {
   shouldInterceptMentionEnter,
 } from './mentionKeyboard'
 
+const noKeyboardTarget = () => null
+
+function useBoundKeyPress(
+  key: string | string[] | (() => false),
+  handler: (event: KeyboardEvent) => void,
+  targets: Array<(() => HTMLElement | null) | undefined>,
+) {
+  useKeyPress(key, handler, { target: targets[0], exactMatch: true, useCapture: true })
+  useKeyPress(key, handler, { target: targets[1] ?? noKeyboardTarget, exactMatch: true, useCapture: true })
+}
+
 function useSwitchSelectByKeyboard<T>(
   ref: RefObject<HTMLDivElement | null> | null,
   params: {
@@ -15,14 +26,27 @@ function useSwitchSelectByKeyboard<T>(
     rowKey: string | ((v: T) => string)
     onSelectNumber: (m: number, isScroll: boolean) => void
     onEnter: () => void
+    /** Ctrl/Cmd+Enter：把当前高亮项加入多选，不提交。 */
+    onCtrlEnter?: () => void
     /** 固定行高；目标 DOM 未挂载（虚拟列表）时用于估算 scrollTop */
     defItemHeight?: number
     getContainer?: () => HTMLElement | null
+    extraContainer?: () => HTMLElement | null
     /** 面板关闭时必须为 false，否则会一直拦截编辑器 Enter */
     enabled?: boolean
   },
 ): void {
-  const { data, selected, rowKey, onSelectNumber, onEnter, getContainer, enabled = true } = params
+  const {
+    data,
+    selected,
+    rowKey,
+    onSelectNumber,
+    onEnter,
+    onCtrlEnter,
+    getContainer,
+    extraContainer,
+    enabled = true,
+  } = params
 
   const defItemHeight = useCreation(() => params.defItemHeight ?? 32, [params.defItemHeight])
 
@@ -35,57 +59,6 @@ function useSwitchSelectByKeyboard<T>(
     }
     return rowKey(item)
   })
-
-  useKeyPress(
-    active ? 'uparrow' : () => false,
-    (e) => {
-      e.stopPropagation()
-      e.preventDefault()
-      onUpArrow()
-    },
-    {
-      target: getContainer,
-      exactMatch: true,
-      useCapture: true,
-    },
-  )
-  useKeyPress(
-    active ? 'downarrow' : () => false,
-    (e) => {
-      e.stopPropagation()
-      e.preventDefault()
-      onDownArrow()
-    },
-    {
-      target: getContainer,
-      exactMatch: true,
-      useCapture: true,
-    },
-  )
-  useKeyPress(
-    active ? 'enter' : () => false,
-    (e) => {
-      if (e.target instanceof Element && e.target.closest('button')) return
-      if (
-        !shouldInterceptMentionEnter({
-          enabled,
-          inViewport,
-          dataLength: data.length,
-          hasSelected: selected != null,
-        })
-      ) {
-        return
-      }
-      e.stopPropagation()
-      e.preventDefault()
-      onEnterKey()
-    },
-    {
-      target: getContainer,
-      exactMatch: true,
-      useCapture: true,
-    },
-  )
 
   const applyArrowSelect = useMemoizedFn((direction: 'up' | 'down') => {
     if (!active) return
@@ -140,6 +113,48 @@ function useSwitchSelectByKeyboard<T>(
     },
     { wait: 200, leading: true },
   ).run
+
+  const targets = [getContainer, extraContainer]
+  const onUpKey = (e: KeyboardEvent) => {
+    e.stopPropagation()
+    e.preventDefault()
+    onUpArrow()
+  }
+  const onDownKey = (e: KeyboardEvent) => {
+    e.stopPropagation()
+    e.preventDefault()
+    onDownArrow()
+  }
+  const onEnterEvent = (e: KeyboardEvent) => {
+    if (e.target instanceof Element) {
+      const button = e.target.closest('button')
+      // 行内操作按钮仍交给按钮自己；分类 Tab 上的回车要提交当前列表。
+      if (button && !button.closest('[data-mention-tabs]')) return
+    }
+    if (
+      !shouldInterceptMentionEnter({
+        enabled,
+        inViewport,
+        dataLength: data.length,
+        hasSelected: selected != null,
+      })
+    ) {
+      return
+    }
+    e.stopPropagation()
+    e.preventDefault()
+    onEnterKey()
+  }
+  const onCtrlEnterEvent = (e: KeyboardEvent) => {
+    if (e.repeat || !onCtrlEnter) return
+    e.stopPropagation()
+    e.preventDefault()
+    onCtrlEnter()
+  }
+  useBoundKeyPress(active ? 'uparrow' : () => false, onUpKey, targets)
+  useBoundKeyPress(active ? 'downarrow' : () => false, onDownKey, targets)
+  useBoundKeyPress(active ? 'enter' : () => false, onEnterEvent, targets)
+  useBoundKeyPress(active && onCtrlEnter ? ['ctrl.enter', 'meta.enter'] : () => false, onCtrlEnterEvent, targets)
 }
 
 export default useSwitchSelectByKeyboard

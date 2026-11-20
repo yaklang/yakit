@@ -13,11 +13,15 @@ const mocks = vi.hoisted(() => ({
   get: vi.fn<() => Promise<AIGlobalConfig>>(),
   save: vi.fn<(_config: AIGlobalConfig) => Promise<void>>(),
   names: vi.fn(),
+  persistedConfig: undefined as AIGlobalConfig | undefined,
 }))
 vi.mock('../../../utils', () => ({
   isForcedSetAIModal: mocks.load,
   grpcGetAIGlobalConfig: mocks.get,
-  grpcSetAIGlobalConfig: mocks.save,
+  grpcSetAIGlobalConfig: (config: AIGlobalConfig) =>
+    mocks.save(config).then(() => {
+      mocks.persistedConfig = structuredClone(config)
+    }),
   grpcListAiModel: mocks.names,
   grpcProbeReasoningEffort: () => new Promise(() => {}),
   getModelName: (name?: string) => name ?? '',
@@ -117,14 +121,21 @@ const mount = async () => {
 
 beforeEach(() => {
   vi.useFakeTimers()
-  mocks.get.mockReset().mockImplementation(() => Promise.resolve(configA()))
+  mocks.persistedConfig = configA()
+  mocks.get.mockReset().mockImplementation(() => Promise.resolve(structuredClone(mocks.persistedConfig!)))
   mocks.save.mockReset().mockResolvedValue(undefined)
   mocks.names.mockReset().mockResolvedValue({ ModelName: ['model-renamed'] })
   mocks.load.mockReset().mockImplementation(({ haveDataCall }) => {
     haveDataCall?.(availableA())
     return Promise.resolve()
   })
-  useAIGlobalConfigStore.setState({ aiGlobalConfig: configA(), isInit: true, queryLoading: false })
+  useAIGlobalConfigStore.setState({
+    aiGlobalConfig: configA(),
+    persistedAiGlobalConfig: undefined,
+    configSavePending: false,
+    isInit: true,
+    queryLoading: false,
+  })
   vi.stubGlobal(
     'ResizeObserver',
     class {
@@ -236,7 +247,7 @@ describe('EnterpriseAIModelSelect real config hook/store synchronization', () =>
     })
     initial.IntelligentModels[0].Provider.ReasoningEffort = 'low'
     initial.IntelligentModels[1].Provider.ReasoningEffort = 'high'
-    mocks.get.mockResolvedValue(initial)
+    mocks.persistedConfig = structuredClone(initial)
     mocks.names.mockResolvedValue({ ModelName: ['model-b'] })
     useAIGlobalConfigStore.setState({ aiGlobalConfig: initial })
     await mount()
@@ -324,7 +335,7 @@ describe('EnterpriseAIModelSelect real config hook/store synchronization', () =>
     initial.IntelligentModels[1].ModelName = 'model-a'
     initial.IntelligentModels[0].Provider.ReasoningEffort = 'low'
     initial.IntelligentModels[1].Provider.ReasoningEffort = 'high'
-    mocks.get.mockResolvedValue(initial)
+    mocks.persistedConfig = structuredClone(initial)
     useAIGlobalConfigStore.setState({ aiGlobalConfig: initial })
     await mount()
     toggle('open')
@@ -351,7 +362,7 @@ describe('EnterpriseAIModelSelect real config hook/store synchronization', () =>
     })
     initial.IntelligentModels[0].Provider.ReasoningEffort = 'low'
     initial.IntelligentModels[1].Provider.ReasoningEffort = 'high'
-    mocks.get.mockResolvedValue(initial)
+    mocks.persistedConfig = structuredClone(initial)
     mocks.names.mockResolvedValue({ ModelName: ['model-b'] })
     useAIGlobalConfigStore.setState({ aiGlobalConfig: initial })
     await mount()
@@ -397,7 +408,7 @@ describe('EnterpriseAIModelSelect real config hook/store synchronization', () =>
       })
     initial.IntelligentModels[0].Provider.ReasoningEffort = 'low'
     initial.IntelligentModels[0].ExtraParams = [{ Key: 'entry', Value: 'original-a' }]
-    mocks.get.mockResolvedValue(initial)
+    mocks.persistedConfig = structuredClone(initial)
     useAIGlobalConfigStore.setState({ aiGlobalConfig: initial })
     await mount()
     const save = deferred<void>()
@@ -446,7 +457,7 @@ describe('EnterpriseAIModelSelect real config hook/store synchronization', () =>
         initial.IntelligentModels.forEach((model) => {
           model.ProviderId = 'shared-provider'
         })
-      mocks.get.mockResolvedValue(initial)
+      mocks.persistedConfig = structuredClone(initial)
       useAIGlobalConfigStore.setState({ aiGlobalConfig: initial })
       await mount()
       const { result } = renderHook(() => useAIGlobalConfig())
@@ -493,7 +504,7 @@ describe('EnterpriseAIModelSelect real config hook/store synchronization', () =>
       initial.IntelligentModels.forEach((model) => {
         model.ProviderId = 'shared-provider'
       })
-    mocks.get.mockResolvedValue(initial)
+    mocks.persistedConfig = structuredClone(initial)
     useAIGlobalConfigStore.setState({ aiGlobalConfig: initial })
     await mount()
     const save = deferred<void>()
@@ -530,7 +541,7 @@ describe('EnterpriseAIModelSelect real config hook/store synchronization', () =>
       initial.IntelligentModels.forEach((model) => {
         model.ProviderId = 'shared-provider'
       })
-    mocks.get.mockResolvedValue(initial)
+    mocks.persistedConfig = structuredClone(initial)
     useAIGlobalConfigStore.setState({ aiGlobalConfig: initial })
     await mount()
     toggle('open')
@@ -562,7 +573,7 @@ describe('EnterpriseAIModelSelect real config hook/store synchronization', () =>
     initial.IntelligentModels[1].SupportsImageInput = true
     initial.IntelligentModels[1].SupportsImageToolCalling = false
     initial.IntelligentModels[1].ImageTokenEstimator = 'tile512'
-    mocks.get.mockResolvedValue(initial)
+    mocks.persistedConfig = structuredClone(initial)
     useAIGlobalConfigStore.setState({ aiGlobalConfig: initial })
     await mount()
     toggle('open')

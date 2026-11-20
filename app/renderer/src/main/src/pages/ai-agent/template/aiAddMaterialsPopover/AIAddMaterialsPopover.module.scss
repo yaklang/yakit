@@ -1,4 +1,5 @@
 @use '../../resourcePickerDimensions' as resourcePicker;
+@use '../../materialMenuRows' as rows;
 
 .popover:global(.ant-popover) {
   .body {
@@ -25,82 +26,62 @@
   height: resourcePicker.$content-height;
 }
 
-.header,
-.menu .item:global(.yakit.ant-btn.ant-btn-default) {
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
-  gap: 8px;
-}
-
 .header {
-  padding: 4px 0 0 8px;
+  @include rows.header;
 }
 
 .menu-header {
-  padding-inline-end: 4px;
+  @include rows.menu-header;
 }
 
 .menu {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  @include rows.menu;
 }
 
-.title,
-.item-title {
+.shortcut-group {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin-bottom: 4px;
+
+  .header {
+    min-height: 28px;
+  }
+}
+
+.item .shortcut-symbol {
+  display: grid;
+  box-sizing: border-box;
+  place-items: center;
   flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--Colors-Use-Neutral-Border);
+  border-radius: 8px;
+  color: var(--Colors-Use-Neutral-Text-2-Primary);
+  font-size: 14px;
   font-weight: 500;
+  line-height: 18px;
 }
 
 .title {
-  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  @include rows.title;
+}
+
+.item-title {
+  @include rows.item-title;
 }
 
 .description {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: var(--Colors-Use-Neutral-Text-4-Help-text);
+  @include rows.description;
 }
 
-.menu .item:global(.yakit.ant-btn.ant-btn-default) {
-  justify-content: flex-start;
-  height: 28px;
-  padding: 0 8px;
-  border: 0;
-  border-radius: 8px;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  letter-spacing: inherit;
-  text-align: start;
-  cursor: pointer;
-
-  &:not(:disabled):hover,
-  &:not(:disabled):focus {
-    background: var(--Colors-Use-Neutral-Bg-Hover);
-  }
-
-  &:not(:disabled):focus-visible {
-    outline: none;
-    box-shadow: none;
-  }
+.item:global(.yakit.ant-btn.ant-btn-default) {
+  @include rows.item;
 }
 
 .icon {
-  display: grid;
-  flex-shrink: 0;
-  place-items: center;
-  width: 20px;
-  height: 20px;
-
-  svg[width='40'] {
-    width: 20px;
-    height: 20px;
-  }
+  @include rows.icon;
 }
 
 .external {
@@ -108,32 +89,18 @@
   color: var(--Colors-Use-Neutral-Text-4-Help-text);
 }
 
-.current:global(.ant-tag) {
-  max-width: 50%;
-  margin-inline-end: 0;
-  gap: 4px;
-  background: var(--Colors-Use-Success-Focus);
-  line-height: 14px;
-  letter-spacing: 0.5px;
-}
-
-.current-prefix {
-  flex-shrink: 0;
-}
-
-.current-name {
-  min-width: 0;
-  overflow: hidden;
-  color: var(--Colors-Use-Neutral-Text-1-Title);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .attachment-header {
   padding-inline-end: 4px;
 
   .description {
     flex: 0 1 auto;
+  }
+}
+
+.attachment-search {
+  :global(.ant-input) {
+    font-size: 14px;
+    line-height: 20px;
   }
 }
 
@@ -165,23 +132,4 @@
   flex: 0 0 1px;
   height: 16px;
   background: var(--Colors-Use-Neutral-Border);
-}
-
-.scenario-search {
-  :global(.ant-input-affix-wrapper.ant-input-borderless > input.ant-input) {
-    font-size: 14px;
-    line-height: 20px;
-    letter-spacing: 0.1px;
-  }
-
-  :global(.ant-input-prefix) {
-    margin-inline-end: 6px;
-  }
-}
-
-.attachment-search {
-  :global(.ant-input) {
-    font-size: 14px;
-    line-height: 20px;
-  }
 }

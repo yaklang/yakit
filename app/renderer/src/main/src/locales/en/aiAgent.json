@@ -112,9 +112,10 @@
     "toConfigure": "Go to Configure",
     "configDesc": "No available AI model found. Please configure one before use.",
     "selectModel": "Select AI Model",
+    "modelTitle": "Model",
     "openConfigTooltip": "Open model configuration in Settings",
     "manageModels": "Manage Models",
-    "resetModel": "Reset Model",
+    "resetModel": "Reset",
     "resetModelTooltip": "Reset to the default model",
     "emptyModels": "No models found. Refresh to try again.",
     "noBuiltinModel": "No built-in primary model found"
@@ -210,6 +211,7 @@
     "singleModelModeDescription": "Use only the globally configured primary model for this session when enabled"
   },
   "AIModelGlobalConfig": {
+    "savedRefreshFailed": "Configuration saved, but refreshing it failed.",
     "aiModelConfig": "AI model configuration",
     "disableFallback": "Disable fallback to the auxiliary model"
   },
@@ -233,24 +235,55 @@
     "basicCheck": "Tool Basic Check"
   },
   "AIChatTextarea": {
+    "otherMaterials": "Other materials",
     "dropToAddToChat": "Release to add to chat",
     "addMaterials": "Add materials",
-    "otherMaterials": "Other materials"
+    "queueSend": "Queue send"
+  },
+  "AIContextUsage": {
+    "label": "Context {{percent}}%",
+    "title": "Context usage",
+    "usedPercent": "Used {{percent}}",
+    "summary": "Used {{used}}, remaining {{remaining}}",
+    "limit": "(limit {{threshold}})",
+    "threshold": "Context compression threshold",
+    "restoreDefault": "Restore default value",
+    "exceedsMaximum": "Exceeds maximum value",
+    "autoAdjust": "Auto-adjust",
+    "autoAdjustHelp": "Adjust automatically after a remote error",
+    "autoAdjustTooltip": "On by default. If the model rejects a context that is too long, the threshold is lowered automatically and the task is retried. When off, the manual threshold is kept and the task stops if the limit is exceeded.",
+    "retry": "Retry",
+    "saveTimeout": "Save timed out. Restored the last confirmed settings.",
+    "sessionUnavailable": "The session is disconnected. Please retry.",
+    "missingContextKey": "Update failed: missing context_key",
+    "waitingContext": "Waiting for data from the backend",
+    "loadFailed": "Failed to load context settings",
+    "retryUsage": "Usage unavailable, retry",
+    "saveFailed": "Failed to save context settings"
+  },
+  "AIRunningStatus": {
+    "label": "Running round {{round}} · {{elapsed}} / {{duration}}",
+    "state": "Running",
+    "round": "round {{round}}"
   },
   "AIAddMaterialsPopover": {
     "scenarioCapabilities": "Capabilities",
-    "currentScenario": "Current selection",
     "addedSkills": "Added skills",
     "addedKnowledgeBases": "Added knowledge bases",
     "addedOtherMaterials": "Other added materials",
     "goToAdd": "Add more",
+    "continueAdding": "Add more",
+    "attachments": "Attachments",
+    "addedAttachments": "My attachments",
+    "addedBrowsers": "Added browsers",
+    "shortcuts": "Shortcuts",
+    "mentionShortcut": "Use @ to add context",
+    "modeShortcut": "Use / to choose execution modes",
+    "currentScenario": "Current selection",
     "searchMaterials": "Enter a keyword to search",
     "contextHint": "All added materials are used as context for the current conversation.",
     "attachment": "Add files",
     "addFolder": "Add folders",
-    "continueAdding": "Add more",
-    "attachments": "Attachments",
-    "addedAttachments": "My attachments",
     "attachmentHint": "Upload up to {{max}} items at a time",
     "attachmentLimitExceeded": "You selected {{count}} attachments. You can add up to {{max}} at a time.",
     "attachmentFailed": "Unable to open the file picker: {{error}}",
@@ -262,10 +295,11 @@
     "knowledgeHint": "Reference a knowledge base",
     "toolHint": "AI prioritizes added tools when completing tasks",
     "fileSystemHint": "Browse and search your files",
-    "browserHint": "Operate a browser with AI",
-    "addedBrowsers": "Added browsers",
-    "sceneHint": "Use a framework to guide AI in complex scenarios",
-    "current": "Current:"
+    "browserHint": "Operate a browser with AI"
+  },
+  "AIFocusMode": {
+    "clearSelection": "Clear scene selection",
+    "focusModeTooltip": "Use a framework to guide AI in complex scenarios"
   },
   "AIToolDecision": {
     "decision": "Decision"
@@ -474,6 +508,9 @@
     "tool": "Tool",
     "knowledgeBase": "Knowledge Base",
     "fileSystem": "File System",
+    "loadedFiles": "Loaded files",
+    "openLocalFileHint": "Load local files into the mention list, up to {{max}} at a time",
+    "openLocalFolderHint": "Load local folders into the mention list, up to {{max}} at a time",
     "allKnowledgeBase": "@All Knowledge Bases",
     "browser": "Browser"
   },
@@ -568,9 +605,9 @@
   "AIReviewRuleOptions": {
     "manualLabel": "manual",
     "manualDesc": "All reviews are handled manually by the user",
-    "yoloLabel": "Escrow YOLO",
+    "yoloLabel": "YOLO",
     "yoloDesc": "All reviews are executed by default without prompting",
-    "aiLabel": "Collaborative AI",
+    "aiLabel": "Collaboration",
     "aiDesc": "AI judges review risk, low risk runs by default, high risk is handled by the user"
   },
   "AIModelPolicyOptions": {
@@ -877,7 +914,10 @@
   },
   "AIReasoningEffort": {
     "probeUnsupported": "This model does not support this effort level",
-    "selectQuality": "Thinking quality",
+    "selectQuality": "Thinking effort",
+    "effortDefault": "Default",
+    "effortLow": "Low (fast)",
+    "effortMax": "Max (slowest)",
     "tooltip": "Off disables thinking; default follows the model default; Very High / Maximum are extended tiers shown only after probe confirmation",
     "probing": "Probing..."
   },
@@ -938,8 +978,7 @@
     "switchToSource": "Switch to source mode"
   },
   "AIMilkdownInput": {
-    "placeholderPrompt": "Ask me anything",
-    "placeholderHint": "Use skills, tools, files, and knowledge bases...",
+    "placeholder": "Ask me anything @ Use skills, tools, files, and knowledge bases, / Choose a mode",
     "selectedHttpFlowSummary": "Selected {{count}} HTTP flows",
     "selectedRiskSummary": "Selected {{count}} risks",
     "imagesNotSaved": "Images have not finished saving. Please try again shortly. If saving failed, remove the failed images and upload them again."
@@ -955,7 +994,7 @@
     "minIterationsPrefix": "Minimum iterations: {{value}}",
     "acceptanceOption": "Acceptance criteria (text)",
     "acceptance": "Acceptance criteria",
-    "acceptancePlaceholder": "Describe the acceptance criteria...",
+    "acceptancePlaceholder": "Describe your acceptance criteria...",
     "acceptancePrefix": "Acceptance criteria: {{value}}",
     "durationOption": "Duration (set a “go deeper” window to add rounds)",
     "duration": "Duration",
@@ -968,12 +1007,22 @@
     "setSubAgentCount": "Set sub-agent count"
   },
   "AIRunModeSelect": {
+    "executionMode": "Execution modes",
+    "modeCount": "{{count}} modes",
+    "modeCountShort": "{{count}}",
+    "iterationCount": "{{count}}×",
     "mode": "Mode",
     "multiMode": "Multi-mode",
     "configuration": "Execution modes",
     "configurationTip": "Combine Plan, Multi-Agent and Goal modes for your task",
-    "goalHint": "Choose a goal mode and set its parameters",
-    "switchGoalModeContent": "Switching will reset the value of the currently selected option to its default. Continue?",
+    "planTip": "Allow AI to create a plan and execute it",
+    "multiAgentTip": "Prefer delegating tasks to SubAgents",
+    "stopCondition": "Stop condition",
+    "customDuration": "Custom",
+    "durationHours": "Hours",
+    "durationMinutes": "Minutes",
+    "hourUnit": "h",
+    "minuteUnit": "min",
     "durationHint": "Set a time window to continue exploring",
     "editAcceptance": "Edit acceptance criteria",
     "noAcceptance": "None"
@@ -1051,8 +1100,6 @@
     "aiCallAutoRetryDesc": "How many times to retry a single dialogue when the remote AI is unstable",
     "aiTransactionRetry": "AI transaction retry count",
     "aiTransactionRetryDesc": "Increase this to retry when answer quality is low",
-    "runtimeContextSize": "Runtime context size",
-    "runtimeContextSizeDesc": "Context size must be a positive integer of at least 60 KB",
     "aiCallTokenLimit": "Pressure token threshold",
     "aiCallTokenLimitDesc": "Warn when AI dialogue tokens exceed this limit",
     "userInteractLimit": "User interaction limit",

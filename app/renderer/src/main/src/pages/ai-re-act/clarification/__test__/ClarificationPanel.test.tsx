@@ -246,34 +246,64 @@ it('keeps one editor when a choice request arrives during form editing and resto
     values: { target: '授权演示系统' },
   })
 })
+it('keeps the queue when a stale card is showing and one questionnaire is still pending', async () => {
+  const stale = item('done')
+  stale.data.request.state = 'submitted'
+  const pending = item('pending')
+  context.contents.set(stale.id, stale)
+  context.contents.set(pending.id, pending)
+  act(() => {
+    context.store.getState().updateState({
+      questionPanelTokens: [stale.id, pending.id],
+      questionPanelRevision: 1,
+    })
+  })
+  render(<ClarificationPanel />)
+  expect(screen.queryByText('选择 pending')).toBeNull()
+  expect(screen.getByRole('button', { name: /问卷队列/ }).textContent?.replace(/\s/g, '')).toBe('问卷队列1')
+  fireEvent.mouseEnter(screen.getByRole('button', { name: /问卷队列/ }))
+  fireEvent.click(await screen.findByText('pending'))
+  expect(screen.getByText('选择 pending')).toBeTruthy()
+  expect(screen.queryByRole('button', { name: /问卷队列/ })).toBeNull()
+})
+it('hides the queue when only one questionnaire is pending', () => {
+  const only = item('only')
+  context.contents.set(only.id, only)
+  syncQuestionPanel(context.store, only)
+  render(<ClarificationPanel />)
+  expect(screen.getByText('选择 only')).toBeTruthy()
+  expect(screen.queryByRole('button', { name: /问卷队列/ })).toBeNull()
+})
 it('refresh restores missing pending tokens without changing the current item', async () => {
   const first = item('first')
+  const second = item('second')
   const extra = formItem('focus')
   extra.data.request.mode = 'blocking'
   extra.data.request.form!.title = '关注重点'
   const stale = item('done')
   stale.data.request.state = 'submitted'
   context.contents.set(first.id, first)
+  context.contents.set(second.id, second)
   context.contents.set(extra.id, extra)
   context.contents.set(stale.id, stale)
   syncQuestionPanel(context.store, first)
   act(() => {
     context.store.getState().updateState({
-      questionPanelTokens: [first.id, stale.id],
+      questionPanelTokens: [first.id, second.id, stale.id],
       questionPanelRevision: 1,
     })
   })
   render(<ClarificationPanel />)
   expect(screen.getByText('选择 first')).toBeTruthy()
-  expect(screen.getByRole('button', { name: /问卷队列/ }).textContent?.replace(/\s/g, '')).toBe('问卷队列1')
+  expect(screen.getByRole('button', { name: /问卷队列/ }).textContent?.replace(/\s/g, '')).toBe('问卷队列2')
   fireEvent.mouseEnter(screen.getByRole('button', { name: /问卷队列/ }))
   const revision = context.store.getState().questionPanelRevision
   fireEvent.click(await screen.findByRole('button', { name: '刷新' }))
-  expect(context.store.getState().questionPanelTokens).toEqual([first.id, extra.id])
+  expect(context.store.getState().questionPanelTokens).toEqual([first.id, second.id, extra.id])
   expect(context.store.getState().questionPanelRevision).toBeGreaterThan(revision)
   expect(screen.getByText('选择 first')).toBeTruthy()
   expect(await screen.findByText('阻塞·参数表单')).toBeInTheDocument()
-  expect(screen.getByText('异步·选择问卷')).toBeInTheDocument()
+  expect(screen.getAllByText('异步·选择问卷')).toHaveLength(2)
 })
 it('refreshes when the queue only contains submitted tokens and recovers pending questions', async () => {
   const stale = item('done')

@@ -6,15 +6,15 @@
 }
 
 .panels {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .panel {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
   min-width: 0;
 }
 
@@ -22,24 +22,26 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
 
   h3 {
     margin: 0;
     font-size: 14px;
+    font-weight: 500;
+    line-height: 20px;
     color: var(--Colors-Use-Neutral-Text-1-Title);
-  }
-
-  > span {
-    font-size: 12px;
-    color: var(--Colors-Use-Neutral-Text-3-Secondary);
   }
 }
 
+.count {
+  font-size: 12px;
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+}
+
 .list {
-  height: 260px;
-  overflow: auto;
+  overflow: hidden;
   border: 1px solid var(--Colors-Use-Neutral-Border);
-  border-radius: 4px;
+  border-radius: 8px;
   background: var(--Colors-Use-Basic-Background);
 }
 
@@ -48,35 +50,41 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 5px 8px 5px 12px;
+  min-height: 45px;
+  padding: 0 12px;
   font-family: monospace;
   font-size: 12px;
 
-  > span {
-    overflow-wrap: anywhere;
+  & + .row {
+    border-top: 1px solid var(--Colors-Use-Neutral-Border);
   }
 
-  &:nth-child(even) {
-    background: var(--Colors-Use-Neutral-Bg);
+  > span {
+    flex: 1;
+    min-width: 0;
+    overflow-wrap: anywhere;
   }
 }
 
-.add {
+.title {
   display: flex;
+  align-items: baseline;
   gap: 8px;
-
-  > :first-child {
-    flex: 1;
-    min-width: 0;
-  }
+  min-width: 0;
 }
 
 .actions {
   display: flex;
-  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
-.empty,
+.draftInput {
+  flex: 1;
+  min-width: 0;
+}
+
 .loading {
   display: flex;
   align-items: center;
@@ -86,23 +94,11 @@
   color: var(--Colors-Use-Neutral-Text-3-Secondary);
 }
 
+.emptyState {
+  padding: 32px 0;
+}
+
 .error {
   font-size: 12px;
   color: var(--Colors-Use-Error-Primary);
-}
-
-@media (max-width: 640px) {
-  .panels {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-
-.footer {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 24px;
-  padding-top: 16px;
-  border-top: 1px solid var(--Colors-Use-Neutral-Border);
 }

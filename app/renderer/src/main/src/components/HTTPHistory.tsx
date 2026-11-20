@@ -87,6 +87,7 @@ import { YakitSideTab } from './yakitSideTab/YakitSideTab'
 import type { YakitTabsProps } from './yakitSideTab/YakitSideTabType'
 import { JSONParseLog } from '@/utils/tool'
 import { HistoryAIReActChatProvider, useHistoryAIReActChat } from './historyAIReActChat'
+import { AIInputInnerFeatureEnum, getFooterLeftTypesWithItem } from '@/pages/ai-agent/template/type'
 import YakitCollapse from './yakitUI/YakitCollapse/YakitCollapse'
 import { YakitPopover } from './yakitUI/YakitPopover/YakitPopover'
 import { yakitNotify } from '@/utils/notification'
@@ -162,7 +163,7 @@ export const HistoryTab: YakitTabsProps[] = [
   },
 ]
 const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
-  const { renderHistoryAIReActChat, setShowFreeChat, historyAIReActChatBridge } = useHistoryAIReActChat()
+  const { renderHistoryAIReActChat, setShowFreeChat, historyAIReActChatBridge, focusModeLoop } = useHistoryAIReActChat()
   const { pageType, ...historyProps } = props
   const { t, i18nRefresh } = useI18nNamespaces(['history'])
   // #region 左侧tab
@@ -376,6 +377,10 @@ const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
                 renderHistoryAIReActChat({
                   externalParameters: {
                     isOpen: false,
+                    footerLeftTypes: getFooterLeftTypesWithItem({
+                      type: AIInputInnerFeatureEnum.AIFocusMode,
+                      props: { value: focusModeLoop, disabled: true },
+                    }),
                     rightIcon: {
                       history: true,
                       dataDetails: { type: 'text2' },

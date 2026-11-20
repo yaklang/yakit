@@ -18,7 +18,7 @@ import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { ArrowLeftOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { onNewChat } from '../historyChat/HistoryChat'
+import { openAIAgentChatTab } from '../historyChat/HistoryChat'
 
 export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
   forwardRef((props, ref) => {
@@ -27,7 +27,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
 
     const store = useCurrentStore()
     const initLoading = useStore(store, (state) => state.initLoading)
-    const { activeChat, pageId } = useAIAgentStore()
+    const { activeChat } = useAIAgentStore()
 
     const [showFreeChat, setShowFreeChat] = useControllableValue<boolean>(props, {
       defaultValue: true,
@@ -86,7 +86,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
                 <YakitButton
                   type="outline2"
                   icon={<ArrowLeftOutlined color="currentColor" />}
-                  onClick={() => onNewChat(false, pageId)}
+                  onClick={() => openAIAgentChatTab()}
                 >
                   {t('AIChatContent.backToHome')}
                 </YakitButton>

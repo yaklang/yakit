@@ -65,7 +65,7 @@ describe('AIRightPanel layout contract', () => {
     expect(chatSource).toContain('--ai-right-panel-slot-width: 325px')
     expect(chatSource).toContain('--ai-right-panel-slot-width: 61px')
     expect(chatSource.replace(/\s+/g, ' ')).toContain(
-      '--ai-right-panel-content-track-width: min( 784px, calc(100% - var(--ai-right-panel-chat-slot-width, 0px) - 2 * var(--ai-content-gutter, 0px)) )',
+      '--ai-right-panel-content-track-width: min( 864px, calc(100% - var(--ai-right-panel-chat-slot-width, 0px) - 2 * var(--ai-content-gutter, 0px)) )',
     )
     // 轨道的实际声明收敛在共享 mixin，面板态 footer include 同一条轨道
     expect(chatSource).toContain('@include mixin.ai-right-panel-content-track')

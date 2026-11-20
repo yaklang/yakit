@@ -1,8 +1,14 @@
-import { type Ctx } from '@milkdown/kit/ctx'
+import type { Ctx } from '@milkdown/kit/ctx'
 import { prosePluginsCtx } from '@milkdown/kit/core'
-import { Plugin, PluginKey } from 'prosemirror-state'
-import { TextSelection } from 'prosemirror-state'
-import { $command, $prose } from '@milkdown/kit/utils'
+import { insertImageCommand } from '@milkdown/kit/preset/commonmark'
+import { Plugin, PluginKey, Selection, TextSelection } from '@milkdown/kit/prose/state'
+import { $command, $prose, callCommand } from '@milkdown/kit/utils'
+import type { EditorMilkdownProps } from '@/components/MilkdownEditor/MilkdownEditorType'
+import { imgTypes } from '@/components/MilkdownEditor/utils/utils'
+import type { MaterialShortcut } from '../../template/aiAddMaterialsPopover/type'
+import { aiMentionCommand } from './aiMilkdownMention/aiMentionPlugin'
+import type { AIMentionCommandParams } from './aiMilkdownMention/aiMentionPlugin'
+import { IMAGE_ATTACHMENT_TITLE } from './utils'
 
 type LockGuardOptions = {
   mentionTypes: string[]
@@ -172,6 +178,51 @@ export const preventDeleteLockedMentionPlugin = () => {
   }
 }
 
+export const insertAIMention = (editor: EditorMilkdownProps, params: AIMentionCommandParams) => {
+  const path = params.mentionId
+  if (
+    params.mentionType === 'file' &&
+    params.mentionSource === 'attachment' &&
+    !params.lock &&
+    imgTypes.some((suffix) => path.toLowerCase().endsWith(suffix))
+  ) {
+    editor.action(callCommand(insertImageCommand.key, { src: path, alt: path, title: IMAGE_ATTACHMENT_TITLE }))
+    return
+  }
+  editor.action(callCommand(aiMentionCommand.key, params))
+}
+
+export const insertAIShortcutCommand = $command<MaterialShortcut, string>(
+  'InsertAIShortcut',
+  () => (shortcut) => (state, dispatch, view) => {
+    if (!shortcut || !view || view.isDestroyed || !view.editable) return false
+    if (!dispatch) return true
+
+    const { doc, schema, selection, tr } = state
+    const paragraph = schema.nodes.paragraph
+    let cursor = selection.$to
+    if (!(selection instanceof TextSelection) || cursor.parent.type !== paragraph) {
+      const end = Selection.atEnd(doc)
+      if (end instanceof TextSelection && end.$to.parent.type === paragraph) {
+        cursor = end.$to
+      } else {
+        tr.insert(doc.content.size, paragraph.create())
+        cursor = tr.doc.resolve(tr.doc.content.size - 1)
+      }
+    }
+
+    const { parent, parentOffset, pos } = cursor
+    const previous = parent.textBetween(Math.max(0, parentOffset - 1), parentOffset, '\n', '\uFFFC')
+    // 现有 @ 和 / 菜单只识别行首或空白后的触发符。
+    const text = previous && !/\s/.test(previous) ? ` ${shortcut}` : shortcut
+    tr.insertText(text, pos, pos)
+    tr.setSelection(TextSelection.create(tr.doc, pos + text.length))
+    view.focus()
+    dispatch(tr)
+    return true
+  },
+)
+
 /** 移除一个偏移量 */
 export const removeAIOffsetCommand = $command(`command-remove-offset`, (ctx) => () => (state, dispatch) => {
   const { selection, tr } = state
@@ -230,5 +281,11 @@ const stepOutLinkPlugin = $prose(() => {
 })
 /** 你的自定义插件集合 */
 export const aiCustomPlugin = () => {
-  return [removeAIOffsetCommand, preventDeleteLockedMentionPlugin(), insertAtCurrentPosition, stepOutLinkPlugin]
+  return [
+    insertAIShortcutCommand,
+    removeAIOffsetCommand,
+    preventDeleteLockedMentionPlugin(),
+    insertAtCurrentPosition,
+    stepOutLinkPlugin,
+  ]
 }

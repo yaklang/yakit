@@ -13,6 +13,7 @@ import {
   type RenderTypeOptionVal,
 } from '@/utils/editors'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
+import { getEditorViewCache, setEditorViewCache } from '@/utils/editorViewCache'
 import { failed, yakitFailed, yakitNotify } from '@/utils/notification'
 import { Uint8ArrayToString } from '@/utils/str'
 import { formatTimestamp } from '@/utils/timeUtil'
@@ -97,6 +98,12 @@ interface HTTPFuzzerPageTableProps {
   hasExtractorRules?: boolean
   /** 非可见 Tab 不挂载预览 Monaco，减轻多 Tab 内存 */
   inViewport?: boolean
+  /** 头部隐藏开关：按页签传入状态，未开启时不显示 */
+  showHeaderVisibilityToggle?: boolean
+  requestHeadersHidden?: boolean
+  onRequestHeadersHiddenChange?: (hidden: boolean) => void
+  responseHeadersHidden?: boolean
+  onResponseHeadersHiddenChange?: (hidden: boolean) => void
 }
 
 /**
@@ -1054,7 +1061,11 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
       }
     })
 
-    const [typeOptionVal, setTypeOptionVal] = useState<RenderTypeOptionVal>()
+    // 首帧同步读取本地镜像，避免先文本后美化/渲染的闪动
+    const [typeOptionVal, setTypeOptionVal] = useState<RenderTypeOptionVal | undefined>(
+      () =>
+        (getEditorViewCache(FuzzerRemoteGV.WebFuzzerEditorBeautify) || undefined) as RenderTypeOptionVal | undefined,
+    )
     // 编辑器编码
     const [codeKey, setCodeKey] = useState<string>('utf-8')
     const [codeLoading, setCodeLoading] = useState<boolean>(false)
@@ -1063,11 +1074,8 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
       if (currentSelectItem) {
         setCodeKey('utf-8')
         getRemoteValue(FuzzerRemoteGV.WebFuzzerEditorBeautify).then((res) => {
-          if (res) {
-            setTypeOptionVal(res)
-          } else {
-            setTypeOptionVal(undefined)
-          }
+          setTypeOptionVal(res || undefined)
+          setEditorViewCache(FuzzerRemoteGV.WebFuzzerEditorBeautify, res || '')
         })
       }
     }, [currentSelectItem, currentSelectShowType])
@@ -1266,6 +1274,11 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                 defaultHttps={currentSelectItem?.IsHTTPS}
                 url={currentSelectItem?.Url}
                 isResponse={currentSelectShowType === 'response'}
+                showHeaderVisibilityToggle={props.showHeaderVisibilityToggle}
+                requestHeadersHidden={props.requestHeadersHidden}
+                onRequestHeadersHiddenChange={props.onRequestHeadersHiddenChange}
+                responseHeadersHidden={props.responseHeadersHidden}
+                onResponseHeadersHiddenChange={props.onResponseHeadersHiddenChange}
                 contextMenuPacket={contextMenuPacket}
                 readOnly={true}
                 loading={codeLoading}
@@ -1358,9 +1371,11 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                   if (typeOptionVal !== undefined) {
                     setTypeOptionVal(typeOptionVal)
                     setRemoteValue(FuzzerRemoteGV.WebFuzzerEditorBeautify, typeOptionVal)
+                    setEditorViewCache(FuzzerRemoteGV.WebFuzzerEditorBeautify, typeOptionVal)
                   } else {
                     setTypeOptionVal(undefined)
                     setRemoteValue(FuzzerRemoteGV.WebFuzzerEditorBeautify, '')
+                    setEditorViewCache(FuzzerRemoteGV.WebFuzzerEditorBeautify, '')
                   }
                 }}
                 onClickUrlMenu={copyUrl}

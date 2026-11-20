@@ -1,11 +1,8 @@
+import type { AIAgentChatMetaData } from '@/pages/ai-agent/type/aiChat'
 import type { AIMessageHandler } from '../type'
-import {
-  AIInputEventSyncTypeEnum,
-  AINotifyType,
-  AITaskStatus,
-  type AITaskStatusType,
-  type AIAgentGrpcApi,
-} from '../grpcApi'
+import { AIInputEventSyncTypeEnum, AINotifyType, AITaskStatus } from '../grpcApi'
+import type { AITaskStatusType, AIAgentGrpcApi } from '../grpcApi'
+import { updateModelContextState } from '../modelContext'
 import { Uint8ArrayToString } from '@/utils/str'
 import { genBaseAIChatData, genExecTasks, handleTaskPlanEnd, trySettleTaskPlanEnd } from '../utils'
 import { type AIChatQSData, AIChatQSDataTypeEnum } from '../aiRender'
@@ -19,11 +16,45 @@ import {
   deletePersistedContent,
 } from '../persist/contentPersistHelper'
 import { ensureToolResultOnUI } from './aiToolResult'
-import type { AIAgentChatMetaData } from '@/pages/ai-agent/type/aiChat'
 import i18n from '@/i18n/i18n'
 import { yakitNotify } from '@/utils/notification'
 
 const tAgent = i18n.getFixedT(null, 'aiAgent')
+
+const handleModelContext: AIMessageHandler = (request) => {
+  const { res, rawData } = request
+  if (res.Type !== 'model_context' || res.NodeId !== 'model_context' || res.IsSync) return
+
+  let data: AIAgentGrpcApi.ModelContext | null
+  try {
+    data = JSON.parse(Uint8ArrayToString(res.Content))
+  } catch {
+    // 单条诊断事件损坏时仍需继续处理后续会话事件。
+    return
+  }
+  const { pending, saved, refreshThreshold, promptTokens } = rawData.modelContext
+  if (typeof data?.error === 'string' && data.error.trim() && data.context_key === pending?.baseline?.context_key) {
+    pending?.onHotpatchError?.(data.error)
+  }
+  const threshold = data?.threshold_tokens
+  const thresholdChanged =
+    !pending &&
+    saved &&
+    (!data?.context_key || data.context_key === saved.context_key) &&
+    typeof threshold === 'number' &&
+    Number.isSafeInteger(threshold) &&
+    threshold > 0 &&
+    threshold !== refreshThreshold &&
+    (threshold !== saved.threshold_tokens || refreshThreshold !== undefined)
+  const tokens = data?.prompt_tokens
+  const hasUsage = typeof tokens === 'number' && Number.isSafeInteger(tokens) && tokens >= 0
+  if (!hasUsage && !thresholdChanged) return
+  updateModelContextState(request, {
+    ...(thresholdChanged && { refreshThreshold: threshold }),
+    // 零用量回执沿用本会话最近的实测值。
+    ...(hasUsage && { promptTokens: tokens || promptTokens || 0 }),
+  })
+}
 
 const handleHttpFuzzRequestChange: AIMessageHandler = (request) => {
   const { res, store, rawData } = request
@@ -609,6 +640,7 @@ const handleSkipSubtaskInPlan: AIMessageHandler = (requestInfo) => {
 }
 
 export const aiOtherDataHandlers = {
+  model_context: handleModelContext,
   http_fuzz_request_change: handleHttpFuzzRequestChange,
   http_flow_fuzz_status: handleHttpFlowFuzzStatus,
   session_title: handleSessionTitle,

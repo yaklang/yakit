@@ -25,6 +25,7 @@ import {
   AIConfigAPIKeyFormItem,
   buildAIConfigHealthCheckConfig,
   getAIModelFormEffortKey,
+  getAIModelFormVisionKey,
 } from '@/pages/ai-agent/aiModelList/aiModelForm/AIModelForm'
 import {
   providerToListAiModelConfig,
@@ -473,7 +474,8 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
     const enableEndpointWatch = Form.useWatch('enable_endpoint', form)
     const reasoningEffortWatch = Form.useWatch('ReasoningEffort', form)
     const currentEffortProbeKey = Form.useWatch(getAIModelFormEffortKey, { form, preserve: true })
-    const footerContent = typeof footer === 'function' ? footer(currentEffortProbeKey) : footer
+    const currentVisionProbeKey = Form.useWatch(getAIModelFormVisionKey, { form, preserve: true })
+    const footerContent = typeof footer === 'function' ? footer(currentVisionProbeKey) : footer
     const savedEffortProbeKey = Form.useWatch('_EffortProbeKey', form)
     const [effortProbing, setEffortProbing] = useState<boolean>(false)
     // 扩展思考强度探测结果：undefined=未探测；[]=探测过但不支持；非空=探测到支持的档位

@@ -49,7 +49,7 @@ const settingWithModel: AIAgentSetting = {
 }
 
 describe('serializeAIAgentChatSetting', () => {
-  it('持久化时过滤废弃阈值并保留运行时上下文阈值', () => {
+  it('持久化时过滤两个旧阈值', () => {
     const setting = {
       ...settingWithModel,
       TimelineContentSizeLimit: 60,
@@ -57,7 +57,7 @@ describe('serializeAIAgentChatSetting', () => {
     }
     const parsed = JSON.parse(serializeAIAgentChatSetting(setting))
     expect(parsed).not.toHaveProperty('TimelineContentSizeLimit')
-    expect(parsed.RuntimeContextSizeLimit).toBe(300)
+    expect(parsed).not.toHaveProperty('RuntimeContextSizeLimit')
   })
 
   it('持久化时去掉模型字段和会话运行模式', () => {
@@ -88,7 +88,7 @@ describe('mergeAIAgentChatSettingCache', () => {
     expect(merged.ReActMaxIteration).toBe(AIAgentSettingDefault.ReActMaxIteration)
   })
 
-  it('读缓存时过滤废弃阈值并保留运行时上下文阈值', () => {
+  it('读缓存时过滤两个旧阈值', () => {
     const cache = {
       ...settingWithModel,
       TimelineContentSizeLimit: 60,
@@ -96,7 +96,7 @@ describe('mergeAIAgentChatSettingCache', () => {
     }
     const merged = mergeAIAgentChatSettingCache(cache)
     expect(merged).not.toHaveProperty('TimelineContentSizeLimit')
-    expect(merged.RuntimeContextSizeLimit).toBe(300)
+    expect(merged).not.toHaveProperty('RuntimeContextSizeLimit')
   })
 
   it('保留已保存的记忆处理开关和策略数值，不在读缓存时重置', () => {

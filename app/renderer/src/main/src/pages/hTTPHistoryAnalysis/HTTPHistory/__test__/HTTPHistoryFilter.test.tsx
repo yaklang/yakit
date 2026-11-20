@@ -3,6 +3,7 @@ import { act, cleanup, fireEvent, render, screen, within } from '@testing-librar
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type * as HistoryFilterModule from '../HTTPHistoryFilter'
 import type { HistoryAIReActChatSlotOptions } from '@/components/historyAIReActChat'
+import { AIInputInnerFeatureEnum } from '@/pages/ai-agent/template/type'
 import type { HttpFlowSelectionApi } from '@/components/useHttpFlowSelection'
 import { compileReactModule } from '@/utils/__test__/helpers/compileReactModule'
 
@@ -31,6 +32,7 @@ vi.mock('@/components/historyAIReActChat', () => ({
     historyAIReActChatBridge: { activeID: 'session-1' },
     setShowFreeChat: vi.fn(),
     renderHistoryAIReActChat,
+    focusModeLoop: 'http_flow_analyze',
   }),
 }))
 vi.mock('lodash', async () => {
@@ -267,11 +269,17 @@ describe('HTTPHistoryFilter 序号合并', () => {
   })
 })
 
-it('流量分析侧栏沿用输入框默认的模型选择', () => {
+it('流量分析侧栏配置默认场景并禁止修改，同时保留模型入口', () => {
   setup()
 
   expect(renderHistoryAIReActChat).toHaveBeenCalled()
-  expect(renderHistoryAIReActChat.mock.lastCall?.[0].externalParameters).not.toHaveProperty('footerRightTypes')
+  const parameters = renderHistoryAIReActChat.mock.lastCall?.[0].externalParameters
+  expect(parameters).not.toHaveProperty('footerRightTypes')
+  expect(parameters?.footerLeftTypes).toContain(AIInputInnerFeatureEnum.AIModelSelect)
+  expect(parameters?.footerLeftTypes).toContainEqual({
+    type: AIInputInnerFeatureEnum.AIFocusMode,
+    props: { value: 'http_flow_analyze', disabled: true },
+  })
 })
 
 describe('HTTPHistoryFilter 流量引用删除', () => {

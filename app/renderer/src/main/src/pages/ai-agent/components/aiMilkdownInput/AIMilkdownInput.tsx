@@ -21,11 +21,11 @@ import { placeholderConfig, placeholderPlugin } from '@/components/MilkdownEdito
 import { AICustomMention, aiMentionFactory, AIMilkdownMention } from './aiMilkdownMention/AIMilkdownMention'
 import { aiMentionCustomPlugin, aiMentionCustomSchema } from './aiMilkdownMention/aiMentionPlugin'
 import type { AIMentionCommandParams } from './aiMilkdownMention/aiMentionPlugin'
-import { IMAGE_ATTACHMENT_TITLE, insertAIMention } from './utils'
+import { IMAGE_ATTACHMENT_TITLE } from './utils'
 import { AIMilkdownModeSlash, aiModeSlashFactory } from './aiMilkdownModeSlash/AIMilkdownModeSlash'
 import directive from 'remark-directive'
 import { useMemoizedFn } from 'ahooks'
-import { aiCustomPlugin } from './customPlugin'
+import { aiCustomPlugin, insertAIMention } from './customPlugin'
 import { customShiftEnterPlugin } from '@/components/MilkdownEditor/utils/utils'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { upload, uploadConfig } from '@milkdown/kit/plugin/upload'
@@ -168,6 +168,7 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
                     onMemfitExtra={onMemfitExtra}
                     filterMode={filterMode}
                     getMaterials={getMaterials}
+                    onModeChangeComplete={onModeChangeComplete}
                   />
                 ),
               }),
@@ -205,8 +206,11 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
             })
           }),
         ].flat()
-        const placeholderPrompt = t('AIMilkdownInput.placeholderPrompt')
-        const placeholderHint = t('AIMilkdownInput.placeholderHint')
+        const placeholderText = t('AIMilkdownInput.placeholder')
+        const placeholderParts = placeholderText
+          .split(/([@/])/)
+          .map((part) => part.trim())
+          .filter(Boolean)
         const placeholder = [
           placeholderConfig,
           placeholderPlugin,
@@ -220,16 +224,13 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
                 row.className = styles['placeholder']
                 row.setAttribute('aria-hidden', 'true')
 
-                const prompt = ownerDocument.createElement('span')
-                prompt.textContent = placeholderPrompt
-                const mention = ownerDocument.createElement('span')
-                mention.className = styles['placeholder-mention']
-                mention.textContent = '@'
-                const hint = ownerDocument.createElement('span')
-                hint.className = styles['placeholder-hint']
-                hint.textContent = placeholderHint
-
-                row.append(prompt, mention, hint)
+                for (const part of placeholderParts) {
+                  const segment = ownerDocument.createElement('span')
+                  segment.className =
+                    part === '@' || part === '/' ? styles['placeholder-symbol'] : styles['placeholder-hint']
+                  segment.textContent = part
+                  row.append(segment)
+                }
                 return row
               },
             }))
@@ -245,7 +246,7 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
               // 配置为只读
               ctx.set(editorViewOptionsCtx, {
                 editable: () => !readonly,
-                attributes: { 'aria-placeholder': `${placeholderPrompt} @ ${placeholderHint}` },
+                attributes: { 'aria-placeholder': placeholderText },
               })
               ctx.set(defaultValueCtx, defaultValue || '')
 

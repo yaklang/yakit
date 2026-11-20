@@ -9,6 +9,9 @@ import { createWithEqualityFn } from 'zustand/traditional'
 
 interface AIGlobalConfigStoreProps {
   aiGlobalConfig: AIGlobalConfig
+  /** 已由引擎回读确认的配置，包含引擎分配的模型归属。 */
+  persistedAiGlobalConfig?: AIGlobalConfig
+  configSavePending: boolean
   isInit: boolean
   queryLoading: boolean
   setAIGlobalConfig: (v: AIGlobalConfig) => void
@@ -20,6 +23,8 @@ interface AIGlobalConfigStoreProps {
 export const useAIGlobalConfigStore = createWithEqualityFn<AIGlobalConfigStoreProps>(
   (set, get) => ({
     aiGlobalConfig: cloneDeep(defaultAIGlobalConfig),
+    persistedAiGlobalConfig: undefined,
+    configSavePending: false,
     isInit: true,
     queryLoading: false,
     setQueryLoading: (queryLoading) => {

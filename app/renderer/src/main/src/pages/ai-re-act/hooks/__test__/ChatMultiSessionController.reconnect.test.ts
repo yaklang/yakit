@@ -121,7 +121,52 @@ describe('session reconnect / IDB lifecycle', () => {
     expect(current.pendingWelcomeInput).toBeUndefined()
   })
 
-  it('用旧标签缓存自动重连时保持原有的字节限额', async () => {
+  it('clears model context with the session data before reconnecting', async () => {
+    const { rawData } = ctrl.ensureSession('context-reconnect')
+    const timeout = vi.fn()
+    rawData.modelContext = {
+      status: 'ready',
+      generation: 4,
+      promptTokens: 125000,
+      pending: { patch: { threshold_tokens: 600000 }, timer: setTimeout(() => timeout(), 10000) },
+    }
+
+    await start('context-reconnect')
+
+    expect(rawData.modelContext).toEqual({ status: 'idle', generation: 5 })
+    await vi.advanceTimersByTimeAsync(10000)
+    expect(timeout).not.toHaveBeenCalled()
+  })
+
+  it('releases a pending model context save when its connection ends', async () => {
+    await start('context-end')
+    const { rawData } = ctrl.ensureSession('context-end')
+    const timeout = vi.fn()
+    const saved = {
+      provider: 'openai',
+      model: 'primary',
+      context_key: 'owner:primary',
+      threshold_tokens: 500000,
+      disable_auto_adjust: false,
+      minimum_threshold_tokens: 100000,
+    }
+    rawData.modelContext = {
+      status: 'ready',
+      generation: 4,
+      saved,
+      pending: { patch: { threshold_tokens: 600000 }, timer: setTimeout(() => timeout(), 10000) },
+    }
+
+    await ctrl.handleSessionEnd('context-end')
+
+    expect(rawData.modelContext.pending).toBeUndefined()
+    expect(rawData.modelContext.saved).toBe(saved)
+    expect(rawData.modelContext.generation).toBe(5)
+    await vi.advanceTimersByTimeAsync(10000)
+    expect(timeout).not.toHaveBeenCalled()
+  })
+
+  it('旧标签自动重连忽略上下文阈值，保留调用 token 限制', async () => {
     const id = 'legacy-cached-session'
     const [page] = restoreAIAgentTabCache([
       {
@@ -151,11 +196,12 @@ describe('session reconnect / IDB lifecycle', () => {
       expect.objectContaining({
         Params: expect.objectContaining({
           TimelineSessionID: id,
-          RuntimeContextSizeLimit: 256000,
           AICallTokenLimit: 49152,
         }),
       }),
     )
+    const start = ipcRendererMock.invoke.mock.calls.find(([channel]) => channel === 'start-ai-re-act')!
+    expect(start[2].Params).not.toHaveProperty('RuntimeContextSizeLimit')
     await emitIPC(id, makeGrpcJsonRes('pong', {}, { SessionId: id }))
   })
 

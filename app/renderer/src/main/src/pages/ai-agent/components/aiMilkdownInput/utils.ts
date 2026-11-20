@@ -1,10 +1,7 @@
 import type { EditorMilkdownProps } from '@/components/MilkdownEditor/MilkdownEditorType'
-import { imgTypes } from '@/components/MilkdownEditor/utils/utils'
 import { editorViewCtx, parserCtx } from '@milkdown/kit/core'
-import { insertImageCommand } from '@milkdown/kit/preset/commonmark'
 import type { Node } from '@milkdown/kit/prose/model'
-import { callCommand } from '@milkdown/kit/utils'
-import { aiMentionCommand, aiMentionCustomId } from './aiMilkdownMention/aiMentionPlugin'
+import { aiMentionCustomId } from './aiMilkdownMention/aiMentionPlugin'
 import type { AIMentionCommandParams } from './aiMilkdownMention/aiMentionPlugin'
 import { aiResourceReferenceCustomId } from './aiMilkdownResourceReference/aiResourceReferencePlugin'
 import type { AIResourceReferenceParams } from './aiMilkdownResourceReference/aiResourceReferencePlugin'
@@ -16,20 +13,6 @@ export const IMAGE_ATTACHMENT_TITLE = 'ai-attachment'
 
 export const isImageAttachmentNode = (node: Node) =>
   node.type.name === 'image' && node.attrs.title === IMAGE_ATTACHMENT_TITLE
-
-export const insertAIMention = (editor: EditorMilkdownProps, params: AIMentionCommandParams) => {
-  const path = params.mentionId
-  if (
-    params.mentionType === 'file' &&
-    params.mentionSource === 'attachment' &&
-    !params.lock &&
-    imgTypes.some((suffix) => path.toLowerCase().endsWith(suffix))
-  ) {
-    editor.action(callCommand(insertImageCommand.key, { src: path, alt: path, title: IMAGE_ATTACHMENT_TITLE }))
-    return
-  }
-  editor.action(callCommand(aiMentionCommand.key, params))
-}
 
 /**md编辑器中匹配出提及相关数据/纯文本 */
 export const extractDataWithMilkdown = (editor: EditorMilkdownProps) => {
@@ -201,3 +184,15 @@ export const unescapeUnderscoreInPath = (markdown: string): string =>
       return part
     })
     .join('')
+
+const ENCODED_SPACE = '&(?:amp;)?#x20;'
+/** remark 把行首/换行前的尾随空格写成 &#x20;；只还原这些位置，避免改写正文或代码块里的字面量。 */
+const LINE_EDGE_ENCODED_SPACES = new RegExp(`(?:${ENCODED_SPACE})+(?=\\n|$)|(?<=^|\\n)(?:${ENCODED_SPACE})+`, 'g')
+
+/** 提交用 markdown：还原路径下划线，并把 remark 写在换行前的 &#x20; / &amp;#x20; 还原成空格后去掉文末空白。 */
+export const normalizeSubmittedMarkdown = (markdown: string): string =>
+  unescapeUnderscoreInPath(
+    markdown.replace(LINE_EDGE_ENCODED_SPACES, (chunk) => ' '.repeat(chunk.match(/#x20;/g)?.length ?? 0)),
+  )
+    .replace(/\n+$/, '')
+    .trimEnd()

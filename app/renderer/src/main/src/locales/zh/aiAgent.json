@@ -112,9 +112,10 @@
     "toConfigure": "去配置",
     "configDesc": "无可使用AI模型，请配置后使用",
     "selectModel": "AI 模型选择",
+    "modelTitle": "模型",
     "openConfigTooltip": "打开设置中的模型配置",
     "manageModels": "管理模型",
-    "resetModel": "重置模型",
+    "resetModel": "重置",
     "resetModelTooltip": "重置回默认的模型",
     "emptyModels": "未获取到模型，可点击刷新重新获取。",
     "noBuiltinModel": "未找到内置主模型"
@@ -210,6 +211,7 @@
     "singleModelModeDescription": "开启后本会话只使用全局配置中的主模型"
   },
   "AIModelGlobalConfig": {
+    "savedRefreshFailed": "配置已保存，刷新失败。",
     "aiModelConfig": "AI模型配置",
     "disableFallback": "禁用降级到辅助模型"
   },
@@ -233,24 +235,55 @@
     "basicCheck": "工具基础检测"
   },
   "AIChatTextarea": {
+    "otherMaterials": "其他资料",
     "dropToAddToChat": "松开以添加到对话",
     "addMaterials": "添加资料",
-    "otherMaterials": "其他资料"
+    "queueSend": "排队发送"
+  },
+  "AIContextUsage": {
+    "label": "上下文 {{percent}}%",
+    "title": "上下文使用情况",
+    "usedPercent": "已用 {{percent}}",
+    "summary": "已用 {{used}}，剩余 {{remaining}}",
+    "limit": "(上限 {{threshold}})",
+    "threshold": "上下文压缩阈值",
+    "restoreDefault": "恢复默认值",
+    "exceedsMaximum": "超出最大值",
+    "autoAdjust": "自动调整",
+    "autoAdjustHelp": "触发远程错误以后自动调整",
+    "autoAdjustTooltip": "默认开启。开启后，模型拒绝过长上下文时会自动降低阈值并重试；关闭后保留手动阈值，超限时停止任务。",
+    "retry": "重试",
+    "saveTimeout": "保存超时，已恢复最近确认的设置",
+    "sessionUnavailable": "会话连接已断开，请重试",
+    "missingContextKey": "没有 context_key，更新失败",
+    "waitingContext": "等待后端返回数据",
+    "loadFailed": "读取上下文设置失败",
+    "retryUsage": "用量加载失败，重试",
+    "saveFailed": "保存上下文设置失败"
+  },
+  "AIRunningStatus": {
+    "label": "运行中 第 {{round}} 轮 · {{elapsed}} / {{duration}}",
+    "state": "运行中",
+    "round": "第 {{round}} 轮"
   },
   "AIAddMaterialsPopover": {
     "scenarioCapabilities": "能力",
-    "currentScenario": "当前选择",
     "addedSkills": "已添加技能",
     "addedKnowledgeBases": "已添加知识库",
     "addedOtherMaterials": "其他已添加资料",
     "goToAdd": "去添加",
+    "continueAdding": "继续添加",
+    "attachments": "附件",
+    "addedAttachments": "我添加的附件",
+    "addedBrowsers": "已添加的浏览器",
+    "shortcuts": "快捷键",
+    "mentionShortcut": "使用 @ 添加上下文",
+    "modeShortcut": "使用 / 选择执行模式",
+    "currentScenario": "当前选择",
     "searchMaterials": "请输入关键字搜索",
     "contextHint": "添加的资料会作为当前会话的上下文优先使用",
     "attachment": "添加文件",
     "addFolder": "添加文件夹",
-    "continueAdding": "继续添加",
-    "attachments": "附件",
-    "addedAttachments": "我添加的附件",
     "attachmentHint": "从本地上传，单次最多 {{max}} 个",
     "attachmentLimitExceeded": "已选择 {{count}} 个附件，单次最多添加 {{max}} 个",
     "attachmentFailed": "打开文件选择器失败：{{error}}",
@@ -262,10 +295,11 @@
     "knowledgeHint": "引用知识库内容",
     "toolHint": "AI 会优先调用已添加的工具来完成任务",
     "fileSystemHint": "从文件系统添加，浏览并搜索你的文件",
-    "browserHint": "在 AI 中操作浏览器",
-    "addedBrowsers": "已添加的浏览器",
-    "sceneHint": "使用场景框架限定 AI 的思考范围",
-    "current": "当前:"
+    "browserHint": "在 AI 中操作浏览器"
+  },
+  "AIFocusMode": {
+    "clearSelection": "取消场景选择",
+    "focusModeTooltip": "使用场景框架限定 AI 的思考范围"
   },
   "AIToolDecision": {
     "decision": "决策"
@@ -474,6 +508,9 @@
     "tool": "工具",
     "knowledgeBase": "知识库",
     "fileSystem": "文件系统",
+    "loadedFiles": "已加载文件",
+    "openLocalFileHint": "从本地加载文件到提及列表，单次最多 {{max}} 个",
+    "openLocalFolderHint": "从本地加载文件夹到提及列表，单次最多 {{max}} 个",
     "allKnowledgeBase": "@所有知识库",
     "browser": "浏览器"
   },
@@ -568,9 +605,9 @@
   "AIReviewRuleOptions": {
     "manualLabel": "人工",
     "manualDesc": "所有审阅都由用户自己操作",
-    "yoloLabel": "托管 YOLO",
+    "yoloLabel": "YOLO",
     "yoloDesc": "所有审阅默认执行，不进行询问",
-    "aiLabel": "协同 AI",
+    "aiLabel": "协同",
     "aiDesc": "由AI判断审阅风险，低风险默认执行，高风险由用户操作"
   },
   "AIModelPolicyOptions": {
@@ -877,7 +914,10 @@
   },
   "AIReasoningEffort": {
     "probeUnsupported": "此模型不支持该档位",
-    "selectQuality": "思考质量选择",
+    "selectQuality": "思考强度",
+    "effortDefault": "默认",
+    "effortLow": "低 (快)",
+    "effortMax": "最高 (最慢)",
     "tooltip": "关闭不进行思考；默认则跟随模型默认；极高 / 最高 为扩展档位，仅探测确认支持后展示",
     "probing": "探测中..."
   },
@@ -938,8 +978,7 @@
     "switchToSource": "切换源码模式"
   },
   "AIMilkdownInput": {
-    "placeholderPrompt": "向我提问",
-    "placeholderHint": "使用技能、工具、文件和知识库...",
+    "placeholder": "向我提问 @ 使用技能、工具、文件和知识库， / 选择模式",
     "selectedHttpFlowSummary": "勾选了 {{count}} 条流量",
     "selectedRiskSummary": "勾选了 {{count}} 条漏洞风险",
     "imagesNotSaved": "图片尚未保存完成，请稍后重试；若保存失败，请移除失败图片后重新上传"
@@ -955,7 +994,7 @@
     "minIterationsPrefix": "最小迭代次数: {{value}}",
     "acceptanceOption": "验收条件（文本描述）",
     "acceptance": "验收条件",
-    "acceptancePlaceholder": "请描述一下验收条件...",
+    "acceptancePlaceholder": "请描述一下你的验收条件...",
     "acceptancePrefix": "验收条件: {{value}}",
     "durationOption": "持续时间（设置“继续深入”时间来增加轮次）",
     "duration": "持续时间",
@@ -968,12 +1007,22 @@
     "setSubAgentCount": "设置子 Agent 数量"
   },
   "AIRunModeSelect": {
+    "executionMode": "执行模式",
+    "modeCount": "{{count}}种模式",
+    "modeCountShort": "{{count}}种",
+    "iterationCount": "{{count}}次",
     "mode": "模式",
     "multiMode": "多模式",
     "configuration": "执行模式配置",
     "configurationTip": "按任务需要组合使用 Plan、Multi-Agent 和 Goal 模式",
-    "goalHint": "请选择一种目标模式并设定参数",
-    "switchGoalModeContent": "切换后，当前选中项的值将恢复为默认值，是否继续？",
+    "planTip": "允许 AI 制定计划并按计划执行",
+    "multiAgentTip": "优先使用 SubAgent 派发完成任务",
+    "stopCondition": "停止条件",
+    "customDuration": "自定义",
+    "durationHours": "小时",
+    "durationMinutes": "分钟",
+    "hourUnit": "时",
+    "minuteUnit": "分",
     "durationHint": "设置“继续深入”时间来增加轮次",
     "editAcceptance": "编辑验收条件",
     "noAcceptance": "暂无"
@@ -1051,8 +1100,6 @@
     "aiCallAutoRetryDesc": "如果远端 AI 不稳定（网络原因）的时候，某一次对话重试几次",
     "aiTransactionRetry": "AI 事务重试次数",
     "aiTransactionRetryDesc": "如果回答质量不高的时候，调大可以有效重试回答",
-    "runtimeContextSize": "运行时上下文大小",
-    "runtimeContextSizeDesc": "上下文大小最小为 60 KB，仅支持正整数",
     "aiCallTokenLimit": "压力 token 阈值",
     "aiCallTokenLimitDesc": "Token pressure limit，当 AI 对话的 token 数量超过这个限制时，需要警告",
     "userInteractLimit": "用户交互上限",

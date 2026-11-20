@@ -127,7 +127,7 @@ service Yak {
   // echo 通常用于测试服务是否通畅
   rpc Echo(EchoRequest) returns(EchoResposne);
 
-  // 握手 用于检查前端是否可以连接当前引擎
+  // 握手 用于检查前端是否可以连接当前引擎 
   rpc Handshake(HandshakeRequest) returns (HandshakeResponse);
 
   rpc VerifySystemCertificate(Empty) returns (VerifySystemCertificateResponse);
@@ -635,13 +635,13 @@ service Yak {
   rpc NewProject(NewProjectRequest) returns (NewProjectResponse);
   rpc UpdateProject(NewProjectRequest) returns(NewProjectResponse);
   rpc IsProjectNameValid(IsProjectNameValidRequest) returns (Empty);
-  rpc RemoveProject(RemoveProjectRequest) returns (Empty); // no implement
+  rpc RemoveProject(RemoveProjectRequest) returns (Empty); // no implement 
 
   rpc DeleteProject(DeleteProjectRequest) returns (Empty);
-  rpc GetDefaultProject(Empty) returns (ProjectDescription); // deprecated
+  rpc GetDefaultProject(Empty) returns (ProjectDescription); // deprecated 
   rpc GetDefaultProjectEx(GetDefaultProjectExRequest) returns (ProjectDescription);
   rpc QueryProjectDetail(QueryProjectDetailRequest) returns (ProjectDescription);
-  rpc GetTemporaryProject(Empty) returns (ProjectDescription); // deprecated
+  rpc GetTemporaryProject(Empty) returns (ProjectDescription); // deprecated 
   rpc GetTemporaryProjectEx(GetTemporaryProjectExRequest) returns (ProjectDescription);
 
   // 导入导出项目，带密码，带进度
@@ -656,7 +656,7 @@ service Yak {
   rpc QueryMITMExtractedAggregate(QueryMITMExtractedAggregateRequest) returns (QueryMITMExtractedAggregateResponse);
   rpc ExportMITMRuleExtractedData(ExportMITMRuleExtractedDataRequest) returns (stream ExportMITMRuleExtractedDataResponse);
   rpc DeleteMITMRuleExtractedData(DeleteMITMRuleExtractedDataRequest) returns (Empty);
-  rpc DeduplicateMITMRuleExtractedData(DeduplicateMITMRuleExtractedDataRequest) returns (DeduplicateMITMRuleExtractedDataResponse);
+  rpc DeduplicateMITMRuleExtractedData(DeduplicateMITMRuleExtractedDataRequest) returns (DeduplicateMITMRuleExtractedDataResponse); 
   /*
     ChaosMakerRule: Bas
   */
@@ -1138,8 +1138,13 @@ service Yak {
   // Fuzztags in both local and remote-engine modes.
   rpc UploadToTemporaryFile(stream UploadToTemporaryFileRequest) returns (UploadToTemporaryFileResponse);
 
-  // AI session resource snapshot query.
+  // Query resources attached by the latest input and the distinct resources
+  // attached throughout an AI session.
   rpc GetAISessionCurrentResources(GetAISessionCurrentResourcesRequest) returns (GetAISessionCurrentResourcesResponse);
+  // Model-specific compression budgets, available before a session starts.
+  rpc GetAIModelContext(GetAIModelContextRequest) returns (AIModelContextResponse);
+  rpc SetAIModelContext(SetAIModelContextRequest) returns (AIModelContextResponse);
+
 }
 
 // IMBotConfig 描述一个 IM 平台 bot 的配置凭证。
@@ -1804,6 +1809,7 @@ message GetKnowledgeBaseResponse {
   Paging Pagination = 2;
   int64 Total = 3;
 }
+
 message CreateKnowledgeBaseRequest {
   string KnowledgeBaseName = 1;
   string KnowledgeBaseDescription = 2;
@@ -2190,6 +2196,7 @@ message AIInputEvent {
   // 配置热补丁目标任务的逻辑 ID (AIStatefulTask.GetId)。
   // 非空时，仅当前正在执行且 ID 匹配的任务会应用该热补丁（主要用于能力热更新）。
   string TaskId = 17;
+  // JSON metadata for a question/form submission. FreeInput remains human-readable.
   string UserInteraction = 18;
 }
 
@@ -2303,7 +2310,7 @@ message AIStartParams {
   int64 ReActMaxIteration = 27;
 
   // 限制 Timeline 的最大条目和最大内容大小（bytes）
-  int64 TimelineItemLimit = 28; // 已经废弃，功能不可用了。运行时上下文请看 RuntimeContextSizeLimit
+  int64 TimelineItemLimit = 28; // 已经废弃，功能不可用了，只需要关注 TimelineContentSizeLimit 就好
   // Deprecated: 运行时的 Timeline 现在除了普通历史，还承载 Skill 正文、Evidence 等
   // 运行时上下文，内容规模已经不同；而且前端会下发一个非零默认值，覆盖服务端默认阈值。
   // 请改用 RuntimeContextSizeLimit。
@@ -2312,6 +2319,9 @@ message AIStartParams {
   // >0 时覆盖服务端默认阈值；<=0（含前端不传）时使用服务端默认值，保证携带运行时
   // 上下文的时间线不会被过早压缩。
   int64 RuntimeContextSizeLimit = 51;
+  // Model-scoped hotpatch only; absent preserves the saved automatic adjustment preference.
+  optional bool DisableContextAutoAdjust = 56;
+  string ModelContextKey = 55;
 
   // 用户交互的最大次数限制,超过这个次数，AI 将不再被允许问用户问题
   int64 UserInteractLimit = 30;
@@ -4058,7 +4068,7 @@ message GetProjectsRequest {
   int64 ChildFolderId = 5;
   // this type is filter ""(all) | "project"(yakit) | file(only-folder) | "ssa_project"(irify)
   string Type = 6;
-  // this type effect response.ProjectTotal, this type mark kind of frontend
+  // this type effect response.ProjectTotal, this type mark kind of frontend 
   // "project"(yakit) | "ssa_project"(irify)
   string FrontendType = 7;
   int64 AfterUpdatedAt = 8;
@@ -7418,7 +7428,7 @@ message QueryHTTPFlowRequest {
 
   string PayloadKeyword = 47;
   string ExcludeStatusCode = 48; // 排除状态码
-
+  
   // 高级配置的hostname过滤（模糊匹配）
   repeated string HostnameFilter = 49;
   repeated MITMExtractAggregateFlowFilterRow MitmExtractAggregateFilterRows = 50;
@@ -8117,7 +8127,7 @@ message EchoResposne {
   string result = 1;
 }
 
-// handshake
+// handshake 
 message HandshakeRequest {
   string Name = 1;
 }
@@ -8858,7 +8868,7 @@ message SyntaxFlowScanRequest{
   // 并发，默认5
   uint32  Concurrency = 7;
 
-  // compile data only in memory
+  // compile data only in memory 
   bool Memory = 8;
   // 根据项目扫描
   uint64 SSAProjectId = 9;
@@ -8945,11 +8955,11 @@ message SyntaxFlowScanResponse{
 }
 
 message SyntaxFlowScanActiveTask {
-  // index
+  // index 
   string RuleName = 3;
-  string ProgramName = 4;
-  // progress
-  double Progress = 5;
+  string ProgramName = 4; 
+  // progress 
+  double Progress = 5; 
 
   int64 RunningTime = 6;
   string Info = 7;
@@ -9009,7 +9019,7 @@ message SyntaxFlowResult {
 
   string RuleContent = 12;
   string Kind = 13; // "query" | "debug" | "scan"
-  string SaveKind = 14; // "memory" | "database"
+  string SaveKind = 14; // "memory" | "database"  
 }
 
 message DeleteSyntaxFlowResultRequest{
@@ -9119,6 +9129,8 @@ message SSARisk {
   string Solution = 28;
   string Description = 29 ;
   string LatestDisposalStatus = 30; // 最新处置状态 not_set | is_issue | not_issue | suspicious
+  // Stable result identity, including results without an audit-result row.
+  string ResultUUID = 32;
 }
 
 message SSARisksFilter {
@@ -9143,6 +9155,7 @@ message SSARisksFilter {
   SSARiskDiffRequest SSARiskDiffRequest = 18;
   // 增量查询
   bool Incremental = 19;
+  repeated string ResultUUID = 20;
 }
 
 message QuerySSARisksRequest {
@@ -9161,9 +9174,9 @@ message QueryNewSSARisksRequest{
 }
 
 message QueryNewSSARisksResponse{
-  repeated SSARisk Data = 1; // new ssa-risk unread data
+  repeated SSARisk Data = 1; // new ssa-risk unread data 
   int64 NewRiskTotal = 2; // new ssa-risk unread count
-  int64 Total = 3; // total ssa-risk count
+  int64 Total = 3; // total ssa-risk count 
   int64 Unread = 4;// total unread ssa-risk count
 }
 
@@ -9614,6 +9627,8 @@ message AIModelConfig {
   optional bool SupportsImageInput = 8;
   string ImageTokenEstimator = 9;
   optional bool SupportsImageToolCalling = 10;
+  // Stable owner for this configured provider entry, independent of the selected model.
+  string ContextOwnerId = 11;
 }
 
 message AIGlobalConfig {
@@ -9631,8 +9646,11 @@ message AIGlobalConfig {
   string AIPlanPrompt = 10;
   // Single-model routing takes precedence over tier selection without deleting tier lists.
   bool SingleModelMode = 11;
+  // Retry failed model calls and invalid model output until recovery or cancellation.
   bool RetryForever = 12;
+  // Opt-in complete HTTP diagnostics for subsequent model calls on this engine.
   bool NetworkDebug = 13;
+  // Engine-wide model attempts per minute; zero disables proactive rate limiting.
   int64 ModelRequestsPerMinute = 14;
 }
 
@@ -10644,6 +10662,32 @@ message BrowserExtensionTaskEvent {
   int64 Timestamp = 6;
   uint64 Sequence = 7;
 }
+
+message AISessionTaskResourceInfo {
+  string Type = 1;
+  string Key = 2;
+  string Value = 3;
+  // Deprecated: retained for wire compatibility and not populated.
+  string Scope = 4;
+  // Deprecated: retained for wire compatibility and not populated.
+  string Source = 5;
+}
+
+message GetAISessionCurrentResourcesRequest {
+  string SessionID = 1;
+}
+
+message GetAISessionCurrentResourcesResponse {
+  string SessionID = 1;
+  string TaskID = 2;
+  string UserInputUUID = 3;
+  // Resources attached by the latest input.
+  repeated AISessionTaskResourceInfo TaskResources = 4;
+  // Distinct resources attached by inputs in this session. Resources from newer
+  // inputs come first; order within each input is preserved.
+  repeated AISessionTaskResourceInfo SessionResources = 5;
+}
+
 // A credential-free, bounded static GET. Network is read only for transport settings;
 // no fuzzing, hot patch, browser transform, task creation or persistence is performed.
 message HTTPPreviewResourceRequest {
@@ -10656,30 +10700,6 @@ message HTTPPreviewResourceResponse {
   string URL = 1;
   string MimeType = 2;
   bytes Data = 3;
-}
-
-message AISessionTaskResourceInfo {
-  string Type = 1;
-  string Key = 2;
-  string Value = 3;
-  // turn: current task only; session: retained across tasks in the session.
-  string Scope = 4;
-  // attached_resource_info / attached_file_path / inherited
-  string Source = 5;
-}
-
-message GetAISessionCurrentResourcesRequest {
-  string SessionID = 1;
-}
-
-message GetAISessionCurrentResourcesResponse {
-  string SessionID = 1;
-  string TaskID = 2;
-  string UserInputUUID = 3;
-  // Resources explicitly attached to or inherited by the latest task.
-  repeated AISessionTaskResourceInfo TaskResources = 4;
-  // Session-scoped resources reconstructed from task input history.
-  repeated AISessionTaskResourceInfo SessionResources = 5;
 }
 
 message QueryAIToolRequest {
@@ -10733,4 +10753,32 @@ message ProbeModelVisionResponse {
   optional bool SupportsImageToolCalling = 2;
   string ImageInputStatus = 3;
   string ImageToolCallingStatus = 4;
+}
+
+message GetAIModelContextRequest {
+  string Provider = 1;
+  string Model = 2;
+  AIModelConfig Config = 3;
+  string ContextKey = 4;
+}
+
+message SetAIModelContextRequest {
+  string Provider = 1;
+  string Model = 2;
+  int64 ThresholdTokens = 3;
+  // Presence allows switching modes without changing a learned threshold below the manual floor.
+  optional bool DisableAutoAdjust = 4;
+  AIModelConfig Config = 5;
+  string ContextKey = 6;
+}
+
+message AIModelContextResponse {
+  reserved 3, 7;
+  string Provider = 1;
+  string Model = 2;
+  int64 ThresholdTokens = 4;
+  string Source = 5;
+  int64 MinimumThresholdTokens = 6;
+  bool DisableAutoAdjust = 8;
+  string ContextKey = 9;
 }

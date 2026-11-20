@@ -6,6 +6,7 @@ export const AI_RESOURCE_REFERENCE_SUMMARY_THRESHOLD = 3
 /** Goal 持续时间预设：单一数据源（UI key / 展示文案 / GoalDurationSeconds） */
 
 export const GOAL_DURATION_PRESETS = [
+  { key: '30m', label: '30m', seconds: 1800 },
   { key: '1h', label: '1h', seconds: 3600 },
   { key: '3h', label: '3h', seconds: 10800 },
   { key: '5h', label: '5h', seconds: 18000 },
@@ -22,9 +23,19 @@ export const DURATION_PRESET_LABELS: Record<string, string> = Object.fromEntries
   GOAL_DURATION_PRESETS.map((p) => [p.key, p.label]),
 )
 
+/** 将预设键或秒数字符串转为 Goal 时长文案，never 使用本地化文案。 */
 export const getGoalDurationDisplayLabel = (key: string, t: TFunction): string => {
   if (key === 'never') return t('AIMilkdownModeSlash.durationNever')
-  return DURATION_PRESET_LABELS[key] || key
+  if (isGoalDurationPresetKey(key)) return DURATION_PRESET_LABELS[key]
+  const seconds = Number(key)
+  if (!Number.isSafeInteger(seconds) || seconds <= 0) return key
+
+  const hours = Math.floor(seconds / 3600)
+  const minutes = Math.floor((seconds % 3600) / 60)
+  const remainingSeconds = seconds % 60
+  return [hours && `${hours}h`, minutes && `${minutes}m`, remainingSeconds && `${remainingSeconds}s`]
+    .filter(Boolean)
+    .join('')
 }
 
 /** UI 预设 key → GoalDurationSeconds（与 yaklang 约定一致） */

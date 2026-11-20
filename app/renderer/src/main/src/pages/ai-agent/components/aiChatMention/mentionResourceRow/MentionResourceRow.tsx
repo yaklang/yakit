@@ -44,6 +44,7 @@ const MentionResourceRow: FC<MentionResourceRowProps> = ({
   knowledgeIndex,
   current,
   active,
+  checked,
   onSelect,
 }) => {
   const { t } = useI18nNamespaces(['aiAgent'])
@@ -55,6 +56,7 @@ const MentionResourceRow: FC<MentionResourceRowProps> = ({
       aria-selected={!!active}
       className={classNames(styles.row, {
         [styles.active]: active,
+        [styles.checked]: checked,
         [styles.file]: kind === 'file' || kind === 'folder',
         [styles.scenario]: kind === 'focusMode',
       })}

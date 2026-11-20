@@ -25,6 +25,23 @@ beforeEach(() => {
 })
 afterEach(cleanup)
 
+it('prefers pending chat data until the pending chat is released', () => {
+  const pending = makeData()
+  const active = makeData()
+  mocks.pendingChat = { status: 'connecting', data: { ...pending, request: { TimelineSessionID: 'welcome-a' } } }
+  mocks.sessionId = 'welcome-a'
+  mocks.ensureSession.mockReturnValue(active)
+  const { result, rerender } = renderHook(useData)
+  expect(result.current.store).toBe(pending.store.renderStore)
+  mocks.sessionId = 'chat-b'
+  rerender()
+  expect(result.current.store).toBe(pending.store.renderStore)
+  expect(mocks.ensureSession).not.toHaveBeenCalled()
+  mocks.pendingChat = undefined
+  rerender()
+  expect(result.current.store).toBe(active.store.renderStore)
+})
+
 it.each(['connecting', 'failed'])('renders %s data without creating a session under an empty ID', (status) => {
   const data = makeData()
   mocks.pendingChat = { status, data }

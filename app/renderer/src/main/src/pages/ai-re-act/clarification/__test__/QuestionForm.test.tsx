@@ -4,7 +4,7 @@ import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import { QuestionCard } from '../QuestionCard/QuestionCard'
 import { QuestionSummary } from '../QuestionSummary/QuestionSummary'
 import { readQuestionForm } from '../formValidation'
-import { stringListIssue, sanitizeFormValues } from '../QuestionFormFields/QuestionFormFields'
+import { groupFields, stringListIssue, sanitizeFormValues } from '../QuestionFormFields/QuestionFormFields'
 import { matchesSchema } from '../../interactive-ui/validate'
 import { AIChatQSDataTypeEnum } from '../../hooks/aiRender'
 const send = vi.hoisted(() => vi.fn().mockResolvedValue(undefined))
@@ -70,6 +70,28 @@ afterEach(() => {
   cleanup()
   send.mockReset()
   send.mockResolvedValue(undefined)
+})
+
+describe('form field rows', () => {
+  it('keeps a long title on its own row and leaves short fields side by side', () => {
+    expect(
+      groupFields({
+        title: '主机扫描参数',
+        fieldOrder: ['target', 'ports', 'mode'],
+        schema: {
+          type: 'object',
+          properties: {
+            target: { type: 'string', title: '扫描目标（单个 IP、CIDR 或域名，多个用逗号分隔）' },
+            ports: { type: 'string', title: '端口范围' },
+            mode: { type: 'string', title: '扫描模式' },
+          },
+        },
+      }),
+    ).toEqual([
+      { compact: false, keys: ['target'] },
+      { compact: true, keys: ['ports', 'mode'] },
+    ])
+  })
 })
 
 describe('forms use the clarification channel', () => {

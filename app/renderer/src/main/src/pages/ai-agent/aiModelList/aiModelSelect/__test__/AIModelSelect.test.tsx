@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { AIModelSelect } from '../AIModelSelect'
+import { EnterpriseAIModelSelect } from '../enterpriseAIModelSelect/EnterpriseAIModelSelect'
 import type { AIGlobalConfig, AIModelConfig } from '../../utils'
 import { defaultAIGlobalConfig } from '../../../defaultConstant'
 import { useAIGlobalConfigStore } from '@/store/aiGlobalConfig'
@@ -164,6 +165,21 @@ const expectModelRequest = (Type: string) =>
 
 describe('AIModelSelect', () => {
   it.each([
+    ['社区版', AIModelSelect],
+    ['企业版', EnterpriseAIModelSelect],
+  ] as const)('%s 会话模式只展示模型图标，仍可打开模型列表', async (_edition, ModelSelect) => {
+    config.IntelligentModels[0] = createModel('configured-a', 'aibalance')
+    useAIGlobalConfigStore.getState().setAIGlobalConfig(config)
+    render(<ModelSelect iconOnly />)
+
+    const selected = await screen.findByTestId('selected-model')
+    expect(selected.textContent).toBe('')
+    expect(within(selected).getByTitle('configured-a').querySelector('svg')).toBeInTheDocument()
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: '打开选择' })))
+    expect(screen.getByRole('region', { name: '模型列表' })).toBeVisible()
+  })
+
+  it.each([
     [undefined, 'effortDefault'],
     ['off', 'effortOff'],
     ['low', 'effortLow'],
@@ -194,7 +210,8 @@ describe('AIModelSelect', () => {
       fireEvent.mouseEnter(within(dropdown).getByRole('button', { name: 'YakitButton.edit' }))
       await waitFor(() => expect(screen.getAllByText('script-model')).toHaveLength(3))
     }
-    expect(screen.getByRole('button', { name: 'YakitButton.refresh' })).toBeDisabled()
+    const panel = edition === 'yakitEE' ? screen.getByRole('region', { name: 'AIModelSelect.selectModel' }) : dropdown
+    expect(within(panel).getByRole('button', { name: 'YakitButton.refresh' })).toBeDisabled()
     expect(mocks.names).not.toHaveBeenCalled()
   })
 
@@ -205,7 +222,8 @@ describe('AIModelSelect', () => {
     const dropdown = await openModels()
     const editButton = within(dropdown).getByRole('button', { name: 'YakitButton.edit' })
     fireEvent.mouseEnter(editButton)
-    expect(await screen.findByRole('button', { name: 'YakitButton.refresh' })).toBeDisabled()
+    const editor = await screen.findByRole('region', { name: 'AIModelSelect.selectModel' })
+    expect(within(editor).getByRole('button', { name: 'YakitButton.refresh' })).toBeDisabled()
 
     const model = config.IntelligentModels[0]
     act(() =>
@@ -216,9 +234,10 @@ describe('AIModelSelect', () => {
         ],
       }),
     )
-    expect(screen.queryByRole('button', { name: 'YakitButton.refresh' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: 'AIModelSelect.selectModel' })).not.toBeInTheDocument()
     fireEvent.mouseEnter(editButton)
-    expect(await screen.findByRole('button', { name: 'YakitButton.refresh' })).toBeDisabled()
+    const reopenedEditor = await screen.findByRole('region', { name: 'AIModelSelect.selectModel' })
+    expect(within(reopenedEditor).getByRole('button', { name: 'YakitButton.refresh' })).toBeDisabled()
     expect(screen.getAllByText('script-model')).toHaveLength(3)
     expect(mocks.names).not.toHaveBeenCalled()
     expect(mocks.save).not.toHaveBeenCalled()
@@ -367,6 +386,7 @@ describe('AIModelSelect', () => {
     config = { ...config, IntelligentModels: [currentModel, config.IntelligentModels[1]] }
     useAIGlobalConfigStore.getState().setAIGlobalConfig(config)
     const dropdown = await openModels()
+    expect(within(dropdown).getByText('AIModelSelect.modelTitle')).toBeVisible()
     fireEvent.click(within(dropdown).getByRole('button', { name: 'AIModelSelect.manageModels' }))
     expect(emit).toHaveBeenCalledWith(
       'openPage',
@@ -389,13 +409,10 @@ describe('AIModelSelect', () => {
       { Config: config.IntelligentModels[0].Provider, Model: 'configured-a' },
       true,
     )
-    const effortTrigger = within(dropdown).getByRole('button', { name: 'AIReasoningEffort.selectQuality' })
-    expect(effortTrigger).toHaveTextContent('ConfigNetworkPage.effortMax')
-    fireEvent.mouseEnter(within(effortTrigger).getByText('Error'))
+    fireEvent.mouseEnter(within(dropdown).getByText('Error'))
     expect(await screen.findByText('最高档位需要升级客户端')).toBeInTheDocument()
-    fireEvent.click(effortTrigger)
-    expect(await screen.findByRole('menuitemradio', { name: 'ConfigNetworkPage.effortXhigh' })).toBeInTheDocument()
-    expect(screen.queryByRole('menuitemradio', { name: 'ConfigNetworkPage.effortMax' })).not.toBeInTheDocument()
+    expect(within(dropdown).getByRole('button', { name: 'ConfigNetworkPage.effortXhigh' })).toBeInTheDocument()
+    expect(within(dropdown).queryByRole('button', { name: 'AIReasoningEffort.effortMax' })).not.toBeInTheDocument()
   })
 
   it('重新打开有 Error 的模型时探测一次，恢复后再次打开不探测', async () => {
@@ -738,15 +755,11 @@ describe('AIModelSelect', () => {
     config = { ...config, IntelligentModels: [first, second] }
     useAIGlobalConfigStore.getState().setAIGlobalConfig(config)
 
-    const dropdown = await openModels()
-    const effort = within(dropdown).getByRole('button', { name: 'AIReasoningEffort.selectQuality' })
-    fireEvent.click(effort)
-    fireEvent.click(effort)
+    await openModels()
     expect(mocks.probe).toHaveBeenCalledExactlyOnceWith({ Config: first.Provider, Model: first.ModelName }, true)
     closeModels()
 
     await act(async () => fireEvent.click(screen.getByRole('button', { name: '打开选择' })))
-    fireEvent.click(screen.getByRole('button', { name: 'AIReasoningEffort.selectQuality' }))
     fireEvent.click(screen.getByRole('option', { name: first.ModelName }))
     expect(mocks.probe).toHaveBeenCalledTimes(1)
     await act(async () => fireEvent.click(screen.getByRole('option', { name: second.ModelName })))
@@ -800,23 +813,23 @@ describe('AIModelSelect', () => {
     vi.useFakeTimers()
     const refreshButton = within(dropdown).getByRole('button', { name: 'YakitButton.refresh' })
     const resetButton = within(dropdown).getByRole('button', { name: 'AIModelSelect.resetModel' })
-    const effortTrigger = within(dropdown).getByRole('button', { name: 'AIReasoningEffort.selectQuality' })
+    const highEffort = within(dropdown).getByRole('button', { name: 'ConfigNetworkPage.effortHigh' })
     expect(refreshButton).toBeDisabled()
     expect(resetButton).toBeDisabled()
-    expect(effortTrigger).toHaveAttribute('aria-disabled', 'true')
+    expect(highEffort).toBeDisabled()
     await act(async () => vi.advanceTimersByTimeAsync(1000))
     fireEvent.click(refreshButton)
     fireEvent.click(resetButton)
-    fireEvent.click(effortTrigger)
-    expect(effortTrigger).toHaveAttribute('aria-expanded', 'false')
+    fireEvent.click(highEffort)
+    expect(highEffort).toHaveAttribute('aria-pressed', 'false')
     expect(mocks.names).toHaveBeenCalledTimes(1)
     expect(mocks.latest).not.toHaveBeenCalled()
     await act(async () => resolveNames({ ModelName: ['remote-model-1'] }))
     expect(refreshButton).toBeEnabled()
     expect(resetButton).toBeEnabled()
-    expect(effortTrigger).toHaveAttribute('aria-disabled', 'false')
-    fireEvent.click(effortTrigger)
-    expect(effortTrigger).toHaveAttribute('aria-expanded', 'true')
+    expect(highEffort).toBeEnabled()
+    fireEvent.click(highEffort)
+    expect(highEffort).toHaveAttribute('aria-pressed', 'true')
   })
 
   it('重置获取配置和模型列表期间持续禁用两个按钮，完成后恢复', async () => {
@@ -881,17 +894,15 @@ describe('AIModelSelect', () => {
     expect(mocks.save).not.toHaveBeenCalled()
   })
 
-  it('模型名称和思考档位在同一次关闭时保存，子菜单选择不丢失模型草稿', async () => {
+  it('在同一面板直接选择模型和思考档位，关闭时保存草稿', async () => {
     const dropdown = await openModels()
     fireEvent.click(within(dropdown).getByRole('option', { name: 'remote-model-2' }))
-    fireEvent.click(within(dropdown).getByRole('button', { name: 'AIReasoningEffort.selectQuality' }))
-    fireEvent.click(await screen.findByRole('menuitemradio', { name: 'ConfigNetworkPage.effortHigh' }))
+    const highEffort = within(dropdown).getByRole('button', { name: 'ConfigNetworkPage.effortHigh' })
+    fireEvent.click(highEffort)
     expect(screen.getByTestId('selected-model')).toHaveTextContent('remote-model-2')
     expect(dropdown).toBeVisible()
     expect(within(screen.getByTestId('selected-model')).getByText('ConfigNetworkPage.effortHigh')).toBeVisible()
-    expect(within(dropdown).getByRole('button', { name: 'AIReasoningEffort.selectQuality' })).toHaveTextContent(
-      'ConfigNetworkPage.effortHigh',
-    )
+    expect(highEffort).toHaveAttribute('aria-pressed', 'true')
     expect(mocks.save).not.toHaveBeenCalled()
     expect(useAIGlobalConfigStore.getState().aiGlobalConfig).toEqual(config)
 
@@ -929,23 +940,18 @@ describe('AIModelSelect', () => {
     const dropdown = await openModels()
     await act(async () => fireEvent.click(within(dropdown).getByRole('option', { name: 'remote-model-2' })))
     expect(screen.getByTestId('selected-model')).toHaveTextContent('ConfigNetworkPage.effortXhigh')
-    const getEffortTrigger = () => within(dropdown).getByRole('button', { name: 'AIReasoningEffort.selectQuality' })
-    fireEvent.click(getEffortTrigger())
-    expect(await screen.findByRole('menuitemradio', { name: 'ConfigNetworkPage.effortXhigh' })).toHaveAttribute(
-      'aria-checked',
+    expect(within(dropdown).getByRole('button', { name: 'ConfigNetworkPage.effortXhigh' })).toHaveAttribute(
+      'aria-pressed',
       'true',
     )
     await act(async () => fireEvent.click(within(dropdown).getByRole('option', { name: 'new-model' })))
     expect(screen.getByTestId('selected-model')).toHaveTextContent('ConfigNetworkPage.effortDefault')
-    expect(getEffortTrigger()).toHaveAttribute('aria-expanded', 'false')
-    expect(getEffortTrigger()).toHaveTextContent('ConfigNetworkPage.effortDefault')
     await waitFor(() => expect(mocks.probe).toHaveBeenCalledWith(expect.objectContaining({ Model: 'new-model' }), true))
-    fireEvent.click(getEffortTrigger())
-    expect(await screen.findByRole('menuitemradio', { name: 'ConfigNetworkPage.effortDefault' })).toHaveAttribute(
-      'aria-checked',
+    expect(within(dropdown).getByRole('button', { name: 'AIReasoningEffort.effortDefault' })).toHaveAttribute(
+      'aria-pressed',
       'true',
     )
-    expect(screen.queryByRole('menuitemradio', { name: 'ConfigNetworkPage.effortXhigh' })).not.toBeInTheDocument()
+    expect(within(dropdown).queryByRole('button', { name: 'ConfigNetworkPage.effortXhigh' })).not.toBeInTheDocument()
 
     await act(async () => fireEvent.click(within(dropdown).getByRole('option', { name: 'remote-model-1' })))
     expect(screen.getByTestId('selected-model')).toHaveTextContent('ConfigNetworkPage.effortHigh')

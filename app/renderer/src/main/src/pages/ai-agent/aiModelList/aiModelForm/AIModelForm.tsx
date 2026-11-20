@@ -7,31 +7,29 @@ import type {
   AIModelFormUpdateOptions,
 } from './AIModelFormType'
 import { useCreation, useDebounceFn, useInViewport, useMemoizedFn } from 'ahooks'
-import { Form, type FormInstance } from 'antd'
-import {
-  type AIThirdPartyApplicationConfig,
-  NewAIThirdPartyApplicationConfigBase,
-} from '@/components/configNetwork/NewAIThirdPartyApplicationConfig'
+import { Form } from 'antd'
+import type { FormInstance } from 'antd'
+import type { AIThirdPartyApplicationConfig } from '@/components/configNetwork/NewAIThirdPartyApplicationConfig'
+import { NewAIThirdPartyApplicationConfigBase } from '@/components/configNetwork/NewAIThirdPartyApplicationConfig'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import {
-  type AIGlobalConfig,
-  type AIModelConfig,
-  type AIModelTypeFileName,
-  type AIProvider,
-  grpcQueryAIProviderAll,
-  grpcAIConfigHealthCheck,
-  grpcProbeModelVision,
-  type ModelVisionProbeResult,
-  normalizeAIAPIType,
-  type AIConfigHealthCheckResponse,
+import type {
+  AIGlobalConfig,
+  AIModelConfig,
+  AIModelTypeFileName,
+  AIProvider,
+  ModelVisionProbeResult,
+  AIConfigHealthCheckResponse,
 } from '../utils'
+import { grpcQueryAIProviderAll, grpcAIConfigHealthCheck, grpcProbeModelVision, normalizeAIAPIType } from '../utils'
 import { YakitAutoComplete } from '@/components/yakitUI/YakitAutoComplete/YakitAutoComplete'
 import type { YakitAutoCompleteProps } from '@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
-import { AIModelTypeEnum, type AIModelTypeEnumType, AIModelTypeInterFileNameEnum } from '../../defaultConstant'
+import { AIModelTypeEnum, AIModelTypeInterFileNameEnum } from '../../defaultConstant'
+import type { AIModelTypeEnumType } from '../../defaultConstant'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { yakitNotify } from '@/utils/notification'
-import { cloneDeep, isNil } from 'lodash'
+import cloneDeep from 'lodash/cloneDeep'
+import isNil from 'lodash/isNil'
 import type { ThirdPartyApplicationConfig } from '@/components/configNetwork/ConfigNetworkPage'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import styles from './AIModelForm.module.scss'
@@ -46,7 +44,8 @@ import {
 } from '@yakit-libs/yakit-ui-icons/outline'
 import { HorizontalScrollCard } from '@/pages/plugins/operator/horizontalScrollCard/HorizontalScrollCard'
 import type { HoldGRPCStreamProps } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
-import { NewHTTPPacketEditor, type RenderTypeOptionVal } from '@/utils/editors'
+import { NewHTTPPacketEditor } from '@/utils/editors'
+import type { RenderTypeOptionVal } from '@/utils/editors'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { setRemoteValue } from '@/utils/kv'
@@ -267,6 +266,9 @@ export const formValueToAIConfigProvider = (res): ThirdPartyApplicationConfig =>
 export const getAIModelFormEffortKey = (values: AIThirdPartyApplicationConfig) =>
   JSON.stringify([providerToListAiModelConfig(formValueToAIConfigProvider(values)), values.model])
 
+export const getAIModelFormVisionKey = (values: AIThirdPartyApplicationConfig) =>
+  JSON.stringify([buildAIConfigHealthCheckFormValues(formValueToAIConfigProvider(values)), values.model])
+
 const visionCapabilityLabel = (value?: boolean) => {
   if (value === true) return 'ModelVision.supported'
   if (value === false) return 'ModelVision.unsupported'
@@ -339,7 +341,7 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
 
   const getVisionForConnection = useMemoizedFn((key: string | undefined, probe = visionProbe) => {
     const previous =
-      item && getAIModelFormEffortKey(formValues as AIThirdPartyApplicationConfig) === key ? item : undefined
+      item && getAIModelFormVisionKey(formValues as AIThirdPartyApplicationConfig) === key ? item : undefined
     const vision = probe?.key === key ? probe?.result : undefined
     return {
       SupportsImageInput: vision?.SupportsImageInput ?? previous?.SupportsImageInput,
@@ -379,9 +381,10 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
       }
 
       const hasCurrentEffortProbe = res._EffortProbed && res._EffortProbeKey === getAIModelFormEffortKey(res)
-      const key = getAIModelFormEffortKey(res)
+      const key = getAIModelFormVisionKey(res)
       const newItem: AIModelConfig = {
         ...getVisionForConnection(key, testedVision),
+        ...(!isAdd && item?.ContextOwnerId ? { ContextOwnerId: item.ContextOwnerId } : {}),
         ProviderId: res.api_key_id,
         Provider: {
           ...formValueToAIConfigProvider(res),
@@ -497,7 +500,7 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
             return
           }
           const form = formRef.current?.form
-          const key = getAIModelFormEffortKey(res)
+          const key = getAIModelFormVisionKey(res)
           const existing = getVisionForConnection(key)
           let testedVision: { key: string; result: ModelVisionProbeResult } | undefined
           if (
@@ -523,7 +526,7 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
           if (
             !form ||
             formRef.current?.form !== form ||
-            key !== getAIModelFormEffortKey(form.getFieldsValue(true) as AIThirdPartyApplicationConfig)
+            key !== getAIModelFormVisionKey(form.getFieldsValue(true) as AIThirdPartyApplicationConfig)
           )
             return
           yakitNotify('success', '测试成功')
@@ -542,11 +545,11 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
     const form = formRef.current?.form
     const values = (await form?.validateFields().catch(() => undefined)) as AIThirdPartyApplicationConfig | undefined
     if (!form || !values?.model) return
-    const key = getAIModelFormEffortKey(values)
+    const key = getAIModelFormVisionKey(values)
     setVisionLoading(true)
     try {
       const result = await grpcProbeModelVision(formValueToAIConfigProvider(values), values.model)
-      if (key === getAIModelFormEffortKey(form.getFieldsValue(true) as AIThirdPartyApplicationConfig)) {
+      if (key === getAIModelFormVisionKey(form.getFieldsValue(true) as AIThirdPartyApplicationConfig)) {
         setVisionProbe({ key, result })
       }
     } catch {

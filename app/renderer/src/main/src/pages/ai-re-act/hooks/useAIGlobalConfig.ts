@@ -1,18 +1,15 @@
 import { useCreation, useMemoizedFn } from 'ahooks'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import {
-  type AIGlobalConfig,
-  type AIModelConfig,
-  type ServerAIGlobalConfig,
-  grpcGetAIGlobalConfig,
-  grpcSetAIGlobalConfig,
-} from '@/pages/ai-agent/aiModelList/utils'
+import type { AIGlobalConfig, AIModelConfig, ServerAIGlobalConfig } from '@/pages/ai-agent/aiModelList/utils'
+import { grpcGetAIGlobalConfig, grpcSetAIGlobalConfig } from '@/pages/ai-agent/aiModelList/utils'
 import { useAIGlobalConfigStore } from '@/store/aiGlobalConfig'
 import { AIModelTypeInterFileNameEnum } from '@/pages/ai-agent/defaultConstant'
 import { shallow } from 'zustand/shallow'
-import { cloneDeep } from 'lodash'
+import cloneDeep from 'lodash/cloneDeep'
 import type { API } from '@/services/swagger/resposeType'
 import { debugToPrintLogs } from '@/utils/logCollection'
+import { yakitNotify } from '@/utils/notification'
+import i18n from '@/i18n/i18n'
 
 /** 与 getFileNameByModelType 对应的配置字段；直接用常量避免动态 import 整份 AIModelForm */
 const AI_MODEL_CONFIG_KEYS = [
@@ -23,6 +20,31 @@ const AI_MODEL_CONFIG_KEYS = [
 
 let saveQueue: Promise<unknown> = Promise.resolve()
 let saveEpoch = 0
+/** 本批保存开始前的配置，成功写入后推进到最后一次已写入的快照。 */
+let saveRollbackConfig: AIGlobalConfig | undefined
+let canonicalRead: { epoch: number; promise: Promise<AIGlobalConfig> } | undefined
+
+/** 等待配置保存完成，读取引擎确认的主模型。 */
+export const getCanonicalAIGlobalConfig = (hiddenError = false): Promise<AIGlobalConfig> => {
+  const epoch = saveEpoch
+  if (canonicalRead?.epoch === epoch) return canonicalRead.promise
+  const promise = saveQueue
+    .then(() => (epoch === saveEpoch ? grpcGetAIGlobalConfig(hiddenError) : getCanonicalAIGlobalConfig(hiddenError)))
+    .then((config) => {
+      if (epoch !== saveEpoch) return getCanonicalAIGlobalConfig(hiddenError)
+      useAIGlobalConfigStore.setState({
+        aiGlobalConfig: config,
+        persistedAiGlobalConfig: config,
+        configSavePending: false,
+      })
+      return config
+    })
+    .finally(() => {
+      if (canonicalRead?.promise === promise) canonicalRead = undefined
+    })
+  canonicalRead = { epoch, promise }
+  return promise
+}
 
 /** int64/double 为空字符串时，SetAIGlobalConfig 无法序列化 */
 const fixEmptyNumber = (config: AIGlobalConfig): AIGlobalConfig => {
@@ -109,8 +131,7 @@ function useAIGlobalConfig(params) {
     const showLoading = isShowLoading !== false
     showLoading && setQueryLoading(true)
     // 刷新在保存期间触发时，先等当前写入完成，避免读到旧数据库配置。
-    saveQueue
-      .then(() => grpcGetAIGlobalConfig())
+    getCanonicalAIGlobalConfig()
       .then((res) => applyFetchedConfig(res, epoch))
       .catch(() => undefined)
       .finally(() => {
@@ -123,32 +144,64 @@ function useAIGlobalConfig(params) {
 
   const setAIGlobalConfig = useMemoizedFn(async (data: Partial<AIGlobalConfig>): Promise<void> => {
     const epoch = ++saveEpoch
+    const previous = useAIGlobalConfigStore.getState()
+    if (!previous.configSavePending) {
+      saveRollbackConfig = previous.persistedAiGlobalConfig ?? previous.aiGlobalConfig
+    }
     const next: AIGlobalConfig = {
-      ...useAIGlobalConfigStore.getState().aiGlobalConfig,
+      ...previous.aiGlobalConfig,
       ...data,
     }
     const snapshot = fixEmptyNumber(next)
+    useAIGlobalConfigStore.setState({ configSavePending: true })
     aiGlobalConfigRef.current = snapshot
     setConfig(snapshot)
     setUpdateLoading(true)
 
     const task = saveQueue.then(async () => {
       await grpcSetAIGlobalConfig(snapshot)
+      saveRollbackConfig = snapshot
     })
     saveQueue = task.catch(() => undefined)
     try {
       await task
     } catch (err) {
       if (epoch === saveEpoch) {
-        grpcGetAIGlobalConfig()
+        getCanonicalAIGlobalConfig()
           .then((res) => applyFetchedConfig(res, epoch))
-          .catch(() => undefined)
+          .catch(() => {
+            if (epoch !== saveEpoch) return
+            const restored = saveRollbackConfig ?? previous.aiGlobalConfig
+            const persisted = useAIGlobalConfigStore.getState().persistedAiGlobalConfig
+            useAIGlobalConfigStore.setState({
+              aiGlobalConfig: restored,
+              persistedAiGlobalConfig: restored === persisted ? persisted : undefined,
+              configSavePending: false,
+            })
+            applyFetchedConfig(restored, epoch)
+          })
       }
       throw err
     } finally {
       setTimeout(() => {
         setUpdateLoading(false)
       }, 200)
+    }
+    if (epoch !== saveEpoch) return
+    try {
+      const config = await getCanonicalAIGlobalConfig(true)
+      applyFetchedConfig(config, epoch)
+    } catch {
+      if (epoch !== saveEpoch) return
+      // 写入已成功。只在后台重试回读，表单可以正常关闭。
+      void getCanonicalAIGlobalConfig(true).then(
+        (config) => applyFetchedConfig(config, epoch),
+        () => {
+          if (epoch !== saveEpoch) return
+          useAIGlobalConfigStore.setState({ configSavePending: false, persistedAiGlobalConfig: undefined })
+          yakitNotify('warning', i18n.t('AIModelGlobalConfig.savedRefreshFailed', { ns: 'aiAgent' }))
+        },
+      )
     }
   })
 
@@ -196,7 +249,7 @@ function useAIGlobalConfig(params) {
           }
           const hit = serverModels.find(({ ModelName }) => ModelName === item.ModelName)
           if (hit) {
-            list.push(hit)
+            list.push({ ...hit, ContextOwnerId: item.ContextOwnerId })
           }
           return list
         }, [] as AIModelConfig[])

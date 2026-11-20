@@ -85,6 +85,23 @@ describe('script providers and global controls gRPC contract', () => {
 })
 
 describe('model vision gRPC contract', () => {
+  it('preserves the engine image fields alongside the context settings', () => {
+    const fieldNumbers = (name) =>
+      Object.fromEntries(packageDefinition['ypb.' + name].type.field.map(({ name: field, number }) => [field, number]))
+
+    expect(fieldNumbers('AIModelConfig')).toMatchObject({
+      SupportsImageInput: 8,
+      ImageTokenEstimator: 9,
+      SupportsImageToolCalling: 10,
+      ContextOwnerId: 11,
+    })
+    expect(fieldNumbers('AIStartParams')).toMatchObject({
+      ImageInput: 54,
+      ModelContextKey: 55,
+      DisableContextAutoAdjust: 56,
+    })
+  })
+
   it('round-trips explicit true, false and unknown independently', () => {
     const method = ypb.Yak.service.SetAIGlobalConfig
     const payload = method.requestDeserialize(

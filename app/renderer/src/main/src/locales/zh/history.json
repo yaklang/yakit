@@ -387,7 +387,6 @@
     "showRequestHeaders": "显示全部请求头",
     "hideResponseHeaders": "隐藏常见响应头（仅影响显示）",
     "showResponseHeaders": "显示全部响应头",
-    "responseHeaderVisibilityScope": "{{action}}。同步 WebFuzzer 的响应视图，并立即保存为响应默认设置。",
     "render": "渲染",
     "compare": "对比",
     "noWrap": "不自动换行",

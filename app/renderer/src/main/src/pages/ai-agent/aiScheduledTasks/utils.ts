@@ -3,8 +3,8 @@ import { yakitNotify } from '@/utils/notification'
 import i18n from '@/i18n/i18n'
 import {
   fromServerAIStartParams,
+  omitLegacyAIContextLimits,
   toServerAIStartParams,
-  withServerRuntimeContextLimit,
 } from '../../ai-re-act/hooks/grpcApi'
 import type {
   AIReActSchedule,
@@ -29,7 +29,7 @@ const normalizeSchedule = (schedule: AIReActSchedule): AIReActSchedule => {
     ...schedule,
     Payload: {
       ...schedule.Payload,
-      StartParams: fromServerAIStartParams(withServerRuntimeContextLimit(schedule.Payload.StartParams)),
+      StartParams: fromServerAIStartParams(schedule.Payload.StartParams),
     },
   }
 }
@@ -41,7 +41,7 @@ const toServerSchedule = (schedule: AIReActSchedule): AIReActSchedule => {
     ...schedule,
     Payload: {
       ...schedule.Payload,
-      StartParams: withServerRuntimeContextLimit(toServerAIStartParams(schedule.Payload.StartParams)),
+      StartParams: toServerAIStartParams(omitLegacyAIContextLimits(schedule.Payload.StartParams)),
     },
   }
 }

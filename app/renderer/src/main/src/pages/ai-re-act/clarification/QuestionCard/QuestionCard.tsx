@@ -273,6 +273,7 @@ export function QuestionCard({
     </span>
   )
   const status = questionStatusLabel(outcome, request.mode, t)
+  const queueIsOnlyCurrent = queueCount === 1 && queueItems.some((entry) => entry.id === item.id)
   return (
     <section
       className={floating ? styles.questionFloating : styles.card}
@@ -301,7 +302,7 @@ export function QuestionCard({
               {t('InteractiveUI.countdown', { seconds: Math.max(0, Math.ceil((request.deadline - now) / 1000)) })}
             </span>
           ) : null}
-          {floating && (queueCount > 0 || onRefreshQueue) ? (
+          {floating && !queueIsOnlyCurrent && (queueCount > 0 || onRefreshQueue) ? (
             <QuestionQueue items={queueItems} currentId={item.id} onSelect={onSelectQueue} onRefresh={onRefreshQueue}>
               <YakitButton type="text" size="small">
                 {t('InteractiveUI.questionQueue')}

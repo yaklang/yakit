@@ -39,6 +39,7 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
       loadedSkillsUpdate: 0,
       availableSkillsUpdate: 0,
       draftMaterialsUpdate: 0,
+      modelContextUpdate: 0,
 
       grpcFolders: [],
       reActTimelines: [],

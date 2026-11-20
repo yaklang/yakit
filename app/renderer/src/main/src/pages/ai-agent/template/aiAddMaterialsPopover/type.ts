@@ -1,21 +1,14 @@
-import type { AIResourceIds } from '../type'
 import type { ReactElement, ReactNode } from 'react'
 import type { AIChatMentionProps } from '../../components/aiChatMention/type'
 import type { AIMentionCommandParams } from '../../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
 import type { AIMentionTabsEnum } from '../../defaultConstant'
 import type { AIEnabledCapability, AIOutputI18n } from '@/pages/ai-re-act/hooks/grpcApi'
+import type { AIForge } from '../../type/forge'
+import type { AIResourceIds } from '../type'
 
-export type MaterialCategory = Extract<
-  AIMentionCommandParams['mentionType'],
-  'forge' | 'tool' | 'knowledgeBase' | 'focusMode'
->
+export type MaterialCategory = Extract<AIMentionCommandParams['mentionType'], 'forge' | 'tool' | 'knowledgeBase'>
 
 export type MaterialPanel = MaterialCategory | 'attachments' | 'browser'
-
-export interface SelectedFocusMode {
-  id: string
-  label: string
-}
 
 export interface MaterialOption {
   id: string
@@ -24,6 +17,7 @@ export interface MaterialOption {
   originalName?: string
   verboseNameI18n?: AIOutputI18n
   knowledgeIndex?: number
+  forgeType?: AIForge['ForgeType']
 }
 
 export interface MaterialPanelHeader {
@@ -44,20 +38,27 @@ export interface MaterialMenuItem {
   summaryAction?: () => void
   external?: boolean
   count?: number
-  current?: string
 }
 
+export interface AddMaterialsControls {
+  open: boolean
+  menuOpen: boolean
+  toggle: () => void
+  summary?: ReactElement
+}
+
+export type MaterialShortcut = '@' | '/'
+
 export interface AIAddMaterialsPopoverProps {
-  children: (open: boolean, toggle: () => void, summary: ReactElement | null, menuOpen: boolean) => ReactElement
+  children: (controls: AddMaterialsControls) => ReactElement
   showScenarioCapabilities?: boolean
   initialEnabledCapabilities?: AIEnabledCapability[]
   onEnabledCapabilitiesChange?: (items: AIEnabledCapability[]) => void
+  onShortcut: (shortcut: MaterialShortcut) => void
   onAdd: (material: AIMentionCommandParams) => void
   onRemove: (material: AIMentionCommandParams) => void
   mentions: AIMentionCommandParams[]
   resourceIds: AIResourceIds
   selectedResourceIds: AIResourceIds
-  focusMode?: string
-  onFocusModeChange: (focusMode?: string) => void
   filterMode?: AIChatMentionProps['filterMode']
 }

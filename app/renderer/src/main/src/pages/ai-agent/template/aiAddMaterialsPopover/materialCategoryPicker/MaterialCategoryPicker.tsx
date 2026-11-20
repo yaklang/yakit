@@ -29,7 +29,7 @@ const optionIcons = { forge: PuzzleOutlined, tool: Wrench1Outlined, knowledgeBas
 
 interface MaterialCategoryPickerProps extends MaterialPanelHeader {
   /** 当前列表的资料类型，支持技能、工具和知识库。 */
-  category: Exclude<MaterialCategory, 'focusMode'>
+  category: MaterialCategory
   mentions: AIMentionCommandParams[]
   /** 按「资料类型:ID」保存的描述，目录数据没有描述时用于回填。 */
   descriptions: Record<string, string>
@@ -76,6 +76,7 @@ const getAddedOptions = (
   return Array.from(addedById.values(), (mention) => {
     const item = catalogById.get(mention.mentionId)
     return {
+      ...(item ?? {}),
       id: mention.mentionId,
       name: item?.name ?? mention.mentionName,
       description: item?.description || descriptions[`${mention.mentionType}:${mention.mentionId}`],
@@ -178,7 +179,7 @@ export const MaterialCatalogList: FC<MaterialCatalogListProps> = ({
     return (
       <div
         key={item.id}
-        className={styles.row}
+        className={option?.checked ? `${styles.row} ${styles.checked}` : styles.row}
         id={option?.id}
         role={option ? 'option' : undefined}
         aria-selected={option?.active}

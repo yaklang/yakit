@@ -361,6 +361,7 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
       url={urlInfo === t('MITMHijackedContent.listening') ? '' : urlInfo}
       originValue={currentPacket}
       noHeader={true}
+      showHeaderVisibilityToggle
       isResponse={currentPacket.substring(0, 5).startsWith('HTTP/')}
       bordered={false}
       foldBinaryFuzztag={true}

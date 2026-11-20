@@ -1,5 +1,31 @@
 import { describe, expect, it } from 'vitest'
-import { filterColorTag, parseCellStyleVars, parseColorTag, resetEmptyVirtualTableViewport } from '../utils'
+import {
+  filterColorTag,
+  getRowScrollTop,
+  parseCellStyleVars,
+  parseColorTag,
+  resetEmptyVirtualTableViewport,
+} from '../utils'
+
+describe('getRowScrollTop', () => {
+  it('行已完整可见时不滚动', () => {
+    expect(getRowScrollTop({ rowTop: 0, rowHeight: 28, visibleHeight: 300, scrollTop: 100 })).toBeNull()
+    expect(getRowScrollTop({ rowTop: 272, rowHeight: 28, visibleHeight: 300, scrollTop: 100 })).toBeNull()
+  })
+
+  it('行在可见区上方时滚到表头下沿', () => {
+    // 行顶已经在表头后面（rowTop=-28），向上滚一行让它贴到表头下沿
+    expect(getRowScrollTop({ rowTop: -28, rowHeight: 28, visibleHeight: 300, scrollTop: 500 })).toBe(472)
+  })
+
+  it('行在可见区下方时滚到可见区底边', () => {
+    expect(getRowScrollTop({ rowTop: 400, rowHeight: 28, visibleHeight: 420, scrollTop: 0 })).toBe(8)
+  })
+
+  it('可见区高度无效时不处理', () => {
+    expect(getRowScrollTop({ rowTop: 10, rowHeight: 28, visibleHeight: 0, scrollTop: 0 })).toBeNull()
+  })
+})
 
 describe('resetEmptyVirtualTableViewport', () => {
   it('removes the stale scroll range when a deeply-scrolled virtual table is cleared', () => {

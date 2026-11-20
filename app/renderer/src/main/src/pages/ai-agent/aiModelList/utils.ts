@@ -22,9 +22,11 @@ import type {
 import omit from 'lodash/omit'
 import type { ThirdPartyApplicationConfig } from '@/components/configNetwork/ConfigNetworkPage'
 import type { KVPair } from '@/models/kv'
-import { genDefaultPagination, type PaginationSchema } from '@/pages/invoker/schema'
+import { genDefaultPagination } from '@/pages/invoker/schema'
+import type { PaginationSchema } from '@/pages/invoker/schema'
 import type { GetThirdPartyAppConfigTemplateResponse } from '@/components/configNetwork/NewThirdPartyApplicationConfig'
-import { type AIModelPolicyEnum, defaultAIGlobalConfig } from '../defaultConstant'
+import { defaultAIGlobalConfig } from '../defaultConstant'
+import type { AIModelPolicyEnum } from '../defaultConstant'
 import type { TFunction } from '@/i18n/useI18nNamespaces'
 export { AI_API_TYPE_OPTIONS, DEFAULT_AI_API_TYPE, normalizeAIAPIType, type AIAPIType } from './aiApiTypeOptions'
 export { getModelName } from './modelName'
@@ -381,6 +383,8 @@ export const canEnableSingleModelMode = (config: Pick<AIGlobalConfig, 'Intellige
 }
 export type AIModelTypeFileName = keyof Pick<AIGlobalConfig, 'IntelligentModels' | 'LightweightModels' | 'VisionModels'>
 export interface AIModelConfig {
+  /** 引擎为已保存配置分配的稳定归属；编辑及重排时保留。 */
+  ContextOwnerId?: string
   ProviderId: string
   Provider: ThirdPartyApplicationConfig
   ModelName: string

@@ -152,6 +152,7 @@ import {
   HTTPFlowTableFormConfiguration,
 } from '@/components/HTTPFlowTable/HTTPFlowTableFormConfiguration/HTTPFlowTableFormConfiguration'
 import { HistoryAIReActChatProvider, useHistoryAIReActChat } from '@/components/historyAIReActChat'
+import { AIInputInnerFeatureEnum, getFooterLeftTypesWithItem } from '@/pages/ai-agent/template/type'
 import { useHttpFlowSelection } from '@/components/useHttpFlowSelection'
 import { HTTPFlowRuleDataFilter } from '@/components/HTTPFlowTable/HTTPFlowRuleDataFilter'
 import { isFilterSectionActive, safeParse } from '../HTTPHistoryAnalysis.utils'
@@ -174,7 +175,7 @@ interface HTTPHistoryFilterProps {
   closable?: boolean
 }
 const HTTPHistoryFilterInner: React.FC<HTTPHistoryFilterProps> = React.memo((props) => {
-  const { renderHistoryAIReActChat, setShowFreeChat, historyAIReActChatBridge } = useHistoryAIReActChat()
+  const { renderHistoryAIReActChat, setShowFreeChat, historyAIReActChatBridge, focusModeLoop } = useHistoryAIReActChat()
   const {
     onSetClickedHttpFlow,
     onSetFirstHttpFlow,
@@ -344,6 +345,10 @@ const HTTPHistoryFilterInner: React.FC<HTTPHistoryFilterProps> = React.memo((pro
                   className: styles['ai-wrapper'],
                   externalParameters: {
                     isOpen: false,
+                    footerLeftTypes: getFooterLeftTypesWithItem({
+                      type: AIInputInnerFeatureEnum.AIFocusMode,
+                      props: { value: focusModeLoop, disabled: true },
+                    }),
                     rightIcon: {
                       history: true,
                       dataDetails: { type: 'text2' },
