@@ -96,7 +96,7 @@ export const setAIModal = (params: {
   const { modelType, item, onSuccess, mountContainer, t } = params
   const m = showYakitModal({
     title: (modalT) => modalT('AIModelList.addThirdPartyApp'),
-    width: 600,
+    width: 800,
     footer: null,
     closable: true,
     maskClosable: false,

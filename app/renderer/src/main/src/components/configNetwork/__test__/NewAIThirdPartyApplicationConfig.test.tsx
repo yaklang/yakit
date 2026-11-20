@@ -20,7 +20,14 @@ const providerExampleTextareaValue = providerExample.replace(/\r\n/g, '\n')
 const mocks = vi.hoisted(() => {
   const invoke = vi.fn()
   window.require = (() => ({ ipcRenderer: { invoke } })) as unknown as typeof window.require
-  return { invoke, healthCheck: vi.fn(), probe: vi.fn(), save: vi.fn(), config: {} as AIGlobalConfig }
+  return {
+    invoke,
+    healthCheck: vi.fn(),
+    probe: vi.fn(),
+    visionProbe: vi.fn(),
+    save: vi.fn(),
+    config: {} as AIGlobalConfig,
+  }
 })
 
 vi.mock('@/i18n/useI18nNamespaces', () => ({
@@ -72,6 +79,7 @@ vi.mock('@/pages/ai-agent/aiModelList/utils', async () => {
     grpcAIConfigHealthCheck: mocks.healthCheck,
     grpcQueryAIProviderAll: async () => ({ Providers: [] }),
     grpcProbeReasoningEffort: mocks.probe,
+    grpcProbeModelVision: mocks.visionProbe,
     sortMemfitNameFirst: (names: string[]) => names,
   }
 })
@@ -80,6 +88,7 @@ beforeEach(() => {
   mocks.invoke.mockReset().mockResolvedValue({ ModelName: ['remote-model'] })
   mocks.healthCheck.mockReset().mockResolvedValue({ Success: true })
   mocks.probe.mockReset().mockResolvedValue({ MaxSupported: false, XhighSupported: true })
+  mocks.visionProbe.mockReset().mockResolvedValue({})
   mocks.save.mockReset().mockResolvedValue(undefined)
   mocks.config = { IntelligentModels: [], LightweightModels: [], VisionModels: [] } as unknown as AIGlobalConfig
   vi.stubGlobal(
@@ -219,6 +228,39 @@ describe('Yak script model configuration', () => {
         errorFields: expect.arrayContaining([expect.objectContaining({ name: ['script'] })]),
       })
     })
+  })
+
+  it.each(['script', 'native tools'])('invalidates vision results after changing %s', async (field) => {
+    const item: AIModelConfig = {
+      ProviderId: '',
+      ModelName: 'my-script',
+      Provider: { ...provider, EnableNativeToolCalling: false },
+      ExtraParams: [],
+      SupportsImageInput: true,
+      SupportsImageToolCalling: true,
+      ImageTokenEstimator: 'tile512',
+    }
+    mocks.config.IntelligentModels = [item]
+    mocks.visionProbe.mockResolvedValueOnce({ SupportsImageInput: true, SupportsImageToolCalling: true })
+    render(<AIModelForm item={item} aiModelType={AIModelTypeEnum.TierIntelligent} onClose={vi.fn()} />)
+    const editor = await screen.findByLabelText('yak-model-script')
+    fireEvent.click(screen.getByRole('button', { name: 'ModelVision.detect' }))
+    await waitFor(() => expect(mocks.visionProbe).toHaveBeenCalledTimes(1))
+    expect(screen.getAllByText('ModelVision.supported')).toHaveLength(2)
+
+    if (field === 'script') {
+      fireEvent.change(editor, { target: { value: 'chat = func(req, emit) { emit("updated"); return nil }' } })
+    } else {
+      fireEvent.click(screen.getByRole('switch', { name: 'ConfigNetworkPage.nativeToolCalling' }))
+    }
+    await waitFor(() => expect(screen.getAllByText('ModelVision.unknown')).toHaveLength(2))
+    fireEvent.click(screen.getByRole('button', { name: 'AIModelList.testAndAddBtn' }))
+    await waitFor(() => expect(mocks.save).toHaveBeenCalledOnce())
+    expect(mocks.visionProbe).toHaveBeenCalledTimes(2)
+    const saved = mocks.save.mock.calls[0][0].IntelligentModels[0]
+    expect(saved.SupportsImageInput).toBeUndefined()
+    expect(saved.SupportsImageToolCalling).toBeUndefined()
+    expect(saved.ImageTokenEstimator).toBeUndefined()
   })
 
   it.each([false, true])('tests and saves the edited script and switch (native=%s)', async (enableNative) => {
@@ -431,6 +473,7 @@ describe('Ordinary provider extension parameters', () => {
   const provider = { Type: 'openai', APIKey: 'fixture-key', ExtraParams: extras }
 
   it('preserves unknown parameters through editing and saving, replacing the stale model in health checks', async () => {
+    mocks.visionProbe.mockResolvedValue({ SupportsImageInput: true, SupportsImageToolCalling: false })
     const item: AIModelConfig = {
       ProviderId: '',
       ModelName: 'current-model',
@@ -444,6 +487,7 @@ describe('Ordinary provider extension parameters', () => {
     await screen.findByRole('combobox', { name: 'ConfigNetworkPage.typeLabel' })
     fireEvent.click(screen.getByRole('button', { name: 'AIModelList.testAndAddBtn' }))
     await waitFor(() => expect(mocks.save).toHaveBeenCalledOnce())
+    expect(mocks.visionProbe).toHaveBeenCalledWith(expect.objectContaining({ Type: 'openai' }), 'current-model')
     const health = mocks.healthCheck.mock.calls[0][0].Config
     expect(health.ExtraParams).toEqual(
       expect.arrayContaining([
@@ -453,6 +497,8 @@ describe('Ordinary provider extension parameters', () => {
     )
     expect(health.ExtraParams.filter(({ Key }) => Key === 'model')).toEqual([{ Key: 'model', Value: 'current-model' }])
     const saved = mocks.save.mock.calls[0][0].IntelligentModels[0]
+    expect(saved.SupportsImageInput).toBe(true)
+    expect(saved.SupportsImageToolCalling).toBe(false)
     expect(saved.Provider.ExtraParams).toEqual(extras)
     expect(saved.ExtraParams).toEqual(item.ExtraParams)
     expect(provider.ExtraParams).toEqual(extras)
@@ -499,5 +545,70 @@ describe('Ordinary provider extension parameters', () => {
     expect(health.ExtraParams?.filter(({ Key }) => ['tenant', 'api_version', 'model'].includes(Key))).toEqual([
       { Key: 'model', Value: 'new-model' },
     ])
+  })
+})
+
+describe('Vision capabilities for the model connection', () => {
+  const renderModel = (capabilities: Partial<AIModelConfig> = {}) => {
+    const item: AIModelConfig = {
+      ProviderId: '',
+      ModelName: 'current-model',
+      Provider: { Type: 'custom', APIKey: 'fixture-key', BaseURL: 'https://old-gateway.example/v1' },
+      ExtraParams: [],
+      ...capabilities,
+    }
+    mocks.config.IntelligentModels = [item]
+    render(<AIModelForm item={item} aiModelType={AIModelTypeEnum.TierIntelligent} onClose={vi.fn()} />)
+    return screen.findByLabelText('BaseURL')
+  }
+
+  it('updates the displayed probe result when the connection changes', async () => {
+    mocks.visionProbe.mockResolvedValue({ SupportsImageInput: true, SupportsImageToolCalling: false })
+    const baseURL = await renderModel()
+    fireEvent.click(screen.getByRole('button', { name: 'ModelVision.detect' }))
+    await screen.findByText('ModelVision.supported')
+    expect(screen.getByText('ModelVision.unsupported')).toBeInTheDocument()
+    fireEvent.change(baseURL, { target: { value: 'https://new-gateway.example/v1' } })
+    await waitFor(() => expect(screen.getAllByText('ModelVision.unknown')).toHaveLength(2))
+    expect(screen.queryByText('ModelVision.supported')).not.toBeInTheDocument()
+  })
+
+  it.each([true, false])('skips the probe when saved image support is conclusive (%s)', async (imageSupport) => {
+    await renderModel({ SupportsImageInput: imageSupport, SupportsImageToolCalling: imageSupport ? false : undefined })
+    fireEvent.click(screen.getByRole('button', { name: 'AIModelList.testAndAddBtn' }))
+    await waitFor(() => expect(mocks.save).toHaveBeenCalledOnce())
+    expect(mocks.visionProbe).not.toHaveBeenCalled()
+    expect(mocks.save.mock.calls[0][0].IntelligentModels[0].SupportsImageInput).toBe(imageSupport)
+  })
+
+  it('preserves a known read capability when the tool probe only reports its own result', async () => {
+    await renderModel({ SupportsImageInput: true, ImageTokenEstimator: 'patch32' })
+    mocks.visionProbe.mockResolvedValue({ SupportsImageToolCalling: false })
+    fireEvent.click(screen.getByRole('button', { name: 'AIModelList.testAndAddBtn' }))
+    await waitFor(() => expect(mocks.save).toHaveBeenCalledOnce())
+    expect(mocks.visionProbe).toHaveBeenCalledOnce()
+    expect(mocks.save.mock.calls[0][0].IntelligentModels[0]).toMatchObject({
+      SupportsImageInput: true,
+      SupportsImageToolCalling: false,
+      ImageTokenEstimator: 'patch32',
+    })
+  })
+
+  it('does not save if the connection changes while its vision probe is pending', async () => {
+    let finishProbe!: (value: unknown) => void
+    mocks.visionProbe.mockReturnValue(
+      new Promise((resolve) => {
+        finishProbe = resolve
+      }),
+    )
+    const baseURL = await renderModel()
+    const submit = screen.getByRole('button', { name: 'AIModelList.testAndAddBtn' })
+    fireEvent.click(submit)
+    await waitFor(() => expect(mocks.visionProbe).toHaveBeenCalledOnce())
+    fireEvent.change(baseURL, { target: { value: 'https://new-gateway.example/v1' } })
+    await act(async () => finishProbe({ SupportsImageInput: true }))
+    await waitFor(() => expect(submit).not.toHaveClass('ant-btn-loading'))
+    expect(mocks.save).not.toHaveBeenCalled()
+    expect(screen.getAllByText('ModelVision.unknown')).toHaveLength(2)
   })
 })

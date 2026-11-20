@@ -64,3 +64,63 @@
     }
   }
 }
+
+.vision-footer-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-right: auto;
+}
+
+.visionCapabilities {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.vision-capability {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  & + & {
+    position: relative;
+    margin-left: 12px;
+    padding-left: 12px;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 0;
+      width: 1px;
+      height: 12px;
+      background: var(--Colors-Use-Neutral-Border);
+      transform: translateY(-50%);
+    }
+  }
+
+  &[data-status='success'] {
+    color: var(--Colors-Use-Success-Primary);
+  }
+
+  &[data-status='warning'] {
+    color: var(--Colors-Use-Error-Primary);
+  }
+
+  &[data-status='unknown'] {
+    color: var(--Colors-Use-Warning-Primary);
+  }
+}
+
+.vision-capability-label {
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+}

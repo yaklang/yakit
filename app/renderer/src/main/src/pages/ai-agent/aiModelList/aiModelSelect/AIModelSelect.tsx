@@ -254,10 +254,16 @@ const CurrentAIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
         Provider: { ...currentModel.Provider, ReasoningEffort: nextModel?.Provider.ReasoningEffort },
         EffortProbed: nextModel?.EffortProbed,
         ProbedExtendedEfforts: nextModel?.ProbedExtendedEfforts,
+        SupportsImageInput: nextModel?.SupportsImageInput,
+        SupportsImageToolCalling: nextModel?.SupportsImageToolCalling,
+        ImageTokenEstimator: nextModel?.ImageTokenEstimator,
       }
       if (model.Provider.ReasoningEffort === undefined) delete model.Provider.ReasoningEffort
       if (model.EffortProbed === undefined) delete model.EffortProbed
       if (model.ProbedExtendedEfforts === undefined) delete model.ProbedExtendedEfforts
+      if (model.SupportsImageInput === undefined) delete model.SupportsImageInput
+      if (model.SupportsImageToolCalling === undefined) delete model.SupportsImageToolCalling
+      if (model.ImageTokenEstimator === undefined) delete model.ImageTokenEstimator
       return { ...old, IntelligentModels: [model, ...rest] }
     })
   })

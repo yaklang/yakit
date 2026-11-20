@@ -1240,5 +1240,16 @@
     "stepDone": "完成",
     "stepError": "失败",
     "invalidQuestion": "提问格式无效"
+  },
+  "ModelVision": {
+    "detect": "检测视觉能力",
+    "readImage": "读图",
+    "imageTools": "带图工具调用",
+    "supported": "支持",
+    "unsupported": "不支持",
+    "unknown": "待验证",
+    "requestFailed": "无法检测模型视觉能力",
+    "nativeTrace": "主模型 {{model}} 直接读取 {{count}} 张图片",
+    "visionTrace": "视觉模型 {{model}} 辅助读取 {{count}} 张图片"
   }
 }

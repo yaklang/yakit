@@ -25,6 +25,7 @@ import {
   AIConfigAPIKeyFormItem,
   buildAIConfigHealthCheckConfig,
   getAIModelFormEffortKey,
+  getAIModelFormVisionKey,
 } from '@/pages/ai-agent/aiModelList/aiModelForm/AIModelForm'
 import {
   providerToListAiModelConfig,
@@ -443,7 +444,7 @@ interface NewAIThirdPartyApplicationConfigBaseProps {
     labelCol: number
     wrapperCol: number
   }
-  footer?: React.ReactNode
+  footer?: React.ReactNode | ((connectionKey: string | undefined) => React.ReactNode)
   readOnly?: boolean
   ref?: React.ForwardedRef<{ form: FormInstance }>
 }
@@ -472,7 +473,9 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
     const execModelNameOption = useRef<boolean>(false)
     const enableEndpointWatch = Form.useWatch('enable_endpoint', form)
     const reasoningEffortWatch = Form.useWatch('ReasoningEffort', form)
-    const currentEffortProbeKey = Form.useWatch(getAIModelFormEffortKey, form)
+    const currentEffortProbeKey = Form.useWatch(getAIModelFormEffortKey, { form, preserve: true })
+    const currentVisionProbeKey = Form.useWatch(getAIModelFormVisionKey, { form, preserve: true })
+    const footerContent = typeof footer === 'function' ? footer(currentVisionProbeKey) : footer
     const savedEffortProbeKey = Form.useWatch('_EffortProbeKey', form)
     const [effortProbing, setEffortProbing] = useState<boolean>(false)
     // 扩展思考强度探测结果：undefined=未探测；[]=探测过但不支持；非空=探测到支持的档位
@@ -843,7 +846,7 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
       return (
         <div className={styles['config-form-wrapper']}>
           <AIThirdPartyConfigReadonlyPanel merged={initialValues} />
-          {footer ? <div className={styles['config-footer']}>{footer}</div> : null}
+          {footerContent ? <div className={styles['config-footer']}>{footerContent}</div> : null}
         </div>
       )
     }
@@ -1039,7 +1042,7 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
             </YakitCollapse>
           )}
         </Form>
-        <div className={styles['config-footer']}>{footer}</div>
+        <div className={styles['config-footer']}>{footerContent}</div>
         <InputHTTPHeaderForm
           initFormVal={headerItemRef.current}
           updateIndex={headerItemIndexRef.current}

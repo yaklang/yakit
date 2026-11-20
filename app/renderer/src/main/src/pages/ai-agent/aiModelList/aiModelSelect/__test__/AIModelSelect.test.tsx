@@ -961,6 +961,43 @@ describe('AIModelSelect', () => {
     expect(mocks.load).toHaveBeenCalledTimes(1)
   })
 
+  it.each(['remote-model-2', 'new-model'])('persists vision capabilities for the selected name %s', async (name) => {
+    const source = {
+      ...config.IntelligentModels[0],
+      ModelName: 'remote-model-1',
+      SupportsImageInput: true,
+      SupportsImageToolCalling: true,
+      ImageTokenEstimator: 'tile512',
+    }
+    const target = {
+      ...source,
+      ModelName: 'remote-model-2',
+      SupportsImageInput: true,
+      SupportsImageToolCalling: false,
+      ImageTokenEstimator: 'patch32',
+    }
+    config = { ...config, IntelligentModels: [source, target] }
+    useAIGlobalConfigStore.getState().setAIGlobalConfig(config)
+    mocks.names.mockResolvedValueOnce({ ModelName: ['remote-model-1', 'remote-model-2', 'new-model'] })
+    const dropdown = await openModels()
+    await act(async () => fireEvent.click(within(dropdown).getByRole('option', { name })))
+    closeModels()
+    await waitFor(() => expect(mocks.save).toHaveBeenCalledOnce())
+    const saved = mocks.save.mock.calls[0][0].IntelligentModels[0]
+    expect(saved.ModelName).toBe(name)
+    if (name === target.ModelName) {
+      expect(saved).toMatchObject({
+        SupportsImageInput: true,
+        SupportsImageToolCalling: false,
+        ImageTokenEstimator: 'patch32',
+      })
+    } else {
+      for (const field of ['SupportsImageInput', 'SupportsImageToolCalling', 'ImageTokenEstimator']) {
+        expect(saved).not.toHaveProperty(field)
+      }
+    }
+  })
+
   it('全局配置内容未变时，不覆盖下拉中尚未保存的模型选择', async () => {
     const dropdown = await openModels()
     fireEvent.click(within(dropdown).getByRole('option', { name: 'remote-model-2' }))

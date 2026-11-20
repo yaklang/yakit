@@ -2,6 +2,7 @@ import { AIChatQSDataTypeEnum } from '@/pages/ai-re-act/hooks/aiRender'
 import { QuestionSummary } from '@/pages/ai-re-act/clarification/QuestionSummary/QuestionSummary'
 import { ComponentCard } from '@/pages/ai-re-act/display-ui/ComponentCard/ComponentCard'
 import { type FC, memo } from 'react'
+import { AIImageModelRead } from '../../aiChatListItem/aiNodeItem/AIImageModelRead'
 import { AIModelErrorPrompt } from '../../aiChatListItem/aiModelErrorPrompt/AIModelErrorPrompt'
 import { AIHttpFlowFuzzStatusCard } from '../../aiHttpFlowFuzzStatusCard/AIHttpFlowFuzzStatusCard'
 import { AIReportFinishCard } from '../../aiReportFinishCard/AIReportFinishCard'
@@ -49,6 +50,8 @@ const AIChildWindowNodeItemWrapper: FC<AIChildWindowNodeItemWrapperProps> = memo
         return null
       case AIChatQSDataTypeEnum.RESULT:
         return <AITriageChatContentWrapper isAnswer={true} itemData={itemData} renderNum={renderNum} />
+      case AIChatQSDataTypeEnum.IMAGE_MODEL_READ:
+        return <AIImageModelRead item={itemData} />
       case AIChatQSDataTypeEnum.THOUGHT:
         return <AIThought itemData={itemData} renderNum={renderNum} />
       case AIChatQSDataTypeEnum.USER_MANUAL_INTERVENTION:

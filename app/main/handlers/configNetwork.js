@@ -156,6 +156,18 @@ module.exports = (win, getClient) => {
     return await asyncProbeReasoningEffort(params)
   })
 
+  ipcMain.handle('ProbeModelVision', (_event, params) => {
+    return new Promise((resolve, reject) => {
+      getClient().ProbeModelVision(params, (err, data) => {
+        if (err) {
+          reject(err)
+          return
+        }
+        resolve(data)
+      })
+    })
+  })
+
   const asyncUpdateApiKey = (params) => {
     return new Promise((resolve, reject) => {
       getClient().UpdateApiKey(params, (err, data) => {
