@@ -45,9 +45,12 @@ const stateNames: Record<string, string> = {
   deleting: '删除中',
 }
 const initialPage: PacketPage = { Data: [], NextCursor: '0', HasMore: false }
+const filterQueryDelay = 400
 const databaseName = (database?: PCAPDatabase) =>
   fileName(database?.SourcePath || '') ||
   (database?.DatasetID ? `实时抓包 ${database.DatasetID.slice(0, 8)}` : '捕获数据集')
+const sameFilters = (left: PacketFilters, right: PacketFilters) =>
+  Object.keys(emptyFilters).every((key) => left[key as keyof PacketFilters] === right[key as keyof PacketFilters])
 
 export default function PCAPPacketViewer() {
   const [databases, setDatabases] = useState<PCAPDatabase[]>([])
@@ -95,6 +98,7 @@ export default function PCAPPacketViewer() {
   const captureStopRequested = useRef(false)
   const loadedPacketIDs = useRef(new Set<string>())
   const dataset = databases.find((item) => item.DatasetID === datasetID)
+  const datasetQueryable = dataset?.State === 'ready' || Boolean(capture && captureProgress?.DatasetID === datasetID)
 
   const loadLibrary = useCallback(async (preferred?: string) => {
     const request = ++libraryRequest.current
@@ -110,7 +114,13 @@ export default function PCAPPacketViewer() {
         if (response.NextCursor === after) throw new Error('数据集分页游标未前进，请更新引擎')
         after = response.NextCursor
       } while (request === libraryRequest.current)
-      setDatabases(all)
+      setDatabases((current) => {
+        if (preferred && !all.some((item) => item.DatasetID === preferred)) {
+          const pending = current.find((item) => item.DatasetID === preferred)
+          if (pending) return [pending, ...all]
+        }
+        return all
+      })
       setCursor('0')
       setPage(initialPage)
       setDatasetID(
@@ -175,19 +185,46 @@ export default function PCAPPacketViewer() {
         if (!current) return
         setCaptureProgress(event)
         if (event.Error) setCaptureError(event.Error)
-        setDatabases((items) =>
-          items.map((item) =>
-            item.DatasetID === event.DatasetID
-              ? {
-                  ...item,
-                  State: event.State || item.State,
-                  PacketCount: event.PacketFrameCounter || item.PacketCount,
-                }
-              : item,
-          ),
-        )
+        if (event.DatasetID) {
+          setDatabases((items) => {
+            const index = items.findIndex((item) => item.DatasetID === event.DatasetID)
+            if (index < 0) {
+              return [
+                {
+                  Id: event.DatasetID,
+                  DatasetID: event.DatasetID,
+                  SourcePath: '',
+                  SourceSize: event.BytesIndexed || '0',
+                  Format: 'live',
+                  State: event.State || 'ready',
+                  PacketCount: event.PacketFrameCounter || '0',
+                  LastError: event.Error || '',
+                  ProtocolsIndexed: true,
+                },
+                ...items,
+              ]
+            }
+            return items.map((item, itemIndex) =>
+              itemIndex === index
+                ? {
+                    ...item,
+                    SourceSize: event.BytesIndexed || item.SourceSize,
+                    State: event.State || item.State,
+                    PacketCount: event.PacketFrameCounter || item.PacketCount,
+                    LastError: event.Error || item.LastError,
+                  }
+                : item,
+            )
+          })
+        }
         if (event.DatasetID && !datasetOpened) {
           datasetOpened = true
+          setDatasetID(event.DatasetID)
+          setDraft(emptyFilters)
+          setFilters(emptyFilters)
+          setCursor('0')
+          setPage(initialPage)
+          setTotalKnown(undefined)
           loadLibrary(event.DatasetID)
           setRevision((value) => value + 1)
         }
@@ -233,7 +270,7 @@ export default function PCAPPacketViewer() {
     return () => {
       current = false
       cleanup.forEach((unsubscribe) => unsubscribe())
-      if (!finished) yakitStream.cancel('PcapX', token).catch(() => {})
+      if (!finished && !captureStopRequested.current) yakitStream.cancel('PcapX', token).catch(() => {})
     }
   }, [capture, loadLibrary])
 
@@ -249,7 +286,7 @@ export default function PCAPPacketViewer() {
       setDetailLoading(false)
       setPage(initialPage)
     }
-    if (!datasetID || dataset?.State !== 'ready') {
+    if (!datasetID || !datasetQueryable) {
       setPage(initialPage)
       setLoading(false)
       setLoadingMore(false)
@@ -316,7 +353,22 @@ export default function PCAPPacketViewer() {
     return () => {
       current = false
     }
-  }, [datasetID, dataset?.State, filters, cursor, revision])
+  }, [datasetID, datasetQueryable, filters, cursor, revision])
+
+  const applyQueryFilters = useCallback((next: PacketFilters) => {
+    setFilters(next)
+    setCursor('0')
+    setPage(initialPage)
+    setTotalKnown(undefined)
+  }, [])
+
+  useEffect(() => {
+    if (sameFilters(draft, filters)) return
+    const timer = setTimeout(() => {
+      applyQueryFilters({ ...draft })
+    }, filterQueryDelay)
+    return () => clearTimeout(timer)
+  }, [applyQueryFilters, draft, filters])
 
   useEffect(() => {
     if (!job) return
@@ -397,10 +449,12 @@ export default function PCAPPacketViewer() {
     setDetailLoading(false)
   }
   const applyFilters = () => {
-    setFilters({ ...draft })
-    setCursor('0')
-    setPage(initialPage)
-    setTotalKnown(undefined)
+    applyQueryFilters({ ...draft })
+  }
+  const updateProtocol = (Protocol: string) => {
+    const next = { ...draft, Protocol }
+    setDraft(next)
+    applyQueryFilters(next)
   }
   const browse = async () => {
     try {
@@ -447,6 +501,11 @@ export default function PCAPPacketViewer() {
     setCaptureStopping(true)
     try {
       await yakitStream.cancel('PcapX', capture.token)
+      const stoppedDatasetID = captureProgress?.DatasetID
+      setCapture(undefined)
+      setCaptureStopping(false)
+      setRevision((value) => value + 1)
+      loadLibrary(stoppedDatasetID)
     } catch (e) {
       captureStopRequested.current = false
       setCaptureError(`停止实时抓包失败：${errorText(e)}`)
@@ -713,7 +772,7 @@ export default function PCAPPacketViewer() {
             </div>
           ) : (
             <>
-              {dataset.State !== 'ready' ? (
+              {!datasetQueryable ? (
                 <div className={styles.welcome}>
                   <Alert
                     type="warning"
@@ -740,7 +799,7 @@ export default function PCAPPacketViewer() {
                         value,
                         label: value || '全部协议',
                       }))}
-                      onChange={(Protocol) => setDraft((f) => ({ ...f, Protocol }))}
+                      onChange={updateProtocol}
                     />
                     {(
                       [
@@ -776,10 +835,7 @@ export default function PCAPPacketViewer() {
                       type="text2"
                       onClick={() => {
                         setDraft(emptyFilters)
-                        setFilters(emptyFilters)
-                        setCursor('0')
-                        setPage(initialPage)
-                        setTotalKnown(undefined)
+                        applyQueryFilters(emptyFilters)
                       }}
                     >
                       重置

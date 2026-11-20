@@ -235,6 +235,37 @@ describe('PCAP packet workspace', () => {
     )
   })
 
+  it('queries automatically after text filters settle', async () => {
+    render(<PCAPPacketViewer />)
+    await screen.findByText('HTTP response 10')
+    const keyword = screen.getByRole('textbox', { name: '摘要关键词' })
+    fireEvent.change(keyword, { target: { value: 'HTTP' } })
+    fireEvent.change(keyword, { target: { value: 'HTTP response 10' } })
+    await waitFor(
+      () =>
+        expect(api.queryPackets).toHaveBeenLastCalledWith({
+          DatasetID: database.DatasetID,
+          Filter: { Keyword: 'HTTP response 10' },
+          Pagination: { Limit: 100, AfterId: '0' },
+        }),
+      { timeout: 1500 },
+    )
+  })
+
+  it('queries immediately after selecting a protocol', async () => {
+    render(<PCAPPacketViewer />)
+    await screen.findByText('HTTP response 10')
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: '协议过滤' }))
+    fireEvent.click(await screen.findByTitle('DNS'))
+    await waitFor(() =>
+      expect(api.queryPackets).toHaveBeenLastCalledWith({
+        DatasetID: database.DatasetID,
+        Filter: { ApplicationLayerTypes: ['DNS'] },
+        Pagination: { Limit: 100, AfterId: '0' },
+      }),
+    )
+  })
+
   it('loads a typed packet detail and jumps to the completion frame', async () => {
     render(<PCAPPacketViewer />)
     await screen.findByText('HTTP response 10')
@@ -324,9 +355,10 @@ describe('PCAP packet workspace', () => {
       expect.any(String),
     )
     const token = api.startLiveCapture.mock.calls[0][1]
+    const liveDatasetID = 'live-dataset-2026'
     act(() =>
       listeners.get(`${token}-data`)?.({
-        DatasetID: database.DatasetID,
+        DatasetID: liveDatasetID,
         State: 'ready',
         PacketFrameCounter: '42',
         ProtocolCount: '8',
@@ -337,8 +369,19 @@ describe('PCAP packet workspace', () => {
       }),
     )
     await screen.findByText(/42 帧/)
+    await waitFor(() =>
+      expect(api.queryPackets).toHaveBeenLastCalledWith({
+        DatasetID: liveDatasetID,
+        Filter: {},
+        Pagination: { Limit: 100, AfterId: '0' },
+      }),
+    )
+    expect(screen.getByText('实时抓包 live-dat').closest('button')).toHaveAttribute('aria-pressed', 'true')
     fireEvent.click(screen.getByRole('button', { name: '停止抓包' }))
     await waitFor(() => expect(cancel).toHaveBeenCalledWith('PcapX', token))
+    await waitFor(() => expect(screen.queryByRole('button', { name: '停止抓包' })).not.toBeInTheDocument())
+    expect(screen.getByText('实时抓包 live-dat').closest('button')).toHaveAttribute('aria-pressed', 'true')
+    expect(cancel).toHaveBeenCalledTimes(1)
   })
 
   it('does not silently treat an unsupported engine as an empty library', async () => {
