@@ -1,6 +1,6 @@
 import i18n from '@/i18n/i18n'
 import { useTheme, type ThemeMode } from '@/hook/useTheme'
-import { yakitApp } from './electronBridge'
+import { yakitApp } from './bridgeFacade'
 
 let registered = false
 let lastSyncedLanguage: string | null = null

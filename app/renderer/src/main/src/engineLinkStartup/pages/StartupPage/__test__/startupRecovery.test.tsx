@@ -23,7 +23,7 @@ vi.mock('@/utils/kv', () => ({
   getLocalValue: vi.fn(() => new Promise(() => {})),
   setLocalValue: vi.fn(),
 }))
-vi.mock('@/engineLinkStartup/utils/eventBus/eventBus', () => ({ default: { emit: mocks.emit } }))
+vi.mock('@/utils/eventBus/eventBus', () => ({ default: { emit: mocks.emit } }))
 vi.mock('@/hook/useTheme', () => ({
   useTheme: Object.assign(() => ({ theme: 'light', setTheme: vi.fn(), syncTheme: vi.fn(), previewTheme: vi.fn() }), {
     getState: () => ({ themeMode: 'light', setTheme: vi.fn() }),
@@ -42,7 +42,7 @@ vi.mock('@/utils/envfile', () => ({
   isIRify: () => false,
   isMemfit: () => mocks.isMemfit,
 }))
-vi.mock('@/engineLinkStartup/utils/electronBridge', () => ({
+vi.mock('@/engineLinkStartup/utils/bridgeFacade', () => ({
   yakitEngine: {
     stopAllLocalEngines: mocks.stopAllLocalEngines,
     clearLocalYaklangVersionCache: vi.fn(),

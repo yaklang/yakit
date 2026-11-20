@@ -6,7 +6,7 @@ const mocks = vi.hoisted(() => ({
   changeLanguage: vi.fn(),
 }))
 
-vi.mock('@/engineLinkStartup/utils/electronBridge', () => ({
+vi.mock('@/engineLinkStartup/utils/bridgeFacade', () => ({
   yakitApp: { onSync: mocks.onSync },
 }))
 vi.mock('@/hook/useTheme', () => ({

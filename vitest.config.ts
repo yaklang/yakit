@@ -71,12 +71,10 @@ export default defineConfig({
         if (id === '@/i18n/i18n' || id === 'i18n/i18n') return I18N_STUB
         if (id === '@/services/electronBridge') return ELECTRON_BRIDGE_STUB
 
-        // React 19 迁移：两个运行时被 shim 替换（vite alias），测试须与运行时一致，按 importer 分发到对应子项目的 shim
+        // React 19 迁移：两个运行时被 shim 替换（vite alias），测试须与运行时一致
         if (id === 'react-resize-detector' || id === 'xterm-for-react') {
-          const importerPath = (importer || '').split(path.sep).join('/')
-          const srcRoot = importerPath.includes('/engineLinkStartup/') ? ENGINE_LINK_SRC : RENDERER_MAIN_SRC
           const shim = id === 'react-resize-detector' ? 'reactResizeDetector.tsx' : 'xtermForReact.tsx'
-          return path.join(srcRoot, 'utils/shims', shim)
+          return path.join(RENDERER_MAIN_SRC, 'utils/shims', shim)
         }
 
         if (!id.startsWith('@/')) return null

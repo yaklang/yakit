@@ -1,4 +1,4 @@
-import { yakitLogs } from '@/engineLinkStartup/utils/electronBridge'
+import { yakitLogs } from '@/engineLinkStartup/utils/bridgeFacade'
 
 export type EngineLogChunk = { kind: 'stdio' | 'log'; text: string }
 

@@ -2,8 +2,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { act, render, waitFor } from '@testing-library/react'
 import { YaklangEngineWatchDog } from '../index'
 import type { YaklangEngineWatchDogProps } from '../index'
-import emiter from '@/engineLinkStartup/utils/eventBus/eventBus'
-import { yakitEngine } from '@/engineLinkStartup/utils/electronBridge'
+import emiter from '@/utils/eventBus/eventBus'
+import { yakitEngine } from '@/engineLinkStartup/utils/bridgeFacade'
 import { grpcStartLocalEngine, isEngineConnectionAlive } from '../../../grpc'
 import { toEngineHandshakeName } from '@/utils/envfile'
 import type { YaklangEngineMode } from '@/engineLinkStartup/pages/StartupPage/types'
@@ -35,14 +35,14 @@ vi.mock('@/i18n/useI18nNamespaces', () => ({
   }),
 }))
 
-vi.mock('@/engineLinkStartup/utils/eventBus/eventBus', () => ({
+vi.mock('@/utils/eventBus/eventBus', () => ({
   default: {
     on: vi.fn(),
     off: vi.fn(),
   },
 }))
 
-vi.mock('@/engineLinkStartup/utils/electronBridge', () => ({
+vi.mock('@/engineLinkStartup/utils/bridgeFacade', () => ({
   yakitEngine: {
     connectYaklangEngine: vi.fn(),
   },

@@ -3,7 +3,7 @@ import { StartupPage } from './pages/StartupPage'
 import { GetMainColor, getStartupReleaseEditionName, isCommunityEdition, isIRify, isMemfit } from '@/utils/envfile'
 import { useTheme } from '@/hook/useTheme'
 import { applyYakitThemeColors } from '@/utils/applyYakitThemeColors'
-import { yakitApp } from './utils/electronBridge'
+import { yakitApp } from './utils/bridgeFacade'
 import styles from './App.module.scss'
 
 const App: React.FC = memo(() => {

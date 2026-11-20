@@ -9,7 +9,7 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import { Progress } from 'antd'
 import { grpcCancelDownloadYakit, grpcDownloadYakit } from '../../grpc'
-import { yakitApp, yakitEngine, yakitShell } from '@/engineLinkStartup/utils/electronBridge'
+import { yakitApp, yakitEngine, yakitShell } from '@/engineLinkStartup/utils/bridgeFacade'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 import styles from './UpdateYakitHint.module.scss'

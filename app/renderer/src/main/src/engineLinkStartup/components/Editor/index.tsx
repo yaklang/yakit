@@ -4,7 +4,7 @@ import type * as monaco from 'monaco-editor/esm/vs/editor/editor.api'
 import MonacoEditor from 'react-monaco-editor'
 import ReactResizeDetector from 'react-resize-detector'
 import { type Theme, useTheme } from '@/hook/useTheme'
-import { applyYakitMonacoTheme } from '@/engineLinkStartup/utils/theme'
+import { applyYakitMonacoTheme } from '@/utils/monacoSpec/theme'
 
 export interface EditorProp {
   value: string

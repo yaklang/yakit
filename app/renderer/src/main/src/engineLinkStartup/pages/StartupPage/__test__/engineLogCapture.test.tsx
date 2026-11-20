@@ -17,7 +17,7 @@ const ipc = vi.hoisted(() => ({
 }))
 const writes = vi.hoisted(() => [] as string[])
 
-vi.mock('@/engineLinkStartup/utils/electronBridge', () => ({
+vi.mock('@/engineLinkStartup/utils/bridgeFacade', () => ({
   yakitLogs: {
     onLiveEngineStdio: (callback: (stdout: string) => void) => {
       ipc.stdio = callback
@@ -39,8 +39,8 @@ vi.mock('@/i18n/useI18nNamespaces', () => ({
     t: (key: string, values?: { stdout?: string }) => (values?.stdout ? `${key}:${values.stdout}` : key),
   }),
 }))
-vi.mock('@/engineLinkStartup/utils/xtermUtils', () => ({ xtermFit: vi.fn() }))
-vi.mock('@/engineLinkStartup/hooks/useXTermOptions', () => ({ useXTermOptions: () => ({}) }))
+vi.mock('@/utils/xtermUtils', () => ({ xtermFit: vi.fn() }))
+vi.mock('@/hook/useXTermOptions/useXTermOptions', () => ({ useXTermOptions: () => ({}) }))
 vi.mock('@/utils/clipboard', () => ({ setClipboardText: vi.fn() }))
 vi.mock('@/utils/notification', () => ({ yakitNotify: vi.fn() }))
 vi.mock('antd', () => ({ Tooltip: ({ children }: { children?: React.ReactNode }) => children }))

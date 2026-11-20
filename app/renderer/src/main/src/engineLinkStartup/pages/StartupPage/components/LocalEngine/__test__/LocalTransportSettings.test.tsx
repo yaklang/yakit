@@ -2,11 +2,11 @@ import type { ReactNode } from 'react'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { LocalTransportSettings } from '../LocalTransportSettings'
-import { yakitCache } from '@/engineLinkStartup/utils/electronBridge'
+import { yakitCache } from '@/engineLinkStartup/utils/bridgeFacade'
 
 vi.mock('@/i18n/useI18nNamespaces', () => ({ useI18nNamespaces: () => ({ t: (key: string) => key }) }))
 vi.mock('@/utils/envfile', () => ({ FetchSoftwareVersion: () => 'yakit' }))
-vi.mock('@/engineLinkStartup/utils/electronBridge', () => ({
+vi.mock('@/engineLinkStartup/utils/bridgeFacade', () => ({
   yakitCache: { getLocalCache: vi.fn(), setLocalCache: vi.fn() },
 }))
 vi.mock('@/components/yakitUI/YakitPopover/YakitPopover', () => ({

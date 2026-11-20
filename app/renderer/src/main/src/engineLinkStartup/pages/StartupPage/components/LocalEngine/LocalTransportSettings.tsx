@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { yakitCache } from '@/engineLinkStartup/utils/electronBridge'
+import { yakitCache } from '@/engineLinkStartup/utils/bridgeFacade'
 import { FetchSoftwareVersion } from '@/utils/envfile'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import styles from './LocalTransportSettings.module.scss'

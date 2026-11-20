@@ -21,7 +21,7 @@ import {
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { EngineModeVerbose } from '../../utils'
 const Editor = React.lazy(() => import('@/engineLinkStartup/components/Editor').then((m) => ({ default: m.Editor })))
-import { yakitApp, yakitEngine, yakitShell } from '@/engineLinkStartup/utils/electronBridge'
+import { yakitApp, yakitEngine, yakitShell } from '@/engineLinkStartup/utils/bridgeFacade'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import styles from './RemoteEngine.module.scss'
 

@@ -5,7 +5,7 @@ const mocks = vi.hoisted(() => ({
   getEngineLinkBridge: vi.fn(),
 }))
 
-vi.mock('../electronBridge', () => ({
+vi.mock('../bridgeFacade', () => ({
   getEngineLinkBridge: mocks.getEngineLinkBridge,
 }))
 

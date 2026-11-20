@@ -19,7 +19,7 @@ import { DragHeaderHeight, safeFormatDownloadProcessState } from '../../utils'
 import { QuestionMarkCircleOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { ShieldExclamationSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { QuestionModal } from '../QuestionModal'
-import { yakitEngine } from '@/engineLinkStartup/utils/electronBridge'
+import { yakitEngine } from '@/engineLinkStartup/utils/bridgeFacade'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 import classNames from 'classnames'
