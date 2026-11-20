@@ -22,6 +22,19 @@ describe('bundled engine recovery', () => {
     },
     close: vi.fn(),
   })
+  const entryArchive = (entries) => ({
+    extract: async (entry, destination) => {
+      if (!entries.includes(entry)) throw new Error(`missing ${entry}`)
+      await fs.writeFile(destination, 'bundled-engine')
+    },
+    close: vi.fn(),
+  })
+  const silentArchive = (entries) => ({
+    extract: async (entry, destination) => {
+      if (entries.includes(entry)) await fs.writeFile(destination, 'bundled-engine')
+    },
+    close: vi.fn(),
+  })
   it('keeps the installed engine when extraction fails', async () => {
     const writeConfig = vi.fn()
     await expect(
@@ -50,5 +63,35 @@ describe('bundled engine recovery', () => {
     await restoreBuiltinEngine({ target, entry: 'yak', openArchive: () => archive(), writeConfig: vi.fn() })
     expect(await fs.readFile(target, 'utf8')).toBe('bundled-engine')
     expect(await fs.readFile(path.join(root, 'profile.db'), 'utf8')).toBe('untouched')
+  })
+  it('finds the engine when the archive stores it at the root', async () => {
+    await restoreBuiltinEngine({
+      target,
+      entry: 'bins/yak',
+      openArchive: () => entryArchive(['yak']),
+      writeConfig: vi.fn(),
+    })
+    expect(await fs.readFile(target, 'utf8')).toBe('bundled-engine')
+  })
+  it('falls back when a missing entry resolves without writing a file', async () => {
+    await restoreBuiltinEngine({
+      target,
+      entry: 'bins/yak',
+      openArchive: () => silentArchive(['yak']),
+      writeConfig: vi.fn(),
+    })
+    expect(await fs.readFile(target, 'utf8')).toBe('bundled-engine')
+  })
+  it('keeps the previous engine when neither archive layout contains the entry', async () => {
+    await expect(
+      restoreBuiltinEngine({
+        target,
+        entry: 'bins/yak',
+        openArchive: () => entryArchive([]),
+        writeConfig: vi.fn(),
+      }),
+    ).rejects.toThrow('missing yak')
+    expect(await fs.readFile(target, 'utf8')).toBe('previous-engine')
+    expect(await fs.readdir(root)).toEqual(['yak'])
   })
 })

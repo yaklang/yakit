@@ -2,6 +2,26 @@ const fs = require('fs/promises')
 const path = require('path')
 const StreamZip = require('node-stream-zip')
 
+// CI 的压缩包把引擎放在 bins/ 下，本地手工打出的包可能直接在压缩包根目录。
+const bundledEngineEntries = (entry) => [...new Set([entry, path.basename(entry)])]
+
+async function extractBundledEngine(archive, entries, destination) {
+  let lastError
+  for (const entry of entries) {
+    try {
+      await archive.extract(entry, destination)
+      // node-stream-zip 对不存在的 entry 可能 resolve 而不是 reject，必须确认文件真的落盘。
+      const extracted = await fs.stat(destination)
+      if (extracted.isFile() && extracted.size > 0) return
+      lastError = new Error(`Bundled engine entry is empty: ${entry}`)
+    } catch (error) {
+      lastError = error
+    }
+    await fs.rm(destination, { force: true })
+  }
+  throw lastError
+}
+
 async function restoreBuiltinEngine({
   zipPath,
   target,
@@ -19,7 +39,7 @@ async function restoreBuiltinEngine({
   try {
     const archive = openArchive(zipPath)
     try {
-      await archive.extract(entry, candidate)
+      await extractBundledEngine(archive, bundledEngineEntries(entry), candidate)
     } finally {
       await archive.close()
     }

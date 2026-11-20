@@ -1,9 +1,9 @@
 import React, { useEffect, useRef } from 'react'
 import { getStartupReleaseEditionName } from '@/utils/envfile'
-import { xtermFit } from '@/engineLinkStartup/utils/xtermUtils'
+import { xtermFit } from '@/utils/xtermUtils'
 import ReactResizeDetector from 'react-resize-detector'
 import { XTerm } from 'xterm-for-react'
-import { useXTermOptions } from '@/engineLinkStartup/hooks/useXTermOptions'
+import { useXTermOptions } from '@/hook/useXTermOptions/useXTermOptions'
 import { useMemoizedFn } from 'ahooks'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { DocumentDuplicateOutlined } from '@yakit-libs/yakit-ui-icons/outline'
@@ -22,6 +22,7 @@ export const EngineLog: React.FC<EngineLogProps> = React.memo((props) => {
   const terminalOptions = useXTermOptions({
     getTerminal: () => xtermRef.current?.terminal,
     delay: 200,
+    backgroundColorVar: '--Colors-Use-Basic-Background',
   })
 
   /** 日志输出 */

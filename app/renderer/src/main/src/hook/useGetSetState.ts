@@ -1,5 +1,6 @@
 import { type Dispatch, type SetStateAction, useRef, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
+import { cloneDeep } from 'lodash'
 
 type GetStateAction<S> = () => S
 
@@ -21,7 +22,7 @@ function useGetSetState<S>(target?: S) {
     try {
       if (typeof initState === 'function') {
         valueRef.current = (initState as Function)(valueRef.current)
-        setValue(JSON.parse(JSON.stringify(valueRef.current)))
+        setValue(cloneDeep(valueRef.current))
       } else {
         valueRef.current = initState
         setValue(initState)

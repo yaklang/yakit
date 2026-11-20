@@ -1,2 +1,2 @@
-/** 主窗口主题 bridge；link 构建通过 vite.link.config.mts 的 alias 指向 link 版本 */
+/** 主题 bridge；link 构建由 @/services/electronBridge 的 alias 收窄到 bridgeFacade */
 export { yakitTheme } from '@/services/electronBridge'

@@ -24,7 +24,7 @@ import { SystemInfo } from '../../utils'
 import { getLocalValue } from '@/utils/kv'
 import { LocalGVS } from '@/engineLinkStartup/enums/yakitGV'
 import { UpdateYakitHint } from '../UpdateYakitHint'
-import { yakitEngine } from '@/engineLinkStartup/utils/electronBridge'
+import { yakitEngine } from '@/engineLinkStartup/utils/bridgeFacade'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 function compare(a: string, b: string) {

@@ -1,6 +1,6 @@
 import { yakitNotify } from '@/utils/notification'
-import type { APIFunc, APINoRequestFunc, APIOptionalFunc } from '@/engineLinkStartup/utils/api'
-import { yakitApp, yakitEngine, yakitShell } from '@/engineLinkStartup/utils/electronBridge'
+import type { APIFunc, APINoRequestFunc, APIOptionalFunc } from '@/apiUtils/type'
+import { yakitApp, yakitEngine, yakitShell } from '@/engineLinkStartup/utils/bridgeFacade'
 import type {
   AllowSecretLocalExecResult,
   CheckAllowSecretLocal,
@@ -11,7 +11,7 @@ import type {
   WriteEngineKeyToYakitProjects,
 } from './components/LocalEngine/LocalEngineType'
 import type { StartLocalEngine } from './types'
-import { randomString } from '@/engineLinkStartup/utils/randomUtil'
+import { randomString } from '@/utils/randomUtil'
 import { getStartupReleaseEditionName, isEnterpriseEdition, isIRify, isMemfit } from '@/utils/envfile'
 import i18n from '@/i18n/i18n'
 const tOriginal = i18n.getFixedT(null, ['link'])

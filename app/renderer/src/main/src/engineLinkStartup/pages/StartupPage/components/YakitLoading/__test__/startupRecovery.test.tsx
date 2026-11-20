@@ -7,7 +7,7 @@ vi.mock('@/i18n/useI18nNamespaces', () => ({
   useI18nNamespaces: () => ({ t: (key: string) => key, i18n: { language: 'zh' }, i18nRefresh: 0 }),
 }))
 vi.mock('@/utils/kv', () => ({ getLocalValue: vi.fn(() => new Promise(() => {})), setLocalValue: vi.fn() }))
-vi.mock('@/engineLinkStartup/utils/electronBridge', () => ({ yakitApp: {}, yakitEngine: {} }))
+vi.mock('@/engineLinkStartup/utils/bridgeFacade', () => ({ yakitApp: {}, yakitEngine: {} }))
 vi.mock('../../AgreementContentModal', () => ({ AgreementContentModal: () => null }))
 vi.mock('../../MoreYaklangVersion', () => ({
   MoreYaklangVersion: ({ onClosePop }: { onClosePop: (visible: boolean, version: string) => void }) => (

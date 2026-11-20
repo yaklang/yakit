@@ -44,7 +44,7 @@ vi.mock('@/utils/envfile', () => ({
   isCommunityYakit: () => true,
   isEnpriTrace: () => false,
 }))
-vi.mock('@/engineLinkStartup/utils/electronBridge', () => ({
+vi.mock('@/engineLinkStartup/utils/bridgeFacade', () => ({
   yakitApp: {
     getYakitHomeConfig: mocks.getYakitHomeConfig,
     setYakitHomeConfig: mocks.setYakitHomeConfig,

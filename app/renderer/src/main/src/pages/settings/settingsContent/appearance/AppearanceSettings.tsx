@@ -9,8 +9,8 @@ import { yakitApp } from '@/services/electronBridge'
 import { syncAppSettings } from '@/auxWindow/utils/messaging'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { SettingsSections } from '../../constants'
-import themePreviewLight from '../../assets/theme-preview-light.png'
-import themePreviewDark from '../../assets/theme-preview-dark.png'
+import themePreviewLight from '@/assets/theme-preview-light.png'
+import themePreviewDark from '@/assets/theme-preview-dark.png'
 import styles from './AppearanceSettings.module.scss'
 
 export const AppearanceSettings: React.FC = () => {

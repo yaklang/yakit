@@ -101,11 +101,6 @@ export default defineConfig(({ mode }) => {
     resolve: {
       dedupe: ['react', 'react-dom', 'react/jsx-runtime', 'react/jsx-dev-runtime', 'ahooks'],
       alias: [
-        // 主项目 useTheme 的 bridge 切到 link 实现
-        {
-          find: '@/hook/useTheme/themeBridge',
-          replacement: path.resolve(rootDir, 'src/engineLinkStartup/hooks/themeBridge.ts'),
-        },
         // 共享主窗模块只允许使用 link preload 具备的窄 facade
         {
           find: '@/services/electronBridge',
@@ -119,6 +114,11 @@ export default defineConfig(({ mode }) => {
         {
           find: '@/i18n/inlineResources',
           replacement: path.resolve(rootDir, 'src/engineLinkStartup/i18n/inlineResources.ts'),
+        },
+        // link 不需要主窗口的全量空状态图，避免 36 张 PNG 进入 pages/link
+        {
+          find: '@/hook/useResultEmpty/SearchEmpty',
+          replacement: path.resolve(rootDir, 'src/engineLinkStartup/utils/emptyImage.ts'),
         },
         { find: '@', replacement: path.resolve(rootDir, 'src') },
         { find: /^~antd/, replacement: path.resolve(rootDir, 'node_modules/antd') },

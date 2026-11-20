@@ -1,6 +1,6 @@
 import type { MutableRefObject } from 'react'
 import { useMemoizedFn } from 'ahooks'
-import useGetSetState from './useGetSetState'
+import useGetSetState from '@/hook/useGetSetState'
 import type { YakitLinkStatusType } from '@/engineLinkStartup/pages/StartupPage/types'
 
 export const useYakitStatus = (breakHandleRef: MutableRefObject<boolean>) => {

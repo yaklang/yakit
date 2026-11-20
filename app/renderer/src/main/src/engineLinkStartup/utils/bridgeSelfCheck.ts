@@ -1,4 +1,4 @@
-import { getEngineLinkBridge } from './electronBridge'
+import { getEngineLinkBridge } from './bridgeFacade'
 
 /** link 入口与主项目共享组件依赖的 preload 能力 */
 const REQUIRED_BRIDGE_CAPABILITIES = [
