@@ -37,7 +37,13 @@ import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfir
 import styles from './AIModelForm.module.scss'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import type { YakitTagColor } from '@/components/yakitUI/YakitTag/YakitTagType'
-import { XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import {
+  CheckCircleOutlined,
+  EngineOutlined,
+  QuestionMarkCircleOutlined,
+  XCircleOutlined,
+  XOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import { HorizontalScrollCard } from '@/pages/plugins/operator/horizontalScrollCard/HorizontalScrollCard'
 import type { HoldGRPCStreamProps } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
 import { NewHTTPPacketEditor, type RenderTypeOptionVal } from '@/utils/editors'
@@ -266,6 +272,26 @@ const visionCapabilityLabel = (value?: boolean) => {
   if (value === false) return 'ModelVision.unsupported'
   return 'ModelVision.unknown'
 }
+
+const VisionCapability: React.FC<{ label: string; value?: boolean }> = React.memo((props) => {
+  const { label, value } = props
+  const { t } = useI18nNamespaces(['aiAgent'])
+  const icon = useCreation(() => {
+    if (value === true) return <CheckCircleOutlined color="currentColor" />
+    if (value === false) return <XCircleOutlined color="currentColor" />
+    return <QuestionMarkCircleOutlined color="currentColor" />
+  }, [value])
+  return (
+    <span
+      className={styles['vision-capability']}
+      data-status={value === true ? 'success' : value === false ? 'warning' : 'unknown'}
+    >
+      <span className={styles['vision-capability-label']}>{label}</span>
+      {icon}
+      <span>{t(visionCapabilityLabel(value))}</span>
+    </span>
+  )
+})
 
 export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
   const { item, aiModelType, onSuccess, onClose } = props
@@ -563,28 +589,29 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
       footer={
         <>
           <div ref={footerRef} />
-          <div role="status" className={styles.visionCapabilities}>
-            <span>{t('ModelVision.readImage')}</span>
-            <YakitTag>
-              {t(visionCapabilityLabel(visionProbe ? visionProbe.result.SupportsImageInput : item?.SupportsImageInput))}
-            </YakitTag>
-            <span>{t('ModelVision.imageTools')}</span>
-            <YakitTag>
-              {t(
-                visionCapabilityLabel(
-                  visionProbe ? visionProbe.result.SupportsImageToolCalling : item?.SupportsImageToolCalling,
-                ),
-              )}
-            </YakitTag>
+          <div className={styles['vision-footer-left']}>
+            <YakitButton
+              size="large"
+              type="outline1"
+              radius={9999}
+              onClick={onProbeVision}
+              loading={visionLoading}
+              disabled={testLoading || loading}
+            >
+              <EngineOutlined color="currentColor" />
+              {t('ModelVision.detect')}
+            </YakitButton>
+            <div role="status" className={styles.visionCapabilities}>
+              <VisionCapability
+                label={t('ModelVision.readImage')}
+                value={visionProbe ? visionProbe.result.SupportsImageInput : item?.SupportsImageInput}
+              />
+              <VisionCapability
+                label={t('ModelVision.imageTools')}
+                value={visionProbe ? visionProbe.result.SupportsImageToolCalling : item?.SupportsImageToolCalling}
+              />
+            </div>
           </div>
-          <YakitButton
-            type="outline2"
-            onClick={onProbeVision}
-            loading={visionLoading}
-            disabled={testLoading || loading}
-          >
-            {t('ModelVision.detect')}
-          </YakitButton>
           <YakitButton
             size="large"
             type="outline2"
