@@ -80,8 +80,11 @@ const BuildCMDExamplesDoc = `
 
 /** pack -h：-s / --legacy / --sign / mwl */
 const PackCMDExamplesDoc = `
-  # 打 macOS Yakit 安装包（本机默认不签名）
+  # 打 macOS Yakit 安装包（本机默认不签名，默认不内置引擎）
   $ yarn cli pack -s mac -v yakit
+
+  # 内置引擎
+  $ yarn cli pack -s win -v yakit --with-engine
 
   # 旧版兼容 + 签名
   $ yarn cli pack -s linux -v memfit --legacy --sign

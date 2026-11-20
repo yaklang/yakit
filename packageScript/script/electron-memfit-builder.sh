@@ -2,6 +2,8 @@
 # 用法: ./electron-memfit-builder.sh <version>
 # 示例: ./electron-memfit-builder.sh memfit
 
+export YAKIT_BUILTIN_ENGINE=on
+
 if [ "$#" -lt 1 ]; then
     echo "Usage: $0 <version>"
     exit 1

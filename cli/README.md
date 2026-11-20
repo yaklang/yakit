@@ -145,6 +145,22 @@ yarn cli pack -s mwl -v yakitEE
 
 未传 `--sign` 时设 `CSC_IDENTITY_AUTO_DISCOVERY=false`。`--sign` 设为 `true`（electron-builder 内置变量，CLI 不改名）。
 
+### 内置引擎
+
+`--with-engine` 控制安装包是否包含内置引擎：
+
+```bash
+# 本地默认：不打内置引擎，缺少引擎文件也不会失败
+yarn cli pack -s win -v yakit
+
+# 必须带内置引擎：缺少 bins/yak_<platform>_<arch>.zip 直接失败
+yarn cli pack -s win -v yakit --with-engine
+```
+
+也可以直接用环境变量 `YAKIT_BUILTIN_ENGINE=on|off` 控制；命令行 `--with-engine` 优先。
+
+CI 的 `multi-platform-build` 按 `engine` 输入映射：`true` → `on`，`false` → `off`；`verify-yakit-sign-build` 固定为 `on`。
+
 ## 环境变量 `YAKIT_*`
 
 由 `cli/env.mjs` 组装，根 CLI spawn 子进程时注入。渲染端子 CLI 只读这些变量，不再维护 versionMap / `--mode`。
