@@ -41,6 +41,7 @@ jobs:
       # electron-builder 在 CI=true 时会改变部分行为，此处显式清空
       CI: ''
       NODE_OPTIONS: --max_old_space_size=4096
+      YAKIT_BUILTIN_ENGINE: on
       # 签名 + 公证（after-sign.js / signature.sh）
       APPLE_ID: ${{ secrets.APPLE_ACCOUNT_EMAIL }}
       APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}

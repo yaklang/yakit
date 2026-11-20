@@ -257,6 +257,14 @@ if (isLegacy) {
   })
 }
 
+// 内置引擎开关：off 时不再打包引擎元数据；本地默认 off，CI 打包显式设置 on。
+const builtinEngineMode = (process.env.YAKIT_BUILTIN_ENGINE || 'off').toLowerCase()
+if (builtinEngineMode === 'off') {
+  configOption.extraFiles = configOption.extraFiles.filter(
+    (file) => file.to !== 'bins/engine-version.txt' && file.to !== 'bins/engine-build-type.txt',
+  )
+}
+
 // 是否执行公证流程
 const autoDiscoveryIdentity = process.env.CSC_IDENTITY_AUTO_DISCOVERY
 if (autoDiscoveryIdentity == 'true') {

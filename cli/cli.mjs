@@ -119,9 +119,7 @@ const runCliInstall = async (target) => {
   }
 
   const pm = detectPmOrExit()
-  const targets = target
-    ? [resolvePkgTarget(target)]
-    : [resolvePkgTarget('electron'), resolvePkgTarget('main')]
+  const targets = target ? [resolvePkgTarget(target)] : [resolvePkgTarget('electron'), resolvePkgTarget('main')]
 
   for (const item of targets) {
     console.log(`Start install ${item.name} (${pm}) ...`)
@@ -502,6 +500,7 @@ program
   .option('-v, --version <type>', `业务版本 (${editionValues})`)
   .option('--legacy', '旧版兼容模式', false)
   .option('--sign', '开启 macOS 签名/公证探测 (CSC_IDENTITY_AUTO_DISCOVERY=true)', false)
+  .option('--with-engine', '打包内置引擎（需要 bins/yak_<platform>_<arch>.zip）', false)
   .addHelpText('after', `\n${YellowChalk.bold('Examples:')}\n${PackCMDExamplesDoc}`)
   .action(async (options) => {
     const system = await requireSystem(options.system)
@@ -511,6 +510,8 @@ program
       legacy: options.legacy,
       sign: Boolean(options.sign),
     })
+    const withEngine = options.withEngine ? 'on' : process.env.YAKIT_BUILTIN_ENGINE || 'off'
+    env.YAKIT_BUILTIN_ENGINE = withEngine
     if (!options.sign) env.CSC_IDENTITY_AUTO_DISCOVERY = 'false'
 
     console.log(GreenChalk('\n准备执行...'))
@@ -518,6 +519,7 @@ program
     console.log(CyanChalk.bold(`> 业务版本: ${version}`))
     console.log(CyanChalk.bold(`> legacy: ${options.legacy ? 'Yes' : 'No'}`))
     console.log(CyanChalk.bold(`> sign: ${options.sign ? 'Yes' : 'No'}`))
+    console.log(CyanChalk.bold(`> 内置引擎: ${withEngine === 'on' ? 'Yes' : 'No'}`))
     console.log('')
 
     /** 打单个系统：electron-builder build --win|--mac|--linux */
