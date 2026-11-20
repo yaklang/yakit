@@ -78,6 +78,7 @@ describe('virtualized PCAP packet table', () => {
         loading={false}
         loadingMore={false}
         hasMore={false}
+        followLive={false}
         error=""
         onSelect={vi.fn()}
         onLoadMore={vi.fn()}
@@ -87,5 +88,6 @@ describe('virtualized PCAP packet table', () => {
 
     await waitFor(() => expect(container.querySelectorAll('tbody tr').length).toBeGreaterThan(0))
     expect(container.querySelectorAll('tbody tr').length).toBeLessThan(100)
+    expect(container.querySelector('table')).toHaveStyle({ width: '100%', minWidth: '1100px' })
   })
 })

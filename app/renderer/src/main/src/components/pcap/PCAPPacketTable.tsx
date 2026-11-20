@@ -97,6 +97,7 @@ export const PCAPPacketTable = ({
   loading,
   loadingMore,
   hasMore,
+  followLive,
   error,
   onSelect,
   onLoadMore,
@@ -109,17 +110,39 @@ export const PCAPPacketTable = ({
   loading: boolean
   loadingMore: boolean
   hasMore: boolean
+  followLive: boolean
   error: string
   onSelect: (id: string) => void
   onLoadMore: () => void
   onRetry: () => void
 }) => {
   const listRef = useRef<TableVirtuosoHandle>(null)
+  const listViewport = useRef<HTMLDivElement>(null)
   const lastSelectedID = useRef('')
+  const skipNextReveal = useRef(false)
+  const userDetached = useRef(false)
+  const lastScrollTop = useRef(0)
+  const touchStartY = useRef(0)
 
   useEffect(() => {
     if (!packets.length) listRef.current?.scrollTo({ top: 0 })
   }, [packets.length])
+
+  useEffect(() => {
+    if (!followLive) {
+      userDetached.current = false
+      return
+    }
+    if (!packets.length || userDetached.current) return
+    const frame = requestAnimationFrame(() => {
+      listRef.current?.scrollToIndex({ index: packets.length - 1, align: 'end' })
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [followLive, packets.length])
+
+  const onBottomStateChange = (atBottom: boolean) => {
+    if (atBottom) userDetached.current = false
+  }
 
   useEffect(() => {
     if (!selectedID) {
@@ -128,8 +151,16 @@ export const PCAPPacketTable = ({
     }
     if (lastSelectedID.current === selectedID) return
     lastSelectedID.current = selectedID
+    if (skipNextReveal.current) {
+      skipNextReveal.current = false
+      return
+    }
     const index = packets.findIndex((packet) => packet.Id === selectedID)
     if (index < 0) return
+    const selectedRowVisible = Array.from(
+      listViewport.current?.querySelectorAll<HTMLElement>('[data-row-key]') || [],
+    ).some((row) => row.dataset.rowKey === selectedID)
+    if (selectedRowVisible) return
     const frame = requestAnimationFrame(() => {
       listRef.current?.scrollToIndex({ index, align: 'center' })
     })
@@ -142,7 +173,7 @@ export const PCAPPacketTable = ({
         <table
           {...props}
           aria-label="原始数据包列表"
-          style={{ ...style, width: 1100, minWidth: 1100, tableLayout: 'fixed' }}
+          style={{ ...style, width: '100%', minWidth: 1100, tableLayout: 'fixed' }}
         />
       ),
       TableRow: ({ item, children, ...props }: ItemProps<PCAPPacketSummary>) => {
@@ -154,10 +185,14 @@ export const PCAPPacketTable = ({
             data-row-key={item.Id}
             tabIndex={0}
             aria-selected={selected}
-            onClick={() => onSelect(item.Id)}
+            onClick={() => {
+              skipNextReveal.current = true
+              onSelect(item.Id)
+            }}
             onKeyDown={(event) => {
               if (event.key === 'Enter' || event.key === ' ') {
                 event.preventDefault()
+                skipNextReveal.current = true
                 onSelect(item.Id)
               }
             }}
@@ -186,12 +221,35 @@ export const PCAPPacketTable = ({
         </span>
         <small>已加载 {packets.length.toLocaleString()} 条 · 滚动继续加载</small>
       </div>
-      <div className={styles['table-box']} data-testid="pcap-packet-scroll">
+      <div
+        ref={listViewport}
+        className={styles['table-box']}
+        data-testid="pcap-packet-scroll"
+        onWheelCapture={(event) => {
+          if (followLive && event.deltaY < 0) userDetached.current = true
+        }}
+        onTouchStart={(event) => {
+          touchStartY.current = event.touches[0]?.clientY || 0
+        }}
+        onTouchMove={(event) => {
+          const nextY = event.touches[0]?.clientY || 0
+          if (followLive && nextY > touchStartY.current) userDetached.current = true
+          touchStartY.current = nextY
+        }}
+        onKeyDownCapture={(event) => {
+          if (followLive && ['ArrowUp', 'PageUp', 'Home'].includes(event.key)) userDetached.current = true
+        }}
+        onScrollCapture={(event) => {
+          const nextScrollTop = (event.target as HTMLElement).scrollTop
+          if (followLive && nextScrollTop + 2 < lastScrollTop.current) userDetached.current = true
+          lastScrollTop.current = nextScrollTop
+        }}
+      >
         <TableVirtuoso
           ref={listRef}
           data={packets}
           className={styles['packet-table']}
-          style={{ height: '100%' }}
+          style={{ width: '100%', height: '100%' }}
           fixedItemHeight={29}
           overscan={20}
           increaseViewportBy={{ top: 400, bottom: 800 }}
@@ -213,6 +271,8 @@ export const PCAPPacketTable = ({
             ))
           }
           endReached={hasMore ? onLoadMore : undefined}
+          followOutput={followLive ? 'auto' : false}
+          atBottomStateChange={followLive ? onBottomStateChange : undefined}
           components={components}
         />
         {loading && (
