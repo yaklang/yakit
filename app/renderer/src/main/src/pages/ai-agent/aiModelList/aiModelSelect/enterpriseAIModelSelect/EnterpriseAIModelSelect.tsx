@@ -189,6 +189,9 @@ export const EnterpriseAIModelSelect: React.FC<AIModelSelectProps> = React.memo(
         model.ModelName = edit.modelName
         delete model.EffortProbed
         delete model.ProbedExtendedEfforts
+        delete model.SupportsImageInput
+        delete model.SupportsImageToolCalling
+        delete model.ImageTokenEstimator
       }
     }
     const rolledBackTargets = new Set(
@@ -484,6 +487,9 @@ export const EnterpriseAIModelSelect: React.FC<AIModelSelectProps> = React.memo(
         if (model.ModelName !== currentModel.ModelName) {
           delete model.EffortProbed
           delete model.ProbedExtendedEfforts
+          delete model.SupportsImageInput
+          delete model.SupportsImageToolCalling
+          delete model.ImageTokenEstimator
         }
         newList.splice(index, 1, model)
         return {

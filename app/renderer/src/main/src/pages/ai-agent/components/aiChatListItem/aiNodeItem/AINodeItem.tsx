@@ -1,5 +1,6 @@
 import React from 'react'
-import styles from './AINodeItem.module.scss'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { AIImageModelRead } from './AIImageModelRead'
 import { QuestionSummary } from '@/pages/ai-re-act/clarification/QuestionSummary/QuestionSummary'
 import { ComponentCard } from '@/pages/ai-re-act/display-ui/ComponentCard/ComponentCard'
 import type { AINodeItemProps } from './type'
@@ -14,7 +15,6 @@ import { AIHttpFlowFuzzStatusCard } from '../../aiHttpFlowFuzzStatusCard/AIHttpF
 import { AIReportFinishCard } from '../../aiReportFinishCard/AIReportFinishCard'
 import DividerCard from '../../DividerCard'
 import { AITaskStatus } from '@/pages/ai-re-act/hooks/grpcApi'
-import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import AiFailPlanCard from '../../aiFailPlanCard/AiFailPlanCard'
 import { AIModelErrorPrompt } from '../aiModelErrorPrompt/AIModelErrorPrompt'
 import AIStreamCardWrapper from '../../aiChatListItemWrapper/aiStreamCardWrapper/aiStreamCardWrapper'
@@ -35,14 +35,7 @@ const AINodeItem: React.FC<AINodeItemProps> = React.memo((props) => {
     case AIChatQSDataTypeEnum.RESULT:
       return <AITriageChatContentWrapper isAnswer={true} itemData={itemData} renderNum={renderNum} />
     case AIChatQSDataTypeEnum.IMAGE_MODEL_READ:
-      return (
-        <div className={styles.imageModelRead}>
-          {t(itemData.data.route === 'native' ? 'ModelVision.nativeTrace' : 'ModelVision.visionTrace', {
-            model: itemData.data.model,
-            count: itemData.data.imageCount,
-          })}
-        </div>
-      )
+      return <AIImageModelRead item={itemData} />
     case AIChatQSDataTypeEnum.THOUGHT:
       return <AIThought itemData={itemData} renderNum={renderNum} />
 

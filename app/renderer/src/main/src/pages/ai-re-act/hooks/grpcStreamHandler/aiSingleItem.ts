@@ -46,12 +46,17 @@ const handleThought: AIMessageHandler = (requestInfo) => {
 
 const handleImageModelRead: AIMessageHandler = ({ res, chatType, store, rawData, meta, sessionId }) => {
   const data = JSON.parse(Uint8ArrayToString(res.Content) || '{}')
-  if (data?.state !== 'read' || !['native', 'vision'].includes(data.route) || !data.model) return
+  if (data?.state !== 'read' || !['native', 'vision'].includes(data.route) || typeof data.model !== 'string') return
+  const model = data.model.trim()
+  if (!model) return
+  const count =
+    typeof data.image_count === 'number' || typeof data.image_count === 'string' ? Number(data.image_count) : NaN
+  const imageCount = Number.isSafeInteger(count) && count > 0 ? count : 1
   const item: AIChatQSData = {
     ...genBaseAIChatData(res),
     chatType,
     type: AIChatQSDataTypeEnum.IMAGE_MODEL_READ,
-    data: { route: data.route, model: data.model, imageCount: Number(data.image_count) || 1 },
+    data: { route: data.route, model, imageCount },
     TaskId: generateTaskNodeDataID({
       chatType,
       planID: store.getState().currentChatStatus.questionID,

@@ -559,6 +559,9 @@ describe('EnterpriseAIModelSelect real config hook/store synchronization', () =>
     const initial = configA()
     initial.IntelligentModels[1].EffortProbed = true
     initial.IntelligentModels[1].ProbedExtendedEfforts = ['max']
+    initial.IntelligentModels[1].SupportsImageInput = true
+    initial.IntelligentModels[1].SupportsImageToolCalling = false
+    initial.IntelligentModels[1].ImageTokenEstimator = 'tile512'
     mocks.get.mockResolvedValue(initial)
     useAIGlobalConfigStore.setState({ aiGlobalConfig: initial })
     await mount()
@@ -586,6 +589,9 @@ describe('EnterpriseAIModelSelect real config hook/store synchronization', () =>
     expect(saved.IntelligentModels[1].ModelName).toBe('model-renamed')
     expect(saved.IntelligentModels[1].EffortProbed).toBeUndefined()
     expect(saved.IntelligentModels[1].ProbedExtendedEfforts).toBeUndefined()
+    for (const field of ['SupportsImageInput', 'SupportsImageToolCalling', 'ImageTokenEstimator']) {
+      expect(saved.IntelligentModels[1]).not.toHaveProperty(field)
+    }
   })
 
   it('保留未保存选择时，同步探测结果的回滚', async () => {

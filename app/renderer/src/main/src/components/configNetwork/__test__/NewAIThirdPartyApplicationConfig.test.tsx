@@ -502,3 +502,68 @@ describe('Ordinary provider extension parameters', () => {
     ])
   })
 })
+
+describe('Vision capabilities for the model connection', () => {
+  const renderModel = (capabilities: Partial<AIModelConfig> = {}) => {
+    const item: AIModelConfig = {
+      ProviderId: '',
+      ModelName: 'current-model',
+      Provider: { Type: 'custom', APIKey: 'fixture-key', BaseURL: 'https://old-gateway.example/v1' },
+      ExtraParams: [],
+      ...capabilities,
+    }
+    mocks.config.IntelligentModels = [item]
+    render(<AIModelForm item={item} aiModelType={AIModelTypeEnum.TierIntelligent} onClose={vi.fn()} />)
+    return screen.findByLabelText('BaseURL')
+  }
+
+  it('updates the displayed probe result when the connection changes', async () => {
+    mocks.visionProbe.mockResolvedValue({ SupportsImageInput: true, SupportsImageToolCalling: false })
+    const baseURL = await renderModel()
+    fireEvent.click(screen.getByRole('button', { name: 'ModelVision.detect' }))
+    await screen.findByText('ModelVision.supported')
+    expect(screen.getByText('ModelVision.unsupported')).toBeInTheDocument()
+    fireEvent.change(baseURL, { target: { value: 'https://new-gateway.example/v1' } })
+    await waitFor(() => expect(screen.getAllByText('ModelVision.unknown')).toHaveLength(2))
+    expect(screen.queryByText('ModelVision.supported')).not.toBeInTheDocument()
+  })
+
+  it.each([true, false])('skips the probe when saved image support is conclusive (%s)', async (imageSupport) => {
+    await renderModel({ SupportsImageInput: imageSupport, SupportsImageToolCalling: imageSupport ? false : undefined })
+    fireEvent.click(screen.getByRole('button', { name: 'AIModelList.testAndAddBtn' }))
+    await waitFor(() => expect(mocks.save).toHaveBeenCalledOnce())
+    expect(mocks.visionProbe).not.toHaveBeenCalled()
+    expect(mocks.save.mock.calls[0][0].IntelligentModels[0].SupportsImageInput).toBe(imageSupport)
+  })
+
+  it('preserves a known read capability when the tool probe only reports its own result', async () => {
+    await renderModel({ SupportsImageInput: true, ImageTokenEstimator: 'patch32' })
+    mocks.visionProbe.mockResolvedValue({ SupportsImageToolCalling: false })
+    fireEvent.click(screen.getByRole('button', { name: 'AIModelList.testAndAddBtn' }))
+    await waitFor(() => expect(mocks.save).toHaveBeenCalledOnce())
+    expect(mocks.visionProbe).toHaveBeenCalledOnce()
+    expect(mocks.save.mock.calls[0][0].IntelligentModels[0]).toMatchObject({
+      SupportsImageInput: true,
+      SupportsImageToolCalling: false,
+      ImageTokenEstimator: 'patch32',
+    })
+  })
+
+  it('does not save if the connection changes while its vision probe is pending', async () => {
+    let finishProbe!: (value: unknown) => void
+    mocks.visionProbe.mockReturnValue(
+      new Promise((resolve) => {
+        finishProbe = resolve
+      }),
+    )
+    const baseURL = await renderModel()
+    const submit = screen.getByRole('button', { name: 'AIModelList.testAndAddBtn' })
+    fireEvent.click(submit)
+    await waitFor(() => expect(mocks.visionProbe).toHaveBeenCalledOnce())
+    fireEvent.change(baseURL, { target: { value: 'https://new-gateway.example/v1' } })
+    await act(async () => finishProbe({ SupportsImageInput: true }))
+    await waitFor(() => expect(submit).not.toHaveClass('ant-btn-loading'))
+    expect(mocks.save).not.toHaveBeenCalled()
+    expect(screen.getAllByText('ModelVision.unknown')).toHaveLength(2)
+  })
+})

@@ -21,6 +21,54 @@ describe('aiSingleItem handlers', () => {
     expect(req.store.getState().chatElements.length).toBeGreaterThan(0)
   })
 
+  it.each([
+    { state: 'registered', route: 'native', model: 'main' },
+    { state: 'read', route: 'unknown', model: 'main' },
+    { state: 'read', route: 'native' },
+    { state: 'read', route: 'vision', model: ' ' },
+    { state: 'read', route: 'native', model: { name: 'main' } },
+  ])('ignores invalid image reader events %j', (data) => {
+    const req = makeHandlerRequest({ res: makeGrpcJsonRes('structured', data) })
+    const dispatch = vi.spyOn(req.store.getState(), 'dispatchStreamingNode')
+    vi.mocked(persistIndependentItem).mockClear()
+    aiSingleItemDataHandlers.image_context(req)
+    expect(req.rawData.contents.size).toBe(0)
+    expect(dispatch).not.toHaveBeenCalled()
+    expect(persistIndependentItem).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    { route: 'native', count: '3', expected: 3 },
+    { route: 'vision', count: 2, expected: 2 },
+    { route: 'vision', count: undefined, expected: 1 },
+    { route: 'vision', count: -1, expected: 1 },
+    { route: 'native', count: 0, expected: 1 },
+    { route: 'native', count: 'Infinity', expected: 1 },
+    { route: 'native', count: 1.5, expected: 1 },
+  ])('persists and dispatches $route image reads for count $count', ({ route, count, expected }) => {
+    const req = makeHandlerRequest({
+      res: makeGrpcJsonRes(
+        'structured',
+        { state: 'read', route, model: ' reader ', image_count: count },
+        { IsSync: true },
+      ),
+    })
+    const dispatch = vi.spyOn(req.store.getState(), 'dispatchStreamingNode')
+    vi.mocked(persistIndependentItem).mockClear()
+    aiSingleItemDataHandlers.image_context(req)
+    const [item] = [...req.rawData.contents.values()]
+    expect(item).toMatchObject({
+      type: AIChatQSDataTypeEnum.IMAGE_MODEL_READ,
+      data: { route, model: 'reader', imageCount: expected },
+    })
+    expect(persistIndependentItem).toHaveBeenCalledExactlyOnceWith(req.sessionId, item, req.meta.lifecycle)
+    expect(dispatch).toHaveBeenCalledExactlyOnceWith({
+      chatType: req.chatType,
+      parentTaskId: item.TaskId,
+      node: { token: item.id, kind: 'item', type: item.type, isHistory: true },
+    })
+  })
+
   it('D5: result inserts when not after_stream', () => {
     const req = makeHandlerRequest({
       res: makeGrpcJsonRes('result', { result: 'ok', after_stream: false }),
