@@ -30,13 +30,14 @@ const ResponseCard: React.FC<ResponseCardProps> = React.memo((props) => {
   const secondNodeSize = useSize(secondNodeRef)
 
   useEffect(() => {
-    ipcRenderer.on('fetch-extracted-to-table', (e: any, data: { type: string; extractedMap: Map<string, string> }) => {
+    const handleFetchExtracted = (_e: unknown, data: { type: string; extractedMap: Map<string, string> }) => {
       if (data.type === 'allSequenceList') {
         setAll(data.extractedMap)
       }
-    })
+    }
+    ipcRenderer.on('fetch-extracted-to-table', handleFetchExtracted)
     return () => {
-      ipcRenderer.removeAllListeners('fetch-extracted-to-table')
+      ipcRenderer.removeListener?.('fetch-extracted-to-table', handleFetchExtracted)
     }
   }, [])
 
