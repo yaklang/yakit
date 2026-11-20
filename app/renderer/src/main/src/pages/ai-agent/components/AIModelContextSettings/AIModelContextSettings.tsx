@@ -124,7 +124,7 @@ const AIModelContextSettings: FC<AIModelContextSettingsProps> = ({ ref, source, 
             suffix="K"
             min={minimumThresholdTokens / 1000}
             max={maximumThresholdTokens / 1000}
-            step={1}
+            controls={false}
             changeOnBlur={false}
             onChangeCapture={(event) => {
               const input = event.target as HTMLInputElement

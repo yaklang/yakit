@@ -45,10 +45,6 @@
 
 .sceneOption:global(.ant-select-item-option-selected) {
   column-gap: 8px;
-
-  :global(.ant-select-item-option-content) {
-    flex: 0 1 auto;
-  }
 }
 
 .optionLabel {

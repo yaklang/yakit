@@ -376,23 +376,15 @@ describe('AIModelContextSettings', () => {
     expect(context.save).toHaveBeenCalledExactlyOnceWith({ threshold_tokens: 600000, disable_auto_adjust: true })
   })
 
-  it('上下按钮按 1K 修改草稿并遵守模型下限与最大值', () => {
-    const context = props()
-    const ref = createRef<AIModelContextSettingsRef>()
-    render(editor(context, ref))
+  it('阈值可以直接输入，且不渲染上下步进按钮', () => {
+    render(editor(props()))
     const input = screen.getByRole('spinbutton')
-    const up = screen.getByRole('button', { name: 'Increase Value' })
-    const down = screen.getByRole('button', { name: 'Decrease Value' })
-    fireEvent.mouseDown(up)
-    fireEvent.mouseUp(up)
+    fireEvent.focus(input)
+    fireEvent.mouseEnter(input)
+    expect(screen.queryByRole('button', { name: 'Increase Value' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Decrease Value' })).not.toBeInTheDocument()
+    fireEvent.change(input, { target: { value: '501' } })
     expect(input).toHaveValue('501')
-    expect(context.save).not.toHaveBeenCalled()
-    act(() => ref.current?.save())
-    expect(context.save).toHaveBeenCalledExactlyOnceWith({ threshold_tokens: 501000 })
-    fireEvent.change(input, { target: { value: '125' } })
-    expect(down).toHaveAttribute('aria-disabled', 'true')
-    fireEvent.change(input, { target: { value: '1000' } })
-    expect(up).toHaveAttribute('aria-disabled', 'true')
   })
 
   it('关闭时提交尚未失焦的输入，重新打开时使用当前模型的值', () => {
