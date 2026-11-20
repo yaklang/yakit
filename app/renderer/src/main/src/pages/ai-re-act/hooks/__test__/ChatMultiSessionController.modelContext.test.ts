@@ -62,4 +62,68 @@ describe('controller session model context', () => {
     expect(owner.rawData.modelContext).toBe(snapshot)
     expect(owner.store.getState().modelContextUpdate).toBe(before)
   })
+
+  it.each(['error', 'unsupported'] as const)(
+    'retains a failed settings query during live usage updates (%s)',
+    async (status) => {
+      owner.rawData.modelContext = { status, generation: 1, error: 'query failed' }
+      const context = {
+        provider: 'openai',
+        model: 'model',
+        context_key: 'owner:model',
+        threshold_tokens: 500000,
+        prompt_tokens: 125000,
+        source: 'default',
+        pending: false,
+        disable_auto_adjust: false,
+      }
+      await controller['processGrpcOutputEvent'](
+        'session-a',
+        makeGrpcJsonRes('model_context', context, { NodeId: 'model_context' }),
+        owner.meta,
+      )
+      expect(owner.rawData.modelContext).toMatchObject({
+        status,
+        error: 'query failed',
+        runtime: { prompt_tokens: 125000 },
+      })
+    },
+  )
+
+  it.each([{}, { context_key: '' }])(
+    'ignores a first event without a context key and accepts the next valid event (%j)',
+    async (empty) => {
+      const before = owner.rawData.modelContext
+      const updates = owner.store.getState().modelContextUpdate
+      await controller['processGrpcOutputEvent'](
+        'session-a',
+        makeGrpcJsonRes('model_context', empty, { NodeId: 'model_context' }),
+        owner.meta,
+      )
+      expect(owner.rawData.modelContext).toBe(before)
+      expect(owner.store.getState().modelContextUpdate).toBe(updates)
+
+      const context = {
+        provider: 'openai',
+        model: 'model',
+        context_key: 'owner:model',
+        threshold_tokens: 500000,
+        prompt_tokens: 125000,
+        source: 'default',
+        pending: false,
+        disable_auto_adjust: false,
+      }
+      await controller['processGrpcOutputEvent'](
+        'session-a',
+        makeGrpcJsonRes('model_context', context, { NodeId: 'model_context' }),
+        owner.meta,
+      )
+      expect(owner.rawData.modelContext).toMatchObject({
+        status: 'ready',
+        saved: { context_key: context.context_key },
+        runtime: context,
+      })
+      expect(owner.store.getState().modelContextUpdate).toBe(updates + 1)
+    },
+  )
 })

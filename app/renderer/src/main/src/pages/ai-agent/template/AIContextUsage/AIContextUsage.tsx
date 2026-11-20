@@ -32,6 +32,13 @@ const AIContextUsage: FC<AIContextUsageProps> = ({ className }) => {
   }
 
   const { promptTokens, thresholdTokens, percent, remaining } = usage
+  const usageRatio = promptTokens / thresholdTokens
+  const alertColor =
+    usageRatio >= 1
+      ? 'var(--Colors-Use-Error-Primary)'
+      : usageRatio >= 0.8
+        ? 'var(--Colors-Use-Warning-Primary)'
+        : undefined
   const percentText = `${percent}%`
   const label = t('AIContextUsage.label', { percent })
 
@@ -101,13 +108,13 @@ const AIContextUsage: FC<AIContextUsageProps> = ({ className }) => {
           size={16}
           strokeWidth={12}
           showInfo={false}
-          strokeColor={usageColor}
+          strokeColor={alertColor ?? usageColor}
           trailColor="var(--Colors-Use-Neutral-Border)"
           aria-label={label}
           aria-valuenow={Math.min(100, percent)}
           aria-valuetext={percentText}
         />
-        <span className={styles.label} aria-hidden="true">
+        <span className={styles.label} style={{ color: alertColor }} aria-hidden="true">
           {label}
         </span>
       </YakitButton>

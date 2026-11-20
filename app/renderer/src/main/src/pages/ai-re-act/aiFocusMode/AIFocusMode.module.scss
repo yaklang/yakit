@@ -10,11 +10,11 @@
 
 .trigger.with-clear:global(.ant-select-single.ant-select-borderless) {
   :global(.ant-select-clear) {
-    inset-inline-end: 26px;
+    inset-inline-end: 6px;
   }
 
-  :global(.ant-select-selector .ant-select-selection-item) {
-    padding-inline-end: 42px;
+  &:hover :global(.ant-select-arrow) {
+    opacity: 0;
   }
 }
 
@@ -33,7 +33,26 @@
 .label {
   display: var(--ai-footer-selector-label-display, inline);
   min-width: 0;
-  padding-inline: 4px;
+  padding-inline-start: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.clearSelection {
+  margin-inline-start: auto;
+}
+
+.sceneOption:global(.ant-select-item-option-selected) {
+  column-gap: 8px;
+
+  :global(.ant-select-item-option-content) {
+    flex: 0 1 auto;
+  }
+}
+
+.optionLabel {
+  display: block;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

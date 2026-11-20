@@ -783,8 +783,10 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                 </div>
 
                 <div className={styles['footer-right']}>
-                  {renderFooterRightTypes()}
-                  {inputFooterRight}
+                  <div className={styles['footer-status-items']}>
+                    {renderFooterRightTypes()}
+                    {inputFooterRight}
+                  </div>
                   <YakitButton
                     type={running ? 'outline2' : undefined}
                     className={styles[running ? 'queue-send-btn' : 'round-btn']}

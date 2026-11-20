@@ -1,7 +1,12 @@
 import type { FC } from 'react'
 import { useEffect, useImperativeHandle, useRef, useState } from 'react'
-import { Slider } from 'antd'
-import { ExclamationOutlined, InformationCircleOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { Slider, Tooltip } from 'antd'
+import {
+  ExclamationOutlined,
+  InformationCircleOutlined,
+  QuestionMarkCircleOutlined,
+  RotateCcwOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInputNumber'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -9,12 +14,14 @@ import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { yakitNotify } from '@/utils/notification'
 import type { AIModelContextDraft, AIModelContextSettingsProps } from './type'
 import type { ModelContextPatch } from '@/pages/ai-re-act/hooks/aiRender'
 import useAIModelContext from '../../useContext/useAIModelContext'
 import { useAIGlobalConfigStore } from '@/store/aiGlobalConfig'
 import { useCurrentRawData } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import { currentPrimaryModel, sameModel } from '@/pages/ai-re-act/hooks/modelContext'
+import { formatModelContextTokens } from '../../utils/modelContextFormat'
 import styles from './AIModelContextSettings.module.scss'
 
 const AIModelContextSettings: FC<AIModelContextSettingsProps> = ({ ref, source, open = true }) => {
@@ -22,8 +29,11 @@ const AIModelContextSettings: FC<AIModelContextSettingsProps> = ({ ref, source, 
   const primaryModel = useAIGlobalConfigStore(currentPrimaryModel, sameModel)
   const context = useAIModelContext(source, open)
   const { editorThresholdTokens, editorDisableAutoAdjust, loading, waitingForContext, error, retry, save } = context
+  const { minimumThresholdTokens } = context
+  const maximumThresholdTokens = 1000000
   const normalizeTokens = (tokens: number) =>
-    Math.min(1000000, Math.max(context.minimumThresholdTokens, Math.round(tokens)))
+    Math.min(maximumThresholdTokens, Math.max(minimumThresholdTokens, Math.round(tokens)))
+  const defaultThresholdTokens = normalizeTokens(500000)
   const { t } = useI18nNamespaces(['aiAgent'])
   const [draft, setDraft] = useState<AIModelContextDraft>({})
   const draftRef = useRef(draft)
@@ -53,7 +63,7 @@ const AIModelContextSettings: FC<AIModelContextSettingsProps> = ({ ref, source, 
         patch.disable_auto_adjust = disableAutoAdjust
       if (Object.keys(patch).length) save(patch)
     },
-    reset: () => updateDraft({ tokens: normalizeTokens(500000), disableAutoAdjust: false }),
+    reset: () => updateDraft({ tokens: defaultThresholdTokens, disableAutoAdjust: false }),
   }))
 
   return (
@@ -114,29 +124,59 @@ const AIModelContextSettings: FC<AIModelContextSettingsProps> = ({ ref, source, 
             suffix="K"
             controls={false}
             wrapperClassName={styles.number}
+            onChangeCapture={(event) => {
+              const input = event.target as HTMLInputElement
+              const parsed = input.value.replace(/[^\w.-]+/g, '')
+              if (Number(parsed) > maximumThresholdTokens / 1000 || input.value.replace(/\D/g, '').length > 4) {
+                input.value = value == null ? '' : String(value / 1000)
+                yakitNotify('warning', t('AIContextUsage.exceedsMaximum'))
+              }
+            }}
             onChange={(next) => updateDraft({ tokens: next == null ? null : Number(next) * 1000 })}
             onBlur={finishInput}
             onPressEnter={finishInput}
           />
+          <Tooltip title={t('AIContextUsage.restoreDefault')} trigger={['hover', 'focus']}>
+            <YakitButton
+              type="text2"
+              size="small"
+              htmlType="button"
+              aria-label={t('AIContextUsage.restoreDefault')}
+              icon={<RotateCcwOutlined size={16} color="currentColor" />}
+              onClick={() => updateDraft({ tokens: defaultThresholdTokens })}
+            />
+          </Tooltip>
         </div>
         <Slider
           className={styles.slider}
           ariaLabelForHandle={t('AIContextUsage.threshold')}
-          min={0}
-          max={1000000}
+          min={minimumThresholdTokens}
+          max={maximumThresholdTokens}
           step={1000}
-          value={Math.min(1000000, Math.max(0, value ?? 0))}
+          value={normalizeTokens(value ?? minimumThresholdTokens)}
           tooltip={{ open: false }}
           onChange={(next) => updateDraft({ tokens: normalizeTokens(next) })}
         />
         <div className={styles.scale} aria-hidden="true">
-          <span>0</span>
-          <span>500K</span>
-          <span>1M</span>
+          <span>{formatModelContextTokens(minimumThresholdTokens)}</span>
+          <span>{formatModelContextTokens((minimumThresholdTokens + maximumThresholdTokens) / 2)}</span>
+          <span>{formatModelContextTokens(maximumThresholdTokens)}</span>
         </div>
         <div className={styles.automatic}>
           <div className={styles.description}>
-            <span>{t('AIContextUsage.autoAdjust')}</span>
+            <span className={styles.autoAdjustLabel}>
+              {t('AIContextUsage.autoAdjust')}
+              <Tooltip title={t('AIContextUsage.autoAdjustTooltip')} placement="top" trigger={['hover', 'focus']}>
+                <span
+                  role="img"
+                  aria-label={t('AIContextUsage.autoAdjust')}
+                  tabIndex={0}
+                  className={styles.waitingIcon}
+                >
+                  <QuestionMarkCircleOutlined size={14} color="currentColor" />
+                </span>
+              </Tooltip>
+            </span>
             <span>{t('AIContextUsage.autoAdjustHelp')}</span>
           </div>
           <YakitSwitch

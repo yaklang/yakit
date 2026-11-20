@@ -29,7 +29,11 @@ export interface ModelContextState {
   status: 'idle' | 'loading' | 'ready' | 'unbound' | 'unsupported' | 'error'
   /** 状态版本号，用于忽略过期的异步结果和排队修改。 */
   generation: number
-  /** 当前模型最近一次测得的提示词 token 数，用于回执未携带用量时继续展示。 */
+  /** 主模型切换后的流事件目标；同一提供方有同名配置时，通过引擎核对上下文键。 */
+  expectedModel?: { provider: string; model: string; resolveKey?: () => Promise<string> }
+  /** 会话已有用量时，切换模型期间暂用的上限，新配置返回后以新阈值为准。 */
+  retainedThresholdTokens?: number
+  /** 当前会话最近一次测得的提示词 token 数。 */
   promptTokens?: number
   /** 从引擎查询或由引擎确认的最近快照，保存失败时用于恢复界面。 */
   saved?: ModelContextSnapshot

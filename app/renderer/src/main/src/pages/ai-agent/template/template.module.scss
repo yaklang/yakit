@@ -146,6 +146,33 @@ textarea.qs-input-textarea {
     max-height: 100px !important;
     color: var(--Colors-Use-Neutral-Text-1-Title);
   }
+  @mixin icon-only-selector {
+    --ai-footer-selector-label-display: none;
+    flex-shrink: 0;
+
+    :global {
+      .ant-select.ant-select-single.ant-select-borderless:not(.ant-select-customize-input) .ant-select-selector {
+        width: 24px;
+        height: 24px;
+        padding: 4px;
+      }
+
+      .ant-select-single.ant-select-show-arrow .ant-select-selector .ant-select-selection-item,
+      .ant-select-single.ant-select-show-arrow .ant-select-selector .ant-select-selection-placeholder {
+        padding-inline-end: 0;
+      }
+
+      .ant-select-arrow {
+        display: none;
+      }
+
+      .ant-select-clear {
+        inset-inline-end: 2px;
+        background: var(--Colors-Use-Neutral-Bg-Hover);
+      }
+    }
+  }
+
   .footer {
     display: flex;
     gap: 4px;
@@ -156,33 +183,14 @@ textarea.qs-input-textarea {
     &:has(> .footer-right button[data-ai-context-usage]) {
       --ai-footer-duration-detail-display: none;
 
+      &:has(> .footer-right > .footer-status-items > :nth-child(2)) > .footer-left .model-self-adaptive,
+      > .footer-left .focus-mode-self-adaptive {
+        @include icon-only-selector;
+      }
+
       > .footer-left {
-        .model-self-adaptive,
-        .focus-mode-self-adaptive {
-          --ai-footer-selector-label-display: none;
-          flex-shrink: 0;
-
-          :global {
-            .ant-select.ant-select-single.ant-select-borderless:not(.ant-select-customize-input) .ant-select-selector {
-              width: 24px;
-              height: 24px;
-              padding: 4px;
-            }
-
-            .ant-select-single.ant-select-show-arrow .ant-select-selector .ant-select-selection-item,
-            .ant-select-single.ant-select-show-arrow .ant-select-selector .ant-select-selection-placeholder {
-              padding-inline-end: 0;
-            }
-
-            .ant-select-arrow {
-              display: none;
-            }
-
-            .ant-select-clear {
-              inset-inline-end: 2px;
-              background: var(--Colors-Use-Neutral-Bg-Hover);
-            }
-          }
+        .focus-mode-self-adaptive :global(.ant-select-clear) {
+          display: none;
         }
 
         .settings-button:global(.ant-btn) {
@@ -195,6 +203,10 @@ textarea.qs-input-textarea {
           }
         }
       }
+    }
+
+    .footer-status-items {
+      display: contents;
     }
 
     .footer-left,
@@ -302,6 +314,12 @@ textarea.qs-input-textarea {
         .queue-send-btn:global(.ant-btn) {
           display: none;
         }
+      }
+    }
+
+    @container ai-chat-textarea (width < 530px) {
+      > .footer-left .model-self-adaptive {
+        @include icon-only-selector;
       }
     }
 

@@ -5,8 +5,10 @@ import { grpcGetAIGlobalConfig, grpcSetAIGlobalConfig } from '@/pages/ai-agent/a
 import type { AIGlobalConfig } from '@/pages/ai-agent/aiModelList/utils'
 import type { API } from '@/services/swagger/resposeType'
 import { useAIGlobalConfigStore } from '@/store/aiGlobalConfig'
+import { yakitNotify } from '@/utils/notification'
 import useAIGlobalConfig, { getCanonicalAIGlobalConfig } from '../useAIGlobalConfig'
 
+vi.mock('@/utils/notification', () => ({ yakitNotify: vi.fn() }))
 vi.mock('@/pages/ai-agent/aiModelList/utils', () => ({
   grpcGetAIGlobalConfig: vi.fn(),
   grpcSetAIGlobalConfig: vi.fn(),
@@ -17,6 +19,7 @@ const setMock = vi.mocked(grpcSetAIGlobalConfig)
 
 describe('useAIGlobalConfig', () => {
   beforeEach(() => {
+    vi.mocked(yakitNotify).mockClear()
     getMock.mockReset()
     setMock.mockReset()
     getMock.mockImplementation(async () => setMock.mock.calls.at(-1)?.[0] ?? { ...defaultAIGlobalConfig })
@@ -110,6 +113,45 @@ describe('useAIGlobalConfig', () => {
     })
     expect(setMock).toHaveBeenCalledTimes(2)
     expect(setMock.mock.calls[1][0]).toMatchObject({ DisableFallback: true })
+  })
+
+  it('写入成功即可关闭表单，首次回读失败只重试读取并更新引擎分配的归属', async () => {
+    const model = { ProviderId: '0', Provider: { Type: 'openai' }, ModelName: 'model', ExtraParams: [] }
+    const persisted = { ...defaultAIGlobalConfig, IntelligentModels: [{ ...model, ContextOwnerId: 'owner' }] }
+    let finishRead!: (value: AIGlobalConfig) => void
+    getMock.mockRejectedValueOnce(new Error('read failed')).mockReturnValueOnce(
+      new Promise<AIGlobalConfig>((resolve) => {
+        finishRead = resolve
+      }),
+    )
+    const { result } = renderHook(() => useAIGlobalConfig())
+    await act(async () => {
+      await expect(result.current[1].setAIGlobalConfig({ IntelligentModels: [model] })).resolves.toBeUndefined()
+    })
+    expect(getMock).toHaveBeenCalledTimes(2)
+    await act(async () => finishRead(persisted))
+    expect(useAIGlobalConfigStore.getState().persistedAiGlobalConfig).toEqual(persisted)
+    expect(setMock).toHaveBeenCalledTimes(1)
+    expect(yakitNotify).not.toHaveBeenCalled()
+  })
+
+  it('两次回读失败后仍保留已写入的配置，下次刷新只读取一次', async () => {
+    useAIGlobalConfigStore.setState({ persistedAiGlobalConfig: { ...defaultAIGlobalConfig, DisableFallback: false } })
+    getMock.mockRejectedValueOnce(new Error('read failed')).mockRejectedValueOnce(new Error('retry failed'))
+    const { result } = renderHook(() => useAIGlobalConfig())
+    await act(async () => {
+      await expect(result.current[1].setAIGlobalConfig({ DisableFallback: true })).resolves.toBeUndefined()
+    })
+    expect(useAIGlobalConfigStore.getState()).toMatchObject({
+      aiGlobalConfig: { DisableFallback: true },
+      persistedAiGlobalConfig: undefined,
+      configSavePending: false,
+    })
+    expect(yakitNotify).toHaveBeenCalledExactlyOnceWith('warning', expect.any(String))
+    await act(async () => result.current[1].onRefresh(false))
+    expect(useAIGlobalConfigStore.getState().persistedAiGlobalConfig?.DisableFallback).toBe(true)
+    expect(getMock).toHaveBeenCalledTimes(3)
+    expect(setMock).toHaveBeenCalledTimes(1)
   })
 
   it('先前保存失败的回拉不会覆盖后续已成功的保存', async () => {

@@ -11,8 +11,10 @@ import AIModelContextSettings from '../AIModelContextSettings/AIModelContextSett
 import useAIModelContext from '../../useContext/useAIModelContext'
 import { useRefreshModelContext } from '../../useContext/useRefreshModelContext'
 import type { AIModelContextSettingsRef } from '../AIModelContextSettings/type'
+import { yakitNotify } from '@/utils/notification'
 
 vi.mock('../../useContext/useAIModelContext', () => ({ default: vi.fn() }))
+vi.mock('@/utils/notification', () => ({ yakitNotify: vi.fn() }))
 const mocks = vi.hoisted(() => ({ getModel: vi.fn(), save: vi.fn(), canonical: vi.fn() }))
 const rawData = { modelContext: { status: 'idle', generation: 0 } as ModelContextState }
 const store = createStore(() => ({ updateStateCount: vi.fn() }))
@@ -102,6 +104,14 @@ describe('AIModelContextSettings', () => {
       persistedAiGlobalConfig: { ...defaultAIGlobalConfig, IntelligentModels: [] },
       configSavePending: false,
     })
+  })
+
+  it.each([fireEvent.mouseEnter, fireEvent.focus])('悬停或聚焦问号时显示自动调整说明', async (showHelp) => {
+    render(editor(props()))
+    const help = screen.getByRole('img', { name: 'AIContextUsage.autoAdjust' })
+    showHelp(help)
+    expect(await screen.findByRole('tooltip')).toHaveTextContent('AIContextUsage.autoAdjustTooltip')
+    expect(screen.getByRole('switch', { name: 'AIContextUsage.autoAdjust' })).toBeChecked()
   })
 
   it('每次打开读取主模型设置，关闭后的旧查询不会覆盖重新打开的结果', async () => {
@@ -452,7 +462,7 @@ describe('AIModelContextSettings', () => {
 
   it.each([
     ['20', 125000],
-    ['1200', 1000000],
+    ['1000', 1000000],
   ])('输入 %s K 时先校正草稿，关闭后按边界提交一次', (value, tokens) => {
     const context = props()
     const ref = createRef<AIModelContextSettingsRef>()
@@ -467,15 +477,74 @@ describe('AIModelContextSettings', () => {
     expect(context.save).toHaveBeenCalledExactlyOnceWith({ threshold_tokens: tokens })
   })
 
-  it('自动调整到下限以下仍显示真实值，未编辑就关闭不保存', () => {
-    const context = { ...props(), editorThresholdTokens: 50000 }
+  it.each([
+    [50000, '50'],
+    [650555, '650.555'],
+  ])('引擎阈值 %i 保留真实值和精度，未编辑就关闭不保存', (tokens, display) => {
+    const context = { ...props(), editorThresholdTokens: tokens }
     const ref = createRef<AIModelContextSettingsRef>()
     render(editor(context, ref))
     const input = screen.getByRole('spinbutton')
-    expect(input).toHaveValue('50')
+    expect(input).toHaveValue(display)
     fireEvent.blur(input)
     act(() => ref.current?.save())
     expect(context.save).not.toHaveBeenCalled()
+  })
+
+  it.each(['1001', '10000', '00001', '1000.1', '999.99', '1,001'])('拒绝超限输入 %s，保留原值并提示', (next) => {
+    const context = props()
+    const ref = createRef<AIModelContextSettingsRef>()
+    render(editor(context, ref))
+    const input = screen.getByRole('spinbutton')
+    fireEvent.change(input, { target: { value: '650' } })
+    fireEvent.change(input, { target: { value: next } })
+    expect(input).toHaveValue('650')
+    expect(yakitNotify).toHaveBeenCalledExactlyOnceWith('warning', 'AIContextUsage.exceedsMaximum')
+    act(() => ref.current?.save())
+    expect(context.save).toHaveBeenCalledExactlyOnceWith({ threshold_tokens: 650000 })
+  })
+
+  it.each([
+    ['650.5', 650500],
+    ['99.99', 99990],
+  ])('保留四位小数 K 输入 %s 并按 token 精度保存', (next, tokens) => {
+    const context = { ...props(), minimumThresholdTokens: 50000 }
+    const ref = createRef<AIModelContextSettingsRef>()
+    render(editor(context, ref))
+    const input = screen.getByRole('spinbutton')
+    fireEvent.change(input, { target: { value: next } })
+    expect(input).toHaveValue(next)
+    expect(yakitNotify).not.toHaveBeenCalled()
+    act(() => ref.current?.save())
+    expect(context.save).toHaveBeenCalledExactlyOnceWith({ threshold_tokens: tokens })
+  })
+
+  it('模型更新最低阈值时同步更新滑块范围和刻度', () => {
+    const context = props()
+    const view = render(editor(context))
+    const slider = screen.getByRole('slider')
+    expect(slider).toHaveAttribute('aria-valuemin', '125000')
+    expect(screen.getByText('125K')).toBeVisible()
+    expect(screen.getByText('562.5K')).toBeVisible()
+    view.rerender(editor({ ...context, minimumThresholdTokens: 300000 }))
+    expect(slider).toHaveAttribute('aria-valuemin', '300000')
+    expect(screen.getByText('300K')).toBeVisible()
+    expect(screen.getByText('650K')).toBeVisible()
+  })
+
+  it.each([
+    [125000, 500000],
+    [600000, 600000],
+  ])('下限为 %i 时局部重置只恢复阈值，关闭后保存 %i', (minimumThresholdTokens, expected) => {
+    const context = { ...props(), minimumThresholdTokens, editorThresholdTokens: 800000, editorDisableAutoAdjust: true }
+    const ref = createRef<AIModelContextSettingsRef>()
+    render(editor(context, ref))
+    fireEvent.click(screen.getByRole('button', { name: 'AIContextUsage.restoreDefault' }))
+    expect(screen.getByRole('spinbutton')).toHaveValue(String(expected / 1000))
+    expect(screen.getByRole('switch')).not.toBeChecked()
+    expect(context.save).not.toHaveBeenCalled()
+    act(() => ref.current?.save())
+    expect(context.save).toHaveBeenCalledExactlyOnceWith({ threshold_tokens: expected })
   })
 
   it('编辑期间收到新阈值后保留尚未失焦的草稿，关闭后提交草稿', () => {

@@ -24,8 +24,11 @@ export const useRefreshModelContext = (source: AIModelContextSource, open?: bool
   )
   const queryRef = useRef<{ generation: number; unsubscribe?: () => void } | undefined>(undefined)
   const refresh = useMemoizedFn(async () => {
-    if (source === 'stream' || rawData.modelContext.pending) return
     const previous = rawData.modelContext
+    const retrySwitch =
+      previous.retainedThresholdTokens !== undefined &&
+      (previous.status === 'error' || previous.status === 'unsupported')
+    if ((source === 'stream' && !retrySwitch) || previous.pending) return
     const lifecycle = meta.lifecycle
     const current = lifecycle.current
     const closing = lifecycle.closing
@@ -81,7 +84,9 @@ export const useRefreshModelContext = (source: AIModelContextSource, open?: bool
         context: newer ?? saved,
         promptTokens:
           runtime?.prompt_tokens ??
-          (state.saved && sameModelContextIdentity(state.saved, saved) ? state.promptTokens : undefined),
+          (state.retainedThresholdTokens !== undefined || (state.saved && sameModelContextIdentity(state.saved, saved))
+            ? state.promptTokens
+            : undefined),
         status: 'ready',
         error: state.failedPatch ? state.error : undefined,
       })

@@ -8,6 +8,8 @@ import { shallow } from 'zustand/shallow'
 import cloneDeep from 'lodash/cloneDeep'
 import type { API } from '@/services/swagger/resposeType'
 import { debugToPrintLogs } from '@/utils/logCollection'
+import { yakitNotify } from '@/utils/notification'
+import i18n from '@/i18n/i18n'
 
 /** 与 getFileNameByModelType 对应的配置字段；直接用常量避免动态 import 整份 AIModelForm */
 const AI_MODEL_CONFIG_KEYS = [
@@ -21,13 +23,13 @@ let saveEpoch = 0
 let canonicalRead: { epoch: number; promise: Promise<AIGlobalConfig> } | undefined
 
 /** 等待配置保存完成，读取引擎确认的主模型。 */
-export const getCanonicalAIGlobalConfig = (): Promise<AIGlobalConfig> => {
+export const getCanonicalAIGlobalConfig = (hiddenError = false): Promise<AIGlobalConfig> => {
   const epoch = saveEpoch
   if (canonicalRead?.epoch === epoch) return canonicalRead.promise
   const promise = saveQueue
-    .then(() => (epoch === saveEpoch ? grpcGetAIGlobalConfig() : getCanonicalAIGlobalConfig()))
+    .then(() => (epoch === saveEpoch ? grpcGetAIGlobalConfig(hiddenError) : getCanonicalAIGlobalConfig(hiddenError)))
     .then((config) => {
-      if (epoch !== saveEpoch) return getCanonicalAIGlobalConfig()
+      if (epoch !== saveEpoch) return getCanonicalAIGlobalConfig(hiddenError)
       useAIGlobalConfigStore.setState({
         aiGlobalConfig: config,
         persistedAiGlobalConfig: config,
@@ -156,10 +158,6 @@ function useAIGlobalConfig(params) {
     saveQueue = task.catch(() => undefined)
     try {
       await task
-      if (epoch === saveEpoch) {
-        const config = await getCanonicalAIGlobalConfig()
-        applyFetchedConfig(config, epoch)
-      }
     } catch (err) {
       if (epoch === saveEpoch) {
         getCanonicalAIGlobalConfig()
@@ -171,6 +169,22 @@ function useAIGlobalConfig(params) {
       setTimeout(() => {
         setUpdateLoading(false)
       }, 200)
+    }
+    if (epoch !== saveEpoch) return
+    try {
+      const config = await getCanonicalAIGlobalConfig(true)
+      applyFetchedConfig(config, epoch)
+    } catch {
+      if (epoch !== saveEpoch) return
+      // 写入已成功。只在后台重试回读，表单可以正常关闭。
+      void getCanonicalAIGlobalConfig(true).then(
+        (config) => applyFetchedConfig(config, epoch),
+        () => {
+          if (epoch !== saveEpoch) return
+          useAIGlobalConfigStore.setState({ configSavePending: false, persistedAiGlobalConfig: undefined })
+          yakitNotify('warning', i18n.t('AIModelGlobalConfig.savedRefreshFailed', { ns: 'aiAgent' }))
+        },
+      )
     }
   })
 

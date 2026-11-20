@@ -668,16 +668,26 @@ describe('输入框资料栏', () => {
     expect(stop.compareDocumentPosition(send) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
-  it('右侧显示默认状态项时，底栏通过实际按钮匹配紧凑布局样式', () => {
+  it('上下文单独显示时独占状态区，排队和停止按钮不计入状态项', () => {
     const { container, rerender } = render(<AIChatTextarea chatDataStoreKey="test" />)
 
     expect(screen.getByRole('progressbar', { name: 'AIContextUsage.label' })).toBeInTheDocument()
     expect(screen.queryByRole('status', { name: 'AIRunningStatus.label' })).not.toBeInTheDocument()
-    expect(container.querySelector('button[data-ai-context-usage]')).toBeInTheDocument()
+    const contextButton = screen.getByRole('button', { name: 'AIContextUsage.label' })
+    const statusItems = contextButton.parentElement!
+    expect(Array.from(statusItems.children)).toEqual([contextButton])
     expect(screen.getByRole('button', { name: '默认模型选择' })).toHaveAttribute('data-icon-only', 'false')
     expect(screen.getByTitle('AiAgengt.focusMode').querySelector('svg')).toBeInTheDocument()
     expect(screen.getByText('AiAgengt.focusMode')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'AIRightPanel.aiSettings' })).toHaveTextContent('AIRightPanel.aiSettings')
+
+    rerender(
+      <AIChatTextarea
+        chatDataStoreKey="test"
+        footerRightTypes={[AIInputFooterRightEnum.AIContextUsage, AIInputFooterRightEnum.AIRunningStatus]}
+      />,
+    )
+    expect(Array.from(statusItems.children)).toEqual([contextButton, screen.getByRole('status')])
 
     rerender(<AIChatTextarea chatDataStoreKey="test" footerRightTypes={[]} />)
     expect(container.querySelector('button[data-ai-context-usage]')).not.toBeInTheDocument()
@@ -726,16 +736,68 @@ describe('输入框资料栏', () => {
     expect(model).toHaveAttribute('data-icon-only', 'false')
     const scene = screen.getByRole('combobox', { name: label })
     expect(screen.getByText(label)).toBeVisible()
+    const sceneIcon = (title: string) => within(screen.getByTitle(title)).getByRole('img')
+    expect(sceneIcon(label)).toHaveStyle({ color: 'var(--Colors-Use-Neutral-Text-2-Primary)' })
 
     clickSceneSelector(scene)
     fireEvent.click(await screen.findByText('测试场景'))
     expect(scene).toHaveAttribute('aria-expanded', 'false')
     expect(screen.getByTitle('测试场景')).toHaveTextContent('测试场景')
+    expect(sceneIcon('测试场景')).toHaveStyle({ color: 'var(--Colors-Use-Main-Primary)' })
     fireEvent.mouseDown(scene.closest('.ant-select')!.querySelector('.ant-select-clear')!)
-    expect(screen.getByTitle(label)).toBeInTheDocument()
+    expect(sceneIcon(label)).toHaveStyle({ color: 'var(--Colors-Use-Neutral-Text-2-Primary)' })
 
     expect(model).toHaveAttribute('data-icon-only', 'false')
     expect(within(model.parentElement!).getByText(label)).toBeVisible()
+  })
+
+  it('场景标题栏可清空选择，点击选项可选中或取消', async () => {
+    const onChange = vi.fn()
+    const input = (value?: string) => (
+      <AIChatTextarea
+        chatDataStoreKey="test"
+        footerLeftTypes={[
+          {
+            type: AIInputInnerFeatureEnum.AIFocusMode,
+            props: {
+              options: [
+                { value: 'a', label: '场景 A' },
+                { value: 'b', label: '场景 B' },
+              ],
+              value,
+              onChange,
+            },
+          },
+        ]}
+      />
+    )
+    const { rerender } = render(input('a'))
+    const scene = screen.getByRole('combobox', { name: 'AiAgengt.focusMode' })
+    clickSceneSelector(scene)
+    const rowB = (await screen.findByText('场景 B')).closest('.ant-select-item-option')!
+    const clear = screen.getByRole('button', { name: 'AIFocusMode.clearSelection' })
+    expect(clear).toHaveTextContent('YakitButton.cancel')
+    expect(clear.closest('.ant-select-item-option')).toBeNull()
+    const selectedOption = () => document.querySelector('.ant-select-item-option-selected')!
+    const selectedRow = selectedOption()
+    expect(selectedRow.querySelector('button')).toBeNull()
+    expect(selectedRow).toHaveTextContent('场景 A')
+    expect(selectedRow.querySelector('.ant-select-item-option-state svg')).toBeInTheDocument()
+    expect(rowB.querySelector('button, .ant-select-item-option-state svg')).toBeNull()
+    fireEvent.mouseDown(clear)
+    fireEvent.click(clear)
+    expect(onChange).toHaveBeenCalledExactlyOnceWith(undefined)
+    expect(scene).toHaveAttribute('aria-expanded', 'false')
+    rerender(input())
+    clickSceneSelector(scene)
+    expect(screen.queryByRole('button', { name: 'AIFocusMode.clearSelection' })).not.toBeInTheDocument()
+    fireEvent.click(await screen.findByText('场景 A'))
+    expect(onChange).toHaveBeenLastCalledWith('a')
+    rerender(input('a'))
+    clickSceneSelector(scene)
+    fireEvent.click(selectedOption())
+    expect(onChange.mock.calls).toEqual([[undefined], ['a'], [undefined]])
+    expect(scene).toHaveAttribute('aria-expanded', 'false')
   })
 
   it('左侧底栏小于 360px 时在更多菜单中显示模型、场景和设置，恢复宽度后回到底栏', async () => {
@@ -1095,6 +1157,10 @@ describe('输入框资料栏', () => {
     expect(screen.getByTitle('代码审计')).toBeInTheDocument()
     expect(scene.closest('.ant-select')?.querySelector('.ant-select-clear')).toBeNull()
 
+    clickSceneSelector(scene)
+    expect(screen.queryByRole('button', { name: 'AIFocusMode.clearSelection' })).not.toBeInTheDocument()
+    fireEvent.click(document.querySelector('.ant-select-item-option-selected')!)
+    expect(onChange).not.toHaveBeenCalled()
     clickSceneSelector(scene)
     fireEvent.click(await screen.findByText('技能审计'))
     expect(onChange).toHaveBeenCalledExactlyOnceWith('skill')

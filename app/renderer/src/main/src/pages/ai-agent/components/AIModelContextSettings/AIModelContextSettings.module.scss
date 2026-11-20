@@ -37,12 +37,17 @@
 }
 
 .number {
-  flex: 0 0 104px;
-  width: 104px;
 }
 
 .slider:global(.ant-slider) {
   margin: 8px 0 0;
+
+  &:not(:global(.ant-slider-disabled)) {
+    &,
+    > * {
+      cursor: pointer;
+    }
+  }
 
   :global(.ant-slider-rail) {
     background: var(--Colors-Use-Neutral-Border);
@@ -57,9 +62,13 @@
 }
 
 .scale {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   color: var(--Colors-Use-Neutral-Text-4-Help-text);
+
+  > :last-child {
+    justify-self: end;
+  }
 }
 
 .automatic {
@@ -78,11 +87,18 @@
   }
 }
 
+.autoAdjustLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .switch {
   padding: 0;
 }
 
 .thresholdLabel {
+  flex: 1;
   min-width: 0;
   display: flex;
   align-items: center;

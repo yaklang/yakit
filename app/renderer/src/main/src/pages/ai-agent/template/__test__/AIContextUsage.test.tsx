@@ -99,6 +99,22 @@ describe('AIContextUsage', () => {
     expect(mocks.save).toHaveBeenCalledExactlyOnceWith({ threshold_tokens: 650000, disable_auto_adjust: true })
   })
 
+  it.each([
+    [79999, 'Main'],
+    [80000, 'Warning'],
+    [99999, 'Warning'],
+    [100000, 'Error'],
+    [125000, 'Error'],
+  ] as const)('阈值为 100K、用量为 %i 时检查圆环和文字的 %s 配色', (tokens, color) => {
+    mocks.context.thresholdTokens = 100000
+    mocks.context.promptTokens = tokens
+    render(<AIContextUsage />)
+    const strokes = screen.getByRole('progressbar').querySelectorAll<SVGCircleElement>('circle')
+    const themeColor = `var(--Colors-Use-${color}-Primary)`
+    expect(Array.from(strokes, (circle) => circle.style.stroke)).toContain(themeColor)
+    expect(screen.getByText(/^Context \d+%$/).style.color).toBe(color === 'Main' ? '' : themeColor)
+  })
+
   it('超限显示实际比例，图形封顶且剩余为零', () => {
     mocks.context.promptTokens = 625000
     render(<AIContextUsage />)

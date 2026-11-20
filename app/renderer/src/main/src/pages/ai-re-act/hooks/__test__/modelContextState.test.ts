@@ -1,23 +1,27 @@
 import './setupElectron'
-import { cleanup, renderHook } from '@testing-library/react'
+import { act, cleanup, renderHook } from '@testing-library/react'
 import { useSaveModelContext } from '@/pages/ai-agent/template/AIContextUsage/useSaveModelContext'
+import useAIModelContext, { useCurrentModelContextReset } from '@/pages/ai-agent/useContext/useAIModelContext'
+import { getModelContextUsage } from '@/pages/ai-agent/utils/modelContextFormat'
 import { getCanonicalAIGlobalConfig } from '../useAIGlobalConfig'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ModelContextSnapshot } from '../aiRender'
+import { getStreamModelContext } from '../modelContext'
 import { globalSessionEngine } from '../ChatMultiSessionController'
 import { useAIGlobalConfigStore } from '@/store/aiGlobalConfig'
 import { defaultAIGlobalConfig } from '@/pages/ai-agent/defaultConstant'
 import { grpcAIMessageHandlers } from '../grpcStreamHandler/grpcAIOutputEventHandlers'
 import { makeGrpcJsonRes, makeHandlerRequest } from './fixtures'
 
-const { setModel } = vi.hoisted(() => ({ setModel: vi.fn() }))
-vi.mock('@/pages/ai-agent/grpc', () => ({ grpcSetAIModelContext: setModel }))
+const { getModel, setModel } = vi.hoisted(() => ({ getModel: vi.fn(), setModel: vi.fn() }))
+vi.mock('@/pages/ai-agent/grpc', () => ({ grpcGetAIModelContext: getModel, grpcSetAIModelContext: setModel }))
 let currentSession: ReturnType<typeof globalSessionEngine.ensureSession>
 let currentSessionId = 'session-a'
 vi.mock('../useCurrentDataBySession', () => ({
   useCurrentRawData: () => currentSession.rawData,
   useCurrentStore: () => currentSession.store.renderStore,
   useCurrentRequest: () => currentSession.request,
+  useCurrentMeta: () => currentSession.meta,
 }))
 vi.mock('../useCurrentSessionId', () => ({ default: () => currentSessionId }))
 vi.mock('@/i18n/useI18nNamespaces', () => ({ useI18nNamespaces: () => ({ t: (key: string) => key }) }))
@@ -92,6 +96,166 @@ describe('component model context saving and stream acknowledgements', () => {
     push({ threshold_tokens: 600000, disable_auto_adjust: true })
     expect(session.rawData.modelContext.context).toMatchObject({ threshold_tokens: 600000, disable_auto_adjust: true })
     expect(session.store.getState().modelContextUpdate).toBe(before + 1)
+  })
+
+  it.each(['model-b', saved.model])('uses only the selected model and its key after switching to %s', async (model) => {
+    const config = useAIGlobalConfigStore.getState().persistedAiGlobalConfig!
+    const target = { ...config.IntelligentModels[0], ModelName: model, ContextOwnerId: 'owner-b' }
+    const nextConfig = { ...config, IntelligentModels: [target, ...config.IntelligentModels] }
+    getModel.mockReset().mockResolvedValue({ ContextKey: 'key-b' })
+    renderHook(() => useCurrentModelContextReset(true))
+    const save = renderHook(() => useSaveModelContext('stream')).result.current
+    useAIGlobalConfigStore.setState({ aiGlobalConfig: nextConfig, configSavePending: true })
+    await push({ prompt_tokens: 100000 })
+    expect(session.rawData.modelContext.saved).toBeUndefined()
+    useAIGlobalConfigStore.setState({ persistedAiGlobalConfig: nextConfig, configSavePending: false })
+    await push({ model, context_key: 'key-b', prompt_tokens: 200000, threshold_tokens: 700000 })
+    await push({ prompt_tokens: 150000 })
+    await vi.advanceTimersByTimeAsync(0)
+    expect(getModel).toHaveBeenCalledTimes(model === saved.model ? 1 : 0)
+    expect(session.rawData.modelContext.saved?.context_key).toBe('key-b')
+    expect(session.rawData.modelContext.runtime).toMatchObject({
+      context_key: 'key-b',
+      threshold_tokens: 700000,
+      prompt_tokens: 200000,
+    })
+    expect(save({ threshold_tokens: 800000 })).toBe(true)
+    await vi.advanceTimersByTimeAsync(0)
+    expect(controller.handleSendMessage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        params: expect.objectContaining({ Params: { ModelContextKey: 'key-b', RuntimeContextSizeLimit: 800000 } }),
+      }),
+    )
+  })
+
+  it('discards a late key lookup after another model switch', async () => {
+    const config = useAIGlobalConfigStore.getState().persistedAiGlobalConfig!
+    const original = config.IntelligentModels[0]
+    let finishLookup!: (value: { ContextKey: string }) => void
+    getModel.mockReset().mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          finishLookup = resolve
+        }),
+    )
+    renderHook(() => useCurrentModelContextReset(true))
+    useAIGlobalConfigStore.setState({
+      persistedAiGlobalConfig: { ...config, IntelligentModels: [{ ...original, ContextOwnerId: 'owner-b' }] },
+    })
+    push({ context_key: 'key-b' })
+    await vi.advanceTimersByTimeAsync(0)
+    useAIGlobalConfigStore.setState({
+      persistedAiGlobalConfig: { ...config, IntelligentModels: [{ ...original, ModelName: 'model-c' }] },
+    })
+    finishLookup({ ContextKey: 'key-b' })
+    await vi.advanceTimersByTimeAsync(0)
+    expect(session.rawData.modelContext.saved).toBeUndefined()
+    push({ model: 'model-c', context_key: 'key-c' })
+    expect(session.rawData.modelContext.saved?.context_key).toBe('key-c')
+    expect(session.rawData.modelContext.runtime?.context_key).toBe('key-c')
+  })
+
+  it.each(['model-b', 'model'])('切换模型 %s 保留 121K 用量，以新配置计算占比并使用新 key 保存', async (model) => {
+    push({ prompt_tokens: 121000, threshold_tokens: 100000 })
+    const config = useAIGlobalConfigStore.getState().persistedAiGlobalConfig!
+    const target = { ...config.IntelligentModels[0], ModelName: model, ContextOwnerId: 'owner-b' }
+    getModel.mockReset().mockResolvedValue({
+      Provider: 'openai',
+      Model: model,
+      ContextKey: 'key-b',
+      ThresholdTokens: 500000,
+      MinimumThresholdTokens: 100000,
+      DisableAutoAdjust: true,
+      Source: 'manual',
+    })
+    const { result } = renderHook(() => {
+      useCurrentModelContextReset(true)
+      return useAIModelContext('stream')
+    })
+    await act(async () => {
+      useAIGlobalConfigStore.setState({ persistedAiGlobalConfig: { ...config, IntelligentModels: [target] } })
+      await vi.advanceTimersByTimeAsync(0)
+    })
+    expect(getModel).toHaveBeenCalledWith({ Config: target }, true)
+    expect(result.current).toMatchObject({
+      enabled: true,
+      promptTokens: 121000,
+      thresholdTokens: 500000,
+      editorThresholdTokens: 500000,
+      editorDisableAutoAdjust: true,
+    })
+    expect(
+      getModelContextUsage(result.current.enabled, result.current.promptTokens, result.current.thresholdTokens),
+    ).toMatchObject({ percent: 24, remaining: 379000 })
+    await act(async () => {
+      result.current.save({ threshold_tokens: 600000 })
+      await vi.advanceTimersByTimeAsync(0)
+    })
+    expect(controller.handleSendMessage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        params: expect.objectContaining({ Params: { ModelContextKey: 'key-b', RuntimeContextSizeLimit: 600000 } }),
+      }),
+    )
+    act(() => {
+      push({
+        model,
+        context_key: 'key-b',
+        prompt_tokens: 0,
+        threshold_tokens: 600000,
+        disable_auto_adjust: true,
+        change: { id: 'new-manual', reason: 'manual' },
+      })
+    })
+    expect(result.current).toMatchObject({ promptTokens: 121000, thresholdTokens: 600000, saving: false })
+  })
+
+  it.each(['迟到查询', '新模型流先到'])('切换模型时%s不会覆盖新数据', async (scenario) => {
+    push({ prompt_tokens: 121000, threshold_tokens: 100000 })
+    const config = useAIGlobalConfigStore.getState().persistedAiGlobalConfig!
+    const select = (name: string) =>
+      useAIGlobalConfigStore.setState({
+        persistedAiGlobalConfig: {
+          ...config,
+          IntelligentModels: [{ ...config.IntelligentModels[0], ModelName: name, ContextOwnerId: name }],
+        },
+      })
+    const response = (name: string) => ({
+      Provider: 'openai',
+      Model: name,
+      ContextKey: name,
+      ThresholdTokens: 500000,
+      MinimumThresholdTokens: 100000,
+      DisableAutoAdjust: true,
+      Source: 'manual',
+    })
+    let finish!: (value: ReturnType<typeof response>) => void
+    getModel
+      .mockReset()
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            finish = resolve
+          }),
+      )
+      .mockResolvedValue(response('model-c'))
+    renderHook(() => useCurrentModelContextReset(true))
+    select('model-b')
+    await vi.advanceTimersByTimeAsync(0)
+    if (scenario === '迟到查询') {
+      select('model-c')
+      await vi.advanceTimersByTimeAsync(0)
+    } else {
+      push({ model: 'model-b', context_key: 'model-b', prompt_tokens: 140000, threshold_tokens: 700000 })
+    }
+    finish(response('model-b'))
+    await vi.advanceTimersByTimeAsync(0)
+    expect(getStreamModelContext(session.rawData.modelContext)).toMatchObject(
+      scenario === '迟到查询'
+        ? { context_key: 'model-c', threshold_tokens: 500000 }
+        : { context_key: 'model-b', prompt_tokens: 140000, threshold_tokens: 700000 },
+    )
+    const { result } = renderHook(() => useAIModelContext('stream'))
+    expect(result.current.promptTokens).toBe(scenario === '迟到查询' ? 121000 : 140000)
   })
 
   it('keeps the model minimum when subsequent usage events omit it', () => {

@@ -3,7 +3,8 @@ import type { FC } from 'react'
 import { useRequest } from 'ahooks'
 import { Tooltip } from 'antd'
 import classNames from 'classnames'
-import { BoxOutlined, QuestionMarkCircleOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { BoxOutlined, CheckOutlined, QuestionMarkCircleOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { grpcQueryAIFocus } from '@/pages/ai-agent/grpc'
@@ -36,11 +37,16 @@ export const AIFocusMode: FC<AIFocusModeProps> = ({
       return { value: item.Name, label: row.name ?? item.Name, description: row.description }
     })
   const heading = t('AiAgengt.focusMode')
+  const clearLabel = t('AIFocusMode.clearSelection')
+  const clearSelection = () => {
+    onChange(undefined)
+    setOpen(false)
+  }
   const renderLabel = (label: string) => (
     <span className={selectStyles['select-option']} title={label}>
       <BoxOutlined
         size={16}
-        color="var(--Colors-Use-Neutral-Text-2-Primary)"
+        color={value ? 'var(--Colors-Use-Main-Primary)' : 'var(--Colors-Use-Neutral-Text-2-Primary)'}
         className={selectStyles['select-icon-wrapper']}
       />
       {!iconOnly && <span className={styles.label}>{label}</span>}
@@ -72,9 +78,12 @@ export const AIFocusMode: FC<AIFocusModeProps> = ({
         placeholder={renderLabel(heading)}
         optionLabelProp="label"
         labelRender={({ label, value }) => renderLabel(String(label ?? value))}
-        allowClear={canClear}
-        onChange={(next: string | undefined) => {
-          onChange(next)
+        allowClear={canClear && !iconOnly}
+        menuItemSelectedIcon={<CheckOutlined size={14} color="currentColor" />}
+        onClear={clearSelection}
+        onSelect={(next: string) => {
+          if (next !== value) onChange(next)
+          else if (canClear) return clearSelection()
           setOpen(false)
         }}
         dropdownRender={(menu) => (
@@ -85,15 +94,29 @@ export const AIFocusMode: FC<AIFocusModeProps> = ({
               <Tooltip title={t('AIFocusMode.focusModeTooltip')}>
                 <QuestionMarkCircleOutlined />
               </Tooltip>
+              {canClear && (
+                <Tooltip title={clearLabel}>
+                  <YakitButton
+                    type="text2"
+                    htmlType="button"
+                    className={styles.clearSelection}
+                    aria-label={clearLabel}
+                    onMouseDown={(event) => event.preventDefault()}
+                    onClick={clearSelection}
+                  >
+                    {t('YakitButton.cancel')}
+                  </YakitButton>
+                </Tooltip>
+              )}
             </div>
             {menu}
           </div>
         )}
       >
-        {sceneOptions.map(({ value, label, description }) => (
-          <YakitSelect.Option key={value} value={value} label={label}>
-            <Tooltip title={description || t('YakitEmpty.noDescription')} placement="right">
-              <div>{label}</div>
+        {sceneOptions.map(({ value: sceneValue, label, description }) => (
+          <YakitSelect.Option key={sceneValue} value={sceneValue} label={label} className={styles.sceneOption}>
+            <Tooltip title={description || t('YakitEmpty.noDescription')} placement="left">
+              <span className={styles.optionLabel}>{label}</span>
             </Tooltip>
           </YakitSelect.Option>
         ))}

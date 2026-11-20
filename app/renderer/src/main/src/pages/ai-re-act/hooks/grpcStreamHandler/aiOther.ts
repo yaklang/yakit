@@ -1,6 +1,6 @@
 import type { AIAgentChatMetaData } from '@/pages/ai-agent/type/aiChat'
 import type { ModelContextPatch } from '../aiRender'
-import type { AIMessageHandler } from '../type'
+import type { AIMessageHandler, AIMessageHandlerParams } from '../type'
 import { AIInputEventSyncTypeEnum, AINotifyType, AITaskStatus } from '../grpcApi'
 import type { AITaskStatusType, AIAgentGrpcApi } from '../grpcApi'
 import { updateModelContextState } from '../modelContext'
@@ -33,13 +33,35 @@ const handleModelContext: AIMessageHandler = (request) => {
     // 单条诊断事件损坏时仍需继续处理后续会话事件。
     return
   }
-  if (data == null) return
+  if (!data?.context_key) return
+  const { expectedModel, saved } = rawData.modelContext
+  if (expectedModel) {
+    if (data.provider !== expectedModel.provider || data.model !== expectedModel.model) return
+    if (!saved && expectedModel.resolveKey) {
+      const event = data
+      // 查询同名配置的归属期间，其他会话事件可以继续处理。
+      void expectedModel.resolveKey().then(
+        (key) => {
+          if (rawData.modelContext.expectedModel === expectedModel && key === event.context_key) {
+            applyModelContext(request, event)
+          }
+        },
+        () => undefined,
+      )
+      return
+    }
+  }
+  applyModelContext(request, data)
+}
+
+const applyModelContext = (request: AIMessageHandlerParams, data: AIAgentGrpcApi.ModelContext) => {
+  const { rawData } = request
   const state = rawData.modelContext
   if (state.saved && data.context_key !== state.saved.context_key) return
   const { pending } = state
   if (pending && data.context_key !== pending.baseline?.context_key) return
 
-  // 保存回执的用量可能为 0，只保留同一模型上次测得的值。
+  // 保存回执的用量可能为 0，沿用最近的实测值，包括切换模型时保留的会话用量。
   const sameContext = !state.runtime || state.runtime.context_key === data.context_key
   const promptTokens = data.prompt_tokens || (sameContext ? state.promptTokens : undefined)
   const previous = state.context ?? state.saved
@@ -60,13 +82,20 @@ const handleModelContext: AIMessageHandler = (request) => {
     (patch.threshold_tokens === undefined || patch.threshold_tokens === data.threshold_tokens) &&
     (patch.disable_auto_adjust === undefined || patch.disable_auto_adjust === data.disable_auto_adjust)
   // 流事件只能确认运行中的模型，设置查询的加载或失败状态仍由查询负责结束。
-  const update = { status: state.status === 'idle' ? ('ready' as const) : state.status, runtime, promptTokens, saved }
+  const awaitingSwitchedModel = state.retainedThresholdTokens !== undefined && !state.saved
+  const update = {
+    status: state.status === 'idle' || awaitingSwitchedModel ? ('ready' as const) : state.status,
+    runtime,
+    retainedThresholdTokens: undefined,
+    promptTokens,
+    saved,
+  }
   if (!pending) {
     updateModelContextState(request, {
       ...update,
       context: runtime,
       ...(!data.error &&
-        (!state.failedPatch || confirmsPatch(state.failedPatch)) && {
+        (state.failedPatch ? confirmsPatch(state.failedPatch) : update.status === 'ready') && {
           failedPatch: undefined,
           error: undefined,
         }),

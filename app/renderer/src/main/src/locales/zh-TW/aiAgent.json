@@ -211,6 +211,7 @@
     "singleModelModeDescription": "開啟後本會話只使用全局配置中的主模型"
   },
   "AIModelGlobalConfig": {
+    "savedRefreshFailed": "設定已儲存，重新整理失敗。",
     "aiModelConfig": "AI模型配置",
     "disableFallback": "禁用降級到輔助模型"
   },
@@ -246,8 +247,11 @@
     "summary": "已用 {{used}}，剩餘 {{remaining}}",
     "limit": "(上限 {{threshold}})",
     "threshold": "上下文壓縮閾值",
+    "restoreDefault": "恢復預設值",
+    "exceedsMaximum": "超出最大值",
     "autoAdjust": "自動調整",
     "autoAdjustHelp": "觸發遠端錯誤以後自動調整",
+    "autoAdjustTooltip": "預設開啟。開啟後，模型拒絕過長的上下文時會自動降低閾值並重試；關閉後保留手動閾值，超限時停止任務。",
     "retry": "重試",
     "saveTimeout": "儲存逾時，已恢復最近確認的設定",
     "sessionUnavailable": "工作階段連線已中斷，請重試",
@@ -293,6 +297,7 @@
     "browserHint": "在 AI 中操作瀏覽器"
   },
   "AIFocusMode": {
+    "clearSelection": "取消情境選取",
     "focusModeTooltip": "使用情境框架限定 AI 的思考範圍"
   },
   "AIToolDecision": {

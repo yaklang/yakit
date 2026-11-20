@@ -211,6 +211,7 @@
     "singleModelModeDescription": "Use only the globally configured primary model for this session when enabled"
   },
   "AIModelGlobalConfig": {
+    "savedRefreshFailed": "Configuration saved, but refreshing it failed.",
     "aiModelConfig": "AI model configuration",
     "disableFallback": "Disable fallback to the auxiliary model"
   },
@@ -246,8 +247,11 @@
     "summary": "Used {{used}}, remaining {{remaining}}",
     "limit": "(limit {{threshold}})",
     "threshold": "Context compression threshold",
+    "restoreDefault": "Restore default value",
+    "exceedsMaximum": "Exceeds maximum value",
     "autoAdjust": "Auto-adjust",
     "autoAdjustHelp": "Adjust automatically after a remote error",
+    "autoAdjustTooltip": "On by default. If the model rejects a context that is too long, the threshold is lowered automatically and the task is retried. When off, the manual threshold is kept and the task stops if the limit is exceeded.",
     "retry": "Retry",
     "saveTimeout": "Save timed out. Restored the last confirmed settings.",
     "sessionUnavailable": "The session is disconnected. Please retry.",
@@ -293,6 +297,7 @@
     "browserHint": "Operate a browser with AI"
   },
   "AIFocusMode": {
+    "clearSelection": "Clear scene selection",
     "focusModeTooltip": "Use a framework to guide AI in complex scenarios"
   },
   "AIToolDecision": {

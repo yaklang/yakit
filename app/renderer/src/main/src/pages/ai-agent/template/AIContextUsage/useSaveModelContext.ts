@@ -2,12 +2,14 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { yakitNotify } from '@/utils/notification'
 import { useAIGlobalConfigStore } from '@/store/aiGlobalConfig'
 import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
+import { AIInputEventHotPatchTypeEnum } from '@/pages/ai-re-act/hooks/grpcApi'
 import { useCurrentRawData, useCurrentRequest, useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
 import { getCanonicalAIGlobalConfig } from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
 import {
   DEFAULT_MINIMUM_THRESHOLD_TOKENS,
   enqueueModelContextSave,
+  getStreamModelContext,
   sameModelContextIdentity,
   toModelContextSnapshot,
   updateModelContextState,
@@ -40,7 +42,7 @@ export const useSaveModelContext = (source: AIModelContextSource) => {
     }
     // 后台会话可能保留旧主模型；设置查询确认前，离线保存由当前 Config 定位目标。
     const baseline = streamOnly
-      ? current.runtime
+      ? getStreamModelContext(current)
       : current.status === 'ready'
         ? (current.saved ?? current.runtime)
         : undefined
@@ -96,7 +98,7 @@ export const useSaveModelContext = (source: AIModelContextSource) => {
             type: 'casual',
             params: {
               IsConfigHotpatch: true,
-              HotpatchType: 'RuntimeContextSizeLimit',
+              HotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_RuntimeContextSizeLimit,
               Params: {
                 ModelContextKey: baseline.context_key,
                 RuntimeContextSizeLimit: patch.threshold_tokens ?? 0,
