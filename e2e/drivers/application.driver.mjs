@@ -6,7 +6,9 @@ import {
 } from '../fixtures/electron/electron-cdp-retry.mjs'
 
 const devRenderers = process.env.YAKIT_E2E_RENDERER_MODE === 'development'
-export const LINK_WINDOW_URL = devRenderers ? '127.0.0.1:3000/engine-link.html' : '/renderer/pages/link/engine-link.html'
+export const LINK_WINDOW_URL = devRenderers
+  ? '127.0.0.1:3000/engine-link.html'
+  : '/renderer/pages/link/engine-link.html'
 export const MAIN_WINDOW_URL = devRenderers ? '127.0.0.1:3000' : '/renderer/pages/main/index.html'
 
 export const waitForShellWindows = async () => {

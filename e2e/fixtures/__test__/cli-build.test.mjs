@@ -76,12 +76,16 @@ if (${JSON.stringify(command)} === 'vite') {
 }
 
 describe('CLI production build ordering', () => {
-  it('waits for both renderers before building Electron', async () => {
-    const result = await runBuild()
-    expect(result.code, result.output).toBe(0)
-    expect(result.events.slice(0, 2).sort()).toEqual(['link', 'main'])
-    expect(result.events[2]).toBe('electron')
-  }, BUILD_ORDER_TEST_TIMEOUT)
+  it(
+    'waits for both renderers before building Electron',
+    async () => {
+      const result = await runBuild()
+      expect(result.code, result.output).toBe(0)
+      expect(result.events.slice(0, 2).sort()).toEqual(['link', 'main'])
+      expect(result.events[2]).toBe('electron')
+    },
+    BUILD_ORDER_TEST_TIMEOUT,
+  )
 
   it.each(['main', 'link'])(
     'does not build Electron when %s fails',
