@@ -11,6 +11,7 @@ const checks = [
   { envKey: 'OUTCOME_I18N', title: 'i18n（renderer src/main zh/zh-TW/en）', log: 'i18n-output.log' },
   { envKey: 'OUTCOME_ESLINT', title: 'ESLint（renderer src/main）', log: 'eslint-output.log' },
   { envKey: 'OUTCOME_TSC', title: 'TypeScript（renderer src/main）', log: 'tsc-output.log' },
+  { envKey: 'OUTCOME_LINK_BOUNDARY', title: 'Link 边界（源码 + 构建）', log: 'link-boundary-output.log' },
   { envKey: 'OUTCOME_MEDIA', title: '图片/视频体积', log: 'media-output.log' },
   {
     envKey: 'OUTCOME_VITEST',

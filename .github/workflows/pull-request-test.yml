@@ -34,6 +34,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       vitest_tests: ${{ steps.vitest_select.outputs.tests }}
+      link_changed: ${{ steps.link_changed.outputs.value }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -87,6 +88,16 @@ jobs:
           CHANGED_FILES_PATH: ${{ github.workspace }}/pr-ci-changed-files-list.txt
           CI_DEBUG_VITEST_SELECT: '0'
         run: node scripts/ci-select-vitest-tests.js
+
+      - name: Detect Link boundary inputs
+        id: link_changed
+        shell: bash
+        run: |
+          if grep -Eq '^(app/renderer/src/main/src/|app/renderer/src/main/engine-link\.html$|app/renderer/src/main/vite\.link\.config\.mts$|app/renderer/src/main/scripts/generate-theme-css\.cjs$|app/renderer/vite-plugins/|app/renderer/src/main/package\.json$|app/renderer/src/main/yarn\.lock$|package\.json$|yarn\.lock$|scripts/check-renderer-boundaries\.js$|\.github/workflows/pull-request-test\.yml$)' pr-ci-changed-files-list.txt; then
+            echo 'value=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'value=false' >> "$GITHUB_OUTPUT"
+          fi
 
       - uses: actions/upload-artifact@v4
         name: Upload changed paths
@@ -146,6 +157,39 @@ jobs:
       run_command: yarn type-check
       log_filename: tsc-output.log
       artifact_name: ci-log-tsc-renderer
+
+  # Link 与主渲染端共用源码树：源码边界脚本 + 真实 Link 构建（覆盖共享组件的 window.require/页面模块泄漏）
+  ci-link-boundary:
+    name: Link 边界（源码 + 构建）
+    runs-on: ubuntu-latest
+    needs: [prepare]
+    if: needs.prepare.outputs.link_changed == 'true'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - uses: ./.github/actions/pr-ci-setup-node-yarn
+        with:
+          node-version: '22.22.1'
+
+      - name: Check renderer boundaries
+        shell: bash
+        run: node scripts/check-renderer-boundaries.js 2>&1 | tee link-boundary-output.log
+
+      - name: Build Link renderer
+        shell: bash
+        run: yarn cli build --link -v yakit 2>&1 | tee -a link-boundary-output.log
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ci-log-link-boundary
+          path: link-boundary-output.log
+          if-no-files-found: warn
 
   # 单测：用 fake electron-builder/asar 验证构建脚本逻辑；真实产物由发布流水线覆盖
   ci-electron:
@@ -324,6 +368,7 @@ jobs:
       - ci-i18n
       - ci-eslint-renderer
       - ci-tsc-renderer
+      - ci-link-boundary
       - ci-electron
       - ci-media
       - ci-vitest
@@ -366,6 +411,7 @@ jobs:
           OUTCOME_I18N: ${{ needs.ci-i18n.result }}
           OUTCOME_ESLINT: ${{ needs.ci-eslint-renderer.result }}
           OUTCOME_TSC: ${{ needs.ci-tsc-renderer.result }}
+          OUTCOME_LINK_BOUNDARY: ${{ needs.ci-link-boundary.result }}
           OUTCOME_ELECTRON: ${{ needs.ci-electron.result }}
           OUTCOME_MEDIA: ${{ needs.ci-media.result }}
           OUTCOME_VITEST: ${{ steps.map_vitest.outputs.outcome }}
