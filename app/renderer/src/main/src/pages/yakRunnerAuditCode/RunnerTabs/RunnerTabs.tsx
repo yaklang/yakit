@@ -16,6 +16,7 @@ import type {
   WidgetControlProps,
 } from './RunnerTabsType'
 import { Droppable, Draggable } from '@hello-pangea/dnd'
+import { YakitAntdProvider } from '@/theme/antdTheme'
 
 import classNames from 'classnames'
 import styles from './RunnerTabs.module.scss'
@@ -1250,10 +1251,12 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
           const domNode = document.createElement('div')
           domNode.style.height = '100px'
           createRoot(domNode).render(
-            <CodeScanMonacoWidget
-              source={editorInfo?.highLightRange?.source}
-              closeFizzRangeWidget={closeFizzRangeWidget}
-            />,
+            <YakitAntdProvider>
+              <CodeScanMonacoWidget
+                source={editorInfo?.highLightRange?.source}
+                closeFizzRangeWidget={closeFizzRangeWidget}
+              />
+            </YakitAntdProvider>,
           )
           return domNode
         },

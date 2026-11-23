@@ -385,7 +385,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     tempElement.style.cssText = `
             display: inline-block;
             font-size: 11px;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+            font-family: var(--ant-font-family);
         `
     tempElement.textContent = text
     document.body.appendChild(tempElement)

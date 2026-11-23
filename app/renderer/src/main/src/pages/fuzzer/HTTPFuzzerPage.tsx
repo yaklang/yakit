@@ -82,6 +82,7 @@ import type {
 import type { HTTPHeader } from '../mitm/MITMContentReplacerHeaderOperator'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import _ from 'lodash'
+import { YakitAntdProvider } from '@/theme/antdTheme'
 import { createHTTPFuzzerRun } from './httpFuzzerRun'
 import {
   fuzzerPageScope,
@@ -5147,7 +5148,11 @@ export const onAddOverlayWidget = (editor, rsp, isShow?: boolean) => {
 
   fizzOverlayDomNode = document.createElement('div')
   fizzOverlayRoot = createRoot(fizzOverlayDomNode)
-  fizzOverlayRoot.render(<EditorOverlayWidget rsp={rsp} />)
+  fizzOverlayRoot.render(
+    <YakitAntdProvider>
+      <EditorOverlayWidget rsp={rsp} />
+    </YakitAntdProvider>,
+  )
 
   const fizzOverlayWidget = {
     getDomNode() {

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { act, fireEvent, screen } from '@testing-library/react'
-import type { ReactNode } from 'react'
+import { useContext, type ReactNode } from 'react'
+import { ConfigProvider } from 'antd'
 import { showByRightContext } from '../showByRightContext'
 import emiter from '@/utils/eventBus/eventBus'
 
@@ -109,5 +110,23 @@ describe('showByRightContext', () => {
     handle.destroy()
     expect(emiter.emit).toHaveBeenCalledWith('setYakitHeaderDraggable', true)
     expect(document.getElementById(ContextMenuId)).not.toBeInTheDocument()
+  })
+
+  it('独立 createRoot 包裹在 YakitAntdProvider 内，菜单可吃到全局主题与字体 token', async () => {
+    const ThemeProbe = () => {
+      const { theme } = useContext(ConfigProvider.ConfigContext)
+      return (
+        <div
+          data-testid="theme-probe"
+          data-hashed={String(theme?.hashed)}
+          data-font-family={theme?.token?.fontFamily ?? ''}
+        />
+      )
+    }
+    handles.push(showByRightContext(<ThemeProbe />, 10, 20))
+    await waitForRender()
+    const probe = screen.getByTestId('theme-probe')
+    expect(probe.getAttribute('data-hashed')).toBe('false')
+    expect(probe.getAttribute('data-font-family')).toContain('Microsoft YaHei')
   })
 })

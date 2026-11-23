@@ -45,7 +45,7 @@ export const UpdateGroupList: React.FC<UpdateGroupListProps> = React.forwardRef(
     tempElement.style.cssText = `
           display: inline-block;
           font-size: 14px;
-          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+          font-family: var(--ant-font-family);
       `
     tempElement.textContent = text
     document.body.appendChild(tempElement)

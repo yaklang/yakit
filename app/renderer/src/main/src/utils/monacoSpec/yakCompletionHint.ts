@@ -119,7 +119,7 @@ const buildWidget = (editor: monaco.editor.ICodeEditor, text: string): monaco.ed
     'opacity:0',
     `transition:opacity ${FADE_MS}ms ease`,
     'box-shadow:0 2px 8px rgba(0,0,0,0.25)',
-    'font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif',
+    'font-family:var(--ant-font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑", "Noto Sans", sans-serif)',
   ].join(';')
 
   const widget: monaco.editor.IContentWidget = {

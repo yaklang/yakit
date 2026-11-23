@@ -3,6 +3,7 @@ import React, { memo, type ReactNode, useEffect, useLayoutEffect, useMemo, useRe
 import classNames from 'classnames'
 import { coordinate } from '@/pages/globalVariable'
 import emiter from '@/utils/eventBus/eventBus'
+import { YakitAntdProvider } from '@/theme/antdTheme'
 import { YakitMenu, type YakitMenuProp } from './YakitMenu'
 import styles from './showByRightContext.module.scss'
 
@@ -148,7 +149,12 @@ export const showByRightContext = (props: YakitMenuProp | ReactNode, x?: number,
         rightContextRoot = createRoot(div)
       }
       root = rightContextRoot
-      rightContextRoot.render(<RightContext data={props} callback={offsetPosition} renderSeq={renderSeq} />)
+      // 独立 createRoot 必须包 YakitAntdProvider，否则 antd 5 Menu 会丢失全局 fontFamily、colorSplit 和主题样式
+      rightContextRoot.render(
+        <YakitAntdProvider>
+          <RightContext data={props} callback={offsetPosition} renderSeq={renderSeq} />
+        </YakitAntdProvider>,
+      )
     })
   }
   render()
