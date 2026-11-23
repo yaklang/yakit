@@ -2324,14 +2324,8 @@ message AIStartParams {
   // 上下文的时间线不会被过早压缩。
   int64 RuntimeContextSizeLimit = 51;
   // Model-scoped hotpatch only; absent preserves the saved automatic adjustment preference.
-  // 55/56 已被 SyntaxFlow 规则开关占用，模型上下文绑定暂用 57/58。
-  optional bool DisableContextAutoAdjust = 57;
-  string ModelContextKey = 58;
-  // 为 true 时禁用内置 SyntaxFlow 安全规则（内置高危预检与 ReAct 审查）。
-  bool DisableBuiltinSyntaxFlowRules = 55;
-  // 为 true 时把用户自定义 Bash 安全规则（AI Bash 安全规则页的正则规则与规则库中
-  // 的自定义 Bash SyntaxFlow 规则）纳入安全审查与高危预检。
-  bool EnableCustomSyntaxFlowRules = 56;
+  optional bool DisableContextAutoAdjust = 56;
+  string ModelContextKey = 55;
 
   // 用户交互的最大次数限制,超过这个次数，AI 将不再被允许问用户问题
   int64 UserInteractLimit = 30;
@@ -2391,6 +2385,11 @@ message AIStartParams {
   // Connection-local, build-generated component catalog and interaction capabilities.
   string ClientUI = 53;
 	AIImageInputConfig ImageInput = 54;
+  // 为 true 时禁用内置 SyntaxFlow 安全规则（内置高危预检与 ReAct 审查）。
+  bool DisableBuiltinSyntaxFlowRules = 57;
+  // 为 true 时把用户自定义 Bash 安全规则（AI Bash 安全规则页的正则规则与规则库中
+  // 的自定义 Bash SyntaxFlow 规则）纳入安全审查与高危预检。
+  bool EnableCustomSyntaxFlowRules = 58;
 }
 
 message AIExecutionStrategy {

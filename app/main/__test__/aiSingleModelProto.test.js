@@ -99,6 +99,8 @@ describe('model vision gRPC contract', () => {
       ImageInput: 54,
       ModelContextKey: 55,
       DisableContextAutoAdjust: 56,
+      DisableBuiltinSyntaxFlowRules: 57,
+      EnableCustomSyntaxFlowRules: 58,
     })
   })
 
