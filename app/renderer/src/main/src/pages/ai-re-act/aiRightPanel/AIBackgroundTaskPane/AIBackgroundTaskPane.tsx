@@ -1,3 +1,4 @@
+import type { FC } from 'react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useStore } from 'zustand'
 import { useMemoizedFn } from 'ahooks'
@@ -70,7 +71,7 @@ const renderExecutionItem = (
         <div key={execution.execute_id} className={classNames(styles['execution-item'], styles['running-item'])}>
           <div className={styles['execution-item-content']}>
             <LoadingOutlined color="currentColor" className={styles['running']} />
-            <div>{execution.metadata?.name}</div>
+            <div>{execution.metadata?.name || execution.execute_id}</div>
           </div>
           <span className={styles['execution-time']}>
             {t('AIRightPanel.executionDuration')}
@@ -95,7 +96,7 @@ const renderExecutionItem = (
         <div key={execution.execute_id} className={styles['execution-item']}>
           <div className={styles['execution-item-content']}>
             <CheckCircleOutlined color="currentColor" className={styles['completed']} />
-            <div>{execution.metadata?.name}</div>
+            <div>{execution.metadata?.name || execution.execute_id}</div>
           </div>
           <span className={classNames(styles['execution-time'])}>{formatExecutionTime(execution.ended_at)}</span>
         </div>
@@ -105,7 +106,7 @@ const renderExecutionItem = (
         <div key={execution.execute_id} className={styles['execution-item']}>
           <div className={styles['execution-item-content']}>
             <XCircleOutlined color="currentColor" className={styles['failed']} />
-            <div>{execution.metadata?.name}</div>
+            <div>{execution.metadata?.name || execution.execute_id}</div>
           </div>
           <span className={classNames(styles['execution-time'], styles['execution-time-hide'])}>
             {formatExecutionTime(execution.ended_at)}
@@ -142,7 +143,7 @@ const defaultExpanded = (grouped: ReturnType<typeof groupExecutions>) => ({
 })
 
 /** 后台执行快照：先把协议数据原样放出来，停止走 stop_async_execution_sync */
-export const AIBackgroundTaskPane: React.FC = () => {
+export const AIBackgroundTaskPane: FC = () => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const store = useCurrentStore()
   const rawData = useCurrentRawData()

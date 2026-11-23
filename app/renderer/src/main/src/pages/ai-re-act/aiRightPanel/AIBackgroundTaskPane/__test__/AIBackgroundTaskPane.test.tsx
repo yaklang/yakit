@@ -87,6 +87,7 @@ describe('AIBackgroundTaskPane', () => {
         makeExecution('exec-failed', AsyncExecutionState.failed, 'scan_port'),
         makeExecution('exec-cancelled', AsyncExecutionState.cancelled, 'fuzz'),
         makeExecution('exec-timeout', AsyncExecutionState.timedOut, 'slow'),
+        { execute_id: 'exec-no-name', state: AsyncExecutionState.running },
       ],
     }
     render(<AIBackgroundTaskPane />)
@@ -99,6 +100,7 @@ describe('AIBackgroundTaskPane', () => {
     expect(screen.getByText('scan_port')).toBeInTheDocument()
     expect(screen.getByText('fuzz')).toBeInTheDocument()
     expect(screen.getByText('slow')).toBeInTheDocument()
+    expect(screen.getByText('exec-no-name')).toBeInTheDocument()
     expect(screen.getByText('YakitEmpty.end_of_list')).toBeInTheDocument()
   })
 
