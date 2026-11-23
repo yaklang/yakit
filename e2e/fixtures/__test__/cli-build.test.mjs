@@ -8,6 +8,8 @@ import { fileURLToPath } from 'node:url'
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..')
 const fixtures = []
+// 真实 CLI 子进程 + 临时目录复制在并行负载下开销较大，15s 容易抖动。
+const BUILD_ORDER_TEST_TIMEOUT = 30_000
 
 afterEach(async () => {
   for (const directory of fixtures.splice(0))
@@ -79,7 +81,7 @@ describe('CLI production build ordering', () => {
     expect(result.code, result.output).toBe(0)
     expect(result.events.slice(0, 2).sort()).toEqual(['link', 'main'])
     expect(result.events[2]).toBe('electron')
-  }, 15000)
+  }, BUILD_ORDER_TEST_TIMEOUT)
 
   it.each(['main', 'link'])(
     'does not build Electron when %s fails',
@@ -88,6 +90,6 @@ describe('CLI production build ordering', () => {
       expect(result.code, result.output).not.toBe(0)
       expect(result.events).not.toContain('electron')
     },
-    15000,
+    BUILD_ORDER_TEST_TIMEOUT,
   )
 })
