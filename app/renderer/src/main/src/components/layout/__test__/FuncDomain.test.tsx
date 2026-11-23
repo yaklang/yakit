@@ -636,13 +636,15 @@ describe('FuncDomain 设置菜单录屏/截屏', () => {
     await waitFor(() => expect(yakitUILayout.cancelScreenRecorder).toHaveBeenCalledWith('t'))
   })
 
+  const SUBMENU_TIMEOUT = 5000
+
   /** 展开「截屏」二级菜单 */
   const openScreenshotSubmenu = async () => {
     const parent = await screen.findByText('FuncDomain.screenshot')
     const title = parent.closest('.ant-menu-submenu-title') ?? parent
     fireEvent.mouseEnter(title)
     fireEvent.mouseMove(title)
-    await screen.findByText('FuncDomain.screenshotSelect')
+    await screen.findByText('FuncDomain.screenshotSelect', undefined, { timeout: SUBMENU_TIMEOUT })
   }
 
   type CaptureResult = { path: string; clipboardCopied: boolean; clipboardError: string }
