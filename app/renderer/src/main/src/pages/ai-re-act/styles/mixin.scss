@@ -1,7 +1,8 @@
 /// 复用 .ai-re-act 的内容宽度与偏移，对齐消息、输入框和提示。
 /// 仅在 .ai-re-act 内使用，各内容元素需分别 @include。
 @mixin ai-right-panel-content-track() {
-  width: var(--ai-right-panel-content-track-width);
+  width: calc(var(--ai-right-panel-content-track-width) - var(--ai-summary-track-inset, 0px));
   margin: 0 auto;
+  margin-left: calc((100% - var(--ai-right-panel-content-track-width)) / 2 + var(--ai-summary-track-inset, 0px));
   transform: translateX(var(--ai-right-panel-content-shift));
 }

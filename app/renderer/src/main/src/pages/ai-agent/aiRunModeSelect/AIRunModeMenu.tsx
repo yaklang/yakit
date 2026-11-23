@@ -19,13 +19,14 @@ import { useAIRunMode } from './useAIRunMode'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { clearGoalStrategy } from '../defaultConstant'
 import {
-  GOAL_DURATION_PRESETS,
+  GOAL_DURATION_OPTIONS,
   getGoalDurationDisplayLabel,
   goalDurationKeyToSeconds,
   goalDurationSecondsToKey,
   isGoalDurationPresetKey,
 } from '../components/aiMilkdownInput/constants'
 import { deriveGoalTagFromStrategy } from '../components/aiMilkdownInput/aiMilkdownModeSlash/store/goalTag'
+import GoalDurationInputs from './GoalDurationInputs/GoalDurationInputs'
 import styles from './AIRunModeSelect.module.scss'
 
 export type AIRunModeMenuProps = {
@@ -88,8 +89,6 @@ export const AIRunModeMenu: FC<AIRunModeMenuProps> = ({ fullWidth, open = true }
   const durationKey = goalDurationSecondsToKey(goalDurationSeconds) ?? '1h'
   const showCustomDuration = customDuration || !isGoalDurationPresetKey(durationKey)
   const selectedDurationKey = showCustomDuration ? 'custom' : durationKey
-  const hours = Math.floor(Math.max(0, goalDurationSeconds) / 3600)
-  const minutes = Math.floor((Math.max(0, goalDurationSeconds) % 3600) / 60)
 
   useUpdateEffect(() => {
     if (!enableGoalMode || goalMinIterations > 0 || goalDurationSeconds !== 0) {
@@ -135,11 +134,6 @@ export const AIRunModeMenu: FC<AIRunModeMenuProps> = ({ fullWidth, open = true }
     setCustomDuration(custom)
     if (custom && goalDurationSeconds > 0) return
     onSetStrategy({ GoalDurationSeconds: custom ? 3600 : goalDurationKeyToSeconds(value) }, true)
-  }
-
-  const onChangeCustomDuration = (nextHours: number, nextMinutes: number) => {
-    const seconds = Math.max(60, nextHours * 3600 + nextMinutes * 60)
-    if (Number.isSafeInteger(seconds)) onSetStrategy({ GoalDurationSeconds: seconds }, true)
   }
 
   const renderGoalConfiguration = () => (
@@ -200,7 +194,7 @@ export const AIRunModeMenu: FC<AIRunModeMenuProps> = ({ fullWidth, open = true }
           <div className={styles['goal-choice-row']}>
             <span>{t('AIMilkdownModeSlash.duration')}</span>
             <div role="group" aria-label={t('AIMilkdownModeSlash.duration')} className={styles['goal-pills']}>
-              {GOAL_DURATION_PRESETS.filter(({ key }) => key !== 'never' || durationKey === 'never').map(({ key }) => (
+              {GOAL_DURATION_OPTIONS.map((key) => (
                 <YakitButton
                   key={key}
                   type={selectedDurationKey === key ? 'primary' : 'secondary2'}
@@ -211,39 +205,14 @@ export const AIRunModeMenu: FC<AIRunModeMenuProps> = ({ fullWidth, open = true }
                   {getGoalDurationDisplayLabel(key, t)}
                 </YakitButton>
               ))}
-              <YakitButton
-                type={showCustomDuration ? 'primary' : 'secondary2'}
-                radius="9999px"
-                aria-pressed={showCustomDuration}
-                onClick={() => onPickDuration('custom')}
-              >
-                {t('AIRunModeSelect.customDuration')}
-              </YakitButton>
             </div>
           </div>
           {showCustomDuration && (
-            <div className={styles['custom-duration']}>
-              <YakitInputNumber
-                aria-label={t('AIRunModeSelect.durationHours')}
-                value={hours}
-                min={0}
-                precision={0}
-                onChange={(value) => {
-                  if (value !== null) onChangeCustomDuration(Math.max(0, Number(value)), minutes)
-                }}
+            <div className={styles['duration-input-row']}>
+              <GoalDurationInputs
+                seconds={goalDurationSeconds > 0 ? goalDurationSeconds : 3600}
+                onChange={(seconds) => onSetStrategy({ GoalDurationSeconds: seconds }, true)}
               />
-              <span>{t('AIRunModeSelect.hourUnit')}</span>
-              <YakitInputNumber
-                aria-label={t('AIRunModeSelect.durationMinutes')}
-                value={minutes}
-                min={0}
-                max={59}
-                precision={0}
-                onChange={(value) => {
-                  if (value !== null) onChangeCustomDuration(hours, Math.min(59, Math.max(0, Number(value))))
-                }}
-              />
-              <span>{t('AIRunModeSelect.minuteUnit')}</span>
             </div>
           )}
         </>

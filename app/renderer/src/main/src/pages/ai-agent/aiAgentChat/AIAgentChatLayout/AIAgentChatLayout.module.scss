@@ -33,6 +33,7 @@
 }
 
 .chat-content {
+  container: ai-chat-content / inline-size;
   position: relative;
   width: 100%;
   min-width: 0;

@@ -1,4 +1,4 @@
-import type { ReactElement, ReactNode } from 'react'
+import type { ReactElement, ReactNode, RefObject } from 'react'
 import type { AIChatMentionProps } from '../../components/aiChatMention/type'
 import type { AIMentionCommandParams } from '../../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
 import type { AIMentionTabsEnum } from '../../defaultConstant'
@@ -28,6 +28,7 @@ export interface MaterialPanelHeader {
 }
 
 export interface MaterialMenuItem {
+  onClearCategory?: () => void
   label: string
   description: string
   icon: ReactNode
@@ -41,6 +42,7 @@ export interface MaterialMenuItem {
 }
 
 export interface AddMaterialsControls {
+  inputLayoutRef: RefObject<HTMLDivElement>
   open: boolean
   menuOpen: boolean
   toggle: () => void
@@ -50,13 +52,15 @@ export interface AddMaterialsControls {
 export type MaterialShortcut = '@' | '/'
 
 export interface AIAddMaterialsPopoverProps {
+  strategyTagCount: number
   children: (controls: AddMaterialsControls) => ReactElement
   showScenarioCapabilities?: boolean
   initialEnabledCapabilities?: AIEnabledCapability[]
   onEnabledCapabilitiesChange?: (items: AIEnabledCapability[]) => void
   onShortcut: (shortcut: MaterialShortcut) => void
   onAdd: (material: AIMentionCommandParams) => void
-  onRemove: (material: AIMentionCommandParams) => void
+  onRemoveMaterials: (materials: AIMentionCommandParams[]) => void
+  onClearSelectedResources?: (type?: keyof AIResourceIds) => void
   mentions: AIMentionCommandParams[]
   resourceIds: AIResourceIds
   selectedResourceIds: AIResourceIds

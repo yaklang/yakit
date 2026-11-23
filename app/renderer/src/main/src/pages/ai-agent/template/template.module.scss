@@ -118,11 +118,33 @@ textarea.qs-input-textarea {
   }
 }
 
-.materials-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px;
+.input-with-summary {
+  position: relative;
+
+  @container ai-chat-content (width > 1152px) {
+    // 左列伸入预留的留白，同时参与高度计算，避免短输入框裁掉最底部的标签。
+    display: grid;
+    grid-template-columns: 0 minmax(0, 1fr);
+
+    > .textarea-wrapper {
+      grid-area: 1 / 2;
+      align-self: start;
+    }
+  }
+}
+
+.material-side-add:global(.ant-btn.ant-btn-default.ant-btn-icon-only) {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px dashed var(--Colors-Use-Neutral-Border);
+  border-radius: 50%;
+  background: var(--Colors-Use-Basic-Background);
+
+  svg {
+    color: var(--Colors-Use-Neutral-Disable);
+  }
 }
 
 .textarea-wrapper {
@@ -183,7 +205,6 @@ textarea.qs-input-textarea {
     &:has(> .footer-right button[data-ai-context-usage]) {
       --ai-footer-duration-detail-display: none;
 
-      &:has(> .footer-right > .footer-status-items > :nth-child(2)) > .footer-left .model-self-adaptive,
       > .footer-left .focus-mode-self-adaptive {
         @include icon-only-selector;
       }
@@ -307,6 +328,26 @@ textarea.qs-input-textarea {
     }
 
     @container ai-chat-textarea (width < 640px) {
+      > .footer-left {
+        .focus-mode-self-adaptive {
+          @include icon-only-selector;
+
+          :global(.ant-select-clear) {
+            display: none;
+          }
+        }
+
+        .settings-button:global(.ant-btn) {
+          width: 24px;
+          padding: 0;
+          gap: 0;
+
+          .settings-label {
+            display: none;
+          }
+        }
+      }
+
       .footer-right {
         --ai-footer-context-label-display: none;
         --ai-footer-running-label-display: none;
@@ -317,7 +358,7 @@ textarea.qs-input-textarea {
       }
     }
 
-    @container ai-chat-textarea (width < 530px) {
+    @container ai-chat-textarea (width < 450px) {
       > .footer-left .model-self-adaptive {
         @include icon-only-selector;
       }
@@ -368,81 +409,4 @@ textarea.qs-input-textarea {
   }
 }
 
-.http-flow-reference {
-  display: inline-flex;
-  gap: 4px;
-  align-items: center;
-  height: 26px;
-  padding: 4px 6px;
-  border: 1px dashed var(--Colors-Use-Neutral-Disable);
-  border-radius: 9999px;
-  background: var(--Colors-Use-Basic-Background);
-  color: var(--Colors-Use-Neutral-Text-1-Title);
-  font-size: 11px;
-  font-weight: 400;
-  line-height: 14px;
-  letter-spacing: 0.5px;
-
-  .http-flow-reference-icon {
-    flex-shrink: 0;
-    color: var(--Colors-Use-Neutral-Text-2-Primary);
-  }
-}
-
-.strategy-setup-tag {
-  color: var(--Colors-Use-Neutral-Text-1-Title);
-  background: var(--Colors-Use-Neutral-Bg);
-  border-color: transparent;
-  font-size: 11px;
-  font-weight: 400;
-  line-height: 14px;
-  .strategy-setup-leading {
-    position: relative;
-    display: inline-flex;
-    flex-shrink: 0;
-    align-items: center;
-    justify-content: center;
-    width: 16px;
-    height: 16px;
-  }
-  .strategy-setup-type-icon {
-    display: block;
-  }
-  .strategy-setup-close-icon {
-    display: none;
-    color: var(--Colors-Use-Neutral-Text-3-Secondary);
-  }
-  .strategy-setup-edit-icon {
-    display: none;
-    flex-shrink: 0;
-    color: var(--Colors-Use-Neutral-Text-3-Secondary);
-  }
-  &:hover {
-    background: var(--Colors-Use-Neutral-Bg-Hover);
-    .strategy-setup-type-icon {
-      display: none;
-    }
-    .strategy-setup-close-icon {
-      display: block;
-    }
-    .strategy-setup-edit-icon {
-      display: block;
-    }
-  }
-}
-
-.http-flow-reference-label {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  max-width: 100px;
-}
 // #endregion
-
-.strategy-reference-label {
-  max-width: 180px;
-  span {
-    color: var(--Colors-Use-Main-Primary);
-  }
-}

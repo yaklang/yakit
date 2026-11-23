@@ -1,0 +1,11 @@
+.inputs {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto;
+  align-items: center;
+  min-width: 0;
+  gap: 8px;
+
+  :global(.ant-input-number) {
+    width: 100%;
+  }
+}

@@ -1,5 +1,4 @@
-import type { MouseEvent } from 'react'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, renderHook, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const { mocks } = vi.hoisted(() => ({
@@ -28,27 +27,8 @@ vi.mock('../../components/aiMilkdownInput/aiMilkdownModeSlash/store', async () =
   }
 })
 
-vi.mock('@yakit-libs/yakit-ui-icons/outline', async (importOriginal) => {
-  const actual = await importOriginal()
-  return {
-    ...(actual as object),
-    BoxesOutlined: () => <span data-testid="icon-boxes" />,
-    Goal2Outlined: () => <span data-testid="icon-goal" />,
-    PencilAltOutlined: (props: { onClick?: (e: MouseEvent) => void }) => (
-      <button type="button" aria-label="edit-tag" onClick={props.onClick} />
-    ),
-  }
-})
-
-vi.mock('@yakit-libs/yakit-ui-icons/solid', async (importOriginal) => {
-  const actual = await importOriginal()
-  return {
-    ...(actual as object),
-    XCircleSolid: () => <span data-testid="icon-close" />,
-  }
-})
-
-const { StrategySetupTags, useHasStrategySetupTags } = await import('../StrategySetupTags')
+const { useStrategySetupTags } = await import('../StrategySetupTags')
+const StrategySetupTags = () => <>{useStrategySetupTags()}</>
 
 type RunMode = ReturnType<(typeof mocks)['useAIRunMode']>
 
@@ -88,8 +68,9 @@ describe('StrategySetupTags', () => {
       },
     })
     render(<StrategySetupTags />)
-    fireEvent.click(screen.getByLabelText('edit-tag'))
-    expect(mocks.requestModeSlashReopen).toHaveBeenCalledWith({
+    const button = screen.getAllByRole('button')[0]
+    fireEvent.click(button)
+    expect(mocks.requestModeSlashReopen).toHaveBeenCalledWith(button, {
       kind: 'goalIterations',
       iterations: 3,
     })
@@ -106,8 +87,9 @@ describe('StrategySetupTags', () => {
       },
     })
     render(<StrategySetupTags />)
-    fireEvent.click(screen.getByLabelText('edit-tag'))
-    expect(mocks.requestModeSlashReopen).toHaveBeenCalledWith({
+    const button = screen.getAllByRole('button')[0]
+    fireEvent.click(button)
+    expect(mocks.requestModeSlashReopen).toHaveBeenCalledWith(button, {
       kind: 'goalDuration',
       durationKey: '7200',
     })
@@ -124,8 +106,9 @@ describe('StrategySetupTags', () => {
       },
     })
     render(<StrategySetupTags />)
-    fireEvent.click(screen.getByLabelText('edit-tag'))
-    expect(mocks.requestModeSlashReopen).toHaveBeenCalledWith({
+    const button = screen.getAllByRole('button')[0]
+    fireEvent.click(button)
+    expect(mocks.requestModeSlashReopen).toHaveBeenCalledWith(button, {
       kind: 'goalAcceptance',
       text: '接口 200',
     })
@@ -138,8 +121,9 @@ describe('StrategySetupTags', () => {
       strategy: { EnableMultiAgent: true, MaxSubAgents: 4 },
     })
     render(<StrategySetupTags />)
-    fireEvent.click(screen.getByLabelText('edit-tag'))
-    expect(mocks.requestModeSlashReopen).toHaveBeenCalledWith({
+    const button = screen.getAllByRole('button')[0]
+    fireEvent.click(button)
+    expect(mocks.requestModeSlashReopen).toHaveBeenCalledWith(button, {
       kind: 'multiAgentConfig',
       subAgents: 4,
     })
@@ -156,8 +140,9 @@ describe('StrategySetupTags', () => {
       },
     })
     render(<StrategySetupTags />)
-    fireEvent.click(screen.getByLabelText('edit-tag'))
-    expect(mocks.requestModeSlashReopen).toHaveBeenCalledWith({ kind: 'goalModes' })
+    const button = screen.getAllByRole('button')[0]
+    fireEvent.click(button)
+    expect(mocks.requestModeSlashReopen).toHaveBeenCalledWith(button, { kind: 'goalModes' })
   })
 
   it('关闭 Goal 标签会 clearGoalStrategy', () => {
@@ -172,9 +157,7 @@ describe('StrategySetupTags', () => {
       },
     })
     render(<StrategySetupTags />)
-    const label = screen.getByTitle(/minIterationsPrefix/)
-    const leading = label.parentElement!.firstElementChild!
-    fireEvent.click(leading)
+    fireEvent.click(screen.getByRole('button', { name: /minIterationsPrefix.* ×$/ }))
     expect(onSetStrategy).toHaveBeenCalledWith(
       expect.objectContaining({
         EnableGoalMode: false,
@@ -193,26 +176,27 @@ describe('StrategySetupTags', () => {
       strategy: { EnableMultiAgent: true, MaxSubAgents: 3 },
     })
     render(<StrategySetupTags />)
-    const label = screen.getByTitle(/subAgentCountPrefix/)
-    const leading = label.parentElement!.firstElementChild!
-    fireEvent.click(leading)
+    fireEvent.click(screen.getByRole('button', { name: /subAgentCountPrefix.* ×$/ }))
     expect(onSetStrategy).toHaveBeenCalledWith({ EnableMultiAgent: false, MaxSubAgents: 0 })
   })
 })
 
-describe('useHasStrategySetupTags', () => {
-  it('Goal / Multi-Agent 任一开启则 true', async () => {
-    const { renderHook } = await import('@testing-library/react')
+describe('useStrategySetupTags', () => {
+  it('每个开启的策略各占一个标签', () => {
     stubRunMode({ enableGoalMode: true })
-    const { result, rerender } = renderHook(() => useHasStrategySetupTags())
-    expect(result.current).toBe(true)
+    const { result, rerender } = renderHook(useStrategySetupTags)
+    expect(result.current).toHaveLength(1)
 
     stubRunMode({ enableMultiAgent: true, maxSubAgents: 1 })
     rerender()
-    expect(result.current).toBe(true)
+    expect(result.current).toHaveLength(1)
+
+    stubRunMode({ enableGoalMode: true, enableMultiAgent: true, maxSubAgents: 1 })
+    rerender()
+    expect(result.current).toHaveLength(2)
 
     stubRunMode({})
     rerender()
-    expect(result.current).toBe(false)
+    expect(result.current).toHaveLength(0)
   })
 })

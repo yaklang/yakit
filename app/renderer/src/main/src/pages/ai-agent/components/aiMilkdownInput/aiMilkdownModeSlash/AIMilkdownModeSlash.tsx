@@ -21,19 +21,22 @@ import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInp
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { useAIRunMode } from '@/pages/ai-agent/aiRunModeSelect/useAIRunMode'
+import GoalDurationInputs from '@/pages/ai-agent/aiRunModeSelect/GoalDurationInputs/GoalDurationInputs'
 import type { AIExecutionStrategy } from '@/pages/ai-re-act/hooks/grpcApi'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import styles from './AIMilkdownModeSlash.module.scss'
+import { registerModeSlashReopenHandler, goalDurationKeyToSeconds, isGoalDurationPresetKey } from './store'
+import type { ModeSlashReopenPayload } from './store'
 import {
-  registerModeSlashReopenHandler,
-  goalDurationKeyToSeconds,
-  GOAL_DURATION_PRESETS,
-  isGoalDurationPresetKey,
-  type ModeSlashReopenPayload,
-} from './store'
-import { PANEL_GAP, PANEL_OFFSET_UP, PANEL_WIDTH_EXTRA_EACH } from '../constants'
+  GOAL_DURATION_OPTIONS,
+  getGoalDurationDisplayLabel,
+  PANEL_GAP,
+  PANEL_OFFSET_UP,
+  PANEL_WIDTH_EXTRA_EACH,
+} from '../constants'
 import { tryClaimMilkdownPopup, releaseMilkdownPopup } from '../panelMutex'
-import { shouldSkipModeSlashEnterConfirm, type SlashStep } from './modeSlashEnterGuard'
+import { shouldSkipModeSlashEnterConfirm } from './modeSlashEnterGuard'
+import type { SlashStep } from './modeSlashEnterGuard'
 import {
   extractModeSlashFilterKeyword,
   getModeSlashQueryDeleteRange,
@@ -78,6 +81,9 @@ export const AIMilkdownModeSlash: React.FC<{ onModeChangeComplete?: () => void }
   const [draftSubAgents, setDraftSubAgents] = useState(0)
   const [draftAcceptance, setDraftAcceptance] = useState('')
   const [draftDuration, setDraftDuration] = useState<string>('1h')
+  const [customDuration, setCustomDuration] = useState(false)
+  const durationSelectOpenRef = useRef(false)
+  const showCustomDuration = customDuration || !isGoalDurationPresetKey(draftDuration)
   const [activeIndex, setActiveIndex] = useState(0)
   /** `/` 后继续输入的筛选词，与 @ 的 filterKeyword 一致 */
   const [slashQuery, setSlashQuery] = useState('')
@@ -206,6 +212,7 @@ export const AIMilkdownModeSlash: React.FC<{ onModeChangeComplete?: () => void }
     'enter',
     (e) => {
       if (!visible) return
+      if (step === 'goalDuration' && durationSelectOpenRef.current) return
       // document capture 先于 textarea 冒泡；空草稿 / 验收框内回车不触发确认
       if (shouldSkipModeSlashEnterConfirm(step, e.target, { acceptanceDraft: draftAcceptance })) return
       const canConfirmList = navigableItems.length > 0
@@ -328,7 +335,8 @@ export const AIMilkdownModeSlash: React.FC<{ onModeChangeComplete?: () => void }
 
   // tag click -> reopen goal / multi-agent config panel（仅输入卡片内的实例注册，避免历史只读编辑器抢 handler）
   useEffect(() => {
-    if (!view?.dom?.closest?.('[data-ai-input-card]')) return
+    const card = view?.dom?.closest?.('[data-ai-input-card]')
+    if (!card) return
     const handler = (payload: ModeSlashReopenPayload) => {
       ignoreClickAwayUntilRef.current = Date.now() + 300
       const openStep = (stepName: SlashStep) => {
@@ -347,6 +355,7 @@ export const AIMilkdownModeSlash: React.FC<{ onModeChangeComplete?: () => void }
         return
       }
       if (payload.kind === 'goalDuration') {
+        setCustomDuration(false)
         setDraftDuration(payload.durationKey || '1h')
         openStep('goalDuration')
         return
@@ -368,32 +377,17 @@ export const AIMilkdownModeSlash: React.FC<{ onModeChangeComplete?: () => void }
       setDraftSubAgents(payload.subAgents ?? maxSubAgents)
       openStep('multiAgentConfig')
     }
-    return registerModeSlashReopenHandler(handler)
+    return registerModeSlashReopenHandler(card, handler)
   }, [maxSubAgents, goalMinIterations, view])
 
   const getInputAnchor = useMemoizedFn((): HTMLElement | null => {
     // CSS Modules 会把 ai-chat-textarea 哈希掉，不能写死 class 名；用 data 锚到整张输入卡片（含标签行）
-    const fromView =
+    return (
       (view.dom.closest('[data-ai-input-card]') as HTMLElement | null) ||
       (view.dom.closest('[class*="ai-chat-textarea"]') as HTMLElement | null) ||
-      (view.dom.closest('[class*="ai-milkdown-input"]') as HTMLElement | null)
-
-    const isLaidOut = (el: HTMLElement | null) => {
-      if (!el) return false
-      const r = el.getBoundingClientRect()
-      return r.width > 0 && r.height > 0
-    }
-
-    if (isLaidOut(fromView)) return fromView
-
-    // 多实例 / 只读历史编辑器：回落到当前可见的输入卡片
-    const cards = document.querySelectorAll('[data-ai-input-card]')
-    for (let i = cards.length - 1; i >= 0; i--) {
-      const el = cards[i] as HTMLElement
-      if (isLaidOut(el)) return el
-    }
-
-    return fromView || (view.dom.parentElement as HTMLElement | null)
+      (view.dom.closest('[class*="ai-milkdown-input"]') as HTMLElement | null) ||
+      view.dom.parentElement
+    )
   })
 
   const syncPosition = useMemoizedFn(() => {
@@ -479,6 +473,8 @@ export const AIMilkdownModeSlash: React.FC<{ onModeChangeComplete?: () => void }
     setDraftSubAgents(maxSubAgents)
     setDraftAcceptance('')
     setDraftDuration('1h')
+    setCustomDuration(false)
+    durationSelectOpenRef.current = false
   })
 
   const onHide = useMemoizedFn(() => {
@@ -546,6 +542,7 @@ export const AIMilkdownModeSlash: React.FC<{ onModeChangeComplete?: () => void }
       return
     }
     setDraftDuration('1h')
+    setCustomDuration(false)
     setStep('goalDuration')
     keepPanelOpen()
   })
@@ -840,22 +837,46 @@ export const AIMilkdownModeSlash: React.FC<{ onModeChangeComplete?: () => void }
           <ChevronLeftOutlined color="currentColor" />
         </button>
         <span className={styles['config-title']}>{t('AIMilkdownModeSlash.duration')}</span>
-        <div className={styles['config-inline-control']} onClick={(e) => e.stopPropagation()}>
+        <div
+          className={classNames(styles['duration-controls'], {
+            [styles['duration-controls-custom']]: showCustomDuration,
+          })}
+          onClick={(e) => e.stopPropagation()}
+        >
           <YakitSelect
             size="small"
-            value={draftDuration}
-            onChange={(v) => setDraftDuration(String(v))}
+            value={showCustomDuration ? 'custom' : draftDuration}
+            onChange={(value) => {
+              const custom = value === 'custom'
+              setCustomDuration(custom)
+              if (custom) {
+                if (goalDurationKeyToSeconds(draftDuration) <= 0) setDraftDuration('1h')
+              } else {
+                setDraftDuration(String(value))
+              }
+            }}
+            onOpenChange={(open) => {
+              durationSelectOpenRef.current = open
+            }}
             wrapperClassName={styles['duration-select']}
             getPopupContainer={() => document.body}
-            dropdownStyle={{ zIndex: 9999 }}
-            dropdownMatchSelectWidth={false}
+            styles={{ popup: { root: { zIndex: 9999 } } }}
+            popupMatchSelectWidth={false}
           >
-            {GOAL_DURATION_PRESETS.map((item) => (
-              <YakitSelect.Option key={item.key} value={item.key}>
-                {item.key === 'never' ? t('AIMilkdownModeSlash.durationNever') : item.label}
+            {GOAL_DURATION_OPTIONS.map((key) => (
+              <YakitSelect.Option key={key} value={key}>
+                {getGoalDurationDisplayLabel(key, t)}
               </YakitSelect.Option>
             ))}
           </YakitSelect>
+          {showCustomDuration && (
+            <div className={styles['duration-inputs']}>
+              <GoalDurationInputs
+                seconds={goalDurationKeyToSeconds(draftDuration)}
+                onChange={(seconds) => setDraftDuration(String(seconds))}
+              />
+            </div>
+          )}
         </div>
         <div className={styles['config-actions']}>
           <button

@@ -19,21 +19,27 @@ import MaterialSummary from './materialSummary/MaterialSummary'
 import type { MaterialSummaryGroup } from './materialSummary/type'
 import type { AIAddMaterialsPopoverProps, MaterialMenuItem, MaterialPanel } from './type'
 import styles from './AIAddMaterialsPopover.module.scss'
+import { ChatContentWidthContext } from '../../aiAgentChat/AIAgentChatLayout/ChatContentWidthContext'
+import { groupNarrowMaterials } from './groupNarrowMaterials'
+import { useSideTagsOverflow } from './useSideTagsOverflow'
 
 const AIAddMaterialsPopover: FC<AIAddMaterialsPopoverProps> = ({
   children,
+  strategyTagCount,
   showScenarioCapabilities,
   initialEnabledCapabilities,
   onEnabledCapabilitiesChange,
   onShortcut,
   onAdd,
-  onRemove,
+  onRemoveMaterials,
+  onClearSelectedResources,
   mentions,
   resourceIds,
   selectedResourceIds,
   filterMode,
 }) => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
+  const widthMode = useContext(ChatContentWidthContext)
   const sidebarChat = useContext(HistoryAIReActChatContext)
   const [open, setOpen] = useState(false)
   const anchorRef = useRef<HTMLElement>(null)
@@ -101,6 +107,9 @@ const AIAddMaterialsPopover: FC<AIAddMaterialsPopoverProps> = ({
     resourceIds,
     selectedResourceIds,
     browserCount: browsers.length,
+    allowCategoryRemoval: widthMode !== 'standard',
+    onRemoveMaterials,
+    onClearSelectedResources,
     addAttachments,
     close,
   })
@@ -108,7 +117,8 @@ const AIAddMaterialsPopover: FC<AIAddMaterialsPopoverProps> = ({
   const items: MaterialMenuItem[] = Object.values(menu)
   const isWorkspaceOnly = (item: MaterialMenuItem) => !!sidebarChat && workspaceItems.includes(item)
   const menuItems = items.filter((item) => !isWorkspaceOnly(item))
-  const summaryGroups = getMaterialSummaryGroups({
+  const onRemove = (material: AIMentionCommandParams) => onRemoveMaterials([material])
+  const originalSummaryGroups = getMaterialSummaryGroups({
     items: items.map((item) =>
       isWorkspaceOnly(item) ? { ...item, action: undefined, summaryAction: undefined } : item,
     ),
@@ -117,9 +127,28 @@ const AIAddMaterialsPopover: FC<AIAddMaterialsPopoverProps> = ({
     descriptions,
     filterMode,
     attachmentCount: attachments.length,
-    onRemove,
+    onClearAttachments: menu.attachments.onClearCategory,
+    onRemoveMaterials,
+    onClearSelectedResources,
+    selectedResourceIds,
     openCategory: openSummaryCategory,
   })
+
+  const tagCount = originalSummaryGroups.length + Number(!!showScenarioCapabilities) + strategyTagCount
+  const { inputLayoutRef, sideTagsOverflow } = useSideTagsOverflow(
+    widthMode === 'wide',
+    tagCount,
+    showScenarioCapabilities,
+  )
+  const compactMaterials = widthMode === 'narrow' || (widthMode === 'wide' && sideTagsOverflow)
+  const summaryGroups = compactMaterials
+    ? groupNarrowMaterials(
+        originalSummaryGroups,
+        t('AIChatTextarea.otherMaterials'),
+        t('AIAddMaterialsPopover.addedOtherMaterials'),
+        strategyTagCount > 0,
+      )
+    : originalSummaryGroups
 
   const renderPanel = () => {
     const category = picker?.category
@@ -192,6 +221,7 @@ const AIAddMaterialsPopover: FC<AIAddMaterialsPopoverProps> = ({
         }
       >
         {children({
+          inputLayoutRef,
           open,
           menuOpen: open && (!picker || picker.fromMenu),
           toggle: () => (open ? close() : setOpen(true)),

@@ -9,27 +9,18 @@ export type ModeSlashReopenPayload =
 
 type Handler = (payload: ModeSlashReopenPayload) => void
 
-/** 栈：后注册的优先；卸载只移除自身，避免清掉仍存活的输入区 handler */
-const reopenHandlers: Handler[] = []
+/** 以输入卡片为归属，后台页签中的编辑器也可以保持挂载。 */
+const reopenHandlers = new WeakMap<Element, Handler>()
 
 /** 注册 reopen handler，返回注销函数 */
-export const registerModeSlashReopenHandler = (handler: Handler): (() => void) => {
-  reopenHandlers.push(handler)
+export const registerModeSlashReopenHandler = (card: Element, handler: Handler): (() => void) => {
+  reopenHandlers.set(card, handler)
   return () => {
-    const i = reopenHandlers.lastIndexOf(handler)
-    if (i >= 0) reopenHandlers.splice(i, 1)
+    if (reopenHandlers.get(card) === handler) reopenHandlers.delete(card)
   }
 }
 
-/**
- * @deprecated 单槽覆盖写法；多实例场景请用 registerModeSlashReopenHandler。
- * 保留给旧调用/测试：handler 非 null 时清空栈后压入；null 时清空栈。
- */
-export const setModeSlashReopenHandler = (handler: Handler | null) => {
-  reopenHandlers.length = 0
-  if (handler) reopenHandlers.push(handler)
-}
-
-export const requestModeSlashReopen = (payload: ModeSlashReopenPayload) => {
-  reopenHandlers[reopenHandlers.length - 1]?.(payload)
+export const requestModeSlashReopen = (source: Element, payload: ModeSlashReopenPayload) => {
+  const card = source.closest('[data-ai-input-card]')
+  if (card) reopenHandlers.get(card)?.(payload)
 }

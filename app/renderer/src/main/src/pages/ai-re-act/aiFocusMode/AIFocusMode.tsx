@@ -74,7 +74,7 @@ export const AIFocusMode: FC<AIFocusModeProps> = ({
         }}
         disabled={disabled}
         loading={loading}
-        value={value}
+        value={value || null}
         placeholder={renderLabel(heading)}
         optionLabelProp="label"
         labelRender={({ label, value }) => renderLabel(String(label ?? value))}

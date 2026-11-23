@@ -236,6 +236,7 @@
   },
   "AIChatTextarea": {
     "otherMaterials": "Other materials",
+    "materials": "Materials",
     "dropToAddToChat": "Release to add to chat",
     "addMaterials": "Add materials",
     "queueSend": "Queue send"
@@ -1003,6 +1004,8 @@
     "subAgentCount": "Sub-agent count",
     "subAgentCountTip": "<=0 uses the server default; max 20",
     "subAgentCountPrefix": "Sub-agent count: {{value}}",
+    "goalTag": "Goal",
+    "subAgentTag": "Sub Agent",
     "setGoal": "Set goal",
     "setSubAgentCount": "Set sub-agent count"
   },

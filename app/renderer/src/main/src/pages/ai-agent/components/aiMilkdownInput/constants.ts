@@ -9,11 +9,12 @@ export const GOAL_DURATION_PRESETS = [
   { key: '30m', label: '30m', seconds: 1800 },
   { key: '1h', label: '1h', seconds: 3600 },
   { key: '3h', label: '3h', seconds: 10800 },
-  { key: '5h', label: '5h', seconds: 18000 },
   { key: 'never', label: 'never', seconds: -1 },
 ] as const
 
 export type GoalDurationPresetKey = (typeof GOAL_DURATION_PRESETS)[number]['key']
+
+export const GOAL_DURATION_OPTIONS = [...GOAL_DURATION_PRESETS.map(({ key }) => key), 'custom'] as const
 
 export const isGoalDurationPresetKey = (key: string): key is GoalDurationPresetKey =>
   GOAL_DURATION_PRESETS.some((p) => p.key === key)
@@ -26,6 +27,7 @@ export const DURATION_PRESET_LABELS: Record<string, string> = Object.fromEntries
 /** 将预设键或秒数字符串转为 Goal 时长文案，never 使用本地化文案。 */
 export const getGoalDurationDisplayLabel = (key: string, t: TFunction): string => {
   if (key === 'never') return t('AIMilkdownModeSlash.durationNever')
+  if (key === 'custom') return t('AIRunModeSelect.customDuration')
   if (isGoalDurationPresetKey(key)) return DURATION_PRESET_LABELS[key]
   const seconds = Number(key)
   if (!Number.isSafeInteger(seconds) || seconds <= 0) return key

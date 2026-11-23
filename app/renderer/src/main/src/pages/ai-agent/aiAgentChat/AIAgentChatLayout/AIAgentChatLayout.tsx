@@ -24,16 +24,24 @@ import TimelineCard from '../../chatTemplate/TimelineCard/TimelineCard'
 import { YakitAIAgentPageID } from '../../defaultConstant'
 import { useMultiFuncPaneStore } from '../useMultiFuncPaneStore'
 import type { AIAgentChatMode, AIChatSubmitParams } from '../type'
-import type { AIChatInputDraft } from '../../template/type'
+import type { AIChatInputDraft, AIResourceIds } from '../../template/type'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { AIRightPanel } from '@/pages/ai-re-act/aiRightPanel/AIRightPanel'
 import { useRiskSelection } from './useRiskSelection'
+import { ChatContentWidthContext } from './ChatContentWidthContext'
+import type { ChatContentWidthMode } from './ChatContentWidthContext'
 import styles from './AIAgentChatLayout.module.scss'
 
 const AIChatWelcome = React.lazy(() => import('../../aiChatWelcome/AIChatWelcome'))
 
+// 多功能面板停靠时占用的宽度（px）。
 const MULTI_FUNC_PANE_WIDTH = 320
+// 聊天内容区的最小宽度（px），停靠后剩余空间不足时禁用停靠。
 const MIN_CHAT_CONTENT_WIDTH = 400
+// 聊天内容区宽度低于此值（px）时，合并展示资料标签。
+const GROUP_MATERIALS_BELOW_WIDTH = 450
+// 聊天内容区宽度超过此值（px）时，在左侧展示摘要。
+const LEFT_SUMMARY_ABOVE_WIDTH = 1152
 
 export interface AIAgentChatLayoutProps {
   mode: AIAgentChatMode
@@ -86,6 +94,7 @@ export const AIAgentChatLayout: React.FC<AIAgentChatLayoutProps> = memo((props) 
   const chatWrapperRef = useRef<HTMLDivElement>(null)
   const [inViewPort = true] = useInViewport(chatWrapperRef)
   const chatContentRef = useRef<HTMLDivElement>(null)
+  const [chatContentWidthMode, setChatContentWidthMode] = useState<ChatContentWidthMode>('standard')
   const panelLayoutRef = useRef<HTMLDivElement>(null)
   const [chatLayoutElement, setChatLayoutElement] = useState<HTMLDivElement | null>(null)
   const [panelFrame, setPanelFrame] = useState<React.CSSProperties>()
@@ -105,9 +114,9 @@ export const AIAgentChatLayout: React.FC<AIAgentChatLayoutProps> = memo((props) 
     setSelectedRiskIds(initialDraft.selectedResourceIds.risk)
   }, [initialDraft, inViewPort, onSetSelectedHttpFlowIds, setSelectedRiskIds])
 
-  const clearDraftSelection = () => {
-    clearHttpFlowSelection()
-    clearRiskSelection()
+  const clearDraftSelection = (type?: keyof AIResourceIds) => {
+    if (!type || type === 'http') clearHttpFlowSelection()
+    if (!type || type === 'risk') clearRiskSelection()
   }
 
   useEffect(() => {
@@ -117,14 +126,21 @@ export const AIAgentChatLayout: React.FC<AIAgentChatLayoutProps> = memo((props) 
   useLayoutEffect(() => {
     const container = chatContentRef.current
     const target = welcome ? container : chatLayoutElement
-    if (!container || !target) return
+    if (!container) return
 
-    // 只定位浮层，保留聊天滚动容器的宽度、间距与顶部卡片布局。
     const updateFrame = () => {
       const containerRect = container.getBoundingClientRect()
-      const targetRect = target.getBoundingClientRect()
-      // 切页隐藏时保留有效尺寸，恢复可见后再同步浮层位置。
-      if (containerRect.width <= 0 || targetRect.width <= 0) return
+      // 隐藏页尺寸为零，恢复可见时再更新资料分组及浮层位置。
+      if (containerRect.width <= 0) return
+      setChatContentWidthMode(
+        containerRect.width < GROUP_MATERIALS_BELOW_WIDTH
+          ? 'narrow'
+          : containerRect.width > LEFT_SUMMARY_ABOVE_WIDTH
+            ? 'wide'
+            : 'standard',
+      )
+      const targetRect = target === container ? containerRect : target?.getBoundingClientRect()
+      if (!targetRect || targetRect.width <= 0) return
       const next = {
         left: targetRect.left - containerRect.left,
         top: targetRect.top - containerRect.top,
@@ -145,7 +161,7 @@ export const AIAgentChatLayout: React.FC<AIAgentChatLayoutProps> = memo((props) 
     if (typeof ResizeObserver === 'undefined') return
     const observer = new ResizeObserver(updateFrame)
     observer.observe(container)
-    if (target !== container) observer.observe(target)
+    if (target && target !== container) observer.observe(target)
     return () => observer.disconnect()
   }, [welcome, chatLayoutElement])
 
@@ -211,36 +227,40 @@ export const AIAgentChatLayout: React.FC<AIAgentChatLayoutProps> = memo((props) 
           }
           secondNode={
             <div ref={chatContentRef} className={styles['chat-content']} data-ai-shared-right-panel={panelVisible}>
-              {mode === 'welcome' ? (
-                <React.Suspense fallback={<div>loading...</div>}>
-                  <AIChatWelcome
-                    key={`${activeChat?.SessionID ?? ''}:${initialDraft ? 'recovered' : 'welcome'}`}
-                    initialDraft={initialDraft}
-                    onTriageSubmit={(data, draft) => {
-                      if (!onTriageSubmit(data, draft)) return false
-                      clearDraftSelection()
-                      return true
-                    }}
+              <ChatContentWidthContext.Provider value={chatContentWidthMode}>
+                {mode === 'welcome' ? (
+                  <React.Suspense fallback={<div>loading...</div>}>
+                    <AIChatWelcome
+                      key={`${activeChat?.SessionID ?? ''}:${initialDraft ? 'recovered' : 'welcome'}`}
+                      initialDraft={initialDraft}
+                      onTriageSubmit={(data, draft) => {
+                        if (!onTriageSubmit(data, draft)) return false
+                        clearDraftSelection()
+                        return true
+                      }}
+                      onHttpFlowRemove={onHttpFlowRemove}
+                      onClearSelectedResources={clearDraftSelection}
+                      selectedHttpFlowIds={selectedHttpFlowIds}
+                      selectedRiskIds={selectedRiskIds}
+                      onSetReAct={onSetReAct}
+                      ref={aiChatWelcomeRef}
+                    />
+                  </React.Suspense>
+                ) : (
+                  <AIChatContent
+                    ref={aiReActChatRef}
+                    onChat={onChat}
+                    showFreeChat={showFreeChat}
+                    setShowFreeChat={setShowFreeChat}
+                    rightPanelLayoutRef={setChatLayoutElement}
                     onHttpFlowRemove={onHttpFlowRemove}
                     selectedHttpFlowIds={selectedHttpFlowIds}
                     selectedRiskIds={selectedRiskIds}
-                    onSetReAct={onSetReAct}
-                    ref={aiChatWelcomeRef}
+                    onAfterSubmit={clearDraftSelection}
+                    onClearSelectedResources={clearDraftSelection}
                   />
-                </React.Suspense>
-              ) : (
-                <AIChatContent
-                  ref={aiReActChatRef}
-                  onChat={onChat}
-                  showFreeChat={showFreeChat}
-                  setShowFreeChat={setShowFreeChat}
-                  rightPanelLayoutRef={setChatLayoutElement}
-                  onHttpFlowRemove={onHttpFlowRemove}
-                  selectedHttpFlowIds={selectedHttpFlowIds}
-                  selectedRiskIds={selectedRiskIds}
-                  onAfterSubmit={clearDraftSelection}
-                />
-              )}
+                )}
+              </ChatContentWidthContext.Provider>
               <div
                 ref={panelLayoutRef}
                 className={styles['right-panel-frame']}

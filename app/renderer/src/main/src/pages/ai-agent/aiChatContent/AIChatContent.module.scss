@@ -11,7 +11,7 @@
 }
 .ai-chat-content-wrapper {
   @extend %display-column-center;
-  container: ai-chat-content / inline-size;
+  container: ai-chat-content-tabs / inline-size;
   position: relative;
   height: 100%;
   overflow: hidden;
@@ -27,7 +27,7 @@
     justify-content: flex-end;
     display: flex;
 
-    @container ai-chat-content (width < 840px) {
+    @container ai-chat-content-tabs (width < 840px) {
       padding: 0 4px 0 0;
     }
 

@@ -257,8 +257,36 @@
   width: 120px;
 }
 
+.duration-controls {
+  display: flex;
+  flex: 1 1 120px;
+  max-width: 380px;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+}
+
+.config-inline-header:has(.duration-controls-custom) {
+  flex-wrap: wrap;
+}
+
+.duration-controls-custom {
+  flex-basis: 280px;
+  min-width: min(280px, 100%);
+
+  .duration-select {
+    flex-basis: clamp(88px, 30%, 120px);
+  }
+}
+
+.duration-inputs {
+  flex: 1;
+  min-width: 0;
+}
+
 .duration-select {
-  width: 100%;
+  flex: 0 0 120px;
+  width: 120px;
 
   :global {
     .ant-select {

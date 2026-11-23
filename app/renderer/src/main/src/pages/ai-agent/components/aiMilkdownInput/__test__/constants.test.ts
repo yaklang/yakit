@@ -11,7 +11,6 @@ describe('goalDurationKeyToSeconds', () => {
     ['30m', 1800],
     ['1h', 3600],
     ['3h', 10800],
-    ['5h', 18000],
     ['never', -1],
   ] as const)('preset %s → %s', (key, seconds) => {
     expect(goalDurationKeyToSeconds(key)).toBe(seconds)
@@ -38,7 +37,6 @@ describe('goalDurationSecondsToKey', () => {
     [1800, '30m'],
     [3600, '1h'],
     [10800, '3h'],
-    [18000, '5h'],
     [-1, 'never'],
   ] as const)('preset seconds %s → %s', (seconds, key) => {
     expect(goalDurationSecondsToKey(seconds)).toBe(key)
@@ -46,6 +44,7 @@ describe('goalDurationSecondsToKey', () => {
 
   it('未知秒数回落为数字字符串以便展示', () => {
     expect(goalDurationSecondsToKey(7200)).toBe('7200')
+    expect(goalDurationSecondsToKey(18000)).toBe('18000')
     expect(goalDurationSecondsToKey(1)).toBe('1')
   })
 })
@@ -65,6 +64,8 @@ describe('isGoalDurationPresetKey', () => {
 describe('getGoalDurationDisplayLabel', () => {
   it.each([
     ['30m', '30m'],
+    ['never', 'AIMilkdownModeSlash.durationNever'],
+    ['custom', 'AIRunModeSelect.customDuration'],
     ['7200', '2h'],
     ['4500', '1h15m'],
     ['90', '1m30s'],

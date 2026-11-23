@@ -106,6 +106,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
                   selectedHttpFlowIds: props.selectedHttpFlowIds,
                   selectedRiskIds: props.selectedRiskIds,
                   onHttpFlowRemove: props.onHttpFlowRemove,
+                  onClearSelectedResources: props.onClearSelectedResources,
                   onAfterSubmit: props.onAfterSubmit,
                 }}
               />

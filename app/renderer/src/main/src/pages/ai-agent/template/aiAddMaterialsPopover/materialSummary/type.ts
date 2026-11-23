@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react'
 
 export interface MaterialSummaryRow {
+  onClearCategory?: () => void
+  group?: MaterialSummaryGroup
   key: string
   name: string
   icon: ReactNode
@@ -14,12 +16,14 @@ export interface MaterialSummaryRow {
 }
 
 export interface MaterialSummaryGroup {
+  allowCategoryRemoval?: boolean
   key: string
   label: string
   title: string
   count: number
   icon?: ReactNode
   rows: MaterialSummaryRow[]
+  onRemove?: () => void
   onAdd?: () => void
   headerAction?: ReactNode
 }

@@ -1,11 +1,6 @@
 export { type DerivedGoalTag, deriveGoalTagFromStrategy } from './goalTag'
 
-export {
-  type ModeSlashReopenPayload,
-  registerModeSlashReopenHandler,
-  setModeSlashReopenHandler,
-  requestModeSlashReopen,
-} from './modeSlashReopen'
+export { type ModeSlashReopenPayload, registerModeSlashReopenHandler, requestModeSlashReopen } from './modeSlashReopen'
 
 export {
   type GoalDurationPresetKey,

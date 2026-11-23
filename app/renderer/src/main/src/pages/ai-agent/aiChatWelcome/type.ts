@@ -1,6 +1,6 @@
 import type { YakitButtonProp } from '@/components/yakitUI/YakitButton/YakitButton'
 import type { AIChatSubmitParams } from '../aiAgentChat/type'
-import type { AIChatInputDraft } from '../template/type'
+import type { AIChatInputDraft, AIChatTextareaProps } from '../template/type'
 import type { AIReActChatRefProps } from '@/pages/ai-re-act/aiReActChat/AIReActChatType'
 import type { AIMentionCommandParams } from '../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
 
@@ -11,6 +11,7 @@ export interface AIChatWelcomeProps {
   selectedHttpFlowIds?: string[]
   selectedRiskIds?: string[]
   onHttpFlowRemove?: (id: string, isSummary: boolean) => void
+  onClearSelectedResources?: AIChatTextareaProps['onClearSelectedResources']
   ref?: React.ForwardedRef<AIReActChatRefProps>
 }
 export interface AIRecommendItem {

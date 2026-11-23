@@ -7,6 +7,7 @@ import {
   PuzzleOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 import type { TFunction } from '@/i18n/useI18nNamespaces'
+import type { AIMentionCommandParams } from '../../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
 import emiter from '@/utils/eventBus/eventBus'
 import { targetIcon } from '@/pages/KnowledgeBase/utils'
 import {
@@ -26,10 +27,11 @@ import { getWorkspaceAddedCounts } from './workspaceAddedCounts'
 
 interface MaterialMenuOptions extends Pick<
   AIAddMaterialsPopoverProps,
-  'mentions' | 'resourceIds' | 'selectedResourceIds'
+  'mentions' | 'resourceIds' | 'selectedResourceIds' | 'onRemoveMaterials' | 'onClearSelectedResources'
 > {
   t: TFunction
   browserCount: number
+  allowCategoryRemoval: boolean
   addAttachments: (type: 'file' | 'folder') => void
   close: () => void
 }
@@ -41,11 +43,19 @@ export const getMaterialMenuItems = ({
   selectedResourceIds,
   t,
   browserCount,
+  allowCategoryRemoval,
+  onRemoveMaterials,
+  onClearSelectedResources,
   addAttachments,
   close,
 }: MaterialMenuOptions) => {
   const countMentions = (type: string) => mentions.filter((item) => item.mentionType === type).length
   const added = getWorkspaceAddedCounts({ mentions, resourceIds, selectedResourceIds })
+  const getClearMentionsAction = (matches: (item: AIMentionCommandParams) => boolean) => {
+    if (!allowCategoryRemoval) return undefined
+    const removable = mentions.filter((item) => !item.lock && matches(item))
+    return removable.length ? () => onRemoveMaterials(removable) : undefined
+  }
 
   const openWorkspaceTab = (key: AITabsEnum) => {
     close()
@@ -58,6 +68,10 @@ export const getMaterialMenuItems = ({
     const selected = selectedResourceIds[type]
     return {
       action: () => openWorkspaceTab(key),
+      onClearCategory:
+        allowCategoryRemoval && selected.length && onClearSelectedResources
+          ? () => onClearSelectedResources(type)
+          : undefined,
       summaryAction: selected.length
         ? () => {
             close()
@@ -81,6 +95,7 @@ export const getMaterialMenuItems = ({
       description: t('AIAddMaterialsPopover.attachmentHint', { max: MAX_ATTACHMENTS_PER_BATCH }),
       icon: <PaperClipOutlined size={16} />,
       action: () => addAttachments('file'),
+      onClearCategory: getClearMentionsAction((item) => item.mentionSource === 'attachment'),
     },
     addFolder: {
       label: t('AIAddMaterialsPopover.addFolder'),
@@ -121,6 +136,7 @@ export const getMaterialMenuItems = ({
       tab: AIMentionTabsEnum.Tool,
       category: 'tool',
       count: countMentions('tool'),
+      onClearCategory: getClearMentionsAction((item) => item.mentionType === 'tool'),
     },
     fileSystem: {
       label: t('AIMentionTabs.fileSystem'),
@@ -130,6 +146,9 @@ export const getMaterialMenuItems = ({
       action: () => openSidebarTab(AIAgentTabListEnum.File),
       external: true,
       count: added.fileSystem,
+      onClearCategory: getClearMentionsAction(
+        (item) => item.mentionSource !== 'attachment' && ['file', 'folder'].includes(item.mentionType),
+      ),
     },
     browser: {
       label: t('AIMentionTabs.browser'),
@@ -139,12 +158,17 @@ export const getMaterialMenuItems = ({
       action: () => openSidebarTab(AIAgentTabListEnum.Browser),
       external: true,
       count: browserCount,
+      onClearCategory: getClearMentionsAction((item) => item.mentionType === 'browser'),
       summaryPanel: 'browser',
     },
   } satisfies Record<string, MaterialMenuItem>
 }
 
-interface MaterialSummaryOptions extends Pick<AIAddMaterialsPopoverProps, 'mentions' | 'onRemove' | 'filterMode'> {
+interface MaterialSummaryOptions extends Pick<
+  AIAddMaterialsPopoverProps,
+  'mentions' | 'filterMode' | 'onRemoveMaterials' | 'onClearSelectedResources' | 'selectedResourceIds'
+> {
+  onClearAttachments?: () => void
   items: MaterialMenuItem[]
   t: TFunction
   descriptions: Record<string, string>
@@ -156,17 +180,21 @@ interface MaterialSummaryOptions extends Pick<AIAddMaterialsPopoverProps, 'menti
 export const getMaterialSummaryGroups = ({
   items,
   mentions,
-  onRemove,
+  onRemoveMaterials,
+  onClearSelectedResources,
+  selectedResourceIds,
   filterMode,
   t,
   descriptions,
   attachmentCount,
+  onClearAttachments,
   openCategory,
 }: MaterialSummaryOptions): MaterialSummaryGroup[] => {
   const groups = items.flatMap<MaterialSummaryGroup>(({ category, tab, label, icon }) => {
     if (category !== 'forge' && category !== 'knowledgeBase') return []
     const entries = mentions.filter((mention) => mention.mentionType === category)
     if (!entries.length) return []
+    const removable = entries.filter((entry) => !entry.lock)
     const forgeNames = new Map(entries.filter((entry) => entry.name).map((entry) => [entry.mentionId, entry.name]))
     const entryGroups =
       category === 'forge'
@@ -186,8 +214,10 @@ export const getMaterialSummaryGroups = ({
           category === 'forge' ? 'AIAddMaterialsPopover.addedSkills' : 'AIAddMaterialsPopover.addedKnowledgeBases',
         ),
         count: entryGroups.length,
+        onRemove: removable.length ? () => onRemoveMaterials(removable) : undefined,
         onAdd: tab && filterMode?.includes(tab) ? undefined : () => openCategory(category),
-        rows: entryGroups.map(([entry, ...duplicates], index) => {
+        rows: entryGroups.map((group, index) => {
+          const [entry] = group
           const KnowledgeIcon =
             entry.knowledgeIndex === undefined ? BookOpenTextOutlined : targetIcon(entry.knowledgeIndex)
           return {
@@ -195,24 +225,19 @@ export const getMaterialSummaryGroups = ({
             name: entry.mentionName,
             icon: category === 'forge' ? <PuzzleOutlined size={16} /> : <KnowledgeIcon size={16} />,
             description: descriptions[`${category}:${entry.mentionId}`],
-            onRemove:
-              entry.lock || duplicates.some((duplicate) => duplicate.lock)
-                ? undefined
-                : () => {
-                    onRemove(entry)
-                    duplicates.forEach(onRemove)
-                  },
+            onRemove: group.some((item) => item.lock) ? undefined : () => onRemoveMaterials(group),
           }
         }),
       },
     ]
   })
   const otherRows = items.flatMap<MaterialSummaryRow>(
-    ({ label, icon, count, action, summaryAction, category, tab, summaryPanel }) =>
+    ({ label, icon, count, action, summaryAction, category, tab, summaryPanel, onClearCategory }) =>
       count && count > 0
         ? [
             {
               key: label,
+              onClearCategory,
               name: label,
               icon,
               count,
@@ -229,6 +254,7 @@ export const getMaterialSummaryGroups = ({
   if (attachmentCount) {
     otherRows.unshift({
       key: 'attachments',
+      onClearCategory: onClearAttachments,
       name: t('AIAddMaterialsPopover.attachments'),
       icon: <PaperClipOutlined size={16} />,
       count: attachmentCount,
@@ -236,12 +262,25 @@ export const getMaterialSummaryGroups = ({
     })
   }
   if (otherRows.length) {
+    const removable = mentions.filter(
+      (item) =>
+        !item.lock &&
+        (item.mentionSource === 'attachment' || ['tool', 'browser', 'file', 'folder'].includes(item.mentionType)),
+    )
+    const hasSelectedResources = selectedResourceIds.http.length > 0 || selectedResourceIds.risk.length > 0
     groups.push({
       key: 'other',
       label: t('AIChatTextarea.otherMaterials'),
       title: t('AIAddMaterialsPopover.addedOtherMaterials'),
       count: otherRows.reduce((total, row) => total + (row.count ?? 0), 0),
       rows: otherRows,
+      onRemove:
+        removable.length || (hasSelectedResources && onClearSelectedResources)
+          ? () => {
+              if (removable.length) onRemoveMaterials(removable)
+              onClearSelectedResources?.()
+            }
+          : undefined,
     })
   }
   return groups

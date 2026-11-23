@@ -30,6 +30,7 @@ export interface AIChatInputDraft {
   markdown: string
   selectedMaterials: AIMentionCommandParams[]
   hiddenInlineKeys: string[]
+  /** 工作区表格勾选的流量和风险 ID，恢复草稿时用于还原勾选。 */
   selectedResourceIds: AIResourceIds
   focusMode?: string
   enabledCapabilities?: AIEnabledCapability[]
@@ -138,6 +139,7 @@ export interface AIChatTextareaProps {
   selectedHttpFlowIds?: string[]
   selectedRiskIds?: string[]
   onHttpFlowRemove?: (id: string, isSummary: boolean) => void
+  onClearSelectedResources?: (type?: keyof AIResourceIds) => void
   /** 当前会话已添加的漏洞、流量和文件系统数量，供欢迎页卡片展示。 */
   onWorkspaceAddedChange?: (counts: WorkspaceAddedCounts) => void
 }
