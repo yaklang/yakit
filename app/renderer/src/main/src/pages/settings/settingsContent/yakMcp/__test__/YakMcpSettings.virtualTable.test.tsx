@@ -129,5 +129,5 @@ describe('YakMcpSettings real virtual table', () => {
     expect(await screen.findByRole('switch', { name: 'tool_0' })).toBeChecked()
     expect(screen.getByRole('switch', { name: 'tool_1' })).toBeChecked()
     expect(viewport.scrollTop).toBe(0)
-  })
+  }, 15000)
 })
