@@ -132,6 +132,8 @@ export enum YakitRoute {
   AI_Forge = 'ai-forge',
   /** Yak MCP 调用历史 */
   MCP_History = 'mcp-history',
+  /** AI Bash 自定义安全规则（SyntaxFlow） */
+  AI_Bash_Guard_Rules = 'ai-bash-guard-rules',
   /** 右键插件管理 */
   ManageRightClickPlugins = 'manage-right-click-plugins',
   /** 右键插件执行结果 */

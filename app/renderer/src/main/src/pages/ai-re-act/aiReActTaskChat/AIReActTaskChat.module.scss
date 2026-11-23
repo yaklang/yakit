@@ -167,6 +167,16 @@
     color: var(--Colors-Use-Neutral-Text-4-Help-text);
   }
 
+  .setting-link {
+    margin-left: 4px;
+    color: var(--Colors-Use-Main-Primary);
+    cursor: pointer;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
   .setting-switch {
     padding: 0;
   }

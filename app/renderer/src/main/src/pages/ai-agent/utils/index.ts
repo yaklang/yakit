@@ -149,6 +149,10 @@ export const formatAIAgentSetting = (setting: AIAgentSetting): AIAgentSetting =>
       setting.DisableToolIntervalReview ?? AIAgentSettingDefault.DisableToolIntervalReview
     data.DisableMemoryTriage = setting.DisableMemoryTriage ?? AIAgentSettingDefault.DisableMemoryTriage
     data.SingleModelMode = setting.SingleModelMode ?? AIAgentSettingDefault.SingleModelMode
+    data.DisableBuiltinSyntaxFlowRules =
+      setting.DisableBuiltinSyntaxFlowRules ?? AIAgentSettingDefault.DisableBuiltinSyntaxFlowRules
+    data.EnableCustomSyntaxFlowRules =
+      setting.EnableCustomSyntaxFlowRules ?? AIAgentSettingDefault.EnableCustomSyntaxFlowRules
   } catch (error) {}
   return data
 }

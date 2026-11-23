@@ -125,6 +125,7 @@
     "ssaCompileHistory": "SSACompileHistory",
     "cHeaders": "C Headers",
     "mcpHistory": "MCP Call History",
+    "aiBashGuardRules": "AI Bash Security Rules",
     "penetrationRecordDescription": "Records any content generated during the penetration testing process, making it easy to review and track.",
     "ai-memory": "Memory Base",
     "ai-tool": "Tool",

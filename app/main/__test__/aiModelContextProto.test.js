@@ -40,13 +40,14 @@ describe('context and image engine wire compatibility', () => {
   describe.each(['StartAIReAct', 'StartAITask'])('%s', (rpc) => {
     it.each([
       [undefined, '1b', ''],
-      [false, '1e', 'c00300'],
-      [true, '1e', 'c00301'],
+      [false, '1e', 'c80300'],
+      [true, '1e', 'c80301'],
     ])('keeps automatic adjustment presence independent of image policy (%s)', (disabled, length, flag) => {
       // Params: RuntimeContextSizeLimit=51, ImageInput=54,
-      // ModelContextKey=55, DisableContextAutoAdjust=56.
+      // ModelContextKey=58, DisableContextAutoAdjust=57.
+      // 55/56 预留给 SyntaxFlow 规则开关。
       const wire = Buffer.from(
-        `12${length}9803c0cf24b203060a046175746fba030a6f70617175652d6b6579${flag}40014a1752756e74696d65436f6e7465787453697a654c696d6974`,
+        `12${length}9803c0cf24b203060a046175746f${flag}d2030a6f70617175652d6b657940014a1752756e74696d65436f6e7465787453697a654c696d6974`,
         'hex',
       )
       const payload = {
@@ -65,6 +66,24 @@ describe('context and image engine wire compatibility', () => {
       if (disabled === undefined) expect(decoded.Params).not.toHaveProperty('DisableContextAutoAdjust')
       expect(method.requestSerialize(payload)).toEqual(wire)
     })
+  })
+})
+
+describe('SyntaxFlow security rule switches', () => {
+  it.each(['StartAIReAct', 'StartAITask'])('%s 使用 55/56 下发会话开关', (rpc) => {
+    const method = ypb.Yak.service[rpc]
+    const wire = Buffer.from('1206b80301c00301', 'hex')
+    const params = { DisableBuiltinSyntaxFlowRules: true, EnableCustomSyntaxFlowRules: true }
+    expect(method.requestDeserialize(wire)).toMatchObject({ Params: params })
+    expect(method.requestSerialize({ Params: params })).toEqual(wire)
+  })
+
+  it('AIGlobalConfig 使用 15/16 持久化全局默认', () => {
+    const method = ypb.Yak.service.SetAIGlobalConfig
+    const wire = Buffer.from('7801800101', 'hex')
+    const config = { DisableBuiltinSyntaxFlowRules: true, EnableCustomSyntaxFlowRules: true }
+    expect(method.requestDeserialize(wire)).toMatchObject(config)
+    expect(method.requestSerialize(config)).toEqual(wire)
   })
 })
 

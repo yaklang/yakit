@@ -168,6 +168,8 @@ export const AIAgentSettingDefault: AIAgentSetting = {
   },
   DisableMemoryTriage: false,
   SingleModelMode: false,
+  DisableBuiltinSyntaxFlowRules: false,
+  EnableCustomSyntaxFlowRules: false,
   Source: AISourceEnum.aiAgent,
 }
 
@@ -445,6 +447,8 @@ export const defaultAIGlobalConfig: AIGlobalConfig = {
   VisionModels: [],
   AIPresetPrompt: '',
   AIPlanPrompt: '',
+  DisableBuiltinSyntaxFlowRules: false,
+  EnableCustomSyntaxFlowRules: false,
 }
 
 export const defaultExportAIForgeRequest: ExportAIForgeRequest = {

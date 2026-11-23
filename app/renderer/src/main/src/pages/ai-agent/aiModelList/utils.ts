@@ -374,6 +374,10 @@ export interface AIGlobalConfig {
   AIPresetPrompt: string
   /** 自定义 plan 提示词 */
   AIPlanPrompt: string
+  /** 全局默认：为 true 时禁用内置 SyntaxFlow 安全规则，可被会话启动参数覆盖 */
+  DisableBuiltinSyntaxFlowRules?: boolean
+  /** 全局默认：为 true 时把用户自定义 Bash SyntaxFlow 规则纳入安全审查 */
+  EnableCustomSyntaxFlowRules?: boolean
 }
 
 /** 单模型模式要求首个高质模型具备可用的厂商类型和模型名。 */

@@ -287,6 +287,9 @@ const YakRunnerScanHistory = React.lazy(() => import('@/pages/yakRunnerScanHisto
 const SSACompileHistory = React.lazy(() => import('@/pages/ssaCompileHistory/SSACompileHistory'))
 const CHeaderManager = React.lazy(() => import('@/pages/yakRunnerAuditCode/CHeaderManager/CHeaderManager'))
 const MCPHistory = React.lazy(() => import('@/pages/ai-agent/aiMCPHistory/MCPHistory'))
+const AIBashGuardRules = React.lazy(() =>
+  import('@/pages/ai-agent/aiBashGuardRules/AIBashGuardRules').then((m) => ({ default: m.AIBashGuardRules })),
+)
 const MemoryBase = React.lazy(() => import('@/pages/memoryBase/MemoryBase'))
 const ConfigManagement = React.lazy(() => import('@/pages/configManagement/ConfigManagement'))
 const AITool = React.lazy(() => import('@/pages/aiTool/AITool'))
@@ -505,6 +508,7 @@ export const YakitRouteToPageInfo: Record<
   'ssa-compile-history': { label: 'SSA项目编译历史', labelUi: 'YakitRoute.ssaCompileHistory' },
   'c-headers': { label: 'C 头文件', labelUi: 'YakitRoute.cHeaders' },
   'mcp-history': { label: 'MCP调用历史', labelUi: 'YakitRoute.mcpHistory' },
+  'ai-bash-guard-rules': { label: 'AI Bash 安全规则', labelUi: 'YakitRoute.aiBashGuardRules' },
   'config-management': {
     label: '配置管理',
     labelUi: 'YakitRoute.configManagement',
@@ -573,6 +577,7 @@ export const SingletonPageRoute: YakitRoute[] = [
   YakitRoute.AI_Tool,
   YakitRoute.AI_Forge,
   YakitRoute.MCP_History,
+  YakitRoute.AI_Bash_Guard_Rules,
   YakitRoute.C_Headers,
   YakitRoute.ManageRightClickPlugins,
   YakitRoute.Settings,
@@ -634,6 +639,7 @@ export const NoPaddingRoute: YakitRoute[] = [
   YakitRoute.AI_Tool,
   YakitRoute.AI_Forge,
   YakitRoute.MCP_History,
+  YakitRoute.AI_Bash_Guard_Rules,
   YakitRoute.C_Headers,
   YakitRoute.ManageRightClickPlugins,
   YakitRoute.ContextMenuResult,
@@ -1073,6 +1079,8 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
       return <CHeaderManager />
     case YakitRoute.MCP_History:
       return <MCPHistory />
+    case YakitRoute.AI_Bash_Guard_Rules:
+      return <AIBashGuardRules />
     case YakitRoute.Rule_Management:
       return <RuleManagement ruleManagementPageInfo={params?.ruleManagementPageInfo} />
     case YakitRoute.Notepad_Manage:
