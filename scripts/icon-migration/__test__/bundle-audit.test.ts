@@ -84,6 +84,24 @@ describe('audit-package-bundle', () => {
     expect(written.public_internal_display_name_map.outline[0]).toHaveProperty('internal_binding')
   })
 
+  it('uses the Link build module manifest as the source scope', async () => {
+    const fixture = await createFixture()
+    const manifest = resolve(fixture.root, 'link-module-manifest.json')
+    await writeFile(manifest, JSON.stringify({ source_files: [resolve(fixture.sourceRoot, 'consumer.tsx')] }))
+
+    const artifact = await auditPackageBundle({
+      runDir: fixture.runDir,
+      mode: 'fixture',
+      renderer: 'link',
+      dist: fixture.dist,
+      packageRoot: fixture.packageRoot,
+      sourceManifest: manifest,
+    })
+
+    expect(artifact.exit_status).toBe('pass')
+    expect(artifact.source_manifest).toBeTruthy()
+  })
+
   it('fails closed when an oldicon displayName differs from its public export', async () => {
     const fixture = await createFixture()
     await writeFile(

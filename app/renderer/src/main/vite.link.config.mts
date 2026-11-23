@@ -19,6 +19,8 @@ const linkPublicDir = path.resolve(rootDir, '.link-public')
 const mainPagesRoot = path.resolve(rootDir, 'src/pages')
 const mainNewAppRoot = path.resolve(rootDir, 'src/newApp')
 const linkPagesRoot = path.resolve(rootDir, 'src/engineLinkStartup/pages')
+/** 供 icon migration 审计使用：Link 实际模块图包含主窗共享组件，不能只按 engineLinkStartup 扫源码 */
+const linkSourceManifest = path.resolve(outDir, '../.link-module-manifest.json')
 
 const normalizeModuleId = (id: string) => id.replace(/\\/g, '/').split('?')[0]
 
@@ -42,17 +44,25 @@ function linkModuleBoundaryPlugin(): Plugin {
       }
     },
     generateBundle() {
-      const leaked = [...this.getModuleIds()]
-        .map(normalizeModuleId)
-        .filter(
-          (id) => (id.startsWith(mainPagePrefix) && !id.startsWith(linkPagePrefix)) || id.startsWith(mainNewAppPrefix),
-        )
+      const moduleIds = [...this.getModuleIds()].map(normalizeModuleId)
+      const leaked = moduleIds.filter(
+        (id) => (id.startsWith(mainPagePrefix) && !id.startsWith(linkPagePrefix)) || id.startsWith(mainNewAppPrefix),
+      )
 
       if (leaked.length) {
         this.error(
           `Link 构建包含主窗口页面模块，请检查 Link 入口是否引用了 @/pages 或 @/newApp：\n${leaked.slice(0, 10).join('\n')}`,
         )
       }
+
+      const sourcePrefix = `${normalizeModuleId(path.resolve(rootDir, 'src'))}/`
+      const sourceFiles = moduleIds
+        .filter((id) => id.startsWith(sourcePrefix) && /\.(?:[cm]?[jt]sx?)$/.test(id))
+        .filter((id) => !id.split('/').some((segment) => ['__test__', '__tests__'].includes(segment)))
+        .filter((id) => !/\.(?:test|spec)\.[^/]+$/.test(id))
+        .sort()
+      fs.mkdirSync(path.dirname(linkSourceManifest), { recursive: true })
+      fs.writeFileSync(linkSourceManifest, `${JSON.stringify({ source_files: sourceFiles }, null, 2)}\n`)
     },
   }
 }

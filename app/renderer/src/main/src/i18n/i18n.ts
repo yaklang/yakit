@@ -9,7 +9,10 @@ const isLinkEntry = typeof window !== 'undefined' && window.__YAKIT_ENTRY__ === 
 // 生产构建用编译期常量，避免主窗口产物里留下未使用的 Link inline chunk；
 // 开发态同一个 Vite 服务提供两个入口，只能用运行时标记。
 declare const __YAKIT_LINK_ENTRY__: boolean
-const useLinkInlineResources = import.meta.env.DEV ? isLinkEntry : __YAKIT_LINK_ENTRY__
+// 非标准 Vite 配置（如 Memfit UI 回归）不会注入该常量，typeof 保护避免运行时 ReferenceError。
+const useLinkInlineResources = import.meta.env.DEV
+  ? isLinkEntry
+  : typeof __YAKIT_LINK_ENTRY__ !== 'undefined' && __YAKIT_LINK_ENTRY__
 // 企业版中文资源同步内联：Link 开发态与生产态保持一致，不走 backend 首屏加载。
 const useI18nInline = process.env.YAKIT_EDITION ? ['yakitEE', 'irifyEE'].includes(process.env.YAKIT_EDITION) : false
 

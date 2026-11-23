@@ -180,6 +180,7 @@ const configOption = {
     '!backups/**/*',
     '!app/renderer/src/**/*',
     '!app/renderer/vite-plugins/**/*',
+    '!app/renderer/pages/.link-module-manifest.json',
     '!cli/*',
     '!**/*.p12',
     '!imgs/**/*',
