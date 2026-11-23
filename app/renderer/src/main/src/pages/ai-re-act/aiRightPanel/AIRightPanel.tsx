@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { TaskListPane } from '@/pages/ai-agent/chatTemplate/historyTaskTree/TaskListPane'
+import { AIBackgroundTaskPane } from './AIBackgroundTaskPane/AIBackgroundTaskPane'
 import useRunningAsyncTaskCount from '@/pages/ai-agent/chatTemplate/historyTaskTree/useRunningAsyncTaskCount'
 import { AIRightPanelPane } from './AIRightPanelPane'
 import { TimelineDumpButton } from './TimelineDumpButton'
@@ -7,7 +8,7 @@ import { AISkillLoadingPane } from './AISkillLoadingPane/AISkillLoadingPane'
 import TimelineCard from '@/pages/ai-agent/chatTemplate/TimelineCard/TimelineCard'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import { useStore } from 'zustand'
-import { useCurrentStore } from '../hooks/useCurrentDataBySession'
+import { useCurrentRawData, useCurrentStore } from '../hooks/useCurrentDataBySession'
 import useCurrentSessionId from '../hooks/useCurrentSessionId'
 import useCurrentTaskData from '../hooks/useCurrentTaskData/useCurrentTaskData'
 import classNames from 'classnames'
@@ -49,6 +50,7 @@ import {
   NewspaperOutlined,
   ScrollTextOutlined,
   SmViewGridAddOutlined,
+  TerminalOutlined,
   TimelineOutlined,
   UserCircleOutlined,
   XOutlined,
@@ -80,6 +82,7 @@ const MAIN_MENUS: MenuItemDef[] = [
   { key: 'traffic', labelKey: 'AIRightPanel.traffic', icon: <FlowOutlined /> },
   { key: 'risk', labelKey: 'AIRightPanel.risk', icon: <BugOutlined /> },
   { key: 'session-history', labelKey: 'AIRightPanel.sessionHistory', icon: <ChatAlt2Outlined /> },
+  { key: 'background-tasks', labelKey: 'AIRightPanel.backgroundTasks', icon: <TerminalOutlined /> },
   { key: 'task-list', labelKey: 'AIRightPanel.taskList', icon: <FlagOutlined /> },
 ]
 
@@ -530,6 +533,8 @@ const PaneSlot: React.FC<{
 
   const renderTitle = () => {
     switch (pane) {
+      case 'background-tasks':
+        return t('AIRightPanel.backgroundTasks')
       case 'task-list':
         return t('AIRightPanel.taskList')
       case 'timeline':
@@ -559,6 +564,8 @@ const PaneSlot: React.FC<{
 
   const renderContent = () => {
     switch (pane) {
+      case 'background-tasks':
+        return <AIBackgroundTaskPane />
       case 'task-list':
         return <TaskListPane />
       case 'timeline':
@@ -602,6 +609,8 @@ type ChatRightPanelProps = { panel: PanelState }
 const ChatRightPanel: React.FC<ChatRightPanelProps> = React.memo((props) => {
   const { panel } = props
   const store = useCurrentStore()
+  const rawData = useCurrentRawData()
+  useStore(store, (state) => state.asyncExecutionUpdate)
   const questionID = useStore(store, (state) => state.currentChatStatus.questionID)
   const taskData = useCurrentTaskData(questionID)
   const sessionExecution = useStore(store, (state) => state.sessionExecution)
@@ -651,18 +660,20 @@ const ChatRightPanel: React.FC<ChatRightPanelProps> = React.memo((props) => {
   const totals: Partial<Record<AIRightPanelMenuKey, number | undefined>> = {
     browser: browserOnlineCount,
     traffic: trafficCount,
+    'background-tasks': rawData.asyncExecution?.running_count,
     'task-list': runningTaskCount,
     risk: riskTotal,
   }
   const menus = mainMenus.map((item) => ({ ...item, total: totals[item.key] }))
 
   /**
-   * 菜单点击：任务列表、加载技能、时间线打开右侧内容面板；
+   * 菜单点击：后台任务、任务列表、加载技能、时间线打开右侧内容面板；
    * 任务详情、流量、漏洞切换工作区 tab；文件系统、浏览器、会话历史已展开则收起否则打开左侧对应页；
    * AI 设置打开设置页，导出日志打开导出弹窗，查看日志打开日志窗口。
    */
   const handleMenuClick = useMemoizedFn((key: AIRightPanelMenuKey) => {
     switch (key) {
+      case 'background-tasks':
       case 'task-list':
       case 'load-skills':
       case 'timeline':

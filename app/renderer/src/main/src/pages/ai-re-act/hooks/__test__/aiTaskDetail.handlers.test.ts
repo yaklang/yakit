@@ -1143,4 +1143,134 @@ describe('aiTaskDetail handlers', () => {
     aiTaskDetailDataHandlers.session_snapshot(makeFollowUpReq(3, 9))
     expect(rawData.taskDetailsMap.get(taskId)?.execution?.execution_rounds).toBe(9)
   })
+
+  it('async_execution 写入快照，并按 revision 丢掉旧响应', () => {
+    vi.mocked(yakitNotify).mockClear()
+    const execution = {
+      execute_id: 'exec-1',
+      metadata: { name: 'capture' },
+      state: 'running',
+      revision: 2,
+    }
+    const req = makeHandlerRequest({
+      sessionId: 'session-1',
+      res: makeGrpcJsonRes(
+        'structured',
+        {
+          revision: 2,
+          session_id: 'session-1',
+          current_task_id: 'task-1',
+          running_count: 1,
+          updated_at: 10,
+          executions: [execution],
+        },
+        { NodeId: 'async_execution' },
+      ),
+    })
+
+    aiTaskDetailDataHandlers.async_execution(req)
+    expect(req.rawData.asyncExecution).toMatchObject({ revision: 2, running_count: 1, executions: [execution] })
+    expect(req.store.getState().asyncExecutionUpdate).toBe(1)
+
+    req.res = makeGrpcJsonRes(
+      'structured',
+      { revision: 1, session_id: 'session-1', running_count: 0, updated_at: 11, executions: [] },
+      { NodeId: 'async_execution' },
+    )
+    aiTaskDetailDataHandlers.async_execution(req)
+    expect(req.rawData.asyncExecution?.revision).toBe(2)
+    expect(req.store.getState().asyncExecutionUpdate).toBe(1)
+
+    req.res = makeGrpcJsonRes(
+      'structured',
+      { revision: 2, session_id: 'session-1', running_count: 0, updated_at: 12, executions: [] },
+      { NodeId: 'async_execution' },
+    )
+    aiTaskDetailDataHandlers.async_execution(req)
+    expect(req.rawData.asyncExecution?.running_count).toBe(1)
+
+    req.res = makeGrpcJsonRes(
+      'structured',
+      {
+        revision: 3,
+        session_id: 'other-session',
+        running_count: 0,
+        updated_at: 13,
+        executions: [],
+      },
+      { NodeId: 'async_execution' },
+    )
+    aiTaskDetailDataHandlers.async_execution(req)
+    expect(req.rawData.asyncExecution?.revision).toBe(2)
+
+    req.res = makeGrpcJsonRes('structured', { error: 'not found' }, { NodeId: 'async_execution' })
+    aiTaskDetailDataHandlers.async_execution(req)
+    expect(req.rawData.asyncExecution?.revision).toBe(2)
+    expect(req.rawData.asyncExecution?.executions).toEqual([execution])
+    expect(yakitNotify).toHaveBeenCalledWith('error', 'handleAsyncExecution:not found')
+
+    req.res = makeGrpcJsonRes(
+      'structured',
+      {
+        error: 'stop failed',
+        revision: 9,
+        session_id: 'session-1',
+        running_count: 0,
+        updated_at: 99,
+        executions: [],
+      },
+      { NodeId: 'async_execution' },
+    )
+    aiTaskDetailDataHandlers.async_execution(req)
+    expect(req.rawData.asyncExecution).toMatchObject({
+      revision: 2,
+      running_count: 1,
+      executions: [execution],
+      error: 'stop failed',
+    })
+    expect(yakitNotify).toHaveBeenCalledWith('error', 'handleAsyncExecution:stop failed')
+
+    req.res = makeGrpcJsonRes(
+      'structured',
+      {
+        revision: 4,
+        session_id: 'session-1',
+        running_count: 1,
+        updated_at: 14,
+        executions: [{ ...execution, state: 'stopping' }],
+      },
+      { NodeId: 'async_execution' },
+    )
+    aiTaskDetailDataHandlers.async_execution(req)
+    expect(req.rawData.asyncExecution).toMatchObject({ revision: 4, running_count: 1 })
+    expect(req.store.getState().asyncExecutionUpdate).toBe(4)
+
+    req.res = makeGrpcJsonRes(
+      'structured',
+      { error: 'wrong session', session_id: 'other-session', executions: [] },
+      { NodeId: 'async_execution' },
+    )
+    aiTaskDetailDataHandlers.async_execution(req)
+    expect(req.rawData.asyncExecution?.revision).toBe(4)
+    expect(req.rawData.asyncExecution?.error).toBeUndefined()
+    expect(yakitNotify).not.toHaveBeenCalledWith('error', 'handleAsyncExecution:wrong session')
+
+    const missingCountReq = makeHandlerRequest({
+      sessionId: 'session-1',
+      res: makeGrpcJsonRes(
+        'structured',
+        {
+          session_id: 'session-1',
+          updated_at: 1,
+          executions: [
+            { execute_id: 'exec-run', state: 'running' },
+            { execute_id: 'exec-done', state: 'completed' },
+          ],
+        },
+        { NodeId: 'async_execution' },
+      ),
+    })
+    aiTaskDetailDataHandlers.async_execution(missingCountReq)
+    expect(missingCountReq.rawData.asyncExecution).toMatchObject({ revision: 0, running_count: 1 })
+  })
 })

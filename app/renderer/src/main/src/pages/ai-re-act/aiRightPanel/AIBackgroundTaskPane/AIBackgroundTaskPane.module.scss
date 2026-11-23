@@ -1,0 +1,169 @@
+@use '../../../../styles/mixin.scss' as mixin;
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  height: 100%;
+  min-height: 0;
+  overflow: auto;
+}
+
+.list-end {
+  flex-shrink: 0;
+  padding: 8px 0 12px;
+  color: var(--Colors-Use-Neutral-Disable);
+  font-size: 11px;
+  line-height: 14px;
+  text-align: center;
+  font-weight: 400;
+}
+
+.empty {
+  display: flex;
+  justify-content: center;
+  height: 100%;
+  min-height: 0;
+}
+
+.group-title {
+  display: flex;
+  align-items: center;
+  height: 32px;
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+  gap: 4px;
+  cursor: pointer;
+  svg {
+    width: 12px;
+    height: 12px;
+    transition: transform 0.3s;
+  }
+  &.expanded svg {
+    transform: rotate(90deg);
+  }
+}
+
+.group-list {
+  display: grid;
+  grid-template-rows: 0fr;
+  overflow: hidden;
+  transition: grid-template-rows 0.3s ease;
+
+  &.expanded {
+    grid-template-rows: 1fr;
+  }
+}
+
+.group-list-inner {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.execution-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  height: 28px;
+  padding: 2px 8px;
+  border-radius: 8px;
+  .execution-item-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    flex: 1;
+    div {
+      flex: 1;
+      color: var(--Colors-Use-Neutral-Text-1-Title);
+      font-size: 12px;
+      line-height: 16px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      @include mixin.text-ellipsis();
+    }
+    svg {
+      width: 16px;
+      height: 16px;
+      flex: none;
+    }
+    .completed {
+      color: var(--Colors-Use-Success-Primary);
+    }
+    .running {
+      color: var(--Colors-Use-Info-Primary);
+      transform-origin: center center;
+      animation: background-task-spin 1s linear infinite;
+    }
+    .failed {
+      color: var(--Colors-Use-Error-Primary);
+    }
+  }
+  .execution-time {
+    flex: none;
+    color: var(--Colors-Use-Neutral-Text-4-Help-text);
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 16px;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+  .execution-fail-reason {
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 16px;
+    letter-spacing: 0.5px;
+    display: none;
+    align-items: center;
+    gap: 4px;
+    svg {
+      width: 16px;
+      height: 16px;
+      color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    }
+  }
+  .execution-cancel {
+    display: none;
+    flex: none;
+    align-items: center;
+    gap: 4px;
+    color: var(--Colors-Use-Error-Primary);
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 16px;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    cursor: pointer;
+    svg {
+      width: 16px;
+      height: 16px;
+    }
+  }
+  &:hover {
+    background-color: var(--Colors-Use-Neutral-Bg-Hover);
+    .execution-time-hide {
+      display: none;
+    }
+    .execution-fail-reason {
+      display: inline-flex;
+    }
+  }
+  &.running-item:hover {
+    .execution-time {
+      display: none;
+    }
+    .execution-cancel {
+      display: inline-flex;
+    }
+  }
+}
+
+@keyframes background-task-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

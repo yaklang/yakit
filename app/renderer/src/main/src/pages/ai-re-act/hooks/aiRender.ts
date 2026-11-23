@@ -606,6 +606,8 @@ export interface ChatStoreState {
   loadedSkillsUpdate: number
   /** aiChat.d.ts AIAgentChatData availableSkills */
   availableSkillsUpdate: number
+  /** aiChat.d.ts AIAgentChatData asyncExecution */
+  asyncExecutionUpdate: number
   /** aiChat.d.ts AIAgentChatData draftMaterials */
   draftMaterialsUpdate: number
 
@@ -721,6 +723,7 @@ export interface ChatStoreState {
       | 'timelineDumpUpdate'
       | 'loadedSkillsUpdate'
       | 'availableSkillsUpdate'
+      | 'asyncExecutionUpdate'
       | 'draftMaterialsUpdate'
       | 'currentPlanReviewExtraUpdate'
       | 'chatTodoListUpdate'
@@ -755,6 +758,7 @@ export interface ChatStoreState {
         | 'timelineDumpUpdate'
         | 'loadedSkillsUpdate'
         | 'availableSkillsUpdate'
+        | 'asyncExecutionUpdate'
         | 'draftMaterialsUpdate'
         | 'grpcFolders'
         | 'reActTimelines'

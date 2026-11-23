@@ -87,6 +87,7 @@ const genAIAgentChatData = (): AIAgentChatData => {
     memoryList: DefaultMemoryList,
     loadedSkills: { skills: [], total: 0 },
     availableSkills: { skills: [], total: 0, page: 1, page_size: DEFAULT_SKILL_PAGE_SIZE, has_more: false },
+    asyncExecution: { revision: 0, running_count: 0, updated_at: 0, executions: [] },
     skillDetails: new Map(),
     systemStream: '',
     yaklangCodeChange: undefined,
@@ -1756,6 +1757,13 @@ export class ChatMultiSessionController {
       SyncJsonInput: JSON.stringify({ page: 1, page_size: DEFAULT_SKILL_PAGE_SIZE }),
     })
 
+    // 空闲会话也能查到跨轮次仍在跑的后台执行；没有 Manager 时后端返回空列表且不创建
+    this.requestMessage(sessionId, {
+      IsSyncMessage: true,
+      SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_ASYNC_EXECUTION,
+      SyncID: uuidv4(),
+    })
+
     // 获取最新记忆列表数据, 并注册轮询定时器
     this.requestMessage(sessionId, { IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_MEMORY_CONTEXT })
     if (meta.memoryPollingTimer) clearInterval(meta.memoryPollingTimer)
@@ -1928,6 +1936,7 @@ export class ChatMultiSessionController {
         'skill_loaded',
         'skill_available',
         'skill_detail',
+        'async_execution',
         'react_task_created',
         'plan_exec_tasks',
         'skip_subtask_in_plan',

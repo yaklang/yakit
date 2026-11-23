@@ -179,6 +179,8 @@ export interface AIAgentChatData {
   availableSkills: Omit<AIAgentGrpcApi.SkillAvailableResponse, 'skills'> & { skills: AISkillListItem[]; error?: string }
   /** 按技能名称缓存当前会话的详情 */
   skillDetails: Map<string, AIAgentGrpcApi.SkillDetail>
+  /** 当前会话的后台执行快照；revision 用于丢弃晚到的旧查询响应 */
+  asyncExecution?: AIAgentGrpcApi.AsyncExecutionSnapshot
   /** 系统流信息(isSystem=true&type=stream) */
   systemStream: string
   /** CodeChange 数据（事件类型 yaklang_code_change） */

@@ -1,6 +1,6 @@
 import type { AIMessageHandler } from '../type'
 import type { AIAgentGrpcApi } from '../grpcApi'
-import { AISkillLoadStateEnum } from '../grpcApi'
+import { AISkillLoadStateEnum, AsyncExecutionState } from '../grpcApi'
 import type { AISkillListItem } from '../../aiRightPanel/AISkillLoadingPane/aiSkillList/type'
 import type { AISkillLoadState } from '../../aiRightPanel/AISkillLoadingPane/type'
 import { Uint8ArrayToString } from '@/utils/str'
@@ -215,6 +215,71 @@ const handleLoadedSkills: AIMessageHandler = ({ res, store, rawData }) => {
     skills: mapSkillListItems(response.skills, AISkillLoadStateEnum.Loaded, rawData.skillDetails),
   }
   store.getState().updateStateCount('loadedSkillsUpdate')
+}
+
+const terminalAsyncExecutionStates = new Set<AsyncExecutionState>([
+  AsyncExecutionState.completed,
+  AsyncExecutionState.failed,
+  AsyncExecutionState.cancelled,
+  AsyncExecutionState.timedOut,
+])
+
+/** 非终态才占用 running_count；后端缺字段时按明细兜底 */
+const countRunningAsyncExecutions = (executions: AIAgentGrpcApi.AsyncExecutionSummary[]): number =>
+  executions.filter((execution) => !execution.state || !terminalAsyncExecutionStates.has(execution.state)).length
+
+/**
+ * 推送、查询、停止共用同一份快照。revision 更小或相同的晚到响应直接丢掉；
+ * revision 为 0 只在本地还没有更高版本时接收。
+ * Manager 属于 ReAct 会话而非单次任务，同一会话内 revision 不会因任务轮次归零。
+ * 接受条件要求 executions 为数组：后端空列表也发 []，停止响应同样带完整 executions。
+ * execution 只是停止成功时多带的那一条，不参与接受判断，也不合并进列表。
+ * 带 error 的响应一律提示并保留本地列表，不覆盖 executions。
+ */
+const acceptAsyncExecutionSnapshot = (
+  current: AIAgentGrpcApi.AsyncExecutionSnapshot | undefined,
+  incoming: AIAgentGrpcApi.AsyncExecutionSnapshot,
+  sessionId: string,
+): boolean => {
+  if (incoming.session_id && incoming.session_id !== sessionId) return false
+  if (!Array.isArray(incoming.executions)) return false
+  const revision = typeof incoming.revision === 'number' ? incoming.revision : 0
+  const cachedRevision = current?.revision ?? 0
+  if (revision < cachedRevision) return false
+  if (revision === cachedRevision && revision !== 0) return false
+  return true
+}
+
+const handleAsyncExecution: AIMessageHandler = ({ res, store, rawData, sessionId }) => {
+  if (res.Type !== 'structured' || res.NodeId !== 'async_execution') return
+
+  let snapshot: AIAgentGrpcApi.AsyncExecutionSnapshot
+  try {
+    snapshot = JSON.parse(Uint8ArrayToString(res.Content) || '') as AIAgentGrpcApi.AsyncExecutionSnapshot
+  } catch {
+    return
+  }
+  if (snapshot.error) {
+    if (snapshot.session_id && snapshot.session_id !== sessionId) return
+    yakitNotify('error', 'handleAsyncExecution:' + snapshot.error)
+    if (rawData.asyncExecution) {
+      rawData.asyncExecution = { ...rawData.asyncExecution, error: snapshot.error }
+      store.getState().updateStateCount('asyncExecutionUpdate')
+    }
+    return
+  }
+  if (!acceptAsyncExecutionSnapshot(rawData.asyncExecution, snapshot, sessionId)) return
+
+  const executions = snapshot.executions
+  rawData.asyncExecution = {
+    ...snapshot,
+    revision: typeof snapshot.revision === 'number' ? snapshot.revision : 0,
+    running_count:
+      typeof snapshot.running_count === 'number' ? snapshot.running_count : countRunningAsyncExecutions(executions),
+    updated_at: snapshot.updated_at ?? 0,
+    executions,
+  }
+  store.getState().updateStateCount('asyncExecutionUpdate')
 }
 
 const handleAvailableSkills: AIMessageHandler = ({ res, store, rawData }) => {
@@ -451,6 +516,7 @@ export const aiTaskDetailDataHandlers = {
   skill_detail: handleSkillDetail,
   skill_loaded: handleLoadedSkills,
   skill_available: handleAvailableSkills,
+  async_execution: handleAsyncExecution,
   capability_inventory: handleCapabilityInventory,
   perception: handlePerception,
   current_task_todo_list_update: handleCurrentTaskTodoListUpdate,
