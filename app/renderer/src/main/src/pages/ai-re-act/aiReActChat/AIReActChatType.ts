@@ -67,6 +67,7 @@ export interface AIReActChatProps {
     selectedHttpFlowIds?: AIChatTextareaProps['selectedHttpFlowIds']
     selectedRiskIds?: AIChatTextareaProps['selectedRiskIds']
     onHttpFlowRemove?: AIChatTextareaProps['onHttpFlowRemove']
+    onClearSelectedResources?: AIChatTextareaProps['onClearSelectedResources']
     /** 发送问题后回调（如清空 history 表勾选） */
     onAfterSubmit?: () => void
   }

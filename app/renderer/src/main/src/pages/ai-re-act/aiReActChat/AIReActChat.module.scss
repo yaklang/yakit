@@ -74,6 +74,22 @@
     864px,
     calc(100% - var(--ai-right-panel-chat-slot-width, 0px) - 2 * var(--ai-content-gutter, 0px))
   );
+  --ai-summary-track-inset: 0px;
+
+  @container ai-chat-content (width > 1152px) {
+    &:has(.chat-footer [data-ai-summary-row]:not(:empty)) {
+      // 仅有添加按钮时占 24px，加上标签列两侧各 4px 的内边距。
+      --ai-summary-side-width: 32px;
+      --ai-summary-track-inset: max(
+        0px,
+        calc(var(--ai-summary-side-width) - max(0px, (100% - var(--ai-right-panel-chat-slot-width, 0px) - 880px) / 2))
+      );
+    }
+
+    &:has(.chat-footer [data-ai-summary-row] [data-ai-summary-tag]) {
+      --ai-summary-side-width: 144px;
+    }
+  }
   position: relative;
   overflow: hidden;
 
@@ -160,6 +176,7 @@
   justify-content: center;
   .footer-body {
     @include mixin.ai-right-panel-content-track;
+    box-sizing: border-box;
     height: 100%;
     position: relative;
     display: flex;

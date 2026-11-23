@@ -1,0 +1,33 @@
+.row {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  padding-inline: 24px;
+  box-sizing: border-box;
+  overflow-x: auto;
+  scrollbar-width: none;
+
+  &:empty {
+    display: none;
+  }
+}
+
+@container ai-chat-content (width > 1152px) {
+  .row {
+    --ai-summary-radius: 8px;
+    --ai-summary-bottom-border: 1px;
+
+    grid-area: 1 / 1;
+    justify-self: end;
+    align-self: start;
+    margin-top: 8px;
+    width: 144px;
+    padding: 4px;
+    flex-direction: column-reverse;
+    overflow: visible;
+
+    [data-ai-summary-tag] {
+      max-width: 100%;
+    }
+  }
+}

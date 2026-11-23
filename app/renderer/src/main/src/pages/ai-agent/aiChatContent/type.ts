@@ -1,5 +1,6 @@
 import type { FileSearchEditorHighlight } from '@/components/FileTreeContentSearch'
 import type { AIReActChatRefProps } from '@/pages/ai-re-act/aiReActChat/AIReActChatType'
+import type { AIChatTextareaProps } from '../template/type'
 import { type AITabsEnum } from '../defaultConstant'
 
 export interface AIChatContentRefProps extends AIReActChatRefProps {}
@@ -11,6 +12,7 @@ export interface AIChatContentProps {
   selectedHttpFlowIds?: string[]
   selectedRiskIds?: string[]
   onHttpFlowRemove?: (id: string, isSummary: boolean) => void
+  onClearSelectedResources?: AIChatTextareaProps['onClearSelectedResources']
   /** 提交消息并清空输入内容后触发，用于清理表格勾选和资料引用。 */
   onAfterSubmit?: () => void
   showFreeChat?: boolean

@@ -1,110 +1,72 @@
 import type React from 'react'
+import { Tooltip } from 'antd'
 import { useMemoizedFn } from 'ahooks'
-import classNames from 'classnames'
-import { BoxesOutlined, Goal2Outlined, PencilAltOutlined } from '@yakit-libs/yakit-ui-icons/outline'
-import { XCircleSolid } from '@yakit-libs/yakit-ui-icons/solid'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import { BoxesOutlined, Goal2Outlined, XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useAIRunMode } from '../aiRunModeSelect/useAIRunMode'
 import { clearGoalStrategy } from '../defaultConstant'
+import type { ModeSlashReopenPayload } from '../components/aiMilkdownInput/aiMilkdownModeSlash/store'
 import {
   deriveGoalTagFromStrategy,
   getGoalDurationDisplayLabel,
   requestModeSlashReopen,
 } from '../components/aiMilkdownInput/aiMilkdownModeSlash/store'
-import styles from './template.module.scss'
+import styles from './aiAddMaterialsPopover/materialSummary/MaterialSummary.module.scss'
 
 type StrategyTagShellProps = {
   icon: React.ReactNode
   title: string
-  onOpen: (event?: React.MouseEvent) => void
+  reopen: ModeSlashReopenPayload
   onClose: (event: React.MouseEvent) => void
   children: React.ReactNode
 }
 
 const StrategyTagShell: React.FC<StrategyTagShellProps> = (props) => {
-  const { icon, title, onOpen, onClose, children } = props
+  const { icon, title, reopen, onClose, children } = props
   return (
-    <div
-      className={classNames(styles['http-flow-reference'], styles['strategy-setup-tag'])}
-      onMouseDown={(e) => e.stopPropagation()}
-      onClick={onOpen}
-      style={{ cursor: 'pointer' }}
-    >
-      <span className={styles['strategy-setup-leading']} onClick={onClose} onMouseDown={(e) => e.stopPropagation()}>
-        {icon}
-        <XCircleSolid className={styles['strategy-setup-close-icon']} size={16} />
-      </span>
-      <span
-        className={classNames(styles['http-flow-reference-label'], styles['strategy-reference-label'])}
-        title={title}
+    <div data-ai-summary-tag className={styles['summary-tag']} title={title}>
+      <Tooltip title={title} trigger={['hover', 'focus']}>
+        <YakitButton
+          type="text2"
+          size="small"
+          htmlType="button"
+          className={styles['summary-open']}
+          aria-label={title}
+          onClick={(event) => {
+            event.stopPropagation()
+            event.preventDefault()
+            requestModeSlashReopen(event.currentTarget, reopen)
+          }}
+          onMouseDown={(event) => event.stopPropagation()}
+        >
+          <span className={styles['summary-icon']}>{icon}</span>
+          {children}
+        </YakitButton>
+      </Tooltip>
+      <YakitButton
+        type="text2"
+        size="small"
+        htmlType="button"
+        className={styles['summary-close']}
+        aria-label={title + ' ×'}
+        onClick={onClose}
       >
-        {children}
-      </span>
-      <PencilAltOutlined
-        className={styles['strategy-setup-edit-icon']}
-        size={16}
-        onClick={(e) => {
-          e.stopPropagation()
-          onOpen(e)
-        }}
-      />
+        <XOutlined size={12} />
+      </YakitButton>
     </div>
   )
 }
 
-const goalIcon = (
-  <Goal2Outlined
-    className={classNames(styles['http-flow-reference-icon'], styles['strategy-setup-type-icon'])}
-    size={16}
-  />
-)
-
-const subAgentIcon = (
-  <BoxesOutlined
-    className={classNames(styles['http-flow-reference-icon'], styles['strategy-setup-type-icon'])}
-    size={16}
-  />
-)
-
-export const useHasStrategySetupTags = (): boolean => {
-  const { enableMultiAgent, enableGoalMode, strategy } = useAIRunMode()
-  const goalTagState = deriveGoalTagFromStrategy(strategy)
-  return goalTagState.kind != null || enableGoalMode || enableMultiAgent
-}
+const goalIcon = <Goal2Outlined size={14} />
+const subAgentIcon = <BoxesOutlined size={14} />
 
 /** 输入框上方 Goal / Multi-Agent 策略标签：点击编辑重开 / 面板，关闭则清策略 */
-export const StrategySetupTags: React.FC = () => {
+export const useStrategySetupTags = () => {
   const { t } = useI18nNamespaces(['aiAgent'])
   const { enableMultiAgent, enableGoalMode, goalMinIterations, maxSubAgents, onSetStrategy, strategy } = useAIRunMode()
   const goalTagState = deriveGoalTagFromStrategy(strategy)
 
-  const onDurationClick = useMemoizedFn((event?: React.MouseEvent) => {
-    event?.stopPropagation()
-    event?.preventDefault()
-    if (goalTagState.kind !== 'duration' || !goalTagState.durationKey) return
-    requestModeSlashReopen({ kind: 'goalDuration', durationKey: goalTagState.durationKey })
-  })
-  const onIterationsClick = useMemoizedFn((event?: React.MouseEvent) => {
-    event?.stopPropagation()
-    event?.preventDefault()
-    requestModeSlashReopen({ kind: 'goalIterations', iterations: goalMinIterations })
-  })
-  const onAcceptanceClick = useMemoizedFn((event?: React.MouseEvent) => {
-    event?.stopPropagation()
-    event?.preventDefault()
-    if (goalTagState.kind !== 'acceptance' || !goalTagState.acceptanceText) return
-    requestModeSlashReopen({ kind: 'goalAcceptance', text: goalTagState.acceptanceText })
-  })
-  const onGoalSetupClick = useMemoizedFn((event?: React.MouseEvent) => {
-    event?.stopPropagation()
-    event?.preventDefault()
-    requestModeSlashReopen({ kind: 'goalModes' })
-  })
-  const onSubAgentClick = useMemoizedFn((event?: React.MouseEvent) => {
-    event?.stopPropagation()
-    event?.preventDefault()
-    requestModeSlashReopen({ kind: 'multiAgentConfig', subAgents: maxSubAgents })
-  })
   const onCloseGoal = useMemoizedFn((event: React.MouseEvent) => {
     event.stopPropagation()
     event.preventDefault()
@@ -123,10 +85,10 @@ export const StrategySetupTags: React.FC = () => {
         key="strategy-goal-setup"
         icon={goalIcon}
         title={t('AIMilkdownModeSlash.setGoal')}
-        onOpen={onGoalSetupClick}
+        reopen={{ kind: 'goalModes' }}
         onClose={onCloseGoal}
       >
-        {t('AIMilkdownModeSlash.setGoal')}
+        <span data-ai-summary-label>{t('AIMilkdownModeSlash.setGoal')}</span>
       </StrategyTagShell>,
     )
   }
@@ -138,10 +100,11 @@ export const StrategySetupTags: React.FC = () => {
         key="strategy-duration"
         icon={goalIcon}
         title={t('AIMilkdownModeSlash.durationPrefix', { value: label })}
-        onOpen={onDurationClick}
+        reopen={{ kind: 'goalDuration', durationKey: goalTagState.durationKey }}
         onClose={onCloseGoal}
       >
-        {t('AIMilkdownModeSlash.duration')}: <span>{label}</span>
+        <span data-ai-summary-label>{t('AIMilkdownModeSlash.goalTag')} · </span>
+        <span>{label}</span>
       </StrategyTagShell>,
     )
   }
@@ -152,10 +115,11 @@ export const StrategySetupTags: React.FC = () => {
         key="strategy-iterations"
         icon={goalIcon}
         title={t('AIMilkdownModeSlash.minIterationsPrefix', { value: goalMinIterations })}
-        onOpen={onIterationsClick}
+        reopen={{ kind: 'goalIterations', iterations: goalMinIterations }}
         onClose={onCloseGoal}
       >
-        {t('AIMilkdownModeSlash.minIterations')}: <span>{goalMinIterations}</span>
+        <span data-ai-summary-label>{t('AIMilkdownModeSlash.goalTag')} · </span>
+        <span>{goalMinIterations}</span>
       </StrategyTagShell>,
     )
   }
@@ -167,10 +131,13 @@ export const StrategySetupTags: React.FC = () => {
         key="strategy-acceptance"
         icon={goalIcon}
         title={t('AIMilkdownModeSlash.acceptancePrefix', { value: text })}
-        onOpen={onAcceptanceClick}
+        reopen={{ kind: 'goalAcceptance', text }}
         onClose={onCloseGoal}
       >
-        {t('AIMilkdownModeSlash.acceptance')}: <span>{text}</span>
+        <span data-ai-summary-label>{t('AIMilkdownModeSlash.goalTag')} · </span>
+        <span data-ai-summary-label className={styles['summary-value']}>
+          {text}
+        </span>
       </StrategyTagShell>,
     )
   }
@@ -186,19 +153,20 @@ export const StrategySetupTags: React.FC = () => {
             ? t('AIMilkdownModeSlash.setSubAgentCount')
             : t('AIMilkdownModeSlash.subAgentCountPrefix', { value: maxSubAgents })
         }
-        onOpen={onSubAgentClick}
+        reopen={{ kind: 'multiAgentConfig', subAgents: maxSubAgents }}
         onClose={onCloseSubAgent}
       >
         {isSetup ? (
-          t('AIMilkdownModeSlash.setSubAgentCount')
+          <span data-ai-summary-label>{t('AIMilkdownModeSlash.setSubAgentCount')}</span>
         ) : (
           <>
-            {t('AIMilkdownModeSlash.subAgentCount')}: <span>{maxSubAgents}</span>
+            <span data-ai-summary-label>{t('AIMilkdownModeSlash.subAgentTag')} · </span>
+            <span>{maxSubAgents}</span>
           </>
         )}
       </StrategyTagShell>,
     )
   }
 
-  return <>{tags}</>
+  return tags
 }

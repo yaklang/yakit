@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useContext, useRef } from 'react'
 import type { ReactNode } from 'react'
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -6,11 +6,14 @@ import { useStore } from 'zustand'
 import { createStore } from 'zustand/vanilla'
 import type { AIChatContentProps, AIChatContentRefProps } from '../../../aiChatContent/type'
 import { AIAgentChatLayout } from '../AIAgentChatLayout'
+import { ChatContentWidthContext } from '../ChatContentWidthContext'
 import type { AIAgentChatMode } from '../../type'
 import type { AIChatInputDraft } from '../../../template/type'
 import type { RiskSelectionProps } from '../../../aiChatContent/AIChatWorkspace/AIChatWorkspaceTabs/AIChatWorkspaceTabContent'
 
 let removeFlow: (id: string, isSummary: boolean) => void
+
+const MaterialGroupingProbe = () => <output data-testid="group-materials">{useContext(ChatContentWidthContext)}</output>
 
 const agentStore = createStore<{ activeChat?: { Id: string; SessionID: string } }>(() => ({}))
 const taskStore = createStore(() => ({
@@ -110,6 +113,7 @@ vi.mock('../../../aiChatContent/AIChatWorkspace/AIChatWorkspace', () => ({
 vi.mock('../../../aiChatWelcome/AIChatWelcome', () => ({
   default: (props: {
     onHttpFlowRemove: (id: string, isSummary: boolean) => void
+    onClearSelectedResources: NonNullable<AIChatContentProps['onClearSelectedResources']>
     onTriageSubmit: (data: object) => void
     selectedHttpFlowIds: string[]
     selectedRiskIds: string[]
@@ -118,9 +122,12 @@ vi.mock('../../../aiChatWelcome/AIChatWelcome', () => ({
     return (
       <div>
         欢迎页
+        <MaterialGroupingProbe />
         <output data-testid="selected-flows">{props.selectedHttpFlowIds.join(',')}</output>
         <output data-testid="selected-risks">{props.selectedRiskIds.join(',')}</output>
         <button onClick={() => props.onHttpFlowRemove('1,2,3', true)}>删除引用</button>
+        <button onClick={() => props.onClearSelectedResources('http')}>移除流量</button>
+        <button onClick={() => props.onClearSelectedResources('risk')}>移除风险</button>
         <button onClick={() => props.onTriageSubmit({ resourceReferences: [{ type: 'http', ids: ['1', '2'] }] })}>
           发送欢迎消息
         </button>
@@ -133,10 +140,11 @@ vi.mock('../../../aiChatContent/AIChatContent', () => ({
     removeFlow = props.onHttpFlowRemove!
     return (
       <div ref={props.rightPanelLayoutRef} data-testid="chat-content">
+        <MaterialGroupingProbe />
         <output data-testid="selected-flows">{props.selectedHttpFlowIds?.join(',')}</output>
         <output data-testid="selected-risks">{props.selectedRiskIds?.join(',')}</output>
         <button onClick={() => props.setShowFreeChat?.(!props.showFreeChat)}>切换自由对话</button>
-        <button onClick={props.onAfterSubmit}>发送会话消息</button>
+        <button onClick={() => props.onAfterSubmit?.()}>发送会话消息</button>
       </div>
     )
   },
@@ -236,7 +244,52 @@ afterEach(() => {
   vi.useRealTimers()
 })
 
+it.each(['welcome', 're-act'] as const)('%s 根据 chatContentRef 的实际宽度切换三档布局', async (mode) => {
+  const { container } = render(<Layout mode={mode} />)
+  const probe = await screen.findByTestId('group-materials')
+  expect(probe).toHaveTextContent('wide')
+  const chatContent = container.querySelector<HTMLElement>('[data-ai-shared-right-panel]')!
+  const bounds = vi.spyOn(chatContent, 'getBoundingClientRect')
+  const resizeChatContent = (width: number) => {
+    bounds.mockReturnValue(new DOMRect(0, 0, width, 800))
+    act(() => observers.forEach((update) => update()))
+  }
+  resizeChatContent(449.5)
+  expect(probe).toHaveTextContent('narrow')
+  resizeChatContent(0)
+  expect(probe).toHaveTextContent('narrow')
+  resizeChatContent(450)
+  expect(probe).toHaveTextContent('standard')
+  resizeChatContent(1152)
+  expect(probe).toHaveTextContent('standard')
+  resizeChatContent(1152.5)
+  expect(probe).toHaveTextContent('wide')
+  resizeChatContent(0)
+  expect(probe).toHaveTextContent('wide')
+  resizeChatContent(1152)
+  expect(probe).toHaveTextContent('standard')
+})
+
 describe('公共右侧面板', () => {
+  it('从资料列表移除流量或风险只清理对应的工作区勾选', async () => {
+    render(<Layout />)
+    await screen.findByText('欢迎页')
+    act(() => {
+      workspaceProps.onSetSelectedHttpFlowIds(['1'])
+      workspaceProps.riskSelection.onChange(
+        [{ Id: 21, Hash: 'hash-21', Title: '风险 A', IP: '', RiskType: '', CreatedAt: 0 }],
+        true,
+      )
+    })
+    fireEvent.click(screen.getByRole('button', { name: '移除流量' }))
+    expect(workspaceProps.selectedHttpFlowIds).toEqual([])
+    expect(workspaceProps.riskSelection.ids).toEqual(['21'])
+    act(() => workspaceProps.onSetSelectedHttpFlowIds(['2']))
+    fireEvent.click(screen.getByRole('button', { name: '移除风险' }))
+    expect(workspaceProps.selectedHttpFlowIds).toEqual(['2'])
+    expect(workspaceProps.riskSelection.ids).toEqual([])
+  })
+
   it('欢迎页提交被拒绝时保留流量和风险选择，重试成功后清理', async () => {
     submit.mockReturnValueOnce(false)
     render(<Layout />)

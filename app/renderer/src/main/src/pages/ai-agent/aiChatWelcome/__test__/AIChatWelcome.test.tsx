@@ -177,7 +177,7 @@ afterEach(() => {
 const WELCOME_TITLE = 'Memfit AI Agent'
 
 describe('AIChatWelcome 输入框转发', () => {
-  it('在欢迎页开启场景能力入口', () => {
+  it('欢迎页开启场景能力入口', () => {
     render(<AIChatWelcome onTriageSubmit={vi.fn()} onSetReAct={vi.fn()} />)
     expect(screen.getByTestId('scenario-capabilities')).toHaveAttribute('data-enabled', 'true')
   })

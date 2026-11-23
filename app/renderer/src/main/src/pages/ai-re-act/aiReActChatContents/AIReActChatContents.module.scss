@@ -91,6 +91,7 @@
   }
   .scroll-to-bottom-wrapper {
     position: absolute;
+    inset-inline: 0;
     bottom: 8px;
     // 置底按钮也沿用消息内容轨道，避免面板态下回到窗口中心。
     @include mixin.ai-right-panel-content-track;

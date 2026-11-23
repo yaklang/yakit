@@ -192,7 +192,7 @@ describe('AIRunModeMenu', () => {
     ['30m', 1800],
     ['1h', 3600],
     ['3h', 10800],
-    ['5h', 18000],
+    ['AIMilkdownModeSlash.durationNever', -1],
   ] as const)('applies the %s duration preset', (preset, seconds) => {
     state.enableGoalMode = true
     state.goalDurationSeconds = 7200
@@ -389,16 +389,19 @@ describe('AIRunModeMenu', () => {
     expect(state.onSetStrategy).not.toHaveBeenCalled()
   })
 
-  it('opens a stored nonpreset duration as custom hours and minutes', () => {
+  it.each([
+    [8100, 2, 15],
+    [18000, 5, 0],
+  ])('opens %i stored seconds as custom hours and minutes', (seconds, hours, minutes) => {
     state.enableGoalMode = true
-    state.goalDurationSeconds = 8100
+    state.goalDurationSeconds = seconds
     render(<AIRunModeMenu />)
     expect(screen.getByRole('button', { name: 'AIRunModeSelect.customDuration' })).toHaveAttribute(
       'aria-pressed',
       'true',
     )
-    expect(screen.getByRole('spinbutton', { name: 'AIRunModeSelect.durationHours' })).toHaveValue(2)
-    expect(screen.getByRole('spinbutton', { name: 'AIRunModeSelect.durationMinutes' })).toHaveValue(15)
+    expect(screen.getByRole('spinbutton', { name: 'AIRunModeSelect.durationHours' })).toHaveValue(hours)
+    expect(screen.getByRole('spinbutton', { name: 'AIRunModeSelect.durationMinutes' })).toHaveValue(minutes)
   })
 
   it('preserves the stored never duration and can switch it to custom', () => {
@@ -409,13 +412,22 @@ describe('AIRunModeMenu', () => {
     expect(state.onSetStrategy).not.toHaveBeenCalled()
     fireEvent.click(screen.getByRole('button', { name: 'AIRunModeSelect.customDuration' }))
     expect(state.onSetStrategy).toHaveBeenLastCalledWith({ GoalDurationSeconds: 3600 }, true)
+    expect(screen.getByRole('spinbutton', { name: 'AIRunModeSelect.durationHours' })).toHaveValue(1)
+    expect(screen.getByRole('spinbutton', { name: 'AIRunModeSelect.durationMinutes' })).toHaveValue(0)
   })
 
-  it('does not offer never for a positive duration', () => {
+  it('offers never between 3h and custom for a positive duration', () => {
     state.enableGoalMode = true
     state.goalDurationSeconds = 3600
     render(<AIRunModeMenu />)
-    expect(screen.queryByRole('button', { name: label('durationNever') })).not.toBeInTheDocument()
+    const buttons = within(screen.getByRole('group', { name: label('duration') })).getAllByRole('button')
+    expect(buttons.map((button) => button.textContent)).toEqual([
+      '30m',
+      '1h',
+      '3h',
+      label('durationNever'),
+      'AIRunModeSelect.customDuration',
+    ])
     expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument()
   })
 

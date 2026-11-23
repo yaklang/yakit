@@ -165,6 +165,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
                   selectedHttpFlowIds={props.selectedHttpFlowIds}
                   selectedRiskIds={props.selectedRiskIds}
                   onHttpFlowRemove={props.onHttpFlowRemove}
+                  onClearSelectedResources={props.onClearSelectedResources}
                   onWorkspaceAddedChange={handleWorkspaceAddedChange}
                   chatDataStoreKey="aiChatDataStore"
                   className={styles['ai-text-wrapper']}

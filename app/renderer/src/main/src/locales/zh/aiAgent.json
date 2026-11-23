@@ -236,6 +236,7 @@
   },
   "AIChatTextarea": {
     "otherMaterials": "其他资料",
+    "materials": "资料",
     "dropToAddToChat": "松开以添加到对话",
     "addMaterials": "添加资料",
     "queueSend": "排队发送"
@@ -1003,6 +1004,8 @@
     "subAgentCount": "子 Agent 数量",
     "subAgentCountTip": "<=0 时由服务端使用默认值；最大 20",
     "subAgentCountPrefix": "子 Agent 数量: {{value}}",
+    "goalTag": "目标",
+    "subAgentTag": "子 Agent",
     "setGoal": "设置目标",
     "setSubAgentCount": "设置子 Agent 数量"
   },

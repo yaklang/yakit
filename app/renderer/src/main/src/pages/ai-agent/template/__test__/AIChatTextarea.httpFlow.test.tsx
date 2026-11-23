@@ -1,5 +1,6 @@
 import React, { createRef, useEffect, useImperativeHandle, useRef } from 'react'
 import type { ContextType } from 'react'
+import { ChatContentWidthContext } from '../../aiAgentChat/AIAgentChatLayout/ChatContentWidthContext'
 import { getLocalFileLinkInfo } from '@/components/MilkdownEditor/CustomFile/utils'
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -27,7 +28,7 @@ import {
   aiMentionCustomId,
   aiMentionCustomPlugin,
 } from '../../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
-import type { AIChatInputDraft, AIChatTextareaRefProps, AIChatTextareaSubmit } from '../type'
+import type { AIChatInputDraft, AIChatTextareaProps, AIChatTextareaRefProps, AIChatTextareaSubmit } from '../type'
 import { AIInputFooterRightEnum, AIInputInnerFeatureEnum, getFooterLeftTypesWithItem } from '../type'
 import type * as TemplateModule from '../template'
 import type * as ReviewRuleSelectModule from '@/pages/ai-re-act/aiReviewRuleSelect/AIReviewRuleSelect'
@@ -184,6 +185,39 @@ const resizeObservedElement = (element: Element, width: number) => {
   })
 }
 
+const mockSummaryHeight = (initialHeight: number) => {
+  let availableHeight = initialHeight
+  const getRect = HTMLElement.prototype.getBoundingClientRect
+  vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+    if (this.matches('[data-ai-summary-row]')) return new DOMRect(0, availableHeight ? 10 : 0, 144, 20)
+    if (this.matches('[data-ai-summary-tag]')) return new DOMRect(0, 0, 120, 20)
+    if (this.matches('[data-ai-side-material-add]')) return new DOMRect(0, 0, 24, 24)
+    if (this.matches('[data-ai-input-footer]')) {
+      return new DOMRect(0, availableHeight ? 14 + availableHeight : 0, 800, availableHeight ? 28 : 0)
+    }
+    if (this.querySelector(':scope > [data-ai-input-footer]')) {
+      return new DOMRect(0, 0, availableHeight ? 800 : 0, availableHeight ? availableHeight + 42 : 0)
+    }
+    return getRect.call(this)
+  })
+  const getStyle = window.getComputedStyle
+  vi.spyOn(window, 'getComputedStyle').mockImplementation((element, pseudoElement) => {
+    const style = getStyle(element, pseudoElement)
+    if (element.matches('[data-ai-summary-row]')) {
+      Object.defineProperties(style, {
+        rowGap: { configurable: true, value: '4px' },
+        paddingTop: { configurable: true, value: '4px' },
+      })
+    }
+    return style
+  })
+  return (height: number, container: HTMLElement) => {
+    availableHeight = height
+    const textarea = container.querySelector('[data-ai-input-footer]')!.parentElement!
+    resizeObservedElement(textarea, height ? 800 : 0)
+  }
+}
+
 const clickSceneSelector = (combobox: HTMLElement) => {
   const selector = combobox.closest('.ant-select-selector')!
   fireEvent.mouseDown(selector)
@@ -227,29 +261,36 @@ vi.mock('@/pages/ai-re-act/aiReasoningEffortSelect/AIReasoningEffortSelect', () 
   AIReasoningEffortSelect: () => null,
 }))
 vi.mock('../../aiRunModeSelect/AIRunModeSelect', () => ({ default: () => <button>执行模式</button> }))
+const StrategyFlagsContext = React.createContext<{ goal: boolean; subAgent: boolean; goalDurationSeconds?: number }>({
+  goal: false,
+  subAgent: false,
+})
 vi.mock('../../aiRunModeSelect/useAIRunMode', () => ({
-  useAIRunMode: () => ({
-    execute: false,
-    enablePlan: false,
-    enableMultiAgent: false,
-    enableGoalMode: false,
-    goalMinIterations: 0,
-    goalDurationSeconds: 0,
-    goalAcceptanceCriteria: '',
-    strategy: {
-      EnableMultiAgent: false,
-      EnableGoalMode: false,
-      GoalMinIterations: 0,
-      MaxSubAgents: 0,
-      GoalDurationSeconds: 0,
-      GoalAcceptanceCriteria: '',
-    },
-    maxSubAgents: 0,
-    selectedModes: [],
-    isModeSelected: () => false,
-    onToggleMode: vi.fn(),
-    onSetStrategy: vi.fn(),
-  }),
+  useAIRunMode: () => {
+    const strategyFlags = React.useContext(StrategyFlagsContext)
+    return {
+      execute: false,
+      enablePlan: false,
+      enableMultiAgent: strategyFlags.subAgent,
+      enableGoalMode: strategyFlags.goal,
+      goalMinIterations: 0,
+      goalDurationSeconds: strategyFlags.goalDurationSeconds ?? 0,
+      goalAcceptanceCriteria: '',
+      strategy: {
+        EnableMultiAgent: strategyFlags.subAgent,
+        EnableGoalMode: strategyFlags.goal,
+        GoalMinIterations: 0,
+        MaxSubAgents: 0,
+        GoalDurationSeconds: strategyFlags.goalDurationSeconds ?? 0,
+        GoalAcceptanceCriteria: '',
+      },
+      maxSubAgents: 0,
+      selectedModes: [],
+      isModeSelected: () => false,
+      onToggleMode: vi.fn(),
+      onSetStrategy: vi.fn(),
+    }
+  },
 }))
 vi.mock('@/utils/fileSystemDialog', () => ({ handleOpenFileSystemDialog: vi.fn() }))
 vi.mock('@yakit-libs/yakit-ui-icons/outline', async (importOriginal) => ({
@@ -473,6 +514,498 @@ const codeReview = {
 }
 
 describe('输入框资料栏', () => {
+  it('宽屏侧边和底栏的添加按钮共用资料弹窗开关', async () => {
+    const { container } = render(
+      <ChatContentWidthContext.Provider value="wide">
+        <AIChatTextarea chatDataStoreKey="test" />
+      </ChatContentWidthContext.Provider>,
+    )
+    const row = container.querySelector<HTMLElement>('[data-ai-summary-row]')!
+    const footer = container.querySelector<HTMLElement>('[data-ai-input-footer]')!
+    const sideAdd = within(row).getByRole('button', { name: 'AIChatTextarea.addMaterials' })
+    const footerAdd = within(footer).getByRole('button', { name: 'AIChatTextarea.addMaterials' })
+    expect(sideAdd).toHaveAttribute('data-ai-side-material-add')
+    expect(sideAdd).toHaveAttribute('aria-expanded', 'false')
+    fireEvent.click(sideAdd)
+    const panel = await screen.findByRole('dialog', { name: 'AIChatTextarea.addMaterials' })
+    expect(screen.getAllByRole('dialog', { name: 'AIChatTextarea.addMaterials' })).toHaveLength(1)
+    expect(sideAdd).toHaveAttribute('aria-expanded', 'true')
+    expect(footerAdd).toHaveAttribute('aria-expanded', 'true')
+    expect(within(panel).getByRole('menuitem', { name: /^AIAddMaterialsPopover.attachment / })).toBeInTheDocument()
+    fireEvent.click(footerAdd)
+    expect(sideAdd).toHaveAttribute('aria-expanded', 'false')
+    expect(footerAdd).toHaveAttribute('aria-expanded', 'false')
+    fireEvent.click(footerAdd)
+    expect(sideAdd).toHaveAttribute('aria-expanded', 'true')
+    fireEvent.click(sideAdd)
+    expect(footerAdd).toHaveAttribute('aria-expanded', 'false')
+  })
+
+  it('侧边添加按钮随宽屏布局出现，遵循原生底栏添加入口配置', () => {
+    const input = (width: ContextType<typeof ChatContentWidthContext>, props: Partial<AIChatTextareaProps> = {}) => (
+      <ChatContentWidthContext.Provider value={width}>
+        <AIChatTextarea chatDataStoreKey="test" {...props} />
+      </ChatContentWidthContext.Provider>
+    )
+    const { container, rerender } = render(input('standard'))
+    expect(container.querySelector('[data-ai-side-material-add]')).toBeNull()
+    rerender(input('wide'))
+    expect(container.querySelector('[data-ai-side-material-add]')).toBeInTheDocument()
+    rerender(input('narrow'))
+    expect(container.querySelector('[data-ai-side-material-add]')).toBeNull()
+    rerender(input('wide', { footerLeftTypes: [] }))
+    expect(container.querySelector('[data-ai-side-material-add]')).toBeNull()
+    rerender(input('wide', { inputFooterLeft: <button>自定义底栏</button> }))
+    expect(container.querySelector('[data-ai-side-material-add]')).toBeNull()
+    rerender(
+      input('wide', {
+        footerLeftTypes: [{ type: AIInputInnerFeatureEnum.AddMaterials, component: <button>自定义添加</button> }],
+      }),
+    )
+    expect(container.querySelector('[data-ai-side-material-add]')).toBeNull()
+    expect(screen.getByRole('button', { name: '自定义添加' })).toBeInTheDocument()
+  })
+
+  it('仅勾选流量时各宽度均显示其他资料文案和样式', () => {
+    const input = (width: ContextType<typeof ChatContentWidthContext>) => (
+      <ChatContentWidthContext.Provider value={width}>
+        <AIChatTextarea chatDataStoreKey="test" selectedHttpFlowIds={['5590', '5589', '5588', '5587']} />
+      </ChatContentWidthContext.Provider>
+    )
+    const { rerender } = render(input('narrow'))
+    for (const width of ['narrow', 'standard', 'wide'] as const) {
+      rerender(input(width))
+      const tag = screen
+        .getByRole('button', { name: 'AIChatTextarea.otherMaterials 4' })
+        .closest('[data-ai-summary-tag]')
+      expect(tag).toHaveAttribute('data-category', 'other')
+      expect(tag).not.toHaveAttribute('data-merged-categories')
+      expect(screen.queryByRole('button', { name: 'AIChatTextarea.materials 4' })).toBeNull()
+    }
+  })
+
+  it.each([
+    ['forge', 'AIMentionTabs.skill'],
+    ['knowledgeBase', 'AIMentionTabs.knowledgeBase'],
+  ] as const)('窄屏合并 %s 后显示资料，移除该类后恢复其他资料', async (mentionType, categoryLabel) => {
+    const draft: AIChatInputDraft = {
+      markdown: '当前问题',
+      selectedMaterials: [{ mentionType, mentionId: '1', mentionName: '测试资料' }],
+      selectedResourceIds: { http: ['5590', '5589', '5588', '5587'], risk: [] },
+      hiddenInlineKeys: [],
+    }
+    const input = (width: ContextType<typeof ChatContentWidthContext>) => (
+      <ChatContentWidthContext.Provider value={width}>
+        <StrategyFlagsContext.Provider value={{ goal: true, subAgent: false }}>
+          <AIChatTextarea
+            chatDataStoreKey="test"
+            initialDraft={draft}
+            selectedHttpFlowIds={draft.selectedResourceIds.http}
+          />
+        </StrategyFlagsContext.Provider>
+      </ChatContentWidthContext.Provider>
+    )
+    const { rerender } = render(input('standard'))
+    expect(
+      screen.getByRole('button', { name: 'AIChatTextarea.otherMaterials 4' }).closest('[data-ai-summary-tag]'),
+    ).not.toHaveAttribute('data-merged-categories')
+    expect(screen.getByRole('button', { name: categoryLabel + ' 1' })).toBeInTheDocument()
+    rerender(input('narrow'))
+    const materials = screen.getByRole('button', { name: 'AIChatTextarea.materials 5' })
+    expect(materials.closest('[data-ai-summary-tag]')).toHaveAttribute('data-merged-categories')
+    fireEvent.click(materials)
+    const panel = within(await screen.findByRole('dialog', { name: 'AIAddMaterialsPopover.addedOtherMaterials' }))
+    fireEvent.click(panel.getByRole('button', { name: 'YakitButton.delete ' + categoryLabel }))
+    expect(
+      screen.getByRole('button', { name: 'AIChatTextarea.otherMaterials 4' }).closest('[data-ai-summary-tag]'),
+    ).not.toHaveAttribute('data-merged-categories')
+    expect(screen.queryByRole('button', { name: 'AIChatTextarea.materials 5' })).toBeNull()
+  })
+
+  it.each([
+    ['narrow', 'goal'],
+    ['narrow', 'subAgent'],
+    ['wide', 'goal'],
+    ['wide', 'subAgent'],
+  ] as const)('%s 布局仅在开启 %s 时允许合并，关闭后恢复技能和知识库', async (width, mode) => {
+    mockSummaryHeight(96)
+    const draft: AIChatInputDraft = {
+      markdown: '当前问题',
+      selectedMaterials: [
+        { mentionType: 'forge', mentionId: '1', mentionName: '技能一' },
+        { mentionType: 'knowledgeBase', mentionId: '2', mentionName: '知识库一' },
+        { mentionType: 'tool', mentionId: '3', mentionName: '工具一' },
+      ],
+      selectedResourceIds: { http: [], risk: [] },
+      hiddenInlineKeys: [],
+    }
+    const input = (enabled: boolean) => (
+      <ChatContentWidthContext.Provider value={width}>
+        <StrategyFlagsContext.Provider
+          value={{
+            goal: enabled && mode === 'goal',
+            subAgent: enabled && mode === 'subAgent',
+            goalDurationSeconds: 3600,
+          }}
+        >
+          <AIChatTextarea chatDataStoreKey="test" initialDraft={draft} showScenarioCapabilities />
+        </StrategyFlagsContext.Provider>
+      </ChatContentWidthContext.Provider>
+    )
+    const { rerender } = render(input(false))
+    await waitFor(() => expect(screen.getByTestId('editor')).toHaveTextContent(draft.markdown))
+    expect(screen.getByRole('button', { name: 'AIMentionTabs.skill 1' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'AIMentionTabs.knowledgeBase 1' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'AIChatTextarea.otherMaterials 1' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'AIChatTextarea.materials 3' })).toBeNull()
+
+    rerender(input(true))
+    const merged = screen.getByRole('button', { name: 'AIChatTextarea.materials 3' })
+    expect(merged.closest('[data-ai-summary-tag]')).toHaveAttribute('data-merged-categories')
+    expect(screen.queryByRole('button', { name: 'AIMentionTabs.skill 1' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'AIMentionTabs.knowledgeBase 1' })).toBeNull()
+
+    rerender(input(false))
+    expect(screen.getByRole('button', { name: 'AIMentionTabs.skill 1' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'AIMentionTabs.knowledgeBase 1' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'AIChatTextarea.otherMaterials 1' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'AIChatTextarea.materials 3' })).toBeNull()
+    expect(screen.getByTestId('editor')).toHaveTextContent(draft.markdown)
+  })
+
+  it('任务运行时目标和子 Agent 标签仍可编辑和移除', () => {
+    startSessionTask()
+    render(
+      <StrategyFlagsContext.Provider value={{ goal: true, subAgent: true }}>
+        <AIChatTextarea chatDataStoreKey="test" />
+      </StrategyFlagsContext.Provider>,
+    )
+    for (const name of ['AIMilkdownModeSlash.setGoal', 'AIMilkdownModeSlash.setSubAgentCount']) {
+      const edit = screen.getByRole('button', { name })
+      expect(edit).toBeEnabled()
+      expect(edit).not.toHaveAttribute('aria-disabled', 'true')
+      expect(screen.getByRole('button', { name: name + ' ×' })).toBeEnabled()
+    }
+  })
+
+  it.each(['goal', 'subAgent'] as const)(
+    '左栏将 %s 计入高度，超过三行可用空间时合并，删除一类后恢复独立标签',
+    async (extraTag) => {
+      mockSummaryHeight(96)
+      const draft: AIChatInputDraft = {
+        markdown: '保留当前问题',
+        selectedMaterials: [
+          { mentionType: 'forge', mentionId: '1', mentionName: '技能一' },
+          { mentionType: 'forge', mentionId: '2', mentionName: '技能二' },
+          { mentionType: 'knowledgeBase', mentionId: '1', mentionName: '知识库一' },
+          { mentionType: 'knowledgeBase', mentionId: '2', mentionName: '知识库二' },
+          { mentionType: 'tool', mentionId: '1', mentionName: '工具一' },
+          { mentionType: 'tool', mentionId: '2', mentionName: '工具二' },
+        ],
+        selectedResourceIds: { http: [], risk: [] },
+        hiddenInlineKeys: [],
+      }
+      const input = (width: ContextType<typeof ChatContentWidthContext>, extra: boolean) => (
+        <ChatContentWidthContext.Provider value={width}>
+          <StrategyFlagsContext.Provider
+            value={{ goal: extra && extraTag === 'goal', subAgent: extra && extraTag === 'subAgent' }}
+          >
+            <AIChatTextarea chatDataStoreKey="test" initialDraft={draft} />
+          </StrategyFlagsContext.Provider>
+        </ChatContentWidthContext.Provider>
+      )
+      const { container, rerender } = render(input('wide', false))
+      await waitFor(() => expect(screen.getByTestId('editor')).toHaveTextContent(draft.markdown))
+      expect(container.querySelectorAll('[data-ai-summary-tag]')).toHaveLength(3)
+      expect(screen.getByRole('button', { name: 'AIMentionTabs.skill 2' })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'AIMentionTabs.knowledgeBase 2' })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'AIChatTextarea.otherMaterials 2' })).toBeInTheDocument()
+
+      rerender(input('standard', true))
+      expect(container.querySelectorAll('[data-ai-summary-tag]')).toHaveLength(4)
+      expect(screen.queryByRole('button', { name: 'AIChatTextarea.materials 6' })).toBeNull()
+
+      rerender(input('wide', true))
+      const merged = screen.getByRole('button', { name: 'AIChatTextarea.materials 6' })
+      const tag = merged.closest<HTMLElement>('[data-ai-summary-tag]')!
+      expect(tag).toHaveAttribute('data-merged-categories')
+      expect(within(tag).getAllByRole('button')).toHaveLength(1)
+      expect(container.querySelectorAll('[data-ai-summary-tag]')).toHaveLength(2)
+      fireEvent.click(merged)
+      const panel = within(await screen.findByRole('dialog', { name: 'AIAddMaterialsPopover.addedOtherMaterials' }))
+      fireEvent.click(panel.getByRole('button', { name: 'YakitButton.delete AIMentionTabs.skill' }))
+      expect(screen.queryByRole('button', { name: 'AIChatTextarea.materials 6' })).toBeNull()
+      expect(screen.getByRole('button', { name: 'AIMentionTabs.knowledgeBase 2' })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'AIChatTextarea.otherMaterials 2' })).toBeInTheDocument()
+      expect(container.querySelectorAll('[data-ai-summary-tag]')).toHaveLength(3)
+      expect(screen.getByTestId('editor')).toHaveTextContent(draft.markdown)
+    },
+  )
+
+  it('较高输入框能容纳五个标签，第六个溢出时合并，高度变化时恢复并再次合并', async () => {
+    const resizeHeight = mockSummaryHeight(144)
+    const draft: AIChatInputDraft = {
+      markdown: '欢迎页草稿',
+      selectedMaterials: [
+        { mentionType: 'forge', mentionId: '1', mentionName: '技能一' },
+        { mentionType: 'knowledgeBase', mentionId: '2', mentionName: '知识库一' },
+        { mentionType: 'tool', mentionId: '3', mentionName: '工具一' },
+      ],
+      selectedResourceIds: { http: [], risk: [] },
+      hiddenInlineKeys: [],
+    }
+    const input = (subAgent: boolean) => (
+      <ChatContentWidthContext.Provider value="wide">
+        <StrategyFlagsContext.Provider value={{ goal: true, subAgent }}>
+          <AIChatTextarea chatDataStoreKey="test" initialDraft={draft} showScenarioCapabilities />
+        </StrategyFlagsContext.Provider>
+      </ChatContentWidthContext.Provider>
+    )
+    const { container, rerender } = render(input(false))
+    await screen.findByRole('button', { name: 'AIMentionTabs.skill 1' })
+    expect(container.querySelectorAll('[data-ai-summary-tag]')).toHaveLength(5)
+    rerender(input(true))
+    expect(screen.getByRole('button', { name: 'AIChatTextarea.materials 3' })).toBeInTheDocument()
+    expect(container.querySelectorAll('[data-ai-summary-tag]')).toHaveLength(4)
+    resizeHeight(168, container)
+    expect(container.querySelectorAll('[data-ai-summary-tag]')).toHaveLength(6)
+    expect(screen.getByRole('button', { name: 'AIMentionTabs.skill 1' })).toBeInTheDocument()
+    resizeHeight(167.5, container)
+    expect(screen.getByRole('button', { name: 'AIChatTextarea.materials 3' })).toBeInTheDocument()
+    resizeHeight(0, container)
+    expect(screen.getByRole('button', { name: 'AIChatTextarea.materials 3' })).toBeInTheDocument()
+    resizeHeight(168, container)
+    expect(container.querySelectorAll('[data-ai-summary-tag]')).toHaveLength(6)
+    resizeHeight(144, container)
+    expect(screen.getByRole('button', { name: 'AIChatTextarea.materials 3' })).toBeInTheDocument()
+    rerender(input(false))
+    expect(screen.getByRole('button', { name: 'AIMentionTabs.knowledgeBase 1' })).toBeInTheDocument()
+    expect(container.querySelectorAll('[data-ai-summary-tag]')).toHaveLength(5)
+  })
+
+  it('左栏仅两类资料时，目标和子 Agent 共同触发合并', async () => {
+    mockSummaryHeight(96)
+    const draft: AIChatInputDraft = {
+      markdown: '两个策略',
+      selectedMaterials: [
+        { mentionType: 'forge', mentionId: '1', mentionName: '技能一' },
+        { mentionType: 'knowledgeBase', mentionId: '1', mentionName: '知识库一' },
+      ],
+      selectedResourceIds: { http: [], risk: [] },
+      hiddenInlineKeys: [],
+    }
+    render(
+      <ChatContentWidthContext.Provider value="wide">
+        <StrategyFlagsContext.Provider value={{ goal: true, subAgent: true }}>
+          <AIChatTextarea chatDataStoreKey="test" initialDraft={draft} />
+        </StrategyFlagsContext.Provider>
+      </ChatContentWidthContext.Provider>,
+    )
+    expect(await screen.findByRole('button', { name: 'AIChatTextarea.materials 2' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'AIMilkdownModeSlash.setGoal' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'AIMilkdownModeSlash.setSubAgentCount' })).toBeInTheDocument()
+  })
+
+  it('从技能明细移除同名条目时清除整行引用，保留锁定的技能', async () => {
+    const draft: AIChatInputDraft = {
+      markdown: '当前问题',
+      selectedMaterials: [
+        { mentionType: 'forge', mentionId: '1', mentionName: '技能 A' },
+        { mentionType: 'forge', mentionId: '2', mentionName: '技能 A' },
+        { mentionType: 'forge', mentionId: '3', mentionName: '锁定技能', lock: true },
+      ],
+      selectedResourceIds: { http: [], risk: [] },
+      hiddenInlineKeys: [],
+    }
+    const onSubmitWithDraft = vi.fn()
+    render(<AIChatTextarea chatDataStoreKey="test" initialDraft={draft} onSubmitWithDraft={onSubmitWithDraft} />)
+    fireEvent.click(await screen.findByRole('button', { name: 'AIMentionTabs.skill 2' }))
+    const panel = within(await screen.findByRole('dialog', { name: 'AIAddMaterialsPopover.addedSkills' }))
+    fireEvent.click(panel.getByRole('button', { name: 'YakitButton.cancel 技能 A' }))
+    expect(panel.queryByText('技能 A')).toBeNull()
+    expect(panel.getByText('锁定技能')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'YakitButton.send' }))
+    expect(onSubmitWithDraft).toHaveBeenCalledWith(
+      expect.objectContaining({ mentionList: [draft.selectedMaterials[2]] }),
+      expect.objectContaining({ markdown: draft.markdown }),
+    )
+  })
+
+  it('窄屏合并为资料标签，在列表内删除技能后保留锁定知识库和正文', async () => {
+    const draft: AIChatInputDraft = {
+      markdown: '当前草稿',
+      selectedMaterials: [
+        { mentionType: 'forge', mentionId: '1', mentionName: '技能 A' },
+        { mentionType: 'knowledgeBase', mentionId: '2', mentionName: '知识库 B', lock: true },
+      ],
+      selectedResourceIds: { http: [], risk: [] },
+      hiddenInlineKeys: [],
+    }
+    const input = (narrow: boolean) => (
+      <ChatContentWidthContext.Provider value={narrow ? 'narrow' : 'standard'}>
+        <StrategyFlagsContext.Provider value={{ goal: true, subAgent: false }}>
+          <AIChatTextarea chatDataStoreKey="test" initialDraft={draft} />
+        </StrategyFlagsContext.Provider>
+      </ChatContentWidthContext.Provider>
+    )
+    const { rerender } = render(input(false))
+    await waitFor(() =>
+      expect(screen.getByTestId('editor').querySelector('.ProseMirror')).toHaveTextContent(draft.markdown),
+    )
+    const editor = screen.getByTestId('editor').querySelector('.ProseMirror')
+    rerender(input(true))
+    expect(screen.queryByRole('button', { name: 'AIMentionTabs.skill 1' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'AIMentionTabs.knowledgeBase 1' })).toBeNull()
+    const mergedTag = screen
+      .getByRole('button', { name: 'AIChatTextarea.materials 2' })
+      .closest('[data-ai-summary-tag]')
+    expect(mergedTag).toHaveAttribute('data-category', 'other')
+    expect(mergedTag).toHaveAttribute('data-merged-categories')
+    expect(within(mergedTag as HTMLElement).getAllByRole('button')).toHaveLength(1)
+
+    rerender(input(false))
+    expect(screen.getByRole('button', { name: 'AIMentionTabs.skill 1' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'AIMentionTabs.knowledgeBase 1' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'AIChatTextarea.materials 2' })).toBeNull()
+    expect(screen.getByTestId('editor').querySelector('.ProseMirror')).toBe(editor)
+    expect(editor).toHaveTextContent(draft.markdown)
+    rerender(input(true))
+    fireEvent.click(screen.getByRole('button', { name: 'AIChatTextarea.materials 2' }))
+    const panel = within(await screen.findByRole('dialog', { name: 'AIAddMaterialsPopover.addedOtherMaterials' }))
+    expect(panel.queryByRole('button', { name: 'YakitButton.delete AIMentionTabs.knowledgeBase' })).toBeNull()
+    fireEvent.click(panel.getByRole('button', { name: 'YakitButton.delete AIMentionTabs.skill' }))
+    expect(screen.getByRole('button', { name: 'AIChatTextarea.materials 1' })).toBeInTheDocument()
+    expect(panel.getByRole('button', { name: 'AIMentionTabs.knowledgeBase' })).toBeInTheDocument()
+    expect(editor).toHaveTextContent(draft.markdown)
+    rerender(input(false))
+    expect(screen.queryByRole('button', { name: 'AIMentionTabs.skill 1' })).toBeNull()
+    expect(screen.getByRole('button', { name: 'AIMentionTabs.knowledgeBase 1' })).toBeInTheDocument()
+  })
+
+  it('从资料卡片移除勾选的流量和风险，编辑器正文保持原文', async () => {
+    const draft: AIChatInputDraft = {
+      markdown: '当前草稿',
+      selectedMaterials: [{ mentionType: 'tool', mentionId: '1', mentionName: '工具一' }],
+      selectedResourceIds: { http: ['7'], risk: ['9'] },
+      hiddenInlineKeys: [],
+    }
+    const onSubmitWithDraft = vi.fn()
+    const clearSelection = vi.fn()
+    const Harness = () => {
+      const [ids, setIds] = React.useState(draft.selectedResourceIds)
+      return (
+        <ChatContentWidthContext.Provider value="narrow">
+          <AIChatTextarea
+            chatDataStoreKey="test"
+            initialDraft={draft}
+            selectedHttpFlowIds={ids.http}
+            selectedRiskIds={ids.risk}
+            onClearSelectedResources={(type) => {
+              clearSelection(type)
+              if (type) setIds((current) => ({ ...current, [type]: [] }))
+            }}
+            onSubmitWithDraft={onSubmitWithDraft}
+          />
+        </ChatContentWidthContext.Provider>
+      )
+    }
+    const { unmount } = render(<Harness />)
+    fireEvent.click(await screen.findByRole('button', { name: 'AIChatTextarea.otherMaterials 3' }))
+    expect(screen.getByTestId('editor').textContent).toBe(draft.markdown)
+    const panel = within(await screen.findByRole('dialog', { name: 'AIAddMaterialsPopover.addedOtherMaterials' }))
+    fireEvent.click(panel.getByRole('button', { name: 'YakitButton.delete AIMentionTabs.tool' }))
+    expect(panel.queryByText('AIMentionTabs.tool')).toBeNull()
+    fireEvent.click(panel.getByRole('button', { name: 'YakitButton.delete AIAddMaterialsPopover.flow' }))
+    expect(clearSelection).toHaveBeenCalledWith('http')
+    expect(panel.queryByText('AIAddMaterialsPopover.flow')).toBeNull()
+    fireEvent.click(panel.getByRole('button', { name: 'YakitButton.delete AIAddMaterialsPopover.risk' }))
+    expect(clearSelection).toHaveBeenCalledWith('risk')
+    expect(screen.queryByRole('button', { name: /^AIChatTextarea\.otherMaterials / })).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: 'YakitButton.send' }))
+    expect(onSubmitWithDraft).toHaveBeenCalledWith(
+      expect.objectContaining({
+        mentionList: [],
+        resourceReferences: [],
+      }),
+      expect.objectContaining({ selectedResourceIds: { http: [], risk: [] }, markdown: draft.markdown }),
+    )
+    const savedDraft: AIChatInputDraft = onSubmitWithDraft.mock.calls[0][1]
+    unmount()
+    render(
+      <ChatContentWidthContext.Provider value="narrow">
+        <AIChatTextarea chatDataStoreKey="test" initialDraft={savedDraft} />
+      </ChatContentWidthContext.Provider>,
+    )
+    await waitFor(() => expect(screen.getByTestId('editor').textContent).toBe(draft.markdown))
+    expect(screen.queryByRole('button', { name: /^AIChatTextarea\.otherMaterials / })).toBeNull()
+  })
+
+  it('收起及恢复标签时保留 Milkdown 的正文和选区', async () => {
+    const { ref } = await setup('保留这段草稿')
+    act(() => ref.current?.setHttpFlow(['7']))
+    const openGroup = screen.getByRole('button', { name: 'AIChatTextarea.otherMaterials 1' })
+    const tag = openGroup.closest<HTMLElement>('[data-ai-summary-tag]')!
+    const row = tag.closest<HTMLElement>('[data-ai-summary-row]')!
+    vi.spyOn(tag, 'getBoundingClientRect').mockImplementation(
+      () => new DOMRect(0, 0, tag.hasAttribute('data-ai-compact') ? 48 : 160, 20),
+    )
+    const view = editors[0].action((ctx) => ctx.get(editorViewCtx))
+    const selection = TextSelection.create(view.state.doc, 2, 4)
+    act(() => view.dispatch(view.state.tr.setSelection(selection)))
+
+    resizeObservedElement(row, 100)
+    expect(tag).toHaveAttribute('data-ai-compact')
+    resizeObservedElement(row, 400)
+    expect(tag).not.toHaveAttribute('data-ai-compact')
+    expect(screen.getByTestId('editor')).toContainElement(view.dom)
+    expect(view.state.selection.eq(selection)).toBe(true)
+    expect(ref.current?.getValue()).toBe('保留这段草稿')
+  })
+
+  it('关闭其他资料一次清空可移除资料和工作区选择，保留锁定资料及编辑器草稿', async () => {
+    const draft: AIChatInputDraft = {
+      markdown: '保留正文',
+      hiddenInlineKeys: [],
+      selectedMaterials: [
+        { mentionType: 'tool', mentionId: '1', mentionName: '工具一' },
+        { mentionType: 'tool', mentionId: '2', mentionName: '工具二' },
+        { mentionType: 'tool', mentionId: '3', mentionName: '锁定工具', lock: true },
+      ],
+      selectedResourceIds: { http: ['7'], risk: ['8'] },
+    }
+    const onSubmitWithDraft = vi.fn()
+    const Harness = () => {
+      const [ids, setIds] = React.useState(draft.selectedResourceIds)
+      return (
+        <AIChatTextarea
+          chatDataStoreKey="test"
+          initialDraft={draft}
+          selectedHttpFlowIds={ids.http}
+          selectedRiskIds={ids.risk}
+          onClearSelectedResources={() => setIds({ http: [], risk: [] })}
+          onSubmitWithDraft={onSubmitWithDraft}
+        />
+      )
+    }
+    render(<Harness />)
+    await waitFor(() =>
+      expect(screen.getByTestId('editor').querySelector('.ProseMirror')).toHaveTextContent(draft.markdown),
+    )
+    const editor = screen.getByTestId('editor').querySelector('.ProseMirror')
+    const row = screen
+      .getByRole('button', { name: 'AIChatTextarea.otherMaterials 5' })
+      .closest('[data-ai-summary-row]')!
+    fireEvent.click(within(row as HTMLElement).getByRole('button', { name: 'AIChatTextarea.otherMaterials ×' }))
+
+    expect(screen.getByRole('button', { name: 'AIChatTextarea.otherMaterials 1' })).toBeInTheDocument()
+    expect(screen.getByTestId('editor').querySelector('.ProseMirror')).toBe(editor)
+    fireEvent.click(screen.getByRole('button', { name: 'YakitButton.send' }))
+    expect(onSubmitWithDraft).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({ mentionList: [draft.selectedMaterials[2]], resourceReferences: [] }),
+      expect.objectContaining({ markdown: draft.markdown, selectedResourceIds: { http: [], risk: [] } }),
+    )
+  })
+
   it.each([
     ['@', 'AIAddMaterialsPopover.mentionShortcut', '', '@'],
     ['/', 'AIAddMaterialsPopover.modeShortcut', '', '/'],
@@ -811,7 +1344,18 @@ describe('输入框资料栏', () => {
         },
       ],
     })
-    render(<AIChatTextarea chatDataStoreKey="test" />)
+    render(
+      <AIChatTextarea
+        chatDataStoreKey="test"
+        initialDraft={{
+          markdown: '',
+          selectedMaterials: [],
+          hiddenInlineKeys: [],
+          selectedResourceIds: { http: [], risk: [] },
+          focusMode: '',
+        }}
+      />,
+    )
     const footerLeft = screen.getByRole('button', { name: '协同' }).parentElement!
 
     resizeObservedElement(footerLeft, 359)
@@ -832,6 +1376,9 @@ describe('输入框资料栏', () => {
     expect(within(menu).getByRole('button', { name: '默认模型选择' })).toHaveAttribute('data-icon-only', 'false')
     expect(within(menu).getByRole('button', { name: 'AIRightPanel.aiSettings' })).toBeInTheDocument()
     const scene = within(menu).getByRole('combobox', { name: 'AiAgengt.focusMode' })
+    const placeholder = scene.closest('.ant-select-selector')?.querySelector('.ant-select-selection-placeholder')
+    expect(placeholder).toHaveTextContent('AiAgengt.focusMode')
+    await waitFor(() => expect(placeholder).toBeVisible())
     clickSceneSelector(scene)
     expect(scene).toHaveAttribute('aria-expanded', 'true')
     await screen.findByText('更多菜单场景')

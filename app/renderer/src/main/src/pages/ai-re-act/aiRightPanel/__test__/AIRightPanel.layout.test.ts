@@ -19,6 +19,25 @@ const layoutStylePath = path.resolve(
 )
 
 describe('AIRightPanel layout contract', () => {
+  it('1152px 以上仅有添加按钮时预留按钮空间，出现标签时预留完整标签列', () => {
+    const layoutCss = compile(layoutStylePath).css
+    const chatCss = compile(chatStylePath).css
+    const contentCss = compile(path.resolve(pageDir, '../../ai-agent/aiChatContent/AIChatContent.module.scss')).css
+
+    expect(layoutCss).toMatch(/\.chat-content\s*\{[^}]*container: ai-chat-content\s*\/\s*inline-size/)
+    expect(contentCss).toMatch(/container: ai-chat-content-tabs\s*\/\s*inline-size/)
+    expect(contentCss).not.toMatch(/container: ai-chat-content\s*\/\s*inline-size/)
+    expect(chatCss).toMatch(
+      /@container ai-chat-content \(width > 1152px\)\s*\{\s*\.ai-re-act:has\(\.chat-footer \[data-ai-summary-row\]:not\(:empty\)\)\s*\{\s*--ai-summary-side-width: 32px;/,
+    )
+    expect(chatCss).toMatch(
+      /\.ai-re-act:has\(\.chat-footer \[data-ai-summary-row\] \[data-ai-summary-tag\]\)\s*\{\s*--ai-summary-side-width: 144px;/,
+    )
+    expect(chatCss).toContain(
+      'calc(var(--ai-summary-side-width) - max(0px, (100% - var(--ai-right-panel-chat-slot-width, 0px) - 880px) / 2))',
+    )
+  })
+
   it('小屏面板的父级层叠上下文高于 TodoList，浮层可以覆盖待办卡片', () => {
     const panelCss = compile(panelStylePath).css
     const todoCss = compile(todoWrapperStylePath).css
@@ -72,8 +91,13 @@ describe('AIRightPanel layout contract', () => {
     expect(chatSource).toContain('.chat-layout-wrapper')
     const trackMixinBlock =
       mixinSource.match(/@mixin\s+ai-right-panel-content-track\([^)]*\)\s*\{([\s\S]*?)\n\}/)?.[1] ?? ''
-    expect(trackMixinBlock).toContain('width: var(--ai-right-panel-content-track-width)')
+    expect(trackMixinBlock).toContain(
+      'width: calc(var(--ai-right-panel-content-track-width) - var(--ai-summary-track-inset, 0px))',
+    )
     expect(trackMixinBlock).toContain('margin: 0 auto')
+    expect(trackMixinBlock).toContain(
+      'margin-left: calc((100% - var(--ai-right-panel-content-track-width)) / 2 + var(--ai-summary-track-inset, 0px))',
+    )
     expect(trackMixinBlock).toContain('transform: translateX(var(--ai-right-panel-content-shift))')
     expect(contentsSource).toContain('.re-act-contents-track')
     expect(contentsSource).toContain('@include mixin.ai-right-panel-content-track')
@@ -98,6 +122,8 @@ describe('AIRightPanel layout contract', () => {
     // 待办卡片与消息列表共用同一条内容轨道
     const todoListBlock = todoWrapperSource.match(/\.to-do-list\s*\{([\s\S]*?)\n\s*\}/)?.[1] ?? ''
     expect(todoListBlock).toContain('@include mixin.ai-right-panel-content-track')
+    expect(todoListBlock).toContain('margin-top: 8px')
+    expect(todoListBlock).not.toContain('margin:')
 
     // review 弹层绝对定位于全宽根容器上，同样需要轨道对齐消息区中心
     const reviewBoxBlock = agentChatSource.match(/\.review-box\s*\{([\s\S]*?)\n\}/)?.[1] ?? ''
