@@ -1212,3 +1212,298 @@ describe('history restore through the real loadHistory path', () => {
     expect(bindings.yakitNotify).not.toHaveBeenCalledWith('warning', 'HTTPFuzzerPage.historyNotFound')
   })
 })
+
+// 按源码实际顺序抽取草稿保护、卸载 flush 与发包后同步落盘，确保 hook 顺序或同步读取前提不被改坏
+const findNode = (predicate: (node: ts.Node) => boolean) => {
+  const matches: ts.Node[] = []
+  const visit = (node: ts.Node) => {
+    predicate(node) && matches.push(node)
+    ts.forEachChild(node, visit)
+  }
+  visit(source)
+  expect(matches).toHaveLength(1)
+  return matches[0]
+}
+
+const persistNodes = [
+  findNode(
+    (n) =>
+      ts.isVariableStatement(n) &&
+      n.declarationList.declarations.some((d) => d.name.getText(source) === 'hasUnsentRequestEditRef'),
+  ),
+  findNode(
+    (n) =>
+      ts.isVariableStatement(n) &&
+      n.declarationList.declarations.some((d) => d.name.getText(source) === 'flushFuzzerSettingInfoRef'),
+  ),
+  findNode(
+    (n) =>
+      ts.isExpressionStatement(n) &&
+      ts.isCallExpression(n.expression) &&
+      n.expression.expression.getText(source) === 'useEffect' &&
+      n.getText(source).includes('flushFuzzerSettingInfoRef.current()'),
+  ),
+  findNode(
+    (n) =>
+      ts.isVariableStatement(n) &&
+      n.declarationList.declarations.some((d) => {
+        if (!ts.isObjectBindingPattern(d.name)) return false
+        const names = d.name.elements.map((el) => el.name.getText(source))
+        return names.includes('sendFuzzerSettingInfo') && names.includes('flushFuzzerSettingInfo')
+      }),
+  ),
+  findNode(
+    (n) =>
+      ts.isExpressionStatement(n) &&
+      ts.isBinaryExpression(n.expression) &&
+      n.expression.left.getText(source) === 'flushFuzzerSettingInfoRef.current' &&
+      n.expression.right.getText(source) === 'flushFuzzerSettingInfo',
+  ),
+  findNode(
+    (n) =>
+      ts.isVariableStatement(n) &&
+      n.declarationList.declarations.some((d) => d.name.getText(source) === 'onSetRequest'),
+  ),
+  findNode(
+    (n) =>
+      ts.isVariableStatement(n) &&
+      n.declarationList.declarations.some((d) => d.name.getText(source) === 'getNewCurrentPage'),
+  ),
+].sort((a, b) => a.getStart(source) - b.getStart(source))
+
+const persistCode = ts.transpileModule(persistNodes.map((n) => n.getText(source)).join('\n'), {
+  compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None },
+}).outputText
+
+const setupPersistFlow = () => {
+  const cleanups: Array<() => void> = []
+  const events: string[] = []
+  let currentSelectId: number | undefined = 5
+  let showAll = false
+  const requestRef = { current: 'GET /initial' }
+  const onUpdateFuzzerSequenceDueToDataChanges = vi.fn((_key: string, param: any) => {
+    events.push(`save:${param.lastSelectedHistory?.id ?? 'none'}`)
+  })
+  const unpin = vi.fn(() => {
+    events.push('unpin')
+  })
+  const pinSubPageKeepAlive = vi.fn(() => {
+    events.push('pin')
+    return unpin
+  })
+  const invoke = vi.fn(async () => ({ Data: [{ BasicInfo: { Id: 88 } }], Total: 3 }))
+
+  const bindings: Record<string, any> = {
+    useRef: (init: any) => ({ current: init }),
+    useMemoizedFn: (fn: unknown) => fn,
+    useEffect: (fn: () => any) => {
+      const cleanup = fn()
+      if (typeof cleanup === 'function') cleanups.push(cleanup)
+    },
+    // 复现 ahooks useDebounceFn 内部 useUnmount(() => debounced.cancel()) 的清理顺序
+    useDebounceFn: (fn: () => void, options?: { wait?: number }) => {
+      const debounced = _.debounce(fn, options?.wait ?? 500)
+      cleanups.push(() => debounced.cancel())
+      return { run: debounced, flush: debounced.flush, cancel: debounced.cancel }
+    },
+    props: { id: 'page-1' },
+    advancedConfigValue: { isHttps: false },
+    advancedConfigShow: {},
+    requestRef,
+    hotPatchCodeRef: { current: '' },
+    browserTransformSelection: undefined,
+    getCurrentSelectId: () => currentSelectId,
+    setCurrentSelectId: (id: number | undefined) => {
+      currentSelectId = id
+    },
+    getShowAll: () => showAll,
+    showAll,
+    setShowAll: (v: boolean) => {
+      showAll = v
+    },
+    skipNextSyncTotalRef: { current: false },
+    setTotal: vi.fn(),
+    setCurrentPage: vi.fn(),
+    onUpdateFuzzerSequenceDueToDataChanges,
+    pinSubPageKeepAlive,
+    ipcRenderer: { invoke },
+    logger: vi.fn(),
+    httpFuzzerLog: (v: unknown) => v,
+    t: (v: string) => v,
+  }
+
+  const api = new Function(
+    ...Object.keys(bindings),
+    `${persistCode}\nreturn { onSetRequest, getNewCurrentPage, flushFuzzerSettingInfo }`,
+  )(...Object.values(bindings))
+
+  return {
+    api,
+    events,
+    unmount: () => cleanups.forEach((fn) => fn()),
+    onUpdateFuzzerSequenceDueToDataChanges,
+    pinSubPageKeepAlive,
+    unpin,
+  }
+}
+
+describe('keep-alive eviction persistence guards', () => {
+  beforeEach(() => vi.useFakeTimers())
+  afterEach(() => {
+    vi.clearAllTimers()
+    vi.useRealTimers()
+  })
+
+  it('clears cached lastSelectedHistory.id after editing request draft so remount keeps the draft', () => {
+    const { api, onUpdateFuzzerSequenceDueToDataChanges } = setupPersistFlow()
+    api.onSetRequest('POST /unsent-draft')
+    api.flushFuzzerSettingInfo()
+
+    expect(onUpdateFuzzerSequenceDueToDataChanges).toHaveBeenCalledWith(
+      'page-1',
+      expect.objectContaining({
+        request: 'POST /unsent-draft',
+        lastSelectedHistory: { id: undefined, showAll: false },
+      }),
+    )
+  })
+
+  it('flushes pending debounced edits on unmount before useDebounceFn cancels the timer', () => {
+    const { api, unmount, onUpdateFuzzerSequenceDueToDataChanges } = setupPersistFlow()
+    api.onSetRequest('POST /pending-before-evict')
+    expect(onUpdateFuzzerSequenceDueToDataChanges).not.toHaveBeenCalled()
+
+    unmount()
+    expect(onUpdateFuzzerSequenceDueToDataChanges).toHaveBeenCalledTimes(1)
+    expect(onUpdateFuzzerSequenceDueToDataChanges).toHaveBeenCalledWith(
+      'page-1',
+      expect.objectContaining({ request: 'POST /pending-before-evict' }),
+    )
+  })
+
+  it('persists latest history id synchronously in getNewCurrentPage before releasing keep-alive pin', async () => {
+    const { api, events, onUpdateFuzzerSequenceDueToDataChanges, pinSubPageKeepAlive, unpin } = setupPersistFlow()
+    api.onSetRequest('POST /about-to-send')
+    api.getNewCurrentPage()
+    await vi.runAllTimersAsync()
+
+    expect(pinSubPageKeepAlive).toHaveBeenCalledWith('page-1')
+    expect(unpin).toHaveBeenCalledTimes(1)
+    expect(onUpdateFuzzerSequenceDueToDataChanges).toHaveBeenLastCalledWith(
+      'page-1',
+      expect.objectContaining({
+        lastSelectedHistory: { id: 88, showAll: false },
+      }),
+    )
+    expect(events).toEqual(['pin', 'save:88', 'unpin'])
+  })
+})
+
+const pinWiringCode = ts.transpileModule(
+  [
+    findNode(
+      (n) =>
+        ts.isVariableStatement(n) &&
+        n.declarationList.declarations.some((d) => d.name.getText(source) === 'isbuttonIsSendReqStatus'),
+    ),
+    findNode(
+      (n) =>
+        ts.isVariableStatement(n) &&
+        n.declarationList.declarations.some((d) => d.name.getText(source) === 'shouldPinKeepAlive'),
+    ),
+    findNode(
+      (n) =>
+        ts.isExpressionStatement(n) &&
+        ts.isCallExpression(n.expression) &&
+        n.expression.expression.getText(source) === 'useEffect' &&
+        n.getText(source).includes('shouldPinKeepAlive'),
+    ),
+  ]
+    .map((n) => n.getText(source))
+    .join('\n'),
+  { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None } },
+).outputText
+
+describe('shouldPinKeepAlive wiring', () => {
+  it.each([
+    { label: 'sending', loading: true, loadingHistory: false, isPause: true, reviews: 0, expectPinned: true },
+    { label: 'paused', loading: false, loadingHistory: false, isPause: false, reviews: 0, expectPinned: true },
+    { label: 'loadingHistory', loading: false, loadingHistory: true, isPause: true, reviews: 0, expectPinned: true },
+    { label: 'casualReview', loading: false, loadingHistory: false, isPause: true, reviews: 1, expectPinned: true },
+    { label: 'idle', loading: false, loadingHistory: false, isPause: true, reviews: 0, expectPinned: false },
+  ])('pins and releases correctly when $label', ({ loading, loadingHistory, isPause, reviews, expectPinned }) => {
+    const unpin = vi.fn()
+    const pinSubPageKeepAlive = vi.fn(() => unpin)
+    let cleanup: (() => void) | undefined
+    new Function(
+      'props',
+      'loading',
+      'loadingHistory',
+      'isPause',
+      'casualReviewQueue',
+      'useMemo',
+      'useEffect',
+      'pinSubPageKeepAlive',
+      pinWiringCode,
+    )(
+      { id: 'page-pin' },
+      loading,
+      loadingHistory,
+      isPause,
+      Array.from({ length: reviews }),
+      (fn: () => unknown) => fn(),
+      (fn: () => any) => {
+        cleanup = fn()
+      },
+      pinSubPageKeepAlive,
+    )
+
+    if (expectPinned) {
+      expect(pinSubPageKeepAlive).toHaveBeenCalledWith('page-pin')
+      cleanup?.()
+      expect(unpin).toHaveBeenCalledTimes(1)
+    } else {
+      expect(pinSubPageKeepAlive).not.toHaveBeenCalled()
+    }
+  })
+})
+
+const extractedListenerCode = ts.transpileModule(
+  findNode(
+    (n) =>
+      ts.isExpressionStatement(n) &&
+      ts.isCallExpression(n.expression) &&
+      n.expression.expression.getText(source) === 'useEffect' &&
+      n.getText(source).includes('fetch-extracted-to-table'),
+  ).getText(source),
+  { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None } },
+).outputText
+
+describe('fetch-extracted-to-table listener isolation', () => {
+  it('unmounting one HTTPFuzzerPage instance does not remove another instance listener', () => {
+    const ipc = new EventEmitter()
+    const mountInstance = () => {
+      const setExtractedMap = vi.fn()
+      let unmount: (() => void) | undefined
+      new Function('ipcRenderer', 'setExtractedMap', 'useEffect', extractedListenerCode)(
+        ipc,
+        setExtractedMap,
+        (fn: () => any) => {
+          unmount = fn()
+        },
+      )
+      return { setExtractedMap, unmount: () => unmount?.() }
+    }
+
+    const first = mountInstance()
+    const second = mountInstance()
+    first.unmount()
+
+    const extracted = new Map([['token', 'abc']])
+    ipc.emit('fetch-extracted-to-table', {}, { type: 'fuzzer', extractedMap: extracted })
+
+    expect(first.setExtractedMap).not.toHaveBeenCalled()
+    expect(second.setExtractedMap).toHaveBeenCalledWith(extracted)
+    second.unmount()
+  })
+})

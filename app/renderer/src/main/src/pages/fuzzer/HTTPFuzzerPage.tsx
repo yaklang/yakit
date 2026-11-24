@@ -92,6 +92,7 @@ import {
   useFuzzerResponseRaw,
 } from './fuzzerRawStore'
 import { YakitRoute } from '@/enums/yakitRoute'
+import { pinSubPageKeepAlive } from '@/utils/subPageKeepAlive'
 import { FUZZER_LABEL_LIST_NUMBER } from './HTTPFuzzerEditorMenu'
 import { BlastingAnimationAemonstration } from './AnimationAemonstration'
 import { WebFuzzerNewEditor } from './WebFuzzerNewEditor/WebFuzzerNewEditor'
@@ -1724,6 +1725,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     if (!mcpExecutionSlotRef.current.tryStart(props.id, loadingRef.current)) return
     // validate 可能异步；在真正 setLoading 前先占 busy，防止 duplex 再入同 token
     loadingRef.current = true
+    setNewCurrentPageRef.current = true
     onValidateHTTPFuzzer()
   }
 
@@ -1784,6 +1786,13 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
       setLoadingText('sending packets')
     }
   }, [isbuttonIsSendReqStatus])
+
+  // 发包/暂停/加载历史/AI 审阅期间锁住页签，避免后台淘汰导致中断或丢状态
+  const shouldPinKeepAlive = !isbuttonIsSendReqStatus || casualReviewQueue.length > 0
+  useEffect(() => {
+    if (!props.id || !shouldPinKeepAlive) return
+    return pinSubPageKeepAlive(props.id)
+  }, [props.id, shouldPinKeepAlive])
 
   const cancelCurrentHTTPFuzzer = useMemoizedFn(async () => {
     // Send cancellation before unlocking the UI so a fresh send follows it over IPC.
@@ -2150,13 +2159,14 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
 
   const [extractedMap, { setAll, reset }] = useMap<string, string>()
   useEffect(() => {
-    ipcRenderer.on('fetch-extracted-to-table', (_, data: { type: string; extractedMap: Map<string, string> }) => {
+    const handleFetchExtracted = (_: unknown, data: { type: string; extractedMap: Map<string, string> }) => {
       if (data.type === 'fuzzer') {
         setExtractedMap(data.extractedMap)
       }
-    })
+    }
+    ipcRenderer.on('fetch-extracted-to-table', handleFetchExtracted)
     return () => {
-      ipcRenderer.removeAllListeners('fetch-extracted-to-table')
+      ipcRenderer.removeListener?.('fetch-extracted-to-table', handleFetchExtracted)
     }
   }, [])
 
@@ -2185,7 +2195,14 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     return failedFuzzer.length + successFuzzer.length === 1
   }, [failedFuzzer, successFuzzer])
 
-  const sendFuzzerSettingInfo = useDebounceFn(
+  // 编辑器改动过请求草稿且尚未重新发包时，重挂不应用旧历史覆盖用户编辑
+  const hasUnsentRequestEditRef = useRef(false)
+  const flushFuzzerSettingInfoRef = useRef<() => void>(() => {})
+  // 必须在 useDebounceFn 之前注册：ahooks useDebounceFn 内部 useUnmount 会先 cancel，提前注册才能先 flush 再 cancel
+  useEffect(() => {
+    return () => flushFuzzerSettingInfoRef.current()
+  }, [])
+  const { run: sendFuzzerSettingInfo, flush: flushFuzzerSettingInfo } = useDebounceFn(
     () => {
       const webFuzzerPageInfo: WebFuzzerPageInfoProps = {
         pageId: props.id,
@@ -2194,12 +2211,16 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
         advancedConfigShow,
         hotPatchCode: hotPatchCodeRef.current,
         browserTransformSelection,
-        lastSelectedHistory: { id: getCurrentSelectId(), showAll: getShowAll() },
+        lastSelectedHistory: {
+          id: hasUnsentRequestEditRef.current ? undefined : getCurrentSelectId(),
+          showAll: getShowAll(),
+        },
       }
       onUpdateFuzzerSequenceDueToDataChanges(props.id || '', webFuzzerPageInfo)
     },
     { wait: 500 },
-  ).run
+  )
+  flushFuzzerSettingInfoRef.current = flushFuzzerSettingInfo
   useUpdateEffect(() => {
     sendFuzzerSettingInfo()
   }, [advancedConfigValue, browserTransformSelection])
@@ -2365,6 +2386,10 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
   }, [showAll])
 
   useUpdateEffect(() => {
+    hasUnsentRequestEditRef.current = false
+  }, [currentSelectId])
+
+  useUpdateEffect(() => {
     sendFuzzerSettingInfo()
   }, [currentSelectId, showAll])
 
@@ -2519,6 +2544,9 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     sendFuzzerSettingInfo()
   })
   const onSetRequest = useMemoizedFn((i: string) => {
+    if (i !== requestRef.current) {
+      hasUnsentRequestEditRef.current = true
+    }
     requestRef.current = i
     sendFuzzerSettingInfo()
   })
@@ -2958,6 +2986,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
       skipNextSyncTotalRef.current = true
       setShowAll(false)
     }
+    const unpinSettle = pinSubPageKeepAlive(props.id || '')
     ipcRenderer
       .invoke('QueryHistoryHTTPFuzzerTaskEx', {
         FuzzerTabIndex: props.id,
@@ -2969,10 +2998,15 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
         if (t <= 0) return
         const latest = data.Data[0]
         if (latest) {
+          hasUnsentRequestEditRef.current = false
           setCurrentPage(t)
           setCurrentSelectId(latest.BasicInfo.Id)
+          // 同步落盘最新历史 id，避免 .finally(unpinSettle) 立即淘汰后台页签时漏写缓存
+          sendFuzzerSettingInfo()
+          flushFuzzerSettingInfo()
         }
       })
+      .finally(unpinSettle)
     logger(
       httpFuzzerLog({
         title: t('HTTPFuzzerPage.run_function_end'),

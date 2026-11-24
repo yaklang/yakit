@@ -59,6 +59,7 @@ import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { yakitFailed, yakitNotify } from '@/utils/notification'
 import { YakitRoute } from '@/enums/yakitRoute'
+import { pinSubPageKeepAlive } from '@/utils/subPageKeepAlive'
 import {
   FuzzerExtraShow,
   type FuzzerRequestProps,
@@ -469,18 +470,26 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     { wait: 200 },
   )
   useEffect(() => {
-    ipcRenderer.on(
-      'fetch-extracted-to-table',
-      (e: any, data: { pageId: string; type: string; extractedMap: Map<string, string> }) => {
-        if (data.type === 'fuzzerSequence') {
-          setExtractedMap(data.extractedMap)
-        }
-      },
-    )
+    const handleFetchExtracted = (
+      _e: unknown,
+      data: { pageId: string; type: string; extractedMap: Map<string, string> },
+    ) => {
+      if (data.type === 'fuzzerSequence') {
+        setExtractedMap(data.extractedMap)
+      }
+    }
+    ipcRenderer.on('fetch-extracted-to-table', handleFetchExtracted)
     return () => {
-      ipcRenderer.removeAllListeners('fetch-extracted-to-table')
+      ipcRenderer.removeListener?.('fetch-extracted-to-table', handleFetchExtracted)
     }
   }, [])
+
+  // 序列与并发共享同一实例，任一模式运行中都要锁住保活，避免切模式后误释放取消任务
+  const anyLoading = sequenceLoading || concurrencyLoading
+  useEffect(() => {
+    if (!props.groupId || !anyLoading) return
+    return pinSubPageKeepAlive(props.groupId)
+  }, [props.groupId, anyLoading])
 
   useEffect(() => {
     inViewportRef.current = inViewport === true

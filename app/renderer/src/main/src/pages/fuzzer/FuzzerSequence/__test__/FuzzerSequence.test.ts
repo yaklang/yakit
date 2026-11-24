@@ -451,3 +451,36 @@ describe('FuzzerSequence response release queue', () => {
     expect(bindings.startConcurrency).toHaveBeenCalled()
   })
 })
+
+describe('sequence/concurrency keep-alive pin', () => {
+  it('stays pinned when either sequence or concurrency is running across mode switches', () => {
+    const pinEffect = findOne(
+      (node) =>
+        ts.isExpressionStatement(node) &&
+        ts.isCallExpression(node.expression) &&
+        node.expression.expression.getText(source) === 'useEffect' &&
+        node.getText(source).includes('pinSubPageKeepAlive'),
+    )
+    const code = `${declarations(['anyLoading'])}\n${
+      ts.transpileModule(pinEffect, {
+        compilerOptions: { target: ts.ScriptTarget.ES2022 },
+      }).outputText
+    }`
+
+    const run = (sequenceLoading: boolean, concurrencyLoading: boolean) => {
+      const pinSubPageKeepAlive = vi.fn(() => () => {})
+      new Function('props', 'sequenceLoading', 'concurrencyLoading', 'useEffect', 'pinSubPageKeepAlive', code)(
+        { groupId: 'g-1' },
+        sequenceLoading,
+        concurrencyLoading,
+        (fn: () => unknown) => fn(),
+        pinSubPageKeepAlive,
+      )
+      return pinSubPageKeepAlive
+    }
+
+    expect(run(true, false)).toHaveBeenCalledWith('g-1')
+    expect(run(false, true)).toHaveBeenCalledWith('g-1')
+    expect(run(false, false)).not.toHaveBeenCalled()
+  })
+})
