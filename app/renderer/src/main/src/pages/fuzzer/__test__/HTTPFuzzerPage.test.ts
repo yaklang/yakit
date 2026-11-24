@@ -1398,3 +1398,112 @@ describe('keep-alive eviction persistence guards', () => {
     expect(events).toEqual(['pin', 'save:88', 'unpin'])
   })
 })
+
+const pinWiringCode = ts.transpileModule(
+  [
+    findNode(
+      (n) =>
+        ts.isVariableStatement(n) &&
+        n.declarationList.declarations.some((d) => d.name.getText(source) === 'isbuttonIsSendReqStatus'),
+    ),
+    findNode(
+      (n) =>
+        ts.isVariableStatement(n) &&
+        n.declarationList.declarations.some((d) => d.name.getText(source) === 'shouldPinKeepAlive'),
+    ),
+    findNode(
+      (n) =>
+        ts.isExpressionStatement(n) &&
+        ts.isCallExpression(n.expression) &&
+        n.expression.expression.getText(source) === 'useEffect' &&
+        n.getText(source).includes('shouldPinKeepAlive'),
+    ),
+  ]
+    .map((n) => n.getText(source))
+    .join('\n'),
+  { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None } },
+).outputText
+
+describe('shouldPinKeepAlive wiring', () => {
+  it.each([
+    { label: 'sending', loading: true, loadingHistory: false, isPause: true, reviews: 0, expectPinned: true },
+    { label: 'paused', loading: false, loadingHistory: false, isPause: false, reviews: 0, expectPinned: true },
+    { label: 'loadingHistory', loading: false, loadingHistory: true, isPause: true, reviews: 0, expectPinned: true },
+    { label: 'casualReview', loading: false, loadingHistory: false, isPause: true, reviews: 1, expectPinned: true },
+    { label: 'idle', loading: false, loadingHistory: false, isPause: true, reviews: 0, expectPinned: false },
+  ])('pins and releases correctly when $label', ({ loading, loadingHistory, isPause, reviews, expectPinned }) => {
+    const unpin = vi.fn()
+    const pinSubPageKeepAlive = vi.fn(() => unpin)
+    let cleanup: (() => void) | undefined
+    new Function(
+      'props',
+      'loading',
+      'loadingHistory',
+      'isPause',
+      'casualReviewQueue',
+      'useMemo',
+      'useEffect',
+      'pinSubPageKeepAlive',
+      pinWiringCode,
+    )(
+      { id: 'page-pin' },
+      loading,
+      loadingHistory,
+      isPause,
+      Array.from({ length: reviews }),
+      (fn: () => unknown) => fn(),
+      (fn: () => any) => {
+        cleanup = fn()
+      },
+      pinSubPageKeepAlive,
+    )
+
+    if (expectPinned) {
+      expect(pinSubPageKeepAlive).toHaveBeenCalledWith('page-pin')
+      cleanup?.()
+      expect(unpin).toHaveBeenCalledTimes(1)
+    } else {
+      expect(pinSubPageKeepAlive).not.toHaveBeenCalled()
+    }
+  })
+})
+
+const extractedListenerCode = ts.transpileModule(
+  findNode(
+    (n) =>
+      ts.isExpressionStatement(n) &&
+      ts.isCallExpression(n.expression) &&
+      n.expression.expression.getText(source) === 'useEffect' &&
+      n.getText(source).includes('fetch-extracted-to-table'),
+  ).getText(source),
+  { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None } },
+).outputText
+
+describe('fetch-extracted-to-table listener isolation', () => {
+  it('unmounting one HTTPFuzzerPage instance does not remove another instance listener', () => {
+    const ipc = new EventEmitter()
+    const mountInstance = () => {
+      const setExtractedMap = vi.fn()
+      let unmount: (() => void) | undefined
+      new Function('ipcRenderer', 'setExtractedMap', 'useEffect', extractedListenerCode)(
+        ipc,
+        setExtractedMap,
+        (fn: () => any) => {
+          unmount = fn()
+        },
+      )
+      return { setExtractedMap, unmount: () => unmount?.() }
+    }
+
+    const first = mountInstance()
+    const second = mountInstance()
+    first.unmount()
+
+    const extracted = new Map([['token', 'abc']])
+    ipc.emit('fetch-extracted-to-table', {}, { type: 'fuzzer', extractedMap: extracted })
+
+    expect(first.setExtractedMap).not.toHaveBeenCalled()
+    expect(second.setExtractedMap).toHaveBeenCalledWith(extracted)
+    second.unmount()
+  })
+})
