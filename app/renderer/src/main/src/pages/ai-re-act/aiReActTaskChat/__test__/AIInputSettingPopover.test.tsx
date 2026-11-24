@@ -1,5 +1,5 @@
 import type React from 'react'
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createStore } from 'zustand/vanilla'
 import emiter from '@/utils/eventBus/eventBus'
@@ -272,7 +272,7 @@ describe('AIInputSettingPopover', () => {
       SyncPerceptionTrigger: false,
       EnablePlan: true,
       DisableBuiltinSyntaxFlowRules: true,
-      EnableCustomSyntaxFlowRules: false,
+      EnableCustomSyntaxFlowRules: true,
     })
     expect(mocks.setSetting).toHaveBeenCalledTimes(3)
     expect(mocks.onSend).not.toHaveBeenCalled()
@@ -311,7 +311,7 @@ describe('AIInputSettingPopover', () => {
       ['SyncPerceptionTrigger', { SyncPerceptionTrigger: false }],
       [
         AIInputEventHotPatchTypeEnum.HotPatchType_SyntaxFlowRules,
-        { DisableBuiltinSyntaxFlowRules: true, EnableCustomSyntaxFlowRules: false },
+        { DisableBuiltinSyntaxFlowRules: true, EnableCustomSyntaxFlowRules: true },
       ],
     ]) {
       expect(mocks.onSend).toHaveBeenCalledWith({
@@ -324,7 +324,7 @@ describe('AIInputSettingPopover', () => {
       SyncPerceptionTrigger: false,
       EnablePlan: true,
       DisableBuiltinSyntaxFlowRules: true,
-      EnableCustomSyntaxFlowRules: false,
+      EnableCustomSyntaxFlowRules: true,
     })
     expect(screen.getAllByRole('switch')[0]).toBeChecked()
     expect(mocks.setSetting).toHaveBeenCalledTimes(2)
@@ -342,7 +342,7 @@ describe('AIInputSettingPopover', () => {
     expect(screen.getByLabelText('AIReActTaskChatContent.planPrompt')).toHaveValue('')
     expect(mocks.setAIGlobalConfig).toHaveBeenCalledExactlyOnceWith({
       DisableBuiltinSyntaxFlowRules: true,
-      EnableCustomSyntaxFlowRules: false,
+      EnableCustomSyntaxFlowRules: true,
     })
     fireEvent.click(screen.getByText('关闭设置'))
     expect(mocks.setAIGlobalConfig).toHaveBeenCalledTimes(2)
@@ -559,31 +559,42 @@ describe('AIInputSettingPopover', () => {
     expect(screen.getByRole('switch', { name: 'AIReActTaskChatContent.allowUserPrompt' })).toBeDisabled()
   })
 
-  it('默认关闭内置和自定义安全规则', () => {
+  it('默认关闭内置安全规则，自定义规则只显示配置入口', () => {
     render(<AIInputSettingPopover visible />)
 
     const builtin = screen.getByRole('switch', { name: 'AIReActTaskChatContent.enableBuiltinSyntaxFlowRules' })
-    const custom = screen.getByRole('switch', { name: 'AIReActTaskChatContent.enableCustomSyntaxFlowRules' })
     expect(builtin).not.toBeChecked()
-    expect(custom).not.toBeChecked()
+    expect(
+      screen.queryByRole('switch', { name: 'AIReActTaskChatContent.enableCustomSyntaxFlowRules' }),
+    ).not.toBeInTheDocument()
+    expect(screen.getByText('AIReActTaskChatContent.customBashRulesTitle')).toBeInTheDocument()
+    expect(screen.getByText('AIReActTaskChatContent.configureCustomSyntaxFlowRules')).toBeInTheDocument()
   })
 
-  it('切换安全规则后立即热更新会话，并写入全局配置', () => {
+  it('点击自定义规则入口打开规则配置页', () => {
+    render(<AIInputSettingPopover visible />)
+
+    fireEvent.click(screen.getByText('AIReActTaskChatContent.configureCustomSyntaxFlowRules'))
+
+    expect(mocks.emit).toHaveBeenCalledWith('openPage', JSON.stringify({ route: 'ai-bash-guard-rules' }))
+  })
+
+  it('切换内置安全规则后立即热更新会话，并写入全局配置', () => {
     mocks.setSetting.mockImplementation((update) => {
       mocks.setting = update(mocks.setting)
     })
     sessionStore.setState({ execute: true })
     render(<AIInputSettingPopover visible />)
 
-    const custom = screen.getByRole('switch', { name: 'AIReActTaskChatContent.enableCustomSyntaxFlowRules' })
-    fireEvent.click(custom)
+    const builtin = screen.getByRole('switch', { name: 'AIReActTaskChatContent.enableBuiltinSyntaxFlowRules' })
+    fireEvent.click(builtin)
 
     expect(mocks.setting).toMatchObject({
-      DisableBuiltinSyntaxFlowRules: true,
+      DisableBuiltinSyntaxFlowRules: false,
       EnableCustomSyntaxFlowRules: true,
     })
     expect(mocks.setAIGlobalConfig).toHaveBeenCalledExactlyOnceWith({
-      DisableBuiltinSyntaxFlowRules: true,
+      DisableBuiltinSyntaxFlowRules: false,
       EnableCustomSyntaxFlowRules: true,
     })
     expect(mocks.onSend).toHaveBeenCalledTimes(1)
@@ -591,37 +602,14 @@ describe('AIInputSettingPopover', () => {
       IsConfigHotpatch: true,
       HotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_SyntaxFlowRules,
       Params: {
-        DisableBuiltinSyntaxFlowRules: true,
+        DisableBuiltinSyntaxFlowRules: false,
         EnableCustomSyntaxFlowRules: true,
       },
     })
     expect(mocks.showYakitModal).not.toHaveBeenCalled()
   })
 
-  it('关闭全部安全规则需要二次确认，取消后恢复开关且不落库', () => {
-    mocks.setting = { ...mocks.setting, DisableBuiltinSyntaxFlowRules: false }
-    mocks.setSetting.mockImplementation((update) => {
-      mocks.setting = update(mocks.setting)
-    })
-    render(<AIInputSettingPopover visible />)
-    const builtin = screen.getByRole('switch', { name: 'AIReActTaskChatContent.enableBuiltinSyntaxFlowRules' })
-
-    fireEvent.click(builtin)
-
-    expect(mocks.showYakitModal).toHaveBeenCalledTimes(1)
-    expect(mocks.setSetting).not.toHaveBeenCalled()
-    expect(mocks.setAIGlobalConfig).not.toHaveBeenCalled()
-    expect(builtin).not.toBeChecked()
-
-    act(() => mocks.modalOnCancel?.())
-
-    expect(mocks.modalDestroy).toHaveBeenCalled()
-    expect(builtin).toBeChecked()
-    expect(mocks.setSetting).not.toHaveBeenCalled()
-    expect(mocks.setAIGlobalConfig).not.toHaveBeenCalled()
-  })
-
-  it('确认关闭全部安全规则后写入配置并热更新会话', () => {
+  it('关闭内置安全规则不需要二次确认，仍然保留逐条自定义规则', () => {
     mocks.setting = { ...mocks.setting, DisableBuiltinSyntaxFlowRules: false }
     mocks.setSetting.mockImplementation((update) => {
       mocks.setting = update(mocks.setting)
@@ -631,25 +619,22 @@ describe('AIInputSettingPopover', () => {
     const builtin = screen.getByRole('switch', { name: 'AIReActTaskChatContent.enableBuiltinSyntaxFlowRules' })
 
     fireEvent.click(builtin)
-    act(() => mocks.modalOnOk?.())
 
-    expect(mocks.modalDestroy).toHaveBeenCalled()
+    expect(mocks.showYakitModal).not.toHaveBeenCalled()
     expect(mocks.setSetting).toHaveBeenCalledTimes(1)
     expect(mocks.setting).toMatchObject({
       DisableBuiltinSyntaxFlowRules: true,
-      EnableCustomSyntaxFlowRules: false,
+      EnableCustomSyntaxFlowRules: true,
     })
     expect(mocks.setAIGlobalConfig).toHaveBeenCalledExactlyOnceWith({
       DisableBuiltinSyntaxFlowRules: true,
-      EnableCustomSyntaxFlowRules: false,
+      EnableCustomSyntaxFlowRules: true,
     })
-    expect(mocks.onSend).toHaveBeenCalledTimes(1)
     expect(mocks.onSend.mock.calls[0][0].params).toMatchObject({
-      IsConfigHotpatch: true,
       HotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_SyntaxFlowRules,
       Params: {
         DisableBuiltinSyntaxFlowRules: true,
-        EnableCustomSyntaxFlowRules: false,
+        EnableCustomSyntaxFlowRules: true,
       },
     })
   })

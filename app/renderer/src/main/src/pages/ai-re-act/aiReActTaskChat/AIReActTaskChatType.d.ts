@@ -23,8 +23,6 @@ export interface AIInputSettingFormProps {
   SingleModelMode: boolean
   /** 启用内置 SyntaxFlow 安全规则（UI 正向语义，落库为 DisableBuiltinSyntaxFlowRules） */
   EnableBuiltinSyntaxFlowRules: boolean
-  /** 启用自定义 Bash SyntaxFlow 规则 */
-  EnableCustomSyntaxFlowRules: boolean
   /** 全局指令 */
   AIPresetPrompt: string
   /** 规划提示词 */

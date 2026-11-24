@@ -39,7 +39,6 @@ import useCurrentSessionId from '../hooks/useCurrentSessionId'
 import { useStore } from 'zustand'
 import { AIAgentSettingDefault } from '@/pages/ai-agent/defaultConstant'
 import { isChatSession } from '@/pages/ai-agent/utils/isChatSession'
-import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { YakitRoute } from '@/enums/yakitRoute'
 
 const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
@@ -158,12 +157,6 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
     aiGlobalConfig.DisableBuiltinSyntaxFlowRules ??
     AIAgentSettingDefault.DisableBuiltinSyntaxFlowRules
   )
-  const enableCustomSyntaxFlowRules = !!(
-    setting.EnableCustomSyntaxFlowRules ??
-    aiGlobalConfig.EnableCustomSyntaxFlowRules ??
-    AIAgentSettingDefault.EnableCustomSyntaxFlowRules
-  )
-
   const [visible, setVisible] = useControllableValue<boolean>(props, {
     defaultValue: false,
     valuePropName: 'visible',
@@ -191,15 +184,13 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
     form.setFieldValue('SingleModelMode', effectiveSingleModelMode)
     form.setFieldValue('AllowUserPrompt', allowUserPrompt)
     form.setFieldValue('EnableBuiltinSyntaxFlowRules', enableBuiltinSyntaxFlowRules)
-    form.setFieldValue('EnableCustomSyntaxFlowRules', enableCustomSyntaxFlowRules)
-  }, [visible, effectiveSingleModelMode, allowUserPrompt, enableBuiltinSyntaxFlowRules, enableCustomSyntaxFlowRules])
+  }, [visible, effectiveSingleModelMode, allowUserPrompt, enableBuiltinSyntaxFlowRules])
 
   // 缓存弹窗打开时的文本域初始值，用于关闭时比较是否修改
   const promptSnapshotRef = useRef<{ AIPresetPrompt: string; AIPlanPrompt: string }>({
     AIPresetPrompt: '',
     AIPlanPrompt: '',
   })
-  const skipSecurityRuleConfirmRef = useRef(false)
 
   const onHotConfigChange = useMemoizedFn(
     (hotpatchType: AIInputEventHotPatchTypeEnum, params: AIInputEvent['Params']) => {
@@ -280,41 +271,16 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
         SyncPerceptionTrigger: !!changedValues.SyncPerceptionTrigger,
       }))
     }
-    if (has(changedValues, 'EnableBuiltinSyntaxFlowRules') || has(changedValues, 'EnableCustomSyntaxFlowRules')) {
-      const values = form.getFieldsValue(['EnableBuiltinSyntaxFlowRules', 'EnableCustomSyntaxFlowRules'])
-      const builtinEnabled = !!values.EnableBuiltinSyntaxFlowRules
-      const customEnabled = !!values.EnableCustomSyntaxFlowRules
-      const apply = () => {
-        const next = {
-          DisableBuiltinSyntaxFlowRules: !builtinEnabled,
-          EnableCustomSyntaxFlowRules: customEnabled,
-        }
-        // 会话级启动参数随 setting 下发；同时写回全局默认，供新会话/其它入口复用。
-        onHotConfigChange(AIInputEventHotPatchTypeEnum.HotPatchType_SyntaxFlowRules, next)
-        setSetting?.((v) => ({ ...v, ...next }))
-        aiGlobalConfigEvent.setAIGlobalConfig(next)
+    if (has(changedValues, 'EnableBuiltinSyntaxFlowRules')) {
+      const next = {
+        DisableBuiltinSyntaxFlowRules: !changedValues.EnableBuiltinSyntaxFlowRules,
+        // 自定义规则不再有会话级总开关，逐条规则在 AI Bash 安全规则页控制。
+        EnableCustomSyntaxFlowRules: true,
       }
-      if (builtinEnabled || customEnabled || skipSecurityRuleConfirmRef.current) {
-        apply()
-        return
-      }
-      const modal = showYakitModal({
-        title: t('AIReActTaskChatContent.disableAllSyntaxFlowRulesTitle'),
-        content: t('AIReActTaskChatContent.disableAllSyntaxFlowRulesContent'),
-        onOkText: t('AIReActTaskChatContent.disableAllSyntaxFlowRulesOk'),
-        onCancel: () => {
-          modal.destroy()
-          form.setFieldsValue({
-            EnableBuiltinSyntaxFlowRules: enableBuiltinSyntaxFlowRules,
-            EnableCustomSyntaxFlowRules: enableCustomSyntaxFlowRules,
-          })
-        },
-        onOk: () => {
-          modal.destroy()
-          apply()
-        },
-        width: 460,
-      })
+      // 会话级启动参数随 setting 下发；同时写回全局默认，供新会话/其它入口复用。
+      onHotConfigChange(AIInputEventHotPatchTypeEnum.HotPatchType_SyntaxFlowRules, next)
+      setSetting?.((v) => ({ ...v, ...next }))
+      aiGlobalConfigEvent.setAIGlobalConfig(next)
     }
   })
 
@@ -329,7 +295,6 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
         AllowUserPrompt: allowUserPrompt,
         SingleModelMode: effectiveSingleModelMode,
         EnableBuiltinSyntaxFlowRules: enableBuiltinSyntaxFlowRules,
-        EnableCustomSyntaxFlowRules: enableCustomSyntaxFlowRules,
         AIPresetPrompt: aiGlobalConfig.AIPresetPrompt || '',
         AIPlanPrompt: aiGlobalConfig.AIPlanPrompt || '',
       })
@@ -354,14 +319,11 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
       SingleModelMode: singleModelModeLocked ? effectiveSingleModelMode : !!AIAgentSettingDefault.SingleModelMode,
       SyncPerceptionTrigger: !!AIAgentSettingDefault.SyncPerceptionTrigger,
       EnableBuiltinSyntaxFlowRules: !AIAgentSettingDefault.DisableBuiltinSyntaxFlowRules,
-      EnableCustomSyntaxFlowRules: !!AIAgentSettingDefault.EnableCustomSyntaxFlowRules,
       AIPresetPrompt: '',
       AIPlanPrompt: '',
     }
     form.setFieldsValue(defaults)
-    skipSecurityRuleConfirmRef.current = true
     onValuesChange(defaults)
-    skipSecurityRuleConfirmRef.current = false
     modelContextRef.current?.reset()
   })
 
@@ -413,7 +375,6 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
               SyncPerceptionTrigger: setting.SyncPerceptionTrigger,
               EnablePlan: setting.EnablePlan,
               EnableBuiltinSyntaxFlowRules: enableBuiltinSyntaxFlowRules,
-              EnableCustomSyntaxFlowRules: enableCustomSyntaxFlowRules,
               AIPresetPrompt: aiGlobalConfig.AIPresetPrompt || '',
               AIPlanPrompt: aiGlobalConfig.AIPlanPrompt || '',
             }}
@@ -510,34 +471,26 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
                   wrapperClassName={styles['setting-switch']}
                 />
               </Form.Item>
-              <Form.Item
-                label={
-                  <div className={styles['setting-label']}>
-                    <span>{t('AIReActTaskChatContent.enableCustomSyntaxFlowRules')}</span>
-                    <span className={styles['setting-description']}>
-                      {t('AIReActTaskChatContent.enableCustomSyntaxFlowRulesTip')}
-                      <span
-                        className={styles['setting-link']}
-                        onClick={(event) => {
-                          event.stopPropagation()
-                          onOpenBashGuardRules()
-                        }}
-                      >
-                        {t('AIReActTaskChatContent.configureCustomSyntaxFlowRules')}
-                      </span>
-                    </span>
+              <div className={styles['custom-rule-entry']} onClick={onOpenBashGuardRules}>
+                <div className={styles['custom-rule-entry-main']}>
+                  <div className={styles['custom-rule-entry-title']}>
+                    {t('AIReActTaskChatContent.customBashRulesTitle')}
                   </div>
-                }
-                name="EnableCustomSyntaxFlowRules"
-                layout="horizontal"
-                valuePropName="checked"
-                className={styles['inline-form-item']}
-              >
-                <YakitSwitch
-                  aria-label={t('AIReActTaskChatContent.enableCustomSyntaxFlowRules')}
-                  wrapperClassName={styles['setting-switch']}
-                />
-              </Form.Item>
+                  <div className={styles['custom-rule-entry-tip']}>
+                    {t('AIReActTaskChatContent.customBashRulesTip')}
+                  </div>
+                </div>
+                <YakitButton
+                  type="outline2"
+                  size="small"
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    onOpenBashGuardRules()
+                  }}
+                >
+                  {t('AIReActTaskChatContent.configureCustomSyntaxFlowRules')}
+                </YakitButton>
+              </div>
             </div>
             <Form.Item
               label={t('AIReActTaskChatContent.globalDirective')}

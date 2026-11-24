@@ -1,16 +1,27 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
+import classNames from 'classnames'
+import { YakitAlert } from '@/components/yakitUI/YakitAlert/YakitAlert'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
-import { YakitSegmented } from '@/components/yakitUI/YakitSegmented/YakitSegmented'
-import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
+import { YakitCard } from '@/components/yakitUI/YakitCard/YakitCard'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
-import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
-import { yakitNotify } from '@/utils/notification'
+import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
+import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
+import { YakitSegmented } from '@/components/yakitUI/YakitSegmented/YakitSegmented'
+import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
+import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
+import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { yakitNotify } from '@/utils/notification'
 import styles from './AIBashGuardRules.module.scss'
-import type { AIBashGuardAction, AIBashGuardRuleRow, AIBashGuardRuleValidationError } from './utils'
+import type { AIBashGuardAction, AIBashGuardMatch, AIBashGuardRuleRow, AIBashGuardRuleValidationError } from './utils'
 import { createRuleRow, readRulesFromEngine, validateRuleRows, writeRulesToEngine } from './utils'
+
+const ACTION_TAG_COLOR: Record<AIBashGuardAction, 'danger' | 'warning' | 'info'> = {
+  deny: 'danger',
+  ask: 'warning',
+  warn: 'info',
+}
 
 export const AIBashGuardRules: React.FC = React.memo(() => {
   const { t } = useI18nNamespaces(['aiAgent'])
@@ -26,6 +37,42 @@ export const AIBashGuardRules: React.FC = React.memo(() => {
       { label: t('AIBashGuardRules.actionAsk'), value: 'ask' },
       { label: t('AIBashGuardRules.actionWarn'), value: 'warn' },
     ],
+    [t],
+  )
+
+  const matchOptions = useMemo(
+    () => [
+      { label: t('AIBashGuardRules.matchExact'), value: 'exact' },
+      { label: t('AIBashGuardRules.matchPrefix'), value: 'prefix' },
+      { label: t('AIBashGuardRules.matchRegex'), value: 'regex' },
+    ],
+    [t],
+  )
+
+  const actionLabels = useMemo(
+    () => ({
+      deny: t('AIBashGuardRules.actionDeny'),
+      ask: t('AIBashGuardRules.actionAsk'),
+      warn: t('AIBashGuardRules.actionWarn'),
+    }),
+    [t],
+  )
+
+  const matchHints = useMemo(
+    () => ({
+      exact: t('AIBashGuardRules.matchExactHint'),
+      prefix: t('AIBashGuardRules.matchPrefixHint'),
+      regex: t('AIBashGuardRules.matchRegexHint'),
+    }),
+    [t],
+  )
+
+  const patternPlaceholders = useMemo(
+    () => ({
+      exact: t('AIBashGuardRules.patternExactPlaceholder'),
+      prefix: t('AIBashGuardRules.patternPrefixPlaceholder'),
+      regex: t('AIBashGuardRules.patternPlaceholder'),
+    }),
     [t],
   )
 
@@ -79,27 +126,14 @@ export const AIBashGuardRules: React.FC = React.memo(() => {
     setDirty(true)
   })
 
-  const onRemoveRule = useMemoizedFn((row: AIBashGuardRuleRow, index: number) => {
-    const modal = showYakitModal({
-      title: t('AIBashGuardRules.removeConfirmTitle'),
-      content: t('AIBashGuardRules.removeConfirmContent', {
-        index: index + 1,
-        pattern: row.pattern.trim() || t('AIBashGuardRules.untitledRule'),
-      }),
-      onOkText: t('AIBashGuardRules.removeConfirmOk'),
-      onCancel: () => modal.destroy(),
-      onOk: () => {
-        modal.destroy()
-        setRows((prev) => prev.filter((item) => item.uid !== row.uid))
-        setRowErrors((prev) => {
-          const next = { ...prev }
-          delete next[row.uid]
-          return next
-        })
-        setDirty(true)
-      },
-      width: 460,
+  const onRemoveRule = useMemoizedFn((row: AIBashGuardRuleRow) => {
+    setRows((prev) => prev.filter((item) => item.uid !== row.uid))
+    setRowErrors((prev) => {
+      const next = { ...prev }
+      delete next[row.uid]
+      return next
     })
+    setDirty(true)
   })
 
   const onReload = useMemoizedFn(async () => {
@@ -143,14 +177,29 @@ export const AIBashGuardRules: React.FC = React.memo(() => {
   return (
     <div className={styles['ai-bash-guard-rules']}>
       <div className={styles['header']}>
-        <div className={styles['title']}>{t('AIBashGuardRules.title')}</div>
-        <div className={styles['description']}>{t('AIBashGuardRules.description')}</div>
-        <div className={styles['tips']}>
-          <div className={styles['tip-item']}>{t('AIBashGuardRules.tipMatch')}</div>
-          <div className={styles['tip-item']}>{t('AIBashGuardRules.tipAction')}</div>
-          <div className={styles['tip-item']}>{t('AIBashGuardRules.tipEnable')}</div>
+        <div className={styles['title-row']}>
+          <div className={styles['title']}>{t('AIBashGuardRules.title')}</div>
+          <YakitTag size="small" color="blue">
+            {t('AIBashGuardRules.ruleCount', { count: rows.length })}
+          </YakitTag>
         </div>
+        <div className={styles['description']}>{t('AIBashGuardRules.description')}</div>
       </div>
+
+      <YakitAlert
+        type="info"
+        showIcon
+        className={styles['tips']}
+        message={t('AIBashGuardRules.tipTitle')}
+        description={
+          <div className={styles['tip-list']}>
+            <div className={styles['tip-item']}>{t('AIBashGuardRules.tipMatch')}</div>
+            <div className={styles['tip-item']}>{t('AIBashGuardRules.tipAction')}</div>
+            <div className={styles['tip-item']}>{t('AIBashGuardRules.tipEnable')}</div>
+          </div>
+        }
+      />
+
       <div className={styles['toolbar']}>
         <div className={styles['toolbar-left']}>
           <YakitButton size="middle" onClick={onAddRule} disabled={loading}>
@@ -173,62 +222,99 @@ export const AIBashGuardRules: React.FC = React.memo(() => {
           {dirty ? <span className={styles['dirty']}>{t('AIBashGuardRules.unsaved')}</span> : null}
         </div>
       </div>
-      <div className={styles['rule-list']}>
-        {rows.length === 0 && !loading ? (
-          <YakitEmpty
-            title={t('AIBashGuardRules.emptyTitle')}
-            descriptionReactNode={t('AIBashGuardRules.emptyDescription')}
-          />
-        ) : null}
-        {rows.map((row, index) => (
-          <div className={`${styles['rule-row']} ${row.disabled ? styles['rule-row-disabled'] : ''}`} key={row.uid}>
-            <div className={styles['row-main']}>
-              <div className={styles['row-index']}>{index + 1}</div>
-              <div className={styles['row-content']}>
-                <div className={styles['row-line']}>
-                  <YakitInput
-                    className={styles['pattern-input']}
-                    value={row.pattern}
-                    placeholder={t('AIBashGuardRules.patternPlaceholder')}
-                    onChange={(e) => patchRow(row.uid, { pattern: e.target.value })}
-                    spellCheck={false}
-                  />
-                  <YakitSegmented
-                    options={actionOptions}
-                    value={row.action}
-                    onChange={(value) => patchRow(row.uid, { action: value as AIBashGuardAction })}
-                    disabled={row.disabled}
-                  />
-                </div>
-                <div className={styles['row-line']}>
+
+      <YakitSpin spinning={loading} wrapperClassName={styles['rule-list-wrapper']}>
+        <div className={styles['rule-list']}>
+          {rows.length === 0 && !loading ? (
+            <YakitEmpty
+              title={t('AIBashGuardRules.emptyTitle')}
+              descriptionReactNode={t('AIBashGuardRules.emptyDescription')}
+            />
+          ) : null}
+          {rows.map((row, index) => (
+            <YakitCard
+              key={row.uid}
+              className={classNames(styles['rule-card'], { [styles['rule-card-disabled']]: row.disabled })}
+              style={{ height: 'auto' }}
+              headClassName={styles['rule-card-head']}
+              bodyClassName={styles['rule-card-body']}
+              title={
+                <div className={styles['rule-card-title']}>
+                  <span className={styles['rule-index']}>{index + 1}</span>
                   <YakitInput
                     className={styles['name-input']}
                     value={row.name}
                     placeholder={t('AIBashGuardRules.namePlaceholder')}
                     onChange={(e) => patchRow(row.uid, { name: e.target.value })}
                   />
-                  <YakitInput
-                    value={row.description}
-                    placeholder={t('AIBashGuardRules.descriptionPlaceholder')}
-                    onChange={(e) => patchRow(row.uid, { description: e.target.value })}
-                  />
                 </div>
-                {rowErrors[row.uid] ? <div className={styles['row-error']}>{rowErrors[row.uid]}</div> : null}
-              </div>
-              <div className={styles['row-side']}>
-                <YakitSwitch
-                  size="small"
-                  checked={!row.disabled}
-                  onChange={(checked) => patchRow(row.uid, { disabled: !checked })}
+              }
+              extra={
+                <div className={styles['rule-card-extra']}>
+                  <YakitTag size="small" color={ACTION_TAG_COLOR[row.action]}>
+                    {actionLabels[row.action]}
+                  </YakitTag>
+                  <YakitSwitch
+                    size="small"
+                    checked={!row.disabled}
+                    onChange={(checked) => patchRow(row.uid, { disabled: !checked })}
+                  />
+                  <YakitPopconfirm
+                    placement="bottomRight"
+                    title={t('AIBashGuardRules.removeConfirmContent', {
+                      index: index + 1,
+                      pattern: row.pattern.trim() || t('AIBashGuardRules.untitledRule'),
+                    })}
+                    onConfirm={() => onRemoveRule(row)}
+                  >
+                    <YakitButton type="text" colors="danger" size="small">
+                      {t('AIBashGuardRules.remove')}
+                    </YakitButton>
+                  </YakitPopconfirm>
+                </div>
+              }
+            >
+              <div className={styles['field-row']}>
+                <div className={styles['field-label']}>{t('AIBashGuardRules.matchLabel')}</div>
+                <YakitSegmented
+                  options={matchOptions}
+                  value={row.match}
+                  onChange={(value) => patchRow(row.uid, { match: value as AIBashGuardMatch })}
+                  disabled={row.disabled}
                 />
-                <YakitButton type="text" colors="danger" size="small" onClick={() => onRemoveRule(row, index)}>
-                  {t('AIBashGuardRules.remove')}
-                </YakitButton>
+                <span className={styles['field-hint']}>{matchHints[row.match]}</span>
               </div>
-            </div>
-          </div>
-        ))}
-      </div>
+              <div className={styles['field-row']}>
+                <div className={styles['field-label']}>{t('AIBashGuardRules.patternLabel')}</div>
+                <YakitInput
+                  className={styles['pattern-input']}
+                  value={row.pattern}
+                  placeholder={patternPlaceholders[row.match]}
+                  onChange={(e) => patchRow(row.uid, { pattern: e.target.value })}
+                  disabled={row.disabled}
+                  spellCheck={false}
+                />
+                <YakitSegmented
+                  options={actionOptions}
+                  value={row.action}
+                  onChange={(value) => patchRow(row.uid, { action: value as AIBashGuardAction })}
+                  disabled={row.disabled}
+                />
+              </div>
+              <div className={styles['field-row']}>
+                <div className={styles['field-label']}>{t('AIBashGuardRules.descriptionLabel')}</div>
+                <YakitInput
+                  value={row.description}
+                  placeholder={t('AIBashGuardRules.descriptionPlaceholder')}
+                  onChange={(e) => patchRow(row.uid, { description: e.target.value })}
+                  disabled={row.disabled}
+                />
+              </div>
+              {rowErrors[row.uid] ? <div className={styles['row-error']}>{rowErrors[row.uid]}</div> : null}
+            </YakitCard>
+          ))}
+        </div>
+      </YakitSpin>
     </div>
   )
 })

@@ -167,18 +167,42 @@
     color: var(--Colors-Use-Neutral-Text-4-Help-text);
   }
 
-  .setting-link {
-    margin-left: 4px;
-    color: var(--Colors-Use-Main-Primary);
-    cursor: pointer;
-
-    &:hover {
-      text-decoration: underline;
-    }
-  }
-
   .setting-switch {
     padding: 0;
+  }
+
+  .custom-rule-entry {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
+    cursor: pointer;
+
+    &:hover .custom-rule-entry-title {
+      color: var(--Colors-Use-Main-Primary);
+    }
+
+    .custom-rule-entry-main {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .custom-rule-entry-title {
+      font-size: 12px;
+      line-height: 16px;
+      color: var(--Colors-Use-Neutral-Text-1-Title);
+    }
+
+    .custom-rule-entry-tip {
+      font-size: 12px;
+      line-height: 16px;
+      color: var(--Colors-Use-Neutral-Text-4-Help-text);
+    }
   }
 
   .model-context-settings {
