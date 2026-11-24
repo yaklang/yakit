@@ -199,6 +199,7 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
     AIPresetPrompt: '',
     AIPlanPrompt: '',
   })
+  const skipSecurityRuleConfirmRef = useRef(false)
 
   const onHotConfigChange = useMemoizedFn(
     (hotpatchType: AIInputEventHotPatchTypeEnum, params: AIInputEvent['Params']) => {
@@ -289,10 +290,11 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
           EnableCustomSyntaxFlowRules: customEnabled,
         }
         // 会话级启动参数随 setting 下发；同时写回全局默认，供新会话/其它入口复用。
+        onHotConfigChange(AIInputEventHotPatchTypeEnum.HotPatchType_SyntaxFlowRules, next)
         setSetting?.((v) => ({ ...v, ...next }))
         aiGlobalConfigEvent.setAIGlobalConfig(next)
       }
-      if (builtinEnabled || customEnabled) {
+      if (builtinEnabled || customEnabled || skipSecurityRuleConfirmRef.current) {
         apply()
         return
       }
@@ -357,7 +359,9 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
       AIPlanPrompt: '',
     }
     form.setFieldsValue(defaults)
+    skipSecurityRuleConfirmRef.current = true
     onValuesChange(defaults)
+    skipSecurityRuleConfirmRef.current = false
     modelContextRef.current?.reset()
   })
 

@@ -250,6 +250,7 @@ export enum AIInputEventHotPatchTypeEnum {
   HotPatchType_SyncPerceptionTrigger = 'SyncPerceptionTrigger',
   HotPatchType_EnablePlan = 'EnablePlan',
   HotPatchType_Strategy = 'ExecutionStrategy',
+  HotPatchType_SyntaxFlowRules = 'SyntaxFlowRules',
 
   HotPatchType_EnabledCapabilities = 'EnabledCapabilities',
   HotPatchType_DisabledCapabilities = 'DisabledCapabilities',
