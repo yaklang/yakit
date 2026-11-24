@@ -1,4 +1,8 @@
 @use './HTTPFuzzerPageShare.module.scss' as HTTPFuzzerPageShare;
+.build-request-popover {
+  -webkit-app-region: no-drag;
+}
+
 .http-fuzzer-body {
   display: flex;
   height: 100%;

@@ -2789,6 +2789,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
             </div>
             <YakitPopover
               trigger={'click'}
+              classNames={{ root: styles['build-request-popover'] }}
               content={
                 <div style={{ width: 400 }}>
                   <Form
