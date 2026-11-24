@@ -30,8 +30,15 @@ describe('parseStoredRules', () => {
     )
     expect(error).toBeUndefined()
     expect(rules).toEqual([
-      { name: 'deny-rm', pattern: 'rm\\s+-rf\\s+/', action: 'deny', match: 'regex', description: '禁止删根' },
-      { pattern: 'curl\\s+http://', action: 'ask', match: 'regex' },
+      {
+        name: 'deny-rm',
+        pattern: 'rm\\s+-rf\\s+/',
+        action: 'deny',
+        match: 'regex',
+        description: '禁止删根',
+        disabled: true,
+      },
+      { pattern: 'curl\\s+http://', action: 'ask', match: 'regex', disabled: true },
       { pattern: 'chmod\\s+777', action: 'warn', match: 'regex', disabled: true },
     ])
   })
@@ -44,14 +51,27 @@ describe('parseStoredRules', () => {
       ]),
     )
     expect(rules).toEqual([
-      { pattern: 'ls', action: 'deny', match: 'exact' },
-      { pattern: 'curl', action: 'ask', match: 'regex' },
+      { pattern: 'ls', action: 'deny', match: 'exact', disabled: true },
+      { pattern: 'curl', action: 'ask', match: 'regex', disabled: true },
     ])
   })
 
   it('未知动作按拦截处理，与引擎保持一致', () => {
     const { rules } = parseStoredRules(JSON.stringify([{ pattern: 'x', action: 'typo' }]))
-    expect(rules).toEqual([{ pattern: 'x', action: 'deny', match: 'exact' }])
+    expect(rules).toEqual([{ pattern: 'x', action: 'deny', match: 'exact', disabled: true }])
+  })
+
+  it('只有显式 false 的规则才视为启用', () => {
+    const { rules } = parseStoredRules(
+      JSON.stringify([
+        { pattern: 'a', action: 'deny', disabled: false },
+        { pattern: 'b', action: 'deny' },
+      ]),
+    )
+    expect(rules).toEqual([
+      { pattern: 'a', action: 'deny', match: 'exact', disabled: false },
+      { pattern: 'b', action: 'deny', match: 'exact', disabled: true },
+    ])
   })
 
   it('非法 JSON 与非数组返回错误', () => {
@@ -93,7 +113,7 @@ describe('rowsToStoredRules', () => {
       row({ name: ' ask-curl ', pattern: 'curl http://', action: 'ask', description: '外发数据', disabled: true }),
     ])
     expect(stored).toEqual([
-      { pattern: 'rm -rf /', action: 'deny', match: 'exact' },
+      { pattern: 'rm -rf /', action: 'deny', match: 'exact', disabled: true },
       {
         name: 'ask-curl',
         pattern: 'curl http://',
@@ -174,7 +194,7 @@ describe('引擎读写', () => {
       action: 'deny',
       match: 'regex',
       name: 'demo',
-      disabled: false,
+      disabled: true,
     })
     expect(rows[0].uid).toBeTruthy()
   })
@@ -192,7 +212,7 @@ describe('引擎读写', () => {
     await writeRulesToEngine([row({ pattern: ' chmod 777 ', action: 'warn' })])
     expect(invoke).toHaveBeenCalledWith('SetKey', {
       Key: AI_BASH_GUARD_REGEX_RULES_KEY,
-      Value: JSON.stringify([{ pattern: 'chmod 777', action: 'warn', match: 'exact' }]),
+      Value: JSON.stringify([{ pattern: 'chmod 777', action: 'warn', match: 'exact', disabled: true }]),
     })
   })
 

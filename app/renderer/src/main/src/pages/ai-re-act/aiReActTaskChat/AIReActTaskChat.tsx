@@ -152,7 +152,7 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
   const singleModelModeLocked = globalSingleModelMode || isChatSession(activeChat) || execute
   const allowUserPrompt = !(setting.DisallowRequireForUserPrompt ?? AIAgentSettingDefault.DisallowRequireForUserPrompt)
   // 会话配置优先，缺省回退全局默认；后端字段是 Disable 语义，UI 用正向开关展示。
-  const enableBuiltinSyntaxFlowRules = !(
+  const enableCommandSecurityRules = !(
     setting.DisableBuiltinSyntaxFlowRules ??
     aiGlobalConfig.DisableBuiltinSyntaxFlowRules ??
     AIAgentSettingDefault.DisableBuiltinSyntaxFlowRules
@@ -183,8 +183,8 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
     if (!visible) return
     form.setFieldValue('SingleModelMode', effectiveSingleModelMode)
     form.setFieldValue('AllowUserPrompt', allowUserPrompt)
-    form.setFieldValue('EnableBuiltinSyntaxFlowRules', enableBuiltinSyntaxFlowRules)
-  }, [visible, effectiveSingleModelMode, allowUserPrompt, enableBuiltinSyntaxFlowRules])
+    form.setFieldValue('EnableCommandSecurityRules', enableCommandSecurityRules)
+  }, [visible, effectiveSingleModelMode, allowUserPrompt, enableCommandSecurityRules])
 
   // 缓存弹窗打开时的文本域初始值，用于关闭时比较是否修改
   const promptSnapshotRef = useRef<{ AIPresetPrompt: string; AIPlanPrompt: string }>({
@@ -271,11 +271,9 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
         SyncPerceptionTrigger: !!changedValues.SyncPerceptionTrigger,
       }))
     }
-    if (has(changedValues, 'EnableBuiltinSyntaxFlowRules')) {
+    if (has(changedValues, 'EnableCommandSecurityRules')) {
       const next = {
-        DisableBuiltinSyntaxFlowRules: !changedValues.EnableBuiltinSyntaxFlowRules,
-        // 自定义规则不再有会话级总开关，逐条规则在 AI Bash 安全规则页控制。
-        EnableCustomSyntaxFlowRules: true,
+        DisableBuiltinSyntaxFlowRules: !changedValues.EnableCommandSecurityRules,
       }
       // 会话级启动参数随 setting 下发；同时写回全局默认，供新会话/其它入口复用。
       onHotConfigChange(AIInputEventHotPatchTypeEnum.HotPatchType_SyntaxFlowRules, next)
@@ -294,7 +292,7 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
       form.setFieldsValue({
         AllowUserPrompt: allowUserPrompt,
         SingleModelMode: effectiveSingleModelMode,
-        EnableBuiltinSyntaxFlowRules: enableBuiltinSyntaxFlowRules,
+        EnableCommandSecurityRules: enableCommandSecurityRules,
         AIPresetPrompt: aiGlobalConfig.AIPresetPrompt || '',
         AIPlanPrompt: aiGlobalConfig.AIPlanPrompt || '',
       })
@@ -318,7 +316,7 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
     const defaults = {
       SingleModelMode: singleModelModeLocked ? effectiveSingleModelMode : !!AIAgentSettingDefault.SingleModelMode,
       SyncPerceptionTrigger: !!AIAgentSettingDefault.SyncPerceptionTrigger,
-      EnableBuiltinSyntaxFlowRules: !AIAgentSettingDefault.DisableBuiltinSyntaxFlowRules,
+      EnableCommandSecurityRules: !AIAgentSettingDefault.DisableBuiltinSyntaxFlowRules,
       AIPresetPrompt: '',
       AIPlanPrompt: '',
     }
@@ -374,7 +372,7 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
               SingleModelMode: effectiveSingleModelMode,
               SyncPerceptionTrigger: setting.SyncPerceptionTrigger,
               EnablePlan: setting.EnablePlan,
-              EnableBuiltinSyntaxFlowRules: enableBuiltinSyntaxFlowRules,
+              EnableCommandSecurityRules: enableCommandSecurityRules,
               AIPresetPrompt: aiGlobalConfig.AIPresetPrompt || '',
               AIPlanPrompt: aiGlobalConfig.AIPlanPrompt || '',
             }}
@@ -455,19 +453,19 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
               <Form.Item
                 label={
                   <div className={styles['setting-label']}>
-                    <span>{t('AIReActTaskChatContent.enableBuiltinSyntaxFlowRules')}</span>
+                    <span>{t('AIReActTaskChatContent.enableCommandSecurityRules')}</span>
                     <span className={styles['setting-description']}>
-                      {t('AIReActTaskChatContent.enableBuiltinSyntaxFlowRulesTip')}
+                      {t('AIReActTaskChatContent.enableCommandSecurityRulesTip')}
                     </span>
                   </div>
                 }
-                name="EnableBuiltinSyntaxFlowRules"
+                name="EnableCommandSecurityRules"
                 layout="horizontal"
                 valuePropName="checked"
                 className={styles['inline-form-item']}
               >
                 <YakitSwitch
-                  aria-label={t('AIReActTaskChatContent.enableBuiltinSyntaxFlowRules')}
+                  aria-label={t('AIReActTaskChatContent.enableCommandSecurityRules')}
                   wrapperClassName={styles['setting-switch']}
                 />
               </Form.Item>

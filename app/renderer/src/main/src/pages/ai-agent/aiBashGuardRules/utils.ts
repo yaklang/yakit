@@ -49,7 +49,8 @@ export const createRuleRow = (row?: Partial<Omit<AIBashGuardRuleRow, 'uid'>>): A
   action: row?.action ?? 'deny',
   match: row?.match ?? 'exact',
   description: row?.description ?? '',
-  disabled: row?.disabled ?? false,
+  // 新建和缺失开关状态的规则一律默认关闭，必须逐条手动开启。
+  disabled: row?.disabled ?? true,
 })
 
 export const normalizeAction = (value: unknown): AIBashGuardAction => {
@@ -120,7 +121,8 @@ export const parseStoredRules = (raw: string): ParsedStoredRules => {
       match: normalizeMatch(record.match, pattern, action),
       ...(name ? { name } : {}),
       ...(description ? { description } : {}),
-      ...(record.disabled === true ? { disabled: true } : {}),
+      // 旧数据没有 disabled 字段时按关闭处理；只有显式 false 才表示启用。
+      disabled: record.disabled !== false,
     })
   }
   return { rules }
@@ -137,7 +139,8 @@ export const rowsToStoredRules = (rows: AIBashGuardRuleRow[]): AIBashGuardStored
       match: row.match,
       ...(name ? { name } : {}),
       ...(description ? { description } : {}),
-      ...(row.disabled ? { disabled: true } : {}),
+      // 始终写入开关状态，否则启用的行重新读取后会按默认关闭处理。
+      disabled: row.disabled,
     }
   })
 

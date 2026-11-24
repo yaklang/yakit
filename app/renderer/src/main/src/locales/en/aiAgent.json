@@ -209,14 +209,11 @@
     "singleModelModeSessionTip": "Single-model mode can only be changed before starting a new session",
     "advancedConfiguration": "Advanced configuration",
     "singleModelModeDescription": "Use only the globally configured primary model for this session when enabled",
-    "enableBuiltinSyntaxFlowRules": "Enable built-in security rules",
-    "enableBuiltinSyntaxFlowRulesTip": "Built-in rules: system-provided high/medium/low risk Bash SyntaxFlow rules, disabled by default. Changes take effect immediately.",
+    "enableCommandSecurityRules": "Enable command execution security rules",
+    "enableCommandSecurityRulesTip": "When enabled, all built-in rules apply. Custom rules stay off until you enable them individually on the AI Bash Security Rules page.",
     "customBashRulesTitle": "Custom security rules",
-    "customBashRulesTip": "Maintain commands, match modes, and actions per row. Changes take effect immediately after saving.",
-    "configureCustomSyntaxFlowRules": "Configure rules",
-    "disableAllSyntaxFlowRulesTitle": "Disable all security rules?",
-    "disableAllSyntaxFlowRulesContent": "AI Bash commands will no longer be checked by SyntaxFlow security rules. Claude Code permission JSON still applies.",
-    "disableAllSyntaxFlowRulesOk": "Disable anyway"
+    "customBashRulesTip": "Custom rules are off by default; enable them individually on the rules page.",
+    "configureCustomSyntaxFlowRules": "Configure rules"
   },
   "AIModelGlobalConfig": {
     "savedRefreshFailed": "Configuration saved, but refreshing it failed.",
@@ -1124,11 +1121,11 @@
   },
   "AIBashGuardRules": {
     "title": "AI Bash Security Rules",
-    "description": "Maintain custom rules for Bash commands run by AI. Each rule chooses its match mode and action. Saving writes the rules to the local engine, and the per-row switch controls whether a rule participates.",
+    "description": "Maintain custom rules for Bash commands run by AI. Each rule chooses its match mode and action. Saving writes the rules to the local engine; new rules are off by default and must be enabled individually.",
     "tipTitle": "How rules work",
     "tipMatch": "Exact requires the whole command to be equal; Prefix matches the command plus its arguments; Regex is matched against the full command and every sub-command split out of pipelines and && chains.",
     "tipAction": "Block: refuse to execute. Ask: confirm according to the review policy (YOLO/auto continues and records the hit). Warn: execute and surface the hit to the AI.",
-    "tipEnable": "Regex uses Go RE2 syntax; lookarounds ((?=, (?!) and friends) and backreferences (\\1) are not supported. Rows switched off are kept but never matched.",
+    "tipEnable": "Regex uses Go RE2 syntax; lookarounds ((?=, (?!) and friends) and backreferences (\\1) are not supported. New rules are off by default; switched-off rows are kept but never matched.",
     "ruleCount": "{{count}} rule(s)",
     "matchLabel": "Match",
     "matchExact": "Exact",

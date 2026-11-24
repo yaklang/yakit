@@ -169,8 +169,6 @@ export const AIAgentSettingDefault: AIAgentSetting = {
   DisableMemoryTriage: false,
   SingleModelMode: false,
   DisableBuiltinSyntaxFlowRules: true,
-  // 自定义规则没有会话级总开关，逐条规则在 AI Bash 安全规则页控制。
-  EnableCustomSyntaxFlowRules: true,
   Source: AISourceEnum.aiAgent,
 }
 
@@ -449,7 +447,6 @@ export const defaultAIGlobalConfig: AIGlobalConfig = {
   AIPresetPrompt: '',
   AIPlanPrompt: '',
   DisableBuiltinSyntaxFlowRules: true,
-  EnableCustomSyntaxFlowRules: true,
 }
 
 export const defaultExportAIForgeRequest: ExportAIForgeRequest = {

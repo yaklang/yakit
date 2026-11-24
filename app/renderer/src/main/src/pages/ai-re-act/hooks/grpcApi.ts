@@ -195,16 +195,10 @@ export interface AIStartParams {
   DisableMemoryTriage?: boolean
 
   /**
-   * 为 true 时禁用内置 SyntaxFlow 安全规则（内置高危预检与 ReAct 审查）。
+   * 为 true 时关闭命令执行安全规则（内置规则与自定义规则都不生效）。
    * @default false
    */
   DisableBuiltinSyntaxFlowRules?: boolean
-
-  /**
-   * 为 true 时把用户自定义 Bash SyntaxFlow 规则纳入安全审查与高危预检。
-   * @default false
-   */
-  EnableCustomSyntaxFlowRules?: boolean
 }
 
 /** 执行策略，对应后端 AIExecutionStrategy */

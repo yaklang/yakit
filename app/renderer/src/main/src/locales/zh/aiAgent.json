@@ -209,14 +209,11 @@
     "singleModelModeSessionTip": "单模型模式只能在新会话启动前修改",
     "advancedConfiguration": "高级配置",
     "singleModelModeDescription": "开启后本会话只使用全局配置中的主模型",
-    "enableBuiltinSyntaxFlowRules": "启用内置安全规则",
-    "enableBuiltinSyntaxFlowRulesTip": "内置规则：系统提供的 Bash 高危/中危/低危 SyntaxFlow 规则，默认关闭，修改后立即生效。",
+    "enableCommandSecurityRules": "启用命令执行安全规则",
+    "enableCommandSecurityRulesTip": "开启后内置规则全部生效；自定义规则默认关闭，需要在「AI Bash 安全规则」页逐条开启。",
     "customBashRulesTitle": "自定义安全规则",
-    "customBashRulesTip": "逐条维护命令、匹配方式与处置动作；打开配置页修改后即时生效。",
-    "configureCustomSyntaxFlowRules": "配置规则",
-    "disableAllSyntaxFlowRulesTitle": "关闭全部安全规则？",
-    "disableAllSyntaxFlowRulesContent": "关闭后 AI 执行的 Bash 命令将不再经过 SyntaxFlow 安全规则检查。Claude Code 权限 JSON 仍然独立生效。",
-    "disableAllSyntaxFlowRulesOk": "仍要关闭"
+    "customBashRulesTip": "自定义规则默认关闭，打开规则页逐条开启后才会参与匹配。",
+    "configureCustomSyntaxFlowRules": "配置规则"
   },
   "AIModelGlobalConfig": {
     "savedRefreshFailed": "配置已保存，刷新失败。",
@@ -1124,11 +1121,11 @@
   },
   "AIBashGuardRules": {
     "title": "AI Bash 安全规则",
-    "description": "逐条维护 AI 执行 Bash 命令时的自定义规则。每条规则可分别选择匹配方式和处置动作；保存即写入本机引擎，逐条开关控制是否参与匹配。",
+    "description": "逐条维护 AI 执行 Bash 命令时的自定义规则。每条规则可分别选择匹配方式和处置动作；保存即写入本机引擎，新建规则默认关闭，需逐条打开开关才会参与匹配。",
     "tipTitle": "规则说明",
     "tipMatch": "匹配方式：精确命令要求整条命令完全相等；命令前缀匹配命令本身及其参数；正则会对完整命令以及管道、&& 拆解出的每条子命令分别匹配。",
     "tipAction": "拦截：直接拒绝执行；询问：按回答模式确认（YOLO/自动模式下自动放行并记录）；警告：继续执行，同时把命中信息提示给 AI。",
-    "tipEnable": "正则使用 Go RE2 语法，不支持零宽断言（(?=、(?!) 等）与反向引用（\\1）；关闭开关的行会保留但不参与匹配。",
+    "tipEnable": "正则使用 Go RE2 语法，不支持零宽断言（(?=、(?!) 等）与反向引用（\\1）；新建规则默认关闭，关闭的行会保留但不参与匹配。",
     "ruleCount": "{{count}} 条规则",
     "matchLabel": "匹配方式",
     "matchExact": "精确命令",

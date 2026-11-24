@@ -21,8 +21,8 @@ export interface AIInputSettingFormProps {
   SyncPerceptionTrigger: boolean
   EnablePlan: boolean
   SingleModelMode: boolean
-  /** 启用内置 SyntaxFlow 安全规则（UI 正向语义，落库为 DisableBuiltinSyntaxFlowRules） */
-  EnableBuiltinSyntaxFlowRules: boolean
+  /** 启用命令执行安全规则（UI 正向语义，落库为 DisableBuiltinSyntaxFlowRules） */
+  EnableCommandSecurityRules: boolean
   /** 全局指令 */
   AIPresetPrompt: string
   /** 规划提示词 */
