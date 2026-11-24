@@ -30,6 +30,17 @@ describe('useSubPageKeepAlive', () => {
     expect(result.current).toBe(false)
   })
 
+  // 空 id 表示不纳管（RenderSubPage 里非 Web Fuzzer 路由走这里）：离开页签后不得继续保活
+  it('treats an empty id as untracked instead of keeping it alive', () => {
+    const { result, rerender } = renderHook(
+      ({ active }: { active: boolean }) => useSubPageKeepAlive({ scope: 'subpage:scan-port', id: '', active }),
+      { initialProps: { active: true } },
+    )
+    expect(result.current).toBe(true)
+    rerender({ active: false })
+    expect(result.current).toBe(false)
+  })
+
   it('evicts oldest hidden tabs when exceeding maxIdle and remounts on re-select', () => {
     const View = makeView(['t1', 't2', 't3', 't4', 't5', 't6'], 3)
     const { rerender, queryByTestId } = render(<View selected="t1" />)

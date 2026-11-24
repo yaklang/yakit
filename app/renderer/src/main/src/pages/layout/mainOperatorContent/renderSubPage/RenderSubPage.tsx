@@ -18,16 +18,17 @@ const FuzzerSequence = React.lazy(() => import('@/pages/fuzzer/FuzzerSequence/Fu
 
 const EMPTY_FUZZER_SEQUENCE_LIST: never[] = []
 
-/** 单个二级页签面板：display 切换不触发重渲染；后台超出上限后自动卸载 */
+/** 单个二级页签面板：display 切换不触发重渲染；仅 Web Fuzzer 后台超出上限后自动卸载 */
 const RenderSubPagePanel = React.memo(
   ({ route, subItem, isSelected }: { route: YakitRoute; subItem: MultipleNodeInfo; isSelected: boolean }) => {
+    const isFuzzerSubPage = route === YakitRoute.HTTPFuzzer
     const mounted = useSubPageKeepAlive({
       scope: `subpage:${route}`,
-      id: subItem.id,
+      id: isFuzzerSubPage ? subItem.id : '',
       active: isSelected,
       maxIdle: SUB_PAGE_MAX_IDLE,
     })
-    if (!mounted) return null
+    if (isFuzzerSubPage && !mounted) return null
     return (
       <div
         id={subItem.id}
