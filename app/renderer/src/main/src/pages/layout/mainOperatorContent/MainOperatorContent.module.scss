@@ -460,7 +460,18 @@
     .tab-menu-sub-expand {
       max-width: calc(100% - 32px);
       flex-wrap: wrap;
-      height: fit-content;
+      align-items: flex-start;
+      align-content: flex-start;
+      height: auto;
+      // 竖向展开最多约 10 行（32px），超出在页签栏内滚动
+      max-height: 320px;
+      overflow-x: hidden;
+      overflow-y: auto;
+
+      &::-webkit-scrollbar {
+        display: block;
+        width: 6px;
+      }
     }
 
     .render-sub-page {

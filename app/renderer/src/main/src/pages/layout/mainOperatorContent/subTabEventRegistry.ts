@@ -76,7 +76,7 @@ export function initSubTabGlobalListeners() {
   const onRemoveSecondPageByFocus = (focus: string) => dispatchActive('onRemoveSecondPageByFocus', focus)
   const onCloseCurrentPage = (id: string) => dispatchActive('onCloseCurrentPage', id)
   const onUpdateSubMenuNameFormPage = (val: string) => dispatchActive('onUpdateSubMenuNameFormPage', val)
-  const onUpdateSecondaryTabsNum = (num: number) => dispatchActive('onUpdateSecondaryTabsNum', num)
+  const onUpdateSecondaryTabsNum = (num: number) => dispatchAllHandlers('onUpdateSecondaryTabsNum', num)
   const onCloseSubPageByInfo = (res: string) => dispatchActive('onCloseSubPageByInfo', res)
   const onExpandGroupByPageId = (pageId: string) => dispatchAllHandlers('onExpandGroupByPageId', pageId)
 
