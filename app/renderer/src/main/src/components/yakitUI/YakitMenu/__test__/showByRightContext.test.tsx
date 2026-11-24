@@ -163,17 +163,17 @@ describe('showByRightContext 三级子菜单展开方向', () => {
 describe('showByRightContext 二级菜单高度', () => {
   const handles: { destroy: () => void }[] = []
 
-  const visibleRect = (top: number) => ({ top, width: 200, height: 400 }) as DOMRect
+  const visibleRect = (top: number, height = 400) => ({ top, width: 200, height }) as DOMRect
   /** display: none 时 jsdom 的 rect 全为 0 */
   const hiddenRect = { top: 0, width: 0, height: 0 } as DOMRect
 
-  const mountMenu = (top: number) => {
+  const mountMenu = (top: number, height = 400) => {
     const popup = document.createElement('div')
     popup.className = styles['show-by-right-context-submenu']
     const menu = document.createElement('ul')
     menu.className = 'ant-menu'
     popup.appendChild(menu)
-    vi.spyOn(menu, 'getBoundingClientRect').mockReturnValue(visibleRect(top))
+    vi.spyOn(menu, 'getBoundingClientRect').mockReturnValue(visibleRect(top, height))
     document.body.appendChild(popup)
     return { menu, popup }
   }
@@ -213,11 +213,49 @@ describe('showByRightContext 二级菜单高度', () => {
     expect(menu.style.maxHeight).toBe('292px')
   })
 
-  it('剩余高度不足 120 时使用 120 下限', async () => {
-    const { menu } = mountMenu(760)
+  it('剩余高度不足 120 时同步上移弹层并使用 120 下限，避免掉出视口', async () => {
+    const { menu, popup } = mountMenu(760)
+    popup.style.top = '760px'
     await flushFit()
     expect(menu.style.maxHeight).toBe('120px')
+    expect(popup.style.top).toBe('672px')
     expect(menu.style.overflowY).toBe('auto')
+  })
+
+  it('短子菜单在剩余高度内放得下时不位移，超出时只上移实际差值', async () => {
+    const { menu: fitMenu, popup: fitPopup } = mountMenu(720, 56)
+    fitPopup.style.top = '720px'
+    await flushFit()
+    expect(fitPopup.style.top).toBe('720px')
+    expect(fitMenu.style.maxHeight).toBe('72px')
+
+    const { menu: tightMenu, popup: tightPopup } = mountMenu(760, 56)
+    tightPopup.style.top = '760px'
+    await flushFit()
+    expect(tightPopup.style.top).toBe('736px')
+    expect(tightMenu.style.maxHeight).toBe('56px')
+  })
+
+  it('视口极矮时下限与 top 均不越出视口', async () => {
+    vi.stubGlobal('innerHeight', 100)
+    const { menu, popup } = mountMenu(80)
+    popup.style.top = '80px'
+    await flushFit()
+    expect(menu.style.maxHeight).toBe('84px')
+    expect(popup.style.top).toBe('8px')
+  })
+
+  it('滚动重对齐覆盖 top 后按新位置重新上移', async () => {
+    const { popup } = mountMenu(760)
+    popup.style.top = '760px'
+    await flushFit()
+    expect(popup.style.top).toBe('672px')
+
+    // rc-trigger 的滚动对齐会把 top 写回贴住菜单项，下一帧须重新上移
+    popup.style.top = '760px'
+    window.dispatchEvent(new Event('scroll'))
+    await flushFit()
+    expect(popup.style.top).toBe('672px')
   })
 
   it('子菜单收起后不写入视口高度，重新展开按新位置重算', async () => {

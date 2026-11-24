@@ -194,6 +194,8 @@ const RightContext: React.FC<RightContextProp> = memo((props) => {
   }, [renderSeq])
 
   useEffect(() => {
+    const SUBMENU_MIN_HEIGHT = 120
+    const SUBMENU_VIEWPORT_GAP = 8
     const fitSubmenu = () => {
       document
         .querySelectorAll<HTMLElement>(`.${styles['show-by-right-context-submenu']} .ant-menu`)
@@ -201,17 +203,44 @@ const RightContext: React.FC<RightContextProp> = memo((props) => {
           const rect = menu.getBoundingClientRect()
           // 收起的子菜单是 display: none，rect 全为 0；此时写入会得到整个视口的高度，展开后反而不再滚动
           if (rect.width <= 0 || rect.height <= 0) return
-          menu.style.maxHeight = `${Math.max(120, Math.floor(window.innerHeight - rect.top - 8))}px`
+          const remaining = Math.floor(window.innerHeight - rect.top - SUBMENU_VIEWPORT_GAP)
+          const minHeight = Math.max(0, Math.min(SUBMENU_MIN_HEIGHT, window.innerHeight - SUBMENU_VIEWPORT_GAP * 2))
+          const neededHeight = Math.min(minHeight, Math.ceil(menu.scrollHeight || rect.height))
+          // 仅当真实内容放不下时才上移超出部分，短子菜单放得下时不位移
+          if (remaining < neededHeight) {
+            const popup = menu.closest<HTMLElement>(`.${styles['show-by-right-context-submenu']}`)
+            if (popup) {
+              const currentTop = Number.parseFloat(popup.style.top)
+              const baseTop = Number.isFinite(currentTop) ? currentTop : rect.top
+              popup.style.top = `${Math.max(SUBMENU_VIEWPORT_GAP, baseTop - (neededHeight - remaining))}px`
+            }
+            menu.style.maxHeight = `${neededHeight}px`
+          } else {
+            menu.style.maxHeight = `${Math.max(0, remaining)}px`
+          }
           menu.style.overflowY = 'auto'
         })
     }
-    const observer = new MutationObserver(() => requestAnimationFrame(fitSubmenu))
+    /** 同一帧内的 class 变化与滚动只重算一次 */
+    let fitFrame = 0
+    const scheduleFit = () => {
+      if (fitFrame) return
+      fitFrame = requestAnimationFrame(() => {
+        fitFrame = 0
+        fitSubmenu()
+      })
+    }
+    const observer = new MutationObserver(scheduleFit)
     // 子菜单展开/收起只切换 ant-menu-hidden class、不增删子节点，只监听 childList 会让重新展开时沿用收起时的高度
     observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] })
     window.addEventListener('resize', fitSubmenu)
+    // 滚动时 rc-trigger 会在微任务里重新对齐并写回 top，须等对齐完成后再在下一帧重算；capture 才能收到内部滚动容器的 scroll
+    window.addEventListener('scroll', scheduleFit, true)
     return () => {
       observer.disconnect()
       window.removeEventListener('resize', fitSubmenu)
+      window.removeEventListener('scroll', scheduleFit, true)
+      cancelAnimationFrame(fitFrame)
     }
   }, [renderSeq])
 
