@@ -18,6 +18,7 @@ vi.mock('antd', async (importOriginal) => {
 })
 
 import { showByRightContext } from '../showByRightContext'
+import styles from '../showByRightContext.module.scss'
 import type { YakitMenuProp } from '../YakitMenu'
 
 const menuProps: YakitMenuProp = { data: [{ key: 'item', label: '菜单项' }], width: 128 }
@@ -100,15 +101,17 @@ describe('showByRightContext 三级子菜单展开方向', () => {
     })
   }
 
-  /** 注入的子菜单 placements；null 表示未注入（保持向右展开） */
-  const submenuPlacements = (): Record<string, { points: string[] }> | null => {
+  /** 注入的子菜单 placements；向右展开的锚点是 tl/tr */
+  const submenuPlacements = (): Record<string, { points: string[]; overflow?: { adjustY?: boolean } }> | null => {
     const raw = document.querySelector('[data-testid="yakit-menu"]')?.getAttribute('data-builtin-placements') || ''
     return raw ? JSON.parse(raw) : null
   }
 
-  it('右侧空间充足时保持向右展开', async () => {
+  it('右侧空间充足时保持向右展开，且不会被顶到窗口顶部', async () => {
     await renderMenu({ innerWidth: 1920, left: 100, right: 300, width: 200 })
-    expect(submenuPlacements()).toBeNull()
+    const placements = submenuPlacements()
+    expect(placements?.rightTop?.points).toEqual(['tl', 'tr'])
+    expect(placements?.rightTop?.overflow?.adjustY).toBe(false)
   })
 
   it('右侧不足且左侧充足时子菜单优先向左展开', async () => {
@@ -125,19 +128,19 @@ describe('showByRightContext 三级子菜单展开方向', () => {
 
   it('两侧都不足时选剩余空间更大的一侧：右侧大则保持向右', async () => {
     await renderMenu({ innerWidth: 500, left: 10, right: 410, width: 400 })
-    expect(submenuPlacements()).toBeNull()
+    expect(submenuPlacements()?.rightTop?.points).toEqual(['tl', 'tr'])
   })
 
   it('三级菜单：右侧足够放下整条链时保持向右', async () => {
     // 右侧剩 1620，一、二、三级都能向右展开
     await renderMenu({ innerWidth: 1920, left: 100, right: 300, width: 200 }, deepMenuProps)
-    expect(submenuPlacements()).toBeNull()
+    expect(submenuPlacements()?.rightTop?.points).toEqual(['tl', 'tr'])
   })
 
   it('连续右键复用已有菜单时按新位置重新判定展开方向', async () => {
     // 第一次：右侧空间充足，保持向右
     await renderMenu({ innerWidth: 1920, left: 100, right: 300, width: 200 })
-    expect(submenuPlacements()).toBeNull()
+    expect(submenuPlacements()?.rightTop?.points).toEqual(['tl', 'tr'])
 
     // 第二次：复用同一 div（带非零高度才会走同步定位分支），换到右侧不足、左侧充足的布局，应重新判定为向左
     stubLayout({ innerWidth: 1000, left: 800, right: 1000, width: 200, height: 100 })
@@ -154,5 +157,84 @@ describe('showByRightContext 三级子菜单展开方向', () => {
     const contextRoot = document.getElementById('yakit-right-context')
     expect(contextRoot?.style.left).toBe('94px')
     expect(contextRoot?.style.top).toBe('194px')
+  })
+})
+
+describe('showByRightContext 二级菜单高度', () => {
+  const handles: { destroy: () => void }[] = []
+
+  const visibleRect = (top: number) => ({ top, width: 200, height: 400 }) as DOMRect
+  /** display: none 时 jsdom 的 rect 全为 0 */
+  const hiddenRect = { top: 0, width: 0, height: 0 } as DOMRect
+
+  const mountMenu = (top: number) => {
+    const popup = document.createElement('div')
+    popup.className = styles['show-by-right-context-submenu']
+    const menu = document.createElement('ul')
+    menu.className = 'ant-menu'
+    popup.appendChild(menu)
+    vi.spyOn(menu, 'getBoundingClientRect').mockReturnValue(visibleRect(top))
+    document.body.appendChild(popup)
+    return { menu, popup }
+  }
+
+  const flushFit = async () => {
+    // 跨两帧：observer 回调里再排的 rAF 也要执行完
+    await act(async () => {
+      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve(undefined))))
+    })
+  }
+
+  beforeEach(async () => {
+    vi.stubGlobal('innerHeight', 800)
+    handles.push(showByRightContext(menuProps, 10, 20))
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0))
+    })
+  })
+
+  afterEach(() => {
+    handles.splice(0).forEach((handle) => handle.destroy())
+    vi.unstubAllGlobals()
+    vi.restoreAllMocks()
+    document.body.innerHTML = ''
+  })
+
+  it('按当前项到窗口底部的剩余高度滚动，窗口变化后重算', async () => {
+    const { menu } = mountMenu(200)
+    await flushFit()
+    expect(menu.style.maxHeight).toBe('592px')
+    expect(menu.style.overflowY).toBe('auto')
+
+    vi.stubGlobal('innerHeight', 500)
+    await act(async () => {
+      window.dispatchEvent(new Event('resize'))
+    })
+    expect(menu.style.maxHeight).toBe('292px')
+  })
+
+  it('剩余高度不足 120 时使用 120 下限', async () => {
+    const { menu } = mountMenu(760)
+    await flushFit()
+    expect(menu.style.maxHeight).toBe('120px')
+    expect(menu.style.overflowY).toBe('auto')
+  })
+
+  it('子菜单收起后不写入视口高度，重新展开按新位置重算', async () => {
+    const { menu, popup } = mountMenu(200)
+    await flushFit()
+    expect(menu.style.maxHeight).toBe('592px')
+
+    // 收起：rc-menu 的 removeOnLeave 为 false，弹层留在 DOM 里只切换 ant-menu-hidden，此时 rect 全为 0
+    vi.mocked(menu.getBoundingClientRect).mockReturnValue(hiddenRect)
+    popup.classList.add('ant-menu-hidden')
+    await flushFit()
+    expect(menu.style.maxHeight).toBe('592px')
+
+    // 重新展开：位置变化后按新 top 重算，不沿用收起时的值
+    vi.mocked(menu.getBoundingClientRect).mockReturnValue(visibleRect(400))
+    popup.classList.remove('ant-menu-hidden')
+    await flushFit()
+    expect(menu.style.maxHeight).toBe('392px')
   })
 })

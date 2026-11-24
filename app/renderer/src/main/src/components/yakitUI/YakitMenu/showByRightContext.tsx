@@ -13,18 +13,16 @@ const roundDown = (value: number) => {
 /**
  * antd/rc-menu 垂直子菜单默认 placement 为 rightTop（向右展开）。
  * 右侧放得下时保持向右；右侧不够且左侧放得下时，把 right* 锚点改成向左优先。
- * 两侧都不够时再选剩余空间更大的一侧。adjustX 只会平移、不会切换 placement。
- * 各级实际宽度并不一致，这里用根菜单宽度估算子菜单所需空间，再决定整棵往哪边展开。
+ * 两侧都不够时再选剩余空间更大的一侧。adjustY 关闭，超长部分在菜单内滚动。
  */
+const submenuOverflow = { adjustX: true, adjustY: false }
 const preferLeftSubmenuPlacements: NonNullable<YakitMenuProp['builtinPlacements']> = {
-  rightTop: {
-    points: ['tr', 'tl'],
-    overflow: { adjustX: true, adjustY: true },
-  },
-  rightBottom: {
-    points: ['br', 'bl'],
-    overflow: { adjustX: true, adjustY: true },
-  },
+  rightTop: { points: ['tr', 'tl'], overflow: submenuOverflow },
+  rightBottom: { points: ['br', 'bl'], overflow: submenuOverflow },
+}
+const openRightSubmenuPlacements: NonNullable<YakitMenuProp['builtinPlacements']> = {
+  rightTop: { points: ['tl', 'tr'], overflow: submenuOverflow },
+  rightBottom: { points: ['bl', 'br'], overflow: submenuOverflow },
 }
 
 const genX = (client, coordinate, target) => {
@@ -195,15 +193,37 @@ const RightContext: React.FC<RightContextProp> = memo((props) => {
     }
   }, [renderSeq])
 
+  useEffect(() => {
+    const fitSubmenu = () => {
+      document
+        .querySelectorAll<HTMLElement>(`.${styles['show-by-right-context-submenu']} .ant-menu`)
+        .forEach((menu) => {
+          const rect = menu.getBoundingClientRect()
+          // 收起的子菜单是 display: none，rect 全为 0；此时写入会得到整个视口的高度，展开后反而不再滚动
+          if (rect.width <= 0 || rect.height <= 0) return
+          menu.style.maxHeight = `${Math.max(120, Math.floor(window.innerHeight - rect.top - 8))}px`
+          menu.style.overflowY = 'auto'
+        })
+    }
+    const observer = new MutationObserver(() => requestAnimationFrame(fitSubmenu))
+    // 子菜单展开/收起只切换 ant-menu-hidden class、不增删子节点，只监听 childList 会让重新展开时沿用收起时的高度
+    observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] })
+    window.addEventListener('resize', fitSubmenu)
+    return () => {
+      observer.disconnect()
+      window.removeEventListener('resize', fitSubmenu)
+    }
+  }, [renderSeq])
+
   const menuProps = data as YakitMenuProp
 
-  const builtinPlacements = useMemo(() => {
-    if (!preferSubmenuLeft) return menuProps.builtinPlacements
-    return {
+  const builtinPlacements = useMemo(
+    () => ({
       ...menuProps.builtinPlacements,
-      ...preferLeftSubmenuPlacements,
-    }
-  }, [menuProps.builtinPlacements, preferSubmenuLeft])
+      ...(preferSubmenuLeft ? preferLeftSubmenuPlacements : openRightSubmenuPlacements),
+    }),
+    [menuProps.builtinPlacements, preferSubmenuLeft],
+  )
 
   return (
     <div className={styles['show-by-right-context-wrapper']} ref={wrapperRef}>
