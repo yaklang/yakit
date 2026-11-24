@@ -10,6 +10,7 @@ import { useUploadInfoByEnpriTrace } from '@/components/layout/utils'
 import { JSONParseLog } from '@/utils/tool'
 import { SystemInfo } from '@/constants/hardware'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import type { FALSE } from 'sass'
 const { ipcRenderer } = window.require('electron')
 
 /** 构建期配置：默认需要 License 验证；CI 可设为 false 跳过校验流程 */
@@ -24,7 +25,7 @@ const EnterpriseJudgeLogin: React.FC<EnterpriseJudgeLoginProps> = (props) => {
   const { setJudgeLicense, setJudgeLogin } = props
   // License
   // const [licenseVerified, setLicenseVerified] = useState<boolean>(false)
-  const [activateLicense, setActivateLicense] = useState<boolean>(!requireEnterpriseLicense || !!SystemInfo.isDev)
+  const [activateLicense, setActivateLicense] = useState<boolean>(false)
   const [loading, setLoading] = useState<boolean>(requireEnterpriseLicense)
   const [licensePageLoading, setLicensePageLoading] = useState<boolean>(false)
   useEffect(() => {
@@ -77,11 +78,12 @@ const EnterpriseJudgeLogin: React.FC<EnterpriseJudgeLoginProps> = (props) => {
         CompanyVersion: isEnpriTraceAgent() ? 'EnpriTraceAgent' : 'EnpriTrace',
       })
       .then((e) => {
-        setActivateLicense(true)
+        setJudgeLicense(false)
+        // setActivateLicense(true)
         setRemoteValue('LICENSE_ACTIVATION', JSON.stringify(LicenseActivation))
-        if (isCache) {
-          judgeLogin()
-        }
+        // if (isCache) {
+        //   judgeLogin()
+        // }
       })
       .catch((e) => {
         info(t('EnterpriseJudgeLogin.reActivateNotice'))
