@@ -92,7 +92,7 @@ describe('PCAP main-process transport', () => {
   })
 })
 
-describe('extended legacy protobuf contract', () => {
+describe('PCAP protobuf contract', () => {
   const loader = require('@grpc/proto-loader')
   const grpc = require('@grpc/grpc-js')
   const definition = loader.loadSync(path.resolve('app/protos/grpc.proto'), {
@@ -103,23 +103,29 @@ describe('extended legacy protobuf contract', () => {
   })
   const service = grpc.loadPackageDefinition(definition).ypb.Yak.service
 
-  it('keeps old wire numbers and round-trips exact packet IDs, nanoseconds and Full details', () => {
+  it('keeps the deprecated traffic packet wire shape', () => {
     const method = service.QueryTrafficPacket
     const request = {
-      DatasetID: 'dataset',
-      Full: true,
-      Id: '9007199254740993',
+      Pagination: { Page: '1', Limit: '100', OrderBy: 'id', Order: 'asc', AfterId: '24' },
+      TimestampNow: '1700000000123456789',
+      SessionId: 'session',
+      LinkLayerTypes: 'ethernet',
+      NetworkLayerTypes: 'ipv4',
+      TransportLayerTypes: 'tcp',
+      ApplicationLayerTypes: 'http',
+      SrcIP: '10.0.0.1',
+      DstIP: '10.0.0.2',
       SrcPort: '0',
-      StartTimestampNS: '1700000000123456789',
+      DstPort: '80',
+      FromId: '9007199254740993',
     }
     expect(method.requestDeserialize(method.requestSerialize(request))).toMatchObject(request)
     expect([...method.requestSerialize({ FromId: '1' })]).toEqual([96, 1])
     const packet = {
       Id: '9007199254740993',
-      TimestampNS: '1700000000123456789',
-      CapturedLength: '478',
       Raw: Buffer.from([0, 255]),
-      Details: '{"Result":[],"Messages":[]}',
+      Protocol: 'http',
+      Info: 'GET / HTTP/1.1',
     }
     expect(
       method.responseDeserialize(
@@ -142,7 +148,13 @@ describe('extended legacy protobuf contract', () => {
     const query = service.QueryPCAPPackets
     const request = {
       DatasetID: 'dataset',
-      Filter: { SourceIP: ['10.0.0.1'], SourcePort: [0], ApplicationLayerTypes: ['http'] },
+      Filter: {
+        SourceIP: ['10.0.0.1'],
+        SourcePort: [0],
+        ApplicationLayerTypes: ['http'],
+        StartTimestampNS: '1700000000123456789',
+        EndTimestampNS: '1700000001123456789',
+      },
       Pagination: { Limit: 100, AfterId: '9007199254740993' },
     }
     expect(query.requestDeserialize(query.requestSerialize(request))).toMatchObject({
