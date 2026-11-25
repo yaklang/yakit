@@ -1,5 +1,5 @@
 import type { FC, KeyboardEvent } from 'react'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useCountDown, useCreation, useInterval } from 'ahooks'
 import { useStore } from 'zustand'
 import { ChevronDownOutlined } from '@yakit-libs/yakit-ui-icons/outline'
@@ -9,9 +9,8 @@ import YakitStripedProgress from '@/components/YakitStripedProgress/YakitStriped
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useCurrentRawData, useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
-import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
-import { AIGoalTimeAction, AIInputEventHotPatchTypeEnum } from '@/pages/ai-re-act/hooks/grpcApi'
-import type { AIGoalTimePatch } from '@/pages/ai-re-act/hooks/grpcApi'
+import GoalTimeAdjustments from './GoalTimeAdjustments/GoalTimeAdjustments'
+import RunningGoalConditions from './RunningGoalConditions/RunningGoalConditions'
 import type { AIAgentChatData } from '@/pages/ai-agent/type/aiChat'
 import type { AIRunningStatusProps } from './type'
 import panelStyles from '../AIContextUsage/AIContextUsage.module.scss'
@@ -60,7 +59,8 @@ const AIRunningStatus: FC<AIRunningStatusProps> = ({ className }) => {
   const round = useStore(store, (state) => state.sessionSnapshot?.current_round) ?? '—'
   const agentPolicySnapshotUpdate = useStore(store, (state) => state.agentPolicySnapshotUpdate)
   const timing = useCreation(() => readGoalTiming(rawData), [rawData, agentPolicySnapshotUpdate])
-  if (execution?.status !== 'processing' || timing.limit === 0) return null
+  const hideForMode = timing.mode === 'not_started' || timing.mode === 'disabled'
+  if (execution?.status !== 'processing' || timing.limit === 0 || hideForMode) return null
 
   return (
     <RunningStatusButton
@@ -84,8 +84,8 @@ const RunningStatusButton = ({
 }) => {
   const { t } = useI18nNamespaces(['aiAgent'])
   const sessionId = useCurrentSessionId()
-  const { onSend } = useAIAgentDispatcher()
   const [open, setOpen] = useState(false)
+  const submitConditions = useRef<(() => void) | null>(null)
   const { limit, mode, targetDate } = timing
   const hasLimit = limit !== undefined && limit > 0
   const [remainingMs] = useCountDown({ targetDate })
@@ -104,41 +104,17 @@ const RunningStatusButton = ({
   const remainingLabel = t('AIRunningStatus.remaining')
   const roundLabel = t('AIRunningStatus.round', { round })
   const label = t('AIRunningStatus.label', { round, elapsed, duration })
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen && open) {
+      submitConditions.current?.()
+      submitConditions.current = null
+    }
+    setOpen(nextOpen)
+  }
   const handleKeyDown = (event: KeyboardEvent) => {
     event.stopPropagation()
-    if (event.key === 'Escape') setOpen(false)
+    if (event.key === 'Escape') handleOpenChange(false)
   }
-  const sendGoalTimePatch = (patch: AIGoalTimePatch) => {
-    if (!sessionId) return
-    onSend({
-      token: sessionId,
-      type: '',
-      params: {
-        IsConfigHotpatch: true,
-        HotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_GoalTime,
-        GoalTimePatch: patch,
-      },
-    })
-  }
-  const adjustments = [
-    {
-      label: t('AIRunningStatus.extend'),
-      options: [
-        { label: '+15m', patch: { Action: AIGoalTimeAction.Extend, ExtendSeconds: 900 } },
-        { label: '+30m', patch: { Action: AIGoalTimeAction.Extend, ExtendSeconds: 1800 } },
-        { label: '+1h', patch: { Action: AIGoalTimeAction.Extend, ExtendSeconds: 3600 } },
-        { label: t('AIRunningStatus.unlimited'), patch: { Action: AIGoalTimeAction.NeverEnding } },
-      ],
-    },
-    {
-      label: t('AIRunningStatus.shorten'),
-      options: [
-        { label: '-15m', patch: { Action: AIGoalTimeAction.Extend, ExtendSeconds: -900 } },
-        { label: t('AIRunningStatus.stopAfterRound'), patch: { Action: AIGoalTimeAction.Disable } },
-      ],
-    },
-  ]
-
   return (
     <span role="status" aria-label={label} className={className}>
       <YakitPopover
@@ -146,7 +122,7 @@ const RunningStatusButton = ({
         placement="top"
         arrow={false}
         open={open}
-        onOpenChange={setOpen}
+        onOpenChange={handleOpenChange}
         destroyOnHidden
         classNames={{ root: panelStyles.popoverRoot }}
         content={
@@ -170,14 +146,7 @@ const RunningStatusButton = ({
                     )}
                   </>
                 )}
-                {mode === 'not_started' && (
-                  <>
-                    {' '}
-                    · {t('AIRunningStatus.target')} {duration} · {t('AIRunningStatus.notStarted')}
-                  </>
-                )}
                 {mode === 'never_ending' && <> · {t('AIRunningStatus.infinite')}</>}
-                {mode === 'disabled' && <> · {t('AIRunningStatus.noTimeLimit')}</>}
               </div>
               {remaining !== undefined && hasLimit && used !== undefined && (
                 <YakitStripedProgress
@@ -189,27 +158,11 @@ const RunningStatusButton = ({
               )}
             </div>
             <div className={panelStyles.settings}>
-              <div className={styles.adjustments}>
-                <div className={styles.hint}>{t('AIRunningStatus.adjustmentHint')}</div>
-                {adjustments.map((group) => (
-                  <div className={styles.row} role="group" aria-label={group.label} key={group.label}>
-                    <span>{group.label}</span>
-                    <div className={styles.options}>
-                      {group.options.map(({ label, patch }) => (
-                        <YakitButton
-                          key={label}
-                          type="secondary2"
-                          radius={9999}
-                          className={styles.option}
-                          onClick={() => sendGoalTimePatch(patch)}
-                        >
-                          {label}
-                        </YakitButton>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
+              {mode === 'never_ending' ? (
+                open && <RunningGoalConditions key={sessionId} ref={submitConditions} sessionId={sessionId} />
+              ) : (
+                <GoalTimeAdjustments sessionId={sessionId} />
+              )}
             </div>
           </div>
         }

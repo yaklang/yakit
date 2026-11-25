@@ -4,13 +4,13 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import type { GoalDurationInputsProps } from './type'
 import styles from './GoalDurationInputs.module.scss'
 
-const GoalDurationInputs: FC<GoalDurationInputsProps> = ({ seconds, onChange }) => {
+const GoalDurationInputs: FC<GoalDurationInputsProps> = ({ seconds, onChange, minSeconds = 60 }) => {
   const { t } = useI18nNamespaces(['aiAgent'])
   const hours = Math.floor(seconds / 3600)
   const minutes = Math.floor((seconds % 3600) / 60)
 
   const updateDuration = (nextHours: number, nextMinutes: number) => {
-    const nextSeconds = Math.max(60, nextHours * 3600 + nextMinutes * 60)
+    const nextSeconds = Math.max(minSeconds, nextHours * 3600 + nextMinutes * 60)
     if (Number.isSafeInteger(nextSeconds)) onChange(nextSeconds)
   }
 

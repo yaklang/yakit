@@ -11,7 +11,6 @@ import {
 } from '@yakit-libs/yakit-ui-icons/outline'
 import classNames from 'classnames'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInputNumber'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import { MODE_LABEL_KEY, ModeOptionList } from './aiRunModeConstants'
@@ -19,14 +18,13 @@ import { useAIRunMode } from './useAIRunMode'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { clearGoalStrategy } from '../defaultConstant'
 import {
-  GOAL_DURATION_OPTIONS,
-  getGoalDurationDisplayLabel,
   goalDurationKeyToSeconds,
   goalDurationSecondsToKey,
   isGoalDurationPresetKey,
 } from '../components/aiMilkdownInput/constants'
 import { deriveGoalTagFromStrategy } from '../components/aiMilkdownInput/aiMilkdownModeSlash/store/goalTag'
-import GoalDurationInputs from './GoalDurationInputs/GoalDurationInputs'
+import GoalStopConditionFields from './GoalStopConditionFields/GoalStopConditionFields'
+import type { GoalCondition } from './GoalStopConditionFields/type'
 import styles from './AIRunModeSelect.module.scss'
 
 export type AIRunModeMenuProps = {
@@ -34,14 +32,6 @@ export type AIRunModeMenuProps = {
   /** 嵌入输入框弹层时铺满容器宽度 */
   fullWidth?: boolean
 }
-
-const goalConditions = [
-  { value: 'iterations', label: 'AIMilkdownModeSlash.minIterations' },
-  { value: 'acceptance', label: 'AIMilkdownModeSlash.acceptance' },
-  { value: 'duration', label: 'AIMilkdownModeSlash.duration' },
-] as const
-
-type GoalCondition = (typeof goalConditions)[number]['value']
 
 /** Plan / Multi-Agent / Goal 菜单体：按钮下拉与输入框 / 弹层复用 */
 export const AIRunModeMenu: FC<AIRunModeMenuProps> = ({ fullWidth, open = true }) => {
@@ -136,89 +126,6 @@ export const AIRunModeMenu: FC<AIRunModeMenuProps> = ({ fullWidth, open = true }
     onSetStrategy({ GoalDurationSeconds: custom ? 3600 : goalDurationKeyToSeconds(value) }, true)
   }
 
-  const renderGoalConfiguration = () => (
-    <div className={styles['mode-configuration']}>
-      <div className={styles['goal-choice-row']}>
-        <span>{t('AIRunModeSelect.stopCondition')}</span>
-        <div role="group" aria-label={t('AIRunModeSelect.stopCondition')} className={styles['goal-pills']}>
-          {goalConditions.map(({ value, label }) => {
-            const selected = value === goalMode
-            return (
-              <YakitButton
-                key={value}
-                type={selected ? 'primary' : 'secondary2'}
-                radius="9999px"
-                aria-pressed={selected}
-                onClick={() => {
-                  if (!selected) applyGoalMode(value)
-                }}
-              >
-                {t(label)}
-              </YakitButton>
-            )
-          })}
-        </div>
-      </div>
-      <div className={styles['goal-divider']} />
-      {goalMode === 'iterations' && (
-        <div className={styles['configuration-row']}>
-          <span>{t('AIMilkdownModeSlash.minIterations')}</span>
-          <YakitInputNumber
-            aria-label={t('AIMilkdownModeSlash.minIterations')}
-            className={styles['configuration-control']}
-            value={Math.max(1, goalMinIterations)}
-            min={1}
-            precision={0}
-            onChange={(value) => {
-              if (value !== null) onSetStrategy({ GoalMinIterations: Math.max(1, Number(value)) })
-            }}
-          />
-        </div>
-      )}
-      {goalMode === 'acceptance' && (
-        <YakitInput.TextArea
-          className={styles['goal-acceptance']}
-          aria-label={t('AIMilkdownModeSlash.acceptance')}
-          placeholder={t('AIMilkdownModeSlash.acceptancePlaceholder')}
-          value={acceptanceDraft ?? goalAcceptanceCriteria}
-          onChange={(event) => {
-            setAcceptanceSelected(true)
-            setAcceptanceDraft(event.target.value)
-          }}
-          rows={3}
-          isShowResize={false}
-        />
-      )}
-      {goalMode === 'duration' && (
-        <>
-          <div className={styles['goal-choice-row']}>
-            <span>{t('AIMilkdownModeSlash.duration')}</span>
-            <div role="group" aria-label={t('AIMilkdownModeSlash.duration')} className={styles['goal-pills']}>
-              {GOAL_DURATION_OPTIONS.map((key) => (
-                <YakitButton
-                  key={key}
-                  type={selectedDurationKey === key ? 'primary' : 'secondary2'}
-                  radius="9999px"
-                  aria-pressed={selectedDurationKey === key}
-                  onClick={() => onPickDuration(key)}
-                >
-                  {getGoalDurationDisplayLabel(key, t)}
-                </YakitButton>
-              ))}
-            </div>
-          </div>
-          {showCustomDuration && (
-            <div className={styles['duration-input-row']}>
-              <GoalDurationInputs
-                seconds={goalDurationSeconds > 0 ? goalDurationSeconds : 3600}
-                onChange={(seconds) => onSetStrategy({ GoalDurationSeconds: seconds }, true)}
-              />
-            </div>
-          )}
-        </>
-      )}
-    </div>
-  )
 
   return (
     <div
@@ -298,7 +205,23 @@ export const AIRunModeMenu: FC<AIRunModeMenuProps> = ({ fullWidth, open = true }
                   </div>
                 </div>
               )}
-              {checked && item.key === 'goal' && renderGoalConfiguration()}
+              {checked && item.key === 'goal' && (
+                <GoalStopConditionFields
+                  condition={goalMode}
+                  onConditionChange={applyGoalMode}
+                  iterations={goalMinIterations}
+                  onIterationsChange={(value) => onSetStrategy({ GoalMinIterations: value })}
+                  acceptance={acceptanceDraft ?? goalAcceptanceCriteria}
+                  onAcceptanceChange={(value) => {
+                    setAcceptanceSelected(true)
+                    setAcceptanceDraft(value)
+                  }}
+                  durationSeconds={goalDurationSeconds}
+                  customDuration={showCustomDuration}
+                  onDurationPick={onPickDuration}
+                  onCustomDurationChange={(seconds) => onSetStrategy({ GoalDurationSeconds: seconds }, true)}
+                />
+              )}
             </Fragment>
           )
         })}

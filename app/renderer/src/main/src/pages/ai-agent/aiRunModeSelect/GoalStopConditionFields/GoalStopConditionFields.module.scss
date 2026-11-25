@@ -1,0 +1,31 @@
+.mode-configuration {
+  composes: mode-configuration from '../AIRunModeSelect.module.scss';
+}
+
+.goal-choice-row {
+  composes: goal-choice-row from '../AIRunModeSelect.module.scss';
+}
+
+.goal-pills {
+  composes: goal-pills from '../AIRunModeSelect.module.scss';
+}
+
+.goal-divider {
+  composes: goal-divider from '../AIRunModeSelect.module.scss';
+}
+
+.configuration-row {
+  composes: configuration-row from '../AIRunModeSelect.module.scss';
+}
+
+.configuration-control {
+  composes: configuration-control from '../AIRunModeSelect.module.scss';
+}
+
+.goal-acceptance {
+  composes: goal-acceptance from '../AIRunModeSelect.module.scss';
+}
+
+.duration-input-row {
+  composes: duration-input-row from '../AIRunModeSelect.module.scss';
+}

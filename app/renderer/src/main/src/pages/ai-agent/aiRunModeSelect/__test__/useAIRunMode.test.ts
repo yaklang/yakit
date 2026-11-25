@@ -61,6 +61,10 @@ vi.mock('@/pages/ai-agent/useContext/useDispatcher', () => ({
 
 vi.mock('@/pages/ai-re-act/hooks/useCurrentDataBySession', () => ({
   useCurrentStore: () => ({}),
+  useCurrentRawData: () => ({
+    agentPolicySnapshot: { server_time: 1795413600 },
+    agentPolicySnapshotReceivedAt: Date.now() / 1000 - 30,
+  }),
 }))
 
 vi.mock('zustand', () => ({
@@ -207,8 +211,25 @@ describe('useAIRunMode', () => {
     })
   })
 
+  it('修改持续时间时在同一条策略请求中设置服务端截止时间', () => {
+    executeRef.value = true
+    const { result } = renderHook(() => useAIRunMode())
+    act(() => result.current.onSetStrategy({ GoalDurationSeconds: 1800 }, true))
+    expect(onSend).toHaveBeenCalledExactlyOnceWith({
+      token: 'token-1',
+      type: '',
+      params: {
+        IsConfigHotpatch: true,
+        HotpatchType: 'ExecutionStrategy',
+        Params: { Strategy: { ...settingRef.value.Strategy, GoalDurationSeconds: 1800 } },
+        GoalTimePatch: { Action: 'AI_GOAL_TIME_ACTION_SET_DEADLINE', DeadlineUnix: 1795415430 },
+      },
+    })
+  })
+
   it('运行中切换 Strategy 会发送 ExecutionStrategy hotpatch', () => {
     executeRef.value = true
+    settingRef.value.Strategy.GoalDurationSeconds = 3600
     const { result } = renderHook(() => useAIRunMode())
 
     expect(result.current).not.toHaveProperty('isModeLocked')
@@ -218,6 +239,7 @@ describe('useAIRunMode', () => {
     })
 
     expect(onSend).toHaveBeenCalledTimes(1)
+    expect(onSend.mock.calls[0][0].params).not.toHaveProperty('GoalTimePatch')
     expect(onSend.mock.calls[0][0]).toMatchObject({
       token: 'token-1',
       type: '',

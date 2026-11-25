@@ -4,9 +4,10 @@ import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
 import { AIInputEventHotPatchTypeEnum } from '@/pages/ai-re-act/hooks/grpcApi'
 import type { AIExecutionStrategy, AIInputEvent } from '@/pages/ai-re-act/hooks/grpcApi'
 import emiter from '@/utils/eventBus/eventBus'
-import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import { useCurrentRawData, useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import { useStore } from 'zustand'
 import { ModeOptionList } from './aiRunModeConstants'
+import { buildStrategyHotpatch, syncRunModeStrategy } from './syncRunModeStrategy'
 import type { ModeOptionKey } from './aiRunModeConstants'
 import { clearGoalStrategy } from '../defaultConstant'
 import { isChatSession } from '../utils/isChatSession'
@@ -16,6 +17,7 @@ export const useAIRunMode = () => {
   const { setting, activeChat } = useAIAgentStore()
   const { setSetting, onSend } = useAIAgentDispatcher()
   const store = useCurrentStore()
+  const rawData = useCurrentRawData()
   const execute = useStore(store, (state) => state.execute)
 
   const enablePlan = useCreation(() => !!setting?.EnablePlan, [setting?.EnablePlan])
@@ -78,33 +80,10 @@ export const useAIRunMode = () => {
     useMemoizedFn((next: AIExecutionStrategy) => {
       const merged: AIExecutionStrategy = { ...(setting?.Strategy || {}), ...next }
       if (execute && isChatSession(activeChat)) {
-        const info: AIInputEvent = {
-          IsConfigHotpatch: true,
-          HotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_Strategy,
-          Params: {
-            Strategy: merged,
-          },
-        }
+        const info = buildStrategyHotpatch(merged, next.GoalDurationSeconds, rawData)
         onSend({ token: activeChat.SessionID, type: '', params: info })
       }
-      setSetting?.((v) => ({
-        ...v,
-        Strategy: { ...v.Strategy, ...next },
-      }))
-      if (isChatSession(activeChat)) {
-        emiter.emit(
-          'sessionData',
-          JSON.stringify({
-            type: 'updateSession',
-            sessionId: activeChat.SessionID,
-            updates: {
-              StartParams: {
-                Strategy: next,
-              },
-            },
-          }),
-        )
-      }
+      syncRunModeStrategy(setSetting, next, isChatSession(activeChat) ? activeChat.SessionID : undefined)
     }),
     { wait: 200, leading: true },
   )
