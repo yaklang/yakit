@@ -60,6 +60,8 @@
       background: var(--Colors-Use-Basic-Background);
       color: var(--Colors-Use-Neutral-Text-1-Title);
       word-break: keep-all;
+      white-space: nowrap;
+      flex-shrink: 0;
       &:not(:first-child)::before {
         background-color: var(--Colors-Use-Neutral-Border);
       }

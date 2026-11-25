@@ -305,6 +305,25 @@
       margin-bottom: 0;
       margin-top: 8px;
     }
+    .plugin-type-switch-row {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+
+      .plugin-type-switch {
+        flex-shrink: 0;
+        min-width: min-content;
+      }
+
+      // YakModuleListHeard 在 MITMPage.module.scss 中为 width: 100%，
+      // 与开关同行时会把选项按钮挤窄，英文标签随即折行。
+      > div:last-child {
+        width: auto;
+        flex: 1 1 auto;
+        min-width: min-content;
+      }
+    }
   }
   .plugin-loaded-list {
     height: 100%;
