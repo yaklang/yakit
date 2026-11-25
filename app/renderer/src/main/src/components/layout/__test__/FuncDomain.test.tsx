@@ -652,6 +652,7 @@ describe('FuncDomain 设置菜单录屏/截屏', () => {
 
     const screenshotItem = await screen.findByText('FuncDomain.screenshot')
     fireEvent.click(screenshotItem)
+    expect(yakitUILayout.activateScreenshot).not.toHaveBeenCalled()
     await waitFor(() => expect(yakitUILayout.activateScreenshot).toHaveBeenCalledTimes(1))
 
     // loading 期间再次点击不触发第二次
@@ -668,6 +669,7 @@ describe('FuncDomain 设置菜单录屏/截屏', () => {
     expect(screen.getByText('FuncDomain.screenshotFullscreen')).toBeInTheDocument()
 
     fireEvent.click(screen.getByText('FuncDomain.screenshotSelect'))
+    expect(yakitUILayout.activateScreenshot).not.toHaveBeenCalled()
     await waitFor(() => expect(yakitUILayout.activateScreenshot).toHaveBeenCalledTimes(1))
     expect(screenshotCapture).not.toHaveBeenCalled()
   })

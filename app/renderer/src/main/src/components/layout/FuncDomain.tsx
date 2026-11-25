@@ -1370,10 +1370,10 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
       case 'screenshot-select':
         if (screenshotLoading) return
         setScreenshotLoading(true)
-        yakitUILayout.activateScreenshot()
         setTimeout(() => {
-          setScreenshotLoading(false)
-        }, 1000)
+          yakitUILayout.activateScreenshot()
+          setTimeout(() => setScreenshotLoading(false), 1000)
+        }, 250)
         return
       // 截全屏
       case 'screenshot-fullscreen':
