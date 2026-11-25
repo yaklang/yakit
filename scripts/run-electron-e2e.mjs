@@ -63,8 +63,7 @@ if (missingArtifacts.length) {
 let rendererBuildMetadata
 try {
   if (devRenderers) {
-    const linkDevPort = process.env.YAKIT_LINK_DEV_PORT || '3001'
-    for (const url of ['http://127.0.0.1:3000', `http://127.0.0.1:${linkDevPort}/engine-link.html`]) {
+    for (const url of ['http://127.0.0.1:3000', 'http://127.0.0.1:3001/engine-link.html']) {
       const response = await fetch(url, { signal: AbortSignal.timeout(30000) })
       const html = await response.text()
       if (!response.ok || !html.includes('<script') || !html.includes('id="root"'))

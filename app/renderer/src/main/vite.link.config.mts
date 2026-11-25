@@ -14,7 +14,6 @@ import { createProcessEnvDefines } from '../../vite-plugins/yakitProcessEnv.mjs'
  */
 const rootDir = path.dirname(fileURLToPath(import.meta.url))
 const outDir = path.resolve(rootDir, '../../pages/link')
-const linkDevPort = Number(process.env.YAKIT_LINK_DEV_PORT || 3001) || 3001
 /** Link 只需要 theme.css，不复制主窗口整套 public 资源 */
 const linkPublicDir = path.resolve(rootDir, '.link-public')
 const mainPagesRoot = path.resolve(rootDir, 'src/pages')
@@ -130,7 +129,7 @@ export default defineConfig(({ mode, command }) => {
     ],
     server: {
       host: true,
-      port: linkDevPort,
+      port: 3001,
       strictPort: true,
       compress: false,
       warmup: {
@@ -143,7 +142,7 @@ export default defineConfig(({ mode, command }) => {
     },
     preview: {
       host: true,
-      port: linkDevPort,
+      port: 3001,
       strictPort: true,
     },
     optimizeDeps: {

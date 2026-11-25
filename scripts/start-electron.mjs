@@ -20,7 +20,7 @@ const pageReady = (url) =>
 
 export const resolveRendererUrls = () => [
   'http://127.0.0.1:3000',
-  `http://127.0.0.1:${process.env.YAKIT_LINK_DEV_PORT || '3001'}/engine-link.html`,
+  'http://127.0.0.1:3001/engine-link.html',
 ]
 
 export async function waitForRenderers({ urls = resolveRendererUrls(), timeoutMs = 120000 } = {}) {
