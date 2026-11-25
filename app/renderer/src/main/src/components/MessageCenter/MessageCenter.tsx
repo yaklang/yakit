@@ -706,6 +706,7 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
     return (
       <div className={styles['tab-item-box']}>
         <RollingLoadList<API.MessageLogDetail>
+          classNameList={styles['message-list']}
           isRef={isRef}
           data={dataSorce}
           loadMoreData={loadMore}
@@ -902,6 +903,7 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
           </div>
         )}
         <YakitTabs
+          boxStyle={{ flex: 1, minHeight: 0, height: 'auto', overflow: 'hidden' }}
           activeKey={activeKey}
           onChange={(v: any) => onActiveKeyChange(v)}
           tabBarStyle={{ marginBottom: 5 }}
