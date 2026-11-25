@@ -30,6 +30,10 @@ vi.mock('@/store/softMode', () => ({
   YakitModeEnum: { Classic: 'classic', SecurityExpert: 'securityExpert' },
 }))
 vi.mock('@/utils/notification', () => ({ yakitNotify: routeMenuServices.notify }))
+vi.mock('@/utils/envfile', () => ({
+  isYakitOrEnpriTrace: () => true,
+  isMemfit: () => false,
+}))
 
 // 执行实际初始化 Effect、AI 恢复方法和新开入口；不加载 Electron、Monaco，也不模拟浏览器的 inert 行为。
 const source = ts.createSourceFile(
