@@ -2385,11 +2385,11 @@ message AIStartParams {
   // Connection-local, build-generated component catalog and interaction capabilities.
   string ClientUI = 53;
 	AIImageInputConfig ImageInput = 54;
-  // 为 true 时禁用内置 SyntaxFlow 安全规则（内置高危预检与 ReAct 审查）。
+  // 为 true 时禁用命令执行安全规则（内置规则与自定义规则都不生效）。
   bool DisableBuiltinSyntaxFlowRules = 57;
-  // 为 true 时把用户自定义 Bash 安全规则（AI Bash 安全规则页的正则规则与规则库中
-  // 的自定义 Bash SyntaxFlow 规则）纳入安全审查与高危预检。
-  bool EnableCustomSyntaxFlowRules = 58;
+  // Reserved for the removed custom-rule session switch. Custom rows are
+  // enabled individually on the AI Bash guard page.
+  reserved 58;
 }
 
 message AIExecutionStrategy {
@@ -9666,10 +9666,9 @@ message AIGlobalConfig {
   // Global default for disabling built-in SyntaxFlow security rules. A session
   // AIStartParams value can override this default.
   bool DisableBuiltinSyntaxFlowRules = 15;
-  // Global default for including user-authored Bash security rules (regex rows
-  // from the AI Bash guard page and custom Bash SyntaxFlow rules) in the guard.
-  // A session AIStartParams value can override this default.
-  bool EnableCustomSyntaxFlowRules = 16;
+  // Reserved for the removed custom-rule global switch. Custom rows are
+  // enabled individually on the AI Bash guard page.
+  reserved 16;
 }
 
 // Local Model Messages

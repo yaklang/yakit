@@ -70,18 +70,18 @@ describe('context and image engine wire compatibility', () => {
 })
 
 describe('SyntaxFlow security rule switches', () => {
-  it.each(['StartAIReAct', 'StartAITask'])('%s 使用 57/58 下发会话开关', (rpc) => {
+  it.each(['StartAIReAct', 'StartAITask'])('%s 使用 57 下发会话开关', (rpc) => {
     const method = ypb.Yak.service[rpc]
-    const wire = Buffer.from('1206c80301d00301', 'hex')
-    const params = { DisableBuiltinSyntaxFlowRules: true, EnableCustomSyntaxFlowRules: true }
+    const wire = Buffer.from('1203c80301', 'hex')
+    const params = { DisableBuiltinSyntaxFlowRules: true }
     expect(method.requestDeserialize(wire)).toMatchObject({ Params: params })
     expect(method.requestSerialize({ Params: params })).toEqual(wire)
   })
 
-  it('AIGlobalConfig 使用 15/16 持久化全局默认', () => {
+  it('AIGlobalConfig 使用 15 持久化全局默认', () => {
     const method = ypb.Yak.service.SetAIGlobalConfig
-    const wire = Buffer.from('7801800101', 'hex')
-    const config = { DisableBuiltinSyntaxFlowRules: true, EnableCustomSyntaxFlowRules: true }
+    const wire = Buffer.from('7801', 'hex')
+    const config = { DisableBuiltinSyntaxFlowRules: true }
     expect(method.requestDeserialize(wire)).toMatchObject(config)
     expect(method.requestSerialize(config)).toEqual(wire)
   })
