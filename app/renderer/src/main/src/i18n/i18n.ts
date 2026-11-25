@@ -7,7 +7,7 @@ import { loadLocaleResource } from '@/i18n/localeLoader'
 
 const isLinkEntry = typeof window !== 'undefined' && window.__YAKIT_ENTRY__ === 'link'
 // 生产构建用编译期常量，避免主窗口产物里留下未使用的 Link inline chunk；
-// 开发态同一个 Vite 服务提供两个入口，只能用运行时标记。
+// 开发态由独立的 Link Vite 服务提供 engine-link.html，只能用运行时标记。
 declare const __YAKIT_LINK_ENTRY__: boolean
 // 非标准 Vite 配置（如 Memfit UI 回归）不会注入该常量，typeof 保护避免运行时 ReferenceError。
 const useLinkInlineResources = import.meta.env.DEV

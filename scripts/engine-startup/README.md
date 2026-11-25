@@ -83,8 +83,8 @@ For development-renderer acceptance, start the renderer dev service using
 node scripts/run-electron-e2e.mjs --dev-renderers --with-cdn-engine --suite ipc-startup
 ```
 
-The runner verifies HTTP 200 and root/script content for `/` and `/engine-link.html`
-on port 3000 before starting Electron. Its CDN fixture installs into disposable userData/YAKIT_HOME,
+The runner verifies HTTP 200 and root/script content for `:3000/` and
+`:3001/engine-link.html` before starting Electron. Its CDN fixture installs into disposable userData/YAKIT_HOME,
 does not pre-start the engine, and never uses the user's installed engine/database.
 `YAKIT_E2E_CDN_BINARY` may point to an already downloaded binary; the same manifest
 hash is still mandatory. `YAKIT_E2E_STARTUP_POLICY=auto|ipc|tcp` selects the initial

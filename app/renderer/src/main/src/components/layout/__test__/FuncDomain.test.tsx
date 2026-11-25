@@ -721,13 +721,15 @@ describe('FuncDomain 设置菜单录屏/截屏', () => {
     await openScreenshotSubmenu()
 
     fireEvent.click(screen.getByText('FuncDomain.screenshotFullscreen'))
-    await waitFor(() =>
-      expect(yakitNotify).toHaveBeenCalledWith(
-        'warning',
-        expect.objectContaining({
-          message: 'Screenshot.clipboardFailed?error=clipboard unavailable',
-        }),
-      ),
+    await waitFor(
+      () =>
+        expect(yakitNotify).toHaveBeenCalledWith(
+          'warning',
+          expect.objectContaining({
+            message: 'Screenshot.clipboardFailed?error=clipboard unavailable',
+          }),
+        ),
+      { timeout: SUBMENU_TIMEOUT },
     )
     const warningCall = (yakitNotify as ReturnType<typeof vi.fn>).mock.calls.find(([type]) => type === 'warning')
     expect(warningCall?.[1]?.description.props.children).toBe('/saved.png')
@@ -742,8 +744,10 @@ describe('FuncDomain 设置菜单录屏/截屏', () => {
       emiter.emit('onGlobalShortcutKey', JSON.stringify({ eventName: 'screenshotFullscreen', currentFocus: null }))
     })
 
-    await waitFor(() => expect(screenshotCapture).toHaveBeenCalledTimes(1))
-    await waitFor(() => expect(yakitNotify).toHaveBeenCalledWith('success', expect.anything()))
+    await waitFor(() => expect(screenshotCapture).toHaveBeenCalledTimes(1), { timeout: SUBMENU_TIMEOUT })
+    await waitFor(() => expect(yakitNotify).toHaveBeenCalledWith('success', expect.anything()), {
+      timeout: SUBMENU_TIMEOUT,
+    })
   })
 
   it('「截全屏」失败时提示错误且允许再次点击', async () => {

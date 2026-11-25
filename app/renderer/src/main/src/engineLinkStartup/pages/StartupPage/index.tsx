@@ -607,7 +607,7 @@ export const StartupPage: React.FC = () => {
           safeSetYakitStatus('fix_database_timeout')
           break
         default:
-          setDbPath(res.json!.path)
+          setDbPath(Array.isArray(res.json?.path) ? res.json.path : [])
           setCheckLog([t('StartupPage.fix_database_failed_contact_staff')])
           safeSetYakitStatus('fix_database_error')
       }

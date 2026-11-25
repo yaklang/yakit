@@ -4,12 +4,15 @@ import {
   isTransientElectronCDPError,
   runIdempotentElectronCDPCommand,
 } from '../fixtures/electron/electron-cdp-retry.mjs'
+import { matchesYakitWindowUrl } from '../fixtures/electron/window-url.mjs'
 
 const devRenderers = process.env.YAKIT_E2E_RENDERER_MODE === 'development'
+const linkDevPort = process.env.YAKIT_LINK_DEV_PORT || '3001'
 export const LINK_WINDOW_URL = devRenderers
-  ? '127.0.0.1:3000/engine-link.html'
+  ? `127.0.0.1:${linkDevPort}/engine-link.html`
   : '/renderer/pages/link/engine-link.html'
-export const MAIN_WINDOW_URL = devRenderers ? '127.0.0.1:3000' : '/renderer/pages/main/index.html'
+// 末尾斜杠用于无 matcher 的调用方（如 recovery 的 includes），避免 :30000 误命中 :3000
+export const MAIN_WINDOW_URL = devRenderers ? '127.0.0.1:3000/' : '/renderer/pages/main/index.html'
 
 export const waitForShellWindows = async () => {
   let readyWindows
@@ -34,8 +37,8 @@ export const waitForShellWindows = async () => {
 }
 
 export const findApplicationWindows = (windows) => ({
-  linkWindow: windows.find((window) => window.url.includes(LINK_WINDOW_URL)),
-  mainWindow: windows.find((window) => window.url.includes(MAIN_WINDOW_URL)),
+  linkWindow: windows.find((window) => matchesYakitWindowUrl(window.url, LINK_WINDOW_URL)),
+  mainWindow: windows.find((window) => matchesYakitWindowUrl(window.url, MAIN_WINDOW_URL)),
 })
 
 export const confirmStartupWorkspace = async () => {

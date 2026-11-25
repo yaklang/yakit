@@ -42,7 +42,6 @@ declare global {
       setYakitHomeConfig: (key: string, value: any) => Promise<{ success: boolean }>
       relaunchApp: () => Promise<unknown>
       getDirSize: (dirPath: string) => Promise<number>
-      sync: (message: EngineLinkAppSyncMessage) => Promise<unknown>
       onSync: (callback: (message: EngineLinkAppSyncMessage) => void) => BridgeCleanup
     }
     theme: {

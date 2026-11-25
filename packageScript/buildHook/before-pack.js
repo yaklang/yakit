@@ -1,27 +1,9 @@
-const fs = require('fs')
 const packageJson = require('../../package.json')
 const writeEngineBuildTypeFile = require('./write-engine-build-type')
+const { resolveEngineMode, engineArchiveFor, engineSha256For, assertEngineArchive } = require('./enginePackaging')
 
-const ENGINE_MODE = (process.env.YAKIT_BUILTIN_ENGINE || 'off').toLowerCase()
-if (!['on', 'off'].includes(ENGINE_MODE)) {
-  throw new Error(`YAKIT_BUILTIN_ENGINE must be on or off, got ${process.env.YAKIT_BUILTIN_ENGINE}`)
-}
+const ENGINE_MODE = resolveEngineMode()
 const withBuiltinEngine = ENGINE_MODE === 'on'
-
-const engineArchiveFor = (platform, arch) => {
-  if (platform === 'win32') return 'bins/yak_windows_amd64.zip'
-  const cpu = arch === 'arm64' ? 'arm64' : 'amd64'
-  if (platform === 'linux') return `bins/yak_linux_${cpu}.zip`
-  if (platform === 'darwin') return `bins/yak_darwin_${cpu}.zip`
-  return ''
-}
-
-const assertEngineArchive = (archive) => {
-  if (!withBuiltinEngine || !archive) return
-  if (!fs.existsSync(archive)) {
-    throw new Error(`YAKIT_BUILTIN_ENGINE=on but ${archive} is missing; prepare the built-in engine before packing`)
-  }
-}
 
 module.exports = async function (context) {
   const { prepareElectronPack } = await import('../../scripts/build-electron.mjs')
@@ -35,7 +17,9 @@ module.exports = async function (context) {
   }
   const arch = archMap[context.arch]
   const engineArchive = engineArchiveFor(context.electronPlatformName, arch)
-  assertEngineArchive(engineArchive)
+  const engineSha256 = context.electronPlatformName === 'darwin' ? engineSha256For(engineArchive) : ''
+  assertEngineArchive(engineArchive, { withBuiltinEngine })
+  assertEngineArchive(engineSha256, { withBuiltinEngine })
 
   if (withBuiltinEngine) {
     writeEngineBuildTypeFile({
@@ -140,7 +124,7 @@ module.exports = async function (context) {
         to: 'bins/yak.zip',
       })
       darwinExtraFiles.push({
-        from: engineArchive.replace(/\.zip$/, '.sha256.txt'),
+        from: engineSha256,
         to: 'bins/engine-sha256.txt',
       })
     }

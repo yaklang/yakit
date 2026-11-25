@@ -24,10 +24,10 @@ node ./cli/cli.mjs <command>
 | `install [electron\|main\|cli]` | 装依赖 | 位置参数；`cli` 只装 CLI 运行时 | 根目录 + 主渲染端 |
 | `add <electron\|main> <pkg…>` | 给指定子项目加包 | `-D` / `--dev` 及其他 yarn/npm/pnpm 原样 flag | 必须指定一端 |
 | `remove <electron\|main> <pkg…>` | 从指定子项目卸包 | 位置参数 | 必须指定一端 |
-| `start` | 开发态启动渲染服务（:3000 单服务，主窗口 + link） | `-v`、`--main`、`--link`（兼容参数） | 单服务 |
+| `start` | 开发态启动两个渲染服务（main :3000 / link :3001） | `-v`、`--main`、`--link`（兼容参数） | 默认两个服务 |
 | `build` | 生产构建三端 | `-v`、`--electron`、`--main`、`--link`、`--devtools`、`--no-license`、`--analyzer` | 三端都构建 |
 | `pack` | electron-builder 打安装包 | `-s`、`-v`、`--legacy`、`--sign` | 本机默认不签名 |
-| `electron` | 页面就绪后单次开发构建并启动 Electron | 无 | 不区分业务版本 |
+| `electron` | 页面就绪后单次开发构建并启动 Electron | 无 | 默认等待两端 |
 | `dev` | `start` + 等待页面 + 编译并启动 `electron` | `-v` | 渲染服务 + 主进程 |
 
 短 flag **不跨命令复用**。旧命令名 `render` / `electron -b` 已删除，没有别名。
@@ -36,7 +36,7 @@ node ./cli/cli.mjs <command>
 
 - 仅 TTY 且缺**该命令必需项**时才 inquirer：`start` / `build` / `dev` 缺 `-v`（`build --electron` 除外），`pack` 缺 `-s` 或 `-v`
 - 非 TTY（CI）缺参直接 `exit 1`，禁止交互
-- `--main` 与 `--link` 不能同时使用；`build --electron` 与两者互斥。`start` 启动同一个 Vite 服务（主窗口与 link 入口共用 :3000），`build` 默认构建主窗口产物、link 产物与主进程。
+- `build --main` 与 `--link` 不能同时使用；`build --electron` 与两者互斥。`start` 默认同时启动 main :3000 与 link :3001 两个 Vite 服务，`--main` / `--link` 为兼容参数，仍启动两端；`build` 默认构建主窗口产物、link 产物与主进程。
 
 ```bash
 yarn cli -h
@@ -105,13 +105,13 @@ yarn cli remove electron env-cmd
 
 flag 原样转发（`-D` / `--dev` 等）。识别到 npm 时，仅把 `--dev` 转成 `--save-dev`（npm 没有 `--dev`）。
 
-### 兼容参数（同一服务）
+### `--main` / `--link`（start 兼容参数）
 
-`start` 的 `--main` / `--link` 为兼容参数，均指向同一个 :3000 Vite 服务。
+`start` 默认同时启动两个 Vite 服务；`--main` / `--link` 仅保留兼容，仍启动两端。
 
 ```bash
-yarn cli start -v yakit --main
-yarn cli start -v irifyEE --link
+yarn cli start -v yakit --main   # 仍启动 main :3000 + link :3001
+yarn cli start -v irifyEE --link # 仍启动 main :3000 + link :3001
 ```
 
 ### 生产构建

@@ -45,11 +45,12 @@ describe('Link file IPC', () => {
     await expect(handlers.get('EngineLink:fetch-file-content')({}, '/tmp/targets.txt')).resolves.toBe('a,b\n1,2')
   })
 
-  it('returns file stats when statSync succeeds', async () => {
-    const stats = { size: 42 }
-    const { handlers } = loadPortScan2(() => stats)
+  it('returns only the file size when statSync succeeds', async () => {
+    const { handlers } = loadPortScan2(() => ({ size: 42, mtimeMs: 1 }))
 
-    await expect(handlers.get('EngineLink:fetch-file-info-by-path')({}, '/tmp/targets.txt')).resolves.toBe(stats)
+    await expect(handlers.get('EngineLink:fetch-file-info-by-path')({}, '/tmp/targets.txt')).resolves.toEqual({
+      size: 42,
+    })
   })
 
   it('rejects the prefixed file info handler when statSync fails', async () => {

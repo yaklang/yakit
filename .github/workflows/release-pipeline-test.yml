@@ -8,6 +8,8 @@ on:
       - '.github/workflows/publish-oss-version.yml'
       - '.github/actions/release-toolchain/**'
       - 'app/renderer/src/main/vite.config.mts'
+      - 'app/renderer/src/main/vite.link.config.mts'
+      - 'app/renderer/src/main/engine-link.html'
       - 'scripts/release/**'
       - 'e2e/fixtures/__test__/release-pipeline.test.mjs'
       - 'e2e/fixtures/__test__/release-identity.test.mjs'

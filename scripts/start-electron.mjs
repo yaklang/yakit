@@ -18,10 +18,12 @@ const pageReady = (url) =>
     request.on('error', () => resolve(false))
   })
 
-export async function waitForRenderers({
-  urls = ['http://127.0.0.1:3000', 'http://127.0.0.1:3000/engine-link.html'],
-  timeoutMs = 120000,
-} = {}) {
+export const resolveRendererUrls = () => [
+  'http://127.0.0.1:3000',
+  `http://127.0.0.1:${process.env.YAKIT_LINK_DEV_PORT || '3001'}/engine-link.html`,
+]
+
+export async function waitForRenderers({ urls = resolveRendererUrls(), timeoutMs = 120000 } = {}) {
   const deadline = Date.now() + timeoutMs
   let pending = urls
   while (pending.length) {

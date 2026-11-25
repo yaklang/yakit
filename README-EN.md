@@ -141,11 +141,11 @@ Steps:
      yarn cli install
      ```
 
-2. Start development (start the renderer service, then Electron)
+2. Start development (start the renderer services, then Electron)
 
      ```bash
-     yarn cli start -v yakit   # starts the :3000 service used by main + link
-     yarn cli electron         # after the page is ready
+     yarn cli start -v yakit   # starts main :3000 + link :3001
+     yarn cli electron         # after both pages are ready
      # or: yarn cli dev -v yakit
      ```
 

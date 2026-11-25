@@ -16,8 +16,8 @@ afterEach(async () => {
     await rm(directory, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 })
 })
 
-// Run the real CLI and concurrently dependency, replacing only the expensive build commands.
-async function runBuild(failingRenderer) {
+// Run the real CLI with lightweight Vite/Electron stand-ins instead of real builds.
+async function createCliFixture(failingRenderer) {
   const root = await mkdtemp(path.join(os.tmpdir(), 'yakit-cli-build-'))
   fixtures.push(root)
   await cp(path.join(repoRoot, 'cli'), path.join(root, 'cli'), {
@@ -60,8 +60,12 @@ if (${JSON.stringify(command)} === 'vite') {
     path.join(root, 'scripts/build-electron.mjs'),
     `import { appendFileSync } from 'node:fs'\nappendFileSync(${JSON.stringify(events)}, '"electron"\\n')\n`,
   )
+  return { root, events }
+}
+
+async function runCli(root, args) {
   const result = await new Promise((resolve, reject) => {
-    const child = spawn(process.execPath, ['cli/cli.mjs', 'build', '-v', 'yakit'], { cwd: root })
+    const child = spawn(process.execPath, ['cli/cli.mjs', ...args], { cwd: root })
     let output = ''
     child.stdout.on('data', (data) => {
       output += data
@@ -72,6 +76,18 @@ if (${JSON.stringify(command)} === 'vite') {
     child.once('error', reject)
     child.once('close', (code) => resolve({ code, output }))
   })
+  return { ...result }
+}
+
+async function runBuild(failingRenderer) {
+  const { root, events } = await createCliFixture(failingRenderer)
+  const result = await runCli(root, ['build', '-v', 'yakit'])
+  return { ...result, events: (await readFile(events, 'utf8')).trim().split('\n').map(JSON.parse) }
+}
+
+async function runStart(args = []) {
+  const { root, events } = await createCliFixture()
+  const result = await runCli(root, ['start', '-v', 'yakit', ...args])
   return { ...result, events: (await readFile(events, 'utf8')).trim().split('\n').map(JSON.parse) }
 }
 
@@ -93,6 +109,28 @@ describe('CLI production build ordering', () => {
       const result = await runBuild(renderer)
       expect(result.code, result.output).not.toBe(0)
       expect(result.events).not.toContain('electron')
+    },
+    BUILD_ORDER_TEST_TIMEOUT,
+  )
+})
+
+describe('CLI development servers', () => {
+  it(
+    'starts main and link by default',
+    async () => {
+      const result = await runStart()
+      expect(result.code, result.output).toBe(0)
+      expect(result.events.sort()).toEqual(['link', 'main'])
+    },
+    BUILD_ORDER_TEST_TIMEOUT,
+  )
+
+  it(
+    'keeps --main/--link as compatibility flags and still starts both',
+    async () => {
+      const result = await runStart(['--main', '--link'])
+      expect(result.code, result.output).toBe(0)
+      expect(result.events.sort()).toEqual(['link', 'main'])
     },
     BUILD_ORDER_TEST_TIMEOUT,
   )

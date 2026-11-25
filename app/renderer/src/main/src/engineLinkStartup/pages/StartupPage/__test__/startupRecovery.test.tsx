@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
   localInit: vi.fn(),
   localLink: vi.fn(),
   installYakEngine: vi.fn(),
+  fixupDatabase: vi.fn(),
   emit: vi.fn(),
   isMemfit: false,
   mainWindowHandler: undefined as undefined | ((data: { yakitStatus: string }) => void),
@@ -69,7 +70,7 @@ vi.mock('../grpc', () => ({
   grpcFetchBuildInYakVersion: vi.fn(() => new Promise(() => {})),
   grpcFetchLocalYakitVersion: vi.fn(() => new Promise(() => {})),
   grpcFetchYakInstallResult: vi.fn(() => new Promise(() => {})),
-  grpcFixupDatabase: vi.fn(),
+  grpcFixupDatabase: mocks.fixupDatabase,
   grpcInitCVEDatabase: vi.fn().mockResolvedValue(undefined),
   grpcReclaimDatabaseSpace: vi.fn(),
   grpcRelaunch: vi.fn(),
@@ -114,6 +115,7 @@ vi.mock('../components/YakitLoading', () => ({
       <button onClick={() => props.setYaklangSpecifyVersion('v1.2.3')}>install version</button>
       <button onClick={() => props.btnClickCallback('remote')}>switch directly to remote</button>
       <button onClick={() => props.btnClickCallback('break', { isRemote: true })}>disconnect to remote</button>
+      <button onClick={() => props.btnClickCallback('database_error')}>fix database</button>
     </div>
   ),
 }))
@@ -158,6 +160,25 @@ describe('StartupPage owned-engine recovery', () => {
   afterEach(() => {
     vi.clearAllTimers()
     vi.useRealTimers()
+  })
+
+  it('reports a failed database repair without crashing when json is null', async () => {
+    mocks.fixupDatabase.mockResolvedValueOnce({
+      ok: false,
+      status: 'unknown',
+      message: 'unknown',
+      json: null,
+    })
+    render(<StartupPage />)
+    fireEvent.click(screen.getByRole('button', { name: 'confirm workspace' }))
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'fix database' }))
+    })
+
+    expect(screen.getByTestId('status').textContent).toBe('fix_database_error')
+    expect(screen.getByTestId('check-log').textContent).toContain('StartupPage.fix_database_failed_contact_staff')
+    expect(screen.getByTestId('check-log').textContent).not.toContain('StartupPage.fix_database_unexpected_check_log')
   })
 
   it('waits for owned-engine cleanup before retrying a failed check', async () => {

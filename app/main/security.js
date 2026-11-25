@@ -2,7 +2,11 @@ const fs = require('fs')
 const path = require('path')
 
 const TRUSTED_DEV_HOSTS = new Set(['127.0.0.1', 'localhost'])
-const TRUSTED_DEV_PORTS = new Set(['3000'])
+const TRUSTED_DEV_PORTS = new Set(['3000', '3001'])
+// 仅 Electron 以 `electron <app>` 开发启动时信任自定义 Link 端口；打包后不信任环境变量端口
+if (process.defaultApp && process.env.YAKIT_LINK_DEV_PORT) {
+  TRUSTED_DEV_PORTS.add(process.env.YAKIT_LINK_DEV_PORT)
+}
 const BLOCKED_OPEN_PATH_EXTENSIONS = new Set([
   '.app',
   '.appimage',

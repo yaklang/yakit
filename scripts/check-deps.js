@@ -147,7 +147,7 @@ function main() {
   console.log('[检查通过] 已声明依赖存在、固定版本匹配，锁文件无本地改动')
   console.log('')
   console.log('接下来：')
-  console.log(`  ${runCli('start -v yakit')}   # 启动渲染服务（主窗口 + link 共用 :3000）`)
+  console.log(`  ${runCli('start -v yakit')}   # 启动渲染服务（main :3000 / link :3001）`)
   console.log(`  ${runCli('electron')}         # 页面就绪后启动 Electron 主进程`)
   console.log(`  或: ${runCli('dev -v yakit')} # 一条命令 start + wait-on + electron`)
   process.exit(0)

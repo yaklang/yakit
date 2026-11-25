@@ -18,11 +18,13 @@ const root = document.getElementById('root')
 
 if (!bridge) {
   console.error('[engine-link] missing bridge capabilities: yakitBridge')
-  if (root) root.textContent = 'Link 启动页加载失败：preload 未注入 yakitBridge'
+  if (root)
+    root.textContent =
+      'Link 启动页加载失败：preload 未注入 yakitBridge / Link startup failed: yakitBridge was not injected by preload'
 } else {
   installDroppedFilePath(File, bridge.app?.getPathForFile)
   void import('./bootstrap').catch((error) => {
     console.error('[engine-link] bootstrap failed', error)
-    if (root) root.textContent = 'Link 启动页加载失败'
+    if (root) root.textContent = 'Link 启动页加载失败 / Link startup failed'
   })
 }

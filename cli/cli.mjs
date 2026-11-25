@@ -297,46 +297,46 @@ const runLocal = (file, args, { cwd, env } = {}) =>
     localDir: cwd || repoRoot,
   })
 
-/** 在指定渲染端目录跑 vite（开发）或 vite build（生产） */
-const runVite = async ({ cwd, build, env }) => {
-  const args = build ? ['build'] : []
-  await runLocal('vite', args, { cwd, env })
+/**
+ * main 与 link 共用同一个 public/theme.css。
+ * 两个 Vite 进程同时启动/构建时先统一生成一次，避免并发写同一文件。
+ */
+const prepareThemeCss = async (env) => {
+  const themeCssScript = path.join(MAIN_RENDER_DIR, 'scripts', 'generate-theme-css.cjs')
+  if (!fs.existsSync(themeCssScript)) return env
+  await runLocal(process.execPath, [themeCssScript], { env })
+  return { ...env, THEME_CSS_PREGENERATED: '1' }
 }
 
 /**
  * 启动或构建渲染端。main 与 link 共用同一源码树：
- * - 开发态只有一个 Vite 服务（MAIN_RENDER_DIR），同时服务主窗口与 link 入口
+ * - 开发态 main :3000、link :3001，各自使用自己的 Vite 配置
  * - 生产构建按目标输出两份产物：pages/main 与 pages/link
  */
 const runRenderers = async ({ main, link, build, env }) => {
-  if (!build) {
-    await runVite({ cwd: MAIN_RENDER_DIR, build: false, env })
-    return
-  }
-
   const jobs = []
-  if (main) jobs.push({ name: MainChalk('main'), args: ['build'] })
-  if (link) jobs.push({ name: BlueChalk('link'), args: ['build', '--config', 'vite.link.config.mts'] })
-
-  if (jobs.length === 1) {
-    await runLocal('vite', jobs[0].args, { cwd: MAIN_RENDER_DIR, env })
-    return
+  if (main) jobs.push({ name: MainChalk('main'), args: build ? ['build'] : [] })
+  if (link) {
+    jobs.push({
+      name: BlueChalk('link'),
+      args: build ? ['build', '--config', 'vite.link.config.mts'] : ['--config', 'vite.link.config.mts'],
+    })
   }
 
-  // main 与 link 共用同一个 public/theme.css，先统一生成一次，避免并发写同一文件
-  const themeCssScript = path.join(MAIN_RENDER_DIR, 'scripts', 'generate-theme-css.cjs')
-  let buildEnv = env
-  if (fs.existsSync(themeCssScript)) {
-    await runLocal(process.execPath, [themeCssScript], { env })
-    buildEnv = { ...env, THEME_CSS_PREGENERATED: '1' }
+  if (jobs.length === 0) return
+
+  const runEnv = jobs.length > 1 ? await prepareThemeCss(env) : env
+  if (jobs.length === 1) {
+    await runLocal('vite', jobs[0].args, { cwd: MAIN_RENDER_DIR, env: runEnv })
+    return
   }
 
   await concurrently(
     jobs.map((job) => ({
-      command: `vite ${job.args.join(' ')}`,
+      command: `vite ${job.args.join(' ')}`.trim(),
       name: job.name,
       cwd: MAIN_RENDER_DIR,
-      env: withLocalBin(MAIN_RENDER_DIR, buildEnv),
+      env: withLocalBin(MAIN_RENDER_DIR, runEnv),
     })),
     {
       killOthers: ['failure'],
@@ -418,20 +418,21 @@ program
 /** start：注入 YAKIT_EDITION + DEVTOOLS，开发态跑 vite（不启 Electron） */
 program
   .command('start')
-  .description('开发模式启动渲染端（main + link 共用 :3000 单服务）')
+  .description('开发模式启动渲染端（main :3000 / link :3001）')
   .option('-v, --version <type>', `业务版本 (${editionValues})`)
-  .option('--main', '兼容参数：主窗口入口', false)
-  .option('--link', '兼容参数：link 入口同样由该 Vite 服务提供', false)
+  .option('--main', '兼容参数：始终启动 main + link', false)
+  .option('--link', '兼容参数：始终启动 main + link', false)
   .addHelpText('after', `\n${YellowChalk.bold('Examples:')}\n${StartCMDExamplesDoc}`)
   .action(async (options) => {
     const version = await requireEdition(options.version)
-    const targets = resolveRenderTargets(options.main, options.link)
+    const targets = { main: true, link: true }
     const env = buildYakitEnv({ edition: version, devtools: true })
 
     console.log(GreenChalk('\n准备执行...'))
     console.log(CyanChalk.bold(`> 业务版本: ${version}`))
     console.log(CyanChalk.bold(`> 模式: Development`))
-    console.log(CyanChalk.bold(`> 渲染端: ${renderLabel(targets)} → :3000 单 Vite 服务`))
+    const endpoints = [targets.main && 'main :3000', targets.link && 'link :3001'].filter(Boolean).join(' / ')
+    console.log(CyanChalk.bold(`> 渲染端: ${renderLabel(targets)} → ${endpoints}`))
     console.log('')
 
     try {
@@ -541,7 +542,7 @@ program
     }
   })
 
-/** electron：只起主进程。不注入版本；窗口加载当前已运行的 :3000（主窗口 + link 入口） */
+/** electron：只起主进程。不注入版本；窗口加载已运行的 main :3000 / link :3001 */
 program
   .command('electron')
   .description('等待渲染页面、单次开发构建并启动 Electron（手动重启）')
@@ -558,7 +559,7 @@ program
 /** dev：Vite 页面就绪后单次构建并启动 Electron，无 watch 或自动重启 */
 program
   .command('dev')
-  .description('启动渲染服务，等待 :3000 页面就绪后启动 Electron')
+  .description('启动 main :3000 + link :3001，等待两个页面就绪后启动 Electron')
   .option('-v, --version <type>', `业务版本 (${editionValues})`)
   .addHelpText('after', `\n${YellowChalk.bold('Examples:')}\n${DevCMDExamplesDoc}`)
   .action(async (options) => {
@@ -567,23 +568,30 @@ program
 
     console.log(GreenChalk('\n准备执行...'))
     console.log(CyanChalk.bold(`> 业务版本: ${version}`))
-    console.log(CyanChalk.bold(`> start + wait for renderer HTML + build electron + electron`))
+    console.log(CyanChalk.bold(`> main :3000 + link :3001 → wait HTML → build electron`))
     console.log('')
 
     try {
+      const devEnv = await prepareThemeCss(env)
       await concurrently(
         [
           {
             command: 'vite',
             name: MainChalk('main'),
             cwd: MAIN_RENDER_DIR,
-            env: withLocalBin(MAIN_RENDER_DIR, env),
+            env: withLocalBin(MAIN_RENDER_DIR, devEnv),
+          },
+          {
+            command: 'vite --config vite.link.config.mts',
+            name: BlueChalk('link'),
+            cwd: MAIN_RENDER_DIR,
+            env: withLocalBin(MAIN_RENDER_DIR, devEnv),
           },
           {
             command: 'node scripts/start-electron.mjs',
             name: GreenChalk('electron'),
             cwd: repoRoot,
-            env: withLocalBin(repoRoot, env),
+            env: withLocalBin(repoRoot, devEnv),
           },
         ],
         {

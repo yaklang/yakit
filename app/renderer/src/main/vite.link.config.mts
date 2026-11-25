@@ -9,33 +9,51 @@ import { yakitUiIconsPurePlugin } from '../../vite-plugins/yakitUiIconsPurePlugi
 import { createProcessEnvDefines } from '../../vite-plugins/yakitProcessEnv.mjs'
 
 /**
- * link 窗口独立构建：与主窗口同一份源码树，但单独产物 / chunk 图。
- * dev 由 vite.config.mts 的 :3000 统一服务 engine-link.html；本文件只负责生产构建。
+ * Link 窗口独立配置：与主窗口同一份源码树，但使用 Link 专属 alias、dev server 和独立产物 / chunk 图。
+ * dev 起在 :3001 提供 engine-link.html；build 输出 pages/link。
  */
 const rootDir = path.dirname(fileURLToPath(import.meta.url))
 const outDir = path.resolve(rootDir, '../../pages/link')
+const linkDevPort = Number(process.env.YAKIT_LINK_DEV_PORT || 3001) || 3001
 /** Link 只需要 theme.css，不复制主窗口整套 public 资源 */
 const linkPublicDir = path.resolve(rootDir, '.link-public')
 const mainPagesRoot = path.resolve(rootDir, 'src/pages')
 const mainNewAppRoot = path.resolve(rootDir, 'src/newApp')
-const linkPagesRoot = path.resolve(rootDir, 'src/engineLinkStartup/pages')
 /** 供 icon migration 审计使用：Link 实际模块图包含主窗共享组件，不能只按 engineLinkStartup 扫源码 */
 const linkSourceManifest = path.resolve(outDir, '../.link-module-manifest.json')
 
 const normalizeModuleId = (id: string) => id.replace(/\\/g, '/').split('?')[0]
+const mainPagePrefix = `${normalizeModuleId(mainPagesRoot)}/`
+const mainNewAppPrefix = `${normalizeModuleId(mainNewAppRoot)}/`
+
+/** 已解析模块 id 是否属于主窗口页面/新应用目录；dev 的 load 与 build 的 generateBundle 共用 */
+export const isForbiddenLinkModule = (id: string) => {
+  const moduleId = normalizeModuleId(id)
+  return moduleId.startsWith(mainPagePrefix) || moduleId.startsWith(mainNewAppPrefix)
+}
 
 /**
- * Link 构建不应包含主窗口页面模块，也不应出现 window.require。
+ * Link dev/build 都不应包含主窗口页面模块，也不应出现 window.require。
  * 按模块图判断，避免与 Vite 生成的 chunk 名耦合。
  */
 function linkModuleBoundaryPlugin(): Plugin {
-  const mainPagePrefix = `${normalizeModuleId(mainPagesRoot)}/`
-  const mainNewAppPrefix = `${normalizeModuleId(mainNewAppRoot)}/`
-  const linkPagePrefix = `${normalizeModuleId(linkPagesRoot)}/`
-
   return {
     name: 'link-module-boundary',
-    apply: 'build',
+    resolveId(source) {
+      if (
+        source === '@/pages' ||
+        source.startsWith('@/pages/') ||
+        source === '@/newApp' ||
+        source.startsWith('@/newApp/')
+      ) {
+        this.error(`Link 禁止引用主窗口页面模块：${source}`)
+      }
+    },
+    load(id) {
+      if (isForbiddenLinkModule(id)) {
+        this.error(`Link 禁止引用主窗口页面模块：${normalizeModuleId(id)}`)
+      }
+    },
     transform(code, id) {
       const moduleId = normalizeModuleId(id)
       if (moduleId.startsWith('\0') || moduleId.includes('/node_modules/')) return
@@ -45,9 +63,7 @@ function linkModuleBoundaryPlugin(): Plugin {
     },
     generateBundle() {
       const moduleIds = [...this.getModuleIds()].map(normalizeModuleId)
-      const leaked = moduleIds.filter(
-        (id) => (id.startsWith(mainPagePrefix) && !id.startsWith(linkPagePrefix)) || id.startsWith(mainNewAppPrefix),
-      )
+      const leaked = moduleIds.filter(isForbiddenLinkModule)
 
       if (leaked.length) {
         this.error(
@@ -67,7 +83,7 @@ function linkModuleBoundaryPlugin(): Plugin {
   }
 }
 
-/** public/theme.css 已从版本库移除，构建时重新生成；Link 只复制 theme.css 到独立 public 目录 */
+/** public/theme.css 已从版本库移除，dev/build 启动时重新生成；Link 只复制 theme.css 到独立 public 目录 */
 function generateThemeCssPlugin(): Plugin {
   return {
     name: 'generate-theme-css',
@@ -84,12 +100,16 @@ function generateThemeCssPlugin(): Plugin {
   }
 }
 
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ mode, command }) => {
+  const isServe = command === 'serve'
   const sourcemap = process.env.YAKIT_SOURCEMAP === 'true'
 
   return {
     root: rootDir,
-    base: './',
+    // 与主窗口 dev server 分开缓存，避免两个 Vite 进程争用同一 optimizeDeps 目录
+    cacheDir: path.resolve(rootDir, 'node_modules/.vite-link'),
+    // dev 走 http://127.0.0.1:3001，生产 file:// 必须使用相对路径
+    base: isServe ? '/' : './',
     publicDir: linkPublicDir,
     envPrefix: ['YAKIT_', 'REACT_APP_', 'VITE_'],
     define: { ...createProcessEnvDefines(mode, rootDir), __YAKIT_LINK_ENTRY__: 'true' },
@@ -108,6 +128,35 @@ export default defineConfig(({ mode }) => {
         protocolImports: true,
       }),
     ],
+    server: {
+      host: true,
+      port: linkDevPort,
+      strictPort: true,
+      compress: false,
+      warmup: {
+        clientFiles: [
+          './engine-link.html',
+          './src/engineLinkStartup/main.tsx',
+          './src/engineLinkStartup/bootstrap.tsx',
+        ],
+      },
+    },
+    preview: {
+      host: true,
+      port: linkDevPort,
+      strictPort: true,
+    },
+    optimizeDeps: {
+      // 只列 Link 入口；共享组件依赖由 Vite 沿静态 import 继续 crawl，避免把主窗口页面扫进来。
+      holdUntilCrawlEnd: true,
+      entries: [
+        'engine-link.html',
+        'src/engineLinkStartup/**/*.{ts,tsx}',
+        '!src/**/*.d.ts',
+        '!src/**/__test__/**',
+        '!src/**/__tests__/**',
+      ],
+    },
     resolve: {
       dedupe: ['react', 'react-dom', 'react/jsx-runtime', 'react/jsx-dev-runtime', 'ahooks'],
       alias: [

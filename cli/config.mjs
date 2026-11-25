@@ -51,16 +51,17 @@ const RemoveCMDExamplesDoc = `
   $ yarn cli remove electron env-cmd
 `
 
-/** start -h：TTY 可省略 -v；--main / --link 为兼容参数，均指向同一服务 */
+/** start -h：TTY 可省略 -v；--main / --link 为兼容参数，始终启动两端 */
 const StartCMDExamplesDoc = `
   # TTY 下未传 -v 会询问业务版本
   $ yarn cli start
 
-  # 启动 yakit 开发服务（主窗口与 link 共用 :3000）
+  # 启动 yakit 开发服务（main :3000 / link :3001）
   $ yarn cli start -v yakit
 
-  # --main / --link 为兼容参数，均指向同一 Vite 服务
+  # --main / --link 为兼容参数，仍启动两端
   $ yarn cli start -v irifyEE --main
+  $ yarn cli start -v irifyEE --link
 `
 
 /** build -h：--devtools / --no-license / --link / --analyzer */
@@ -95,11 +96,11 @@ const PackCMDExamplesDoc = `
 
 /** electron -h：只起主进程（渲染端需已就绪） */
 const ElectronCMDExamplesDoc = `
-  # 等待渲染页面就绪，单次开发构建，再启动 Electron
+  # 等待 main :3000 + link :3001 就绪，单次开发构建，再启动 Electron
   $ yarn cli electron
 `
 
-/** dev -h：start + 等 :3000 + electron */
+/** dev -h：start + 等 main :3000 / link :3001 + electron */
 const DevCMDExamplesDoc = `
   # 启动渲染服务 + 等待页面 + 单次构建并启动 Electron
   $ yarn cli dev -v yakit

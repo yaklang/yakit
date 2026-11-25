@@ -167,10 +167,8 @@ export default defineConfig(({ mode }) => {
           // HTML / 入口壳层（显式 entries 会覆盖默认 html 推断，须保留）
           './index.html',
           './yakit-aux.html',
-          './engine-link.html',
           './src/index.tsx',
           './src/auxWindow/aux-entry.tsx',
-          './src/engineLinkStartup/main.tsx',
           './src/newApp/NewApp.tsx',
           './src/components/layout/UILayout.tsx',
           // 已有动态边界：NewApp lazy MainOperator；UILayout lazy SoftwareSettings
@@ -219,9 +217,9 @@ export default defineConfig(({ mode }) => {
       entries: [
         'index.html',
         'yakit-aux.html',
-        'engine-link.html',
         'src/**/*.{ts,tsx}',
         '!src/**/*.d.ts', // 核心：排除声明文件
+        '!src/engineLinkStartup/**', // Link 入口由独立服务与配置扫描，避免主窗预构建混入 Link 依赖
         '!src/**/__test__/**',
         '!src/**/__tests__/**',
         '!src/alibaba/ali-react-table-dist/**', // 第三方 dist 仅含 .d.ts，无需 crawl

@@ -11,7 +11,8 @@ module.exports = {
       return new Promise((resolve, reject) => {
         try {
           const stats = FS.statSync(path)
-          resolve(stats)
+          // renderer 只需要文件大小，不要把完整 Stats 暴露到 IPC 层
+          resolve({ size: stats.size })
         } catch (error) {
           reject(error)
         }

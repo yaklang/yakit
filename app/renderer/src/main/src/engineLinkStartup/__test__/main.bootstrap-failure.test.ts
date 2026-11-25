@@ -28,6 +28,6 @@ describe('engineLinkStartup entry bootstrap failure', () => {
     await import('../main')
     await vi.waitFor(() => expect(error).toHaveBeenCalledWith('[engine-link] bootstrap failed', expect.any(Error)))
 
-    expect(document.getElementById('root')?.textContent).toBe('Link 启动页加载失败')
+    expect(document.getElementById('root')?.textContent).toBe('Link 启动页加载失败 / Link startup failed')
   })
 })

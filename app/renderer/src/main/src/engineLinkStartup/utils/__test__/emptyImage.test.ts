@@ -23,7 +23,8 @@ vi.mock('@/assets/EmptyImage/MemfitDarkEmpty.png', () => ({ default: 'memfit-dar
 
 import { useEmptyImage } from '../emptyImage'
 
-const image = () => renderHook(() => useEmptyImage()).result.current
+const image = (type: 'network' | 'server' | 'power' | 'empty' | 'search' | 'screenRecording' = 'empty') =>
+  renderHook(() => useEmptyImage(type)).result.current
 
 describe('Link 通用空状态图', () => {
   beforeEach(() => {
@@ -49,5 +50,10 @@ describe('Link 通用空状态图', () => {
     state.env = 'yakitSE'
     state.theme = 'dark'
     expect(image()).toBe('yakit-dark')
+  })
+
+  it('接受主窗的 type 参数但仍返回通用空图', () => {
+    expect(image('search')).toBe('yakit-light')
+    expect(image('power')).toBe('yakit-light')
   })
 })

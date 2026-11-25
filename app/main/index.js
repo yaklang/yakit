@@ -220,8 +220,10 @@ function createEngineLinkWindow() {
   rendererRecovery.attach(engineLinkWin, 'engineLinkWin')
 
   if (!hasPos) engineLinkWin.center()
-  if (isDev) engineLinkWin.loadURL('http://127.0.0.1:3000/engine-link.html')
-  else engineLinkWin.loadFile(appResourcePath('renderer', 'pages', 'link', 'engine-link.html'))
+  if (isDev) {
+    const linkDevPort = process.env.YAKIT_LINK_DEV_PORT || '3001'
+    engineLinkWin.loadURL(`http://127.0.0.1:${linkDevPort}/engine-link.html`)
+  } else engineLinkWin.loadFile(appResourcePath('renderer', 'pages', 'link', 'engine-link.html'))
 
   engineLinkWin.webContents.setWindowOpenHandler(() => ({ action: 'deny' }))
 
