@@ -1646,6 +1646,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     const { proxyEndpoints, ProxyRuleIds } = getProxyValue(proxy)
     return {
       ...advancedConfigValueToFuzzerRequests(advancedConfigValue),
+      ...mcpExecutionSlotRef.current.getDelayOverrides(),
       RequestRaw: StringToUint8Array(requestRef.current, 'utf8'),
       HotPatchCode: hotPatchCodeRef.current,
       HotPatchCodeWithParamGetter: hotPatchCodeWithParamGetterRef.current,

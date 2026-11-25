@@ -35,6 +35,49 @@ it('lets the AI sidebar use the default model selector', () => {
   expect(chat).not.toContain('footerRightTypes')
 })
 
+it('builds request parameters with execution delays without changing saved tab settings', () => {
+  const declaration = findOne(
+    (node) =>
+      ts.isVariableStatement(node) &&
+      node.declarationList.declarations.some((item) => item.name.getText(source) === 'getFuzzerRequestParams'),
+  )
+  const slot = createMcpWebFuzzerExecutionSlot(() => ({
+    executionId: 'delay-override',
+    pageId: 'page',
+    expiresAt: Date.now() + 10_000,
+    minDelaySeconds: 0,
+    maxDelaySeconds: 0,
+  }))
+  const tabSettings = { minDelaySeconds: 3, maxDelaySeconds: 5, proxy: [] }
+  const bindings = {
+    useMemoizedFn: (fn: unknown) => fn,
+    advancedConfigValue: tabSettings,
+    advancedConfigValueToFuzzerRequests: (value: typeof tabSettings) => ({
+      DelayMinSeconds: value.minDelaySeconds,
+      DelayMaxSeconds: value.maxDelaySeconds,
+    }),
+    mcpExecutionSlotRef: { current: slot },
+    getProxyValue: () => ({ proxyEndpoints: '' }),
+    StringToUint8Array: () => new Uint8Array(),
+    requestRef: { current: 'GET /' },
+    hotPatchCodeRef: { current: '' },
+    hotPatchCodeWithParamGetterRef: { current: '' },
+    props: { id: 'page' },
+    browserTransformRequestFields: () => ({}),
+    browserTransformSelection: undefined,
+  }
+  const code = ts.transpileModule(declaration, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText
+  const getParams = new Function(...Object.keys(bindings), `${code}\nreturn getFuzzerRequestParams`)(
+    ...Object.values(bindings),
+  )
+  expect(getParams()).toMatchObject({ DelayMinSeconds: 3, DelayMaxSeconds: 5 })
+  slot.tryStart('page', false)
+  expect(getParams()).toMatchObject({ FuzzerIndex: 'delay-override', DelayMinSeconds: 0, DelayMaxSeconds: 0 })
+  slot.release()
+  expect(getParams()).toMatchObject({ FuzzerIndex: undefined, DelayMinSeconds: 3, DelayMaxSeconds: 5 })
+  expect(tabSettings).toEqual({ minDelaySeconds: 3, maxDelaySeconds: 5, proxy: [] })
+})
+
 const controls = [
   'resetResponse',
   'cancelCurrentHTTPFuzzer',

@@ -1,4 +1,4 @@
-import { consumeMcpWebFuzzerExecution } from '@/utils/eventBus/events/webFuzzer'
+import { consumeMcpWebFuzzerExecution, type McpWebFuzzerExecution } from '@/utils/eventBus/events/webFuzzer'
 
 /**
  * HTTPFuzzerPage MCP 执行槽位：idle → in-flight → 完成/取消后释放。
@@ -10,6 +10,7 @@ export type McpWebFuzzerExecutionSlot = {
   /** 释放 in-flight；原先在飞返回 true */
   release: () => boolean
   getFuzzerIndex: () => string | undefined
+  getDelayOverrides: () => { DelayMinSeconds?: number; DelayMaxSeconds?: number }
   isInFlight: () => boolean
 }
 
@@ -17,7 +18,7 @@ export function createMcpWebFuzzerExecutionSlot(
   consume: typeof consumeMcpWebFuzzerExecution = consumeMcpWebFuzzerExecution,
 ): McpWebFuzzerExecutionSlot {
   let inFlight = false
-  let executionId: string | undefined
+  let activeExecution: McpWebFuzzerExecution | undefined
 
   return {
     tryStart(pageId, busy) {
@@ -25,16 +26,23 @@ export function createMcpWebFuzzerExecutionSlot(
       const execution = consume(pageId)
       if (!execution) return undefined
       inFlight = true
-      executionId = execution.executionId
-      return executionId
+      activeExecution = execution
+      return execution.executionId
     },
     release() {
       if (!inFlight) return false
       inFlight = false
-      executionId = undefined
+      activeExecution = undefined
       return true
     },
-    getFuzzerIndex: () => executionId,
+    getFuzzerIndex: () => activeExecution?.executionId,
+    getDelayOverrides: () =>
+      activeExecution?.minDelaySeconds === undefined
+        ? {}
+        : {
+            DelayMinSeconds: activeExecution.minDelaySeconds,
+            DelayMaxSeconds: activeExecution.maxDelaySeconds,
+          },
     isInFlight: () => inFlight,
   }
 }
