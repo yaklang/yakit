@@ -106,6 +106,8 @@ const classNameOf = (prefix: string) => {
 
 beforeEach(() => {
   deltaDecorations.mockClear()
+  editor.addCommand.mockClear()
+  editor.trigger.mockClear()
   window.require = (() => ({ ipcRenderer: { invoke: vi.fn(), on: vi.fn(), removeListener: vi.fn() } })) as never
 })
 
@@ -139,5 +141,37 @@ describe('YakitEditor 高亮类名切换', () => {
     expect(deltaDecorations.mock.calls.length).toBeGreaterThan(callsAfterMount)
     expect(classNameOf('hight-light-find_')).toBe('hight-light-yak-runner-color')
     expect(classNameOf('hight-light-text_')).toBe('hight-light-yak-runner-color')
+  })
+})
+
+/** 取出 Ctrl+V 粘贴命令的注册参数：[keybinding, handler, when] */
+const findPasteCommand = () => {
+  const call = editor.addCommand.mock.calls.find(
+    ([, , when]) => typeof when === 'string' && when.includes('editorTextFocus'),
+  )
+  expect(call, '未注册带 editorTextFocus 条件的 Ctrl+V 命令').toBeDefined()
+  return call as [number, () => void, string]
+}
+
+describe('YakitEditor 粘贴命令上下文条件', () => {
+  it('Ctrl+V 命令的 when 条件叠加 editorTextFocus，查找框聚焦时不再拦截粘贴', () => {
+    render(<YakitEditor value="NEEDLE" type="plaintext" />)
+
+    const [, , when] = findPasteCommand()
+    const parts = when.split('&&').map((part) => part.trim())
+    expect(parts).toHaveLength(2)
+    // 前缀是 createContextKey 注册的随机上下文 key，需保留
+    expect(parts[0]).not.toBe('')
+    // 修复前 when 只有该随机 key，查找框（find widget）内按 Ctrl+V 也会命中并吞掉粘贴
+    expect(parts[1]).toBe('editorTextFocus')
+  })
+
+  it('命令回调仍会触发 clipboardPasteAction 粘贴', () => {
+    render(<YakitEditor value="NEEDLE" type="plaintext" />)
+
+    const [, handler] = findPasteCommand()
+    handler()
+
+    expect(editor.trigger).toHaveBeenCalledWith('keyboard', 'editor.action.clipboardPasteAction', {})
   })
 })

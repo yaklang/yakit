@@ -975,7 +975,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
           editor.trigger('keyboard', 'editor.action.clipboardPasteAction', {})
         }
       },
-      randomStr,
+      `${randomStr} && editorTextFocus`,
     )
     const generateDecorations = (): YakitIModelDecoration[] => {
       // 检查 model 是否已被释放
