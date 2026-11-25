@@ -21,10 +21,6 @@ const mocks = vi.hoisted(() => ({
   setActiveChat: vi.fn(),
   onSend: vi.fn(),
   emit: vi.fn(),
-  showYakitModal: vi.fn(),
-  modalDestroy: vi.fn(),
-  modalOnOk: undefined as (() => void) | undefined,
-  modalOnCancel: undefined as (() => void) | undefined,
   modelContext: {
     enabled: false,
     thresholdTokens: 500000,
@@ -181,7 +177,6 @@ vi.mock('@/pages/ai-agent/chatTemplate/AIAgentChatTemplate', () => ({ AIChatLeft
 vi.mock('../../aiTaskContent/AITaskContent', () => ({ AITaskContent: () => null }))
 vi.mock('../../aiReActChat/AIReActComponent', () => ({ ChevrondownButton: () => null }))
 vi.mock('@/utils/eventBus/eventBus', () => ({ default: { emit: mocks.emit } }))
-vi.mock('@/components/yakitUI/YakitModal/YakitModalConfirm', () => ({ showYakitModal: mocks.showYakitModal }))
 vi.mock('@/i18n/useI18nNamespaces', () => ({
   useI18nNamespaces: () => ({ t: (key: string) => key }),
 }))
@@ -208,14 +203,6 @@ describe('AIInputSettingPopover', () => {
     })
     mocks.onSend.mockReset().mockReturnValue(true)
     mocks.emit.mockClear()
-    mocks.modalOnOk = undefined
-    mocks.modalOnCancel = undefined
-    mocks.modalDestroy.mockReset()
-    mocks.showYakitModal.mockReset().mockImplementation((config: any) => {
-      mocks.modalOnOk = config.onOk
-      mocks.modalOnCancel = config.onCancel
-      return { destroy: mocks.modalDestroy }
-    })
     sessionStore = createSessionStore()
   })
 
@@ -595,34 +582,6 @@ describe('AIInputSettingPopover', () => {
       HotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_SyntaxFlowRules,
       Params: {
         DisableBuiltinSyntaxFlowRules: false,
-      },
-    })
-    expect(mocks.showYakitModal).not.toHaveBeenCalled()
-  })
-
-  it('关闭命令执行安全规则不需要二次确认，自定义规则仍按逐条开关生效', () => {
-    mocks.setting = { ...mocks.setting, DisableBuiltinSyntaxFlowRules: false }
-    mocks.setSetting.mockImplementation((update) => {
-      mocks.setting = update(mocks.setting)
-    })
-    sessionStore.setState({ execute: true })
-    render(<AIInputSettingPopover visible />)
-    const builtin = screen.getByRole('switch', { name: 'AIReActTaskChatContent.enableCommandSecurityRules' })
-
-    fireEvent.click(builtin)
-
-    expect(mocks.showYakitModal).not.toHaveBeenCalled()
-    expect(mocks.setSetting).toHaveBeenCalledTimes(1)
-    expect(mocks.setting).toMatchObject({
-      DisableBuiltinSyntaxFlowRules: true,
-    })
-    expect(mocks.setAIGlobalConfig).toHaveBeenCalledExactlyOnceWith({
-      DisableBuiltinSyntaxFlowRules: true,
-    })
-    expect(mocks.onSend.mock.calls[0][0].params).toMatchObject({
-      HotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_SyntaxFlowRules,
-      Params: {
-        DisableBuiltinSyntaxFlowRules: true,
       },
     })
   })

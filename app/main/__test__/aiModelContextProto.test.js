@@ -45,7 +45,6 @@ describe('context and image engine wire compatibility', () => {
     ])('keeps automatic adjustment presence independent of image policy (%s)', (disabled, length, flag) => {
       // Params: RuntimeContextSizeLimit=51, ImageInput=54,
       // ModelContextKey=55, DisableContextAutoAdjust=56.
-      // 57/58 是 SyntaxFlow 规则开关。
       const wire = Buffer.from(
         `12${length}9803c0cf24b203060a046175746fba030a6f70617175652d6b6579${flag}40014a1752756e74696d65436f6e7465787453697a654c696d6974`,
         'hex',

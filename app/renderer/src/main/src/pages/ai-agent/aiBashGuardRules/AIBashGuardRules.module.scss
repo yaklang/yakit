@@ -12,12 +12,6 @@
     flex-direction: column;
     gap: 4px;
 
-    .title-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
     .title {
       font-size: 16px;
       font-weight: 600;
@@ -31,73 +25,9 @@
     }
   }
 
-  .tips {
-    border-radius: 8px;
-
-    :global(.ant-alert-message) {
-      font-size: 12px;
-      font-weight: 500;
-    }
-
-    .tip-list {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    .tip-item {
-      position: relative;
-      padding-left: 12px;
-      font-size: 12px;
-      line-height: 18px;
-      color: var(--Colors-Use-Neutral-Text-3-Secondary);
-
-      &::before {
-        position: absolute;
-        top: 7px;
-        left: 2px;
-        width: 4px;
-        height: 4px;
-        border-radius: 50%;
-        background: var(--Colors-Use-Main-Primary);
-        content: '';
-      }
-    }
-  }
-
   .toolbar {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-
-    .toolbar-left {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .toolbar-right {
-      display: flex;
-      align-items: center;
-
-      .dirty {
-        font-size: 12px;
-        color: var(--Colors-Use-Warning-Primary);
-      }
-    }
-  }
-
-  .rule-list-wrapper {
-    display: flex;
-    flex: 1;
-    min-height: 0;
-
-    :global(.ant-spin-nested-loading),
-    :global(.ant-spin-container) {
-      display: flex;
-      flex: 1;
-      min-height: 0;
-    }
+    gap: 8px;
   }
 
   .rule-list {
@@ -110,30 +40,31 @@
     overflow: auto;
   }
 
-  .rule-card {
-    height: auto;
+  .empty {
+    padding: 32px 0;
+    font-size: 12px;
+    color: var(--Colors-Use-Neutral-Text-4-Help-text);
+    text-align: center;
+  }
+
+  .rule-row {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    border: 1px solid var(--Colors-Use-Neutral-Border);
     border-radius: 8px;
     background: var(--Colors-Use-Basic-Background);
   }
 
-  .rule-card-body {
-    gap: 8px;
-    padding: 12px;
+  .rule-row-disabled {
+    opacity: 0.65;
   }
 
-  .rule-card-head {
-    height: auto;
-    min-height: 40px;
-    padding: 7px 12px;
-    background: var(--Colors-Use-Neutral-Bg);
-  }
-
-  .rule-card-title {
+  .rule-head {
     display: flex;
-    flex: 1;
     align-items: center;
     gap: 8px;
-    min-width: 0;
 
     .rule-index {
       display: inline-flex;
@@ -149,41 +80,16 @@
     }
 
     .name-input {
-      width: 220px;
+      width: 240px;
       max-width: 100%;
     }
   }
 
-  .rule-card-extra {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .field-row {
+  .rule-body {
     display: flex;
     align-items: center;
     gap: 10px;
     min-width: 0;
-
-    .field-label {
-      flex: 0 0 72px;
-      font-size: 12px;
-      line-height: 20px;
-      color: var(--Colors-Use-Neutral-Text-3-Secondary);
-      text-align: right;
-    }
-
-    .field-hint {
-      flex: 1;
-      min-width: 0;
-      overflow: hidden;
-      font-size: 12px;
-      line-height: 20px;
-      color: var(--Colors-Use-Neutral-Text-4-Help-text);
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
 
     .pattern-input {
       flex: 1;
@@ -193,13 +99,8 @@
   }
 
   .row-error {
-    padding-left: 82px;
     font-size: 12px;
     line-height: 16px;
     color: var(--Colors-Use-Error-Primary);
-  }
-
-  .rule-card-disabled {
-    opacity: 0.65;
   }
 }

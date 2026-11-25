@@ -469,23 +469,14 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
                   wrapperClassName={styles['setting-switch']}
                 />
               </Form.Item>
-              <div className={styles['custom-rule-entry']} onClick={onOpenBashGuardRules}>
-                <div className={styles['custom-rule-entry-main']}>
-                  <div className={styles['custom-rule-entry-title']}>
-                    {t('AIReActTaskChatContent.customBashRulesTitle')}
-                  </div>
-                  <div className={styles['custom-rule-entry-tip']}>
+              <div className={styles['custom-rule-entry']}>
+                <div className={styles['setting-label']}>
+                  <span>{t('AIReActTaskChatContent.customBashRulesTitle')}</span>
+                  <span className={styles['setting-description']}>
                     {t('AIReActTaskChatContent.customBashRulesTip')}
-                  </div>
+                  </span>
                 </div>
-                <YakitButton
-                  type="outline2"
-                  size="small"
-                  onClick={(event) => {
-                    event.stopPropagation()
-                    onOpenBashGuardRules()
-                  }}
-                >
+                <YakitButton type="outline2" size="small" onClick={onOpenBashGuardRules}>
                   {t('AIReActTaskChatContent.configureCustomSyntaxFlowRules')}
                 </YakitButton>
               </div>

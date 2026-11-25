@@ -1,20 +1,15 @@
 /**
- * AI Bash 自定义安全规则：一条规则 = 一个命令匹配方式 + 模式 + 命中后的处置动作。
- * 落库位置与引擎 commandcheck.RegexRulesStorageKey 一致（profile 数据库 KV，位于 Yakit Home），
- * 引擎在执行 Bash 工具前读取并对完整命令及拆解后的子命令求值。
+ * AI Bash 自定义安全规则：一条规则 = 匹配方式 + 匹配内容 + 处置动作。
+ * 存储 key 与引擎 aicommon.BashGuardRegexRulesStorageKey 一致（profile 数据库 KV，位于 Yakit Home），
+ * 引擎读取后对完整命令及拆解出的子命令分别求值。
  */
 export const AI_BASH_GUARD_REGEX_RULES_KEY = 'ai-bash-guard-regex-rules'
 
-/** 命中规则后的处置动作：拦截（拒绝执行）/ 询问（等待用户确认）/ 警告（执行并提示） */
+/** 命中后的处置动作：拦截（拒绝执行）/ 询问（等待确认）/ 警告（继续执行并提示） */
 export type AIBashGuardAction = 'deny' | 'ask' | 'warn'
 
-/**
- * 命令匹配方式：
- * - exact：整条命令完全相等，例如 ls 只匹配 ls，不匹配 ls -la
- * - prefix：命令前缀，例如 ls 匹配 ls、ls -la，但不匹配 lsof
- * - regex：Go RE2 正则，保留给复杂命令形态
- */
-export type AIBashGuardMatch = 'exact' | 'prefix' | 'regex'
+/** 匹配方式：正则 / 精确命令 / 命令前缀，缺省由引擎按正则处理 */
+export type AIBashGuardMatch = 'regex' | 'exact' | 'prefix'
 
 /** 页面中的一行规则，uid 仅用于前端渲染与定位错误，不落库 */
 export interface AIBashGuardRuleRow {
@@ -27,18 +22,15 @@ export interface AIBashGuardRuleRow {
   disabled: boolean
 }
 
-/** 落库结构与引擎 commandcheck.RegexRule 的 json tag 保持一致 */
+/** 落库结构与引擎 aicommon.BashGuardRegexRule 的 json tag 保持一致 */
 export interface AIBashGuardStoredRule {
   name?: string
   pattern: string
   action: AIBashGuardAction
-  match?: AIBashGuardMatch
+  match: AIBashGuardMatch
   description?: string
-  disabled?: boolean
+  disabled: boolean
 }
-
-export const AIBashGuardActions: AIBashGuardAction[] = ['deny', 'ask', 'warn']
-export const AIBashGuardMatches: AIBashGuardMatch[] = ['exact', 'prefix', 'regex']
 
 let uidSeed = 0
 
@@ -47,55 +39,26 @@ export const createRuleRow = (row?: Partial<Omit<AIBashGuardRuleRow, 'uid'>>): A
   name: row?.name ?? '',
   pattern: row?.pattern ?? '',
   action: row?.action ?? 'deny',
-  match: row?.match ?? 'exact',
+  match: row?.match ?? 'regex',
   description: row?.description ?? '',
-  // 新建和缺失开关状态的规则一律默认关闭，必须逐条手动开启。
+  // 引擎对缺失的 disabled 按关闭处理，新建规则同样默认关闭，需手动开启。
   disabled: row?.disabled ?? true,
 })
 
-export const normalizeAction = (value: unknown): AIBashGuardAction => {
-  switch (typeof value === 'string' ? value.trim().toLowerCase() : '') {
-    case 'ask':
-    case 'confirm':
-      return 'ask'
-    case 'warn':
-    case 'warning':
-      return 'warn'
-    default:
-      // 引擎对未知动作也按拦截处理，这里保持一致
-      return 'deny'
-  }
+/** 引擎对未知动作按拦截处理，这里保持一致 */
+const normalizeAction = (value: unknown): AIBashGuardAction => {
+  const text = typeof value === 'string' ? value.trim().toLowerCase() : ''
+  if (text === 'ask' || text === 'confirm') return 'ask'
+  if (text === 'warn' || text === 'warning') return 'warn'
+  return 'deny'
 }
 
-const PLAIN_COMMAND_RE = /^[A-Za-z0-9_\-./:@%+=,]+$/
-
-/**
- * 兼容旧数据：没有 match 字段时，纯命令名的拦截规则按精确命令处理，
- * 其它情况保持原来的正则语义。新规则由页面显式选择匹配方式。
- */
-export const normalizeMatch = (value: unknown, pattern: string, action: AIBashGuardAction): AIBashGuardMatch => {
-  switch (typeof value === 'string' ? value.trim().toLowerCase() : '') {
-    case 'exact':
-    case 'command':
-      return 'exact'
-    case 'prefix':
-    case 'command_prefix':
-      return 'prefix'
-    case 'regex':
-    case 'pattern':
-      return 'regex'
-    default:
-      return action === 'deny' && PLAIN_COMMAND_RE.test(pattern.trim()) ? 'exact' : 'regex'
-  }
+const normalizeMatch = (value: unknown): AIBashGuardMatch => {
+  const text = typeof value === 'string' ? value.trim().toLowerCase() : ''
+  return text === 'exact' || text === 'prefix' ? text : 'regex'
 }
 
-export interface ParsedStoredRules {
-  rules: AIBashGuardStoredRule[]
-  error?: string
-}
-
-/** 解析引擎中保存的规则 JSON；空值表示尚未配置 */
-export const parseStoredRules = (raw: string): ParsedStoredRules => {
+export const parseStoredRules = (raw: string): { rules: AIBashGuardStoredRule[]; error?: string } => {
   const text = (raw || '').trim()
   if (!text) return { rules: [] }
   let data: unknown
@@ -114,21 +77,19 @@ export const parseStoredRules = (raw: string): ParsedStoredRules => {
     if (!pattern.trim()) continue
     const name = typeof record.name === 'string' ? record.name : ''
     const description = typeof record.description === 'string' ? record.description : ''
-    const action = normalizeAction(record.action)
     rules.push({
       pattern,
-      action,
-      match: normalizeMatch(record.match, pattern, action),
+      action: normalizeAction(record.action),
+      match: normalizeMatch(record.match),
       ...(name ? { name } : {}),
       ...(description ? { description } : {}),
-      // 旧数据没有 disabled 字段时按关闭处理；只有显式 false 才表示启用。
+      // 与引擎一致：只有显式 false 才表示启用
       disabled: record.disabled !== false,
     })
   }
   return { rules }
 }
 
-/** 把页面行转换为落库结构；空的可选字段不写入，保持存储精简 */
 export const rowsToStoredRules = (rows: AIBashGuardRuleRow[]): AIBashGuardStoredRule[] =>
   rows.map((row) => {
     const name = row.name.trim()
@@ -139,55 +100,54 @@ export const rowsToStoredRules = (rows: AIBashGuardRuleRow[]): AIBashGuardStored
       match: row.match,
       ...(name ? { name } : {}),
       ...(description ? { description } : {}),
-      // 始终写入开关状态，否则启用的行重新读取后会按默认关闭处理。
+      // 引擎对缺失的 disabled 按关闭处理，必须显式写入
       disabled: row.disabled,
     }
   })
 
 export type AIBashGuardRuleValidationError =
-  | { code: 'patternRequired'; uid: string; index: number }
-  | { code: 'patternSyntax'; uid: string; index: number; message: string }
-  | { code: 'patternLookaround'; uid: string; index: number }
-  | { code: 'patternBackreference'; uid: string; index: number }
-  | { code: 'patternDuplicate'; uid: string; index: number; pattern: string }
+  | { code: 'patternRequired'; uid: string }
+  | { code: 'patternSyntax'; uid: string; message: string }
+  | { code: 'patternLookaround'; uid: string }
+  | { code: 'patternBackreference'; uid: string }
+  | { code: 'patternDuplicate'; uid: string; pattern: string }
 
-/** Go RE2 不支持零宽断言与反向引用，提前拦截，避免规则保存后静默失效 */
+/** Go RE2 不支持零宽断言与反向引用，提前拦截，避免规则保存后被引擎静默跳过 */
 const RE2_UNSUPPORTED: { test: RegExp; code: 'patternLookaround' | 'patternBackreference' }[] = [
   { test: /\(\?<?[=!]/, code: 'patternLookaround' },
   { test: /\\[1-9]/, code: 'patternBackreference' },
 ]
 
-/** 保存前校验：模式非空；正则模式额外校验语法与 RE2 兼容性；同匹配方式下不允许重复 */
+/** 保存前校验：内容非空；正则额外校验语法与 RE2 兼容性；同匹配方式下不允许重复 */
 export const validateRuleRows = (rows: AIBashGuardRuleRow[]): AIBashGuardRuleValidationError[] => {
   const errors: AIBashGuardRuleValidationError[] = []
-  const seen = new Map<string, number>()
-  rows.forEach((row, index) => {
+  const seen = new Set<string>()
+  rows.forEach((row) => {
     const pattern = row.pattern.trim()
     if (!pattern) {
-      errors.push({ code: 'patternRequired', uid: row.uid, index })
+      errors.push({ code: 'patternRequired', uid: row.uid })
       return
     }
     if (row.match === 'regex') {
       for (const rule of RE2_UNSUPPORTED) {
         if (rule.test.test(pattern)) {
-          errors.push({ code: rule.code, uid: row.uid, index })
+          errors.push({ code: rule.code, uid: row.uid })
           return
         }
       }
       try {
         new RegExp(pattern)
       } catch (error) {
-        errors.push({ code: 'patternSyntax', uid: row.uid, index, message: `${error}` })
+        errors.push({ code: 'patternSyntax', uid: row.uid, message: `${error}` })
         return
       }
     }
     const duplicateKey = `${row.match}\u0000${pattern}`
-    const duplicateIndex = seen.get(duplicateKey)
-    if (duplicateIndex !== undefined) {
-      errors.push({ code: 'patternDuplicate', uid: row.uid, index, pattern })
+    if (seen.has(duplicateKey)) {
+      errors.push({ code: 'patternDuplicate', uid: row.uid, pattern })
       return
     }
-    seen.set(duplicateKey, index)
+    seen.add(duplicateKey)
   })
   return errors
 }
@@ -201,13 +161,8 @@ const getIPC = (): any => {
   }
 }
 
-export interface LoadedGuardRules {
-  rows: AIBashGuardRuleRow[]
-  error?: string
-}
-
 /** 从引擎读取规则（GetKey 走 profile 数据库） */
-export const readRulesFromEngine = async (): Promise<LoadedGuardRules> => {
+export const readRulesFromEngine = async (): Promise<{ rows: AIBashGuardRuleRow[]; error?: string }> => {
   const ipc = getIPC()
   if (!ipc) return { rows: [], error: 'ipcUnavailable' }
   try {

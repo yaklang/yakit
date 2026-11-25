@@ -2387,9 +2387,6 @@ message AIStartParams {
 	AIImageInputConfig ImageInput = 54;
   // 为 true 时禁用命令执行安全规则（内置规则与自定义规则都不生效）。
   bool DisableBuiltinSyntaxFlowRules = 57;
-  // Reserved for the removed custom-rule session switch. Custom rows are
-  // enabled individually on the AI Bash guard page.
-  reserved 58;
 }
 
 message AIExecutionStrategy {
@@ -9666,9 +9663,6 @@ message AIGlobalConfig {
   // Global default for disabling built-in SyntaxFlow security rules. A session
   // AIStartParams value can override this default.
   bool DisableBuiltinSyntaxFlowRules = 15;
-  // Reserved for the removed custom-rule global switch. Custom rows are
-  // enabled individually on the AI Bash guard page.
-  reserved 16;
 }
 
 // Local Model Messages
