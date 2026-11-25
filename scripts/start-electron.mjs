@@ -18,10 +18,7 @@ const pageReady = (url) =>
     request.on('error', () => resolve(false))
   })
 
-export const resolveRendererUrls = () => [
-  'http://127.0.0.1:3000',
-  'http://127.0.0.1:3001/engine-link.html',
-]
+export const resolveRendererUrls = () => ['http://127.0.0.1:3000', 'http://127.0.0.1:3001/engine-link.html']
 
 export async function waitForRenderers({ urls = resolveRendererUrls(), timeoutMs = 120000 } = {}) {
   const deadline = Date.now() + timeoutMs
