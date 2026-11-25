@@ -310,18 +310,57 @@
       align-items: center;
       flex-wrap: wrap;
       gap: 10px;
+      min-width: 0;
 
+      // 开关按文案宽度排列，不用 100% 占满第一行，避免统计信息被挤到下一行。
       .plugin-type-switch {
-        flex-shrink: 0;
-        min-width: min-content;
+        flex: 0 0 auto;
+        width: max-content;
+        min-width: 0;
+        max-width: 100%;
+        overflow: hidden;
+
+        :global {
+          .ant-radio-group {
+            display: inline-flex;
+            width: max-content;
+            max-width: 100%;
+            min-width: 0;
+          }
+
+          .ant-radio-group .ant-radio-button-wrapper {
+            flex: 0 1 auto;
+            min-width: 0;
+            overflow: hidden;
+          }
+
+          .ant-radio-group .ant-radio-button-wrapper .ant-radio-button {
+            flex-shrink: 0;
+          }
+
+          .ant-radio-group .ant-radio-button-wrapper > span:not(.ant-radio-button) {
+            display: block;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+        }
       }
 
-      // YakModuleListHeard 在 MITMPage.module.scss 中为 width: 100%，
-      // 与开关同行时会把选项按钮挤窄，英文标签随即折行。
-      > div:last-child {
+      // flex-basis: 0 让它先排进开关右侧的剩余空间，而不是按 100% 宽度整行换行。
+      // min-width: 80px 只在剩余宽度过窄时才折到下一行；同行时单行省略。
+      .plugin-list-heard-wrap {
+        flex: 1 1 0;
+        min-width: 80px;
         width: auto;
-        flex: 1 1 auto;
-        min-width: min-content;
+        overflow: hidden;
+
+        > div {
+          width: auto;
+          max-width: 100%;
+          min-width: 0;
+        }
       }
     }
   }

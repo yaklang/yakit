@@ -5,7 +5,7 @@ import { failed, yakitNotify } from '@/utils/notification'
 import style from '../MITMPage.module.scss'
 import ReactResizeDetector from 'react-resize-detector'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
-import { Divider, Dropdown, Empty, Progress } from 'antd'
+import { Dropdown, Empty, Progress } from 'antd'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import classNames from 'classnames'
 import { ChevronUpIcon } from '@yakit-libs/yakit-ui-icons/oldicon/ChevronUpIcon'
@@ -445,14 +445,10 @@ export const YakModuleListHeard: React.FC<YakModuleListHeardProps> = React.memo(
           <span className={style['mitm-plugin-list-check-text']}>全选</span>
         </div>
       )}
-      <div className={style['mitm-plugin-list-tip']}>
-        <div>
-          Total<span>&nbsp;{total}</span>
-        </div>
-        <Divider type="vertical" style={{ margin: '0 8px', height: 12, top: 0 }} />
-        <div>
-          Selected<span>&nbsp;{length}</span>
-        </div>
+      <div className={style['mitm-plugin-list-tip']} title={`Total ${total} Selected ${length}`}>
+        Total<span>&nbsp;{total}</span>
+        <span className={style['mitm-plugin-list-tip-divider']} />
+        Selected<span>&nbsp;{length}</span>
       </div>
     </div>
   )

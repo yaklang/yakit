@@ -940,15 +940,17 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
                   onIsHasParams(e.target.value)
                 }}
               />
-              <YakModuleListHeard
-                onSelectAll={onSelectAll}
-                setIsSelectAll={setIsSelectAll}
-                isSelectAll={isSelectAll}
-                total={total}
-                length={isHasParams ? hasParamsCheckList.length : noParamsCheckList.length}
-                loading={loading}
-                isHasParams={isHasParams}
-              />
+              <div className={styles['plugin-list-heard-wrap']}>
+                <YakModuleListHeard
+                  onSelectAll={onSelectAll}
+                  setIsSelectAll={setIsSelectAll}
+                  isSelectAll={isSelectAll}
+                  total={total}
+                  length={isHasParams ? hasParamsCheckList.length : noParamsCheckList.length}
+                  loading={loading}
+                  isHasParams={isHasParams}
+                />
+              </div>
             </div>
             <YakitSpin spinning={loading}>
               <MITMPluginLocalList
