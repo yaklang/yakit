@@ -375,3 +375,80 @@ describe('aiOther syntaxflow_rule_change', () => {
     expect(req.store.getState().syntaxflowRuleChangeUpdate).toBe(0)
   })
 })
+
+const planHistoryTree = JSON.stringify({
+  task_id: 'root',
+  name: 'root',
+  goal: '',
+  semantic_identifier: 'root',
+  isRemove: false,
+  tools: [],
+  description: '',
+  total_tool_call_count: 0,
+  success_tool_call_count: 0,
+  fail_tool_call_count: 0,
+  summary: '',
+  subtasks: [],
+})
+
+const planHistoryRecord = (coordinatorId: string, phase: 'Completed' | 'NotCompleted') => ({
+  coordinator_id: coordinatorId,
+  created_at: '',
+  created_at_unix: 0,
+  session_id: 'session-1',
+  updated_at: '',
+  updated_at_unix: 0,
+  task_progress: JSON.stringify({
+    total_tasks: 1,
+    completed_tasks: phase === 'Completed' ? 1 : 0,
+    skipped_tasks: 0,
+    aborted_tasks: 0,
+    current_index: 0,
+    current_task_index: '',
+    current_task: '',
+    current_goal: '',
+    phase,
+    updated_at: 0,
+  }),
+  task_tree: planHistoryTree,
+})
+
+describe('aiOther plan_exec_tasks', () => {
+  it('过滤已完成规划，协议 total 保持原值，planHistoryCount 为未过滤条数', () => {
+    const req = makeHandlerRequest({
+      res: makeGrpcJsonRes(
+        'structured',
+        {
+          session_id: 'session-1',
+          total: 99,
+          records: [
+            planHistoryRecord('done-1', 'Completed'),
+            planHistoryRecord('open-1', 'NotCompleted'),
+            planHistoryRecord('done-2', 'Completed'),
+          ],
+        },
+        { NodeId: 'plan_exec_tasks' },
+      ),
+    })
+    aiOtherDataHandlers.plan_exec_tasks(req)
+    const state = req.store.getState()
+    expect(state.planHistoryCount).toBe(3)
+    const list = state.planHistoryList
+    expect(list.total).toBe(99)
+    expect(list.session_id).toBe('session-1')
+    expect(list.records.map((item) => item.coordinator_id)).toEqual(['open-1'])
+    expect(list.records[0].task_progress.phase).toBe('NotCompleted')
+    expect(list.records[0].root_task_name).toBe('root')
+  })
+
+  it('空 records 保持协议 total，并清空残留的 planHistoryCount', () => {
+    const payload = { session_id: 'session-empty', total: 4, records: [] as never[] }
+    const req = makeHandlerRequest({
+      res: makeGrpcJsonRes('structured', payload, { NodeId: 'plan_exec_tasks' }),
+    })
+    req.store.getState().updateState({ planHistoryCount: 5 })
+    aiOtherDataHandlers.plan_exec_tasks(req)
+    expect(req.store.getState().planHistoryList).toEqual(payload)
+    expect(req.store.getState().planHistoryCount).toBe(0)
+  })
+})

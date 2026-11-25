@@ -89,7 +89,7 @@ describe('useRunningAsyncTaskCount', () => {
     sessions.clear()
   })
 
-  it('统计一个执行叶子和两个子 Agent，排除父节点、删除节点及非执行状态', () => {
+  it('total 统计全部叶子和子 Agent，running 只计执行中状态', () => {
     const session = getSession()
     session.store.getState().updateState({
       currentPlan: {
@@ -108,20 +108,23 @@ describe('useRunningAsyncTaskCount', () => {
     addAgent('agent-2')
     addAgent('done-agent', { status: 'completed' })
     const { result } = renderHook(() => useRunningAsyncTaskCount())
-    expect(result.current).toBe(3)
+    expect(result.current).toEqual({ total: 9, running: 3 })
   })
 
-  it.each(['completed', 'aborted', 'cancel', 'skipped'] as const)('子 Agent 到达 %s 后即时减数', (status) => {
-    const session = getSession()
-    const agent = addAgent('agent-1')
-    const { result } = renderHook(() => useRunningAsyncTaskCount())
-    expect(result.current).toBe(1)
-    act(() => {
-      agent.data.status = status
-      session.store.getState().incrementNodeVersion(agent.id, 'task')
-    })
-    expect(result.current).toBe(0)
-  })
+  it.each(['completed', 'aborted', 'cancel', 'skipped'] as const)(
+    '子 Agent 到达 %s 后 running 减为 0，total 仍保留',
+    (status) => {
+      const session = getSession()
+      const agent = addAgent('agent-1')
+      const { result } = renderHook(() => useRunningAsyncTaskCount())
+      expect(result.current).toEqual({ total: 1, running: 1 })
+      act(() => {
+        agent.data.status = status
+        session.store.getState().incrementNodeVersion(agent.id, 'task')
+      })
+      expect(result.current).toEqual({ total: 1, running: 0 })
+    },
+  )
 
   it('同一规划内重复展示的节点只计一次，子 Agent 独立计数', () => {
     const session = getSession()
@@ -131,7 +134,7 @@ describe('useRunningAsyncTaskCount', () => {
     addAgent('agent-1')
     addAgent('agent-1')
     const { result } = renderHook(() => useRunningAsyncTaskCount())
-    expect(result.current).toBe(2)
+    expect(result.current).toEqual({ total: 2, running: 2 })
   })
 
   it('子 Agent 来源保持原 reAct 筛选，task 通道节点不进入该列表和计数', () => {
@@ -141,7 +144,7 @@ describe('useRunningAsyncTaskCount', () => {
       count: useRunningAsyncTaskCount(),
       list: useCasualConcurrentTaskList(),
     }))
-    expect(result.current.count).toBe(1)
+    expect(result.current.count).toEqual({ total: 1, running: 1 })
     expect(result.current.list).toMatchObject([{ task_id: 'casual-agent', progress: 'processing' }])
   })
 
@@ -150,13 +153,13 @@ describe('useRunningAsyncTaskCount', () => {
     const agent = addAgent('restored-agent', { history: true })
     addAgent('completed-agent', { history: true, status: 'completed' })
     const { result } = renderHook(() => ({ count: useRunningAsyncTaskCount(), list: useCasualConcurrentTaskList() }))
-    expect(result.current.count).toBe(1)
+    expect(result.current.count).toEqual({ total: 2, running: 1 })
     expect(result.current.list.find((task) => task.task_id === 'restored-agent')?.progress).toBe('processing')
     act(() => {
       agent.data.status = 'completed'
       session.store.getState().incrementNodeVersion(agent.id, 'task')
     })
-    expect(result.current.count).toBe(0)
+    expect(result.current.count).toEqual({ total: 2, running: 0 })
   })
 
   it('相同或不同 ID 的快照更新均不改变本地数量和列表状态', () => {
@@ -165,7 +168,7 @@ describe('useRunningAsyncTaskCount', () => {
     addAgent('completed-agent', { status: 'completed' })
     const { result } = renderHook(() => ({ count: useRunningAsyncTaskCount(), list: useCasualConcurrentTaskList() }))
     const localList = result.current.list
-    expect(result.current.count).toBe(1)
+    expect(result.current.count).toEqual({ total: 2, running: 1 })
     act(() =>
       session.store.getState().updateState({
         sessionTaskListRevision: 1,
@@ -177,10 +180,10 @@ describe('useRunningAsyncTaskCount', () => {
         ],
       }),
     )
-    expect(result.current.count).toBe(1)
+    expect(result.current.count).toEqual({ total: 2, running: 1 })
     expect(result.current.list).toEqual(localList)
     act(() => session.store.getState().updateState({ sessionTaskListRevision: 2, sessionTaskList: [] }))
-    expect(result.current.count).toBe(1)
+    expect(result.current.count).toEqual({ total: 2, running: 1 })
     expect(result.current.list).toEqual(localList)
   })
 
@@ -202,7 +205,7 @@ describe('useRunningAsyncTaskCount', () => {
     addAgent('agent-1')
     const { result } = renderHook(() => ({ tasks: useAsyncTaskStates(), count: useRunningAsyncTaskCount() }))
     expect(result.current.tasks).toEqual([planTask('leaf'), planTask('done', { progress: 'completed' })])
-    expect(result.current.count).toBe(2)
+    expect(result.current.count).toEqual({ total: 3, running: 2 })
   })
 
   it('切换规划后复用 task_id，旧规划的快照不会改变新规划状态', () => {
@@ -214,14 +217,14 @@ describe('useRunningAsyncTaskCount', () => {
     })
     addAgent('agent-1')
     const { result } = renderHook(() => ({ count: useRunningAsyncTaskCount(), tasks: useAsyncTaskStates() }))
-    expect(result.current.count).toBe(1)
+    expect(result.current.count).toEqual({ total: 2, running: 1 })
     act(() =>
       session.store.getState().updateState({
         currentChatStatus: { questionID: 'question-2', coordinatorId: 'plan-2', status: 'processing' },
         currentPlan: { root_task_name: '新规划', task_tree: [planTask('1')] },
       }),
     )
-    expect(result.current.count).toBe(2)
+    expect(result.current.count).toEqual({ total: 2, running: 2 })
     expect(result.current.tasks).toEqual([planTask('1')])
   })
 
@@ -229,13 +232,13 @@ describe('useRunningAsyncTaskCount', () => {
     const session = getSession()
     addAgent('agent-1')
     const { result } = renderHook(() => useRunningAsyncTaskCount())
-    expect(result.current).toBe(1)
+    expect(result.current).toEqual({ total: 1, running: 1 })
     act(() => session.store.getState().updateState({ execute: false }))
-    expect(result.current).toBe(1)
+    expect(result.current).toEqual({ total: 1, running: 1 })
     act(() => session.store.getState().updateState({ execute: true, initLoading: true }))
-    expect(result.current).toBe(1)
+    expect(result.current).toEqual({ total: 1, running: 1 })
     act(() => session.store.getState().updateState({ initLoading: false }))
-    expect(result.current).toBe(1)
+    expect(result.current).toEqual({ total: 1, running: 1 })
   })
 
   it('切换会话后读取当前规划，相同长度和 ID 的不同状态不会串 store', () => {
@@ -248,7 +251,7 @@ describe('useRunningAsyncTaskCount', () => {
       count: useRunningAsyncTaskCount(),
       tasks: useAsyncTaskStates(),
     }))
-    expect(result.current.count).toBe(1)
+    expect(result.current.count).toEqual({ total: 1, running: 1 })
     const next = createTestSession('session-b')
     next.store.getState().updateState({
       currentPlan: { root_task_name: 'B', task_tree: [planTask('leaf', { progress: 'completed' })] },
@@ -256,11 +259,11 @@ describe('useRunningAsyncTaskCount', () => {
     sessions.set('session-b', next)
     context.current = 'session-b'
     rerender()
-    expect(result.current.count).toBe(0)
+    expect(result.current.count).toEqual({ total: 1, running: 0 })
     expect(result.current.tasks[0].progress).toBe('completed')
     context.current = 'session-a'
     rerender()
-    expect(result.current.count).toBe(1)
+    expect(result.current.count).toEqual({ total: 1, running: 1 })
     expect(result.current.tasks[0].progress).toBe('processing')
   })
 })

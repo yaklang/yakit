@@ -15,7 +15,7 @@ let removeFlow: (id: string, isSummary: boolean) => void
 const agentStore = createStore<{ activeChat?: { Id: string; SessionID: string } }>(() => ({}))
 const taskStore = createStore(() => ({
   currentChatStatus: { questionID: 'task-1' },
-  currentPlan: { task_tree: [] },
+  currentPlan: { task_tree: [] as { task_id: string; isLeaf?: boolean }[] },
   chatElements: [],
   tasks: {},
   taskDetailsUpdate: 0,
@@ -231,6 +231,7 @@ beforeEach(() => {
 afterEach(() => {
   cleanup()
   observers.clear()
+  taskStore.setState({ currentPlan: { task_tree: [] } })
   vi.restoreAllMocks()
   vi.unstubAllGlobals()
   vi.useRealTimers()
@@ -403,6 +404,10 @@ describe('公共右侧面板', () => {
   })
 
   it('会话模式浮层随聊天容器定位，切换自由对话隐藏浮层', async () => {
+    // 无任务时「异步任务」入口隐藏；本用例只验证浮层开关，预置叶子任务让入口可见
+    taskStore.setState({
+      currentPlan: { task_tree: [{ task_id: 'leaf-1', isLeaf: true }] },
+    })
     agentStore.setState({ activeChat: { Id: 'chat-1', SessionID: 'session-1' } })
     const { container } = render(<Layout />)
     await screen.findByTestId('chat-content')
