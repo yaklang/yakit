@@ -235,6 +235,26 @@ export const apiRiskFieldGroup: () => Promise<RiskFieldGroupResponse> = () => {
   })
 }
 
+export interface UploadRiskToOnlineBatchRequest {
+  ToOnlineWhere: {
+    Token: string
+    ProjectName: string
+    ExternalModule?: string
+    ExternalProjectCode?: string
+    Hash?: string[]
+  }
+  UploadRisksWhere: Partial<QueryRisksRequest>
+}
+
+export interface UploadRiskToOnlineBatchResponse {
+  SuccessCount: number | string
+  FailedCount: number | string
+}
+
+export const apiUploadRiskToOnlineBatch = (
+  params: UploadRiskToOnlineBatchRequest,
+): Promise<UploadRiskToOnlineBatchResponse> => ipcRenderer.invoke('UploadRiskToOnlineBatch', params)
+
 export interface UploadRiskToOnlineRequest {
   Token: string
   ProjectName?: string

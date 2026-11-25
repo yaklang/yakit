@@ -1,4 +1,28 @@
 import type { Risk } from '../schema'
+import type { QueryRisksRequest } from './YakitRiskTableType'
+
+/** 上传范围从第一页覆盖所选数量，避免沿用列表分页或依赖引擎默认分页。 */
+export const buildRiskUploadFilter = (
+  query: QueryRisksRequest,
+  total: number,
+  ids?: Risk['Id'][],
+): Partial<QueryRisksRequest> => {
+  const count = ids ? ids.length : total
+  if (count <= 0) throw new Error('Cannot upload an empty risk selection')
+  const Pagination = { Page: 1, Limit: count, OrderBy: 'id', Order: 'asc' }
+  if (ids) {
+    return { Ids: [...ids], Pagination }
+  }
+  const filter: Partial<QueryRisksRequest> = { ...query, Pagination }
+  delete filter.FromId
+  delete filter.UntilId
+  delete filter.RiskTypeList
+  delete filter.SeverityList
+  delete filter.TagList
+  delete filter.IPList
+  delete filter.CreatedAt
+  return filter
+}
 
 export const getDiscoveryTimeColumnFixed = (excludeColumnsKey: string[]): 'right' | undefined => {
   return excludeColumnsKey.includes('action') ? 'right' : undefined

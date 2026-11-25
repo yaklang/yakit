@@ -61,6 +61,7 @@ import {
   type BatchSetRiskTagsRequest,
   type SetTagForRiskRequest,
   type UploadRiskToOnlineRequest,
+  apiUploadRiskToOnlineBatch,
   apiDeleteRisk,
   apiExportHtml,
   apiNewRiskRead,
@@ -127,7 +128,8 @@ import { getRemoteValue } from '@/utils/kv'
 import { NoPromptHint } from '@/pages/pluginHub/utilsUI/UtilsTemplate'
 import { RemoteRiskGV } from '@/enums/risk'
 import { useStore } from '@/store'
-import { isEnterpriseEdition } from '@/utils/envfile'
+import { isEnpriTrace, isEnterpriseEdition } from '@/utils/envfile'
+import { NowProjectDescription } from '@/pages/globalVariable'
 import { RiskDisposalLog } from './RiskDisposalLog'
 import { BatchScopeSelector } from '@/components/BatchScopeSelector/BatchScopeSelector'
 import { buildBatchScopes } from '@/components/BatchScopeSelector/batchScope'
@@ -143,6 +145,7 @@ import { SafeMarkdown } from '@/pages/assetViewer/reportRenders/markdownRender'
 import type { HTTPFlow } from '@/components/HTTPFlowTable/HTTPFlowTable'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 import {
+  buildRiskUploadFilter,
   countNewRiskIds,
   getDiscoveryTimeColumnFixed,
   isRiskTableInitPage,
@@ -355,6 +358,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
   const { userInfo } = useStore()
   const isEnterprise = isEnterpriseEdition()
   const [loading, setLoading] = useState<boolean>(false)
+  const isUploadingRiskRef = useRef<boolean>(false)
   const exportPageContainerRef = useRef<HTMLElement>()
 
   const [isRefresh, setIsRefresh] = useState<boolean>(false)
@@ -1041,10 +1045,59 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         }, 200),
       )
   })
+  const onUploadRiskData = useMemoizedFn(async (ids?: Risk['Id'][]) => {
+    if (isUploadingRiskRef.current) {
+      yakitNotify('warning', t('YakitRiskTable.uploadInProgress'))
+      return
+    }
+    if (!userInfo.isLogin || !userInfo.token) {
+      yakitNotify('warning', t('YakitRiskTable.uploadLoginRequired'))
+      return
+    }
+    if (!NowProjectDescription?.ProjectName) {
+      yakitNotify('warning', t('YakitRiskTable.uploadMissingProject'))
+      return
+    }
+    if (!isEnpriTrace()) return
+
+    const { ProjectName, ExternalModule, ExternalProjectCode } = NowProjectDescription
+    isUploadingRiskRef.current = true
+    yakitNotify('info', t('YakitRiskTable.uploadingData'))
+    try {
+      const response = await apiUploadRiskToOnlineBatch({
+        ToOnlineWhere: {
+          Token: userInfo.token,
+          ProjectName,
+          ExternalModule,
+          ExternalProjectCode,
+        },
+        UploadRisksWhere: buildRiskUploadFilter(cloneDeep(getQuery()), allTotal, ids),
+      })
+      const SuccessCount = Number(response.SuccessCount) || 0
+      const FailedCount = Number(response.FailedCount) || 0
+      const message = t('YakitRiskTable.uploadResult', { SuccessCount, FailedCount })
+      yakitNotify(FailedCount === 0 ? 'success' : SuccessCount === 0 ? 'error' : 'warning', message)
+    } catch (error: any) {
+      const errorMessage = error?.message || `${error}`
+      const isUnsupported = error?.code === 12 || /UNIMPLEMENTED/i.test(errorMessage)
+      yakitNotify(
+        'error',
+        isUnsupported
+          ? t('YakitRiskTable.uploadUnsupported')
+          : t('YakitRiskTable.uploadFailed', { error: errorMessage }),
+      )
+    } finally {
+      isUploadingRiskRef.current = false
+    }
+  })
   const onBatchAction = useMemoizedFn((key: RiskBatchAction) => {
     if (selectNum === 0) return
     const scope = allCheck ? { Filter: cloneDeep(getQuery()) } : { Ids: selectList.map((item) => item.Id) }
     switch (key) {
+      case 'upload-data':
+        if (!isEnpriTrace() || !userInfo.isLogin) return
+        void onUploadRiskData(allCheck ? undefined : selectList.map((item) => item.Id))
+        break
       case 'modify-mark': {
         if (!isEnterpriseEdition()) return
         const currentFilter = cloneDeep(getQuery())
@@ -1559,6 +1612,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
     showByRightContext({
       width: 180,
       data: [
+        ...(isEnpriTrace() && userInfo.isLogin ? [{ key: 'upload-data', label: t('YakitRiskTable.uploadData') }] : []),
         { key: 'delete-repeat-title', label: t('YakitRiskTable.RowContextMenu.delete_duplicate_title_data') },
         { key: 'open-in-new-window', label: t('YakitRiskTable.RowContextMenu.openInNewWindow') },
       ],
@@ -1567,6 +1621,9 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
   })
   const onRightMenuSelect = useMemoizedFn((key: string, rowData: Risk) => {
     switch (key) {
+      case 'upload-data':
+        void onUploadRiskData([rowData.Id])
+        break
       case 'delete-repeat-title':
         onDeleteRepeatTitle(rowData)
         break
@@ -1743,6 +1800,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                     <RiskBatchOperationsMenu
                       selectedCount={selectNum}
                       isEnterprise={isEnterpriseEdition()}
+                      canUpload={isEnpriTrace() && userInfo.isLogin}
                       onAction={onBatchAction}
                     />
                     <YakitPopconfirm

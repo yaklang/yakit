@@ -13,6 +13,14 @@
     "resetTipAfterManualSelection": "After manually selecting all vulnerability types, click reset to view all data"
   },
   "YakitRiskTable": {
+    "uploadData": "Upload data",
+    "uploadingData": "Uploading data",
+    "uploadInProgress": "Upload in progress. Please do not submit again.",
+    "uploadMissingProject": "The current project name is missing. Cannot upload data.",
+    "uploadLoginRequired": "Please sign in before uploading data.",
+    "uploadResult": "Upload finished: {{SuccessCount}} succeeded, {{FailedCount}} failed.",
+    "uploadFailed": "Failed to upload risks: {{error}}",
+    "uploadUnsupported": "This engine does not support batch risk uploads. Please upgrade the engine.",
     "batch_modify_mark": "Modify Marks",
     "delete_selected_risks": "Delete Selected Risks",
     "confirm_clear_filtered_risks": "Clear all vulnerabilities and risks matching the current filters? This cannot be undone.",

@@ -5,21 +5,23 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
 import type { YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
 
-export type RiskBatchAction = 'modify-mark' | 'export-csv' | 'export-html' | 'delete'
+export type RiskBatchAction = 'modify-mark' | 'upload-data' | 'export-csv' | 'export-html' | 'delete'
 
 interface RiskBatchOperationsMenuProps {
   selectedCount: number
   isEnterprise: boolean
+  canUpload: boolean
   onAction: (action: RiskBatchAction) => void
 }
 
 export const RiskBatchOperationsMenu: React.FC<RiskBatchOperationsMenuProps> = ({
   selectedCount,
   isEnterprise,
+  canUpload,
   onAction,
 }) => {
   const { t } = useI18nNamespaces(['risk', 'yakitUi'])
-  const contextKey = `${selectedCount}:${isEnterprise}`
+  const contextKey = `${selectedCount}:${isEnterprise}:${canUpload}`
   const [dropdownState, setDropdownState] = useState({ contextKey, open: false })
   if (dropdownState.contextKey !== contextKey) {
     setDropdownState({ contextKey, open: false })
@@ -32,6 +34,14 @@ export const RiskBatchOperationsMenu: React.FC<RiskBatchOperationsMenuProps> = (
           {
             key: 'modify-mark',
             label: t('YakitRiskTable.batch_modify_mark'),
+          } satisfies YakitMenuItemType,
+        ]
+      : []),
+    ...(canUpload
+      ? [
+          {
+            key: 'upload-data',
+            label: t('YakitRiskTable.uploadData'),
           } satisfies YakitMenuItemType,
         ]
       : []),
@@ -55,7 +65,8 @@ export const RiskBatchOperationsMenu: React.FC<RiskBatchOperationsMenuProps> = (
 
   const handleAction = (action: RiskBatchAction) => {
     setDropdownState({ contextKey, open: false })
-    if (selectedCount === 0 || (action === 'modify-mark' && !isEnterprise)) return
+    if (selectedCount === 0 || (action === 'modify-mark' && !isEnterprise) || (action === 'upload-data' && !canUpload))
+      return
     onAction(action)
   }
 

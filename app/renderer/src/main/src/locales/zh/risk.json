@@ -13,6 +13,14 @@
     "resetTipAfterManualSelection": "手动选择所有漏洞类型后，点击重置即可查看所有数据"
   },
   "YakitRiskTable": {
+    "uploadData": "上传数据",
+    "uploadingData": "正在上传数据",
+    "uploadInProgress": "数据上传中，请勿重复操作",
+    "uploadMissingProject": "缺少当前项目名称，无法上传数据",
+    "uploadLoginRequired": "请先登录后上传数据",
+    "uploadResult": "上传完成：成功 {{SuccessCount}} 条，失败 {{FailedCount}} 条",
+    "uploadFailed": "上传漏洞与风险失败：{{error}}",
+    "uploadUnsupported": "当前引擎不支持批量上传漏洞与风险，请升级引擎",
     "batch_modify_mark": "修改标记",
     "delete_selected_risks": "删除所选漏洞",
     "confirm_clear_filtered_risks": "确定清空当前筛选结果中的所有漏洞与风险吗？此操作不可恢复。",
