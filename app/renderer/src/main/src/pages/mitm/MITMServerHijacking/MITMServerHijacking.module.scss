@@ -309,7 +309,8 @@
       display: flex;
       align-items: center;
       flex-wrap: wrap;
-      gap: 10px;
+      // 只保留列间距：折行时不再额外留 10px 行间距，避免开关下方出现空白。
+      gap: 0 10px;
       min-width: 0;
 
       // 开关按文案宽度排列，不用 100% 占满第一行，避免统计信息被挤到下一行。
@@ -348,11 +349,10 @@
         }
       }
 
-      // flex-basis: 0 让它先排进开关右侧的剩余空间，而不是按 100% 宽度整行换行。
-      // min-width: 80px 只在剩余宽度过窄时才折到下一行；同行时单行省略。
+      // flex-basis: 0 让它先排进开关右侧的剩余空间，而不是按 100% 宽度整行换行；
+      // overflow: hidden 使自动最小宽度为 0，统计信息始终与开关同行，空间不足时单行省略。
       .plugin-list-heard-wrap {
         flex: 1 1 0;
-        min-width: 80px;
         width: auto;
         overflow: hidden;
 
