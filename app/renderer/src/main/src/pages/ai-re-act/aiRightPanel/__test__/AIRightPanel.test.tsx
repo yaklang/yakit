@@ -57,9 +57,9 @@ interface MockTaskStoreState {
   pendingReply: boolean
   taskDetailsUpdate: number
   asyncExecutionUpdate: number
-  sessionExecution?: Record<string, unknown>
   planHistoryList?: { records: { coordinator_id: string }[]; total?: number }
   planHistoryCount?: number
+  sessionSnapshot?: { current_round?: number; execution: Record<string, unknown> }
 }
 // 详情条目带 uuid：父级收到更新通知后比较 uuid 判断详情是否被流数据刷新（参照 AITaskExecutionDetails）
 interface MockTaskDetails {
@@ -94,9 +94,9 @@ const mockTaskStore: StoreApi<MockTaskStoreState> = createStore<MockTaskStoreSta
   pendingReply: false,
   taskDetailsUpdate: 0,
   asyncExecutionUpdate: 0,
-  sessionExecution: undefined,
   planHistoryList: { records: [] },
   planHistoryCount: 0,
+  sessionSnapshot: undefined,
 }))
 const setMockQuestionID = (questionID: string) => {
   mockTaskStore.setState((state) => ({ currentChatStatus: { ...state.currentChatStatus, questionID } }))
@@ -110,9 +110,9 @@ const resetMockStore = () => {
     pendingReply: false,
     taskDetailsUpdate: 0,
     asyncExecutionUpdate: 0,
-    sessionExecution: undefined,
     planHistoryList: { records: [] },
     planHistoryCount: 0,
+    sessionSnapshot: undefined,
   })
   mockRawData.asyncExecution = undefined
   mockTaskDetailsMap.clear()
@@ -328,6 +328,7 @@ vi.mock('i18next-resources-to-backend', () => {
           viewLog: '查看日志',
           collapse: '折叠',
           more: '更多',
+          currentRound: '当前轮数',
           step: 'Step',
           runtime: '运行时间',
           toolCallCount: '工具调用数',
@@ -383,6 +384,7 @@ const renderPanel = async (ui: React.ReactElement) => {
 }
 
 const expectEmptyDataCards = () => {
+  expect(screen.getByText('当前轮数').nextElementSibling).toHaveTextContent('—')
   expect(screen.getByText('运行时间')).toBeVisible()
   expect(screen.getByText('运行时间').nextElementSibling).toHaveTextContent('—')
   expect(screen.getByText('Step')).toBeVisible()
@@ -1360,9 +1362,11 @@ describe('AIRightPanel', () => {
   it.each(['任务详情看板', '流量', '漏洞'])('大屏点击%s后切为小屏，提示保持关闭直到鼠标移出再移入', async (label) => {
     casualTaskState.questionID = 'q-1'
     mockTaskStore.setState({
-      sessionExecution: {
-        http_flow_count: 3,
-        risk_level_count: { critical: 1, high: 0, warning: 0, low: 0, info: 0, other: 0, total: 1 },
+      sessionSnapshot: {
+        execution: {
+          http_flow_count: 3,
+          risk_level_count: { critical: 1, high: 0, warning: 0, low: 0, info: 0, other: 0, total: 1 },
+        },
       },
     })
     try {
@@ -1466,12 +1470,19 @@ describe('AIRightPanel', () => {
 
   it('无当前任务时用会话累计快照展示流量和漏洞', async () => {
     mockTaskStore.setState({
-      sessionExecution: {
-        http_flow_count: 15,
-        risk_level_count: { critical: 1, high: 2, warning: 0, low: 0, info: 0, other: 0, total: 3 },
+      sessionSnapshot: {
+        current_round: 5,
+        execution: {
+          http_flow_count: 15,
+          risk_level_count: { critical: 1, high: 2, warning: 0, low: 0, info: 0, other: 0, total: 3 },
+        },
       },
     })
     const result = await renderPanel(<AIRightPanel />)
+    expect(screen.getByText('当前轮数').nextElementSibling).toHaveTextContent('5')
+    expect(screen.getByText('当前轮数').compareDocumentPosition(screen.getByText('Step'))).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    )
     try {
       expect(screen.getByLabelText('流量')).toHaveTextContent('15')
       expect(screen.getByLabelText('漏洞')).toHaveTextContent('1｜2')
@@ -1491,9 +1502,11 @@ describe('AIRightPanel', () => {
       },
     })
     mockTaskStore.setState({
-      sessionExecution: {
-        http_flow_count: 15,
-        risk_level_count: { critical: 1, high: 2, warning: 0, low: 0, info: 0, other: 0, total: 3 },
+      sessionSnapshot: {
+        execution: {
+          http_flow_count: 15,
+          risk_level_count: { critical: 1, high: 2, warning: 0, low: 0, info: 0, other: 0, total: 3 },
+        },
       },
     })
     const result = await renderPanel(<AIRightPanel />)

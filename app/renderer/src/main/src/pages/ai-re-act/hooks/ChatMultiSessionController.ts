@@ -82,6 +82,8 @@ const genAIAgentChatData = (generation = 0): AIAgentChatData => {
   const defaultData: AIAgentChatData = {
     draftMaterials: DefaultDraftMaterials,
     modelContext: { status: 'idle', generation },
+    agentPolicySnapshot: undefined,
+    agentPolicySnapshotReceivedAt: undefined,
     httpFuzzRequest: undefined,
     httpFlowFuzzStatus: undefined,
     sessionTitle: '',
@@ -1769,6 +1771,11 @@ export class ChatMultiSessionController {
     this.requestMessage(sessionId, {
       IsSyncMessage: true,
       SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_SESSION_SNAPSHOT_SYNC,
+    })
+
+    this.requestMessage(sessionId, {
+      IsSyncMessage: true,
+      SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_AGENT_POLICY_SNAPSHOT_SYNC,
     })
 
     this.requestMessage(sessionId, {

@@ -661,6 +661,8 @@ export interface ChatStoreState {
   /** aiChat.d.ts AIAgentChatData draftMaterials */
   draftMaterialsUpdate: number
   modelContextUpdate: number
+  /** 通知组件重新读取会话策略快照和接收时间。 */
+  agentPolicySnapshotUpdate: number
 
   /** 接口运行过程中的数据文件夹合集 */
   grpcFolders: AIFileSystemPin[]
@@ -677,9 +679,10 @@ export interface ChatStoreState {
   sessionTaskList: AIAgentGrpcApi.SessionSnapshotTaskSummary[]
   /** 会话任务索引水位：与单任务 sessionSnapshotRevision 独立，防止乱序旧包回退列表 */
   sessionTaskListRevision: number
-  /** 会话累计 execution（无 TaskId / questionID 时右侧面板用） */
-  sessionExecution?: AIAgentGrpcApi.SessionSnapshot['execution']
-  sessionExecutionRevision: number
+  /** 会话级快照，保留后端字段层级。 */
+  sessionSnapshot?: AIAgentGrpcApi.SessionSnapshot
+  /** 最近一次有效版本号，兼容未携带 revision 的旧快照。 */
+  sessionSnapshotRevision: number
   /** 问题队列信息 */
   questionQueue: AIQuestionQueues
 
@@ -780,6 +783,7 @@ export interface ChatStoreState {
       | 'asyncExecutionUpdate'
       | 'draftMaterialsUpdate'
       | 'modelContextUpdate'
+      | 'agentPolicySnapshotUpdate'
       | 'currentPlanReviewExtraUpdate'
       | 'chatTodoListUpdate'
       | 'taskDetailsUpdate',
@@ -816,6 +820,7 @@ export interface ChatStoreState {
         | 'asyncExecutionUpdate'
         | 'draftMaterialsUpdate'
         | 'modelContextUpdate'
+        | 'agentPolicySnapshotUpdate'
         | 'grpcFolders'
         | 'reActTimelines'
         | 'httpTabShow'

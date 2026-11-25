@@ -265,7 +265,20 @@
   "AIRunningStatus": {
     "label": "Running round {{round}} · {{elapsed}} / {{duration}}",
     "state": "Running",
-    "round": "round {{round}}"
+    "round": "round {{round}}",
+    "title": "Run time",
+    "used": "Elapsed",
+    "remaining": "Remaining",
+    "limit": "Limit",
+    "target": "Target",
+    "notStarted": "Timer not started",
+    "infinite": "Unlimited",
+    "noTimeLimit": "No time limit",
+    "adjustmentHint": "Changes take effect immediately without interrupting this round.",
+    "extend": "Extend",
+    "shorten": "Shorten",
+    "unlimited": "Never stop",
+    "stopAfterRound": "Stop after this round"
   },
   "AIAddMaterialsPopover": {
     "scenarioCapabilities": "Capabilities",
@@ -823,6 +836,7 @@
     "more": "More",
     "running": "Running",
     "loginToViewBalance": "Login to view balance",
+    "currentRound": "Current round",
     "step": "Step",
     "runtime": "Runtime",
     "toolCallCount": "Tool Call Count"

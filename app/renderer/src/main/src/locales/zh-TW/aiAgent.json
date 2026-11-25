@@ -265,7 +265,20 @@
   "AIRunningStatus": {
     "label": "執行中 第 {{round}} 輪 · {{elapsed}} / {{duration}}",
     "state": "執行中",
-    "round": "第 {{round}} 輪"
+    "round": "第 {{round}} 輪",
+    "title": "執行時間",
+    "used": "已用",
+    "remaining": "剩餘",
+    "limit": "上限",
+    "target": "目標",
+    "notStarted": "尚未開始計時",
+    "infinite": "無限",
+    "noTimeLimit": "無時間限制",
+    "adjustmentHint": "執行中調整會立即生效，不會中斷目前這一輪",
+    "extend": "延長",
+    "shorten": "縮短",
+    "unlimited": "永不停止",
+    "stopAfterRound": "本輪結束後停止"
   },
   "AIAddMaterialsPopover": {
     "scenarioCapabilities": "能力",
@@ -823,6 +836,7 @@
     "more": "更多",
     "running": "執行中",
     "loginToViewBalance": "登入查看餘額",
+    "currentRound": "目前輪數",
     "step": "Step",
     "runtime": "運行時間",
     "toolCallCount": "工具呼叫數"

@@ -397,13 +397,13 @@ const handleSessionSnapshot: AIMessageHandler = (requestInfo) => {
     }
   }
 
-  // 无 TaskId 时仍保留会话累计 execution，供历史闲置会话右侧面板读取
+  // 会话级快照也可能没有 TaskId。
   const snapshotRevision = typeof snapshot.revision === 'number' ? snapshot.revision : 0
-  const cachedSessionExecutionRev = store.getState().sessionExecutionRevision ?? 0
-  if (snapshot.execution && !(snapshotRevision > 0 && snapshotRevision <= cachedSessionExecutionRev)) {
+  const cachedRevision = store.getState().sessionSnapshotRevision
+  if (snapshot.execution && !(snapshotRevision > 0 && snapshotRevision <= cachedRevision)) {
     store.getState().updateState({
-      sessionExecution: snapshot.execution,
-      ...(snapshotRevision > 0 ? { sessionExecutionRevision: snapshotRevision } : {}),
+      sessionSnapshot: snapshot,
+      ...(snapshotRevision > 0 ? { sessionSnapshotRevision: snapshotRevision } : {}),
     })
   }
 
@@ -438,6 +438,25 @@ const handleSessionSnapshot: AIMessageHandler = (requestInfo) => {
   applySnapshotFields(oldData)
   rawData.taskDetailsMap.set(res.TaskId, oldData)
   store.getState().updateStateCount('taskDetailsUpdate')
+}
+
+const handleAgentPolicySnapshot: AIMessageHandler = ({ res, rawData, store }) => {
+  if (res.Type !== 'agent_policy_snapshot' || res.NodeId !== 'agent_policy_snapshot') return
+
+  const snapshot = JSON.parse(Uint8ArrayToString(res.Content) || '{}') as AIAgentGrpcApi.AgentPolicySnapshot
+  if (isEmpty(snapshot)) return
+
+  const cached = rawData.agentPolicySnapshot
+  if (
+    cached &&
+    (snapshot.updated_at < cached.updated_at ||
+      (snapshot.updated_at === cached.updated_at && snapshot.revision <= cached.revision))
+  )
+    return
+
+  rawData.agentPolicySnapshot = snapshot
+  rawData.agentPolicySnapshotReceivedAt = Date.now() / 1000
+  store.getState().updateStateCount('agentPolicySnapshotUpdate')
 }
 
 const handleTaskSnapshot: AIMessageHandler = (requestInfo) => {
@@ -521,5 +540,6 @@ export const aiTaskDetailDataHandlers = {
   perception: handlePerception,
   current_task_todo_list_update: handleCurrentTaskTodoListUpdate,
   session_snapshot: handleSessionSnapshot,
+  agent_policy_snapshot: handleAgentPolicySnapshot,
   task_snapshot: handleTaskSnapshot,
 } as const

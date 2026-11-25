@@ -49,6 +49,7 @@ import type { KnowledgeBaseItem } from '@/pages/KnowledgeBase/hooks/useKnowledge
 import { useBrowserInstances } from '../../browserInstances/browserInstanceStore'
 import type { AIBrowserInstance } from '../../browserInstances/browserInstanceStore'
 import { createChatStore } from '@/pages/ai-re-act/hooks/chatStore'
+import { DefaultPlanItemDetailsData } from '@/pages/ai-re-act/hooks/defaultConstant'
 import { AIInputEventSyncTypeEnum, AITaskStatus } from '@/pages/ai-re-act/hooks/grpcApi'
 import type * as CurrentDataBySession from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import type * as AIAgentStoreModule from '@/pages/ai-agent/useContext/useStore'
@@ -117,6 +118,12 @@ const fileSessions = new Map<
 const fileSession = { id: 'file-session' }
 let sessionStore: ReturnType<typeof createChatStore>
 const sessionControls = vi.hoisted(() => ({ pending: false, onSend: vi.fn(), cancelPendingChat: vi.fn() }))
+const processingSnapshot = {
+  revision: 1,
+  updated_at: 1,
+  background_processes: [],
+  execution: { ...DefaultPlanItemDetailsData.execution, status: 'processing' },
+}
 const startSessionTask = () =>
   sessionStore.setState((state) => ({
     execute: true,
@@ -1245,6 +1252,11 @@ describe('输入框资料栏', () => {
         footerRightTypes={[AIInputFooterRightEnum.AIContextUsage, AIInputFooterRightEnum.AIRunningStatus]}
       />,
     )
+    act(() =>
+      sessionStore.setState({
+        sessionSnapshot: processingSnapshot,
+      }),
+    )
     expect(Array.from(statusItems.children)).toEqual([contextButton, screen.getByRole('status')])
 
     rerender(<AIChatTextarea chatDataStoreKey="test" footerRightTypes={[]} />)
@@ -1508,6 +1520,7 @@ describe('输入框资料栏', () => {
   })
 
   it('右侧配置支持调整状态组件顺序和自定义内容', () => {
+    sessionStore.setState({ sessionSnapshot: processingSnapshot })
     render(
       <AIChatTextarea
         chatDataStoreKey="test"

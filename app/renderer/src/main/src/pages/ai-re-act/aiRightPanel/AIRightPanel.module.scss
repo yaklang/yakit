@@ -281,8 +281,10 @@
   padding: 4px 0 8px;
 }
 
-// 顶部三指标卡横向排列
 .data-cards-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
   width: 100%;
 }
 
@@ -298,9 +300,7 @@
   box-sizing: border-box;
 }
 
-// 顶部三指标卡：等分宽度；内容为数值在上、文案在下
 .data-card-metric {
-  flex: 1;
   min-width: 0;
 
   .data-card-row {
@@ -321,6 +321,15 @@
   .data-card-label {
     font-size: 12px;
     line-height: 16px;
+  }
+}
+
+.data-card-round {
+  background: var(--Colors-Use-Blue-Bg);
+  border-color: var(--Colors-Use-Blue-Bg-Hover);
+
+  .data-card-accent {
+    background: var(--Colors-Use-Blue-Border);
   }
 }
 
