@@ -8,6 +8,8 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 
 // 从脚本位置定位仓库，避免调用方的工作目录影响入口和资源路径。
 export const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
+// Windows 上刚写入的原生资源可能被扫描或短暂占用，删除时重试几次，避免 EPERM 抖动。
+const removeOptions = { recursive: true, force: true, maxRetries: 5, retryDelay: 100 }
 const require = createRequire(import.meta.url)
 // 键对应产物路径；源码省略扩展名，允许各入口独立从 JS 迁移到 TS。
 const entrySources = {
@@ -192,13 +194,13 @@ export async function buildElectron({ mode = 'production' } = {}) {
     )
     await writeFile(path.join(staging, 'metafile.json'), JSON.stringify(metadata, null, 2) + '\n')
     // 所有入口和资源准备完成后才替换正式目录，同时清除上次构建遗留的文件。
-    await rm(output, { recursive: true, force: true })
+    await rm(output, removeOptions)
     await rename(staging, output)
     console.log(`[electron-build] ${mode}: ${Object.keys(hashes).join(', ')}`)
     return output
   } finally {
     // 成功时临时目录已被移动；失败时删除尚未完成的临时产物。
-    await rm(staging, { recursive: true, force: true })
+    await rm(staging, removeOptions)
   }
 }
 

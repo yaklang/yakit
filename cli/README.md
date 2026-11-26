@@ -24,11 +24,11 @@ node ./cli/cli.mjs <command>
 | `install [electron\|main\|cli]` | 装依赖 | 位置参数；`cli` 只装 CLI 运行时 | 根目录 + 主渲染端 |
 | `add <electron\|main> <pkg…>` | 给指定子项目加包 | `-D` / `--dev` 及其他 yarn/npm/pnpm 原样 flag | 必须指定一端 |
 | `remove <electron\|main> <pkg…>` | 从指定子项目卸包 | 位置参数 | 必须指定一端 |
-| `start` | 开发态启动两个渲染服务（main :3000 / link :3001） | `-v`、`--main`、`--link`（兼容参数） | 默认两个服务 |
+| `start` | 开发态启动渲染服务（默认 main :3000 + link :3001） | `-v`、`--main`、`--link`（只启一端） | 默认两个服务 |
 | `build` | 生产构建三端 | `-v`、`--electron`、`--main`、`--link`、`--devtools`、`--no-license`、`--analyzer` | 三端都构建 |
 | `pack` | electron-builder 打安装包 | `-s`、`-v`、`--legacy`、`--sign` | 本机默认不签名 |
-| `electron` | 页面就绪后单次开发构建并启动 Electron | 无 | 默认等待两端 |
-| `dev` | `start` + 等待页面 + 编译并启动 `electron` | `-v` | 渲染服务 + 主进程 |
+| `electron` | 页面就绪后单次开发构建并启动 Electron | `--link`（只等待 link） | 默认等待两端 |
+| `dev` | Vite + 等待页面 + 编译并启动 `electron` | `-v`、`--link`（只跑 link） | 渲染服务 + 主进程 |
 
 短 flag **不跨命令复用**。旧命令名 `render` / `electron -b` 已删除，没有别名。
 
@@ -36,7 +36,7 @@ node ./cli/cli.mjs <command>
 
 - 仅 TTY 且缺**该命令必需项**时才 inquirer：`start` / `build` / `dev` 缺 `-v`（`build --electron` 除外），`pack` 缺 `-s` 或 `-v`
 - 非 TTY（CI）缺参直接 `exit 1`，禁止交互
-- `build --main` 与 `--link` 不能同时使用；`build --electron` 与两者互斥。`start` 默认同时启动 main :3000 与 link :3001 两个 Vite 服务，`--main` / `--link` 为兼容参数，仍启动两端；`build` 默认构建主窗口产物、link 产物与主进程。
+- `--main` 与 `--link` 不能同时使用；`build --electron` 与两者互斥。`start` 的 `--main` / `--link` 只起对应一端 Vite；`electron` / `dev` 只提供 `--link`（只改 Link 时只等待 / 只启动 link），因为 link 是启动入口、主窗口要连上引擎后才显示，没有"只等 main"的等价模式。`build` 默认构建主窗口产物、link 产物与主进程。
 
 ```bash
 yarn cli -h
@@ -105,14 +105,23 @@ yarn cli remove electron env-cmd
 
 flag 原样转发（`-D` / `--dev` 等）。识别到 npm 时，仅把 `--dev` 转成 `--save-dev`（npm 没有 `--dev`）。
 
-### `--main` / `--link`（start 兼容参数）
+### 只启一端（`start` / `electron` / `dev`）
 
-`start` 默认同时启动两个 Vite 服务；`--main` / `--link` 仅保留兼容，仍启动两端。
+`start` 支持 `--main` / `--link`（互斥），只起对应一端 Vite；`electron` / `dev` 只提供 `--link`（只改 Link 时用）：
 
 ```bash
-yarn cli start -v yakit --main   # 仍启动 main :3000 + link :3001
-yarn cli start -v irifyEE --link # 仍启动 main :3000 + link :3001
+# 只起 Vite（不含 Electron 窗口）
+yarn cli start -v yakit --main   # 只启动 main :3000
+yarn cli start -v irifyEE --link # 只启动 link :3001（http://127.0.0.1:3001/engine-link.html）
+
+# 只改 Link 的完整 Electron 调试：只起 link，Electron 也只等它
+yarn cli dev -v yakit --link
+# 或分两步
+yarn cli start -v yakit --link
+yarn cli electron --link
 ```
+
+Electron 始终创建 main 与 link 两个窗口：link 窗口（`show: true`）是启动入口，主窗口默认隐藏、连上引擎后才显示。所以只改 Link 时 main 起不起都不影响使用，也没有"只等 main"的模式——不连 link 根本进不去主窗口。`electron` / `dev` 默认仍是等待两端，只起一端又跑 `yarn cli electron`（不带参数）会在 30 秒内快速失败并打印补救命令；单端等待的阈值可用 `YAKIT_SINGLE_END_TIMEOUT_MS` 覆盖（机器冷启动较慢时调大）。
 
 ### 生产构建
 

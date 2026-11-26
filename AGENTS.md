@@ -97,8 +97,13 @@ yarn check-deps
 先启动两个渲染服务（main :3000 / link :3001），例如社区版：
 
 ```bash
+# 启动两端（Electron 默认等待 main :3000 与 link :3001 都就绪）
 yarn cli start -v yakit
-# --main / --link 为兼容参数，仍同时启动 main 与 link
+
+# 只改 Link：只起 link :3001，Electron 也只等它（主窗口保持隐藏，连接引擎后才显示）
+yarn cli start -v yakit --link
+yarn cli electron --link
+# 或一条命令：yarn cli dev -v yakit --link
 ```
 
 待两个渲染服务**真正就绪**后，再启动 Electron 主进程：
@@ -107,7 +112,7 @@ yarn cli start -v yakit
 yarn cli electron
 ```
 
-> ⚠️ **重要：必须确认两个渲染端「真正就绪」后再启动 Electron，否则窗口会白屏。**
+> ⚠️ **重要：必须确认两个渲染端「真正就绪」后再启动 Electron，否则窗口会白屏。**（用 `electron --link` 只改 Link 时，只需 link :3001 就绪；主窗口保持隐藏，连接引擎前不显示）
 >
 > 端口进入 LISTEN 状态 ≠ 渲染端加载完成。Vite dev server 端口会很快开始监听，但此时首次编译可能尚未结束，Electron 此时加载会拿到不完整的页面导致白屏。
 >
@@ -151,7 +156,7 @@ yarn cli electron
 # 启动两个渲染服务（main :3000 / link :3001，以企业版为例）
 yarn cli start -v yakitEE
 
-# --main / --link 为兼容参数，仍启动两端
+# 只启动单端（--main 只起 main :3000，--link 只起 link :3001）
 yarn cli start -v yakitEE --main
 yarn cli start -v yakitEE --link
 
@@ -293,7 +298,7 @@ yarn cli pack -s mac -v yakit
 | `yarn cli install cli` | 只装 CLI 运行时到 `cli/`（不含 Electron） |
 | `yarn cli add <electron\|main> <pkg…>` | 给指定子项目加包（`-D` / `--dev`） |
 | `yarn cli remove <electron\|main> <pkg…>` | 从指定子项目卸包 |
-| `yarn cli start -v <edition>` | 开发态启动两个渲染服务（main :3000 / link :3001） |
+| `yarn cli start -v <edition>` | 开发态启动渲染服务（默认 main :3000 + link :3001；`--main`/`--link` 只启一端） |
 | `yarn cli electron` | 启动 Electron 主进程（默认等待 main + link） |
 | `yarn cli dev -v <edition>` | start + 页面检查 + 主进程构建 + electron |
 | `yarn cli build -v <edition>` | 生产构建主窗口 / link 产物及压缩主进程 |

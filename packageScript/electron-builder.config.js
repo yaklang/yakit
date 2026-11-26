@@ -258,7 +258,8 @@ if (isLegacy) {
   })
 }
 
-// 内置引擎开关：off 时不再打包引擎元数据；本地默认 off，CI 打包显式设置 on。
+// 内置引擎开关：off 时不打包引擎元数据；本地默认 off，CI 的打包 workflow 按 engine 输入设置 on
+// （正式发版由 release-finalize 的 finalize 阶段注入引擎，不走 before-pack 的这个开关）
 const builtinEngineMode = (process.env.YAKIT_BUILTIN_ENGINE || 'off').toLowerCase()
 if (builtinEngineMode === 'off') {
   configOption.extraFiles = configOption.extraFiles.filter(

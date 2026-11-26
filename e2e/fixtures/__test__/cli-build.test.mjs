@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url'
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..')
 const fixtures = []
-// 真实 CLI 子进程 + 临时目录复制在并行负载下开销较大，15s 容易抖动。
+// 真实 CLI 子进程 + 临时目录复制在并行负载下开销较大，15s 容易抖动，这里放宽到 30s。
 const BUILD_ORDER_TEST_TIMEOUT = 30_000
 
 afterEach(async () => {
@@ -17,7 +17,7 @@ afterEach(async () => {
 })
 
 // Run the real CLI with lightweight Vite/Electron stand-ins instead of real builds.
-async function createCliFixture(failingRenderer) {
+async function createCliFixture(failingRenderer, { viteKeepsRunning = false, electronDelayMs = 0 } = {}) {
   const root = await mkdtemp(path.join(os.tmpdir(), 'yakit-cli-build-'))
   fixtures.push(root)
   await cp(path.join(repoRoot, 'cli'), path.join(root, 'cli'), {
@@ -39,6 +39,7 @@ if (${JSON.stringify(command)} === 'vite') {
   const buildName = process.argv.includes('vite.link.config.mts') ? 'link' : 'main'
   setTimeout(() => {
     appendFileSync(${JSON.stringify(events)}, JSON.stringify(buildName) + '\\n')
+    if (${JSON.stringify(viteKeepsRunning)}) return setInterval(() => {}, 60000)
     process.exit(${JSON.stringify(failingRenderer)} === buildName ? 1 : 0)
   }, buildName === 'main' ? 600 : 900)
 }
@@ -59,6 +60,15 @@ if (${JSON.stringify(command)} === 'vite') {
   await writeFile(
     path.join(root, 'scripts/build-electron.mjs'),
     `import { appendFileSync } from 'node:fs'\nappendFileSync(${JSON.stringify(events)}, '"electron"\\n')\n`,
+  )
+  await writeFile(
+    path.join(root, 'scripts/start-electron.mjs'),
+    `import { appendFileSync } from 'node:fs'
+const args = process.argv.slice(2)
+setTimeout(() => {
+  appendFileSync(${JSON.stringify(events)}, JSON.stringify('electron' + (args.length ? ':' + args.join(',') : '')) + '\\n')
+}, ${electronDelayMs})
+`,
   )
   return { root, events }
 }
@@ -88,6 +98,19 @@ async function runBuild(failingRenderer) {
 async function runStart(args = []) {
   const { root, events } = await createCliFixture()
   const result = await runCli(root, ['start', '-v', 'yakit', ...args])
+  return { ...result, events: (await readFile(events, 'utf8')).trim().split('\n').map(JSON.parse) }
+}
+
+// dev 会同时跑 Vite 与 start-electron，Vite 需要常驻，由 start-electron 退出结束命令
+async function runDev(args = []) {
+  const { root, events } = await createCliFixture(undefined, { viteKeepsRunning: true, electronDelayMs: 1200 })
+  const result = await runCli(root, ['dev', '-v', 'yakit', ...args])
+  return { ...result, events: (await readFile(events, 'utf8')).trim().split('\n').map(JSON.parse) }
+}
+
+async function runElectron(args = []) {
+  const { root, events } = await createCliFixture()
+  const result = await runCli(root, ['electron', ...args])
   return { ...result, events: (await readFile(events, 'utf8')).trim().split('\n').map(JSON.parse) }
 }
 
@@ -125,12 +148,82 @@ describe('CLI development servers', () => {
     BUILD_ORDER_TEST_TIMEOUT,
   )
 
-  it(
-    'keeps --main/--link as compatibility flags and still starts both',
-    async () => {
-      const result = await runStart(['--main', '--link'])
+  it.each([
+    ['--main', 'main'],
+    ['--link', 'link'],
+  ])(
+    'starts only %s',
+    async (flag, expected) => {
+      const result = await runStart([flag])
       expect(result.code, result.output).toBe(0)
-      expect(result.events.sort()).toEqual(['link', 'main'])
+      expect(result.events).toEqual([expected])
+    },
+    BUILD_ORDER_TEST_TIMEOUT,
+  )
+
+  it(
+    'rejects --main together with --link',
+    async () => {
+      const { root } = await createCliFixture()
+      const result = await runCli(root, ['start', '-v', 'yakit', '--main', '--link'])
+      expect(result.code, result.output).not.toBe(0)
+      expect(result.output).toContain('不能同时使用')
+    },
+    BUILD_ORDER_TEST_TIMEOUT,
+  )
+})
+
+describe('CLI dev command', () => {
+  it(
+    'starts both renderers and awaits both by default',
+    async () => {
+      const result = await runDev()
+      expect(result.code, result.output).toBe(0)
+      // 三个进程由定时器驱动，只断言集合，避免并行负载下的顺序抖动
+      expect(result.events.sort()).toEqual(['electron', 'link', 'main'])
+    },
+    BUILD_ORDER_TEST_TIMEOUT,
+  )
+
+  it(
+    'starts and awaits only link with --link',
+    async () => {
+      const result = await runDev(['--link'])
+      expect(result.code, result.output).toBe(0)
+      expect(result.events.sort()).toEqual(['electron:--link', 'link'])
+    },
+    BUILD_ORDER_TEST_TIMEOUT,
+  )
+})
+
+describe('CLI electron command', () => {
+  it(
+    'awaits both renderers by default',
+    async () => {
+      const result = await runElectron()
+      expect(result.code, result.output).toBe(0)
+      expect(result.events).toEqual(['electron'])
+    },
+    BUILD_ORDER_TEST_TIMEOUT,
+  )
+
+  it(
+    'passes --link to start-electron',
+    async () => {
+      const result = await runElectron(['--link'])
+      expect(result.code, result.output).toBe(0)
+      expect(result.events).toEqual(['electron:--link'])
+    },
+    BUILD_ORDER_TEST_TIMEOUT,
+  )
+
+  it(
+    'rejects --main because link is the entry window',
+    async () => {
+      const { root } = await createCliFixture()
+      const result = await runCli(root, ['electron', '--main'])
+      expect(result.code, result.output).not.toBe(0)
+      expect(result.output).toContain('unknown option')
     },
     BUILD_ORDER_TEST_TIMEOUT,
   )

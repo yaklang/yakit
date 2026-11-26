@@ -280,6 +280,9 @@ const resolveRenderTargets = (main, link) => {
   return { main: true, link: true }
 }
 
+/** electron / dev 的 --link：只处理 link（link 是启动入口，所以没有只等 main 的模式） */
+const resolveLinkOnlyTargets = (linkOnly) => ({ main: !linkOnly, link: true })
+
 /** 把渲染端选择格式化成日志里的「Link & Main」/「Main-Render」/「Link-Render」 */
 const renderLabel = ({ main, link }) => {
   if (main && link) return 'Link & Main'
@@ -298,7 +301,7 @@ const runLocal = (file, args, { cwd, env } = {}) =>
   })
 
 /**
- * main 与 link 共用同一个 public/theme.css。
+ * main 与 link 共用同一份生成的 theme.css（link 会再复制到自己的 .link-public）。
  * 两个 Vite 进程同时启动/构建时先统一生成一次，避免并发写同一文件。
  */
 const prepareThemeCss = async (env) => {
@@ -418,14 +421,14 @@ program
 /** start：注入 YAKIT_EDITION + DEVTOOLS，开发态跑 vite（不启 Electron） */
 program
   .command('start')
-  .description('开发模式启动渲染端（main :3000 / link :3001）')
+  .description('开发模式启动渲染端（默认 main :3000 + link :3001）')
   .option('-v, --version <type>', `业务版本 (${editionValues})`)
-  .option('--main', '兼容参数：始终启动 main + link', false)
-  .option('--link', '兼容参数：始终启动 main + link', false)
+  .option('--main', '只启动主渲染端 main :3000', false)
+  .option('--link', '只启动 Link 渲染端 link :3001', false)
   .addHelpText('after', `\n${YellowChalk.bold('Examples:')}\n${StartCMDExamplesDoc}`)
   .action(async (options) => {
     const version = await requireEdition(options.version)
-    const targets = { main: true, link: true }
+    const targets = resolveRenderTargets(options.main, options.link)
     const env = buildYakitEnv({ edition: version, devtools: true })
 
     console.log(GreenChalk('\n准备执行...'))
@@ -546,11 +549,16 @@ program
 program
   .command('electron')
   .description('等待渲染页面、单次开发构建并启动 Electron（手动重启）')
+  .option('--link', '只等待 link :3001（只改 Link 时用；link 是启动入口，main 进入前必须先连 link）', false)
   .addHelpText('after', `\n${YellowChalk.bold('Examples:')}\n${ElectronCMDExamplesDoc}`)
-  .action(async () => {
+  .action(async (options) => {
+    const targets = resolveLinkOnlyTargets(options.link)
+
     console.log(CyanChalk('开始启动 Electron 开发环境...\n'))
+    console.log(CyanChalk.bold(`> 等待渲染端: ${renderLabel(targets)}`))
+    console.log('')
     try {
-      await runLocal(process.execPath, ['scripts/start-electron.mjs'])
+      await runLocal(process.execPath, ['scripts/start-electron.mjs', ...(options.link ? ['--link'] : [])])
     } catch (error) {
       exitOnError(error)
     }
@@ -559,49 +567,54 @@ program
 /** dev：Vite 页面就绪后单次构建并启动 Electron，无 watch 或自动重启 */
 program
   .command('dev')
-  .description('启动 main :3000 + link :3001，等待两个页面就绪后启动 Electron')
+  .description('启动渲染服务，等待页面就绪后启动 Electron（默认 main :3000 + link :3001）')
   .option('-v, --version <type>', `业务版本 (${editionValues})`)
+  .option('--link', '只启动并只等待 link :3001（只改 Link 时用；link 是启动入口）', false)
   .addHelpText('after', `\n${YellowChalk.bold('Examples:')}\n${DevCMDExamplesDoc}`)
   .action(async (options) => {
     const version = await requireEdition(options.version)
+    const targets = resolveLinkOnlyTargets(options.link)
     const env = buildYakitEnv({ edition: version, devtools: true })
+
+    const electronArgs = ['scripts/start-electron.mjs', ...(options.link ? ['--link'] : [])]
+    const endpoints = [targets.main && 'main :3000', targets.link && 'link :3001'].filter(Boolean).join(' / ')
 
     console.log(GreenChalk('\n准备执行...'))
     console.log(CyanChalk.bold(`> 业务版本: ${version}`))
-    console.log(CyanChalk.bold(`> main :3000 + link :3001 → wait HTML → build electron`))
+    console.log(CyanChalk.bold(`> 渲染端: ${renderLabel(targets)} → ${endpoints} → wait HTML → build electron`))
     console.log('')
 
     try {
-      const devEnv = await prepareThemeCss(env)
-      await concurrently(
-        [
-          {
-            command: 'vite',
-            name: MainChalk('main'),
-            cwd: MAIN_RENDER_DIR,
-            env: withLocalBin(MAIN_RENDER_DIR, devEnv),
-          },
-          {
-            command: 'vite --config vite.link.config.mts',
-            name: BlueChalk('link'),
-            cwd: MAIN_RENDER_DIR,
-            env: withLocalBin(MAIN_RENDER_DIR, devEnv),
-          },
-          {
-            command: 'node scripts/start-electron.mjs',
-            name: GreenChalk('electron'),
-            cwd: repoRoot,
-            env: withLocalBin(repoRoot, devEnv),
-          },
-        ],
-        {
-          // 关掉 Electron 是成功退出；必须连 success 一起互杀，否则 vite 会把 CLI 卡住
-          killOthers: ['success', 'failure'],
-          // 以先退出的进程为准：关窗口视为成功，避免被杀掉的 vite 把整个命令打成失败
-          successCondition: 'first',
-          prefix: '[{name}]',
-        },
-      )
+      // 两端同跑时先统一生成一次 theme.css，避免两个 Vite 进程并发写同一文件
+      const devEnv = targets.main && targets.link ? await prepareThemeCss(env) : env
+      const jobs = []
+      if (targets.main)
+        jobs.push({
+          command: 'vite',
+          name: MainChalk('main'),
+          cwd: MAIN_RENDER_DIR,
+          env: withLocalBin(MAIN_RENDER_DIR, devEnv),
+        })
+      if (targets.link)
+        jobs.push({
+          command: 'vite --config vite.link.config.mts',
+          name: BlueChalk('link'),
+          cwd: MAIN_RENDER_DIR,
+          env: withLocalBin(MAIN_RENDER_DIR, devEnv),
+        })
+      jobs.push({
+        command: `node ${electronArgs.join(' ')}`,
+        name: GreenChalk('electron'),
+        cwd: repoRoot,
+        env: withLocalBin(repoRoot, devEnv),
+      })
+      await concurrently(jobs, {
+        // 关掉 Electron 是成功退出；必须连 success 一起互杀，否则 vite 会把 CLI 卡住
+        killOthers: ['success', 'failure'],
+        // 以先退出的进程为准：关窗口视为成功，避免被杀掉的 vite 把整个命令打成失败
+        successCondition: 'first',
+        prefix: '[{name}]',
+      })
     } catch (error) {
       exitOnError(error)
     }
