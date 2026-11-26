@@ -39,25 +39,25 @@ export const NotepadMenu: React.FC = React.memo(() => {
   if (isEnpriTraceAgent()) return null
 
   const iconBtn = (
-    <Tooltip placement="bottom" title={name}>
+    <div
+      className={funcDomainStyles['ui-op-btn-wrapper']}
+      onClick={isYakitEE ? undefined : () => openLatestOrNewNotepad()}
+    >
       <div
-        className={funcDomainStyles['ui-op-btn-wrapper']}
-        onClick={isYakitEE ? undefined : () => openLatestOrNewNotepad()}
+        className={classNames(funcDomainStyles['op-btn-body'], {
+          [funcDomainStyles['op-btn-body-hover']]: open,
+        })}
       >
-        <div
-          className={classNames(funcDomainStyles['op-btn-body'], {
-            [funcDomainStyles['op-btn-body-hover']]: open,
-          })}
-        >
+        <Tooltip placement="bottom" title={name}>
           <ClipboardListOutlined
             className={classNames(
               funcDomainStyles['size-style'],
               open ? funcDomainStyles['icon-hover-style'] : funcDomainStyles['icon-style'],
             )}
           />
-        </div>
+        </Tooltip>
       </div>
-    </Tooltip>
+    </div>
   )
 
   if (!isYakitEE) return iconBtn

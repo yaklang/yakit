@@ -28,6 +28,8 @@
 }
 
 .menu-popover {
+  margin-top: -12px;
+
   :global {
     .ant-popover-inner {
       padding: 0;
