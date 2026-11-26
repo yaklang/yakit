@@ -27,6 +27,8 @@ const LINK_DEV_TESTS = [
   'e2e/fixtures/__test__/start-electron.test.mjs',
   'e2e/fixtures/__test__/window-url.test.mjs',
 ]
+/** 选测脚本自身的用例：改到选测规则时随之验证，否则规则被改坏无人发现 */
+const SELECTOR_SELF_TESTS = ['e2e/fixtures/__test__/ci-vitest-selection.test.mjs']
 const SKIP_DIR_NAMES = new Set(['node_modules', 'dist', 'build', '.git', 'coverage'])
 const DEDICATED_ICON_MIGRATION_TESTS = new Set([
   'app/renderer/src/main/src/__test__/yakitUiIconsPurePlugin.test.ts',
@@ -341,6 +343,10 @@ function main() {
     )
   ) {
     for (const t of LINK_DEV_TESTS) results.add(t)
+  }
+  // 改动选测脚本本身 → 跑它自己的用例
+  if (changed.some((file) => /^scripts\/ci-select-vitest-tests\.js$/.test(file))) {
+    for (const t of SELECTOR_SELF_TESTS) results.add(t)
   }
   const DEBUG = isVitestSelectDebug()
   const debugLines = DEBUG ? [] : null
