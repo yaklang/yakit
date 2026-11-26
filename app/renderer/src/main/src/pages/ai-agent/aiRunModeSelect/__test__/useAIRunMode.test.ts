@@ -63,7 +63,7 @@ vi.mock('@/pages/ai-re-act/hooks/useCurrentDataBySession', () => ({
   useCurrentStore: () => ({}),
   useCurrentRawData: () => ({
     agentPolicySnapshot: { server_time: 1795413600 },
-    agentPolicySnapshotReceivedAt: Date.now() / 1000 - 30,
+    agentPolicySnapshotReceivedAtMs: performance.now() - 30000,
   }),
 }))
 

@@ -165,8 +165,10 @@ export interface QueryAISessionRequest {
 export interface AIAgentChatData {
   modelContext: ModelContextState
   agentPolicySnapshot?: AIAgentGrpcApi.AgentPolicySnapshot
-  /** 客户端收到策略快照的 Unix 时间戳，单位为秒，保留毫秒精度。 */
-  agentPolicySnapshotReceivedAt?: number
+  /** 客户端收到策略快照时的 performance.now()，单位为毫秒。 */
+  agentPolicySnapshotReceivedAtMs?: number
+  /** 当前有限时间窗的起点（Unix 秒），仅在观察到建窗时记录。 */
+  goalWindowStart?: number
   /** 当前输入草稿的资料，供侧栏等界面同步展示。 */
   draftMaterials: AIDraftMaterials
   /** http_fuzz_request_change事件通知数据 */

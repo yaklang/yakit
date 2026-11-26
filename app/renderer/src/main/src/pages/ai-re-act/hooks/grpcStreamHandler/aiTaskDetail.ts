@@ -403,6 +403,7 @@ const handleSessionSnapshot: AIMessageHandler = (requestInfo) => {
   if (snapshot.execution && !(snapshotRevision > 0 && snapshotRevision <= cachedRevision)) {
     store.getState().updateState({
       sessionSnapshot: snapshot,
+      sessionSnapshotReceivedAtMs: Date.now(),
       ...(snapshotRevision > 0 ? { sessionSnapshotRevision: snapshotRevision } : {}),
     })
   }
@@ -454,8 +455,20 @@ const handleAgentPolicySnapshot: AIMessageHandler = ({ res, rawData, store }) =>
   )
     return
 
+  const timeLimit = snapshot.goal.time_limit
+  const previous = cached?.goal.time_limit
+  if (timeLimit.mode !== 'deadline') {
+    rawData.goalWindowStart = undefined
+  } else if (
+    timeLimit.revision === 1 ||
+    (previous &&
+      (previous.mode !== 'deadline' || previous.configured_duration_seconds !== timeLimit.configured_duration_seconds))
+  ) {
+    // 加减时间只移动截止时间。已调整过的重连首帧无法反推出窗口起点。
+    rawData.goalWindowStart = timeLimit.deadline_at - timeLimit.configured_duration_seconds
+  }
   rawData.agentPolicySnapshot = snapshot
-  rawData.agentPolicySnapshotReceivedAt = Date.now() / 1000
+  rawData.agentPolicySnapshotReceivedAtMs = performance.now()
   store.getState().updateStateCount('agentPolicySnapshotUpdate')
 }
 

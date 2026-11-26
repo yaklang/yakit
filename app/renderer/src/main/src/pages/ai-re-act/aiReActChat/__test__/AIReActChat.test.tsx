@@ -431,7 +431,7 @@ describe('AIReActChat', () => {
     [AINotifyType.notify429TypeRateLimited, 'hourglass-icon', 'notify-icon-yellow'],
     [AINotifyType.notify429TypeQuotaExceeded, 'exclamation-icon', 'notify-icon-error'],
     ['unknown' as AINotifyType, 'exclamation-circle-icon', 'notify-icon-yellow'],
-  ] as const)('通知类型 %s 显示对应图标和颜色', (type, icon, color) => {
+  ] as const)('通知类型 %s 显示对应图标和颜色，且可手动关闭', (type, icon, color) => {
     act(() => chatStore.getState().updateState({ execute: true }))
     showNotify(type)
     render(<AIReActChat {...baseProps} />)
@@ -440,6 +440,8 @@ describe('AIReActChat', () => {
     for (const otherIcon of ['hourglass-icon', 'exclamation-icon', 'exclamation-circle-icon']) {
       if (otherIcon !== icon) expect(screen.queryByTestId(otherIcon)).not.toBeInTheDocument()
     }
+    fireEvent.click(screen.getByRole('button', { name: '关闭' }))
+    expect(chatStore.getState().notifyMessage).toBeNull()
   })
 
   it.each([true, false])('非社区版 execute=%s 时不提供充值操作，配额提示仅在执行时显示', (execute) => {
@@ -450,21 +452,27 @@ describe('AIReActChat', () => {
 
     expect(screen.queryAllByText('余额不足')).toHaveLength(execute ? 2 : 0)
     expect(screen.queryByRole('button', { name: '充值' })).not.toBeInTheDocument()
-    expect(screen.queryAllByRole('button').find((btn) => btn.getAttribute('data-type') === 'text')).toBeUndefined()
+    if (execute) {
+      fireEvent.click(screen.getByRole('button', { name: '关闭' }))
+      expect(chatStore.getState().notifyMessage).toBeNull()
+      showNotify(AINotifyType.notify429TypeQuotaExceeded)
+    } else {
+      expect(screen.queryByRole('button', { name: '关闭' })).not.toBeInTheDocument()
+    }
     expect(emiter.emit).not.toHaveBeenCalledWith('onOpenRecharge', '')
 
     act(() => chatStore.getState().updateState({ execute: false }))
     expect(screen.queryByText('余额不足')).not.toBeInTheDocument()
   })
 
-  it('限流消息覆盖配额提示后不显示操作按钮，停止执行后隐藏', () => {
+  it('限流消息覆盖配额提示后只保留关闭按钮，停止执行后隐藏', () => {
     showNotify(AINotifyType.notify429TypeQuotaExceeded)
     render(<AIReActChat {...baseProps} />)
     act(() => chatStore.getState().updateState({ execute: true }))
     showNotify(AINotifyType.notify429TypeRateLimited, '请求过快')
 
     expect(screen.queryByRole('button', { name: '充值' })).not.toBeInTheDocument()
-    expect(screen.queryAllByRole('button').find((btn) => btn.getAttribute('data-type') === 'text')).toBeUndefined()
+    expect(screen.getByRole('button', { name: '关闭' })).toBeInTheDocument()
     expect(screen.getAllByText('请求过快')).toHaveLength(2)
     act(() => chatStore.getState().updateState({ execute: false }))
     expect(screen.queryByText('请求过快')).not.toBeInTheDocument()

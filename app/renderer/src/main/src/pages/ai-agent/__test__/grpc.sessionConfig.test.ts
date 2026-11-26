@@ -2,12 +2,28 @@ import '../../ai-re-act/hooks/__test__/setupElectron'
 import { describe, expect, it, vi } from 'vitest'
 import { ipcRendererMock } from '../../ai-re-act/hooks/__test__/setupElectron'
 import { grpcQueryAISession } from '../grpc'
+import { deriveGoalTagFromStrategy } from '../components/aiMilkdownInput/aiMilkdownModeSlash/store/goalTag'
 import type { QueryAISessionResponse } from '../type/aiChat'
 
 vi.mock('@/utils/notification', () => ({ yakitNotify: vi.fn() }))
 vi.mock('../../ai-re-act/hooks/utils', () => ({ genBaseAIChatData: vi.fn(), isToolExecStream: vi.fn() }))
 
 describe('会话配置接收边界', () => {
+  it('重新进入会话时将 gRPC 返回的 1800 秒恢复为 30m 预设', async () => {
+    const strategy = { EnableGoalMode: true, GoalDurationSeconds: '1800' }
+    ipcRendererMock.invoke.mockResolvedValueOnce({
+      Data: [{ SessionID: 'session', StartParams: { Strategy: strategy } }],
+      Total: 1,
+    })
+
+    const result = await grpcQueryAISession({
+      Pagination: { Page: 1, Limit: 1, OrderBy: 'created_at', Order: 'desc' },
+    })
+    const restored = result.Data[0].StartParams?.Strategy
+    expect(restored?.GoalDurationSeconds).toBe(1800)
+    expect(deriveGoalTagFromStrategy(restored).durationKey).toBe('30m')
+  })
+
   it.each([0, 300])('查询后将后端字节值转为前端 KB，且不修改响应原对象：%s', async (limit) => {
     const response = {
       Data: [

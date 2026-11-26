@@ -1,3 +1,7 @@
+import type { AIGoalTimePatch } from '@/pages/ai-re-act/hooks/grpcApi'
+
 export interface GoalTimeAdjustmentsProps {
-  sessionId: string
+  loading: boolean
+  expired: boolean
+  onAdjust: (patch: AIGoalTimePatch) => void
 }

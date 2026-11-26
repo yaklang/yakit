@@ -92,7 +92,7 @@ const GoalStopConditionFields: FC<GoalStopConditionFieldsProps> = ({
           <div className={styles['goal-choice-row']}>
             <span>{t('AIMilkdownModeSlash.duration')}</span>
             <div role="group" aria-label={t('AIMilkdownModeSlash.duration')} className={styles['goal-pills']}>
-              {GOAL_DURATION_OPTIONS.filter((key) => !editingRunningGoal || key !== 'never').map((key) => (
+              {GOAL_DURATION_OPTIONS.map((key) => (
                 <YakitButton
                   key={key}
                   type={selectedDurationKey === key ? 'primary' : 'secondary2'}

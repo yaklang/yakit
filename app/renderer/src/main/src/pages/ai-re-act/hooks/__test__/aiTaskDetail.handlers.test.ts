@@ -41,7 +41,11 @@ describe('aiTaskDetail handlers', () => {
         { NodeId: 'session_snapshot', TaskId: '' },
       ),
     })
+    const beforeReceive = Date.now()
     aiTaskDetailDataHandlers.session_snapshot(req)
+    const receivedAt = req.store.getState().sessionSnapshotReceivedAtMs
+    expect(receivedAt).toBeGreaterThanOrEqual(beforeReceive)
+    expect(receivedAt).toBeLessThanOrEqual(Date.now())
     expect(req.store.getState().sessionSnapshot).toMatchObject({ current_round: 3, total_rounds: 7 })
     req.res = makeGrpcJsonRes(
       'structured',
@@ -54,6 +58,7 @@ describe('aiTaskDetail handlers', () => {
       { NodeId: 'session_snapshot', TaskId: '' },
     )
     aiTaskDetailDataHandlers.session_snapshot(req)
+    expect(req.store.getState().sessionSnapshotReceivedAtMs).toBe(receivedAt)
     expect(req.store.getState().sessionSnapshot).toMatchObject({
       current_round: 3,
       total_rounds: 7,
@@ -67,11 +72,11 @@ describe('aiTaskDetail handlers', () => {
       res: makeGrpcJsonRes('agent_policy_snapshot', snapshot, { NodeId: 'agent_policy_snapshot' }),
     })
     const count = req.store.getState().agentPolicySnapshotUpdate
-    const beforeReceive = Date.now() / 1000
+    const beforeReceive = performance.now()
     aiTaskDetailDataHandlers.agent_policy_snapshot(req)
-    const receivedAt = req.rawData.agentPolicySnapshotReceivedAt
+    const receivedAt = req.rawData.agentPolicySnapshotReceivedAtMs
     expect(receivedAt).toBeGreaterThanOrEqual(beforeReceive)
-    expect(receivedAt).toBeLessThanOrEqual(Date.now() / 1000)
+    expect(receivedAt).toBeLessThanOrEqual(performance.now())
     expect(req.rawData.agentPolicySnapshot).toEqual(snapshot)
     expect(req.store.getState().agentPolicySnapshotUpdate).toBe(count + 1)
     req.res = makeGrpcJsonRes(
@@ -80,7 +85,7 @@ describe('aiTaskDetail handlers', () => {
       { NodeId: 'agent_policy_snapshot' },
     )
     aiTaskDetailDataHandlers.agent_policy_snapshot(req)
-    expect(req.rawData.agentPolicySnapshotReceivedAt).toBe(receivedAt)
+    expect(req.rawData.agentPolicySnapshotReceivedAtMs).toBe(receivedAt)
     expect(req.rawData.agentPolicySnapshot).toEqual(snapshot)
     expect(req.store.getState().agentPolicySnapshotUpdate).toBe(count + 1)
     const newer = { ...snapshot, revision: 3, goal: { time_limit: { configured_duration_seconds: -1 } } }
@@ -88,6 +93,51 @@ describe('aiTaskDetail handlers', () => {
     aiTaskDetailDataHandlers.agent_policy_snapshot(req)
     expect(req.rawData.agentPolicySnapshot).toEqual(newer)
     expect(req.store.getState().agentPolicySnapshotUpdate).toBe(count + 2)
+  })
+
+  it('只在确认有限窗口建立时记录起点，加减时间复用起点，重连首帧不推测旧窗口', () => {
+    const req = makeHandlerRequest({ res: makeGrpcJsonRes('agent_policy_snapshot', {}) })
+    type TimeLimit = AIAgentGrpcApi.AgentPolicySnapshot['goal']['time_limit']
+    const receive = (mode: TimeLimit['mode'], revision: number, duration: number, deadline: number) => {
+      req.res = makeGrpcJsonRes(
+        'agent_policy_snapshot',
+        {
+          revision,
+          updated_at: revision,
+          goal: { time_limit: { mode, revision, configured_duration_seconds: duration, deadline_at: deadline } },
+        },
+        { NodeId: 'agent_policy_snapshot' },
+      )
+      aiTaskDetailDataHandlers.agent_policy_snapshot(req)
+      return req.rawData.goalWindowStart
+    }
+
+    // 重连后首份快照已加过时，再次加时也无法还原起点。
+    expect(receive('deadline', 3, 3600, 8200)).toBeUndefined()
+    expect(receive('deadline', 4, 3600, 9100)).toBeUndefined()
+    expect(receive('never_ending', 5, -1, 0)).toBeUndefined()
+    expect(receive('deadline', 7, 3600, 13600)).toBe(10000)
+    expect(receive('deadline', 8, 3600, 14500)).toBe(10000)
+    expect(receive('deadline', 9, 3600, 13600)).toBe(10000)
+    expect(receive('deadline', 10, 7200, 19200)).toBe(12000)
+    expect(receive('disabled', 11, 0, 0)).toBeUndefined()
+  })
+
+  it('从时间窗口的初始版本记录起点，与策略整体的版本无关', () => {
+    const req = makeHandlerRequest({
+      res: makeGrpcJsonRes(
+        'agent_policy_snapshot',
+        {
+          revision: 12,
+          goal: {
+            time_limit: { mode: 'deadline', revision: 1, configured_duration_seconds: 3600, deadline_at: 13600 },
+          },
+        },
+        { NodeId: 'agent_policy_snapshot' },
+      ),
+    })
+    aiTaskDetailDataHandlers.agent_policy_snapshot(req)
+    expect(req.rawData.goalWindowStart).toBe(10000)
   })
 
   it.each([

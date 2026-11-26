@@ -350,14 +350,14 @@ const AINotifyMessage: React.FC<AINotifyMessageProps> = React.memo(() => {
           </div>
         </div>
       </div>
-      {isQuotaExceeded && (
-        <div className={styles['notify-actions']}>
+      <div className={styles['notify-actions']}>
+        {isQuotaExceeded && (
           <YakitButton type="primary" onClick={() => emiter.emit('onOpenRecharge', '')}>
             {t('CeUserMenu.recharge')}
           </YakitButton>
-          <YakitButton type="text" aria-label={t('YakitButton.close')} icon={<XOutlined />} onClick={onClose} />
-        </div>
-      )}
+        )}
+        <YakitButton type="text" aria-label={t('YakitButton.close')} icon={<XOutlined />} onClick={onClose} />
+      </div>
     </div>
   ) : (
     <></>

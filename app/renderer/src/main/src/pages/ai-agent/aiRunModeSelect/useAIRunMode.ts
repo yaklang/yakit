@@ -7,9 +7,8 @@ import emiter from '@/utils/eventBus/eventBus'
 import { useCurrentRawData, useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import { useStore } from 'zustand'
 import { ModeOptionList } from './aiRunModeConstants'
-import { buildStrategyHotpatch, syncRunModeStrategy } from './syncRunModeStrategy'
+import { buildStrategyHotpatch, getToggledStrategy, syncRunModeStrategy } from './syncRunModeStrategy'
 import type { ModeOptionKey } from './aiRunModeConstants'
-import { clearGoalStrategy } from '../defaultConstant'
 import { isChatSession } from '../utils/isChatSession'
 
 /** Plan / Multi-Agent / Goal 开关与子配置（按钮下拉与 / 弹层共用） */
@@ -20,71 +19,60 @@ export const useAIRunMode = () => {
   const rawData = useCurrentRawData()
   const execute = useStore(store, (state) => state.execute)
 
-  const enablePlan = useCreation(() => !!setting?.EnablePlan, [setting?.EnablePlan])
-  const enableMultiAgent = useCreation(
-    () => !!setting?.Strategy?.EnableMultiAgent,
-    [setting?.Strategy?.EnableMultiAgent],
-  )
-  const enableGoalMode = useCreation(() => !!setting?.Strategy?.EnableGoalMode, [setting?.Strategy?.EnableGoalMode])
-  const goalMinIterations = useCreation(
-    () => setting?.Strategy?.GoalMinIterations ?? 0,
-    [setting?.Strategy?.GoalMinIterations],
-  )
-  const goalDurationSeconds = useCreation(
-    () => setting?.Strategy?.GoalDurationSeconds ?? 0,
-    [setting?.Strategy?.GoalDurationSeconds],
-  )
+  const strategy = useCreation(() => setting.Strategy, [setting.Strategy])
+  const enablePlan = useCreation(() => !!setting.EnablePlan, [setting.EnablePlan])
+  const enableMultiAgent = useCreation(() => !!strategy?.EnableMultiAgent, [strategy?.EnableMultiAgent])
+  const enableGoalMode = useCreation(() => !!strategy?.EnableGoalMode, [strategy?.EnableGoalMode])
+  const goalMinIterations = useCreation(() => strategy?.GoalMinIterations ?? 0, [strategy?.GoalMinIterations])
+  const goalDurationSeconds = useCreation(() => strategy?.GoalDurationSeconds ?? 0, [strategy?.GoalDurationSeconds])
   const goalAcceptanceCriteria = useCreation(
-    () => setting?.Strategy?.GoalAcceptanceCriteria ?? '',
-    [setting?.Strategy?.GoalAcceptanceCriteria],
+    () => strategy?.GoalAcceptanceCriteria ?? '',
+    [strategy?.GoalAcceptanceCriteria],
   )
-  const strategy = useCreation(() => setting?.Strategy, [setting?.Strategy])
-  const maxSubAgents = useCreation(() => setting?.Strategy?.MaxSubAgents ?? 0, [setting?.Strategy?.MaxSubAgents])
+  const maxSubAgents = useCreation(() => strategy?.MaxSubAgents ?? 0, [strategy?.MaxSubAgents])
+  const chatSessionId = isChatSession(activeChat) ? activeChat.SessionID : undefined
 
-  const onSetPlan = useDebounceFn(
-    useMemoizedFn((checked: boolean) => {
-      // pending 的 execute 也为 true；绑定正式会话后才允许发送热补丁。
-      if (execute && isChatSession(activeChat)) {
-        const info: AIInputEvent = {
-          IsConfigHotpatch: true,
-          HotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_EnablePlan,
-          Params: {
-            EnablePlan: checked,
-          },
-        }
-        onSend({ token: activeChat.SessionID, type: '', params: info })
+  const onSetPlan = useMemoizedFn((checked: boolean) => {
+    // pending 的 execute 也为 true；绑定正式会话后才允许发送热补丁。
+    if (execute && chatSessionId) {
+      const info: AIInputEvent = {
+        IsConfigHotpatch: true,
+        HotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_EnablePlan,
+        Params: {
+          EnablePlan: checked,
+        },
       }
-      setSetting?.((v) => ({
-        ...v,
-        EnablePlan: checked,
-      }))
-      if (isChatSession(activeChat)) {
-        emiter.emit(
-          'sessionData',
-          JSON.stringify({
-            type: 'updateSession',
-            sessionId: activeChat.SessionID,
-            updates: {
-              StartParams: {
-                EnablePlan: checked,
-              },
+      onSend({ token: chatSessionId, type: '', params: info })
+    }
+    setSetting((v) => ({
+      ...v,
+      EnablePlan: checked,
+    }))
+    if (chatSessionId) {
+      emiter.emit(
+        'sessionData',
+        JSON.stringify({
+          type: 'updateSession',
+          sessionId: chatSessionId,
+          updates: {
+            StartParams: {
+              EnablePlan: checked,
             },
-          }),
-        )
-      }
-    }),
-    { wait: 200, leading: true },
-  ).run
+          },
+        }),
+      )
+    }
+  })
+  const togglePlan = useDebounceFn(onSetPlan, { wait: 200, leading: true }).run
 
   const strategyUpdate = useDebounceFn(
-    useMemoizedFn((next: AIExecutionStrategy) => {
-      const merged: AIExecutionStrategy = { ...(setting?.Strategy || {}), ...next }
-      if (execute && isChatSession(activeChat)) {
-        const info = buildStrategyHotpatch(merged, next.GoalDurationSeconds, rawData)
-        onSend({ token: activeChat.SessionID, type: '', params: info })
+    (next: AIExecutionStrategy) => {
+      if (execute && chatSessionId) {
+        const info = buildStrategyHotpatch({ ...strategy, ...next }, next.GoalDurationSeconds, rawData)
+        onSend({ token: chatSessionId, type: '', params: info })
       }
-      syncRunModeStrategy(setSetting, next, isChatSession(activeChat) ? activeChat.SessionID : undefined)
-    }),
+      syncRunModeStrategy(setSetting, next, chatSessionId)
+    },
     { wait: 200, leading: true },
   )
 
@@ -93,47 +81,17 @@ export const useAIRunMode = () => {
     if (immediate) strategyUpdate.flush()
   })
 
-  const isModeSelected = useMemoizedFn((key: ModeOptionKey) => {
-    switch (key) {
-      case 'plan':
-        return enablePlan
-      case 'multiAgent':
-        return enableMultiAgent
-      case 'goal':
-        return enableGoalMode
-      default:
-        return false
-    }
-  })
+  const selected = useCreation(
+    () => ({ plan: enablePlan, multiAgent: enableMultiAgent, goal: enableGoalMode }),
+    [enablePlan, enableMultiAgent, enableGoalMode],
+  )
+  const isModeSelected = useMemoizedFn((key: ModeOptionKey) => selected[key])
 
-  const selectedModes = useCreation(() => {
-    return ModeOptionList.filter((item) => isModeSelected(item.key))
-  }, [enablePlan, enableMultiAgent, enableGoalMode])
+  const selectedModes = useCreation(() => ModeOptionList.filter((item) => selected[item.key]), [selected])
 
   const onToggleMode = useMemoizedFn((key: ModeOptionKey) => {
-    switch (key) {
-      case 'plan':
-        onSetPlan(!enablePlan)
-        break
-      case 'multiAgent':
-        onSetStrategy({ EnableMultiAgent: !enableMultiAgent, MaxSubAgents: enableMultiAgent ? 0 : maxSubAgents })
-        break
-      case 'goal':
-        if (enableGoalMode) {
-          // 关闭 Goal：一并清掉验收/时长/最小迭代，避免残留 gate
-          onSetStrategy(clearGoalStrategy())
-        } else {
-          onSetStrategy({
-            EnableGoalMode: true,
-            ...(!goalAcceptanceCriteria.trim() && goalDurationSeconds === 0
-              ? { GoalMinIterations: Math.max(1, goalMinIterations) }
-              : {}),
-          })
-        }
-        break
-      default:
-        break
-    }
+    if (key === 'plan') togglePlan(!enablePlan)
+    else onSetStrategy(getToggledStrategy(key, strategy))
   })
 
   return {
@@ -149,6 +107,7 @@ export const useAIRunMode = () => {
     maxSubAgents,
     selectedModes,
     isModeSelected,
+    onSetPlan,
     onToggleMode,
     onSetStrategy,
   }

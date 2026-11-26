@@ -7,10 +7,13 @@
   font-weight: inherit;
   line-height: 16px;
   white-space: nowrap;
+
+  &:hover {
+    --ai-running-status-bg: var(--Colors-Use-Neutral-Bg-Hover);
+  }
 }
 
 .dot {
-  display: var(--ai-footer-running-dot-display, block);
   flex-shrink: 0;
   width: 6px;
   height: 6px;
@@ -18,17 +21,33 @@
   background: var(--Colors-Use-Success-Primary);
 }
 
-.label {
-  display: var(--ai-footer-running-label-display, inline);
-}
-
-.time {
-  display: var(--ai-footer-running-time-display, inline);
+.targetReached {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .badge .chevron {
-  display: var(--ai-footer-running-chevron-display, inline-flex);
+  display: inline-flex;
   flex-shrink: 0;
   width: 12px;
   height: 12px;
+}
+
+@container ai-chat-textarea (width < 864px) {
+  .label {
+    display: none;
+  }
+}
+
+@container ai-chat-textarea (width < 512px) {
+  .badge .chevron {
+    display: none;
+  }
+}
+
+@container ai-chat-textarea (width < 410px) {
+  .time {
+    display: none;
+  }
 }

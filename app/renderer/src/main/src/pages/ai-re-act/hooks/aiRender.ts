@@ -681,6 +681,8 @@ export interface ChatStoreState {
   sessionTaskListRevision: number
   /** 会话级快照，保留后端字段层级。 */
   sessionSnapshot?: AIAgentGrpcApi.SessionSnapshot
+  /** 前端收到该会话快照的时间（毫秒），用于校准已用时间。 */
+  sessionSnapshotReceivedAtMs?: number
   /** 最近一次有效版本号，兼容未携带 revision 的旧快照。 */
   sessionSnapshotRevision: number
   /** 问题队列信息 */

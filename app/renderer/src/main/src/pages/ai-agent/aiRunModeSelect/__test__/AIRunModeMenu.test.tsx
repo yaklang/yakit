@@ -11,13 +11,22 @@ const state = vi.hoisted(() => ({
   goalMinIterations: 0,
   goalDurationSeconds: 0,
   goalAcceptanceCriteria: '',
-  onToggleMode: vi.fn(),
+  onSetPlan: vi.fn(),
   onSetStrategy: vi.fn(),
 }))
 
 vi.mock('../useAIRunMode', () => ({
   useAIRunMode: () => ({
     ...state,
+    selectedModes: [],
+    strategy: {
+      EnableMultiAgent: state.enableMultiAgent,
+      MaxSubAgents: state.maxSubAgents,
+      EnableGoalMode: state.enableGoalMode,
+      GoalMinIterations: state.goalMinIterations,
+      GoalDurationSeconds: state.goalDurationSeconds,
+      GoalAcceptanceCriteria: state.goalAcceptanceCriteria,
+    },
     isModeSelected: (key: 'plan' | 'multiAgent' | 'goal') =>
       ({ plan: state.enablePlan, multiAgent: state.enableMultiAgent, goal: state.enableGoalMode })[key],
   }),
@@ -30,9 +39,14 @@ vi.mock('@/components/yakitUI/YakitButton/YakitButton', () => ({
     icon,
     children,
     type,
+    isActive,
     ...props
-  }: Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'type'> & { icon?: ReactNode; type?: string }) => (
-    <button {...props} data-variant={type}>
+  }: Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'type'> & {
+    icon?: ReactNode
+    type?: string
+    isActive?: boolean
+  }) => (
+    <button {...props} data-variant={type} data-active={isActive}>
       {icon}
       {children}
     </button>
@@ -98,6 +112,19 @@ vi.mock('@/components/yakitUI/YakitInput/YakitInput', () => ({
   },
 }))
 import { AIRunModeMenu } from '../AIRunModeMenu'
+import AIRunModeSelect from '../AIRunModeSelect'
+
+const toggleMenu = (expanded: boolean) => fireEvent.click(screen.getByRole('button', { expanded }))
+
+const openMenu = () => {
+  const view = render(<AIRunModeSelect key={state.sessionId} />)
+  toggleMenu(false)
+  return {
+    close: () => toggleMenu(true),
+    refresh: () => view.rerender(<AIRunModeSelect key={state.sessionId} />),
+    unmount: view.unmount,
+  }
+}
 
 const label = (key: string) => `AIMilkdownModeSlash.${key}`
 
@@ -117,38 +144,46 @@ beforeEach(() => {
 })
 
 describe('AIRunModeMenu', () => {
-  it('shows three unchecked mode switches and no inactive settings', () => {
-    render(<AIRunModeMenu />)
+  it('shows three unchecked switches and no inactive configuration', () => {
+    const { unmount } = render(<AIRunModeMenu />)
     expect(screen.getByText('AIRunModeSelect.configuration')).toBeInTheDocument()
     expect(screen.getAllByRole('switch')).toHaveLength(3)
     screen.getAllByRole('switch').forEach((control) => expect(control).not.toBeChecked())
     expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument()
     expect(screen.queryByRole('group', { name: 'AIRunModeSelect.stopCondition' })).not.toBeInTheDocument()
+    unmount()
+    expect(state.onSetPlan).not.toHaveBeenCalled()
+    expect(state.onSetStrategy).not.toHaveBeenCalled()
   })
 
-  it.each([
-    ['plan', 'plan'],
-    ['multiAgent', 'multiAgent'],
-    ['goal', 'goal'],
-  ])('toggles %s using the existing mode action', (key, translation) => {
-    render(<AIRunModeMenu />)
-    fireEvent.click(screen.getByRole('switch', { name: label(translation) }))
-    expect(state.onToggleMode).toHaveBeenCalledWith(key)
-  })
-
-  it('updates the sub-agent count when Multi-Agent is enabled', () => {
-    state.enableMultiAgent = true
-    state.maxSubAgents = 3
-    render(<AIRunModeMenu />)
-    expect(screen.getByRole('spinbutton', { name: label('subAgentCount') })).toHaveValue(3)
+  it('collects Plan, Multi-Agent and Goal edits and submits the final values only on close', () => {
+    const { close, unmount } = openMenu()
+    fireEvent.click(screen.getByRole('switch', { name: label('plan') }))
+    fireEvent.click(screen.getByRole('switch', { name: label('multiAgent') }))
     fireEvent.change(screen.getByRole('spinbutton', { name: label('subAgentCount') }), { target: { value: '5' } })
-    expect(state.onSetStrategy).toHaveBeenCalledWith(expect.objectContaining({ MaxSubAgents: 5 }))
+    fireEvent.click(screen.getByRole('switch', { name: label('goal') }))
+    fireEvent.click(screen.getByRole('button', { name: label('duration') }))
+    for (const preset of ['30m', '3h']) fireEvent.click(screen.getByRole('button', { name: preset }))
+    screen.getAllByRole('switch').forEach((control) => expect(control).toBeChecked())
+    expect(screen.getByRole('button', { name: '3h' })).toHaveAttribute('aria-pressed', 'true')
+    expect(state.onSetPlan).not.toHaveBeenCalled()
+    expect(state.onSetStrategy).not.toHaveBeenCalled()
+
+    close()
+    expect(state.onSetPlan).toHaveBeenCalledExactlyOnceWith(true)
+    expect(state.onSetStrategy).toHaveBeenCalledExactlyOnceWith(
+      { EnableMultiAgent: true, MaxSubAgents: 5, EnableGoalMode: true, GoalDurationSeconds: 10800 },
+      true,
+    )
+    unmount()
+    expect(state.onSetPlan).toHaveBeenCalledTimes(1)
+    expect(state.onSetStrategy).toHaveBeenCalledTimes(1)
   })
 
-  it('keeps Goal choices exclusive and updates the active iteration limit', () => {
+  it('keeps the existing iteration choice exclusive and stages its edited limit', () => {
     state.enableGoalMode = true
     state.goalMinIterations = 2
-    render(<AIRunModeMenu />)
+    const { close } = openMenu()
     expect(
       within(screen.getByRole('group', { name: 'AIRunModeSelect.stopCondition' })).getAllByRole('button'),
     ).toHaveLength(3)
@@ -161,25 +196,32 @@ describe('AIRunModeMenu', () => {
       'secondary2',
     )
     fireEvent.change(screen.getByRole('spinbutton', { name: label('minIterations') }), { target: { value: '4' } })
-    expect(state.onSetStrategy).toHaveBeenLastCalledWith(
-      expect.objectContaining({
-        GoalMinIterations: 4,
-      }),
-    )
+    expect(screen.getByRole('spinbutton', { name: label('minIterations') })).toHaveValue(4)
+    expect(state.onSetStrategy).not.toHaveBeenCalled()
+    close()
+    expect(state.onSetStrategy).toHaveBeenCalledExactlyOnceWith({ GoalMinIterations: 4 }, true)
   })
 
-  it('defaults to the minimum iteration option when Goal is enabled without a configured constraint', () => {
+  it.each([0, -2, 1, 3])('shows a minimum iteration value of 1 for stored value %s', (iterations) => {
     state.enableGoalMode = true
+    state.goalMinIterations = iterations
     render(<AIRunModeMenu />)
-    expect(screen.getByRole('button', { name: label('minIterations') })).toHaveAttribute('aria-pressed', 'true')
     const input = screen.getByRole('spinbutton', { name: label('minIterations') })
-    expect(input).toBeEnabled()
-    expect(input).toHaveValue(1)
-    expect(screen.getByRole('button', { name: label('acceptance') })).toHaveAttribute('aria-pressed', 'false')
-    expect(screen.getByRole('button', { name: label('duration') })).toHaveAttribute('aria-pressed', 'false')
+    expect(input).toHaveAttribute('min', '1')
+    expect(input).toHaveValue(Math.max(1, iterations))
   })
 
-  it.each(['acceptance', 'duration'])('preserves an existing %s constraint when Goal is enabled', (mode) => {
+  it.each(['0', '-3'])('clamps an iteration edit of %s and saves it on close', (value) => {
+    state.enableGoalMode = true
+    state.goalMinIterations = 2
+    const { close } = openMenu()
+    fireEvent.change(screen.getByRole('spinbutton', { name: label('minIterations') }), { target: { value } })
+    expect(state.onSetStrategy).not.toHaveBeenCalled()
+    close()
+    expect(state.onSetStrategy).toHaveBeenCalledExactlyOnceWith({ GoalMinIterations: 1 }, true)
+  })
+
+  it.each(['acceptance', 'duration'])('opens an existing %s constraint', (mode) => {
     state.enableGoalMode = true
     if (mode === 'acceptance') state.goalAcceptanceCriteria = 'existing'
     else state.goalDurationSeconds = 3600
@@ -193,157 +235,48 @@ describe('AIRunModeMenu', () => {
     ['1h', 3600],
     ['3h', 10800],
     ['AIMilkdownModeSlash.durationNever', -1],
-  ] as const)('applies the %s duration preset', (preset, seconds) => {
+  ] as const)('stages the %s duration preset until close', (preset, seconds) => {
     state.enableGoalMode = true
     state.goalDurationSeconds = 7200
-    render(<AIRunModeMenu />)
+    const { close } = openMenu()
     fireEvent.click(screen.getByRole('button', { name: preset }))
-    expect(state.onSetStrategy).toHaveBeenLastCalledWith({ GoalDurationSeconds: seconds }, true)
-  })
-
-  it.each([0, -2, 1, 3])('shows a minimum iteration value of 1 when the stored value is %s', (iterations) => {
-    state.enableGoalMode = true
-    state.goalMinIterations = iterations
-    render(<AIRunModeMenu />)
-    const input = screen.getByRole('spinbutton', { name: label('minIterations') })
-    expect(input).toHaveAttribute('min', '1')
-    expect(input).toHaveValue(Math.max(1, iterations))
-  })
-
-  it.each(['0', '-3'])('clamps an entered iteration value of %s to 1', (value) => {
-    state.enableGoalMode = true
-    state.goalMinIterations = 2
-    render(<AIRunModeMenu />)
-    fireEvent.change(screen.getByRole('spinbutton', { name: label('minIterations') }), { target: { value } })
-    expect(state.onSetStrategy).toHaveBeenLastCalledWith({ GoalMinIterations: 1 })
-  })
-
-  it.each([
-    ['minIterations', 'acceptance', { GoalMinIterations: 0, GoalDurationSeconds: 0, GoalAcceptanceCriteria: '' }],
-    ['acceptance', 'duration', { GoalMinIterations: 0, GoalDurationSeconds: 3600, GoalAcceptanceCriteria: '' }],
-    ['duration', 'minIterations', { GoalMinIterations: 1, GoalDurationSeconds: 0, GoalAcceptanceCriteria: '' }],
-  ] as const)('switches directly from %s to %s and resets the previous value', (mode, nextMode, next) => {
-    state.enableGoalMode = true
-    state.goalMinIterations = mode === 'minIterations' ? 5 : 0
-    state.goalAcceptanceCriteria = mode === 'acceptance' ? 'ces' : ''
-    state.goalDurationSeconds = mode === 'duration' ? 10800 : 0
-    render(<AIRunModeMenu />)
-
-    fireEvent.click(screen.getByRole('button', { name: label(nextMode) }))
-    expect(state.onSetStrategy).toHaveBeenCalledExactlyOnceWith({ EnableGoalMode: true, ...next }, true)
-  })
-
-  it('keeps the current value when clicking the selected Goal option', () => {
-    state.enableGoalMode = true
-    state.goalDurationSeconds = 10800
-    render(<AIRunModeMenu />)
-
-    fireEvent.click(screen.getByRole('button', { name: label('duration') }))
-
+    expect(screen.getByRole('button', { name: preset })).toHaveAttribute('aria-pressed', 'true')
     expect(state.onSetStrategy).not.toHaveBeenCalled()
-    expect(screen.getByRole('button', { name: '3h' })).toHaveAttribute('aria-pressed', 'true')
+    close()
+    expect(state.onSetStrategy).toHaveBeenCalledExactlyOnceWith({ GoalDurationSeconds: seconds }, true)
   })
 
-  it('switches between Goal constraints and clears the previous constraint', () => {
+  it('switches multiple Goal constraints locally and submits only the final changed fields', () => {
     state.enableGoalMode = true
     state.goalAcceptanceCriteria = 'existing'
-    const { rerender } = render(<AIRunModeMenu />)
+    const { close } = openMenu()
     fireEvent.click(screen.getByRole('button', { name: label('minIterations') }))
-    expect(state.onSetStrategy).toHaveBeenLastCalledWith(
-      { EnableGoalMode: true, GoalMinIterations: 1, GoalDurationSeconds: 0, GoalAcceptanceCriteria: '' },
-      true,
-    )
-    state.goalAcceptanceCriteria = ''
-    state.goalMinIterations = 1
-    rerender(<AIRunModeMenu />)
-    expect(screen.getByRole('button', { name: label('minIterations') })).toHaveAttribute('aria-pressed', 'true')
-    expect(screen.getByRole('button', { name: label('acceptance') })).toHaveAttribute('aria-pressed', 'false')
+    expect(screen.getByRole('spinbutton', { name: label('minIterations') })).toHaveValue(1)
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: label('duration') }))
-    expect(state.onSetStrategy).toHaveBeenLastCalledWith(
-      { EnableGoalMode: true, GoalMinIterations: 0, GoalDurationSeconds: 3600, GoalAcceptanceCriteria: '' },
+    expect(screen.getByRole('button', { name: '1h' })).toHaveAttribute('aria-pressed', 'true')
+    expect(state.onSetStrategy).not.toHaveBeenCalled()
+    close()
+    expect(state.onSetStrategy).toHaveBeenCalledExactlyOnceWith(
+      { GoalDurationSeconds: 3600, GoalAcceptanceCriteria: '' },
       true,
     )
   })
 
-  it('shows an inline empty acceptance field when selected', () => {
+  it('shows an empty acceptance field after selecting acceptance', () => {
     state.enableGoalMode = true
-    const { rerender } = render(<AIRunModeMenu />)
+    render(<AIRunModeMenu />)
     fireEvent.click(screen.getByRole('button', { name: label('acceptance') }))
     expect(screen.getByRole('button', { name: label('acceptance') })).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getByRole('textbox', { name: label('acceptance') })).toHaveValue('')
     expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument()
-    expect(state.onSetStrategy).toHaveBeenLastCalledWith(
-      { EnableGoalMode: true, GoalMinIterations: 0, GoalDurationSeconds: 0, GoalAcceptanceCriteria: '' },
-      true,
-    )
-    rerender(<AIRunModeMenu />)
-    expect(screen.getByRole('textbox', { name: label('acceptance') })).toHaveValue('')
-  })
-
-  it.each(['iterations', 'duration'] as const)('hides acceptance editing while %s is selected', (mode) => {
-    state.enableGoalMode = true
-    state.goalMinIterations = mode === 'iterations' ? 3 : 0
-    state.goalDurationSeconds = mode === 'duration' ? 10800 : 0
-    render(<AIRunModeMenu />)
-    expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'AIRunModeSelect.editAcceptance' })).not.toBeInTheDocument()
-  })
-
-  it('renders stored acceptance and reflects external text changes', () => {
-    state.enableGoalMode = true
-    state.goalAcceptanceCriteria = 'existing criteria'
-    const { rerender } = render(<AIRunModeMenu />)
-    expect(screen.getByRole('textbox', { name: label('acceptance') })).toHaveValue('existing criteria')
-    state.goalAcceptanceCriteria = 'externally updated criteria'
-    rerender(<AIRunModeMenu />)
-    expect(screen.getByRole('textbox', { name: label('acceptance') })).toHaveValue('externally updated criteria')
     expect(state.onSetStrategy).not.toHaveBeenCalled()
   })
 
-  it('clears an empty acceptance selection when the strategy changes externally', () => {
-    state.enableGoalMode = true
-    const { rerender } = render(<AIRunModeMenu />)
-    fireEvent.click(screen.getByRole('button', { name: label('acceptance') }))
-    state.goalDurationSeconds = 3600
-    rerender(<AIRunModeMenu />)
-    expect(screen.getByRole('button', { name: label('duration') })).toHaveAttribute('aria-pressed', 'true')
-    expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
-    expect(screen.queryByRole('spinbutton', { name: label('minIterations') })).not.toBeInTheDocument()
-  })
-
-  it('hides acceptance configuration when Goal is disabled', () => {
-    state.enableGoalMode = true
-    state.goalAcceptanceCriteria = 'existing'
-    const { rerender } = render(<AIRunModeMenu />)
-    fireEvent.click(screen.getByRole('switch', { name: label('goal') }))
-    expect(state.onToggleMode).toHaveBeenCalledWith('goal')
-    state.enableGoalMode = false
-    rerender(<AIRunModeMenu />)
-    expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
-    expect(state.onSetStrategy).not.toHaveBeenCalled()
-  })
-
-  it.each(['minIterations', 'duration'])('hides acceptance after selecting %s', (constraint) => {
-    state.enableGoalMode = true
-    state.goalAcceptanceCriteria = 'existing'
-    const { rerender } = render(<AIRunModeMenu />)
-    expect(screen.getByRole('textbox', { name: label('acceptance') })).toHaveValue('existing')
-    fireEvent.click(screen.getByRole('button', { name: label(constraint) }))
-    expect(state.onSetStrategy).toHaveBeenCalledWith(expect.objectContaining({ GoalAcceptanceCriteria: '' }), true)
-    state.goalAcceptanceCriteria = ''
-    state.goalMinIterations = constraint === 'minIterations' ? 1 : 0
-    state.goalDurationSeconds = constraint === 'duration' ? 3600 : 0
-    rerender(<AIRunModeMenu />)
-    expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
-  })
-
-  it.each([
-    ['close', 'final criteria'],
-    ['unmount', ''],
-  ])('saves the final acceptance edit only on %s', (close, finalValue) => {
+  it.each(['final criteria', ''])('saves the final acceptance edit %j only on close', (finalValue) => {
     state.enableGoalMode = true
     state.goalAcceptanceCriteria = 'old criteria'
-    const { rerender, unmount } = render(<AIRunModeMenu open />)
+    const { close, unmount } = openMenu()
     const input = screen.getByRole('textbox', { name: label('acceptance') })
     vi.useFakeTimers()
     try {
@@ -354,10 +287,7 @@ describe('AIRunModeMenu', () => {
       fireEvent.blur(input)
       act(() => vi.advanceTimersByTime(1000))
       expect(state.onSetStrategy).not.toHaveBeenCalled()
-      if (close === 'close') {
-        rerender(<AIRunModeMenu open={false} />)
-        expect(state.onSetStrategy).toHaveBeenCalledTimes(1)
-      }
+      close()
       unmount()
       expect(state.onSetStrategy).toHaveBeenCalledExactlyOnceWith({ GoalAcceptanceCriteria: finalValue }, true)
     } finally {
@@ -365,27 +295,94 @@ describe('AIRunModeMenu', () => {
     }
   })
 
-  it('skips saving when the acceptance draft returns to its original value', () => {
+  it('discards a pending acceptance edit after Goal is disabled and submits the disabled configuration', () => {
     state.enableGoalMode = true
-    state.goalAcceptanceCriteria = 'original'
-    const { unmount } = render(<AIRunModeMenu />)
-    const input = screen.getByRole('textbox', { name: label('acceptance') })
-    fireEvent.change(input, { target: { value: 'draft' } })
-    fireEvent.change(input, { target: { value: 'original' } })
-    unmount()
+    state.goalAcceptanceCriteria = 'existing'
+    const { close } = openMenu()
+    fireEvent.change(screen.getByRole('textbox', { name: label('acceptance') }), { target: { value: 'pending' } })
+    fireEvent.click(screen.getByRole('switch', { name: label('goal') }))
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
+    expect(state.onSetStrategy).not.toHaveBeenCalled()
+    close()
+    expect(state.onSetPlan).not.toHaveBeenCalled()
+    expect(state.onSetStrategy).toHaveBeenCalledExactlyOnceWith(
+      { EnableGoalMode: false, GoalAcceptanceCriteria: '' },
+      true,
+    )
+  })
+
+  it('skips submitting Plan and strategy edits reverted to their original values', () => {
+    state.enableGoalMode = true
+    state.goalDurationSeconds = 3600
+    state.enableMultiAgent = true
+    state.maxSubAgents = 2
+    const { close } = openMenu()
+    fireEvent.click(screen.getByRole('switch', { name: label('plan') }))
+    fireEvent.click(screen.getByRole('switch', { name: label('plan') }))
+    fireEvent.click(screen.getByRole('button', { name: '3h' }))
+    fireEvent.click(screen.getByRole('button', { name: '1h' }))
+    const subAgents = screen.getByRole('spinbutton', { name: label('subAgentCount') })
+    fireEvent.change(subAgents, { target: { value: '5' } })
+    fireEvent.change(subAgents, { target: { value: '2' } })
+    close()
+    expect(state.onSetPlan).not.toHaveBeenCalled()
     expect(state.onSetStrategy).not.toHaveBeenCalled()
   })
 
-  it('does not submit the previous session’s draft after switching sessions', () => {
+  it('skips saving an acceptance draft reverted to its original value', () => {
     state.enableGoalMode = true
     state.goalAcceptanceCriteria = 'original'
-    const { rerender, unmount } = render(<AIRunModeMenu />)
+    const { close } = openMenu()
     const input = screen.getByRole('textbox', { name: label('acceptance') })
-    fireEvent.change(input, { target: { value: 'session A draft' } })
+    fireEvent.change(input, { target: { value: 'draft' } })
+    fireEvent.change(input, { target: { value: 'original' } })
+    close()
+    expect(state.onSetStrategy).not.toHaveBeenCalled()
+  })
+
+  it('reflects external changes to an untouched acceptance field', () => {
+    state.enableGoalMode = true
+    state.goalAcceptanceCriteria = 'existing'
+    const { refresh, close } = openMenu()
+    state.goalAcceptanceCriteria = 'updated externally'
+    refresh()
+    expect(screen.getByRole('textbox', { name: label('acceptance') })).toHaveValue('updated externally')
+    close()
+    expect(state.onSetStrategy).not.toHaveBeenCalled()
+  })
+
+  it('keeps the edited field while merging an unrelated external strategy update', () => {
+    state.enableGoalMode = true
+    state.goalAcceptanceCriteria = 'existing'
+    const { refresh, close } = openMenu()
+    fireEvent.change(screen.getByRole('textbox', { name: label('acceptance') }), { target: { value: 'draft' } })
+    state.enableMultiAgent = true
+    state.maxSubAgents = 7
+    refresh()
+    expect(screen.getByRole('textbox', { name: label('acceptance') })).toHaveValue('draft')
+    expect(screen.getByRole('spinbutton', { name: label('subAgentCount') })).toHaveValue(7)
+    close()
+    expect(state.onSetStrategy).toHaveBeenCalledExactlyOnceWith({ GoalAcceptanceCriteria: 'draft' }, true)
+  })
+
+  it('drops the previous session drafts when switching sessions', () => {
+    state.enableGoalMode = true
+    state.goalAcceptanceCriteria = 'original'
+    const { refresh, close } = openMenu()
+    fireEvent.click(screen.getByRole('switch', { name: label('plan') }))
+    fireEvent.change(screen.getByRole('textbox', { name: label('acceptance') }), {
+      target: { value: 'session A draft' },
+    })
     state.sessionId = 'session-b'
-    rerender(<AIRunModeMenu />)
-    expect(input).toHaveValue('original')
-    unmount()
+    state.goalAcceptanceCriteria = 'session B criteria'
+    refresh()
+    expect(state.onSetPlan).not.toHaveBeenCalled()
+    expect(state.onSetStrategy).not.toHaveBeenCalled()
+    toggleMenu(false)
+    expect(screen.getByRole('textbox', { name: label('acceptance') })).toHaveValue('session B criteria')
+    expect(screen.getByRole('switch', { name: label('plan') })).not.toBeChecked()
+    close()
+    expect(state.onSetPlan).not.toHaveBeenCalled()
     expect(state.onSetStrategy).not.toHaveBeenCalled()
   })
 
@@ -404,65 +401,47 @@ describe('AIRunModeMenu', () => {
     expect(screen.getByRole('spinbutton', { name: 'AIRunModeSelect.durationMinutes' })).toHaveValue(minutes)
   })
 
-  it('preserves the stored never duration and can switch it to custom', () => {
+  it('preserves never duration and stages switching to custom', () => {
     state.enableGoalMode = true
     state.goalDurationSeconds = -1
-    render(<AIRunModeMenu />)
+    const { close } = openMenu()
     expect(screen.getByRole('button', { name: label('durationNever') })).toHaveAttribute('aria-pressed', 'true')
-    expect(state.onSetStrategy).not.toHaveBeenCalled()
     fireEvent.click(screen.getByRole('button', { name: 'AIRunModeSelect.customDuration' }))
-    expect(state.onSetStrategy).toHaveBeenLastCalledWith({ GoalDurationSeconds: 3600 }, true)
     expect(screen.getByRole('spinbutton', { name: 'AIRunModeSelect.durationHours' })).toHaveValue(1)
     expect(screen.getByRole('spinbutton', { name: 'AIRunModeSelect.durationMinutes' })).toHaveValue(0)
+    expect(state.onSetStrategy).not.toHaveBeenCalled()
+    close()
+    expect(state.onSetStrategy).toHaveBeenCalledExactlyOnceWith({ GoalDurationSeconds: 3600 }, true)
   })
 
   it('offers never between 3h and custom for a positive duration', () => {
     state.enableGoalMode = true
     state.goalDurationSeconds = 3600
     render(<AIRunModeMenu />)
-    const buttons = within(screen.getByRole('group', { name: label('duration') })).getAllByRole('button')
-    expect(buttons.map((button) => button.textContent)).toEqual([
-      '30m',
-      '1h',
-      '3h',
-      label('durationNever'),
-      'AIRunModeSelect.customDuration',
-    ])
+    expect(
+      within(screen.getByRole('group', { name: label('duration') }))
+        .getAllByRole('button')
+        .map((button) => button.textContent),
+    ).toEqual(['30m', '1h', '3h', label('durationNever'), 'AIRunModeSelect.customDuration'])
     expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument()
   })
 
-  it('updates custom duration and restores its values when the menu reopens', () => {
+  it('merges custom hour and minute edits and restores the saved values when reopened', () => {
     state.enableGoalMode = true
     state.goalDurationSeconds = 3600
-    const { rerender, unmount } = render(<AIRunModeMenu />)
-    const presetButton = screen.getByRole('button', { name: '1h', pressed: true })
-    const customButton = screen.getByRole('button', { name: 'AIRunModeSelect.customDuration', pressed: false })
-    expect(presetButton).toHaveAttribute('data-variant', 'primary')
-    expect(customButton).toHaveAttribute('data-variant', 'secondary2')
-    fireEvent.click(presetButton)
-    expect(state.onSetStrategy).not.toHaveBeenCalled()
-    fireEvent.click(customButton)
-    expect(customButton).toHaveAttribute('aria-pressed', 'true')
-    expect(customButton).toHaveAttribute('data-variant', 'primary')
-    expect(presetButton).toHaveAttribute('data-variant', 'secondary2')
-    expect(state.onSetStrategy).not.toHaveBeenCalled()
+    const { close } = openMenu()
+    fireEvent.click(screen.getByRole('button', { name: 'AIRunModeSelect.customDuration' }))
     fireEvent.change(screen.getByRole('spinbutton', { name: 'AIRunModeSelect.durationHours' }), {
       target: { value: '2' },
     })
-    expect(state.onSetStrategy).toHaveBeenLastCalledWith({ GoalDurationSeconds: 7200 }, true)
-    state.goalDurationSeconds = 7200
-    rerender(<AIRunModeMenu />)
     fireEvent.change(screen.getByRole('spinbutton', { name: 'AIRunModeSelect.durationMinutes' }), {
       target: { value: '15' },
     })
-    expect(state.onSetStrategy).toHaveBeenLastCalledWith({ GoalDurationSeconds: 8100 }, true)
+    expect(state.onSetStrategy).not.toHaveBeenCalled()
+    close()
+    expect(state.onSetStrategy).toHaveBeenCalledExactlyOnceWith({ GoalDurationSeconds: 8100 }, true)
     state.goalDurationSeconds = 8100
-    unmount()
-    render(<AIRunModeMenu />)
-    expect(screen.getByRole('button', { name: 'AIRunModeSelect.customDuration' })).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    )
+    toggleMenu(false)
     expect(screen.getByRole('spinbutton', { name: 'AIRunModeSelect.durationHours' })).toHaveValue(2)
     expect(screen.getByRole('spinbutton', { name: 'AIRunModeSelect.durationMinutes' })).toHaveValue(15)
   })
@@ -472,30 +451,33 @@ describe('AIRunModeMenu', () => {
     ['durationMinutes', '-1', 60, 60],
     ['durationMinutes', '80', 60, 3540],
     ['durationHours', '0', 3600, 60],
-  ] as const)('bounds custom %s input %s', (field, value, stored, expected) => {
+  ] as const)('bounds custom %s input %s before saving', (field, value, stored, expected) => {
     state.enableGoalMode = true
     state.goalDurationSeconds = stored
-    render(<AIRunModeMenu />)
+    const { close } = openMenu()
     fireEvent.click(screen.getByRole('button', { name: 'AIRunModeSelect.customDuration' }))
     fireEvent.change(screen.getByRole('spinbutton', { name: 'AIRunModeSelect.' + field }), { target: { value } })
-    expect(state.onSetStrategy).toHaveBeenLastCalledWith({ GoalDurationSeconds: expected }, true)
+    expect(state.onSetStrategy).not.toHaveBeenCalled()
+    close()
+    if (stored === expected) expect(state.onSetStrategy).not.toHaveBeenCalled()
+    else expect(state.onSetStrategy).toHaveBeenCalledExactlyOnceWith({ GoalDurationSeconds: expected }, true)
   })
 
-  it.each([false, true])('resets all modes and parameters with Plan enabled=%s', (enablePlan) => {
+  it.each([false, true])('stages resetting every configured field with Plan enabled=%s', (enablePlan) => {
     state.enablePlan = enablePlan
     state.enableMultiAgent = true
     state.enableGoalMode = true
     state.goalMinIterations = 2
-    render(<AIRunModeMenu />)
+    const { close } = openMenu()
     fireEvent.click(screen.getByRole('button', { name: 'YakitButton.reset' }))
-    expect(state.onToggleMode.mock.calls).toEqual(enablePlan ? [['plan']] : [])
-    expect(state.onSetStrategy).toHaveBeenCalledWith({
-      EnableMultiAgent: false,
-      MaxSubAgents: 0,
-      EnableGoalMode: false,
-      GoalMinIterations: 0,
-      GoalDurationSeconds: 0,
-      GoalAcceptanceCriteria: '',
-    })
+    screen.getAllByRole('switch').forEach((control) => expect(control).not.toBeChecked())
+    expect(state.onSetPlan).not.toHaveBeenCalled()
+    expect(state.onSetStrategy).not.toHaveBeenCalled()
+    close()
+    expect(state.onSetPlan.mock.calls).toEqual(enablePlan ? [[false]] : [])
+    expect(state.onSetStrategy).toHaveBeenCalledExactlyOnceWith(
+      { EnableMultiAgent: false, EnableGoalMode: false, GoalMinIterations: 0 },
+      true,
+    )
   })
 })

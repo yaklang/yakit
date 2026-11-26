@@ -229,6 +229,10 @@ export const toServerAIStartParams = <T extends AIStartParams>(params: T): T => 
 export const fromServerAIStartParams = <T extends AIStartParams>(params: T) => ({
   ...omitLegacyAIContextLimits(params),
   ...(params.AICallTokenLimit !== undefined ? { AICallTokenLimit: params.AICallTokenLimit / 1024 } : {}),
+  // gRPC 将 int64 时长返回为字符串，恢复配置时统一为预设使用的数字秒数。
+  ...(params.Strategy?.GoalDurationSeconds !== undefined
+    ? { Strategy: { ...params.Strategy, GoalDurationSeconds: Number(params.Strategy.GoalDurationSeconds) } }
+    : {}),
 })
 
 /** AIInputEvent-HotpatchType 的可选值 */
@@ -1038,7 +1042,7 @@ export declare namespace AIAgentGrpcApi {
       acceptance_criteria?: string
       time_limit: {
         enabled: boolean
-        mode: 'disabled' | 'not_started' | 'deadline' | 'never_ending'
+        mode: 'disabled' | 'deadline' | 'never_ending'
         deadline_at: number
         configured_duration_seconds: number
         revision: number
