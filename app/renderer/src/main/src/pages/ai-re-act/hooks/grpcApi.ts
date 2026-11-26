@@ -196,7 +196,8 @@ export interface AIStartParams {
 
   /**
    * 为 true 时关闭命令执行安全规则（内置规则与自定义规则都不生效）。
-   * @default false
+   * 前端默认关闭安全规则，即默认发送 true。
+   * @default true
    */
   DisableBuiltinSyntaxFlowRules?: boolean
 }
