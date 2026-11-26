@@ -220,6 +220,7 @@ const WelcomeRecentSessions: FC<WelcomeRecentSessionsProps> = memo(({ density = 
       EnablePlan: info?.StartParams?.EnablePlan ?? false,
       SingleModelMode: info?.StartParams?.SingleModelMode ?? false,
       DisableMemoryTriage: info?.StartParams?.DisableMemoryTriage ?? false,
+      DisableBuiltinSyntaxFlowRules: info?.StartParams?.DisableBuiltinSyntaxFlowRules ?? true,
       Strategy: {
         EnableMultiAgent: info?.StartParams?.Strategy?.EnableMultiAgent ?? false,
         EnableGoalMode: info?.StartParams?.Strategy?.EnableGoalMode ?? false,
