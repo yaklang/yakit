@@ -33,8 +33,9 @@ const GoalStopConditionFields: FC<GoalStopConditionFieldsProps> = ({
   minDurationSeconds,
 }) => {
   const { t } = useI18nNamespaces(['aiAgent'])
-  const durationKey = goalDurationSecondsToKey(durationSeconds) ?? '1h'
-  const selectedDurationKey = customDuration || !isGoalDurationPresetKey(durationKey) ? 'custom' : durationKey
+  const durationKey = goalDurationSecondsToKey(durationSeconds)
+  const selectedDurationKey =
+    customDuration || (durationKey !== null && !isGoalDurationPresetKey(durationKey)) ? 'custom' : durationKey
 
   return (
     <div className={styles['mode-configuration']}>

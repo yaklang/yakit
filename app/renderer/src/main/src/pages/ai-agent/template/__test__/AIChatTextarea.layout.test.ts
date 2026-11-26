@@ -15,7 +15,7 @@ it('运行状态显示且输入框小于 500px 时使用简短的模式数量文
   css.walkAtRules('container', (query) => {
     query.walkRules((rule) => {
       rule.walkDecls(/^--ai-footer-mode-count-/, (decl) => {
-        expect(rule.selector).toContain('.footer:has(> .footer-right button[data-ai-running-status]) > .footer-left')
+        expect(rule.selector).toContain('.footer:has(> .footer-right [data-ai-running-status]) > .footer-left')
         expect(query.params).toBe('ai-chat-textarea (width < 500px)')
         overrides.push(`${decl.prop}: ${decl.value}`)
       })
@@ -102,7 +102,7 @@ it('两个状态徽标同时显示时同步收起模型、场景和设置，其�
   expect(compactQueries).toEqual(['ai-chat-textarea (width < 450px)'])
   expect(compactSelectors).toEqual([
     expect.stringContaining(
-      '.footer:has(> .footer-right button[data-ai-context-usage]):has(> .footer-right button[data-ai-running-status]) > .footer-left .model-self-adaptive',
+      '.footer:has(> .footer-right button[data-ai-context-usage]):has(> .footer-right [data-ai-running-status]) > .footer-left .model-self-adaptive',
     ),
   ])
   expect(sceneDeclarations['--ai-footer-selector-label-display']).toBe('none')

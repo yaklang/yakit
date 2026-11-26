@@ -209,7 +209,7 @@ textarea.qs-input-textarea {
         @include icon-only-selector;
       }
 
-      &:has(> .footer-right button[data-ai-running-status]) > .footer-left .model-self-adaptive {
+      &:has(> .footer-right [data-ai-running-status]) > .footer-left .model-self-adaptive {
         @include icon-only-selector;
       }
 
@@ -375,7 +375,7 @@ textarea.qs-input-textarea {
     }
 
     @container ai-chat-textarea (width < 500px) {
-      &:has(> .footer-right button[data-ai-running-status]) > .footer-left {
+      &:has(> .footer-right [data-ai-running-status]) > .footer-left {
         --ai-footer-mode-count-full-display: none;
         --ai-footer-mode-count-short-display: inline;
       }

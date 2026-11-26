@@ -52,7 +52,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo(() => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
 
   const { activeChat, pageId, pendingChat, openChatInNewTab } = useAIAgentStore()
-  const { setActiveChat, setSetting, getSetting, onStart, onClose, cancelPendingChat } = useAIAgentDispatcher()
+  const { setActiveChat, getSetting, onStart, onClose, cancelPendingChat } = useAIAgentDispatcher()
 
   /** 当前对话唯一ID */
   const sessionId = useCurrentSessionId()
@@ -176,20 +176,17 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo(() => {
         emitSessionData: false,
       })
     }
-    setSetting?.((old) => ({
-      ...old,
+    // 首问沿用原草稿 ID，欢迎页的默认配置只写入下一份草稿。
+    const welcome = createWelcomeChat()
+    globalSessionEngine.updateSessionConfig(welcome.SessionID, {
+      ...getSetting(),
       SyncPerceptionTrigger: AIAgentSettingDefault.SyncPerceptionTrigger,
       EnablePlan: AIAgentSettingDefault.EnablePlan,
       SingleModelMode: AIAgentSettingDefault.SingleModelMode,
       DisableMemoryTriage: AIAgentSettingDefault.DisableMemoryTriage,
-      Strategy: {
-        EnableMultiAgent: AIAgentSettingDefault.Strategy?.EnableMultiAgent,
-        EnableGoalMode: AIAgentSettingDefault.Strategy?.EnableGoalMode,
-        GoalMinIterations: AIAgentSettingDefault.Strategy?.GoalMinIterations,
-        MaxSubAgents: AIAgentSettingDefault.Strategy?.MaxSubAgents,
-      },
-    }))
-    setActiveChat?.(createWelcomeChat())
+      Strategy: AIAgentSettingDefault.Strategy,
+    })
+    setActiveChat?.(welcome)
     setMode('welcome')
   })
 

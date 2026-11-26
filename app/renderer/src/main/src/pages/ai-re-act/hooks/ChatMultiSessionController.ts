@@ -49,7 +49,6 @@ import { aiAgentLogEmitter } from './AIAgentLogEmitter'
 import { v4 as uuidv4 } from 'uuid'
 import moment from 'moment'
 import type { YakitRouteType } from '@/enums/yakitRoute'
-import { YakitRoute } from '@/enums/yakitRoute'
 import { grpcQueryAIEvent } from '@/pages/ai-agent/grpc'
 import { clearModelContextSaveTimer, updateModelContextState } from './modelContext'
 import aiChatPersistStore from './persist/aiChatPersistStore'
@@ -1445,6 +1444,7 @@ export class ChatMultiSessionController {
   public handleSendMessage(payload: AIChatSendParams): boolean {
     try {
       const { token, type, params, optionValue } = payload
+      console.log('handleSendMessage-params', params)
       // 只读同步查询（如弹窗打开时拉取用量）没有用户输入，守卫拦截时不应弹出面向发送操作的警告
       const readonlySyncQuery = !!params.IsSyncMessage && isReadonlySyncQuery(params.SyncType)
       if (!this.readyChannels.has(token)) {

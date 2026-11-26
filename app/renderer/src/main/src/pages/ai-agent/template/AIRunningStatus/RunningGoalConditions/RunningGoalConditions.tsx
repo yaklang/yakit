@@ -8,8 +8,11 @@ import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
 import { useCurrentRawData } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import { AIGoalTimeAction } from '@/pages/ai-re-act/hooks/grpcApi'
 import type { RunningGoalConditionsProps } from './type'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import styles from '../AIRunningStatus.module.scss'
 
-const RunningGoalConditions: FC<RunningGoalConditionsProps> = ({ sessionId, ref }) => {
+const RunningGoalConditions: FC<RunningGoalConditionsProps> = ({ sessionId, mode, ref }) => {
+  const { t } = useI18nNamespaces(['aiAgent'])
   const { onSend, setSetting } = useAIAgentDispatcher()
   const rawData = useCurrentRawData()
   const goal = rawData.agentPolicySnapshot?.goal
@@ -17,14 +20,16 @@ const RunningGoalConditions: FC<RunningGoalConditionsProps> = ({ sessionId, ref 
   const [iterations, setIterations] = useState(Math.max(1, goal?.min_iterations ?? 1))
   const [acceptance, setAcceptance] = useState(goal?.acceptance_criteria ?? '')
   const [customDuration, setCustomDuration] = useState(false)
-  const [durationSeconds, setDurationSeconds] = useState(-1)
+  const initialDuration = mode === 'never_ending' ? -1 : 0
+  const [durationSeconds, setDurationSeconds] = useState(initialDuration)
 
-  /** 弹窗关闭时，将有效的停止条件应用到仍处于「永不停止」模式的当前会话。 */
+  /** 关闭时提交编辑后的停止条件。策略已切换时丢弃旧表单。 */
   const applyCondition = () => {
     const policy = rawData.agentPolicySnapshot
-    if (!sessionId || policy?.goal.time_limit.mode !== 'never_ending') return
+    if (!sessionId || policy?.goal.time_limit.mode !== mode || (mode === 'disabled' && !policy.goal.enabled)) return
     const timed = condition === 'duration'
-    if (timed && (!Number.isSafeInteger(durationSeconds) || durationSeconds < 60)) return
+    if (timed && durationSeconds === initialDuration) return
+    if (timed && durationSeconds !== -1 && (!Number.isSafeInteger(durationSeconds) || durationSeconds < 60)) return
     if (condition === 'acceptance' && !acceptance.trim()) return
     // 三种停止条件互斥，发送 ExecutionStrategy 时只保留选中的条件。
     const strategy = {
@@ -44,6 +49,8 @@ const RunningGoalConditions: FC<RunningGoalConditionsProps> = ({ sessionId, ref 
     )
     if (!timed) {
       params.GoalTimePatch = { Action: AIGoalTimeAction.Disable }
+    } else if (durationSeconds === -1) {
+      params.GoalTimePatch = { Action: AIGoalTimeAction.NeverEnding }
     }
     if (onSend({ token: sessionId, type: '', params }) === false) return
     rawData.pendingGoalDurationSeconds = strategy.GoalDurationSeconds
@@ -62,19 +69,22 @@ const RunningGoalConditions: FC<RunningGoalConditionsProps> = ({ sessionId, ref 
   }
 
   return (
-    <GoalStopConditionFields
-      condition={condition}
-      onConditionChange={setCondition}
-      iterations={iterations}
-      onIterationsChange={setIterations}
-      acceptance={acceptance}
-      onAcceptanceChange={setAcceptance}
-      durationSeconds={durationSeconds}
-      customDuration={customDuration}
-      onDurationPick={pickDuration}
-      onCustomDurationChange={setDurationSeconds}
-      minDurationSeconds={0}
-    />
+    <>
+      <div className={styles.resetDurationHint}>{t('AIRunningStatus.resetDurationHint')}</div>
+      <GoalStopConditionFields
+        condition={condition}
+        onConditionChange={setCondition}
+        iterations={iterations}
+        onIterationsChange={setIterations}
+        acceptance={acceptance}
+        onAcceptanceChange={setAcceptance}
+        durationSeconds={durationSeconds}
+        customDuration={customDuration}
+        onDurationPick={pickDuration}
+        onCustomDurationChange={setDurationSeconds}
+        minDurationSeconds={0}
+      />
+    </>
   )
 }
 

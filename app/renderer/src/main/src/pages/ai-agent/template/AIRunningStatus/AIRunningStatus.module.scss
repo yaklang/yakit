@@ -1,3 +1,4 @@
+.roundBadge,
 .badge:global(.ant-btn) {
   border: 0;
   flex-shrink: 0;
@@ -7,10 +8,20 @@
   font-weight: inherit;
   line-height: 16px;
   white-space: nowrap;
+}
 
-  &:hover {
-    --ai-running-status-bg: var(--Colors-Use-Neutral-Bg-Hover);
-  }
+.roundBadge {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  border-radius: 9999px;
+  font-size: 12px;
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  background: var(--Colors-Use-Success-Bg);
+}
+
+.badge:global(.ant-btn):hover {
+  --ai-running-status-bg: var(--Colors-Use-Neutral-Bg-Hover);
 }
 
 .dot {
@@ -25,6 +36,11 @@
   display: flex;
   align-items: center;
   gap: 4px;
+}
+
+.resetDurationHint {
+  margin-bottom: 8px;
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
 }
 
 .badge .chevron {

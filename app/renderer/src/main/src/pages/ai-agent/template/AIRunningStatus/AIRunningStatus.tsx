@@ -1,9 +1,10 @@
-import type { FC, KeyboardEvent } from 'react'
+import type { FC, KeyboardEvent, ReactNode } from 'react'
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useCreation } from 'ahooks'
 import { useStore } from 'zustand'
 import { v4 as uuidv4 } from 'uuid'
 import moment from 'moment'
+import classNames from 'classnames'
 import { ChevronDownOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { CheckCircleSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -47,22 +48,24 @@ const formatWorkDuration = (seconds?: number, maxUnits?: number) => {
 }
 
 const readGoalTiming = ({ agentPolicySnapshot, agentPolicySnapshotReceivedAtMs }: AIAgentChatData) => {
-  const timeLimit = agentPolicySnapshot?.goal.time_limit
-  const mode = timeLimit?.mode
-  const hidden = !mode || mode === 'disabled' || timeLimit?.configured_duration_seconds === 0
+  if (agentPolicySnapshot?.goal.enabled !== true) return
+  const timeLimit = agentPolicySnapshot.goal.time_limit
+  if (timeLimit?.mode !== 'deadline') {
+    const mode = timeLimit?.mode
+    const editable = mode === 'never_ending' || mode === 'disabled'
+    return { panel: editable ? mode : undefined }
+  }
   if (
-    !agentPolicySnapshot?.goal.effective ||
-    timeLimit?.mode !== 'deadline' ||
+    !agentPolicySnapshot.goal.effective ||
     !(timeLimit.deadline_at > 0 && agentPolicySnapshot.server_time > 0) ||
     agentPolicySnapshotReceivedAtMs === undefined
   ) {
-    return { hidden, mode }
+    return { panel: timeLimit.mode }
   }
 
   const remainingAtReceipt = timeLimit.deadline_at - agentPolicySnapshot.server_time
   return {
-    hidden,
-    mode,
+    panel: timeLimit.mode,
     deadlineAt: timeLimit.deadline_at,
     deadlineMs: agentPolicySnapshotReceivedAtMs + remainingAtReceipt * 1000,
   }
@@ -72,10 +75,10 @@ const AIRunningStatus: FC<AIRunningStatusProps> = ({ className }) => {
   const store = useCurrentStore()
   const rawData = useCurrentRawData()
   const execution = useStore(store, (state) => state.sessionSnapshot?.execution)
-  const round = useStore(store, (state) => state.sessionSnapshot?.current_round) ?? '—'
+  const round = useStore(store, (state) => state.sessionSnapshot?.current_round)
   const agentPolicySnapshotUpdate = useStore(store, (state) => state.agentPolicySnapshotUpdate)
   const timing = useCreation(() => readGoalTiming(rawData), [rawData, agentPolicySnapshotUpdate])
-  if (execution?.status !== 'processing' || timing.hidden) return null
+  if (execution?.status !== 'processing' || !timing) return null
 
   return (
     <RunningStatusButton
@@ -93,9 +96,73 @@ const RunningStatusButton = ({
   round,
   executionSeconds,
 }: AIRunningStatusProps & {
-  timing: ReturnType<typeof readGoalTiming>
-  round: number | string
+  timing: NonNullable<ReturnType<typeof readGoalTiming>>
+  round?: number
   executionSeconds?: number
+}) => {
+  const { t } = useI18nNamespaces(['aiAgent'])
+  const store = useCurrentStore()
+  const receivedAtMs = useStore(store, (state) => state.sessionSnapshotReceivedAtMs)
+  const [nowMs, setNowMs] = useState(Date.now) // 让已用时间在两次后端快照之间也能每秒刷新
+  useEffect(() => {
+    if (receivedAtMs === undefined || executionSeconds === undefined) return
+    let timer: number
+    const tick = () => {
+      const now = Date.now()
+      setNowMs(now)
+      timer = window.setTimeout(tick, 1000 - (Math.max(0, now - receivedAtMs) % 1000))
+    }
+    tick()
+    return () => window.clearTimeout(timer)
+  }, [receivedAtMs, executionSeconds])
+  const secondsSinceSnapshot = receivedAtMs === undefined ? 0 : Math.max(0, Math.floor((nowMs - receivedAtMs) / 1000))
+  const used = executionSeconds === undefined ? undefined : executionSeconds + secondsSinceSnapshot
+  const badgeElapsed = formatWorkDuration(used, 2)
+  const roundLabel = round == null ? undefined : t('AIRunningStatus.round', { round })
+  const label =
+    round == null
+      ? `${t('AIRunningStatus.state')} ${badgeElapsed}`
+      : t('AIRunningStatus.label', { round, time: badgeElapsed })
+  const content = (
+    <>
+      <span className={styles.dot} aria-hidden="true" />
+      <span className={styles.label}>{t('AIRunningStatus.state')}</span>
+      {roundLabel && <span>{roundLabel}</span>}
+      {(used !== undefined || timing.panel) && (
+        <span className={roundLabel ? styles.time : undefined}>
+          {roundLabel && '· '}
+          {badgeElapsed}
+        </span>
+      )}
+    </>
+  )
+  if (!timing.panel) {
+    return (
+      <span role="status" data-ai-running-status className={classNames(styles.roundBadge, className)}>
+        {content}
+      </span>
+    )
+  }
+  return (
+    <RunningTimePopover className={className} timing={timing} used={used} roundLabel={roundLabel} label={label}>
+      {content}
+    </RunningTimePopover>
+  )
+}
+
+const RunningTimePopover = ({
+  className,
+  timing,
+  used,
+  roundLabel,
+  label,
+  children,
+}: AIRunningStatusProps & {
+  timing: NonNullable<ReturnType<typeof readGoalTiming>>
+  used?: number
+  roundLabel?: string
+  label: string
+  children: ReactNode
 }) => {
   const { t } = useI18nNamespaces(['aiAgent'])
   const sessionId = useCurrentSessionId()
@@ -129,11 +196,16 @@ const RunningStatusButton = ({
       },
     })
   }
-  const store = useCurrentStore()
-  const receivedAtMs = useStore(store, (state) => state.sessionSnapshotReceivedAtMs)
   const [open, setOpen] = useState(false)
   const submitConditions = useRef<(() => void) | null>(null)
-  const { mode, deadlineMs, deadlineAt } = timing
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen && open) {
+      submitConditions.current?.()
+      submitConditions.current = null
+    }
+    setOpen(nextOpen)
+  }
+  const { deadlineMs, deadlineAt } = timing
   const [remaining, setRemaining] = useState<number>()
   useLayoutEffect(() => {
     if (deadlineMs === undefined) {
@@ -150,46 +222,31 @@ const RunningStatusButton = ({
     tick()
     return () => window.clearTimeout(timer)
   }, [deadlineMs])
-  const [nowMs, setNowMs] = useState(Date.now) // 让已用时间在两次后端快照之间也能每秒刷新
-  useEffect(() => {
-    if (receivedAtMs === undefined || executionSeconds === undefined) return
-    let timer: number
-    const tick = () => {
-      const now = Date.now()
-      setNowMs(now)
-      timer = window.setTimeout(tick, 1000 - (Math.max(0, now - receivedAtMs) % 1000))
-    }
-    tick()
-    return () => window.clearTimeout(timer)
-  }, [receivedAtMs, executionSeconds])
-  const secondsSinceSnapshot = receivedAtMs === undefined ? 0 : Math.max(0, Math.floor((nowMs - receivedAtMs) / 1000))
-  const used = executionSeconds === undefined ? undefined : executionSeconds + secondsSinceSnapshot
-  const badgeElapsed = formatWorkDuration(used, 2)
+  const expired = remaining === 0
   const remainingTime = formatWorkDuration(remaining)
   const usedLabel = t('AIRunningStatus.used')
   const remainingLabel = t('AIRunningStatus.remaining')
-  const roundLabel = t('AIRunningStatus.round', { round })
-  const label = t('AIRunningStatus.label', { round, time: badgeElapsed })
   const renderUsage = () => {
-    if (remaining === undefined || deadlineAt === undefined) {
+    if (timing.panel === 'never_ending') {
       return (
         <div>
-          <span>{usedLabel}</span> <span>{formatTimerValue(used)}</span>
-          {mode === 'never_ending' && <> · {t('AIRunningStatus.infinite')}</>}
-          {mode === 'deadline' && (
-            <>
-              {' '}
-              · <span>{remainingLabel}</span> <span>{remainingTime}</span>
-            </>
-          )}
+          {usedLabel} {formatTimerValue(used)} · {t('AIRunningStatus.infinite')}
         </div>
       )
     }
-    if (remaining === 0) {
+    if (timing.panel === 'disabled' || expired) {
       return (
         <div className={styles.targetReached}>
-          {t('AIRunningStatus.targetReached')}
+          {t(timing.panel === 'disabled' ? 'AIRunningStatus.timeLimitRemoved' : 'AIRunningStatus.targetReached')}
           <CheckCircleSolid aria-hidden="true" size={16} color="var(--Colors-Use-Success-Primary)" />
+        </div>
+      )
+    }
+    if (remaining === undefined || deadlineAt === undefined) {
+      return (
+        <div>
+          <span>{usedLabel}</span> <span>{formatTimerValue(used)}</span> · <span>{remainingLabel}</span>{' '}
+          <span>{remainingTime}</span>
         </div>
       )
     }
@@ -206,13 +263,6 @@ const RunningStatusButton = ({
     }
     if (remaining > 5 * 3600) return t('AIRunningStatus.workUntil', { deadline: deadlineText })
     return t('AIRunningStatus.workSchedule', { deadline: deadlineText, remaining: remainingTime })
-  }
-  const handleOpenChange = (nextOpen: boolean) => {
-    if (!nextOpen && open) {
-      submitConditions.current?.()
-      submitConditions.current = null
-    }
-    setOpen(nextOpen)
   }
   const handleKeyDown = (event: KeyboardEvent) => {
     event.stopPropagation()
@@ -238,14 +288,21 @@ const RunningStatusButton = ({
             >
               <div className={panelStyles.header}>
                 <span>{t('AIRunningStatus.title')}</span>
-                <span>{roundLabel}</span>
+                {roundLabel && <span>{roundLabel}</span>}
               </div>
               <div className={panelStyles.usage}>{renderUsage()}</div>
               <div className={panelStyles.settings}>
-                {mode === 'never_ending' ? (
-                  open && <RunningGoalConditions key={sessionId} ref={submitConditions} sessionId={sessionId} />
+                {timing.panel === 'never_ending' || timing.panel === 'disabled' ? (
+                  open && (
+                    <RunningGoalConditions
+                      key={`${sessionId}:${timing.panel}`}
+                      ref={submitConditions}
+                      sessionId={sessionId}
+                      mode={timing.panel}
+                    />
+                  )
                 ) : (
-                  <GoalTimeAdjustments loading={loading} expired={remaining === 0} onAdjust={adjustGoalTime} />
+                  <GoalTimeAdjustments loading={loading} expired={expired} onAdjust={adjustGoalTime} />
                 )}
               </div>
             </div>
@@ -263,10 +320,7 @@ const RunningStatusButton = ({
           onClick={(event) => event.stopPropagation()}
           onKeyDown={handleKeyDown}
         >
-          <span className={styles.dot} aria-hidden="true" />
-          <span className={styles.label}>{t('AIRunningStatus.state')}</span>
-          <span>{roundLabel}</span>
-          <span className={styles.time}>· {badgeElapsed}</span>
+          {children}
           <span className={styles.chevron} aria-hidden="true">
             <ChevronDownOutlined size={12} color="var(--Colors-Use-Neutral-Text-3-Secondary)" />
           </span>

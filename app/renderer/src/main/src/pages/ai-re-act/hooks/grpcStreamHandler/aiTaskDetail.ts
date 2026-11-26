@@ -383,6 +383,7 @@ const handleSessionSnapshot: AIMessageHandler = (requestInfo) => {
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const snapshot = (JSON.parse(ipcContent) as AIAgentGrpcApi.SessionSnapshot) || {}
+  console.log('handleSessionSnapshot-session_snapshot', snapshot)
   if (isEmpty(snapshot)) return
 
   // 任务索引用会话级水位（勿绑单任务 revision）；乱序旧包不得回退下拉列表
@@ -445,6 +446,7 @@ const handleAgentPolicySnapshot: AIMessageHandler = ({ res, rawData, store }) =>
   if (res.Type !== 'agent_policy_snapshot' || res.NodeId !== 'agent_policy_snapshot') return
 
   const snapshot = JSON.parse(Uint8ArrayToString(res.Content) || '{}') as AIAgentGrpcApi.AgentPolicySnapshot
+  console.log('handleSessionSnapshot-agent_policy_snapshot', snapshot)
   if (isEmpty(snapshot)) return
 
   const cached = rawData.agentPolicySnapshot

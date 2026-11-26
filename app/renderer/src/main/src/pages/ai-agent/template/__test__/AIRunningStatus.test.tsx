@@ -19,6 +19,7 @@ const initialPolicy = {
   server_time: serverTime,
   multi_agent: { enabled: true, effective: true, max_concurrency: 6, prefer_dispatch: false },
   goal: {
+    enabled: true,
     effective: true,
     time_limit: { mode: 'deadline', configured_duration_seconds: 3600, deadline_at: 1795415400 },
   },
@@ -145,20 +146,17 @@ it('ticks from execution_seconds independently of the goal deadline and its adju
 it('recalibrates elapsed time when only the snapshot receipt timestamp changes', () => {
   vi.useFakeTimers()
   try {
-    rawData.agentPolicySnapshot = {
-      ...initialPolicy,
-      goal: { effective: true, time_limit: { mode: 'never_ending', configured_duration_seconds: -1, deadline_at: 0 } },
-    }
+    rawData.agentPolicySnapshotReceivedAtMs = performance.now()
     const receive = (seconds?: number) =>
       act(() => {
         store.setState({
-          sessionSnapshot: { ...snapshot, execution: { ...execution, execution_seconds: seconds } },
+          sessionSnapshot: { ...snapshot, current_round: 1, execution: { ...execution, execution_seconds: seconds } },
           sessionSnapshotReceivedAtMs: Date.now(),
         })
       })
     receive(10)
     const view = render(<AIRunningStatus />)
-    const trigger = screen.getByRole('button', { name: /^AIRunningStatus.label/ })
+    const trigger = screen.getByRole('button', { name: /^AIRunningStatus.label 1 / })
     expect(trigger).toHaveTextContent(/· 10s$/)
     act(() => {
       vi.advanceTimersByTime(2500)
@@ -198,7 +196,7 @@ it('counts down across forward and backward system clock changes, including whil
     rawData.agentPolicySnapshotReceivedAtMs = performance.now()
     store.setState({ sessionSnapshot: snapshot })
     const view = render(<AIRunningStatus />)
-    const openPanel = () => fireEvent.click(screen.getByRole('button', { name: /^AIRunningStatus.label/ }))
+    const openPanel = () => fireEvent.click(screen.getByRole('button', { name: /^AIRunningStatus.state/ }))
     openPanel()
     expect(screen.getByText(/^AIRunningStatus.workSchedule/)).toHaveTextContent(/30m0s$/)
     act(() => {
@@ -234,7 +232,7 @@ it.each([
     ...initialPolicy,
     server_time: now,
     goal: {
-      effective: true,
+      ...initialPolicy.goal,
       time_limit: {
         mode: 'deadline',
         configured_duration_seconds: 10800,
@@ -244,7 +242,7 @@ it.each([
   }
   store.setState({ sessionSnapshot: snapshot })
   render(<AIRunningStatus />)
-  fireEvent.click(screen.getByRole('button', { name: /^AIRunningStatus.label/ }))
+  fireEvent.click(screen.getByRole('button', { name: /^AIRunningStatus.state/ }))
   const summary = remaining
     ? `AIRunningStatus.workSchedule ${expectedDeadline} ${remaining}`
     : `AIRunningStatus.workUntil ${expectedDeadline}`
@@ -266,7 +264,7 @@ it('switches the open panel deadline from tomorrow to today at midnight', () => 
     rawData.agentPolicySnapshotReceivedAtMs = performance.now()
     store.setState({ sessionSnapshot: snapshot })
     const view = render(<AIRunningStatus />)
-    fireEvent.click(screen.getByRole('button', { name: /^AIRunningStatus.label/ }))
+    fireEvent.click(screen.getByRole('button', { name: /^AIRunningStatus.state/ }))
     expect(screen.getByText(/^AIRunningStatus.workSchedule AIRunningStatus.tomorrow/)).toHaveTextContent(/2m0s$/)
     act(() => {
       vi.advanceTimersByTime(1000)
@@ -281,7 +279,7 @@ it('switches the open panel deadline from tomorrow to today at midnight', () => 
 it('updates the panel countdown while the badge displays only elapsed time after deadline adjustments', () => {
   store.setState({ sessionSnapshot: snapshot })
   render(<AIRunningStatus />)
-  fireEvent.click(screen.getByRole('button', { name: /^AIRunningStatus.label/ }))
+  fireEvent.click(screen.getByRole('button', { name: /^AIRunningStatus.state/ }))
   for (const [adjustment, remaining] of [
     [0, '30m0s'],
     [900, '45m0s'],
@@ -300,7 +298,7 @@ it('updates the panel countdown while the badge displays only elapsed time after
       }
       store.getState().updateStateCount('agentPolicySnapshotUpdate')
     })
-    expect(screen.getByRole('button', { name: /^AIRunningStatus.label/ })).toHaveTextContent(/· 12m36s$/)
+    expect(screen.getByRole('button', { name: /^AIRunningStatus.state/ })).toHaveTextContent(/12m36s$/)
     expect(screen.getByText(/^AIRunningStatus.workSchedule/)).toHaveTextContent(remaining)
   }
 })
@@ -313,8 +311,8 @@ it('uses the adjusted deadline in the first policy snapshot after reconnecting',
   }
   store.setState({ sessionSnapshot: snapshot })
   render(<AIRunningStatus />)
-  const trigger = screen.getByRole('button', { name: /^AIRunningStatus.label/ })
-  expect(trigger).toHaveTextContent(/· 12m36s$/)
+  const trigger = screen.getByRole('button', { name: /^AIRunningStatus.state/ })
+  expect(trigger).toHaveTextContent(/12m36s$/)
   expect(trigger).not.toHaveTextContent('/')
   fireEvent.click(trigger)
   expect(screen.getByText(/^AIRunningStatus.workSchedule/)).toHaveTextContent(/45m0s$/)
@@ -344,7 +342,7 @@ it('includes time since snapshot receipt after remount, even past the deadline',
   }
 })
 
-it('shows the running status when the time limit is enabled, then opens and closes its preview', async () => {
+it('opens and closes the deadline preview once the policy snapshot arrives', async () => {
   rawData.agentPolicySnapshot = undefined
   store.setState({ sessionSnapshot: { ...snapshot, current_round: 5 } })
   const focusInput = vi.fn()
@@ -354,14 +352,7 @@ it('shows the running status when the time limit is enabled, then opens and clos
     </div>,
   )
   expect(screen.queryByRole('status')).toBeNull()
-  act(() => {
-    rawData.agentPolicySnapshot = {
-      ...initialPolicy,
-      goal: { effective: true, time_limit: { mode: 'disabled', configured_duration_seconds: 0, deadline_at: 0 } },
-    }
-    store.getState().updateStateCount('agentPolicySnapshotUpdate')
-  })
-  expect(screen.queryByRole('status')).toBeNull()
+  expect(screen.queryByRole('button')).toBeNull()
   act(() => {
     rawData.agentPolicySnapshot = initialPolicy
     store.getState().updateStateCount('agentPolicySnapshotUpdate')
@@ -400,7 +391,7 @@ it.each([
 ] as const)('sends %s immediately, then requests a policy snapshot with a SyncID', (name, patch) => {
   store.setState({ sessionSnapshot: snapshot })
   render(<AIRunningStatus />)
-  fireEvent.click(screen.getByRole('button', { name: /^AIRunningStatus.label/ }))
+  fireEvent.click(screen.getByRole('button', { name: /^AIRunningStatus.state/ }))
   fireEvent.click(screen.getByRole('button', { name }))
   expect(onSend).toHaveBeenNthCalledWith(1, {
     token: 'running-session',
@@ -427,7 +418,7 @@ it('keeps adjustments disabled across reopening until the matching sync receipt 
   })
   store.setState({ sessionSnapshot: snapshot })
   render(<AIRunningStatus />)
-  const trigger = screen.getByRole('button', { name: /^AIRunningStatus.label/ })
+  const trigger = screen.getByRole('button', { name: /^AIRunningStatus.state/ })
   fireEvent.click(trigger)
   fireEvent.click(screen.getByRole('button', { name: '+15m' }))
   const syncId = onSend.mock.calls[1][0].params.SyncID
@@ -448,92 +439,170 @@ it('keeps adjustments disabled across reopening until the matching sync receipt 
   expect(other.closest('[aria-busy]')).toHaveAttribute('aria-busy', 'false')
 })
 
-it.each([3600, -1])('hides the open status at zero limit and restores it closed at %i', (nextLimit) => {
-  store.setState({ sessionSnapshot: snapshot })
-  render(<AIRunningStatus />)
-  fireEvent.click(screen.getByRole('button', { name: /^AIRunningStatus.label/ }))
-  expect(screen.getByText(/^AIRunningStatus.workSchedule/)).toBeInTheDocument()
+it.each(['deadline', 'never_ending', 'disabled'])(
+  'hides a processing session with a round when Goal is off in %s mode',
+  (mode) => {
+    rawData.agentPolicySnapshot = {
+      ...initialPolicy,
+      goal: { ...initialPolicy.goal, enabled: false, time_limit: { ...initialPolicy.goal.time_limit, mode } },
+    }
+    store.setState({ sessionSnapshot: { ...snapshot, current_round: 0 } })
+    render(<AIRunningStatus />)
+    expect(screen.queryByRole('status')).toBeNull()
+  },
+)
 
-  const updateLimit = (seconds: number) =>
+it('ticks the elapsed time in a non-deadline status and keeps only the round when elapsed time is unavailable', () => {
+  vi.useFakeTimers()
+  try {
+    rawData.agentPolicySnapshot = {
+      ...initialPolicy,
+      goal: { ...initialPolicy.goal, time_limit: { ...initialPolicy.goal.time_limit, mode: 'not_started' } },
+    }
+    const withRound = { ...snapshot, current_round: 5 }
+    store.setState({ sessionSnapshot: withRound, sessionSnapshotReceivedAtMs: Date.now() })
+    render(<AIRunningStatus />)
+    const status = screen.getByRole('status')
+    expect(status).toHaveTextContent(/· 12m36s$/)
     act(() => {
-      rawData.agentPolicySnapshot = {
-        ...initialPolicy,
-        goal: {
-          effective: true,
-          time_limit: {
-            ...initialPolicy.goal.time_limit,
-            mode: seconds === -1 ? 'never_ending' : 'deadline',
-            configured_duration_seconds: seconds,
-          },
-        },
-      }
-      store.getState().updateStateCount('agentPolicySnapshotUpdate')
+      vi.advanceTimersByTime(1000)
     })
-  updateLimit(0)
-  expect(screen.queryByRole('status')).toBeNull()
-  expect(screen.queryByText(/^AIRunningStatus.workSchedule/)).toBeNull()
+    expect(status).toHaveTextContent(/· 12m37s$/)
 
-  updateLimit(nextLimit)
-  const trigger = screen.getByRole('button', { name: /^AIRunningStatus.label/ })
-  expect(trigger).toHaveTextContent(/· 12m36s$/)
-  expect(trigger).toHaveAttribute('aria-expanded', 'false')
+    act(() => {
+      store.setState({ sessionSnapshot: { ...withRound, execution: { ...execution, execution_seconds: undefined } } })
+    })
+    expect(status).toHaveTextContent(/AIRunningStatus.round 5$/)
+    act(() => store.setState({ sessionSnapshot: snapshot, sessionSnapshotReceivedAtMs: Date.now() }))
+    expect(status).toHaveTextContent('12m36s')
+    expect(screen.queryByRole('button')).toBeNull()
+  } finally {
+    vi.useRealTimers()
+  }
 })
 
-it('hides the open running status when the policy mode is disabled', async () => {
+it.each([
+  ['AIRunningStatus.unlimited', 'never_ending', -1],
+  ['AIRunningStatus.stopAfterRound', 'disabled', 0],
+] as const)('shows the duration editor after the policy snapshot confirms %s', (action, mode, seconds) => {
+  store.setState({ sessionSnapshot: snapshot })
   render(<AIRunningStatus />)
-  expect(screen.queryByRole('status')).toBeNull()
-  act(() => store.setState({ sessionSnapshot: { ...snapshot, current_round: 2 } }))
-  fireEvent.click(screen.getByRole('button', { name: /^AIRunningStatus.label 2 / }))
-  const schedule = await screen.findByText(/^AIRunningStatus.workSchedule/)
-  act(() => {
-    rawData.agentPolicySnapshot = { ...initialPolicy, goal: { ...initialPolicy.goal, effective: false } }
-    store.setState({ sessionSnapshot: { ...snapshot, current_round: 3 } })
-  })
-  expect(schedule).toHaveTextContent(/30m0s$/)
-  act(() => store.getState().updateStateCount('agentPolicySnapshotUpdate'))
-  expect(screen.queryByText(/^AIRunningStatus.workSchedule/)).toBeNull()
-  expect(screen.queryByText('AIRunningStatus.targetReached')).toBeNull()
-  fireEvent.click(screen.getByRole('button', { name: 'AIRunningStatus.unlimited' }))
-  expect(screen.queryByRole('group', { name: 'AIRunModeSelect.stopCondition' })).toBeNull()
+  const trigger = screen.getByRole('button', { name: 'AIRunningStatus.state 12m36s' })
+  fireEvent.click(trigger)
+  fireEvent.click(screen.getByRole('button', { name: action }))
+  expect(screen.queryByText('AIRunningStatus.resetDurationHint')).toBeNull()
+  expect(onSend).toHaveBeenCalledTimes(2)
+
   act(() => {
     rawData.agentPolicySnapshot = {
       ...initialPolicy,
       goal: {
-        effective: true,
-        time_limit: { mode: 'never_ending', configured_duration_seconds: -1, deadline_at: 0 },
+        ...initialPolicy.goal,
+        effective: mode === 'never_ending',
+        time_limit: { mode, configured_duration_seconds: seconds, deadline_at: 0 },
       },
     }
     store.getState().updateStateCount('agentPolicySnapshotUpdate')
   })
-  expect(screen.queryByText(/^AIRunningStatus.workSchedule/)).toBeNull()
-  const summary = screen.getByText('AIRunningStatus.used').parentElement
-  await waitFor(() => expect(summary).toBeVisible())
-  expect(summary).toHaveTextContent('AIRunningStatus.used 12m36s · AIRunningStatus.infinite')
-  expect(screen.queryByRole('button', { name: '-15m' })).toBeNull()
-  expect(screen.getByRole('group', { name: 'AIRunModeSelect.stopCondition' })).toBeVisible()
+  expect(trigger).toHaveAttribute('aria-expanded', 'true')
+  expect(screen.getByText('AIRunningStatus.resetDurationHint')).toBeInTheDocument()
+  expect(screen.getByRole('group', { name: 'AIMilkdownModeSlash.duration' })).toBeInTheDocument()
+  expect(screen.queryByRole('group', { name: 'AIRunningStatus.extend' })).toBeNull()
+  fireEvent.click(trigger)
+  expect(onSend).toHaveBeenCalledTimes(2)
+  expect(setSetting).not.toHaveBeenCalled()
+
+  fireEvent.click(trigger)
+  fireEvent.click(screen.getByRole('button', { name: '30m' }))
+  expect(onSend).toHaveBeenCalledTimes(2)
+  fireEvent.click(trigger)
+  expect(onSend).toHaveBeenCalledTimes(3)
+  expect(onSend).toHaveBeenLastCalledWith(
+    expect.objectContaining({
+      token: 'running-session',
+      params: expect.objectContaining({
+        GoalTimePatch: expect.objectContaining({ Action: 'AI_GOAL_TIME_ACTION_SET_DEADLINE' }),
+        Params: { Strategy: expect.objectContaining({ GoalDurationSeconds: 1800 }) },
+      }),
+    }),
+  )
+  expect(setSetting).toHaveBeenCalledOnce()
+})
+
+it('shows that the current time limit was removed when Goal is enabled with a disabled time limit', async () => {
+  rawData.agentPolicySnapshot = {
+    ...initialPolicy,
+    goal: {
+      ...initialPolicy.goal,
+      enabled: true,
+      effective: false,
+      time_limit: { mode: 'disabled', configured_duration_seconds: 0, deadline_at: 0 },
+    },
+  }
+  store.setState({ sessionSnapshot: snapshot })
+  render(<AIRunningStatus />)
+  fireEvent.click(screen.getByRole('button', { name: 'AIRunningStatus.state 12m36s' }))
+  const removed = screen.getByText('AIRunningStatus.timeLimitRemoved')
+  await waitFor(() => expect(removed).toBeVisible())
+  expect(removed.querySelector('svg')).toBeInTheDocument()
+  expect(screen.queryByText('AIRunningStatus.remaining')).toBeNull()
+  expect(screen.getByText('AIRunningStatus.resetDurationHint')).toBeInTheDocument()
+  expect(screen.getByRole('group', { name: 'AIMilkdownModeSlash.duration' })).toBeInTheDocument()
+  expect(screen.queryByRole('group', { name: 'AIRunningStatus.shorten' })).toBeNull()
+  expect(onSend).not.toHaveBeenCalled()
+})
+
+it('shows elapsed time and the deadline preview without a round', async () => {
+  store.setState({ sessionSnapshot: snapshot })
+  render(<AIRunningStatus />)
+  const trigger = screen.getByRole('button', { name: 'AIRunningStatus.state 12m36s' })
+  expect(trigger).toHaveTextContent('12m36s')
+  expect(trigger).not.toHaveTextContent(/AIRunningStatus.round|—|·/)
+  fireEvent.click(trigger)
+  await waitFor(() => expect(screen.getByText(/^AIRunningStatus.workSchedule/)).toBeVisible())
+  expect(screen.queryByText(/^AIRunningStatus.round/)).toBeNull()
+})
+
+it('keeps the deadline preview available when the remaining time cannot be calculated', async () => {
+  rawData.agentPolicySnapshot = { ...initialPolicy, goal: { ...initialPolicy.goal, effective: false } }
+  store.setState({ sessionSnapshot: snapshot })
+  render(<AIRunningStatus />)
+  fireEvent.click(screen.getByRole('button', { name: 'AIRunningStatus.state 12m36s' }))
+  expect(screen.getByText('AIRunningStatus.remaining').nextElementSibling).toHaveTextContent('—')
+  await waitFor(() => expect(screen.getByRole('button', { name: '+15m' })).toBeVisible())
+})
+
+it('hides the status and closes its preview when Goal is disabled or execution finishes', () => {
+  store.setState({ sessionSnapshot: { ...snapshot, current_round: 2 } })
+  render(<AIRunningStatus />)
+  fireEvent.click(screen.getByRole('button', { name: /^AIRunningStatus.label 2 / }))
+  expect(screen.getByText(/^AIRunningStatus.workSchedule/)).toBeInTheDocument()
   act(() => {
     rawData.agentPolicySnapshot = {
       ...initialPolicy,
-      goal: { ...initialPolicy.goal, time_limit: { ...initialPolicy.goal.time_limit, mode: 'disabled' } },
+      goal: {
+        ...initialPolicy.goal,
+        enabled: false,
+        time_limit: { ...initialPolicy.goal.time_limit, mode: 'disabled' },
+      },
     }
     store.getState().updateStateCount('agentPolicySnapshotUpdate')
   })
   expect(screen.queryByRole('status')).toBeNull()
-  expect(screen.queryByRole('group', { name: 'AIRunModeSelect.stopCondition' })).toBeNull()
-  expect(screen.queryByText(/^AIRunningStatus.workSchedule/)).toBeNull()
+  expect(screen.queryByText('AIRunningStatus.title')).toBeNull()
+  expect(screen.queryByRole('button')).toBeNull()
+
   act(() => {
     rawData.agentPolicySnapshot = initialPolicy
     store.getState().updateStateCount('agentPolicySnapshotUpdate')
   })
-  const trigger = screen.getByRole('button', { name: /^AIRunningStatus.label/ })
-  expect(trigger).toHaveAttribute('aria-expanded', 'false')
-  fireEvent.click(trigger)
-  await waitFor(() => expect(screen.getByText(/^AIRunningStatus.workSchedule/)).toBeVisible())
-  expect(screen.getByRole('button', { name: '-15m' })).toBeVisible()
-  expect(screen.queryByRole('group', { name: 'AIRunModeSelect.stopCondition' })).toBeNull()
-  act(() => store.setState({ sessionSnapshot: { ...snapshot, execution: { ...execution, status: 'completed' } } }))
+  expect(screen.getByRole('button', { name: /^AIRunningStatus.label 2 / })).toHaveAttribute('aria-expanded', 'false')
+  act(() => {
+    store.setState({
+      sessionSnapshot: { ...snapshot, current_round: 2, execution: { ...execution, status: 'completed' } },
+    })
+  })
   expect(screen.queryByRole('status')).toBeNull()
-  expect(screen.queryByText(/^AIRunningStatus.workSchedule/)).toBeNull()
 })
 
 describe('editing stop conditions while the goal is unlimited', () => {
@@ -541,14 +610,17 @@ describe('editing stop conditions while the goal is unlimited', () => {
 
   beforeEach(() => {
     emit.mockClear()
-    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.useFakeTimers({ toFake: ['Date', 'performance'] })
     vi.setSystemTime(new Date('2030-01-01T00:00:00Z'))
     rawData.agentPolicySnapshot = {
       ...initialPolicy,
-      goal: { effective: true, time_limit: { mode: 'never_ending', configured_duration_seconds: -1, deadline_at: 0 } },
+      goal: {
+        ...initialPolicy.goal,
+        time_limit: { mode: 'never_ending', configured_duration_seconds: -1, deadline_at: 0 },
+      },
     }
     rawData.agentPolicySnapshotReceivedAtMs = performance.now() - 30000
-    store.setState({ sessionSnapshot: snapshot })
+    store.setState({ sessionSnapshot: { ...snapshot, current_round: 1 } })
     render(<AIRunningStatus />)
     fireEvent.click(screen.getByRole('button', { name: /^AIRunningStatus.label/ }))
   })
