@@ -205,8 +205,8 @@ export const fetchEnv = () => {
   }
 }
 
-/** @deprecated 使用 fetchEnv；保留给启动窗口兼容 */
-export const __PLATFORM__ = fetchEnv()
+/** @deprecated 使用 fetchEnv；保留给启动窗口兼容（构建期常量快照，未注入时为 undefined） */
+export const __PLATFORM__ = process.env.YAKIT_EDITION
 
 /** 引擎 Handshake 仍使用旧平台名 */
 export const toEngineHandshakeName = (edition = fetchEnv()) => {
@@ -229,15 +229,16 @@ export const toEngineHandshakeName = (edition = fetchEnv()) => {
 }
 
 /*
- * 在导入的时候，就马上设置，不用等到组件加载
+ * 在导入的时候，就马上设置，不用等到组件加载（引擎拉起时主进程就要用到版本对应的库名）
  * */
 const releaseEdition = fetchEnv()
 const isLinkEntry = typeof window !== 'undefined' && window.__YAKIT_ENTRY__ === 'link'
-// link 窗口通常先于主窗口加载；构建未注入版本时不要用空值覆盖主进程的版本缓存和数据库名
+// 主窗口与旧逻辑一致：无论是否注入版本都写，空版本按社区版兜底。
+// link 窗口先于主窗口加载：仅在构建注入了版本时写一次（与主窗口同值），空版本不要覆盖主进程的版本缓存和库名。
 if (!isLinkEntry || releaseEdition) {
   yakitRelease?.setEditionRaw?.(releaseEdition || '')?.then(() => {
-    // link 窗口不重复提示：旧启动页没有这个副作用，且它只预加载 link/yakitUi，
-    // utils 命名空间未就绪时会显示原始 key。
+    // 提示只在主窗口、且只针对便携 / 简易企业版：link 窗口只预加载 link/yakitUi，
+    // utils 命名空间未就绪会显示原始 key，旧启动页也没有这个副作用。
     if (!isLinkEntry && isEnpriTraceAgent()) {
       info(tOriginal('envfile.setReleaseEditionSuccess', { edition: getReleaseEditionName() }))
     }
