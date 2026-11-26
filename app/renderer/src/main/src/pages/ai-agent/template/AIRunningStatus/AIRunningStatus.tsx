@@ -49,7 +49,7 @@ const formatWorkDuration = (seconds?: number, maxUnits?: number) => {
 const readGoalTiming = ({ agentPolicySnapshot, agentPolicySnapshotReceivedAtMs }: AIAgentChatData) => {
   const timeLimit = agentPolicySnapshot?.goal.time_limit
   const mode = timeLimit?.mode
-  const hidden = timeLimit?.configured_duration_seconds === 0 || mode === 'disabled'
+  const hidden = !mode || mode === 'disabled' || timeLimit?.configured_duration_seconds === 0
   if (
     !agentPolicySnapshot?.goal.effective ||
     timeLimit?.mode !== 'deadline' ||

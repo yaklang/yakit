@@ -324,7 +324,10 @@ export class ChatMultiSessionController {
   private draftPageIds = new Map<string, string>()
   /** 业务操作使用 SessionId，通过此表找到当前这轮连接的 token。 */
   private tokenBySessionId = new Map<string, string>()
-  private pendingReviewPolicies = new Map<string, { payload: AIChatSendParams; unsubscribe: () => void }>()
+  private pendingReviewPolicies = new Map<
+    string,
+    { payloads: Map<string, AIChatSendParams>; unsubscribe: () => void }
+  >()
 
   private clearPendingReviewPolicy = (sessionId: string) => {
     this.pendingReviewPolicies.get(sessionId)?.unsubscribe()
@@ -335,7 +338,7 @@ export class ChatMultiSessionController {
     const sessionId = payload.token
     const existing = this.pendingReviewPolicies.get(sessionId)
     if (existing) {
-      existing.payload = payload
+      existing.payloads.set(payload.params.HotpatchType!, payload)
       return
     }
     const { store, meta } = this.ensureSession(sessionId)
@@ -348,9 +351,12 @@ export class ChatMultiSessionController {
       const pending = this.pendingReviewPolicies.get(sessionId)
       if (!pending) return
       this.clearPendingReviewPolicy(sessionId)
-      this.handleSendMessage(pending.payload)
+      for (const request of pending.payloads.values()) this.handleSendMessage(request)
     })
-    this.pendingReviewPolicies.set(sessionId, { payload, unsubscribe })
+    this.pendingReviewPolicies.set(sessionId, {
+      payloads: new Map([[payload.params.HotpatchType!, payload]]),
+      unsubscribe,
+    })
   }
 
   /** 创建内存数据；通过回调延迟获取业务 ID，避免把临时 token 当作 IDB 的键。 */
@@ -951,17 +957,24 @@ export class ChatMultiSessionController {
     return sessionIds
   }
 
-  public syncConnectedReviewPolicy(reviewPolicy: NonNullable<AIStartParams['ReviewPolicy']>) {
-    for (const sessionId of this.getConnectedSessionIds(YakitRoute.AI_Agent)) {
-      this.handleSendMessage({
-        token: sessionId,
-        type: '',
-        params: {
-          IsConfigHotpatch: true,
-          HotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_AgreePolicy,
-          Params: { ReviewPolicy: reviewPolicy },
-        },
+  public syncConnectedReviewPolicy(settings: Pick<AIStartParams, 'ReviewPolicy' | 'AIReviewRiskControlScore'>) {
+    const patches: AIInputEvent[] = []
+    if (settings.ReviewPolicy !== undefined) {
+      patches.push({
+        IsConfigHotpatch: true,
+        HotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_AgreePolicy,
+        Params: { ReviewPolicy: settings.ReviewPolicy },
       })
+    }
+    if (settings.AIReviewRiskControlScore !== undefined) {
+      patches.push({
+        IsConfigHotpatch: true,
+        HotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_RiskControlScore,
+        Params: { AIReviewRiskControlScore: settings.AIReviewRiskControlScore },
+      })
+    }
+    for (const sessionId of this.getConnectedSessionIds(YakitRoute.AI_Agent)) {
+      for (const params of patches) this.handleSendMessage({ token: sessionId, type: '', params })
     }
   }
 
@@ -1481,7 +1494,11 @@ export class ChatMultiSessionController {
 
       const { store, rawData, meta } = this.ensureSession(token)
 
-      if (params.IsConfigHotpatch && params.HotpatchType === AIInputEventHotPatchTypeEnum.HotPatchType_AgreePolicy) {
+      const isReviewHotpatch =
+        params.IsConfigHotpatch &&
+        (params.HotpatchType === AIInputEventHotPatchTypeEnum.HotPatchType_AgreePolicy ||
+          params.HotpatchType === AIInputEventHotPatchTypeEnum.HotPatchType_RiskControlScore)
+      if (isReviewHotpatch) {
         const streamToken = this.tokenBySessionId.get(token)
         if (!streamToken || !this.connectionsByToken.get(streamToken)?.confirmed) return false
       }
@@ -1489,12 +1506,7 @@ export class ChatMultiSessionController {
       // 向上加载历史（recovery_history）进行中时禁止发送消息，避免与 gRPC 查询并发导致后端表死锁
       // 运行中的审核策略保留最新值，查询结束后补发；其他同步/热更新静默拒绝。
       if (meta.lifecycle.closing || store.getState().initLoading || store.getState().grpcLoadMoreLoading) {
-        if (
-          !meta.lifecycle.closing &&
-          store.getState().execute &&
-          params.IsConfigHotpatch &&
-          params.HotpatchType === AIInputEventHotPatchTypeEnum.HotPatchType_AgreePolicy
-        ) {
+        if (!meta.lifecycle.closing && store.getState().execute && isReviewHotpatch) {
           this.deferReviewPolicy(payload)
           return true
         }

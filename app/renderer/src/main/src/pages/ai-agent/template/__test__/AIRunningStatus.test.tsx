@@ -24,7 +24,7 @@ const initialPolicy = {
   },
 }
 const rawData = {
-  agentPolicySnapshot: initialPolicy,
+  agentPolicySnapshot: initialPolicy as typeof initialPolicy | undefined,
   agentPolicySnapshotReceivedAtMs: 0,
   pendingGoalDurationSeconds: undefined as number | undefined,
 }
@@ -345,10 +345,7 @@ it('includes time since snapshot receipt after remount, even past the deadline',
 })
 
 it('shows the running status when the time limit is enabled, then opens and closes its preview', async () => {
-  rawData.agentPolicySnapshot = {
-    ...initialPolicy,
-    goal: { effective: true, time_limit: { mode: 'disabled', configured_duration_seconds: 0, deadline_at: 0 } },
-  }
+  rawData.agentPolicySnapshot = undefined
   store.setState({ sessionSnapshot: { ...snapshot, current_round: 5 } })
   const focusInput = vi.fn()
   render(
@@ -356,6 +353,14 @@ it('shows the running status when the time limit is enabled, then opens and clos
       <AIRunningStatus />
     </div>,
   )
+  expect(screen.queryByRole('status')).toBeNull()
+  act(() => {
+    rawData.agentPolicySnapshot = {
+      ...initialPolicy,
+      goal: { effective: true, time_limit: { mode: 'disabled', configured_duration_seconds: 0, deadline_at: 0 } },
+    }
+    store.getState().updateStateCount('agentPolicySnapshotUpdate')
+  })
   expect(screen.queryByRole('status')).toBeNull()
   act(() => {
     rawData.agentPolicySnapshot = initialPolicy

@@ -173,7 +173,7 @@ describe('frontend allocated session identity', () => {
     controller.setActiveShowSession('resume-session')
     ipcRendererMock.invoke.mockClear()
     expect(controller.getConnectedSessionIds(YakitRoute.AI_Agent)).toEqual(['client-session'])
-    controller.syncConnectedReviewPolicy('manual')
+    controller.syncConnectedReviewPolicy({ ReviewPolicy: 'manual' })
     expect(ipcRendererMock.invoke).toHaveBeenCalledExactlyOnceWith('send-ai-re-act', established, {
       IsConfigHotpatch: true,
       HotpatchType: 'AgreePolicy',
@@ -197,13 +197,13 @@ describe('frontend allocated session identity', () => {
     )
     expect(controller.getConnectedSessionIds(YakitRoute.AI_Agent)).toEqual(['client-session', 'resume-session'])
     ipcRendererMock.invoke.mockClear()
-    controller.syncConnectedReviewPolicy('yolo')
+    controller.syncConnectedReviewPolicy({ ReviewPolicy: 'yolo' })
     expect(ipcRendererMock.invoke.mock.calls.map(([, token]) => token)).toEqual([established, reconnecting])
     await controller.handleSessionEnd('client-session')
     expect(controller.getConnectedSessionIds(YakitRoute.AI_Agent)).toEqual(['resume-session'])
     await controller.handleSessionEnd('resume-session')
     ipcRendererMock.invoke.mockClear()
-    controller.syncConnectedReviewPolicy('manual')
+    controller.syncConnectedReviewPolicy({ ReviewPolicy: 'manual' })
     expect(ipcRendererMock.invoke).not.toHaveBeenCalled()
   })
 
@@ -214,7 +214,7 @@ describe('frontend allocated session identity', () => {
     store.getState().updateState({ execute: true, grpcLoadMoreLoading: true })
     ipcRendererMock.invoke.mockClear()
     for (const policy of ['manual', 'yolo', 'manual'] as const) {
-      controller.syncConnectedReviewPolicy(policy)
+      controller.syncConnectedReviewPolicy({ ReviewPolicy: policy })
     }
     controller.setActiveShowSession('other-session')
     expect(ipcRendererMock.invoke).not.toHaveBeenCalled()
@@ -232,6 +232,29 @@ describe('frontend allocated session identity', () => {
       store.getState().updateState({ grpcLoadMoreLoading: false })
       expect(ipcRendererMock.invoke).toHaveBeenCalledTimes(1)
     }
+    await controller.handleSessionEnd('client-session')
+  })
+
+  it.each([false, true])('审核阈值支持归零，加载期间与模式独立保留最新值，loading=%s', async (loading) => {
+    const token = await start()
+    await emit(token, 'pong', 'client-session')
+    const { store } = controller.ensureSession('client-session')
+    store.getState().updateState({ grpcLoadMoreLoading: loading })
+    ipcRendererMock.invoke.mockClear()
+    controller.syncConnectedReviewPolicy({ ReviewPolicy: 'manual', AIReviewRiskControlScore: 60 })
+    controller.syncConnectedReviewPolicy({ AIReviewRiskControlScore: 0 })
+    if (loading) expect(ipcRendererMock.invoke).not.toHaveBeenCalled()
+    store.getState().updateState({ grpcLoadMoreLoading: false })
+    const patches = ipcRendererMock.invoke.mock.calls.map(([, , params]) => params)
+    expect(patches).toEqual([
+      { IsConfigHotpatch: true, HotpatchType: 'AgreePolicy', Params: { ReviewPolicy: 'manual' } },
+      ...(!loading
+        ? [{ IsConfigHotpatch: true, HotpatchType: 'RiskControlScore', Params: { AIReviewRiskControlScore: 60 } }]
+        : []),
+      { IsConfigHotpatch: true, HotpatchType: 'RiskControlScore', Params: { AIReviewRiskControlScore: 0 } },
+    ])
+    controller.syncConnectedReviewPolicy({})
+    expect(ipcRendererMock.invoke).toHaveBeenCalledTimes(patches.length)
     await controller.handleSessionEnd('client-session')
   })
 

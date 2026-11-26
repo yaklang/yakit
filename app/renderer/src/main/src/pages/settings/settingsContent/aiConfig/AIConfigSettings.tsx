@@ -119,9 +119,17 @@ export const AIConfigSettings: React.FC = () => {
 
   const applyAll = useMemoizedFn((next: AIAgentSetting) => {
     if (!readyRef.current) return
+    const reviewChanges: Pick<AIAgentSetting, 'ReviewPolicy' | 'AIReviewRiskControlScore'> = {}
     if (next.ReviewPolicy && next.ReviewPolicy !== settingRef.current.ReviewPolicy) {
-      globalSessionEngine.syncConnectedReviewPolicy(next.ReviewPolicy)
+      reviewChanges.ReviewPolicy = next.ReviewPolicy
     }
+    if (
+      next.AIReviewRiskControlScore !== undefined &&
+      next.AIReviewRiskControlScore !== settingRef.current.AIReviewRiskControlScore
+    ) {
+      reviewChanges.AIReviewRiskControlScore = next.AIReviewRiskControlScore
+    }
+    if (Object.keys(reviewChanges).length) globalSessionEngine.syncConnectedReviewPolicy(reviewChanges)
     settingRef.current = next
     setSetting(next)
     lastPayloadRef.current = serializeAIAgentChatSetting(next)

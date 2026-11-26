@@ -96,7 +96,7 @@ describe('AIConfigSettings', () => {
     await waitReady()
     expect(globalSessionEngine.syncConnectedReviewPolicy).not.toHaveBeenCalled()
     fireEvent.click(screen.getByRole('radio', { name: 'yolo' }))
-    expect(globalSessionEngine.syncConnectedReviewPolicy).toHaveBeenCalledExactlyOnceWith('yolo')
+    expect(globalSessionEngine.syncConnectedReviewPolicy).toHaveBeenCalledExactlyOnceWith({ ReviewPolicy: 'yolo' })
     fireEvent.click(screen.getByRole('radio', { name: 'yolo' }))
     fireEvent.click(document.querySelector('[data-settings-section="permissions"] button.ant-switch') as HTMLElement)
     expect(globalSessionEngine.syncConnectedReviewPolicy).toHaveBeenCalledTimes(1)
@@ -111,9 +111,42 @@ describe('AIConfigSettings', () => {
         ? screen.getByRole('button', { name: 'YakitButton.reset' })
         : within(screen.getByText('AIChatSetting.planningAndExecution').parentElement!).getByRole('button')
     await act(async () => fireEvent.click(reset))
-    expect(globalSessionEngine.syncConnectedReviewPolicy).toHaveBeenCalledExactlyOnceWith(
-      AIAgentSettingDefault.ReviewPolicy,
+    expect(globalSessionEngine.syncConnectedReviewPolicy).toHaveBeenCalledExactlyOnceWith({
+      ReviewPolicy: AIAgentSettingDefault.ReviewPolicy,
+    })
+    await act(async () => fireEvent.click(reset))
+    expect(globalSessionEngine.syncConnectedReviewPolicy).toHaveBeenCalledTimes(1)
+  })
+
+  it('风险阈值修改和归零同步已连接会话，同值不重复发送', async () => {
+    vi.mocked(loadAIAgentChatSetting).mockResolvedValue(successLoad({ AIReviewRiskControlScore: 0.5 }))
+    render(<AIConfigSettings />)
+    await waitReady()
+    const slider = screen.getByRole('slider')
+    fireEvent.keyDown(slider, { key: 'ArrowRight', keyCode: 39, which: 39 })
+    expect(globalSessionEngine.syncConnectedReviewPolicy).toHaveBeenLastCalledWith({ AIReviewRiskControlScore: 0.51 })
+    fireEvent.keyDown(slider, { key: 'Home', keyCode: 36, which: 36 })
+    expect(globalSessionEngine.syncConnectedReviewPolicy).toHaveBeenLastCalledWith({ AIReviewRiskControlScore: 0 })
+    vi.mocked(globalSessionEngine.syncConnectedReviewPolicy).mockClear()
+    fireEvent.keyDown(slider, { key: 'Home', keyCode: 36, which: 36 })
+    expect(globalSessionEngine.syncConnectedReviewPolicy).not.toHaveBeenCalled()
+  })
+
+  it.each(['all', 'permissions'])('重置 %s 配置时同步风险阈值并合并审核模式变更', async (scope) => {
+    vi.mocked(loadAIAgentChatSetting).mockResolvedValue(
+      successLoad({ ReviewPolicy: 'yolo', AIReviewRiskControlScore: 0 }),
     )
+    render(<AIConfigSettings />)
+    await waitReady()
+    const reset =
+      scope === 'all'
+        ? screen.getByRole('button', { name: 'YakitButton.reset' })
+        : within(document.querySelector('[data-settings-section="permissions"]') as HTMLElement).getByRole('button')
+    await act(async () => fireEvent.click(reset))
+    expect(globalSessionEngine.syncConnectedReviewPolicy).toHaveBeenCalledExactlyOnceWith({
+      ...(scope === 'all' ? { ReviewPolicy: AIAgentSettingDefault.ReviewPolicy } : {}),
+      AIReviewRiskControlScore: AIAgentSettingDefault.AIReviewRiskControlScore,
+    })
     await act(async () => fireEvent.click(reset))
     expect(globalSessionEngine.syncConnectedReviewPolicy).toHaveBeenCalledTimes(1)
   })
