@@ -190,6 +190,8 @@
   }
 }
 .ui-op-setting-dropdown {
+  margin-top: -12px;
+
   :global {
     .ant-popover-inner {
       padding: 0;
@@ -224,6 +226,8 @@
 }
 
 .ui-op-plus-dropdown {
+  margin-top: -12px;
+
   :global {
     .ant-popover-inner {
       padding: 0;

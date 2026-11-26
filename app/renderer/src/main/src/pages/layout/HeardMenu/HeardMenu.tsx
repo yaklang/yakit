@@ -942,7 +942,7 @@ const RouteMenuDataItem: React.FC<RouteMenuDataItemProps> = React.memo((props) =
   return (
     (isExpand && popoverContent) || (
       <YakitPopover
-        placement="bottomLeft"
+        placement="bottom"
         content={<SubMenu subMenuData={menuItem.children || []} onSelect={onSelect} />}
         trigger="hover"
         classNames={{
@@ -1017,11 +1017,10 @@ const CollapseMenu: React.FC<CollapseMenuProp> = React.memo((props) => {
     <div className={style['heard-menu-more']} style={{ left: moreLeft }}>
       <YakitPopover
         placement={'bottomLeft'}
-        arrow={{ pointAtCenter: true }}
         content={menu}
         trigger="hover"
         onOpenChange={(visible) => setShow(visible)}
-        classNames={{ root: classNames(style['popover']) }}
+        classNames={{ root: classNames(style['popover'], style['popover-more']) }}
       >
         <div
           className={classNames(style['heard-menu-item'], style['heard-menu-item-font-weight'], {
