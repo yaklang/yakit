@@ -21,6 +21,12 @@ const path = require('path')
 
 const SRC_EXTS = new Set(['.ts', '.tsx', '.js', '.jsx'])
 const TEST_SUFFIXES = ['test.ts', 'test.tsx', 'test.js', 'test.jsx', 'spec.ts', 'spec.tsx', 'spec.js', 'spec.jsx']
+/** Link 开发入口守卫：改到端口 / 等待地址 / 窗口匹配相关文件时一并执行（根 vitest.config.ts 的 include 已覆盖 e2e 用例） */
+const LINK_DEV_TESTS = [
+  'e2e/fixtures/__test__/link-boundary.test.mjs',
+  'e2e/fixtures/__test__/start-electron.test.mjs',
+  'e2e/fixtures/__test__/window-url.test.mjs',
+]
 const SKIP_DIR_NAMES = new Set(['node_modules', 'dist', 'build', '.git', 'coverage'])
 const DEDICATED_ICON_MIGRATION_TESTS = new Set([
   'app/renderer/src/main/src/__test__/yakitUiIconsPurePlugin.test.ts',
@@ -113,7 +119,7 @@ function readChangedList() {
 }
 
 function isTestPath(rel) {
-  return /\.(test|spec)\.(ts|tsx|js|jsx)$/.test(rel)
+  return /\.(test|spec)\.(ts|tsx|js|jsx|mjs)$/.test(rel)
 }
 
 function isGenericVitestPath(rel) {
@@ -325,6 +331,16 @@ function main() {
   ) {
     results.add('e2e/fixtures/__test__/electron-build.test.mjs')
     results.add('e2e/fixtures/__test__/cli-build.test.mjs')
+  }
+  // Link dev 端口 5173 / 登录回调端口 / 窗口 URL 的回归守卫：改动这些入口文件时随之执行
+  if (
+    changed.some((file) =>
+      /^(app\/main\/index\.js$|app\/main\/handlers\/userInfo\.js$|app\/renderer\/src\/main\/vite\.link\.config\.mts$|scripts\/start-electron\.mjs$|e2e\/)/.test(
+        file,
+      ),
+    )
+  ) {
+    for (const t of LINK_DEV_TESTS) results.add(t)
   }
   const DEBUG = isVitestSelectDebug()
   const debugLines = DEBUG ? [] : null
