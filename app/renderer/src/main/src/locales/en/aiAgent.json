@@ -210,7 +210,7 @@
     "advancedConfiguration": "Advanced configuration",
     "singleModelModeDescription": "Use only the globally configured primary model for this session when enabled",
     "enableCommandSecurityRules": "Enable command execution security rules",
-    "enableCommandSecurityRulesTip": "When enabled, all built-in rules apply. Custom rules stay off until you enable them individually on the AI Bash Security Rules page.",
+    "enableCommandSecurityRulesTip": "Master switch: when off, neither built-in nor custom rules apply. When on, all built-in rules apply; custom rules still need to be enabled individually on the AI Bash Security Rules page.",
     "customBashRulesTitle": "Custom security rules",
     "customBashRulesTip": "Custom rules are off by default; enable them individually on the rules page.",
     "configureCustomSyntaxFlowRules": "Configure rules"

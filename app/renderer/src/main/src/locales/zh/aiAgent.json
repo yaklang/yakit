@@ -210,7 +210,7 @@
     "advancedConfiguration": "高级配置",
     "singleModelModeDescription": "开启后本会话只使用全局配置中的主模型",
     "enableCommandSecurityRules": "启用命令执行安全规则",
-    "enableCommandSecurityRulesTip": "开启后内置规则全部生效；自定义规则默认关闭，需要在「AI Bash 安全规则」页逐条开启。",
+    "enableCommandSecurityRulesTip": "总开关：关闭后内置与自定义规则均不生效；开启后内置规则全部生效，自定义规则仍需在「AI Bash 安全规则」页逐条开启。",
     "customBashRulesTitle": "自定义安全规则",
     "customBashRulesTip": "自定义规则默认关闭，打开规则页逐条开启后才会参与匹配。",
     "configureCustomSyntaxFlowRules": "配置规则"
