@@ -55,6 +55,31 @@ describe('MCP Web Fuzzer execution push validation', () => {
     expect(consumeMcpWebFuzzerExecution(pageId)?.executionId).toBe('push-validation')
   })
 
+  it.each([
+    [0, 0],
+    [0.25, 1.5],
+    [1, 1],
+  ])('preserves delay overrides %s-%s in the execution queue', (minDelaySeconds, maxDelaySeconds) => {
+    dispatchLikeServerPush({ ...validExecution(), minDelaySeconds, maxDelaySeconds })
+    expect(consumeMcpWebFuzzerExecution(pageId)).toMatchObject({ minDelaySeconds, maxDelaySeconds })
+  })
+
+  it.each([
+    { minDelaySeconds: 1 },
+    { maxDelaySeconds: 1 },
+    { minDelaySeconds: -1, maxDelaySeconds: 1 },
+    { minDelaySeconds: 2, maxDelaySeconds: 1 },
+    { minDelaySeconds: Number.NaN, maxDelaySeconds: 1 },
+    { minDelaySeconds: 0, maxDelaySeconds: Number.POSITIVE_INFINITY },
+    { minDelaySeconds: null, maxDelaySeconds: 1 },
+    { minDelaySeconds: '0', maxDelaySeconds: 1 },
+  ])('rejects invalid delay overrides %j before enqueueing', (overrides) => {
+    expect(() => dispatchLikeServerPush({ ...validExecution(), ...overrides } as McpWebFuzzerExecution)).toThrow(
+      /Web Fuzzer execution delay/,
+    )
+    expect(consumeMcpWebFuzzerExecution(pageId)).toBeUndefined()
+  })
+
   it('rejects a push without executionId and leaves the queue untouched', () => {
     expect(() => dispatchLikeServerPush({ ...validExecution(), executionId: '' })).toThrow(
       /Web Fuzzer execution push is invalid/,

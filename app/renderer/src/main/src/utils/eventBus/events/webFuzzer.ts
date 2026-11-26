@@ -48,6 +48,8 @@ export interface McpWebFuzzerExecution {
   executionId: string
   pageId: string
   expiresAt: number
+  minDelaySeconds?: number
+  maxDelaySeconds?: number
 }
 
 /**
@@ -57,6 +59,19 @@ export interface McpWebFuzzerExecution {
 export const assertValidMcpWebFuzzerExecution = (execution: McpWebFuzzerExecution) => {
   if (!execution.executionId || !execution.pageId || !Number.isFinite(execution.expiresAt)) {
     throw new Error('Web Fuzzer execution push is invalid')
+  }
+  const { minDelaySeconds: min, maxDelaySeconds: max } = execution
+  if (min !== undefined || max !== undefined) {
+    if (
+      typeof min !== 'number' ||
+      typeof max !== 'number' ||
+      !Number.isFinite(min) ||
+      !Number.isFinite(max) ||
+      min < 0 ||
+      max < min
+    ) {
+      throw new Error('Web Fuzzer execution delay must satisfy 0 <= minDelaySeconds <= maxDelaySeconds')
+    }
   }
 }
 
