@@ -921,9 +921,10 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
               allChecked={isHasParams ? false : isSelectAll}
               checkedPlugin={isHasParams ? hasParamsCheckList : isSelectAll ? [] : noParamsCheckList}
             />
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div className={styles['plugin-type-switch-row']}>
               <YakitRadioButtons
                 buttonStyle="solid"
+                wrapClassName={styles['plugin-type-switch']}
                 options={[
                   {
                     value: true,
@@ -938,17 +939,18 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
                 onChange={(e) => {
                   onIsHasParams(e.target.value)
                 }}
-                style={{ minWidth: i18n.language === 'en' ? 240 : undefined }}
               />
-              <YakModuleListHeard
-                onSelectAll={onSelectAll}
-                setIsSelectAll={setIsSelectAll}
-                isSelectAll={isSelectAll}
-                total={total}
-                length={isHasParams ? hasParamsCheckList.length : noParamsCheckList.length}
-                loading={loading}
-                isHasParams={isHasParams}
-              />
+              <div className={styles['plugin-list-heard-wrap']}>
+                <YakModuleListHeard
+                  onSelectAll={onSelectAll}
+                  setIsSelectAll={setIsSelectAll}
+                  isSelectAll={isSelectAll}
+                  total={total}
+                  length={isHasParams ? hasParamsCheckList.length : noParamsCheckList.length}
+                  loading={loading}
+                  isHasParams={isHasParams}
+                />
+              </div>
             </div>
             <YakitSpin spinning={loading}>
               <MITMPluginLocalList

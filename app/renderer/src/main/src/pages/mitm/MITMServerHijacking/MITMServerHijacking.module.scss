@@ -305,6 +305,64 @@
       margin-bottom: 0;
       margin-top: 8px;
     }
+    .plugin-type-switch-row {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      // 只保留列间距：折行时不再额外留 10px 行间距，避免开关下方出现空白。
+      gap: 0 10px;
+      min-width: 0;
+
+      // 开关按文案宽度排列，不用 100% 占满第一行，避免统计信息被挤到下一行。
+      .plugin-type-switch {
+        flex: 0 0 auto;
+        width: max-content;
+        min-width: 0;
+        max-width: 100%;
+        overflow: hidden;
+
+        :global {
+          .ant-radio-group {
+            display: inline-flex;
+            width: max-content;
+            max-width: 100%;
+            min-width: 0;
+          }
+
+          .ant-radio-group .ant-radio-button-wrapper {
+            flex: 0 1 auto;
+            min-width: 0;
+            overflow: hidden;
+          }
+
+          .ant-radio-group .ant-radio-button-wrapper .ant-radio-button {
+            flex-shrink: 0;
+          }
+
+          .ant-radio-group .ant-radio-button-wrapper > span:not(.ant-radio-button) {
+            display: block;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+        }
+      }
+
+      // flex-basis: 0 让它先排进开关右侧的剩余空间，而不是按 100% 宽度整行换行；
+      // overflow: hidden 使自动最小宽度为 0，统计信息始终与开关同行，空间不足时单行省略。
+      .plugin-list-heard-wrap {
+        flex: 1 1 0;
+        width: auto;
+        overflow: hidden;
+
+        > div {
+          width: auto;
+          max-width: 100%;
+          min-width: 0;
+        }
+      }
+    }
   }
   .plugin-loaded-list {
     height: 100%;

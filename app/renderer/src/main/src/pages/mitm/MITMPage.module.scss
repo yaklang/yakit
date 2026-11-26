@@ -101,6 +101,8 @@
   align-items: center;
   height: 36px;
   width: 100%;
+  min-width: 0;
+  overflow: hidden;
 
   .mitm-plugin-list-check {
     display: flex;
@@ -114,14 +116,30 @@
     }
   }
   .mitm-plugin-list-tip {
-    display: flex;
-    align-items: center;
+    display: block;
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
     font-weight: 400;
     font-size: 12px;
     line-height: 16px;
     color: var(--Colors-Use-Neutral-Disable);
+
     span {
       color: var(--Colors-Use-Main-Primary);
+    }
+
+    .mitm-plugin-list-tip-divider {
+      display: inline-block;
+      width: 1px;
+      height: 12px;
+      margin: 0 8px;
+      vertical-align: middle;
+      background: var(--Colors-Use-Neutral-Border);
+      color: transparent;
     }
   }
 }
