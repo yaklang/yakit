@@ -9,10 +9,10 @@ describe('matchesYakitWindowUrl', () => {
   })
 
   it('matches the dev Link window by host, port and pathname', () => {
-    expect(matchesYakitWindowUrl('http://127.0.0.1:3001/engine-link.html', '127.0.0.1:3001/engine-link.html')).toBe(
+    expect(matchesYakitWindowUrl('http://127.0.0.1:5173/engine-link.html', '127.0.0.1:5173/engine-link.html')).toBe(
       true,
     )
-    expect(matchesYakitWindowUrl('http://127.0.0.1:3001/engine-link.html', '127.0.0.1:3000/')).toBe(false)
+    expect(matchesYakitWindowUrl('http://127.0.0.1:5173/engine-link.html', '127.0.0.1:3000/')).toBe(false)
   })
 
   it('matches production paths inside the asar without confusing main and Link', () => {

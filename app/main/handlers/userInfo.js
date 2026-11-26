@@ -278,6 +278,8 @@ module.exports = {
 
             res.end()
           })
+          // 端口固定 3001：后端 auth/from 返回的 OAuth 回调地址指向它，不要与 Link dev server
+          //（vite.link.config.mts 的 5173）共用；两者同时监听会 EADDRINUSE，登录静默失败。
           .listen(3001, () => {
             console.log('HTTP server is listening on port 3001')
           })

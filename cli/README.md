@@ -24,7 +24,7 @@ node ./cli/cli.mjs <command>
 | `install [electron\|main\|cli]` | 装依赖 | 位置参数；`cli` 只装 CLI 运行时 | 根目录 + 主渲染端 |
 | `add <electron\|main> <pkg…>` | 给指定子项目加包 | `-D` / `--dev` 及其他 yarn/npm/pnpm 原样 flag | 必须指定一端 |
 | `remove <electron\|main> <pkg…>` | 从指定子项目卸包 | 位置参数 | 必须指定一端 |
-| `start` | 开发态启动渲染服务（默认 main :3000 + link :3001） | `-v`、`--main`、`--link`（只启一端） | 默认两个服务 |
+| `start` | 开发态启动渲染服务（默认 main :3000 + link :5173） | `-v`、`--main`、`--link`（只启一端） | 默认两个服务 |
 | `build` | 生产构建三端 | `-v`、`--electron`、`--main`、`--link`、`--devtools`、`--no-license`、`--analyzer` | 三端都构建 |
 | `pack` | electron-builder 打安装包 | `-s`、`-v`、`--legacy`、`--sign` | 本机默认不签名 |
 | `electron` | 页面就绪后单次开发构建并启动 Electron | `--link`（只等待 link） | 默认等待两端 |
@@ -112,7 +112,7 @@ flag 原样转发（`-D` / `--dev` 等）。识别到 npm 时，仅把 `--dev` �
 ```bash
 # 只起 Vite（不含 Electron 窗口）
 yarn cli start -v yakit --main   # 只启动 main :3000
-yarn cli start -v irifyEE --link # 只启动 link :3001（http://127.0.0.1:3001/engine-link.html）
+yarn cli start -v irifyEE --link # 只启动 link :5173（http://127.0.0.1:5173/engine-link.html）
 
 # 只改 Link 的完整 Electron 调试：只起 link，Electron 也只等它
 yarn cli dev -v yakit --link

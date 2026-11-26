@@ -28,12 +28,12 @@ afterEach(async () => {
 
 describe('resolveRendererUrls', () => {
   it('waits for both renderers on the fixed dev ports', () => {
-    expect(resolveRendererUrls()).toEqual(['http://127.0.0.1:3000', 'http://127.0.0.1:3001/engine-link.html'])
+    expect(resolveRendererUrls()).toEqual(['http://127.0.0.1:3000', 'http://127.0.0.1:5173/engine-link.html'])
   })
 
   it('can target link only', () => {
-    expect(resolveRendererUrls({ linkOnly: true })).toEqual(['http://127.0.0.1:3001/engine-link.html'])
-    expect(resolveRendererUrls()).toEqual(['http://127.0.0.1:3000', 'http://127.0.0.1:3001/engine-link.html'])
+    expect(resolveRendererUrls({ linkOnly: true })).toEqual(['http://127.0.0.1:5173/engine-link.html'])
+    expect(resolveRendererUrls()).toEqual(['http://127.0.0.1:3000', 'http://127.0.0.1:5173/engine-link.html'])
   })
 })
 
@@ -46,7 +46,7 @@ describe('waitForRenderers', () => {
   it('fails fast with a remedy when only one renderer is up', async () => {
     const urls = [await startPageServer(), 'http://127.0.0.1:1']
     await expect(waitForRenderers({ urls, singleEndTimeoutMs: 0 })).rejects.toThrow(
-      'Electron 固定创建 main :3000 与 link :3001 两个窗口',
+      'Electron 固定创建 main :3000 与 link :5173 两个窗口',
     )
     await expect(waitForRenderers({ urls, singleEndTimeoutMs: 0 })).rejects.toThrow(
       'yarn --cwd app/renderer/src/main vite',
@@ -77,7 +77,7 @@ describe('resolveSingleEndTimeoutMs', () => {
 describe('rendererDevCommand', () => {
   it('maps each dev entry to the command that starts only it', () => {
     expect(rendererDevCommand('http://127.0.0.1:3000')).toBe('yarn --cwd app/renderer/src/main vite')
-    expect(rendererDevCommand('http://127.0.0.1:3001/engine-link.html')).toBe(
+    expect(rendererDevCommand('http://127.0.0.1:5173/engine-link.html')).toBe(
       'yarn --cwd app/renderer/src/main vite --config vite.link.config.mts',
     )
   })

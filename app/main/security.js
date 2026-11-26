@@ -2,7 +2,7 @@ const fs = require('fs')
 const path = require('path')
 
 const TRUSTED_DEV_HOSTS = new Set(['127.0.0.1', 'localhost'])
-const TRUSTED_DEV_PORTS = new Set(['3000', '3001'])
+const TRUSTED_DEV_PORTS = new Set(['3000', '5173'])
 const BLOCKED_OPEN_PATH_EXTENSIONS = new Set([
   '.app',
   '.appimage',

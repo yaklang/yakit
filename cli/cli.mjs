@@ -313,7 +313,7 @@ const prepareThemeCss = async (env) => {
 
 /**
  * 启动或构建渲染端。main 与 link 共用同一源码树：
- * - 开发态 main :3000、link :3001，各自使用自己的 Vite 配置
+ * - 开发态 main :3000、link :5173，各自使用自己的 Vite 配置
  * - 生产构建按目标输出两份产物：pages/main 与 pages/link
  */
 const runRenderers = async ({ main, link, build, env }) => {
@@ -421,10 +421,10 @@ program
 /** start：注入 YAKIT_EDITION + DEVTOOLS，开发态跑 vite（不启 Electron） */
 program
   .command('start')
-  .description('开发模式启动渲染端（默认 main :3000 + link :3001）')
+  .description('开发模式启动渲染端（默认 main :3000 + link :5173）')
   .option('-v, --version <type>', `业务版本 (${editionValues})`)
   .option('--main', '只启动主渲染端 main :3000', false)
-  .option('--link', '只启动 Link 渲染端 link :3001', false)
+  .option('--link', '只启动 Link 渲染端 link :5173', false)
   .addHelpText('after', `\n${YellowChalk.bold('Examples:')}\n${StartCMDExamplesDoc}`)
   .action(async (options) => {
     const version = await requireEdition(options.version)
@@ -434,7 +434,7 @@ program
     console.log(GreenChalk('\n准备执行...'))
     console.log(CyanChalk.bold(`> 业务版本: ${version}`))
     console.log(CyanChalk.bold(`> 模式: Development`))
-    const endpoints = [targets.main && 'main :3000', targets.link && 'link :3001'].filter(Boolean).join(' / ')
+    const endpoints = [targets.main && 'main :3000', targets.link && 'link :5173'].filter(Boolean).join(' / ')
     console.log(CyanChalk.bold(`> 渲染端: ${renderLabel(targets)} → ${endpoints}`))
     console.log('')
 
@@ -545,11 +545,11 @@ program
     }
   })
 
-/** electron：只起主进程。不注入版本；窗口加载已运行的 main :3000 / link :3001 */
+/** electron：只起主进程。不注入版本；窗口加载已运行的 main :3000 / link :5173 */
 program
   .command('electron')
   .description('等待渲染页面、单次开发构建并启动 Electron（手动重启）')
-  .option('--link', '只等待 link :3001（只改 Link 时用；link 是启动入口，main 进入前必须先连 link）', false)
+  .option('--link', '只等待 link :5173（只改 Link 时用；link 是启动入口，main 进入前必须先连 link）', false)
   .addHelpText('after', `\n${YellowChalk.bold('Examples:')}\n${ElectronCMDExamplesDoc}`)
   .action(async (options) => {
     const targets = resolveLinkOnlyTargets(options.link)
@@ -567,9 +567,9 @@ program
 /** dev：Vite 页面就绪后单次构建并启动 Electron，无 watch 或自动重启 */
 program
   .command('dev')
-  .description('启动渲染服务，等待页面就绪后启动 Electron（默认 main :3000 + link :3001）')
+  .description('启动渲染服务，等待页面就绪后启动 Electron（默认 main :3000 + link :5173）')
   .option('-v, --version <type>', `业务版本 (${editionValues})`)
-  .option('--link', '只启动并只等待 link :3001（只改 Link 时用；link 是启动入口）', false)
+  .option('--link', '只启动并只等待 link :5173（只改 Link 时用；link 是启动入口）', false)
   .addHelpText('after', `\n${YellowChalk.bold('Examples:')}\n${DevCMDExamplesDoc}`)
   .action(async (options) => {
     const version = await requireEdition(options.version)
@@ -577,7 +577,7 @@ program
     const env = buildYakitEnv({ edition: version, devtools: true })
 
     const electronArgs = ['scripts/start-electron.mjs', ...(options.link ? ['--link'] : [])]
-    const endpoints = [targets.main && 'main :3000', targets.link && 'link :3001'].filter(Boolean).join(' / ')
+    const endpoints = [targets.main && 'main :3000', targets.link && 'link :5173'].filter(Boolean).join(' / ')
 
     console.log(GreenChalk('\n准备执行...'))
     console.log(CyanChalk.bold(`> 业务版本: ${version}`))

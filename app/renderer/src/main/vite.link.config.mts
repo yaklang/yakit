@@ -10,7 +10,7 @@ import { createProcessEnvDefines } from '../../vite-plugins/yakitProcessEnv.mjs'
 
 /**
  * Link 窗口独立配置：与主窗口同一份源码树，但使用 Link 专属 alias、dev server 和独立产物 / chunk 图。
- * dev 起在 :3001 提供 engine-link.html；build 输出 pages/link。
+ * dev 起在 :5173 提供 engine-link.html；build 输出 pages/link。
  */
 const rootDir = path.dirname(fileURLToPath(import.meta.url))
 const outDir = path.resolve(rootDir, '../../pages/link')
@@ -107,7 +107,7 @@ export default defineConfig(({ mode, command }) => {
     root: rootDir,
     // 与主窗口 dev server 分开缓存，避免两个 Vite 进程争用同一 optimizeDeps 目录
     cacheDir: path.resolve(rootDir, 'node_modules/.vite-link'),
-    // dev 走 http://127.0.0.1:3001，生产 file:// 必须使用相对路径
+    // dev 走 http://127.0.0.1:5173，生产 file:// 必须使用相对路径
     base: isServe ? '/' : './',
     publicDir: linkPublicDir,
     envPrefix: ['YAKIT_', 'REACT_APP_', 'VITE_'],
@@ -129,7 +129,8 @@ export default defineConfig(({ mode, command }) => {
     ],
     server: {
       host: true,
-      port: 3001,
+      // 固定 5173：3001 被主进程登录回调 server 占用（app/main/handlers/userInfo.js），不要改回 3001
+      port: 5173,
       strictPort: true,
       compress: false,
       warmup: {
@@ -142,7 +143,7 @@ export default defineConfig(({ mode, command }) => {
     },
     preview: {
       host: true,
-      port: 3001,
+      port: 5173,
       strictPort: true,
     },
     optimizeDeps: {

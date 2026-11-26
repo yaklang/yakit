@@ -15,11 +15,11 @@ Yakit 是一个基于 Electron + React 的跨平台桌面应用，主要技术�
 | --- | --- | --- | --- |
 | Electron 主进程 | `app/main/` | 源码 index.js，构建入口 dist/electron/main/index.js，承载窗口、IPC、gRPC | - |
 | 主渲染端 | `app/renderer/src/main/` | Vite 8 MPA 主界面 | `3000` |
-| Link 渲染端 | `app/renderer/src/main/src/engineLinkStartup/` | 引擎链接启动页源码；产物在 `app/renderer/pages/link` | `3001`（独立 Vite 服务） |
+| Link 渲染端 | `app/renderer/src/main/src/engineLinkStartup/` | 引擎链接启动页源码；产物在 `app/renderer/pages/link` | `5173`（独立 Vite 服务） |
 
 > 主进程在开发模式下会分别加载：
 > - 主窗口：`http://127.0.0.1:3000`
-> - 引擎链接窗口：`http://127.0.0.1:3001/engine-link.html`
+> - 引擎链接窗口：`http://127.0.0.1:5173/engine-link.html`
 >
 > 两个入口由**两个 Vite 服务**提供（main `vite.config.mts` / link `vite.link.config.mts`）；等两个页面都就绪后再启动 Electron，否则对应窗口会白屏。
 
@@ -51,7 +51,7 @@ yarn cli install
 
 ## 启动开发环境
 
-> 开发模式下 Electron 主进程会分别加载主窗口 `http://127.0.0.1:3000` 与引擎链接窗口 `http://127.0.0.1:3001/engine-link.html`，两个入口由两个 Vite 服务提供（main / link 配置各自独立）；**两个页面都就绪后**再启动 Electron，否则对应窗口会白屏。
+> 开发模式下 Electron 主进程会分别加载主窗口 `http://127.0.0.1:3000` 与引擎链接窗口 `http://127.0.0.1:5173/engine-link.html`，两个入口由两个 Vite 服务提供（main / link 配置各自独立）；**两个页面都就绪后**再启动 Electron，否则对应窗口会白屏。
 
 ### 启动前依赖检查（重要）
 
@@ -94,13 +94,13 @@ yarn check-deps
 | irify-enterprise | `irifyEE` | `yarn cli start -v irifyEE` |
 | memfit | `memfit` | `yarn cli start -v memfit` |
 
-先启动两个渲染服务（main :3000 / link :3001），例如社区版：
+先启动两个渲染服务（main :3000 / link :5173），例如社区版：
 
 ```bash
-# 启动两端（Electron 默认等待 main :3000 与 link :3001 都就绪）
+# 启动两端（Electron 默认等待 main :3000 与 link :5173 都就绪）
 yarn cli start -v yakit
 
-# 只改 Link：只起 link :3001，Electron 也只等它（主窗口保持隐藏，连接引擎后才显示）
+# 只改 Link：只起 link :5173，Electron 也只等它（主窗口保持隐藏，连接引擎后才显示）
 yarn cli start -v yakit --link
 yarn cli electron --link
 # 或一条命令：yarn cli dev -v yakit --link
@@ -112,16 +112,16 @@ yarn cli electron --link
 yarn cli electron
 ```
 
-> ⚠️ **重要：必须确认两个渲染端「真正就绪」后再启动 Electron，否则窗口会白屏。**（用 `electron --link` 只改 Link 时，只需 link :3001 就绪；主窗口保持隐藏，连接引擎前不显示）
+> ⚠️ **重要：必须确认两个渲染端「真正就绪」后再启动 Electron，否则窗口会白屏。**（用 `electron --link` 只改 Link 时，只需 link :5173 就绪；主窗口保持隐藏，连接引擎前不显示）
 >
 > 端口进入 LISTEN 状态 ≠ 渲染端加载完成。Vite dev server 端口会很快开始监听，但此时首次编译可能尚未结束，Electron 此时加载会拿到不完整的页面导致白屏。
 >
 > 必须按以下两步确认就绪：
 >
-> 1. **端口检查**：确认 `3000` 和 `3001` 端口都在监听。
+> 1. **端口检查**：确认 `3000` 和 `5173` 端口都在监听。
 >    ```bash
 >    lsof -i :3000 -sTCP:LISTEN
->    lsof -i :3001 -sTCP:LISTEN
+>    lsof -i :5173 -sTCP:LISTEN
 >    ```
 >
 > 2. **内容轮询**：用 `curl` 轮询两个入口，直到均返回 HTTP 200 且响应体包含有效内容（如 `<script` 或 `<div id="root"`），才说明首次编译完成、页面真正可访问。
@@ -130,7 +130,7 @@ yarn cli electron
 >    until curl -s http://127.0.0.1:3000 | grep -qE '<script|<div id="root"'; do sleep 2; done
 >
 >    # Link 入口
->    until curl -s http://127.0.0.1:3001/engine-link.html | grep -qE '<script|<div id="root"'; do sleep 2; done
+>    until curl -s http://127.0.0.1:5173/engine-link.html | grep -qE '<script|<div id="root"'; do sleep 2; done
 >    ```
 >
 > 两个入口都通过检查后，再执行 `yarn cli electron`。
@@ -153,10 +153,10 @@ yarn cli electron
 | memfit | `memfit` | Memfit AI | AI Agent 精简版 | `9016` |
 
 ```bash
-# 启动两个渲染服务（main :3000 / link :3001，以企业版为例）
+# 启动两个渲染服务（main :3000 / link :5173，以企业版为例）
 yarn cli start -v yakitEE
 
-# 只启动单端（--main 只起 main :3000，--link 只起 link :3001）
+# 只启动单端（--main 只起 main :3000，--link 只起 link :5173）
 yarn cli start -v yakitEE --main
 yarn cli start -v yakitEE --link
 
@@ -208,7 +208,7 @@ yarn cli pack -s mac -v yakit
 - **启动 / 编译报错（模块找不到、API 报错、语法报错等）**：优先 `yarn check-deps` 排查依赖是否一致；结合上述盲区判断是否需要重装依赖。
 - **M1 芯片原生依赖编译失败**：执行 `brew install pkg-config pixman cairo pango`。
 - **Electron 下载慢 / 失败**：在当前终端执行对应镜像脚本后重试（macOS `source scripts/set-electron-mirror-macos.sh` / Linux `source scripts/set-electron-mirror-linux.sh` / Windows PowerShell `. .\scripts\set-electron-mirror.ps1` / Windows CMD `scripts\set-electron-mirror.cmd`）。
-- **端口被占用**：确认没有残留的 vite / electron 进程，必要时 `lsof -i :3000` / `lsof -i :3001` 排查。
+- **端口被占用**：确认没有残留的 vite / electron 进程，必要时 `lsof -i :3000` / `lsof -i :5173` 排查。
 
 ## 代码规范
 
@@ -298,7 +298,7 @@ yarn cli pack -s mac -v yakit
 | `yarn cli install cli` | 只装 CLI 运行时到 `cli/`（不含 Electron） |
 | `yarn cli add <electron\|main> <pkg…>` | 给指定子项目加包（`-D` / `--dev`） |
 | `yarn cli remove <electron\|main> <pkg…>` | 从指定子项目卸包 |
-| `yarn cli start -v <edition>` | 开发态启动渲染服务（默认 main :3000 + link :3001；`--main`/`--link` 只启一端） |
+| `yarn cli start -v <edition>` | 开发态启动渲染服务（默认 main :3000 + link :5173；`--main`/`--link` 只启一端） |
 | `yarn cli electron` | 启动 Electron 主进程（默认等待 main + link） |
 | `yarn cli dev -v <edition>` | start + 页面检查 + 主进程构建 + electron |
 | `yarn cli build -v <edition>` | 生产构建主窗口 / link 产物及压缩主进程 |

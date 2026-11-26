@@ -21,7 +21,7 @@ describe('dev IPC sender ports', () => {
     const { isTrustedAppSender } = loadSecurity()
 
     expect(isTrustedAppSender(senderAt('http://127.0.0.1:3000/'))).toBe(true)
-    expect(isTrustedAppSender(senderAt('http://localhost:3001/engine-link.html'))).toBe(true)
+    expect(isTrustedAppSender(senderAt('http://localhost:5173/engine-link.html'))).toBe(true)
   })
 
   it('rejects other local ports', () => {

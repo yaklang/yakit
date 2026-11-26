@@ -8,7 +8,7 @@ import { matchesYakitWindowUrl } from '../fixtures/electron/window-url.mjs'
 
 const devRenderers = process.env.YAKIT_E2E_RENDERER_MODE === 'development'
 export const LINK_WINDOW_URL = devRenderers
-  ? '127.0.0.1:3001/engine-link.html'
+  ? '127.0.0.1:5173/engine-link.html'
   : '/renderer/pages/link/engine-link.html'
 // 末尾斜杠用于无 matcher 的调用方（如 recovery 的 includes），避免 :30000 误命中 :3000
 export const MAIN_WINDOW_URL = devRenderers ? '127.0.0.1:3000/' : '/renderer/pages/main/index.html'

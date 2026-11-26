@@ -56,10 +56,10 @@ const StartCMDExamplesDoc = `
   # TTY 下未传 -v 会询问业务版本
   $ yarn cli start
 
-  # 启动 yakit 开发服务（main :3000 + link :3001）
+  # 启动 yakit 开发服务（main :3000 + link :5173）
   $ yarn cli start -v yakit
 
-  # 只启动主渲染端（:3000）或只启动 Link 渲染端（:3001）
+  # 只启动主渲染端（:3000）或只启动 Link 渲染端（:5173）
   $ yarn cli start -v irifyEE --main
   $ yarn cli start -v irifyEE --link
 `
@@ -96,10 +96,10 @@ const PackCMDExamplesDoc = `
 
 /** electron -h：只起主进程（渲染端需已就绪；--link 只等待 link） */
 const ElectronCMDExamplesDoc = `
-  # 等待 main :3000 + link :3001 就绪，单次开发构建，再启动 Electron
+  # 等待 main :3000 + link :5173 就绪，单次开发构建，再启动 Electron
   $ yarn cli electron
 
-  # 只改 Link：只等待 :3001（link 是启动入口，主窗口连接引擎后才显示）
+  # 只改 Link：只等待 :5173（link 是启动入口，主窗口连接引擎后才显示）
   $ yarn cli electron --link
 `
 
@@ -108,7 +108,7 @@ const DevCMDExamplesDoc = `
   # 启动两端渲染服务 + 等待页面 + 单次构建并启动 Electron
   $ yarn cli dev -v yakit
 
-  # 只改 Link：只起 link :3001 并只等待它，主窗口保持隐藏
+  # 只改 Link：只起 link :5173 并只等待它，主窗口保持隐藏
   $ yarn cli dev -v yakit --link
 `
 

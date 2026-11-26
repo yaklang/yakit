@@ -144,7 +144,7 @@ Steps:
 2. Start development (start the renderer services, then Electron)
 
      ```bash
-     yarn cli start -v yakit   # starts main :3000 + link :3001
+     yarn cli start -v yakit   # starts main :3000 + link :5173
      yarn cli electron         # after both pages are ready
      # or: yarn cli dev -v yakit
      ```

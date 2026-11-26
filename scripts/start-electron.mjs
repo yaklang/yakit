@@ -24,23 +24,23 @@ const pageReady = (url) =>
  */
 export const resolveRendererUrls = ({ linkOnly = false } = {}) =>
   linkOnly
-    ? ['http://127.0.0.1:3001/engine-link.html']
-    : ['http://127.0.0.1:3000', 'http://127.0.0.1:3001/engine-link.html']
+    ? ['http://127.0.0.1:5173/engine-link.html']
+    : ['http://127.0.0.1:3000', 'http://127.0.0.1:5173/engine-link.html']
 
-/** 只补起单个 dev server 的命令（main :3000 / link :3001 端口互不冲突） */
+/** 只补起单个 dev server 的命令（main :3000 / link :5173 端口互不冲突） */
 export const rendererDevCommand = (url) =>
-  url.includes('engine-link') || url.includes(':3001')
+  url.includes('engine-link') || url.includes(':5173')
     ? 'yarn --cwd app/renderer/src/main vite --config vite.link.config.mts'
     : 'yarn --cwd app/renderer/src/main vite'
 
 /** Electron 固定创建两个窗口；link 是启动入口，main 默认隐藏，所以只改 Link 时可以不等 main */
 const rendererNotReady = (pending) => {
-  const linkOnlyAdvice = pending.some((url) => !url.includes('3001'))
-    ? ['  - 只改 Link 时可直接运行 yarn cli electron --link（只等待 :3001，不等待 main）']
+  const linkOnlyAdvice = pending.some((url) => !url.includes('5173'))
+    ? ['  - 只改 Link 时可直接运行 yarn cli electron --link（只等待 :5173，不等待 main）']
     : []
   return [
     `Renderer pages not ready: ${pending.join(', ')}`,
-    'Electron 固定创建 main :3000 与 link :3001 两个窗口，未启动的一端会加载失败（link 是启动入口，主窗口连接引擎后才显示）。可选：',
+    'Electron 固定创建 main :3000 与 link :5173 两个窗口，未启动的一端会加载失败（link 是启动入口，主窗口连接引擎后才显示）。可选：',
     ...pending.map((url) => `  - 另开终端补起该端：${rendererDevCommand(url)}，然后重新运行 yarn cli electron`),
     ...linkOnlyAdvice,
     '  - 或关闭当前单端服务后执行 yarn cli start -v <edition> 起两端，再运行 yarn cli electron',
