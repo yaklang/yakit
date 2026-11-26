@@ -38,6 +38,10 @@ const dependencies: Record<string, unknown> = {
   ahooks: { useMemoizedFn },
   classnames: classNames,
   './AITree.module.scss': new Proxy({}, { get: (_, key) => (key === '__esModule' ? false : key) }),
+  './subForge/SubForgeTreePopover': {
+    SubForgeTreePopover: ({ children }: React.PropsWithChildren) => <>{children}</>,
+  },
+  './subForge/SubForgeTaskTrees': { isSubForgeTreeTask: () => false },
   '@yakit-libs/yakit-ui-icons/oldicon/TaskErrorIcon': {
     TaskErrorIcon: () => <span data-testid="aborted" />,
   },

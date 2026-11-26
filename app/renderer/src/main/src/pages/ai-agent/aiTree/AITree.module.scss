@@ -191,6 +191,9 @@
     --text-color: var(--Colors-Use-Neutral-Text-2-Primary);
     --bg-hover-color: var(--Colors-Use-Neutral-Bg-Hover);
   }
+  .sub-forge-card {
+    cursor: pointer;
+  }
 
   .node-icon-backslash {
     &::before {
@@ -342,6 +345,14 @@
       background: transparent;
     }
   }
+}
+
+.sub-forge-tree {
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden auto;
 }
 
 .depends-on-popover {

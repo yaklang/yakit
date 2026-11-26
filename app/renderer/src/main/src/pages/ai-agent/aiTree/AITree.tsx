@@ -17,6 +17,8 @@ import { AIHistorySkipTask } from '../chatTemplate/historyTaskTree/HistoryTaskTr
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { Tooltip } from 'antd'
 import { yakitNotify } from '@/utils/notification'
+import { isSubForgeTreeTask } from './subForge/SubForgeTaskTrees'
+import { SubForgeTreePopover } from './subForge/SubForgeTreePopover'
 
 // 起始节点层级
 const START_LEVEL = 1
@@ -56,7 +58,10 @@ export const AITree: React.FC<AITreeProps> = memo((props) => {
         dependsOnTasks: (item.depends_on ?? [])
           .map((depTaskId) => tasks.find((t) => t.task_id === depTaskId))
           .filter((t): t is AITaskInfoProps => !!t),
-        onClick: () => emiter.emit('onAITreeLocatePlanningList', item.task_id),
+        onClick: () => {
+          if (item.subForgeHead || isSubForgeTreeTask(item.task_id)) return
+          emiter.emit('onAITreeLocatePlanningList', item.task_id)
+        },
       })
     })
     return map
@@ -142,7 +147,7 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(
       return (
         <div className={styles['node-title']}>
           <p>{data.name}</p>
-          <div className={styles['node-extra']}>
+          <div className={styles['node-extra']} onClick={(e) => e.stopPropagation()}>
             <YakitPopover
               classNames={{ root: styles['task-detail-popover'] }}
               styles={{ root: { paddingLeft: 4 } }}
@@ -150,7 +155,7 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(
               content={
                 <div className={styles['detail-wrapper']}>
                   <div className={styles['detail-title']}>{data.name}</div>
-                  <div className={styles['detail-description']}>{data.goal}</div>
+                  {data.goal && <div className={styles['detail-description']}>{data.goal}</div>}
                 </div>
               }
               open={infoShow}
@@ -177,7 +182,7 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(
     const getContent = () => {
       return (
         <div className={styles['node-content']}>
-          <div className={styles['node-content-text']}>{data.goal}</div>
+          {!!data.goal && <div className={styles['node-content-text']}>{data.goal}</div>}
           <div className={styles['node-content-tag']}>
             {[data.fail_tool_call_count, data.success_tool_call_count].map((item, index) => {
               if (!item) return null
@@ -196,11 +201,21 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(
     const handleMouseEnter = useMemoizedFn(() => onNodeHover?.(data.task_id))
 
     const node = () => {
-      const style = isParentLast && !data.progress ? { marginBottom: '16px' } : {}
+      const hasBody = !!(data.goal || data.fail_tool_call_count || data.success_tool_call_count)
+      const wrapperStyle: React.CSSProperties = {
+        ...(isParentLast && !data.progress ? { marginBottom: 16 } : null),
+        ...(!hasBody ? { height: 32 } : null),
+      }
       const getWrapper = (extraClass?: string) => (
-        <div className={classNames(styles['node-wrapper'], extraClass)} style={style} onClick={onClick}>
+        <div
+          className={classNames(styles['node-wrapper'], extraClass, {
+            [styles['sub-forge-card']]: !!data.subForgeChildren?.length,
+          })}
+          style={wrapperStyle}
+          onClick={onClick}
+        >
           {getTitleNode()}
-          {data.progress && getContent()}
+          {data.progress && hasBody && getContent()}
         </div>
       )
       switch (data.progress) {
@@ -264,29 +279,38 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(
             </div>
           )
         })}
-        <YakitPopover
-          classNames={{ root: styles['depends-on-popover'] }}
-          placement="right"
-          open={isHovered}
-          content={
-            <div className={styles['depends-on-content']}>
-              <div className={styles['depends-on-title']}>高亮的为该任务的关联任务</div>
-              {dependsOnTasks && dependsOnTasks.length > 0 ? (
-                <div className={styles['depends-on-list']}>
-                  {dependsOnTasks.map((task) => (
-                    <div key={task.task_id} className={styles['depends-on-item']}>
-                      {task.name}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className={styles['depends-on-empty']}>暂无其他关联任务</div>
-              )}
-            </div>
-          }
-        >
-          {Card}
-        </YakitPopover>
+        {data.subForgeChildren?.length ? (
+          <SubForgeTreePopover
+            title={data.name}
+            tree={<AITree tasks={data.subForgeChildren} taskType={taskType} className={styles['sub-forge-tree']} />}
+          >
+            {Card}
+          </SubForgeTreePopover>
+        ) : (
+          <YakitPopover
+            classNames={{ root: styles['depends-on-popover'] }}
+            placement="right"
+            open={isHovered}
+            content={
+              <div className={styles['depends-on-content']}>
+                <div className={styles['depends-on-title']}>高亮的为该任务的关联任务</div>
+                {dependsOnTasks && dependsOnTasks.length > 0 ? (
+                  <div className={styles['depends-on-list']}>
+                    {dependsOnTasks.map((task) => (
+                      <div key={task.task_id} className={styles['depends-on-item']}>
+                        {task.name}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className={styles['depends-on-empty']}>暂无其他关联任务</div>
+                )}
+              </div>
+            }
+          >
+            {Card}
+          </YakitPopover>
+        )}
       </div>
     )
   },

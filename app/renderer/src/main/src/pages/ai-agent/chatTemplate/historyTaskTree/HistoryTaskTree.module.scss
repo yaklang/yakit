@@ -54,6 +54,9 @@
     .ant-collapse > .ant-collapse-item > .ant-collapse-header .ant-collapse-arrow {
       margin-right: 2px;
     }
+    .ant-collapse > .ant-collapse-item > .ant-collapse-header .ant-collapse-expand-icon {
+      padding-inline-end: 0;
+    }
     .ant-collapse-item .ant-collapse-content > .ant-collapse-content-box {
       padding: 0px 16px 24px 22px;
     }
@@ -96,6 +99,7 @@
   }
   .tree-item {
     .time {
+      color: var(--Colors-Use-Neutral-Text-4-Help-text);
     }
     .tree-wrapper {
       padding-top: 0;

@@ -1,3 +1,5 @@
+import { insertSubForgeTasks, isSubForgeTreeTask } from '../../aiTree/subForge/SubForgeTaskTrees'
+import { dropSubForgeRunsByParent } from '@/pages/ai-re-act/hooks/grpcStreamHandler/subForgeTaskTree'
 import React, { memo, useRef, useState } from 'react'
 import styles from './HistoryTaskTree.module.scss'
 import type {
@@ -13,12 +15,7 @@ import { AITree } from '../../aiTree/AITree'
 import YakitCollapse from '@/components/yakitUI/YakitCollapse/YakitCollapse'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { formatTimestamp } from '@/utils/timeUtil'
-import {
-  ChevronDownOutlined,
-  LoadingOutlined,
-  Play2Outlined,
-  RedoDotOutlined,
-} from '@yakit-libs/yakit-ui-icons/outline'
+import { LoadingOutlined, Play2Outlined, RedoDotOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import type { AITaskInfoProps } from '@/pages/ai-re-act/hooks/aiRender'
@@ -37,7 +34,6 @@ import cloneDeep from 'lodash/cloneDeep'
 import emiter from '@/utils/eventBus/eventBus'
 
 export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
-  const { t } = useI18nNamespaces(['aiAgent'])
   const store = useCurrentStore()
   const planHistoryList = useStore(store, (state) => state.planHistoryList ?? cloneDeep(DefaultPlanHistoryList))
   const taskTree = useStore(store, (state) => state.currentPlan.task_tree ?? [])
@@ -76,7 +72,6 @@ export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
   const [activeKey, setActiveKey] = useState<string>(
     currentCoordinatorId || planHistoryList.records[0]?.coordinator_id || '',
   )
-  const [expanded, setExpanded] = useState(true)
 
   const historyRecords = useCreation(() => {
     return planHistoryList.records.filter((ele) => ele.coordinator_id !== currentCoordinatorId)
@@ -97,67 +92,61 @@ export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
 
   return (
     <div className={styles['section']}>
-      <div className={styles['section-title']} onClick={() => setExpanded((p) => !p)}>
-        <ChevronDownOutlined color="currentColor" style={{ transform: expanded ? 'rotate(0deg)' : 'rotate(-90deg)' }} />
-        <span>{t('HistoryTaskTree.taskList')}</span>
-      </div>
-      {expanded && (
-        <div className={styles['section-body']}>
-          <YakitCollapse
-            destroyOnHidden
-            accordion
-            bordered={false}
-            activeKey={activeKey}
-            onChange={(k) => setActiveKey(Array.isArray(k) ? k[0] : k)}
-            style={{ marginBottom: 8, height: '100%' }}
-          >
-            {currentTaskItem.task_tree.length > 0 && (
+      <div className={styles['section-body']}>
+        <YakitCollapse
+          destroyOnHidden
+          accordion
+          bordered={false}
+          activeKey={activeKey}
+          onChange={(k) => setActiveKey(Array.isArray(k) ? k[0] : k)}
+          style={{ marginBottom: 8, height: '100%' }}
+        >
+          {currentTaskItem.task_tree.length > 0 && (
+            <YakitCollapse.YakitPanel
+              header={
+                <div className={styles['history-task-tree-item-header']}>
+                  <div className={styles['history-task-tree-item-header-left']}>
+                    <div
+                      className={styles['history-task-tree-item-header-title']}
+                      title={currentTaskItem?.root_task_name}
+                    >
+                      {currentTaskItem?.root_task_name}
+                    </div>
+                    <YakitTag color="info" size="small" fullRadius>
+                      当前任务
+                    </YakitTag>
+                  </div>
+                </div>
+              }
+              key={currentCoordinatorId}
+            >
+              <HistoryTaskTreeItem
+                item={currentTaskItem}
+                currentCoordinatorId={currentCoordinatorId}
+                taskType="current"
+              />
+            </YakitCollapse.YakitPanel>
+          )}
+          {historyRecords.map((item) => {
+            return (
               <YakitCollapse.YakitPanel
                 header={
                   <div className={styles['history-task-tree-item-header']}>
                     <div className={styles['history-task-tree-item-header-left']}>
-                      <div
-                        className={styles['history-task-tree-item-header-title']}
-                        title={currentTaskItem?.root_task_name}
-                      >
-                        {currentTaskItem?.root_task_name}
+                      <div className={styles['history-task-tree-item-header-title']} title={item?.root_task_name}>
+                        {item?.root_task_name}
                       </div>
-                      <YakitTag color="info" size="small" fullRadius>
-                        当前任务
-                      </YakitTag>
                     </div>
                   </div>
                 }
-                key={currentCoordinatorId}
+                key={item.coordinator_id}
               >
-                <HistoryTaskTreeItem
-                  item={currentTaskItem}
-                  currentCoordinatorId={currentCoordinatorId}
-                  taskType="current"
-                />
+                <HistoryTaskTreeItem item={item} currentCoordinatorId={currentCoordinatorId} taskType="history" />
               </YakitCollapse.YakitPanel>
-            )}
-            {historyRecords.map((item) => {
-              return (
-                <YakitCollapse.YakitPanel
-                  header={
-                    <div className={styles['history-task-tree-item-header']}>
-                      <div className={styles['history-task-tree-item-header-left']}>
-                        <div className={styles['history-task-tree-item-header-title']} title={item?.root_task_name}>
-                          {item?.root_task_name}
-                        </div>
-                      </div>
-                    </div>
-                  }
-                  key={item.coordinator_id}
-                >
-                  <HistoryTaskTreeItem item={item} currentCoordinatorId={currentCoordinatorId} taskType="history" />
-                </YakitCollapse.YakitPanel>
-              )
-            })}
-          </YakitCollapse>
-        </div>
-      )}
+            )
+          })}
+        </YakitCollapse>
+      </div>
     </div>
   )
 })
@@ -209,6 +198,9 @@ export const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React
       SyncJsonInput: JSON.stringify({ coordinator_id: coordinatorId, start_task_id: taskId }),
       SyncID: randomString(8),
     }
+    store.getState().updateState({
+      subForgeRuns: dropSubForgeRunsByParent(store.getState().subForgeRuns, coordinatorId),
+    })
     onSend({ token: sessionId, type: 'task', params: info })
     emiter.emit('changeAITaskQueryShow', 'true')
     sendRecoverParamsRef.current = undefined
@@ -343,8 +335,19 @@ const HistoryTaskTreeItem: React.FC<HistoryTaskTreeItemProps> = memo((props) => 
     return formatTimestamp(item.created_at_unix)
   }, [item.created_at_unix])
   const onAITreeTitleExtraNode = useMemoizedFn((value: AITaskInfoProps) => {
+    if (value.subForgeHead || isSubForgeTreeTask(value.task_id)) return null
+    if (taskType === 'history' && item.task_progress.phase === 'Completed') return null
     return <AIHistoryContinueTask coordinatorId={item.coordinator_id} taskId={value.task_id} />
   })
+  const store = useCurrentStore()
+  const subForgeRuns = useStore(store, (state) => state.subForgeRuns)
+  const execute = useStore(store, (state) => state.execute)
+  const chatStatus = useStore(store, (state) => state.currentChatStatus.status)
+  const chatCoordinatorId = useStore(store, (state) => state.currentChatStatus.coordinatorId)
+  const tasks = useCreation(() => {
+    const active = execute && chatCoordinatorId === item.coordinator_id && chatStatus === AITaskStatus.inProgress
+    return insertSubForgeTasks(item.task_tree, subForgeRuns, item.coordinator_id, active)
+  }, [item.task_tree, item.coordinator_id, subForgeRuns, execute, chatCoordinatorId, chatStatus])
   return (
     <div className={styles['tree-item']}>
       {!(item.coordinator_id === currentCoordinatorId) && (
@@ -352,7 +355,7 @@ const HistoryTaskTreeItem: React.FC<HistoryTaskTreeItemProps> = memo((props) => 
       )}
 
       <AITree
-        tasks={item.task_tree}
+        tasks={tasks}
         className={styles['tree-wrapper']}
         aiTreeTitleExtraNode={onAITreeTitleExtraNode}
         taskType={taskType}

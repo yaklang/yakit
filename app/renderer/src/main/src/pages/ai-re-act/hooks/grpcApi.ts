@@ -1340,8 +1340,29 @@ export declare namespace AIAgentGrpcApi {
     timestamp: number
   }
 
+  export interface SubForgeTaskNode {
+    task_id?: string
+    name: string
+    goal?: string
+    progress?: '' | 'processing' | 'completed' | 'aborted' | 'skipped'
+    subtasks?: SubForgeTaskNode[]
+  }
+
+  export interface SubForgeTaskTree {
+    parent_coordinator_id: string
+    parent_task_id: string
+    parent_task_uuid: string
+    call_tool_id: string
+    child_coordinator_id: string
+    tool_name: string
+    revision: number
+    status: 'running' | 'succeeded' | 'failed' | 'cancelled' | 'timed_out'
+    task_tree: SubForgeTaskNode | null
+  }
+
   /** 任务规划历史列表 */
   export interface PlanHistoryList {
+    sub_forge_task_trees?: SubForgeTaskTree[]
     records: PlanHistory[]
     total: number
     session_id: string
