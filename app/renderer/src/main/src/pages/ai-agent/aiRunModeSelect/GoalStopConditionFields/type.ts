@@ -11,5 +11,5 @@ export interface GoalStopConditionFieldsProps {
   customDuration: boolean
   onDurationPick: (key: string) => void
   onCustomDurationChange: (seconds: number) => void
-  editingRunningGoal?: boolean
+  minDurationSeconds?: number
 }

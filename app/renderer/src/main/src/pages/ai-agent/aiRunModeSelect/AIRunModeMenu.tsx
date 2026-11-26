@@ -19,11 +19,7 @@ import { getToggledStrategy } from './syncRunModeStrategy'
 import type { AIExecutionStrategy } from '@/pages/ai-re-act/hooks/grpcApi'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { clearGoalStrategy } from '../defaultConstant'
-import {
-  goalDurationKeyToSeconds,
-  goalDurationSecondsToKey,
-  isGoalDurationPresetKey,
-} from '../components/aiMilkdownInput/constants'
+import { goalDurationKeyToSeconds } from '../components/aiMilkdownInput/constants'
 import { deriveGoalTagFromStrategy } from '../components/aiMilkdownInput/aiMilkdownModeSlash/store/goalTag'
 import GoalStopConditionFields from './GoalStopConditionFields/GoalStopConditionFields'
 import type { GoalCondition } from './GoalStopConditionFields/type'
@@ -91,9 +87,6 @@ export const AIRunModeMenu: FC<AIRunModeMenuProps> = ({ fullWidth, ref }) => {
     if (Object.keys(changes).length) onSetStrategy(changes, true)
   }
   useImperativeHandle(ref, () => submitDraft)
-  const durationKey = goalDurationSecondsToKey(goalDurationSeconds) ?? '1h'
-  const showCustomDuration = customDuration || !isGoalDurationPresetKey(durationKey)
-  const selectedDurationKey = showCustomDuration ? 'custom' : durationKey
 
   useUpdateEffect(() => {
     if (!enableGoalMode || goalMinIterations > 0 || goalDurationSeconds !== 0) {
@@ -128,7 +121,6 @@ export const AIRunModeMenu: FC<AIRunModeMenuProps> = ({ fullWidth, ref }) => {
   })
 
   const onPickDuration = (value: string) => {
-    if (value === selectedDurationKey) return
     const custom = value === 'custom'
     setCustomDuration(custom)
     if (custom && goalDurationSeconds > 0) return
@@ -225,7 +217,7 @@ export const AIRunModeMenu: FC<AIRunModeMenuProps> = ({ fullWidth, ref }) => {
                     editStrategy({ GoalAcceptanceCriteria: value })
                   }}
                   durationSeconds={goalDurationSeconds}
-                  customDuration={showCustomDuration}
+                  customDuration={customDuration}
                   onDurationPick={onPickDuration}
                   onCustomDurationChange={(seconds) => editStrategy({ GoalDurationSeconds: seconds })}
                 />

@@ -84,7 +84,6 @@ const genAIAgentChatData = (generation = 0): AIAgentChatData => {
     modelContext: { status: 'idle', generation },
     agentPolicySnapshot: undefined,
     agentPolicySnapshotReceivedAtMs: undefined,
-    goalWindowStart: undefined,
     httpFuzzRequest: undefined,
     httpFlowFuzzStatus: undefined,
     sessionTitle: '',

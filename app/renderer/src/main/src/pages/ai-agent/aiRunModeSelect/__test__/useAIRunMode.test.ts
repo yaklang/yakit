@@ -2,6 +2,8 @@ import { act, cleanup, renderHook } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { AIInputEventHotPatchTypeEnum } from '@/pages/ai-re-act/hooks/grpcApi'
 import { useAIRunMode } from '../useAIRunMode'
+import { buildStrategyHotpatch } from '../syncRunModeStrategy'
+import { createTestRawData } from '@/pages/ai-re-act/hooks/__test__/fixtures'
 import emiter from '@/utils/eventBus/eventBus'
 
 const onSend = vi.fn()
@@ -224,6 +226,16 @@ describe('useAIRunMode', () => {
         Params: { Strategy: { ...settingRef.value.Strategy, GoalDurationSeconds: 1800 } },
         GoalTimePatch: { Action: 'AI_GOAL_TIME_ACTION_SET_DEADLINE', DeadlineUnix: 1795415430 },
       },
+    })
+  })
+
+  it('尚未收到策略快照时用本机时间计算 Goal 截止时间', () => {
+    vi.setSystemTime(1800000000000)
+    const strategy = { GoalDurationSeconds: 1800 }
+    const patch = buildStrategyHotpatch(strategy, strategy.GoalDurationSeconds, createTestRawData())
+    expect(patch.GoalTimePatch).toEqual({
+      Action: 'AI_GOAL_TIME_ACTION_SET_DEADLINE',
+      DeadlineUnix: 1800001800,
     })
   })
 

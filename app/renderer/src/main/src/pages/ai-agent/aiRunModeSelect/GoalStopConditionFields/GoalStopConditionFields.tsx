@@ -7,6 +7,7 @@ import {
   GOAL_DURATION_OPTIONS,
   getGoalDurationDisplayLabel,
   goalDurationSecondsToKey,
+  isGoalDurationPresetKey,
 } from '../../components/aiMilkdownInput/constants'
 import GoalDurationInputs from '../GoalDurationInputs/GoalDurationInputs'
 import type { GoalStopConditionFieldsProps } from './type'
@@ -29,11 +30,11 @@ const GoalStopConditionFields: FC<GoalStopConditionFieldsProps> = ({
   customDuration,
   onDurationPick,
   onCustomDurationChange,
-  editingRunningGoal = false,
+  minDurationSeconds,
 }) => {
   const { t } = useI18nNamespaces(['aiAgent'])
   const durationKey = goalDurationSecondsToKey(durationSeconds) ?? '1h'
-  const selectedDurationKey = customDuration ? 'custom' : durationKey
+  const selectedDurationKey = customDuration || !isGoalDurationPresetKey(durationKey) ? 'custom' : durationKey
 
   return (
     <div className={styles['mode-configuration']}>
@@ -98,18 +99,20 @@ const GoalStopConditionFields: FC<GoalStopConditionFieldsProps> = ({
                   type={selectedDurationKey === key ? 'primary' : 'secondary2'}
                   radius="9999px"
                   aria-pressed={selectedDurationKey === key}
-                  onClick={() => onDurationPick(key)}
+                  onClick={() => {
+                    if (key !== selectedDurationKey) onDurationPick(key)
+                  }}
                 >
                   {getGoalDurationDisplayLabel(key, t)}
                 </YakitButton>
               ))}
             </div>
           </div>
-          {customDuration && (
+          {selectedDurationKey === 'custom' && (
             <div className={styles['duration-input-row']}>
               <GoalDurationInputs
                 seconds={durationSeconds >= 0 ? durationSeconds : 3600}
-                minSeconds={editingRunningGoal ? 0 : 60}
+                minSeconds={minDurationSeconds}
                 onChange={onCustomDurationChange}
               />
             </div>

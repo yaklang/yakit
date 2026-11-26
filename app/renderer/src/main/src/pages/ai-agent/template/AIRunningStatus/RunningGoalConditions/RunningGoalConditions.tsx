@@ -72,7 +72,7 @@ const RunningGoalConditions: FC<RunningGoalConditionsProps> = ({ sessionId, ref 
       customDuration={customDuration}
       onDurationPick={pickDuration}
       onCustomDurationChange={setDurationSeconds}
-      editingRunningGoal
+      minDurationSeconds={0}
     />
   )
 }

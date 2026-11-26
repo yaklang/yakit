@@ -26,7 +26,6 @@ const initialPolicy = {
 const rawData = {
   agentPolicySnapshot: initialPolicy,
   agentPolicySnapshotReceivedAtMs: 0,
-  goalWindowStart: undefined as number | undefined,
 }
 const execution = { ...DefaultPlanItemDetailsData.execution, status: 'processing', execution_seconds: 756 }
 const snapshot = { revision: 1, updated_at: 1, background_processes: [], execution }
@@ -49,8 +48,6 @@ beforeEach(() => {
   currentSessionId.mockReturnValue('running-session')
   store = createChatStore()
   rawData.agentPolicySnapshot = initialPolicy
-  rawData.goalWindowStart =
-    initialPolicy.goal.time_limit.deadline_at - initialPolicy.goal.time_limit.configured_duration_seconds
   rawData.agentPolicySnapshotReceivedAtMs = performance.now()
 })
 
@@ -243,7 +240,6 @@ it.each([
       },
     },
   }
-  rawData.goalWindowStart = rawData.agentPolicySnapshot.goal.time_limit.deadline_at - 10800
   store.setState({ sessionSnapshot: snapshot })
   render(<AIRunningStatus />)
   fireEvent.click(screen.getByRole('button', { name: /^AIRunningStatus.label/ }))
@@ -307,15 +303,19 @@ it('updates the panel countdown while the badge displays only elapsed time after
   }
 })
 
-it('shows elapsed time on the badge and remaining time in the panel after reconnecting without a window start', () => {
-  rawData.goalWindowStart = undefined
+it('uses the adjusted deadline in the first policy snapshot after reconnecting', () => {
+  const limit = initialPolicy.goal.time_limit
+  rawData.agentPolicySnapshot = {
+    ...initialPolicy,
+    goal: { ...initialPolicy.goal, time_limit: { ...limit, deadline_at: limit.deadline_at + 900 } },
+  }
   store.setState({ sessionSnapshot: snapshot })
   render(<AIRunningStatus />)
   const trigger = screen.getByRole('button', { name: /^AIRunningStatus.label/ })
   expect(trigger).toHaveTextContent(/· 12m36s$/)
   expect(trigger).not.toHaveTextContent('/')
   fireEvent.click(trigger)
-  expect(screen.getByText(/^AIRunningStatus.workSchedule/)).toHaveTextContent(/30m0s$/)
+  expect(screen.getByText(/^AIRunningStatus.workSchedule/)).toHaveTextContent(/45m0s$/)
   expect(screen.queryByText(/AIRunningStatus.limit/)).toBeNull()
   expect(screen.queryByRole('progressbar')).toBeNull()
 })

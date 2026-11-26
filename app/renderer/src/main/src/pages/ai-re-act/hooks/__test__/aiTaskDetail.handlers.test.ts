@@ -95,49 +95,17 @@ describe('aiTaskDetail handlers', () => {
     expect(req.store.getState().agentPolicySnapshotUpdate).toBe(count + 2)
   })
 
-  it('只在确认有限窗口建立时记录起点，加减时间复用起点，重连首帧不推测旧窗口', () => {
-    const req = makeHandlerRequest({ res: makeGrpcJsonRes('agent_policy_snapshot', {}) })
-    type TimeLimit = AIAgentGrpcApi.AgentPolicySnapshot['goal']['time_limit']
-    const receive = (mode: TimeLimit['mode'], revision: number, duration: number, deadline: number) => {
-      req.res = makeGrpcJsonRes(
-        'agent_policy_snapshot',
-        {
-          revision,
-          updated_at: revision,
-          goal: { time_limit: { mode, revision, configured_duration_seconds: duration, deadline_at: deadline } },
-        },
-        { NodeId: 'agent_policy_snapshot' },
-      )
-      aiTaskDetailDataHandlers.agent_policy_snapshot(req)
-      return req.rawData.goalWindowStart
-    }
-
-    // 重连后首份快照已加过时，再次加时也无法还原起点。
-    expect(receive('deadline', 3, 3600, 8200)).toBeUndefined()
-    expect(receive('deadline', 4, 3600, 9100)).toBeUndefined()
-    expect(receive('never_ending', 5, -1, 0)).toBeUndefined()
-    expect(receive('deadline', 7, 3600, 13600)).toBe(10000)
-    expect(receive('deadline', 8, 3600, 14500)).toBe(10000)
-    expect(receive('deadline', 9, 3600, 13600)).toBe(10000)
-    expect(receive('deadline', 10, 7200, 19200)).toBe(12000)
-    expect(receive('disabled', 11, 0, 0)).toBeUndefined()
-  })
-
-  it('从时间窗口的初始版本记录起点，与策略整体的版本无关', () => {
-    const req = makeHandlerRequest({
-      res: makeGrpcJsonRes(
-        'agent_policy_snapshot',
-        {
-          revision: 12,
-          goal: {
-            time_limit: { mode: 'deadline', revision: 1, configured_duration_seconds: 3600, deadline_at: 13600 },
-          },
-        },
-        { NodeId: 'agent_policy_snapshot' },
-      ),
-    })
+  it('缺少时间策略的快照报错并保留上次有效快照', () => {
+    const node = { NodeId: 'agent_policy_snapshot' }
+    const policy = { updated_at: 1, revision: 1, goal: { time_limit: { mode: 'disabled' } } }
+    const req = makeHandlerRequest({ res: makeGrpcJsonRes('agent_policy_snapshot', policy, node) })
     aiTaskDetailDataHandlers.agent_policy_snapshot(req)
-    expect(req.rawData.goalWindowStart).toBe(10000)
+    req.res = makeGrpcJsonRes('agent_policy_snapshot', { updated_at: 2, revision: 2, goal: {} }, node)
+    expect(() => aiTaskDetailDataHandlers.agent_policy_snapshot(req)).toThrow(
+      'agent_policy_snapshot 缺少 goal.time_limit',
+    )
+    expect(req.rawData.agentPolicySnapshot).toEqual(policy)
+    expect(req.store.getState().agentPolicySnapshotUpdate).toBe(1)
   })
 
   it.each([
