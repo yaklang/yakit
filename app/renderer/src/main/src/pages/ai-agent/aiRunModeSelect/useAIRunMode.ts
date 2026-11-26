@@ -65,11 +65,19 @@ export const useAIRunMode = () => {
   })
   const togglePlan = useDebounceFn(onSetPlan, { wait: 200, leading: true }).run
 
+  const resolveGoalDuration = (editedDuration?: number) => {
+    const goal = rawData.agentPolicySnapshot?.goal
+    const confirmedDuration = goal?.effective ? goal.time_limit.configured_duration_seconds : undefined
+    return editedDuration ?? rawData.pendingGoalDurationSeconds ?? confirmedDuration ?? strategy?.GoalDurationSeconds
+  }
+
   const strategyUpdate = useDebounceFn(
     (next: AIExecutionStrategy) => {
       if (execute && chatSessionId) {
-        const info = buildStrategyHotpatch({ ...strategy, ...next }, next.GoalDurationSeconds, rawData)
-        onSend({ token: chatSessionId, type: '', params: info })
+        const merged = { ...strategy, ...next, GoalDurationSeconds: resolveGoalDuration(next.GoalDurationSeconds) }
+        const info = buildStrategyHotpatch(merged, next.GoalDurationSeconds, rawData)
+        if (onSend({ token: chatSessionId, type: '', params: info }) === false) return
+        if (next.GoalDurationSeconds !== undefined) rawData.pendingGoalDurationSeconds = next.GoalDurationSeconds
       }
       syncRunModeStrategy(setSetting, next, chatSessionId)
     },

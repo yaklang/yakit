@@ -66,7 +66,7 @@ describe('aiTaskDetail handlers', () => {
     })
   })
 
-  it('agent_policy_snapshot 保存完整对象并通知订阅者，后续快照替换旧对象', () => {
+  it('agent_policy_snapshot 按顶层 revision 替换快照，忽略新旧时间戳顺序', () => {
     const snapshot = { goal: { time_limit: { configured_duration_seconds: 10800 } }, updated_at: 10, revision: 2 }
     const req = makeHandlerRequest({
       res: makeGrpcJsonRes('agent_policy_snapshot', snapshot, { NodeId: 'agent_policy_snapshot' }),
@@ -75,23 +75,28 @@ describe('aiTaskDetail handlers', () => {
     const beforeReceive = performance.now()
     aiTaskDetailDataHandlers.agent_policy_snapshot(req)
     const receivedAt = req.rawData.agentPolicySnapshotReceivedAtMs
+    req.rawData.pendingGoalDurationSeconds = -1
     expect(receivedAt).toBeGreaterThanOrEqual(beforeReceive)
     expect(receivedAt).toBeLessThanOrEqual(performance.now())
     expect(req.rawData.agentPolicySnapshot).toEqual(snapshot)
     expect(req.store.getState().agentPolicySnapshotUpdate).toBe(count + 1)
-    req.res = makeGrpcJsonRes(
-      'agent_policy_snapshot',
-      { ...snapshot, revision: 1 },
-      { NodeId: 'agent_policy_snapshot' },
-    )
-    aiTaskDetailDataHandlers.agent_policy_snapshot(req)
+    for (const revision of [1, 2]) {
+      req.res = makeGrpcJsonRes(
+        'agent_policy_snapshot',
+        { ...snapshot, updated_at: 11, revision },
+        { NodeId: 'agent_policy_snapshot' },
+      )
+      aiTaskDetailDataHandlers.agent_policy_snapshot(req)
+    }
     expect(req.rawData.agentPolicySnapshotReceivedAtMs).toBe(receivedAt)
+    expect(req.rawData.pendingGoalDurationSeconds).toBe(-1)
     expect(req.rawData.agentPolicySnapshot).toEqual(snapshot)
     expect(req.store.getState().agentPolicySnapshotUpdate).toBe(count + 1)
-    const newer = { ...snapshot, revision: 3, goal: { time_limit: { configured_duration_seconds: -1 } } }
+    const newer = { ...snapshot, updated_at: 9, revision: 3, goal: { time_limit: { configured_duration_seconds: -1 } } }
     req.res = makeGrpcJsonRes('agent_policy_snapshot', newer, { NodeId: 'agent_policy_snapshot' })
     aiTaskDetailDataHandlers.agent_policy_snapshot(req)
     expect(req.rawData.agentPolicySnapshot).toEqual(newer)
+    expect(req.rawData.pendingGoalDurationSeconds).toBeUndefined()
     expect(req.store.getState().agentPolicySnapshotUpdate).toBe(count + 2)
   })
 

@@ -328,7 +328,7 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
     const onChange = (payload?: string) => {
       if (!payload) return
       try {
-        const cache = JSON.parse(payload) as AIAgentSetting
+        const cache = JSON.parse(payload) as Partial<AIAgentSetting>
         if (typeof cache !== 'object' || !cache) return
         if (serializeAIAgentChatSetting(getSetting()) === payload) return
         setSetting((old) => applyAIAgentChatSettingBroadcast(old, cache))

@@ -8,6 +8,8 @@ import emiter from '@/utils/eventBus/eventBus'
 
 const onSend = vi.fn()
 const setSetting = vi.fn()
+const snapshotGoal = vi.fn()
+const rawData = createTestRawData()
 const executeRef = { value: false }
 const sessionIdRef = { value: 'token-1' }
 const welcomeRef = { value: false }
@@ -63,10 +65,14 @@ vi.mock('@/pages/ai-agent/useContext/useDispatcher', () => ({
 
 vi.mock('@/pages/ai-re-act/hooks/useCurrentDataBySession', () => ({
   useCurrentStore: () => ({}),
-  useCurrentRawData: () => ({
-    agentPolicySnapshot: { server_time: 1795413600 },
-    agentPolicySnapshotReceivedAtMs: performance.now() - 30000,
-  }),
+  useCurrentRawData: () => {
+    rawData.agentPolicySnapshot = {
+      server_time: 1795413600,
+      goal: snapshotGoal(),
+    } as typeof rawData.agentPolicySnapshot
+    rawData.agentPolicySnapshotReceivedAtMs = performance.now() - 30000
+    return rawData
+  },
 }))
 
 vi.mock('zustand', () => ({
@@ -81,6 +87,7 @@ vi.mock('@/utils/eventBus/eventBus', () => ({
 describe('useAIRunMode', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    rawData.pendingGoalDurationSeconds = undefined
     vi.useFakeTimers()
     executeRef.value = false
     sessionIdRef.value = 'token-1'
@@ -215,6 +222,7 @@ describe('useAIRunMode', () => {
 
   it('修改持续时间时在同一条策略请求中设置服务端截止时间', () => {
     executeRef.value = true
+    snapshotGoal.mockReturnValueOnce({ effective: true, time_limit: { configured_duration_seconds: -1 } })
     const { result } = renderHook(() => useAIRunMode())
     act(() => result.current.onSetStrategy({ GoalDurationSeconds: 1800 }, true))
     expect(onSend).toHaveBeenCalledExactlyOnceWith({
@@ -227,6 +235,53 @@ describe('useAIRunMode', () => {
         GoalTimePatch: { Action: 'AI_GOAL_TIME_ACTION_SET_DEADLINE', DeadlineUnix: 1795415430 },
       },
     })
+  })
+
+  it('运行中从 1h 切到永不停止后，只改子 Agent 数量保留当前时限', () => {
+    executeRef.value = true
+    Object.assign(settingRef.value.Strategy, {
+      EnableGoalMode: true,
+      EnableMultiAgent: true,
+      GoalDurationSeconds: 3600,
+    })
+    snapshotGoal.mockReturnValueOnce({ effective: true, time_limit: { configured_duration_seconds: -1 } })
+    const { result } = renderHook(() => useAIRunMode())
+
+    act(() => result.current.onSetStrategy({ MaxSubAgents: 5 }, true))
+
+    expect(onSend).toHaveBeenCalledExactlyOnceWith({
+      token: 'token-1',
+      type: '',
+      params: {
+        IsConfigHotpatch: true,
+        HotpatchType: 'ExecutionStrategy',
+        Params: { Strategy: { ...settingRef.value.Strategy, MaxSubAgents: 5, GoalDurationSeconds: -1 } },
+      },
+    })
+  })
+
+  it.each([-1, 1800])('快照延迟时连续修改保留新时限 %s', (duration) => {
+    executeRef.value = true
+    snapshotGoal.mockReturnValue({ effective: true, time_limit: { configured_duration_seconds: 3600 } })
+    const first = renderHook(() => useAIRunMode())
+    act(() => first.result.current.onSetStrategy({ GoalDurationSeconds: duration }, true))
+    first.unmount()
+    const { result } = renderHook(() => useAIRunMode())
+    act(() => result.current.onSetStrategy({ MaxSubAgents: 5 }, true))
+    expect(onSend.mock.calls.map(([request]) => request.params.Params.Strategy.GoalDurationSeconds)).toEqual([
+      duration,
+      duration,
+    ])
+    snapshotGoal.mockReset()
+  })
+
+  it('引擎拒发时限更新时保留原有策略', () => {
+    executeRef.value = true
+    onSend.mockReturnValueOnce(false)
+    const { result } = renderHook(() => useAIRunMode())
+    act(() => result.current.onSetStrategy({ GoalDurationSeconds: 1800 }, true))
+    expect(rawData.pendingGoalDurationSeconds).toBeUndefined()
+    expect(setSetting).not.toHaveBeenCalled()
   })
 
   it('尚未收到策略快照时用本机时间计算 Goal 截止时间', () => {

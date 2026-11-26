@@ -17,6 +17,7 @@ import { globalSessionEngine } from '../../ai-re-act/hooks/ChatMultiSessionContr
 
 const ipc = vi.hoisted(() => ({
   useChatIPC: vi.fn(),
+  onSend: vi.fn(),
   detachPendingChat: vi.fn(),
   cancelPendingChat: vi.fn(),
   onClose: vi.fn(),
@@ -194,7 +195,7 @@ vi.mock('../../ai-re-act/hooks/useChatIPC', () => ({
     ipc.useChatIPC(...args)
     return {
       onStart: vi.fn(),
-      onSend: vi.fn(),
+      onSend: ipc.onSend,
       onClose: ipc.onClose,
       onUpdatePageId: vi.fn(),
       detachPendingChat: ipc.detachPendingChat,
@@ -294,6 +295,24 @@ describe('AIAgent 配置广播', () => {
         disconnect() {}
       } as typeof ResizeObserver
     }
+  })
+
+  it('运行中的页面接收全局配置后更新展示，避免重复下发审核策略', async () => {
+    const session = { SessionID: 'review-session', Title: '审核策略' } as AISession
+    querySessionMock.mockResolvedValue(
+      sessionResponse([{ ...session, StartParams: { ReviewPolicy: 'yolo' } } as AISession]),
+    )
+    const { store } = globalSessionEngine.ensureSession(session.SessionID)
+    store.setState({ execute: true })
+    render(<AIAgent pageId="test" initialSession={session} />)
+    await waitFor(() => expect(screen.getByTestId('review-policy')).toHaveTextContent('yolo'))
+    expect(ipc.onSend).not.toHaveBeenCalled()
+
+    const broadcast = () => emiter.emit('onAIAgentChatSettingChange', JSON.stringify({ ReviewPolicy: 'manual' }))
+    act(broadcast)
+    expect(screen.getByTestId('review-policy')).toHaveTextContent('manual')
+    act(broadcast)
+    expect(ipc.onSend).not.toHaveBeenCalled()
   })
 
   it('草稿重置和切到历史时释放旧草稿，StrictMode 首次挂载不清理', () => {

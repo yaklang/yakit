@@ -10,7 +10,11 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
-import { AIInputEventHotPatchTypeEnum, AIInputEventSyncTypeEnum } from '@/pages/ai-re-act/hooks/grpcApi'
+import {
+  AIGoalTimeAction,
+  AIInputEventHotPatchTypeEnum,
+  AIInputEventSyncTypeEnum,
+} from '@/pages/ai-re-act/hooks/grpcApi'
 import type { AIGoalTimePatch } from '@/pages/ai-re-act/hooks/grpcApi'
 import { useSyncLoadingState } from '@/pages/ai-re-act/hooks/useSyncLoadingState'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -95,6 +99,7 @@ const RunningStatusButton = ({
 }) => {
   const { t } = useI18nNamespaces(['aiAgent'])
   const sessionId = useCurrentSessionId()
+  const rawData = useCurrentRawData()
   const { onSend } = useAIAgentDispatcher()
   const { loading, markSending } = useSyncLoadingState()
   const adjustGoalTime = (patch: AIGoalTimePatch) => {
@@ -109,6 +114,8 @@ const RunningStatusButton = ({
       },
     })
     if (!sent) return
+    if (patch.Action === AIGoalTimeAction.NeverEnding) rawData.pendingGoalDurationSeconds = -1
+    if (patch.Action === AIGoalTimeAction.Disable) rawData.pendingGoalDurationSeconds = 0
     // GoalTime 的推送不带 SyncID，单独拉取策略快照以获取本次同步的回执。
     const syncId = uuidv4()
     markSending(syncId)

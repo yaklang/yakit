@@ -448,15 +448,13 @@ const handleAgentPolicySnapshot: AIMessageHandler = ({ res, rawData, store }) =>
   if (isEmpty(snapshot)) return
 
   const cached = rawData.agentPolicySnapshot
-  if (
-    cached &&
-    (snapshot.updated_at < cached.updated_at ||
-      (snapshot.updated_at === cached.updated_at && snapshot.revision <= cached.revision))
-  )
-    return
+  if (cached && snapshot.revision <= cached.revision) return
 
   if (snapshot.goal?.time_limit == null) throw new Error('agent_policy_snapshot 缺少 goal.time_limit')
   rawData.agentPolicySnapshot = snapshot
+  if (rawData.pendingGoalDurationSeconds === snapshot.goal.time_limit.configured_duration_seconds) {
+    rawData.pendingGoalDurationSeconds = undefined
+  }
   rawData.agentPolicySnapshotReceivedAtMs = performance.now()
   store.getState().updateStateCount('agentPolicySnapshotUpdate')
 }

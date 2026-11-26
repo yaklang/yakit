@@ -159,6 +159,82 @@ describe('frontend allocated session identity', () => {
     expect(controller.getSessionPageId('client-session', YakitRoute.AI_Agent)).toBe('page')
   })
 
+  it('全局审核策略同步后台已建连会话，跳过握手中的重连且不补发旧广播', async () => {
+    const established = await start()
+    await emit(established, 'pong', 'client-session')
+    const reconnecting = controller.handleStartSession({
+      kind: 'resume',
+      sessionId: 'resume-session',
+      route: YakitRoute.AI_Agent,
+      pageId: 'resume-page',
+      params: { IsStart: true, Params: { Source: 'ai' } },
+    }) as string
+    await tick()
+    controller.setActiveShowSession('resume-session')
+    ipcRendererMock.invoke.mockClear()
+    expect(controller.getConnectedSessionIds(YakitRoute.AI_Agent)).toEqual(['client-session'])
+    controller.syncConnectedReviewPolicy('manual')
+    expect(ipcRendererMock.invoke).toHaveBeenCalledExactlyOnceWith('send-ai-re-act', established, {
+      IsConfigHotpatch: true,
+      HotpatchType: 'AgreePolicy',
+      Params: { ReviewPolicy: 'manual' },
+    })
+    expect(
+      controller.handleSendMessage({
+        token: 'resume-session',
+        type: '',
+        params: { IsConfigHotpatch: true, HotpatchType: 'AgreePolicy', Params: { ReviewPolicy: 'manual' } },
+      }),
+    ).toBe(false)
+    ipcRendererMock.invoke.mockClear()
+    await emit(reconnecting, 'pong', 'resume-session')
+    controller
+      .ensureSession('resume-session')
+      .store.getState()
+      .updateState({ initLoading: false, grpcLoadMoreLoading: false })
+    expect(ipcRendererMock.invoke.mock.calls.filter(([, , params]) => params?.HotpatchType === 'AgreePolicy')).toEqual(
+      [],
+    )
+    expect(controller.getConnectedSessionIds(YakitRoute.AI_Agent)).toEqual(['client-session', 'resume-session'])
+    ipcRendererMock.invoke.mockClear()
+    controller.syncConnectedReviewPolicy('yolo')
+    expect(ipcRendererMock.invoke.mock.calls.map(([, token]) => token)).toEqual([established, reconnecting])
+    await controller.handleSessionEnd('client-session')
+    expect(controller.getConnectedSessionIds(YakitRoute.AI_Agent)).toEqual(['resume-session'])
+    await controller.handleSessionEnd('resume-session')
+    ipcRendererMock.invoke.mockClear()
+    controller.syncConnectedReviewPolicy('manual')
+    expect(ipcRendererMock.invoke).not.toHaveBeenCalled()
+  })
+
+  it.each([false, true])('离开页面后加载结束只发送最新审核策略，结束会话则丢弃，ended=%s', async (ended) => {
+    const token = await start()
+    await emit(token, 'pong', 'client-session')
+    const { store } = controller.ensureSession('client-session')
+    store.getState().updateState({ execute: true, grpcLoadMoreLoading: true })
+    ipcRendererMock.invoke.mockClear()
+    for (const policy of ['manual', 'yolo', 'manual'] as const) {
+      controller.syncConnectedReviewPolicy(policy)
+    }
+    controller.setActiveShowSession('other-session')
+    expect(ipcRendererMock.invoke).not.toHaveBeenCalled()
+    if (ended) store.getState().updateState({ execute: false })
+    store.getState().updateState({ grpcLoadMoreLoading: false })
+    if (ended) {
+      expect(ipcRendererMock.invoke).not.toHaveBeenCalled()
+    } else {
+      expect(ipcRendererMock.invoke).toHaveBeenCalledExactlyOnceWith('send-ai-re-act', token, {
+        IsConfigHotpatch: true,
+        HotpatchType: 'AgreePolicy',
+        Params: { ReviewPolicy: 'manual' },
+      })
+      store.getState().updateState({ grpcLoadMoreLoading: true })
+      store.getState().updateState({ grpcLoadMoreLoading: false })
+      expect(ipcRendererMock.invoke).toHaveBeenCalledTimes(1)
+    }
+    await controller.handleSessionEnd('client-session')
+  })
+
   it('omits the legacy context limit on start and converts token limit copies', async () => {
     const config = { RuntimeContextSizeLimit: 300, AICallTokenLimit: 40 }
     const input: AIChatIPCStartParams = {

@@ -167,6 +167,8 @@ export interface AIAgentChatData {
   agentPolicySnapshot?: AIAgentGrpcApi.AgentPolicySnapshot
   /** 客户端收到策略快照时的 performance.now()，单位为毫秒。 */
   agentPolicySnapshotReceivedAtMs?: number
+  /** 最近发送、尚未由策略快照确认的 Goal 时限。 */
+  pendingGoalDurationSeconds?: number
   /** 当前输入草稿的资料，供侧栏等界面同步展示。 */
   draftMaterials: AIDraftMaterials
   /** http_fuzz_request_change事件通知数据 */

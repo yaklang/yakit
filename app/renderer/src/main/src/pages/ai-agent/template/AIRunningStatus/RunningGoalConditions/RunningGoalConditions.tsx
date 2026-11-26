@@ -46,6 +46,7 @@ const RunningGoalConditions: FC<RunningGoalConditionsProps> = ({ sessionId, ref 
       params.GoalTimePatch = { Action: AIGoalTimeAction.Disable }
     }
     if (onSend({ token: sessionId, type: '', params }) === false) return
+    rawData.pendingGoalDurationSeconds = strategy.GoalDurationSeconds
     syncRunModeStrategy(setSetting, strategy, sessionId)
   }
   useImperativeHandle(ref, () => applyCondition)

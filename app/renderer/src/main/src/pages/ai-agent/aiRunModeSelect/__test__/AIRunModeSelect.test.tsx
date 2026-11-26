@@ -94,7 +94,6 @@ vi.mock('@/components/yakitUI/YakitPopover/YakitPopover', () => ({
 }))
 
 import AIRunModeSelect from '../AIRunModeSelect'
-import styles from '../AIRunModeSelect.module.scss'
 
 const render = (component: ReactElement) =>
   renderComponent(component, {
@@ -203,9 +202,9 @@ describe('AIRunModeSelect', () => {
     const chevron = within(button).getByTestId('chevron-icon')
     expect(chevron.style.color).toBe('var(--Colors-Use-Neutral-Text-3-Secondary)')
     expect(chevron.parentElement).toHaveAttribute('aria-hidden', 'true')
-    const goalDetail = within(button).getByText('3h').closest(`.${styles['mode-goal-detail']}`)
+    const goalDetail = within(button).getByText('3h').parentElement
     expect(goalDetail?.parentElement).toBe(button)
-    expect(goalDetail).toHaveTextContent('·3h')
+    expect(goalDetail).toHaveTextContent(/^·3h$/)
   })
 
   it('reveals the complete Goal acceptance criteria on hover and hides it when Goal turns off', async () => {

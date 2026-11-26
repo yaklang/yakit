@@ -4,6 +4,7 @@ import { UI_PROTOCOL, isQuestionnaireSubmission } from '../interactive-ui/utils'
 import catalogManifest from '../interactive-ui/catalog.manifest.json'
 import type { AIAgentChatData, AIAgentChatMetaData, AIDraftMaterials } from '@/pages/ai-agent/type/aiChat'
 import {
+  AIInputEventHotPatchTypeEnum,
   AIInputEventSyncTypeEnum,
   AISourceEnum,
   AITaskStatus,
@@ -48,6 +49,7 @@ import { aiAgentLogEmitter } from './AIAgentLogEmitter'
 import { v4 as uuidv4 } from 'uuid'
 import moment from 'moment'
 import type { YakitRouteType } from '@/enums/yakitRoute'
+import { YakitRoute } from '@/enums/yakitRoute'
 import { grpcQueryAIEvent } from '@/pages/ai-agent/grpc'
 import { clearModelContextSaveTimer, updateModelContextState } from './modelContext'
 import aiChatPersistStore from './persist/aiChatPersistStore'
@@ -84,6 +86,7 @@ const genAIAgentChatData = (generation = 0): AIAgentChatData => {
     modelContext: { status: 'idle', generation },
     agentPolicySnapshot: undefined,
     agentPolicySnapshotReceivedAtMs: undefined,
+    pendingGoalDurationSeconds: undefined,
     httpFuzzRequest: undefined,
     httpFlowFuzzStatus: undefined,
     sessionTitle: '',
@@ -321,6 +324,34 @@ export class ChatMultiSessionController {
   private draftPageIds = new Map<string, string>()
   /** 业务操作使用 SessionId，通过此表找到当前这轮连接的 token。 */
   private tokenBySessionId = new Map<string, string>()
+  private pendingReviewPolicies = new Map<string, { payload: AIChatSendParams; unsubscribe: () => void }>()
+
+  private clearPendingReviewPolicy = (sessionId: string) => {
+    this.pendingReviewPolicies.get(sessionId)?.unsubscribe()
+    this.pendingReviewPolicies.delete(sessionId)
+  }
+
+  private deferReviewPolicy = (payload: AIChatSendParams) => {
+    const sessionId = payload.token
+    const existing = this.pendingReviewPolicies.get(sessionId)
+    if (existing) {
+      existing.payload = payload
+      return
+    }
+    const { store, meta } = this.ensureSession(sessionId)
+    const unsubscribe = store.subscribe((state) => {
+      if (meta.lifecycle.closing || !state.execute) {
+        this.clearPendingReviewPolicy(sessionId)
+        return
+      }
+      if (state.initLoading || state.grpcLoadMoreLoading) return
+      const pending = this.pendingReviewPolicies.get(sessionId)
+      if (!pending) return
+      this.clearPendingReviewPolicy(sessionId)
+      this.handleSendMessage(pending.payload)
+    })
+    this.pendingReviewPolicies.set(sessionId, { payload, unsubscribe })
+  }
 
   /** 创建内存数据；通过回调延迟获取业务 ID，避免把临时 token 当作 IDB 的键。 */
   private createSessionData(getSessionId: () => string | undefined) {
@@ -341,6 +372,7 @@ export class ChatMultiSessionController {
 
   /** 将已有数据引用登记到正式会话池；保留首问及 React 对原 store 的订阅。 */
   private registerSessionData(sessionId: string, data: ReturnType<ChatMultiSessionController['createSessionData']>) {
+    this.clearPendingReviewPolicy(sessionId)
     this.requestPool.set(sessionId, data.request)
     this.rawDataPool.set(sessionId, data.rawData)
     this.metaPool.set(sessionId, data.meta)
@@ -348,6 +380,7 @@ export class ChatMultiSessionController {
   }
 
   private removeSessionData(sessionId: string) {
+    this.clearPendingReviewPolicy(sessionId)
     const rawData = this.rawDataPool.get(sessionId)
     if (rawData) {
       clearModelContextSaveTimer(rawData.modelContext.pending)
@@ -900,6 +933,38 @@ export class ChatMultiSessionController {
     return this.readyChannels.has(sessionId)
   }
 
+  /** 查询指定页面类型下已完成握手且仍有效的会话。 */
+  public getConnectedSessionIds(route: YakitRouteType): string[] {
+    const sessionIds: string[] = []
+    for (const connection of this.connectionsByToken.values()) {
+      const { lifecycle } = connection.data.meta
+      if (
+        connection.input.route !== route ||
+        !connection.confirmed ||
+        !lifecycle.current ||
+        lifecycle.closing ||
+        !connection.data.store.getState().execute
+      )
+        continue
+      sessionIds.push(connection.sessionId)
+    }
+    return sessionIds
+  }
+
+  public syncConnectedReviewPolicy(reviewPolicy: NonNullable<AIStartParams['ReviewPolicy']>) {
+    for (const sessionId of this.getConnectedSessionIds(YakitRoute.AI_Agent)) {
+      this.handleSendMessage({
+        token: sessionId,
+        type: '',
+        params: {
+          IsConfigHotpatch: true,
+          HotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_AgreePolicy,
+          Params: { ReviewPolicy: reviewPolicy },
+        },
+      })
+    }
+  }
+
   /** 关页后的收尾窗口：连接还在，但已经在停，不能再当成一次新的建立 */
   public isSessionClosing(sessionId: string) {
     return !!this.metaPool.get(sessionId)?.lifecycle.closing || this.pendingDisposeSessions.has(sessionId)
@@ -1416,9 +1481,23 @@ export class ChatMultiSessionController {
 
       const { store, rawData, meta } = this.ensureSession(token)
 
+      if (params.IsConfigHotpatch && params.HotpatchType === AIInputEventHotPatchTypeEnum.HotPatchType_AgreePolicy) {
+        const streamToken = this.tokenBySessionId.get(token)
+        if (!streamToken || !this.connectionsByToken.get(streamToken)?.confirmed) return false
+      }
+
       // 向上加载历史（recovery_history）进行中时禁止发送消息，避免与 gRPC 查询并发导致后端表死锁
-      // 同步/热更新是 UI 自动触发的（如重开会话恢复 setting 时的配置热补丁），静默丢弃不提示
+      // 运行中的审核策略保留最新值，查询结束后补发；其他同步/热更新静默拒绝。
       if (meta.lifecycle.closing || store.getState().initLoading || store.getState().grpcLoadMoreLoading) {
+        if (
+          !meta.lifecycle.closing &&
+          store.getState().execute &&
+          params.IsConfigHotpatch &&
+          params.HotpatchType === AIInputEventHotPatchTypeEnum.HotPatchType_AgreePolicy
+        ) {
+          this.deferReviewPolicy(payload)
+          return true
+        }
         if (!params.IsSyncMessage && !params.IsConfigHotpatch) {
           yakitNotify('warning', tAgent('ChatSessionNotify.historyLoading'))
         }

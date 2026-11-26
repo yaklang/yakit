@@ -15,6 +15,11 @@ import { setRemoteValue } from '@/utils/kv'
 import { AIConfigSettings } from '../AIConfigSettings'
 import { grpcGetAIGlobalConfig, grpcSetAIGlobalConfig } from '@/pages/ai-agent/aiModelList/utils'
 import { useAIGlobalConfigStore } from '@/store/aiGlobalConfig'
+import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
+
+vi.mock('@/pages/ai-re-act/hooks/ChatMultiSessionController', () => ({
+  globalSessionEngine: { syncConnectedReviewPolicy: vi.fn() },
+}))
 
 vi.mock('@/pages/ai-agent/aiModelList/utils', () => ({
   grpcGetAIGlobalConfig: vi.fn(),
@@ -70,6 +75,7 @@ const waitLocked = async () => {
 describe('AIConfigSettings', () => {
   beforeEach(() => {
     cleanup()
+    vi.mocked(globalSessionEngine.syncConnectedReviewPolicy).mockClear()
     vi.mocked(grpcGetAIGlobalConfig)
       .mockReset()
       .mockImplementation(async () => ({ ...useAIGlobalConfigStore.getState().aiGlobalConfig }))
@@ -83,6 +89,33 @@ describe('AIConfigSettings', () => {
     vi.mocked(loadAIAgentChatSetting).mockReset()
     vi.mocked(loadAIAgentChatSetting).mockResolvedValue(successLoad())
     vi.mocked(persistAIAgentChatSetting).mockReset()
+  })
+
+  it('仅显式切换审核策略时同步已连接会话，同值与其他设置修改不重复发送', async () => {
+    render(<AIConfigSettings />)
+    await waitReady()
+    expect(globalSessionEngine.syncConnectedReviewPolicy).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('radio', { name: 'yolo' }))
+    expect(globalSessionEngine.syncConnectedReviewPolicy).toHaveBeenCalledExactlyOnceWith('yolo')
+    fireEvent.click(screen.getByRole('radio', { name: 'yolo' }))
+    fireEvent.click(document.querySelector('[data-settings-section="permissions"] button.ant-switch') as HTMLElement)
+    expect(globalSessionEngine.syncConnectedReviewPolicy).toHaveBeenCalledTimes(1)
+  })
+
+  it.each(['all', 'planning'])('重置 %s 配置时同步改变的审核策略', async (scope) => {
+    vi.mocked(loadAIAgentChatSetting).mockResolvedValue(successLoad({ ReviewPolicy: 'yolo' }))
+    render(<AIConfigSettings />)
+    await waitReady()
+    const reset =
+      scope === 'all'
+        ? screen.getByRole('button', { name: 'YakitButton.reset' })
+        : within(screen.getByText('AIChatSetting.planningAndExecution').parentElement!).getByRole('button')
+    await act(async () => fireEvent.click(reset))
+    expect(globalSessionEngine.syncConnectedReviewPolicy).toHaveBeenCalledExactlyOnceWith(
+      AIAgentSettingDefault.ReviewPolicy,
+    )
+    await act(async () => fireEvent.click(reset))
+    expect(globalSessionEngine.syncConnectedReviewPolicy).toHaveBeenCalledTimes(1)
   })
 
   it('首页动画开关使用独立缓存，不写入 AI 配置，重置配置不改变动画偏好', async () => {

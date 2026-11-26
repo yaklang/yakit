@@ -19,6 +19,7 @@ import {
 } from '@/pages/ai-agent/utils/aiAgentChatSettingCache'
 import emiter from '@/utils/eventBus/eventBus'
 import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
+import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import classNames from 'classnames'
 import { SettingsSections } from '../../constants'
@@ -116,19 +117,19 @@ export const AIConfigSettings: React.FC = () => {
   const hasBroadcastRef = useRef(false)
   settingRef.current = setting
 
-  const apply = useMemoizedFn((patch: Partial<AIAgentSetting>) => {
+  const applyAll = useMemoizedFn((next: AIAgentSetting) => {
     if (!readyRef.current) return
-    const next = { ...settingRef.current, ...patch }
+    if (next.ReviewPolicy && next.ReviewPolicy !== settingRef.current.ReviewPolicy) {
+      globalSessionEngine.syncConnectedReviewPolicy(next.ReviewPolicy)
+    }
+    settingRef.current = next
     setSetting(next)
     lastPayloadRef.current = serializeAIAgentChatSetting(next)
     persistAIAgentChatSetting(next)
   })
 
-  const applyAll = useMemoizedFn((next: AIAgentSetting) => {
-    if (!readyRef.current) return
-    setSetting(next)
-    lastPayloadRef.current = serializeAIAgentChatSetting(next)
-    persistAIAgentChatSetting(next)
+  const apply = useMemoizedFn((patch: Partial<AIAgentSetting>) => {
+    applyAll({ ...settingRef.current, ...patch })
   })
 
   useEffect(() => {

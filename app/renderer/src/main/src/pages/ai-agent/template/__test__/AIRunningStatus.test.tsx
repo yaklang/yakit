@@ -26,6 +26,7 @@ const initialPolicy = {
 const rawData = {
   agentPolicySnapshot: initialPolicy,
   agentPolicySnapshotReceivedAtMs: 0,
+  pendingGoalDurationSeconds: undefined as number | undefined,
 }
 const execution = { ...DefaultPlanItemDetailsData.execution, status: 'processing', execution_seconds: 756 }
 const snapshot = { revision: 1, updated_at: 1, background_processes: [], execution }
@@ -48,6 +49,7 @@ beforeEach(() => {
   currentSessionId.mockReturnValue('running-session')
   store = createChatStore()
   rawData.agentPolicySnapshot = initialPolicy
+  rawData.pendingGoalDurationSeconds = undefined
   rawData.agentPolicySnapshotReceivedAtMs = performance.now()
 })
 
@@ -406,6 +408,8 @@ it.each([
     params: { IsSyncMessage: true, SyncType: 'agent_policy_snapshot_sync', SyncID: expect.any(String) },
   })
   expect(onSend).toHaveBeenCalledTimes(2)
+  if (patch.Action === 'AI_GOAL_TIME_ACTION_NEVER_ENDING') expect(rawData.pendingGoalDurationSeconds).toBe(-1)
+  if (patch.Action === 'AI_GOAL_TIME_ACTION_DISABLE') expect(rawData.pendingGoalDurationSeconds).toBe(0)
 })
 
 it('keeps adjustments disabled across reopening until the matching sync receipt arrives', async () => {
