@@ -38,6 +38,7 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
       timelineDumpUpdate: 0,
       loadedSkillsUpdate: 0,
       availableSkillsUpdate: 0,
+      asyncExecutionUpdate: 0,
       draftMaterialsUpdate: 0,
       modelContextUpdate: 0,
 
@@ -46,6 +47,7 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
 
       notifyMessage: null,
       planHistoryList: cloneDeep(DefaultPlanHistoryList),
+      planHistoryCount: 0,
       sessionTaskList: [],
       sessionTaskListRevision: 0,
       sessionExecution: undefined,

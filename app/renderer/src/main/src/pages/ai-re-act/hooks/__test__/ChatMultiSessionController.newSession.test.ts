@@ -497,8 +497,20 @@ describe('frontend allocated session identity', () => {
     ])
     expect(queries()[0][2]).not.toHaveProperty('SyncJsonInput')
     expect(queries()[0][2].SyncID).not.toBe(queries()[1][2].SyncID)
+    expect(ipcRendererMock.invoke).toHaveBeenCalledWith(
+      'send-ai-re-act',
+      token,
+      expect.objectContaining({
+        IsSyncMessage: true,
+        SyncType: 'async_execution_sync',
+        SyncID: expect.any(String),
+      }),
+    )
     await emit(token, 'pong', 'client-session')
     expect(queries()).toHaveLength(2)
+    expect(
+      ipcRendererMock.invoke.mock.calls.filter(([, , input]) => input?.SyncType === 'async_execution_sync'),
+    ).toHaveLength(1)
     await controller.handleSessionEnd('client-session')
   })
 

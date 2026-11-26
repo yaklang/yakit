@@ -304,6 +304,10 @@ export enum AIInputEventSyncTypeEnum {
   SYNC_TYPE_SESSION_SNAPSHOT_SYNC = 'session_snapshot_sync',
   /** 按 task_id 查询已物化的任务详情快照 */
   SYNC_TYPE_TASK_SNAPSHOT = 'task_snapshot_sync',
+  /** 查询当前会话的后台执行快照；没有 Manager 时返回空列表且不创建 */
+  SYNC_TYPE_ASYNC_EXECUTION = 'async_execution_sync',
+  /** 停止一条后台执行，输入 {"execute_id":"exec-..."} */
+  SYNC_TYPE_STOP_ASYNC_EXECUTION = 'stop_async_execution_sync',
   /** 向当前任务追加待办（text 必填，id / set_current 可选） */
   SYNC_TYPE_ADD_TODO = 'add_todo_sync',
 }
@@ -322,6 +326,7 @@ export const readonlySyncQueryTypes = new Set<`${AIInputEventSyncTypeEnum}`>([
   AIInputEventSyncTypeEnum.SYNC_TYPE_SKILL_AVAILABLE,
   AIInputEventSyncTypeEnum.SYNC_TYPE_SKILL_DETAIL,
   AIInputEventSyncTypeEnum.SYNC_TYPE_TASK_SNAPSHOT,
+  AIInputEventSyncTypeEnum.SYNC_TYPE_ASYNC_EXECUTION,
 ])
 
 export const isReadonlySyncQuery = (syncType?: `${AIInputEventSyncTypeEnum}`): boolean =>
@@ -426,6 +431,17 @@ export enum AITaskStatus {
   created = '',
 }
 export type AITaskStatusType = `${AITaskStatus}`
+
+/** 后台执行状态，对应 asyncexecmanager state */
+export enum AsyncExecutionState {
+  pending = 'pending',
+  running = 'running',
+  stopping = 'stopping',
+  completed = 'completed',
+  failed = 'failed',
+  cancelled = 'cancelled',
+  timedOut = 'timed_out',
+}
 
 export enum AISkillLoadStateEnum {
   /** 未加载 */
@@ -814,6 +830,44 @@ export declare namespace AIAgentGrpcApi {
     is_final: boolean
     updated_at: number
     todo_stats?: TodoListUpdateStats
+  }
+
+  /** 会话级后台执行的单条摘要，对应 asyncexecmanager.Summary */
+  export interface AsyncExecutionSummary {
+    execute_id: string
+    metadata?: {
+      name?: string
+      attributes?: Record<string, string>
+    }
+    state?: AsyncExecutionState
+    created_at?: string
+    started_at?: string
+    ended_at?: string
+    error?: string
+    cancel_reason?: string
+    revision?: number
+  }
+
+  /**
+   * structured/async_execution 与 async_execution_sync、stop_async_execution_sync 共用的快照。
+   * revision 在同一个 ReAct 会话的 Manager 内单调递增，晚到的旧响应按它丢弃。
+   * Manager 挂在会话上惰性创建、跨任务轮次复用，不会随任务重建、也不会把 revision 从头计数。
+   * 列表一律读 executions：后端 BuildAsyncExecutionSnapshot 保证该字段是数组（空则为 []）。
+   * stop 成功时也会带回完整 executions，前端写入列表即可刷新，不必再合并 execution。
+   */
+  export interface AsyncExecutionSnapshot {
+    revision: number
+    session_id?: string
+    current_task_id?: string
+    running_count: number
+    updated_at: number
+    executions: AsyncExecutionSummary[]
+    /**
+     * 仅 stop_async_execution_sync 成功时附带的那一条刚停止的摘要，方便调用方识别目标。
+     * 不是停止响应的唯一载荷，也不会替代 executions；查询/推送通常省略该字段。
+     */
+    execution?: AsyncExecutionSummary
+    error?: string
   }
 
   /** skill_loaded / skill_available 返回的当前会话技能清单项 */

@@ -15,7 +15,7 @@ import { AITaskStatus } from '../../hooks/grpcApi'
 import { useStore } from 'zustand'
 
 vi.mock('@/pages/ai-agent/chatTemplate/historyTaskTree/useRunningAsyncTaskCount', () => {
-  const useMockRunningAsyncTaskCount = () => useStore(mockRunningTaskStore, (state) => state.count)
+  const useMockRunningAsyncTaskCount = () => useStore(mockRunningTaskStore, (state) => state)
   return { default: useMockRunningAsyncTaskCount }
 })
 
@@ -53,9 +53,13 @@ import type { StoreApi } from 'zustand/vanilla'
 interface MockTaskStoreState {
   currentChatStatus: { questionID: string; status?: string }
   execute: boolean
+  initLoading: boolean
   pendingReply: boolean
   taskDetailsUpdate: number
+  asyncExecutionUpdate: number
   sessionExecution?: Record<string, unknown>
+  planHistoryList?: { records: { coordinator_id: string }[]; total?: number }
+  planHistoryCount?: number
 }
 // 详情条目带 uuid：父级收到更新通知后比较 uuid 判断详情是否被流数据刷新（参照 AITaskExecutionDetails）
 interface MockTaskDetails {
@@ -63,14 +67,36 @@ interface MockTaskDetails {
   execution?: Record<string, unknown>
 }
 const mockTaskDetailsMap = new Map<string, MockTaskDetails>()
-const mockRunningTaskStore = createStore<{ count: number | undefined }>(() => ({ count: undefined }))
+const mockRawData: {
+  taskDetailsMap: Map<string, MockTaskDetails>
+  httpRunTimeIDs: string[]
+  aiPerfData: Record<string, never>
+  asyncExecution?: {
+    revision: number
+    running_count: number
+    updated_at: number
+    executions: { execute_id: string; state?: string }[]
+  }
+} = {
+  taskDetailsMap: mockTaskDetailsMap,
+  httpRunTimeIDs: [],
+  aiPerfData: {},
+}
+const mockRunningTaskStore = createStore<{ total: number; running: number | undefined }>(() => ({
+  total: 0,
+  running: undefined,
+}))
 const mockAgentStore = createStore<{ activeChat?: { Id: number; SessionID: string } }>(() => ({}))
 const mockTaskStore: StoreApi<MockTaskStoreState> = createStore<MockTaskStoreState>(() => ({
   currentChatStatus: { questionID: '' },
   execute: false,
+  initLoading: false,
   pendingReply: false,
   taskDetailsUpdate: 0,
+  asyncExecutionUpdate: 0,
   sessionExecution: undefined,
+  planHistoryList: { records: [] },
+  planHistoryCount: 0,
 }))
 const setMockQuestionID = (questionID: string) => {
   mockTaskStore.setState((state) => ({ currentChatStatus: { ...state.currentChatStatus, questionID } }))
@@ -80,21 +106,22 @@ const resetMockStore = () => {
   mockTaskStore.setState({
     currentChatStatus: { questionID: '' },
     execute: false,
+    initLoading: false,
     pendingReply: false,
     taskDetailsUpdate: 0,
+    asyncExecutionUpdate: 0,
     sessionExecution: undefined,
+    planHistoryList: { records: [] },
+    planHistoryCount: 0,
   })
+  mockRawData.asyncExecution = undefined
   mockTaskDetailsMap.clear()
   casualTaskState.questionID = ''
 }
 vi.mock('../../hooks/useCurrentDataBySession', () => ({
   useCurrentStore: () => mockTaskStore,
   useCurrentMeta: () => ({ syncIDMap: new Map() }),
-  useCurrentRawData: () => ({
-    taskDetailsMap: mockTaskDetailsMap,
-    httpRunTimeIDs: [] as string[],
-    aiPerfData: {},
-  }),
+  useCurrentRawData: () => mockRawData,
 }))
 
 vi.mock('@/pages/ai-agent/aiChatContent/AIContextToken/AIMainModelTokens', () => ({
@@ -129,6 +156,7 @@ const {
   mockSyncCasualTaskTab,
   mockOpenLogWindow,
   mockExportModalState,
+  mockOnSend,
   dispatcherState,
   mockNetWorkApi,
   mockIsCommunityEdition,
@@ -138,6 +166,7 @@ const {
   mockSyncCasualTaskTab: vi.fn(),
   mockOpenLogWindow: vi.fn(),
   mockExportModalState: { lastVisible: undefined as boolean | undefined },
+  mockOnSend: vi.fn(() => true),
   // getSetting 返回的可控配置，「任务详情」入口按 Source 决定是否渲染
   dispatcherState: { setting: { Source: 'ai' } as { Source: string } },
   mockNetWorkApi: vi.fn<(params?: { url?: string }) => Promise<unknown>>(() => Promise.resolve(undefined)),
@@ -184,7 +213,7 @@ vi.mock('@/hook/useAiChatLog/useAiChatLog.ts', () => ({
   default: () => ({ onOpenLogWindow: mockOpenLogWindow }),
 }))
 vi.mock('@/pages/ai-agent/useContext/useDispatcher', () => ({
-  default: () => ({ getSetting: () => dispatcherState.setting }),
+  default: () => ({ getSetting: () => dispatcherState.setting, onSend: mockOnSend }),
 }))
 
 const sessionIdState = vi.hoisted(() => ({ id: '' }))
@@ -259,6 +288,9 @@ vi.mock('i18next-resources-to-backend', () => {
         YakitButton: {
           close: '关闭',
         },
+        YakitEmpty: {
+          noData: '暂无数据',
+        },
       },
       layout: {
         CeUserMenu: {
@@ -282,6 +314,13 @@ vi.mock('i18next-resources-to-backend', () => {
           traffic: '流量',
           risk: '漏洞',
           sessionHistory: '会话历史',
+          backgroundTasks: '后台任务',
+          executionRunning: '运行中',
+          executionSucceeded: '成功',
+          executionFailed: '失败',
+          executionFailReason: '失败原因',
+          executionDuration: '耗时：',
+          executionCancel: '取消',
           taskList: '异步任务',
           timeline: '时间线',
           aiSettings: 'AI 设置',
@@ -357,10 +396,10 @@ describe('AIRightPanel', () => {
   beforeEach(() => {
     sessionIdState.id = ''
     browserInstancesMock.reset()
-    mockRunningTaskStore.setState({ count: undefined })
+    mockRunningTaskStore.setState({ total: 0, running: undefined })
     viewportState.visible = true
     mockAgentStore.setState({ activeChat: undefined })
-    mockTaskStore.setState({ execute: false })
+    mockTaskStore.setState({ execute: false, planHistoryCount: 0 })
     useUserStore.getState().setStoreUserInfo({
       ...useUserStore.getState().userInfo,
       isLogin: false,
@@ -368,6 +407,8 @@ describe('AIRightPanel', () => {
     mockIsCommunityEdition.mockReturnValue(true)
     mockNetWorkApi.mockReset()
     mockNetWorkApi.mockResolvedValue(undefined)
+    mockOnSend.mockClear()
+    mockRawData.asyncExecution = undefined
   })
 
   afterEach(() => {
@@ -375,19 +416,29 @@ describe('AIRightPanel', () => {
     vi.useRealTimers()
   })
 
-  it.each([false, true])('异步任务数量变化时更新标签，零和未知数量隐藏（小屏：%s）', (small) => {
+  it.each([false, true])('异步任务按总数显隐，角标只展示执行中数量（小屏：%s）', (small) => {
     const result = render(<AIRightPanel small={small} />)
     try {
-      for (const count of [undefined, 0, 1, 99, 100, 0, undefined]) {
-        act(() => mockRunningTaskStore.setState({ count }))
+      for (const { total, running } of [
+        { total: 0, running: 0 },
+        { total: 1, running: 1 },
+        { total: 99, running: 99 },
+        { total: 100, running: 100 },
+        { total: 2, running: 0 },
+      ]) {
+        act(() => mockRunningTaskStore.setState({ total, running }))
+        if (total <= 0) {
+          expect(screen.queryByLabelText('异步任务')).not.toBeInTheDocument()
+          continue
+        }
         const menu = screen.getByLabelText('异步任务')
-        const displayedCount = count ? (small ? Math.min(count, 99) : count) : ''
+        const displayedCount = running ? (small ? Math.min(running, 99) : running) : ''
         expect(menu.textContent).toBe(`${small ? '' : '异步任务'}${displayedCount}`)
-        if (small && count) {
-          const badge = screen.getByLabelText(`异步任务 ${count}`)
+        if (small && running) {
+          const badge = screen.getByLabelText(`异步任务 ${running}`)
           expect(badge).toHaveClass('count-badge')
           expect(badge).not.toHaveClass('count-badge-risk')
-          expect(badge.classList.contains('count-badge-overflow')).toBe(count > 99)
+          expect(badge.classList.contains('count-badge-overflow')).toBe(running > 99)
         } else {
           expect(screen.queryByLabelText(/^异步任务 /)).not.toBeInTheDocument()
         }
@@ -398,7 +449,7 @@ describe('AIRightPanel', () => {
   })
 
   it('异步任务切换宽窄屏保留数量，浮层使用相同标题', () => {
-    mockRunningTaskStore.setState({ count: 100 })
+    mockRunningTaskStore.setState({ total: 100, running: 100 })
     const result = render(<AIRightPanel />)
     try {
       expect(screen.getByLabelText('异步任务')).toHaveTextContent('异步任务100')
@@ -410,7 +461,7 @@ describe('AIRightPanel', () => {
       fireEvent.click(screen.getByLabelText('异步任务'))
       expect(screen.getByTestId('task-list-pane')).toBeInTheDocument()
       const closeButton = screen.getByRole('button', { name: /关闭|Close|YakitButton\.close/ })
-      expect(closeButton.parentElement?.parentElement?.firstElementChild).toHaveTextContent('异步任务')
+      expect(closeButton.parentElement?.parentElement?.firstElementChild).toHaveTextContent('异步任务100')
       expect(screen.queryByText('任务列表')).not.toBeInTheDocument()
     } finally {
       result.unmount()
@@ -1010,6 +1061,7 @@ describe('AIRightPanel', () => {
     ['时间线', 'timeline-pane'],
     ['加载技能', 'load-skills-pane'],
   ])('切换详情会话后关闭旧会话的%s', (label, testId) => {
+    mockRunningTaskStore.setState({ total: 1, running: 1 })
     mockAgentStore.setState({ activeChat: { Id: 1, SessionID: 'session-1' } })
     render(<AIRightPanel small />)
     fireEvent.click(screen.getByLabelText('更多'))
@@ -1042,6 +1094,7 @@ describe('AIRightPanel', () => {
   })
 
   it('小屏点击在异步任务和时间线间切换，移出不销毁', async () => {
+    mockRunningTaskStore.setState({ total: 1, running: 1 })
     render(<AIRightPanel small />)
     fireEvent.click(screen.getByLabelText('更多'))
     const taskItem = screen.getByLabelText('异步任务')
@@ -1060,6 +1113,7 @@ describe('AIRightPanel', () => {
     ['异步任务', 'task-list-pane'],
     ['加载技能', 'load-skills-pane'],
   ])('正常态点击%s替换菜单，关闭后恢复菜单', async (label, testId) => {
+    mockRunningTaskStore.setState({ total: 1, running: 1 })
     await renderPanel(<AIRightPanel />)
     fireEvent.click(screen.getByLabelText(label))
     expect(screen.getByTestId(testId)).toBeVisible()
@@ -1079,6 +1133,7 @@ describe('AIRightPanel', () => {
     ['异步任务', 'task-list-pane'],
     ['加载技能', 'load-skills-pane'],
   ])('小屏点击%s打开浮层，移出不销毁', async (label, testId) => {
+    mockRunningTaskStore.setState({ total: 1, running: 1 })
     render(<AIRightPanel small />)
     const item = screen.getByLabelText(label)
     fireEvent.click(item)
@@ -1093,6 +1148,7 @@ describe('AIRightPanel', () => {
   })
 
   it('切换屏幕模式时清理打开的任务浮层', () => {
+    mockRunningTaskStore.setState({ total: 1, running: 1 })
     const result = render(<AIRightPanel small />)
     fireEvent.click(screen.getByLabelText('异步任务'))
     result.rerender(<AIRightPanel small={false} />)
@@ -1112,7 +1168,103 @@ describe('AIRightPanel', () => {
     }
   })
 
+  it('进入会话面板时同步后台执行和规划快照', () => {
+    sessionIdState.id = 'session-1'
+    render(<AIRightPanel />)
+    for (const syncType of ['async_execution_sync', 'plan_exec_tasks']) {
+      expect(mockOnSend).toHaveBeenCalledWith(
+        expect.objectContaining({
+          token: 'session-1',
+          params: expect.objectContaining({ IsSyncMessage: true, SyncType: syncType }),
+        }),
+      )
+    }
+  })
+
+  it('历史恢复完成后再同步右侧面板快照', () => {
+    sessionIdState.id = 'session-1'
+    mockTaskStore.setState({ initLoading: true, execute: true })
+    render(<AIRightPanel />)
+    expect(mockOnSend).not.toHaveBeenCalled()
+    act(() => mockTaskStore.setState({ initLoading: false }))
+    expect(mockOnSend).toHaveBeenCalledWith(
+      expect.objectContaining({
+        token: 'session-1',
+        params: expect.objectContaining({ IsSyncMessage: true, SyncType: 'async_execution_sync' }),
+      }),
+    )
+  })
+
+  it('无会话时不同步右侧面板快照', () => {
+    render(<AIRightPanel />)
+    expect(mockOnSend).not.toHaveBeenCalled()
+  })
+
+  it('有规划历史时展示异步任务入口', () => {
+    mockTaskStore.setState({ planHistoryCount: 2, planHistoryList: { records: [] } })
+    render(<AIRightPanel />)
+    expect(screen.getByLabelText('异步任务')).toBeInTheDocument()
+    expect(screen.getByLabelText('异步任务')).toHaveTextContent('异步任务')
+  })
+
+  it('后台任务位于异步任务上方，打开后按运行中、成功、失败展示', () => {
+    mockRunningTaskStore.setState({ total: 1, running: 1 })
+    sessionIdState.id = 'session-1'
+    mockRawData.asyncExecution = {
+      revision: 4,
+      running_count: 1,
+      updated_at: 14,
+      executions: [{ execute_id: 'exec-1', state: 'running' }],
+    }
+    mockTaskStore.setState({ asyncExecutionUpdate: 1 })
+    render(<AIRightPanel />)
+    const background = screen.getByLabelText('后台任务')
+    expect(background.nextElementSibling).toBe(screen.getByLabelText('异步任务'))
+    expect(background).toHaveTextContent('后台任务1')
+    fireEvent.click(background)
+    expect(screen.getByText('运行中')).toBeInTheDocument()
+    expect(screen.queryByText('成功')).not.toBeInTheDocument()
+    expect(screen.queryByText('失败')).not.toBeInTheDocument()
+    expect(mockOnSend).toHaveBeenCalledWith(
+      expect.objectContaining({
+        token: 'session-1',
+        params: expect.objectContaining({ IsSyncMessage: true, SyncType: 'async_execution_sync' }),
+      }),
+    )
+  })
+
+  it('后台任务数量为 0 时不展示菜单', () => {
+    mockRawData.asyncExecution = {
+      revision: 0,
+      running_count: 0,
+      updated_at: 0,
+      executions: [],
+    }
+    mockTaskStore.setState({ asyncExecutionUpdate: 1 })
+    render(<AIRightPanel />)
+    expect(screen.queryByLabelText('后台任务')).not.toBeInTheDocument()
+  })
+
+  it('后台任务菜单和面板标题展示全部执行数量', () => {
+    mockRawData.asyncExecution = {
+      revision: 4,
+      running_count: 1,
+      updated_at: 14,
+      executions: [
+        { execute_id: 'exec-1', state: 'running' },
+        { execute_id: 'exec-2', state: 'completed' },
+      ],
+    }
+    mockTaskStore.setState({ asyncExecutionUpdate: 1 })
+    render(<AIRightPanel />)
+    expect(screen.getByLabelText('后台任务')).toHaveTextContent('后台任务2')
+    fireEvent.click(screen.getByLabelText('后台任务'))
+    const paneTitle = screen.getAllByText('后台任务').find((node) => node.closest('header'))
+    expect(paneTitle?.closest('header')).toHaveTextContent('后台任务2')
+  })
+
   it('小屏加载技能与异步任务互相切换', () => {
+    mockRunningTaskStore.setState({ total: 1, running: 1 })
     render(<AIRightPanel small />)
     const loadSkills = screen.getByLabelText('加载技能')
     fireEvent.click(loadSkills)
@@ -1398,7 +1550,7 @@ describe('AIRightPanel', () => {
   it.each([false, true])('数量更新后无需悬停即可刷新流量和漏洞（小屏：%s）', (small) => {
     vi.useFakeTimers()
     setMockQuestionID('task-live-count')
-    mockRunningTaskStore.setState({ count: 7 })
+    mockRunningTaskStore.setState({ total: 7, running: 7 })
     const detail = {
       uuid: 'snapshot-0',
       execution: { http_flow_count: 0, risk_level_count: { high: 0, total: 0 } },

@@ -21,14 +21,24 @@ export const useAsyncTaskStates = () => {
   }, [store, taskTree])
 }
 
-/** 根据本地任务状态，汇总执行中的规划子任务和子 Agent 数量。 */
-const useRunningAsyncTaskCount = () => {
+export interface AsyncTaskCount {
+  /** 规划叶子 + 子 Agent 总条数，用于入口显隐 */
+  total: number
+  /** processing 数量，用于角标 */
+  running: number
+}
+
+/** 汇总规划子任务和子 Agent：total 不过滤状态，running 只计执行中。 */
+const useRunningAsyncTaskCount = (): AsyncTaskCount => {
   const asyncTasks = useAsyncTaskStates()
   const subAgentTasks = useCasualConcurrentTaskList()
-  // 两类任务分别统计 processing 状态，再相加。
-  const runningTaskCount = asyncTasks.filter((task) => task.progress === AITaskStatus.inProgress).length
-  const runningAgentCount = subAgentTasks.filter((task) => task.progress === AITaskStatus.inProgress).length
-  return runningTaskCount + runningAgentCount
+  return useCreation(() => {
+    const tasks = [...asyncTasks, ...subAgentTasks]
+    return {
+      total: tasks.length,
+      running: tasks.filter((task) => task.progress === AITaskStatus.inProgress).length,
+    }
+  }, [asyncTasks, subAgentTasks])
 }
 
 export default useRunningAsyncTaskCount

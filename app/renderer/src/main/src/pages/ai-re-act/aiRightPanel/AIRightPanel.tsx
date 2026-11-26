@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { TaskListPane } from '@/pages/ai-agent/chatTemplate/historyTaskTree/TaskListPane'
+import { AIBackgroundTaskPane } from './AIBackgroundTaskPane/AIBackgroundTaskPane'
 import useRunningAsyncTaskCount from '@/pages/ai-agent/chatTemplate/historyTaskTree/useRunningAsyncTaskCount'
 import { AIRightPanelPane } from './AIRightPanelPane'
 import { TimelineDumpButton } from './TimelineDumpButton'
@@ -7,7 +8,7 @@ import { AISkillLoadingPane } from './AISkillLoadingPane/AISkillLoadingPane'
 import TimelineCard from '@/pages/ai-agent/chatTemplate/TimelineCard/TimelineCard'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import { useStore } from 'zustand'
-import { useCurrentStore } from '../hooks/useCurrentDataBySession'
+import { useCurrentRawData, useCurrentStore } from '../hooks/useCurrentDataBySession'
 import useCurrentSessionId from '../hooks/useCurrentSessionId'
 import useCurrentTaskData from '../hooks/useCurrentTaskData/useCurrentTaskData'
 import classNames from 'classnames'
@@ -16,7 +17,7 @@ import {
   isSessionSnapshotClockActive,
   useSessionSnapshotExecutionDuration,
 } from '../hooks/useSessionSnapshotExecutionDuration'
-import { AISourceEnum, AISkillLoadStateEnum } from '../hooks/grpcApi'
+import { AIInputEventSyncTypeEnum, AISourceEnum, AISkillLoadStateEnum } from '../hooks/grpcApi'
 import type { AIAgentGrpcApi } from '../hooks/grpcApi'
 import type { AISkillLoadState } from './AISkillLoadingPane/type'
 import emiter from '@/utils/eventBus/eventBus'
@@ -35,6 +36,7 @@ import { useCasualTaskTab } from '@/pages/ai-agent/aiChatContent/hooks/useCasual
 import useAiChatLog from '@/hook/useAiChatLog/useAiChatLog.ts'
 import { ExportAILogsModal } from '@/pages/ai-agent/components/ExportAILogsModal/ExportAILogsModal'
 import { grpcExportAILogs } from '@/pages/ai-agent/grpc'
+import { randomString } from '@/utils/randomUtil'
 import {
   BugOutlined,
   ChatAlt2Outlined,
@@ -49,6 +51,7 @@ import {
   NewspaperOutlined,
   ScrollTextOutlined,
   SmViewGridAddOutlined,
+  TerminalOutlined,
   TimelineOutlined,
   UserCircleOutlined,
   XOutlined,
@@ -80,6 +83,7 @@ const MAIN_MENUS: MenuItemDef[] = [
   { key: 'traffic', labelKey: 'AIRightPanel.traffic', icon: <FlowOutlined /> },
   { key: 'risk', labelKey: 'AIRightPanel.risk', icon: <BugOutlined /> },
   { key: 'session-history', labelKey: 'AIRightPanel.sessionHistory', icon: <ChatAlt2Outlined /> },
+  { key: 'background-tasks', labelKey: 'AIRightPanel.backgroundTasks', icon: <TerminalOutlined /> },
   { key: 'task-list', labelKey: 'AIRightPanel.taskList', icon: <FlagOutlined /> },
 ]
 
@@ -525,13 +529,38 @@ const PaneSlot: React.FC<{
   onClose: () => void
 }> = React.memo(({ pane, small, onClose }) => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
+  const store = useCurrentStore()
+  const rawData = useCurrentRawData()
+  useStore(store, (state) => state.asyncExecutionUpdate)
+  const backgroundTaskCount = rawData.asyncExecution?.executions?.length ?? 0
+  const { running: asyncTaskCount } = useRunningAsyncTaskCount()
   const [skillLoadState, setSkillLoadState] = useState<AISkillLoadState>(AISkillLoadStateEnum.Loaded)
   const [skillTotal, setSkillTotal] = useState(0)
 
   const renderTitle = () => {
     switch (pane) {
+      case 'background-tasks':
+        return (
+          <div className={styles['skill-pane-title']}>
+            <span>{t('AIRightPanel.backgroundTasks')}</span>
+            {!!backgroundTaskCount && (
+              <YakitTag size="small" fullRadius border={false} className={styles['skill-total']}>
+                {backgroundTaskCount}
+              </YakitTag>
+            )}
+          </div>
+        )
       case 'task-list':
-        return t('AIRightPanel.taskList')
+        return (
+          <div className={styles['skill-pane-title']}>
+            <span>{t('AIRightPanel.taskList')}</span>
+            {!!asyncTaskCount && (
+              <YakitTag size="small" fullRadius border={false} className={styles['skill-total']}>
+                {asyncTaskCount}
+              </YakitTag>
+            )}
+          </div>
+        )
       case 'timeline':
         return t('AIRightPanel.timeline')
       case 'load-skills':
@@ -559,6 +588,8 @@ const PaneSlot: React.FC<{
 
   const renderContent = () => {
     switch (pane) {
+      case 'background-tasks':
+        return <AIBackgroundTaskPane />
       case 'task-list':
         return <TaskListPane />
       case 'timeline':
@@ -602,6 +633,8 @@ type ChatRightPanelProps = { panel: PanelState }
 const ChatRightPanel: React.FC<ChatRightPanelProps> = React.memo((props) => {
   const { panel } = props
   const store = useCurrentStore()
+  const rawData = useCurrentRawData()
+  useStore(store, (state) => state.asyncExecutionUpdate)
   const questionID = useStore(store, (state) => state.currentChatStatus.questionID)
   const taskData = useCurrentTaskData(questionID)
   const sessionExecution = useStore(store, (state) => state.sessionExecution)
@@ -611,7 +644,9 @@ const ChatRightPanel: React.FC<ChatRightPanelProps> = React.memo((props) => {
     () => browserInstances.filter((instance) => instance.online).length,
     [browserInstances],
   )
-  const runningTaskCount = useRunningAsyncTaskCount()
+  const { total: asyncTaskTotal, running: runningTaskCount } = useRunningAsyncTaskCount()
+  const sessionId = useCurrentSessionId()
+  const initLoading = useStore(store, (state) => state.initLoading)
   const levelCount = executionData?.risk_level_count
   // 快照映射见 riskLevelCount.mapSessionRiskLevelCount；首页全量别名归并见 useWelcomePanelStats。
   const riskCounts = useCreation<AIRightPanelRiskCounts | undefined>(() => {
@@ -623,7 +658,7 @@ const ChatRightPanel: React.FC<ChatRightPanelProps> = React.memo((props) => {
   const [moreOpen, setMoreOpen] = useState(false)
   // 菜单点击交互：打开工作区 tab / 导出与查看日志
   const { activeChat } = useAIAgentStore()
-  const { getSetting } = useAIAgentDispatcher()
+  const { getSetting, onSend } = useAIAgentDispatcher()
   const { currentChatStatusQuestionID, syncCasualTaskTab } = useCasualTaskTab()
   const { onOpenLogWindow } = useAiChatLog()
   const [exportModalVisible, setExportModalVisible] = useState(false)
@@ -634,35 +669,59 @@ const ChatRightPanel: React.FC<ChatRightPanelProps> = React.memo((props) => {
     panel.closePane()
   }, [activeChat?.Id])
 
+  useEffect(() => {
+    if (!sessionId || !onSend || initLoading) return
+    const sendSync = (SyncType: AIInputEventSyncTypeEnum) => {
+      onSend({
+        token: sessionId,
+        type: '',
+        params: {
+          IsSyncMessage: true,
+          SyncType,
+          SyncID: randomString(8),
+        },
+      })
+    }
+    sendSync(AIInputEventSyncTypeEnum.SYNC_TYPE_ASYNC_EXECUTION)
+    sendSync(AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN_EXEC_TASKS)
+  }, [onSend, sessionId, initLoading])
+
   const trafficCount = executionData?.http_flow_count ?? 0
   const hasRisk = riskTotal > 0 || (!!riskCounts && getRiskTagEntries(riskCounts).length > 0)
+  const backgroundTaskCount = rawData.asyncExecution?.executions?.length ?? 0
+  const planHistoryCount = useStore(store, (state) => state.planHistoryCount ?? 0)
+  const showTaskList = asyncTaskTotal > 0 || planHistoryCount > 0
   const mainMenus = useCreation(() => {
     // 无 questionID 或非 ai-agent 来源时不展示「任务详情」入口
     const showTaskBoard = !!currentChatStatusQuestionID && getSetting().Source === AISourceEnum.aiAgent
     return MAIN_MENUS.filter((item) => {
       if (!showTaskBoard && item.key === 'task-board') return false
-      // 浏览器实例、流量、漏洞没有数据时不占菜单位
+      // 浏览器实例、流量、漏洞、后台任务、异步任务没有数据时不占菜单位
       if (item.key === 'browser') return browserOnlineCount > 0
       if (item.key === 'traffic') return trafficCount > 0
       if (item.key === 'risk') return hasRisk
+      if (item.key === 'background-tasks') return backgroundTaskCount > 0
+      if (item.key === 'task-list') return showTaskList
       return true
     })
-  }, [currentChatStatusQuestionID, browserOnlineCount, trafficCount, hasRisk])
+  }, [currentChatStatusQuestionID, browserOnlineCount, trafficCount, hasRisk, backgroundTaskCount, showTaskList])
   const totals: Partial<Record<AIRightPanelMenuKey, number | undefined>> = {
     browser: browserOnlineCount,
     traffic: trafficCount,
+    'background-tasks': backgroundTaskCount,
     'task-list': runningTaskCount,
     risk: riskTotal,
   }
   const menus = mainMenus.map((item) => ({ ...item, total: totals[item.key] }))
 
   /**
-   * 菜单点击：任务列表、加载技能、时间线打开右侧内容面板；
+   * 菜单点击：后台任务、任务列表、加载技能、时间线打开右侧内容面板；
    * 任务详情、流量、漏洞切换工作区 tab；文件系统、浏览器、会话历史已展开则收起否则打开左侧对应页；
    * AI 设置打开设置页，导出日志打开导出弹窗，查看日志打开日志窗口。
    */
   const handleMenuClick = useMemoizedFn((key: AIRightPanelMenuKey) => {
     switch (key) {
+      case 'background-tasks':
       case 'task-list':
       case 'load-skills':
       case 'timeline':

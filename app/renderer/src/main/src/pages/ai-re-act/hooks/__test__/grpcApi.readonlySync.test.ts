@@ -17,6 +17,7 @@ describe('readonlySyncQueryTypes', () => {
         AIInputEventSyncTypeEnum.SYNC_TYPE_SKILL_AVAILABLE,
         AIInputEventSyncTypeEnum.SYNC_TYPE_SKILL_DETAIL,
         AIInputEventSyncTypeEnum.SYNC_TYPE_TASK_SNAPSHOT,
+        AIInputEventSyncTypeEnum.SYNC_TYPE_ASYNC_EXECUTION,
       ]
         .map((value) => `${value}` as const)
         .sort(),
@@ -40,6 +41,7 @@ describe('readonlySyncQueryTypes', () => {
       AIInputEventSyncTypeEnum.SYNC_EXECUTE_DETACHED_PLAN,
       AIInputEventSyncTypeEnum.SYNC_CLOSE_BROWSER,
       AIInputEventSyncTypeEnum.SYNC_TYPE_SESSION_SNAPSHOT_SYNC,
+      AIInputEventSyncTypeEnum.SYNC_TYPE_STOP_ASYNC_EXECUTION,
     ]
     for (const type of mutatingTypes) {
       expect(readonlySyncQueryTypes.has(type)).toBe(false)

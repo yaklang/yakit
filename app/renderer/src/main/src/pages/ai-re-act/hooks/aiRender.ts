@@ -651,6 +651,8 @@ export interface ChatStoreState {
   loadedSkillsUpdate: number
   /** aiChat.d.ts AIAgentChatData availableSkills */
   availableSkillsUpdate: number
+  /** aiChat.d.ts AIAgentChatData asyncExecution */
+  asyncExecutionUpdate: number
   /** aiChat.d.ts AIAgentChatData draftMaterials */
   draftMaterialsUpdate: number
   modelContextUpdate: number
@@ -664,6 +666,8 @@ export interface ChatStoreState {
   notifyMessage: AIInputNotifyMessage | null
   /** 任务规划历史数据-任务树 */
   planHistoryList: AIAgentGrpcApi.PlanHistoryList
+  /** 规划历史未过滤条数（含 Completed），仅供右侧入口显隐；协议 total 仍在 planHistoryList */
+  planHistoryCount: number
   /** 会话内任务索引（来自 session_snapshot.tasks，供任务详情下拉切换） */
   sessionTaskList: AIAgentGrpcApi.SessionSnapshotTaskSummary[]
   /** 会话任务索引水位：与单任务 sessionSnapshotRevision 独立，防止乱序旧包回退列表 */
@@ -767,6 +771,7 @@ export interface ChatStoreState {
       | 'timelineDumpUpdate'
       | 'loadedSkillsUpdate'
       | 'availableSkillsUpdate'
+      | 'asyncExecutionUpdate'
       | 'draftMaterialsUpdate'
       | 'modelContextUpdate'
       | 'currentPlanReviewExtraUpdate'
@@ -802,6 +807,7 @@ export interface ChatStoreState {
         | 'timelineDumpUpdate'
         | 'loadedSkillsUpdate'
         | 'availableSkillsUpdate'
+        | 'asyncExecutionUpdate'
         | 'draftMaterialsUpdate'
         | 'modelContextUpdate'
         | 'grpcFolders'

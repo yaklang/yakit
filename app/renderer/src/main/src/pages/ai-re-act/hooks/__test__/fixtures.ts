@@ -30,6 +30,7 @@ export const createTestRawData = (): AIAgentChatData => {
     memoryList: DefaultMemoryList,
     loadedSkills: { skills: [], total: 0 },
     availableSkills: { skills: [], total: 0, page: 1, page_size: DEFAULT_SKILL_PAGE_SIZE, has_more: false },
+    asyncExecution: { revision: 0, running_count: 0, updated_at: 0, executions: [] },
     skillDetails: new Map(),
     systemStream: '',
     yaklangCodeChange: undefined,
