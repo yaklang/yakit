@@ -3,4 +3,5 @@ import type { AddMCPServerRequest, UpdateMCPServerRequest } from '../../type/aiM
 export interface AIMCPFormProps {
   onCancel: (saved?: AddMCPServerRequest | UpdateMCPServerRequest) => void
   defaultValues?: UpdateMCPServerRequest
+  onPasteConfig?: () => void
 }

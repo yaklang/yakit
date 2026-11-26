@@ -55,6 +55,7 @@ import emiter from '@/utils/eventBus/eventBus'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { ToolSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import AIAgentSideBox from '../components/aiAgentSideBox/AIAgentSideBox'
+import { AIMCPAddModal } from './aiMCPForm/AIMCPAddModal'
 
 const AIMCP: React.FC<AIMCPProps> = React.memo((props) => {
   const [listType, setListType] = useState<'mcp' | 'mcp-tool'>('mcp')
@@ -296,6 +297,7 @@ const AIMCPList: React.FC<AIMCPListProps> = React.memo((props) => {
   const { setCurrentMCP } = props
   const { t, i18nRefresh } = useI18nNamespaces(['aiAgent', 'setting', 'yakitUi'])
   const [keyWord, setKeyWord] = useState<string>('')
+  const [addOpen, setAddOpen] = useState(false)
   const queryKeyword = useDebounce(keyWord.trim(), { wait: 300 })
   const [loading, setLoading] = useState<boolean>(false)
   const [collapsed, setCollapsed] = useState<string[]>([])
@@ -372,21 +374,6 @@ const AIMCPList: React.FC<AIMCPListProps> = React.memo((props) => {
       .sort((a, b) => b.ID - a.ID)[0]
     if (server) setCurrentMCP(server)
   })
-  const handleNewAIMCP = useMemoizedFn(() => {
-    const m = showYakitModal({
-      title: (modalT) => modalT('AIMCP.addMcpServer'),
-      width: 600,
-      content: (
-        <AIMCPForm
-          onCancel={(created) => {
-            m.destroy()
-            openSavedServer(created)
-          }}
-        />
-      ),
-      footer: null,
-    })
-  })
   const openYakMcpSettings = useMemoizedFn(() => {
     emiter.emit('openPage', JSON.stringify({ route: YakitRoute.Settings, params: { anchor: 'yak-mcp' } }))
   })
@@ -439,7 +426,7 @@ const AIMCPList: React.FC<AIMCPListProps> = React.memo((props) => {
               icon={<PlusOutlined color="currentColor" size={16} />}
               aria-label={t('AIMCP.addMcpServer')}
               type="text2"
-              onClick={handleNewAIMCP}
+              onClick={() => setAddOpen(true)}
             />
           </Tooltip>
         </>
@@ -507,7 +494,11 @@ const AIMCPList: React.FC<AIMCPListProps> = React.memo((props) => {
             {!loading && response.MCPServers.length === 0 && (
               <YakitEmpty title={t('YakitEmpty.noData')}>
                 <div className={styles['ai-mcp-tool-empty-btns']}>
-                  <YakitButton type="outline1" icon={<PlusOutlined color="currentColor" />} onClick={handleNewAIMCP}>
+                  <YakitButton
+                    type="outline1"
+                    icon={<PlusOutlined color="currentColor" />}
+                    onClick={() => setAddOpen(true)}
+                  >
                     {t('AIMCP.addMcp')}
                   </YakitButton>
                 </div>
@@ -516,6 +507,7 @@ const AIMCPList: React.FC<AIMCPListProps> = React.memo((props) => {
           </div>
         </YakitSpin>
       </div>
+      <AIMCPAddModal open={addOpen} onClose={() => setAddOpen(false)} onSaved={openSavedServer} onImported={getList} />
     </AIAgentSideBox>
   )
 })
