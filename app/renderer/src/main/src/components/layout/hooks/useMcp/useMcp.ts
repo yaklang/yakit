@@ -57,8 +57,10 @@ export interface StartMcpServerResponse {
   ServerUrl: string
 }
 
-export const remoteMcpDefalutUrl = '0.0.0.0:11432'
-export const localMcpDefalutUrl = '127.0.0.1:11432'
+const edition = process.env.YAKIT_EDITION || ''
+const mcpDefaultPort = edition.startsWith('irify') ? 11430 : edition.startsWith('memfit') ? 11433 : 11432
+export const remoteMcpDefalutUrl = `0.0.0.0:${mcpDefaultPort}`
+export const localMcpDefalutUrl = `127.0.0.1:${mcpDefaultPort}`
 
 interface useMcpHooks {
   engineLink?: boolean
