@@ -5,11 +5,11 @@ import { SearchOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { getPublicRouteMenu } from '@/routes/newRoute'
-import type { PublicRouteMenuProps } from '@/routes/newRoute'
+import { useConfigManagementTab } from '@/store'
 import { YakitModeEnum } from '@/store/softMode'
 import { openMenuRoute } from '../../publicMenu/openMenuRoute'
-import { buildFirstTabRouteOptions, flattenFirstTabRouteMenus } from './utils'
-import type { FirstTabRouteMenuProps } from './type'
+import { appendFirstTabExtraRoutes, buildFirstTabRouteOptions, flattenFirstTabRouteMenus } from './utils'
+import type { FirstTabRouteItem, FirstTabRouteMenuProps } from './type'
 import styles from './FirstTabRouteMenu.module.scss'
 
 const FirstTabRouteMenu: FC<FirstTabRouteMenuProps> = ({ softMode, onSelect }) => {
@@ -17,11 +17,15 @@ const FirstTabRouteMenu: FC<FirstTabRouteMenuProps> = ({ softMode, onSelect }) =
   const [searchValue, setSearchValue] = useState('')
   const searchKeyword = useDebounce(searchValue, { wait: 300, leading: true })
   const routeMode = softMode === YakitModeEnum.SecurityExpert ? YakitModeEnum.Classic : softMode
-  const routeMenus = useCreation(() => flattenFirstTabRouteMenus(getPublicRouteMenu(routeMode)), [routeMode])
+  const routeMenus = useCreation(
+    () => appendFirstTabExtraRoutes(flattenFirstTabRouteMenus(getPublicRouteMenu(routeMode))),
+    [routeMode],
+  )
   const routeMenuOptions = buildFirstTabRouteOptions(routeMenus, (key) => t(key), searchKeyword)
 
-  const onOpenRoute = (option: PublicRouteMenuProps) => {
+  const onOpenRoute = (option: FirstTabRouteItem & { displayLabel: string }) => {
     if (!option.page) return
+    if (option.configTab) useConfigManagementTab.getState().setConfigManagementActiveTab(option.configTab)
     onSelect?.()
     openMenuRoute({ route: option.page })
   }
@@ -43,7 +47,7 @@ const FirstTabRouteMenu: FC<FirstTabRouteMenuProps> = ({ softMode, onSelect }) =
         {routeMenuOptions.length > 0 ? (
           routeMenuOptions.map((option) => (
             <div
-              key={option.page}
+              key={option.optionKey || option.page}
               className={styles['tab-route-option']}
               role="listitem"
               onClick={() => onOpenRoute(option)}

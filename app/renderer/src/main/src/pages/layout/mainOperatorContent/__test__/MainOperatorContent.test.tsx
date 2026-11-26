@@ -14,6 +14,7 @@ import { YakitRoute } from '@/enums/yakitRoute'
 import FirstTabRouteMenu from '../FirstTabRouteMenu/FirstTabRouteMenu'
 import type { PublicRouteMenuProps } from '@/routes/newRoute'
 import emiter from '@/utils/eventBus/eventBus'
+import { useConfigManagementTab } from '@/store'
 import { useHttpFlowStore } from '@/store/httpFlow'
 import { restoreAIAgentTabCache, serializeAIAgentTabCache } from '@/store/aiAgentTabCache'
 
@@ -29,6 +30,10 @@ vi.mock('@/store/softMode', () => ({
   YakitModeEnum: { Classic: 'classic', SecurityExpert: 'securityExpert' },
 }))
 vi.mock('@/utils/notification', () => ({ yakitNotify: routeMenuServices.notify }))
+vi.mock('@/utils/envfile', () => ({
+  isYakitOrEnpriTrace: () => true,
+  isMemfit: () => false,
+}))
 
 // 执行实际初始化 Effect、AI 恢复方法和新开入口；不加载 Electron、Monaco，也不模拟浏览器的 inert 行为。
 const source = ts.createSourceFile(
@@ -218,10 +223,18 @@ describe('MainOperatorContent first-level tab layout', () => {
   })
 })
 
+const extraRouteLabels = {
+  zh: ['字典管理', '代理管理', '热加载管理', 'Yak Runner', '靶场'],
+  en: ['Payload', 'Proxy Management', 'HotPatch Management', 'Yak Runner', 'Vulinbox'],
+}
+const zhCatalog = ['智能助手', '工具', ...extraRouteLabels.zh]
+const enCatalog = ['AI Agent', 'Tools', ...extraRouteLabels.en]
+
 describe('MainOperatorContent route picker', () => {
   afterEach(() => {
     cleanup()
     vi.restoreAllMocks()
+    useConfigManagementTab.setState({ configManagementActiveTab: 'payload' })
   })
 
   const setupPicker = (community = true, menuVisible = false, softMode = 'classic') => {
@@ -229,8 +242,26 @@ describe('MainOperatorContent route picker', () => {
     let language = 'zh'
     let currentMenuVisible = menuVisible
     const translations: Record<string, Record<string, string>> = {
-      zh: { 'YakitRoute.agent': '智能助手', 'YakitRoute.tools': '工具', 'YakitRoute.plugins': '插件' },
-      en: { 'YakitRoute.agent': 'AI Agent', 'YakitRoute.tools': 'Tools', 'YakitRoute.plugins': 'Plugins' },
+      zh: {
+        'YakitRoute.agent': '智能助手',
+        'YakitRoute.tools': '工具',
+        'YakitRoute.plugins': '插件',
+        'YakitRoute.Payload': '字典管理',
+        'Layout.ExtraMenu.proxyManagement': '代理管理',
+        'Layout.ExtraMenu.hotPatchManagement': '热加载管理',
+        'YakitRoute.YakRunner': 'Yak Runner',
+        'YakitRoute.range': '靶场',
+      },
+      en: {
+        'YakitRoute.agent': 'AI Agent',
+        'YakitRoute.tools': 'Tools',
+        'YakitRoute.plugins': 'Plugins',
+        'YakitRoute.Payload': 'Payload',
+        'Layout.ExtraMenu.proxyManagement': 'Proxy Management',
+        'Layout.ExtraMenu.hotPatchManagement': 'HotPatch Management',
+        'YakitRoute.YakRunner': 'Yak Runner',
+        'YakitRoute.range': 'Vulinbox',
+      },
     }
     routeMenuI18n.t = (key: string) => translations[language][key] || key
     const agent = { page: YakitRoute.AI_Agent, label: '智能助手', labelUi: 'YakitRoute.agent' }
@@ -348,7 +379,7 @@ describe('MainOperatorContent route picker', () => {
     const navigation = attachMenuNavigation()
     try {
       await app.open()
-      fireEvent.click(screen.getByRole('listitem'))
+      fireEvent.click(screen.getByText('专项漏洞检测'))
       expect(navigation.openMultipleMenuPage).toHaveBeenCalledExactlyOnceWith({ route: YakitRoute.PoC })
       expect(navigation.addBugTest).not.toHaveBeenCalled()
     } finally {
@@ -364,7 +395,7 @@ describe('MainOperatorContent route picker', () => {
     const navigation = attachMenuNavigation([YakitRoute.YakRunner_Audit_Code])
     try {
       await app.open()
-      fireEvent.click(screen.getByRole('listitem'))
+      fireEvent.click(screen.getByText('代码审计'))
       expect(navigation.setCurrentTabKey).toHaveBeenCalledExactlyOnceWith(YakitRoute.YakRunner_Audit_Code)
       expect(navigation.addYakRunnerAuditCodePage).not.toHaveBeenCalled()
       expect(navigation.openMenuPage).not.toHaveBeenCalled()
@@ -392,7 +423,7 @@ describe('MainOperatorContent route picker', () => {
     })
     try {
       await app.open()
-      fireEvent.click(screen.getByRole('listitem'))
+      fireEvent.click(screen.getByText('数据对比'))
       expect(navigation.openMultipleMenuPage).toHaveBeenCalledExactlyOnceWith({ route: YakitRoute.DataCompare })
       expect(comparisonAtOpen).toEqual({ token: '', dataMapSize: 0 })
       expect(useHttpFlowStore.getState().flag).toBe('')
@@ -439,16 +470,15 @@ describe('MainOperatorContent route picker', () => {
       },
     ])
     await app.open()
-    expect(screen.getAllByRole('listitem')).toHaveLength(1)
-    expect(screen.getByRole('listitem')).toHaveTextContent('Codec')
+    expect(screen.getAllByRole('listitem').map((item) => item.textContent)).toEqual(['Codec', ...extraRouteLabels.zh])
     expect(screen.queryByText('子域名收集')).toBeNull()
     expect(screen.queryByText('基础爬虫')).toBeNull()
-    fireEvent.click(screen.getByRole('listitem'))
+    fireEvent.click(screen.getByText('Codec'))
     expect(emit).toHaveBeenCalledExactlyOnceWith('menuOpenPage', JSON.stringify({ route: YakitRoute.Codec }))
     await waitFor(() => expect(screen.queryByRole('textbox')).toBeNull())
   })
 
-  it('shows the empty state when all entries are individual plugins', async () => {
+  it('hides individual plugins and still lists the top-bar pages', async () => {
     const app = setupPicker()
     const emit = vi.spyOn(emiter, 'emit')
     app.getPublicRouteMenu.mockReturnValue([
@@ -459,8 +489,9 @@ describe('MainOperatorContent route picker', () => {
       },
     ])
     await app.open()
-    expect(screen.queryByRole('listitem')).toBeNull()
-    expect(screen.getByText('YakitEmpty.noData')).toBeInTheDocument()
+    expect(screen.getAllByRole('listitem').map((item) => item.textContent)).toEqual(extraRouteLabels.zh)
+    expect(screen.queryByText('基础爬虫')).toBeNull()
+    expect(screen.queryByText('YakitEmpty.noData')).toBeNull()
     expect(emit).not.toHaveBeenCalled()
   })
 
@@ -473,7 +504,7 @@ describe('MainOperatorContent route picker', () => {
     })
     expect(screen.queryByRole('textbox')).toBeNull()
     await app.open()
-    expect(screen.getAllByRole('listitem').map((item) => item.textContent)).toEqual(['智能助手', '工具'])
+    expect(screen.getAllByRole('listitem').map((item) => item.textContent)).toEqual(zhCatalog)
     const input = screen.getByRole('textbox', { name: 'YakitInput.search' })
     fireEvent.change(input, { target: { value: '助手' } })
     await waitFor(() => expect(screen.getAllByRole('listitem').map((item) => item.textContent)).toEqual(['智能助手']))
@@ -481,11 +512,15 @@ describe('MainOperatorContent route picker', () => {
     expect(screen.queryAllByRole('listitem')).toHaveLength(0)
     expect(screen.getByText('YakitEmpty.noData')).toBeInTheDocument()
     fireEvent.change(input, { target: { value: 'aGe' } })
-    await waitFor(() => expect(screen.getAllByRole('listitem').map((item) => item.textContent)).toEqual(['AI Agent']))
-    fireEvent.change(input, { target: { value: '' } })
     await waitFor(() =>
-      expect(screen.getAllByRole('listitem').map((item) => item.textContent)).toEqual(['AI Agent', 'Tools']),
+      expect(screen.getAllByRole('listitem').map((item) => item.textContent)).toEqual([
+        'AI Agent',
+        'Proxy Management',
+        'HotPatch Management',
+      ]),
     )
+    fireEvent.change(input, { target: { value: '' } })
+    await waitFor(() => expect(screen.getAllByRole('listitem').map((item) => item.textContent)).toEqual(enCatalog))
   })
 
   it('reuses flattened routes while searching and translating, and rebuilds only when the route mode changes', async () => {
@@ -513,7 +548,13 @@ describe('MainOperatorContent route picker', () => {
     app.changeLanguage('en')
     expect(screen.queryAllByRole('listitem')).toHaveLength(0)
     fireEvent.change(input, { target: { value: 'aGe' } })
-    await waitFor(() => expect(screen.getByRole('listitem')).toHaveTextContent('AI Agent'))
+    await waitFor(() =>
+      expect(screen.getAllByRole('listitem').map((item) => item.textContent)).toEqual([
+        'AI Agent',
+        'Proxy Management',
+        'HotPatch Management',
+      ]),
+    )
     app.changeMode('securityExpert')
     expect(app.getPublicRouteMenu).toHaveBeenCalledTimes(1)
     expect(readChildren).toHaveBeenCalledTimes(1)
@@ -522,7 +563,11 @@ describe('MainOperatorContent route picker', () => {
     expect(app.getPublicRouteMenu).toHaveBeenCalledTimes(2)
     expect(app.getPublicRouteMenu).toHaveBeenLastCalledWith('scan')
     expect(readChildren).toHaveBeenCalledTimes(2)
-    expect(screen.getByRole('listitem')).toHaveTextContent('AI Agent')
+    expect(screen.getAllByRole('listitem').map((item) => item.textContent)).toEqual([
+      'AI Agent',
+      'Proxy Management',
+      'HotPatch Management',
+    ])
   })
 
   it('updates input immediately and waits 300ms after the latest change before filtering', () => {
@@ -534,18 +579,18 @@ describe('MainOperatorContent route picker', () => {
       fireEvent.change(input, { target: { value: '助手' } })
       expect(input).toHaveValue('助手')
       act(() => vi.advanceTimersByTime(299))
-      expect(screen.getAllByRole('listitem')).toHaveLength(2)
+      expect(screen.getAllByRole('listitem')).toHaveLength(zhCatalog.length)
 
       fireEvent.change(input, { target: { value: '工具' } })
       expect(input).toHaveValue('工具')
       act(() => vi.advanceTimersByTime(299))
-      expect(screen.getAllByRole('listitem')).toHaveLength(2)
+      expect(screen.getAllByRole('listitem')).toHaveLength(zhCatalog.length)
       act(() => vi.advanceTimersByTime(1))
       expect(screen.getByRole('listitem')).toHaveTextContent('工具')
 
       fireEvent.change(input, { target: { value: '' } })
       act(() => vi.advanceTimersByTime(300))
-      expect(screen.getAllByRole('listitem')).toHaveLength(2)
+      expect(screen.getAllByRole('listitem')).toHaveLength(zhCatalog.length)
       view.unmount()
     } finally {
       vi.useRealTimers()
@@ -576,7 +621,7 @@ describe('MainOperatorContent route picker', () => {
       act(() => vi.advanceTimersByTime(300))
       fireEvent.change(input, { target: { value: '' } })
       expect(input).toHaveValue('')
-      expect(screen.getAllByRole('listitem').map((item) => item.textContent)).toEqual(['智能助手', '工具'])
+      expect(screen.getAllByRole('listitem').map((item) => item.textContent)).toEqual(zhCatalog)
     } finally {
       view.unmount()
       vi.useRealTimers()
@@ -600,7 +645,7 @@ describe('MainOperatorContent route picker', () => {
     await waitFor(() => expect(screen.queryByRole('textbox')).toBeNull())
     await app.open()
     expect(screen.getByRole('textbox')).toHaveValue('')
-    expect(screen.getAllByRole('listitem')).toHaveLength(2)
+    expect(screen.getAllByRole('listitem')).toHaveLength(zhCatalog.length)
   })
 
   it.each([
@@ -627,6 +672,51 @@ describe('MainOperatorContent route picker', () => {
     expect(screen.getByRole('button', { name: 'YakitButton.add' })).toBeInTheDocument()
     expect(screen.getByRole('textbox')).toHaveValue('助手')
     expect(screen.getAllByRole('listitem')).toHaveLength(1)
+  })
+
+  it('opens payload, proxy, hot patch, Yak Runner and the range from the route menu', async () => {
+    const app = setupPicker()
+    const emit = vi.spyOn(emiter, 'emit')
+    await app.open()
+
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: '字典' } })
+    await waitFor(() => expect(screen.getByRole('listitem')).toHaveTextContent('字典管理'))
+    fireEvent.click(screen.getByRole('listitem'))
+    expect(useConfigManagementTab.getState().configManagementActiveTab).toBe('payload')
+    expect(emit).toHaveBeenCalledExactlyOnceWith('menuOpenPage', JSON.stringify({ route: YakitRoute.ConfigManagement }))
+
+    await app.open()
+    emit.mockClear()
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: '代理' } })
+    await waitFor(() => expect(screen.getByRole('listitem')).toHaveTextContent('代理管理'))
+    fireEvent.click(screen.getByRole('listitem'))
+    expect(useConfigManagementTab.getState().configManagementActiveTab).toBe('proxy')
+    expect(emit).toHaveBeenCalledExactlyOnceWith('menuOpenPage', JSON.stringify({ route: YakitRoute.ConfigManagement }))
+
+    await app.open()
+    emit.mockClear()
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: '热加载' } })
+    await waitFor(() => expect(screen.getByRole('listitem')).toHaveTextContent('热加载管理'))
+    fireEvent.click(screen.getByRole('listitem'))
+    expect(useConfigManagementTab.getState().configManagementActiveTab).toBe('hotPatch')
+
+    await app.open()
+    emit.mockClear()
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'Yak' } })
+    await waitFor(() => expect(screen.getByRole('listitem')).toHaveTextContent('Yak Runner'))
+    fireEvent.click(screen.getByRole('listitem'))
+    expect(emit).toHaveBeenCalledExactlyOnceWith('menuOpenPage', JSON.stringify({ route: YakitRoute.YakScript }))
+
+    await app.open()
+    emit.mockClear()
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: '靶场' } })
+    await waitFor(() => expect(screen.getByRole('listitem')).toHaveTextContent('靶场'))
+    fireEvent.click(screen.getByRole('listitem'))
+    expect(emit).toHaveBeenCalledExactlyOnceWith(
+      'menuOpenPage',
+      JSON.stringify({ route: YakitRoute.Beta_VulinboxManager }),
+    )
+    expect(useConfigManagementTab.getState().configManagementActiveTab).toBe('hotPatch')
   })
 
   it('uses the edition route catalog in security expert mode, which has no grouped menu of its own', async () => {

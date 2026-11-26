@@ -1,7 +1,18 @@
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { YakitRoute } from '@/enums/yakitRoute'
 import type { PublicRouteMenuProps } from '@/routes/newRoute'
-import { buildFirstTabRouteOptions, flattenFirstTabRouteMenus } from '../FirstTabRouteMenu/utils'
+import {
+  appendFirstTabExtraRoutes,
+  buildFirstTabRouteOptions,
+  flattenFirstTabRouteMenus,
+  getFirstTabExtraRoutes,
+} from '../FirstTabRouteMenu/utils'
+
+const edition = vi.hoisted(() => ({ yakitOrEnpriTrace: true, memfit: false }))
+vi.mock('@/utils/envfile', () => ({
+  isYakitOrEnpriTrace: () => edition.yakitOrEnpriTrace,
+  isMemfit: () => edition.memfit,
+}))
 
 const translations: Record<'zh' | 'en', Record<string, string>> = {
   zh: {
@@ -40,6 +51,65 @@ const group = (label: string, children?: PublicRouteMenuProps[]): PublicRouteMen
 })
 const menus = [group('AI', [knowledge]), group('工具', [history, group('Fuzzer', [fuzzer])])]
 const routes = flattenFirstTabRouteMenus(menus)
+
+describe('appendFirstTabExtraRoutes', () => {
+  beforeEach(() => {
+    edition.yakitOrEnpriTrace = true
+    edition.memfit = false
+  })
+
+  it('把字典、代理、热加载、Yak Runner 和靶场追加到跳转列表', () => {
+    const merged = appendFirstTabExtraRoutes([history])
+
+    expect(getFirstTabExtraRoutes().map((route) => route.label)).toEqual([
+      '字典管理',
+      '代理管理',
+      '热加载管理',
+      'Yak Runner',
+      '靶场',
+    ])
+    expect(merged.map((route) => route.optionKey || route.page)).toEqual([
+      YakitRoute.DB_HTTPHistory,
+      `${YakitRoute.ConfigManagement}-payload`,
+      `${YakitRoute.ConfigManagement}-proxy`,
+      `${YakitRoute.ConfigManagement}-hotPatch`,
+      YakitRoute.YakScript,
+      YakitRoute.Beta_VulinboxManager,
+    ])
+    expect(
+      merged.filter((route) => route.page === YakitRoute.ConfigManagement).map((route) => route.configTab),
+    ).toEqual(['payload', 'proxy', 'hotPatch'])
+  })
+
+  it('目录里已经有的页面不再重复追加，配置管理页签仍然保留', () => {
+    const yakRunner: PublicRouteMenuProps = { page: YakitRoute.YakScript, label: 'Yak Runner' }
+    const range: PublicRouteMenuProps = { page: YakitRoute.Beta_VulinboxManager, label: '靶场' }
+    const merged = appendFirstTabExtraRoutes([yakRunner, range])
+
+    expect(merged.map((route) => route.optionKey || route.page)).toEqual([
+      YakitRoute.YakScript,
+      YakitRoute.Beta_VulinboxManager,
+      `${YakitRoute.ConfigManagement}-payload`,
+      `${YakitRoute.ConfigManagement}-proxy`,
+      `${YakitRoute.ConfigManagement}-hotPatch`,
+    ])
+  })
+
+  it('Memfit 顶栏只有 Yak Runner，额外项也只追加 Yak Runner', () => {
+    edition.yakitOrEnpriTrace = false
+    edition.memfit = true
+
+    expect(getFirstTabExtraRoutes().map((route) => route.optionKey || route.page)).toEqual([YakitRoute.YakScript])
+  })
+
+  it('IRify 等版本顶栏没有这些入口，不追加额外项', () => {
+    edition.yakitOrEnpriTrace = false
+    edition.memfit = false
+
+    expect(getFirstTabExtraRoutes()).toEqual([])
+    expect(appendFirstTabExtraRoutes([history])).toEqual([history])
+  })
+})
 
 describe('buildFirstTabRouteOptions', () => {
   it('只平铺顶层 children，递归展开分组并保留路由顺序', () => {
