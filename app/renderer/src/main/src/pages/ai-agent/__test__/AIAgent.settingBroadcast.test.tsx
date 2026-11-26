@@ -4,7 +4,7 @@ import { act, fireEvent, render, screen, waitFor, within } from '@testing-librar
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import emiter from '@/utils/eventBus/eventBus'
-import { serializeAIAgentChatSetting } from '../utils/aiAgentChatSettingCache'
+import { persistAIAgentChatSetting, serializeAIAgentChatSetting } from '../utils/aiAgentChatSettingCache'
 import { AIAgentSettingDefault, createWelcomeChat } from '../defaultConstant'
 import cloneDeep from 'lodash/cloneDeep'
 import { AIAgent } from '../AIAgent'
@@ -148,6 +148,12 @@ vi.mock('../aiAgentChat/AIAgentChat', async () => {
             change-token-limit
           </button>
           <span data-testid="review-policy">{store.setting.ReviewPolicy}</span>
+          <button onClick={() => dispatcher.setSetting((current) => ({ ...current, ReviewPolicy: 'yolo' }))}>
+            change-review-policy
+          </button>
+          <button onClick={() => dispatcher.setSetting((current) => ({ ...current, AIReviewRiskControlScore: 0 }))}>
+            clear-review-risk-score
+          </button>
           <span data-testid="memory">{String(!!store.setting.DisableMemoryTriage)}</span>
           <span data-testid="goal">{store.setting.Strategy?.GoalMinIterations}</span>
           <span data-testid="enable-plan">{String(!!store.setting.EnablePlan)}</span>
@@ -297,7 +303,83 @@ describe('AIAgent 配置广播', () => {
     }
   })
 
-  it('运行中的页面接收全局配置后更新展示，避免重复下发审核策略', async () => {
+  it('对话审核模式和阈值仅保存当前会话，后续共享配置更新也不传播审核覆盖值', async () => {
+    const sessions = ['review-a', 'review-b'].map((SessionID) => ({
+      SessionID,
+      Title: SessionID,
+      StartParams: { ReviewPolicy: 'manual', AIReviewRiskControlScore: 0.6 },
+    })) as AISession[]
+    querySessionMock.mockImplementation(async ({ Filter }) =>
+      sessionResponse(sessions.filter((session) => Filter?.SessionID?.includes(session.SessionID))),
+    )
+    sessions.forEach((session) =>
+      globalSessionEngine.ensureSession(session.SessionID).store.setState({ execute: true }),
+    )
+    const first = render(<AIAgent pageId="review-a" initialSession={sessions[0]} />)
+    const second = render(<AIAgent pageId="review-b" initialSession={sessions[1]} />)
+    const a = within(first.container)
+    const b = within(second.container)
+    await waitFor(() => expect(a.getByTestId('review-policy')).toHaveTextContent('manual'))
+    await waitFor(() => expect(b.getByTestId('review-policy')).toHaveTextContent('manual'))
+    const broadcast = vi.fn()
+    emiter.on('onAIAgentChatSettingChange', broadcast)
+    try {
+      fireEvent.click(a.getByText('change-review-policy'))
+      fireEvent.click(a.getByText('clear-review-risk-score'))
+      expect(a.getByTestId('review-policy')).toHaveTextContent('yolo')
+      expect(JSON.parse(a.getByTestId('setting').textContent!).AIReviewRiskControlScore).toBe(0)
+      expect(b.getByTestId('review-policy')).toHaveTextContent('manual')
+      expect(JSON.parse(b.getByTestId('setting').textContent!).AIReviewRiskControlScore).toBe(0.6)
+      expect(globalSessionEngine.updateSessionConfig).toHaveBeenLastCalledWith(
+        'review-a',
+        expect.objectContaining({ ReviewPolicy: 'yolo', AIReviewRiskControlScore: 0 }),
+      )
+      expect(broadcast).not.toHaveBeenCalled()
+      expect(setRemoteValueMock).not.toHaveBeenCalled()
+
+      fireEvent.click(a.getByText('change-token-limit'))
+      await waitFor(() => expect(JSON.parse(b.getByTestId('setting').textContent!).AICallTokenLimit).toBe(600))
+      expect(a.getByTestId('review-policy')).toHaveTextContent('yolo')
+      expect(b.getByTestId('review-policy')).toHaveTextContent('manual')
+      expect(JSON.parse(b.getByTestId('setting').textContent!).AIReviewRiskControlScore).toBe(0.6)
+      for (const [payload] of broadcast.mock.calls) {
+        expect(JSON.parse(payload)).not.toHaveProperty('ReviewPolicy')
+        expect(JSON.parse(payload)).not.toHaveProperty('AIReviewRiskControlScore')
+      }
+
+      const draft = render(<AIAgent pageId="existing-draft" />)
+      const existingDraft = within(draft.container)
+      await waitFor(() => expect(existingDraft.getByTestId('review-policy')).toHaveTextContent('yolo'))
+      const previousDraftSetting = JSON.parse(existingDraft.getByTestId('setting').textContent!)
+      setRemoteValueMock.mockImplementation(async (key, value) => {
+        if (key === RemoteAIAgentGV.AIAgentChatSetting) getRemoteValueMock.mockResolvedValue(value)
+      })
+      await act(async () => {
+        await persistAIAgentChatSetting({
+          ...AIAgentSettingDefault,
+          ReviewPolicy: 'ai',
+          AIReviewRiskControlScore: 0.8,
+        })
+      })
+      expect(a.getByTestId('review-policy')).toHaveTextContent('yolo')
+      expect(b.getByTestId('review-policy')).toHaveTextContent('manual')
+      expect(JSON.parse(a.getByTestId('setting').textContent!).AIReviewRiskControlScore).toBe(0)
+      expect(JSON.parse(b.getByTestId('setting').textContent!).AIReviewRiskControlScore).toBe(0.6)
+      expect(existingDraft.getByTestId('review-policy')).toHaveTextContent(previousDraftSetting.ReviewPolicy)
+      expect(JSON.parse(existingDraft.getByTestId('setting').textContent!).AIReviewRiskControlScore).toBe(
+        previousDraftSetting.AIReviewRiskControlScore,
+      )
+      const third = render(<AIAgent pageId="new-draft" />)
+      const c = within(third.container)
+      await waitFor(() => expect(c.getByTestId('review-policy')).toHaveTextContent('ai'))
+      expect(JSON.parse(c.getByTestId('setting').textContent!).AIReviewRiskControlScore).toBe(0.8)
+      expect(ipc.onSend).not.toHaveBeenCalled()
+    } finally {
+      emiter.off('onAIAgentChatSettingChange', broadcast)
+    }
+  })
+
+  it('运行中的页面忽略广播内审核字段，保留本会话策略', async () => {
     const session = { SessionID: 'review-session', Title: '审核策略' } as AISession
     querySessionMock.mockResolvedValue(
       sessionResponse([{ ...session, StartParams: { ReviewPolicy: 'yolo' } } as AISession]),
@@ -308,9 +390,13 @@ describe('AIAgent 配置广播', () => {
     await waitFor(() => expect(screen.getByTestId('review-policy')).toHaveTextContent('yolo'))
     expect(ipc.onSend).not.toHaveBeenCalled()
 
-    const broadcast = () => emiter.emit('onAIAgentChatSettingChange', JSON.stringify({ ReviewPolicy: 'manual' }))
+    const broadcast = () =>
+      emiter.emit('onAIAgentChatSettingChange', JSON.stringify({ ReviewPolicy: 'manual', AIReviewRiskControlScore: 0 }))
     act(broadcast)
-    expect(screen.getByTestId('review-policy')).toHaveTextContent('manual')
+    expect(screen.getByTestId('review-policy')).toHaveTextContent('yolo')
+    expect(JSON.parse(screen.getByTestId('setting').textContent!).AIReviewRiskControlScore).toBe(
+      AIAgentSettingDefault.AIReviewRiskControlScore,
+    )
     act(broadcast)
     expect(ipc.onSend).not.toHaveBeenCalled()
   })
@@ -541,9 +627,11 @@ describe('AIAgent 配置广播', () => {
       expect(setRemoteValueMock).not.toHaveBeenCalledWith(RemoteAIAgentGV.AIAgentChatSetting, expect.anything())
       expect(broadcast).not.toHaveBeenCalled()
       expect(globalSessionEngine.updateSessionConfig).not.toHaveBeenCalled()
-      fireEvent.click(screen.getByText('turn-on-plan'))
+      fireEvent.click(screen.getByText('change-token-limit'))
       await waitFor(() => expect(globalSessionEngine.updateSessionConfig).toHaveBeenCalled())
-      expect(setRemoteValueMock).toHaveBeenCalledWith(RemoteAIAgentGV.AIAgentChatSetting, expect.any(String))
+      await waitFor(() =>
+        expect(setRemoteValueMock).toHaveBeenCalledWith(RemoteAIAgentGV.AIAgentChatSetting, expect.any(String)),
+      )
       expect(broadcast).toHaveBeenCalled()
     } finally {
       emiter.off('onAIAgentChatSettingChange', broadcast)
@@ -640,6 +728,30 @@ describe('AIAgent 配置广播', () => {
     expect(session.StartParams?.Strategy?.MaxSubAgents).toBe(4)
   })
 
+  it('历史加载期间收到共享配置，仍恢复该会话自己的审核参数', async () => {
+    const pending = deferred<QueryAISessionResponse>()
+    const session = { SessionID: 'slow-review', Title: '历史' } as AISession
+    querySessionMock.mockReturnValueOnce(pending.promise)
+    render(<AIAgent pageId="test" initialSession={session} />)
+    act(() => emiter.emit('onAIAgentChatSettingChange', JSON.stringify({ AICallTokenLimit: 700 })))
+    await act(async () =>
+      pending.resolve(
+        sessionResponse([
+          {
+            ...session,
+            StartParams: { ReviewPolicy: 'yolo', AIReviewRiskControlScore: 0, AICallTokenLimit: 300 },
+          } as AISession,
+        ]),
+      ),
+    )
+    expect(JSON.parse(screen.getByTestId('setting').textContent!)).toMatchObject({
+      ReviewPolicy: 'yolo',
+      AIReviewRiskControlScore: 0,
+      AICallTokenLimit: 700,
+    })
+    expect(setRemoteValueMock).not.toHaveBeenCalled()
+  })
+
   it.each(['user', 'broadcast', 'context'])(
     '查询期间配置被 %s 修改后，旧响应不再恢复配置但仍更新标题',
     async (source) => {
@@ -659,7 +771,7 @@ describe('AIAgent 配置广播', () => {
           expect(ipc.detachPendingChat).not.toHaveBeenCalled()
           expect(ipc.updatePagesDataCacheById).not.toHaveBeenCalled()
         } else {
-          emiter.emit('onAIAgentChatSettingChange', JSON.stringify({ ReviewPolicy: 'yolo' }))
+          emiter.emit('onAIAgentChatSettingChange', JSON.stringify({ AICallTokenLimit: 700 }))
         }
       })
       const currentSetting = JSON.parse(screen.getByTestId('setting').textContent!)
@@ -668,9 +780,10 @@ describe('AIAgent 配置广播', () => {
           ? { EnablePlan: true }
           : source === 'context'
             ? { AICallTokenLimit: 600 }
-            : { ReviewPolicy: 'yolo' },
+            : { AICallTokenLimit: 700 },
       )
       expect(globalSessionEngine.updateSessionConfig).toHaveBeenCalledExactlyOnceWith('history', currentSetting)
+      await act(async () => {})
       const persistedCount = setRemoteValueMock.mock.calls.length
 
       await act(async () =>
@@ -844,8 +957,53 @@ describe('AIAgent 配置广播', () => {
     expect(globalSessionEngine.updateSessionConfig).not.toHaveBeenCalled()
     expect(setRemoteValueMock).not.toHaveBeenCalled()
     fireEvent.click(screen.getByText('turn-on-plan'))
-    await waitFor(() => expect(setRemoteValueMock).toHaveBeenCalled())
+    await act(async () => {})
+    if (result === 'empty') {
+      expect(setRemoteValueMock).toHaveBeenCalled()
+    } else {
+      expect(setRemoteValueMock).not.toHaveBeenCalled()
+    }
     expect(screen.getByTestId('enable-plan')).toHaveTextContent('true')
+  })
+
+  it('欢迎页慢读缓存期间编辑审核参数，迟到缓存保留本页修改', async () => {
+    const pendingCache = deferred<string>()
+    getRemoteValueMock.mockImplementation((key) =>
+      key === RemoteAIAgentGV.AIAgentChatSetting ? pendingCache.promise : Promise.resolve('false'),
+    )
+    render(<AIAgent pageId="test" />)
+    fireEvent.click(screen.getByText('change-review-policy'))
+    fireEvent.click(screen.getByText('clear-review-risk-score'))
+    await act(async () =>
+      pendingCache.resolve(
+        JSON.stringify({
+          ...AIAgentSettingDefault,
+          ReviewPolicy: 'manual',
+          AIReviewRiskControlScore: 0.6,
+        }),
+      ),
+    )
+    expect(screen.getByTestId('review-policy')).toHaveTextContent('yolo')
+    expect(JSON.parse(screen.getByTestId('setting').textContent!).AIReviewRiskControlScore).toBe(0)
+    expect(setRemoteValueMock).not.toHaveBeenCalled()
+  })
+
+  it('全局缓存为空时从历史返回欢迎页，审核参数恢复新会话默认值', async () => {
+    getRemoteValueMock.mockResolvedValue('')
+    const session = {
+      SessionID: 'history-review',
+      Title: 'history',
+      StartParams: { ReviewPolicy: 'yolo', AIReviewRiskControlScore: 0 },
+    } as AISession
+    querySessionMock.mockResolvedValue(sessionResponse([session]))
+    render(<AIAgent pageId="test" initialSession={session} />)
+    await waitFor(() => expect(screen.getByTestId('review-policy')).toHaveTextContent('yolo'))
+    fireEvent.click(screen.getByText('back-to-welcome'))
+    await act(async () => {})
+    const setting = JSON.parse(screen.getByTestId('setting').textContent!)
+    expect(setting.ReviewPolicy).toBe(AIAgentSettingDefault.ReviewPolicy)
+    expect(setting.AIReviewRiskControlScore).toBe(AIAgentSettingDefault.AIReviewRiskControlScore)
+    expect(setRemoteValueMock).not.toHaveBeenCalled()
   })
 
   it('欢迎页读取全局缓存且不查询会话', async () => {
@@ -1423,7 +1581,7 @@ describe('AIAgent 配置广播', () => {
     }
   })
 
-  it('加载缓存后收到设置广播，会合并已保存项并保留当前会话开关，再写回缓存', async () => {
+  it('加载缓存后收到设置广播，会合并已保存项并保留当前会话开关，接收方不重复写缓存', async () => {
     render(<AIAgent pageId="test" />)
 
     await waitFor(() => {
@@ -1437,6 +1595,8 @@ describe('AIAgent 配置广播', () => {
     await waitFor(() => {
       expect(screen.getByTestId('enable-plan')).toHaveTextContent('true')
     })
+    await act(async () => {})
+    setRemoteValueMock.mockClear()
 
     act(() => {
       emiter.emit(
@@ -1451,18 +1611,12 @@ describe('AIAgent 配置广播', () => {
     })
 
     await waitFor(() => {
-      expect(screen.getByTestId('review-policy')).toHaveTextContent('manual')
+      expect(screen.getByTestId('review-policy')).toHaveTextContent('yolo')
     })
     expect(screen.getByTestId('enable-plan')).toHaveTextContent('true')
     expect(screen.getByTestId('memory')).toHaveTextContent('true')
     expect(screen.getByTestId('goal')).toHaveTextContent('9')
 
-    await waitFor(() => {
-      const last = setRemoteValueMock.mock.calls.at(-1)
-      expect(last?.[1]).toContain('"ReviewPolicy":"manual"')
-      expect(last?.[1]).toContain('"DisableMemoryTriage":true')
-      expect(last?.[1]).toContain('"GoalMinIterations":9')
-      expect(last?.[1]).not.toContain('EnablePlan')
-    })
+    expect(setRemoteValueMock).not.toHaveBeenCalled()
   })
 })

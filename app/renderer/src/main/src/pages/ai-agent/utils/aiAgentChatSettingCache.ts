@@ -1,5 +1,6 @@
 import cloneDeep from 'lodash/cloneDeep'
 import omit from 'lodash/omit'
+import pick from 'lodash/pick'
 import { AISourceEnum } from '@/pages/ai-re-act/hooks/grpcApi'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import emiter from '@/utils/eventBus/eventBus'
@@ -9,6 +10,7 @@ import { AIAgentSettingDefault } from '../defaultConstant'
 
 const omitPersistKeys = ['AIService', 'AIModelName', 'TimelineContentSizeLimit', 'RuntimeContextSizeLimit'] as const
 const omitSessionRuntimeKeys = ['EnablePlan', 'SyncPerceptionTrigger', 'SingleModelMode', 'Source'] as const
+export const reviewSettingKeys = ['ReviewPolicy', 'AIReviewRiskControlScore'] as const
 
 export const stripAIAgentChatSettingForPersist = (setting: Partial<AIAgentSetting>): Partial<AIAgentSetting> => {
   const data = omit(setting, [...omitPersistKeys, ...omitSessionRuntimeKeys]) as Partial<AIAgentSetting>
@@ -70,7 +72,7 @@ export type LoadAIAgentChatSettingResult =
   | { status: 'empty' }
   | { status: 'error' }
 
-export const loadAIAgentChatSetting = async (): Promise<LoadAIAgentChatSettingResult> => {
+const readAIAgentChatSetting = async (): Promise<LoadAIAgentChatSettingResult> => {
   try {
     const res = await getRemoteValue(RemoteAIAgentGV.AIAgentChatSetting)
     if (!res) return { status: 'empty' }
@@ -82,8 +84,36 @@ export const loadAIAgentChatSetting = async (): Promise<LoadAIAgentChatSettingRe
   }
 }
 
+// 会话只写共享项。与全局设置的写入串行，避免读到旧审核默认值后再覆盖新的全局选择。
+let pendingWrite = Promise.resolve()
+export const loadAIAgentChatSetting = () => pendingWrite.then(readAIAgentChatSetting)
+
+const queueSettingWrite = (write: () => Promise<unknown>) => {
+  pendingWrite = pendingWrite.then(write).then(
+    () => undefined,
+    () => undefined,
+  )
+  return pendingWrite
+}
+
 export const persistAIAgentChatSetting = (setting: AIAgentSetting, emit = true) => {
   const payload = serializeAIAgentChatSetting(setting)
-  setRemoteValue(RemoteAIAgentGV.AIAgentChatSetting, payload)
-  if (emit) emiter.emit('onAIAgentChatSettingChange', payload)
+  const write = queueSettingWrite(() => setRemoteValue(RemoteAIAgentGV.AIAgentChatSetting, payload))
+  if (emit) emiter.emit('onAIAgentChatSettingChange', serializeAIAgentChatSetting(omit(setting, reviewSettingKeys)))
+  return write
+}
+
+export const persistSharedChatSetting = (setting: AIAgentSetting) => {
+  const shared = omit(stripAIAgentChatSettingForPersist(setting), reviewSettingKeys)
+  const write = queueSettingWrite(async () => {
+    const cached = await readAIAgentChatSetting()
+    if (cached.status === 'error') return
+    const defaults = cached.status === 'success' ? cached.setting : AIAgentSettingDefault
+    await setRemoteValue(
+      RemoteAIAgentGV.AIAgentChatSetting,
+      JSON.stringify({ ...shared, ...pick(defaults, reviewSettingKeys) }),
+    )
+  })
+  emiter.emit('onAIAgentChatSettingChange', JSON.stringify(shared))
+  return write
 }

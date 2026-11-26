@@ -11,6 +11,7 @@ import {
   loadAIAgentChatSetting,
   mergeAIAgentChatSettingCache,
   persistAIAgentChatSetting,
+  persistSharedChatSetting,
   serializeAIAgentChatSetting,
 } from '../aiAgentChatSettingCache'
 
@@ -219,18 +220,51 @@ describe('persistAIAgentChatSetting', () => {
     emitMock.mockReset()
   })
 
-  it('默认写入远端并广播，payload 不含模型字段', () => {
-    persistAIAgentChatSetting(settingWithModel)
+  it('默认写入远端并广播，payload 不含模型字段', async () => {
+    await persistAIAgentChatSetting(settingWithModel)
     const payload = serializeAIAgentChatSetting(settingWithModel)
     expect(setRemoteValueMock).toHaveBeenCalledWith(RemoteAIAgentGV.AIAgentChatSetting, payload)
-    expect(emitMock).toHaveBeenCalledWith('onAIAgentChatSettingChange', payload)
+    const { ReviewPolicy, AIReviewRiskControlScore, ...shared } = JSON.parse(payload)
+    expect(ReviewPolicy).toBe('yolo')
+    expect(emitMock).toHaveBeenCalledWith('onAIAgentChatSettingChange', JSON.stringify(shared))
     expect(payload).not.toContain('gpt-test')
     expect(payload).not.toContain('EnablePlan')
   })
 
-  it('emit=false 时只落库不广播', () => {
-    persistAIAgentChatSetting(settingWithModel, false)
+  it('emit=false 时只落库不广播', async () => {
+    await persistAIAgentChatSetting(settingWithModel, false)
     expect(setRemoteValueMock).toHaveBeenCalled()
     expect(emitMock).not.toHaveBeenCalled()
+  })
+
+  it('交错保存共享项与全局设置时保留最近一次全局审核模式和零阈值', async () => {
+    let cache = JSON.stringify({ ReviewPolicy: 'manual', AIReviewRiskControlScore: 0.8 })
+    getRemoteValueMock.mockImplementation(async () => cache)
+    setRemoteValueMock.mockImplementation(async (_, payload) => {
+      cache = payload
+    })
+    const chat = { ...settingWithModel, AIReviewRiskControlScore: 0.5 }
+    const global = { ...settingWithModel, ReviewPolicy: 'ai' as const, AIReviewRiskControlScore: 0 }
+    const writes = [
+      persistSharedChatSetting(chat),
+      persistAIAgentChatSetting(global),
+      persistSharedChatSetting({ ...chat, AICallTokenLimit: 600 }),
+    ]
+    await Promise.all(writes)
+    expect(JSON.parse(setRemoteValueMock.mock.calls[0][1])).toMatchObject({
+      ReviewPolicy: 'manual',
+      AIReviewRiskControlScore: 0.8,
+    })
+    expect(JSON.parse(cache)).toMatchObject({ ReviewPolicy: 'ai', AIReviewRiskControlScore: 0, AICallTokenLimit: 600 })
+    expect(emitMock).toHaveBeenNthCalledWith(
+      1,
+      'onAIAgentChatSettingChange',
+      expect.not.stringContaining('"ReviewPolicy"'),
+    )
+    expect(emitMock).toHaveBeenNthCalledWith(
+      3,
+      'onAIAgentChatSettingChange',
+      expect.not.stringContaining('"AIReviewRiskControlScore"'),
+    )
   })
 })

@@ -15,11 +15,6 @@ import { setRemoteValue } from '@/utils/kv'
 import { AIConfigSettings } from '../AIConfigSettings'
 import { grpcGetAIGlobalConfig, grpcSetAIGlobalConfig } from '@/pages/ai-agent/aiModelList/utils'
 import { useAIGlobalConfigStore } from '@/store/aiGlobalConfig'
-import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
-
-vi.mock('@/pages/ai-re-act/hooks/ChatMultiSessionController', () => ({
-  globalSessionEngine: { syncConnectedReviewPolicy: vi.fn() },
-}))
 
 vi.mock('@/pages/ai-agent/aiModelList/utils', () => ({
   grpcGetAIGlobalConfig: vi.fn(),
@@ -75,7 +70,6 @@ const waitLocked = async () => {
 describe('AIConfigSettings', () => {
   beforeEach(() => {
     cleanup()
-    vi.mocked(globalSessionEngine.syncConnectedReviewPolicy).mockClear()
     vi.mocked(grpcGetAIGlobalConfig)
       .mockReset()
       .mockImplementation(async () => ({ ...useAIGlobalConfigStore.getState().aiGlobalConfig }))
@@ -91,18 +85,19 @@ describe('AIConfigSettings', () => {
     vi.mocked(persistAIAgentChatSetting).mockReset()
   })
 
-  it('仅显式切换审核策略时同步已连接会话，同值与其他设置修改不重复发送', async () => {
+  it('全局审核策略保存为新会话默认值', async () => {
     render(<AIConfigSettings />)
     await waitReady()
-    expect(globalSessionEngine.syncConnectedReviewPolicy).not.toHaveBeenCalled()
     fireEvent.click(screen.getByRole('radio', { name: 'yolo' }))
-    expect(globalSessionEngine.syncConnectedReviewPolicy).toHaveBeenCalledExactlyOnceWith({ ReviewPolicy: 'yolo' })
+    expect(vi.mocked(persistAIAgentChatSetting).mock.calls.at(-1)?.[0]).toMatchObject({ ReviewPolicy: 'yolo' })
+    expect(vi.mocked(persistAIAgentChatSetting).mock.calls.at(-1)?.[1]).toBe(false)
     fireEvent.click(screen.getByRole('radio', { name: 'yolo' }))
+    expect(vi.mocked(persistAIAgentChatSetting).mock.calls.at(-1)?.[1]).toBe(false)
     fireEvent.click(document.querySelector('[data-settings-section="permissions"] button.ant-switch') as HTMLElement)
-    expect(globalSessionEngine.syncConnectedReviewPolicy).toHaveBeenCalledTimes(1)
+    expect(vi.mocked(persistAIAgentChatSetting).mock.calls.at(-1)?.[1]).toBe(true)
   })
 
-  it.each(['all', 'planning'])('重置 %s 配置时同步改变的审核策略', async (scope) => {
+  it.each(['all', 'planning'])('重置 %s 配置时保存默认审核策略', async (scope) => {
     vi.mocked(loadAIAgentChatSetting).mockResolvedValue(successLoad({ ReviewPolicy: 'yolo' }))
     render(<AIConfigSettings />)
     await waitReady()
@@ -111,28 +106,27 @@ describe('AIConfigSettings', () => {
         ? screen.getByRole('button', { name: 'YakitButton.reset' })
         : within(screen.getByText('AIChatSetting.planningAndExecution').parentElement!).getByRole('button')
     await act(async () => fireEvent.click(reset))
-    expect(globalSessionEngine.syncConnectedReviewPolicy).toHaveBeenCalledExactlyOnceWith({
+    expect(vi.mocked(persistAIAgentChatSetting).mock.calls.at(-1)?.[0]).toMatchObject({
       ReviewPolicy: AIAgentSettingDefault.ReviewPolicy,
     })
     await act(async () => fireEvent.click(reset))
-    expect(globalSessionEngine.syncConnectedReviewPolicy).toHaveBeenCalledTimes(1)
   })
 
-  it('风险阈值修改和归零同步已连接会话，同值不重复发送', async () => {
+  it('风险阈值修改和归零只保存全局默认值', async () => {
     vi.mocked(loadAIAgentChatSetting).mockResolvedValue(successLoad({ AIReviewRiskControlScore: 0.5 }))
     render(<AIConfigSettings />)
     await waitReady()
     const slider = screen.getByRole('slider')
     fireEvent.keyDown(slider, { key: 'ArrowRight', keyCode: 39, which: 39 })
-    expect(globalSessionEngine.syncConnectedReviewPolicy).toHaveBeenLastCalledWith({ AIReviewRiskControlScore: 0.51 })
+    expect(vi.mocked(persistAIAgentChatSetting).mock.calls.at(-1)?.[0]).toMatchObject({
+      AIReviewRiskControlScore: 0.51,
+    })
     fireEvent.keyDown(slider, { key: 'Home', keyCode: 36, which: 36 })
-    expect(globalSessionEngine.syncConnectedReviewPolicy).toHaveBeenLastCalledWith({ AIReviewRiskControlScore: 0 })
-    vi.mocked(globalSessionEngine.syncConnectedReviewPolicy).mockClear()
+    expect(vi.mocked(persistAIAgentChatSetting).mock.calls.at(-1)?.[0]).toMatchObject({ AIReviewRiskControlScore: 0 })
     fireEvent.keyDown(slider, { key: 'Home', keyCode: 36, which: 36 })
-    expect(globalSessionEngine.syncConnectedReviewPolicy).not.toHaveBeenCalled()
   })
 
-  it.each(['all', 'permissions'])('重置 %s 配置时同步风险阈值并合并审核模式变更', async (scope) => {
+  it.each(['all', 'permissions'])('重置 %s 配置时保存默认风险阈值与审核模式', async (scope) => {
     vi.mocked(loadAIAgentChatSetting).mockResolvedValue(
       successLoad({ ReviewPolicy: 'yolo', AIReviewRiskControlScore: 0 }),
     )
@@ -143,12 +137,11 @@ describe('AIConfigSettings', () => {
         ? screen.getByRole('button', { name: 'YakitButton.reset' })
         : within(document.querySelector('[data-settings-section="permissions"]') as HTMLElement).getByRole('button')
     await act(async () => fireEvent.click(reset))
-    expect(globalSessionEngine.syncConnectedReviewPolicy).toHaveBeenCalledExactlyOnceWith({
+    expect(vi.mocked(persistAIAgentChatSetting).mock.calls.at(-1)?.[0]).toMatchObject({
       ...(scope === 'all' ? { ReviewPolicy: AIAgentSettingDefault.ReviewPolicy } : {}),
       AIReviewRiskControlScore: AIAgentSettingDefault.AIReviewRiskControlScore,
     })
     await act(async () => fireEvent.click(reset))
-    expect(globalSessionEngine.syncConnectedReviewPolicy).toHaveBeenCalledTimes(1)
   })
 
   it('首页动画开关使用独立缓存，不写入 AI 配置，重置配置不改变动画偏好', async () => {
@@ -164,7 +157,7 @@ describe('AIConfigSettings', () => {
     fireEvent.click(screen.getByText('YakitButton.reset'))
     expect(animationSwitch).toHaveAttribute('aria-checked', 'true')
     expect(setRemoteValue).not.toHaveBeenCalled()
-    expect(persistAIAgentChatSetting).toHaveBeenCalledWith(AIAgentSettingDefault)
+    expect(persistAIAgentChatSetting).toHaveBeenCalledWith(AIAgentSettingDefault, true)
   })
 
   it('加载缓存后展示权限分区，重置会写回默认配置', async () => {
@@ -210,7 +203,7 @@ describe('AIConfigSettings', () => {
 
     await user.click(within(header).getByRole('button'))
 
-    expect(persistAIAgentChatSetting).toHaveBeenLastCalledWith({
+    expect(vi.mocked(persistAIAgentChatSetting).mock.calls.at(-1)?.[0]).toEqual({
       ...loaded.setting,
       AICallTokenLimit: AIAgentSettingDefault.AICallTokenLimit,
       UserInteractLimit: AIAgentSettingDefault.UserInteractLimit,
@@ -313,6 +306,30 @@ describe('AIConfigSettings', () => {
     expect(persistAIAgentChatSetting).not.toHaveBeenCalled()
     fireEvent.click(document.querySelector('button.ant-switch') as HTMLElement)
     expect(persistAIAgentChatSetting).toHaveBeenCalled()
+  })
+
+  it('迟到的读取补齐部分广播未携带的审核设置', async () => {
+    let resolveLoad: (value: LoadAIAgentChatSettingResult) => void = () => undefined
+    vi.mocked(loadAIAgentChatSetting).mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveLoad = resolve
+        }),
+    )
+    render(<AIConfigSettings />)
+    act(() => {
+      emiter.emit('onAIAgentChatSettingChange', JSON.stringify({ AICallTokenLimit: 88 }))
+    })
+    await act(async () => {
+      resolveLoad(successLoad({ ReviewPolicy: 'yolo', AIReviewRiskControlScore: 0.8, AICallTokenLimit: 20 }))
+    })
+    await waitReady()
+    fireEvent.click(document.querySelector('button.ant-switch') as HTMLElement)
+    expect(vi.mocked(persistAIAgentChatSetting).mock.calls.at(-1)?.[0]).toMatchObject({
+      ReviewPolicy: 'yolo',
+      AIReviewRiskControlScore: 0.8,
+      AICallTokenLimit: 88,
+    })
   })
 
   it('迟到的初次读取不会覆盖更新的广播配置', async () => {

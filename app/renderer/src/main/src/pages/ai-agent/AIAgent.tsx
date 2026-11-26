@@ -9,7 +9,7 @@ import { getRemoteValue } from '@/utils/kv'
 import { RemoteAIAgentGV } from '@/enums/aiAgent'
 import useGetSetState from '../pluginHub/hooks/useGetSetState'
 import type { AISession } from './type/aiChat'
-import { useDebounceFn, useInViewport, useMemoizedFn, useRequest, useUpdateEffect } from 'ahooks'
+import { useDebounceFn, useInViewport, useMemoizedFn, useRequest } from 'ahooks'
 import {
   AIAgentSettingDefault,
   createWelcomeChat,
@@ -17,6 +17,7 @@ import {
   YakitAIAgentPageID,
 } from './defaultConstant'
 import cloneDeep from 'lodash/cloneDeep'
+import isEqual from 'lodash/isEqual'
 import omit from 'lodash/omit'
 import { omitLegacyAIContextLimits } from '@/pages/ai-re-act/hooks/grpcApi'
 import { grpcQueryAISession } from './grpc'
@@ -24,8 +25,8 @@ import {
   applyAIAgentChatSettingBroadcast,
   applyAIAgentChatSettingSessionDefaults,
   loadAIAgentChatSetting,
-  persistAIAgentChatSetting,
-  serializeAIAgentChatSetting,
+  persistSharedChatSetting,
+  reviewSettingKeys,
 } from './utils/aiAgentChatSettingCache'
 import { AIAgentChat } from './aiAgentChat/AIAgentChat'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
@@ -55,6 +56,14 @@ import { BrowserPairingNotify } from './browserPairingNotify/BrowserPairingNotif
 
 const { ipcRenderer } = window.require('electron')
 
+const restoreReviewSettings = (initial: AIAgentSetting, current: AIAgentSetting, saved: AIAgentSetting) => ({
+  ReviewPolicy: current.ReviewPolicy === initial.ReviewPolicy ? saved.ReviewPolicy : current.ReviewPolicy,
+  AIReviewRiskControlScore:
+    current.AIReviewRiskControlScore === initial.AIReviewRiskControlScore
+      ? saved.AIReviewRiskControlScore
+      : current.AIReviewRiskControlScore,
+})
+
 export const AIAgent: React.FC<AIAgentProps> = (props) => {
   const { t } = useI18nNamespaces(['aiAgent'])
   const pageId = props.pageId || YakitRoute.AI_Agent
@@ -71,7 +80,6 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
   const [setting, setSetting, getSetting] = useGetSetState<AIAgentSetting>(
     initialSetting ?? cloneDeep(AIAgentSettingDefault),
   )
-  const lastInitializedSettingRef = useRef<AIAgentSetting>()
   // 仅记录本页刚创建并绑定的会话，不使用缓存中可能残留的 isCreate 标记。
   const locallyCreatedSessionIdRef = useRef<string>()
 
@@ -140,16 +148,21 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
     return () => observer.disconnect()
   }, [])
 
-  // 缓存全局配置数据
-  useUpdateEffect(() => {
-    // 初始化只恢复当前页面配置，不更新引擎或写回全局缓存。
-    if (setting === lastInitializedSettingRef.current) return
-    // 只有配置变化了才更新，SessionID不管
+  const updateSessionSetting = useMemoizedFn((next: AIAgentSetting) => {
+    setSetting(next)
     if (activeChat.SessionID) {
-      globalSessionEngine.updateSessionConfig(activeChat.SessionID, omitLegacyAIContextLimits(getSetting()))
+      globalSessionEngine.updateSessionConfig(activeChat.SessionID, omitLegacyAIContextLimits(next))
     }
-    persistAIAgentChatSetting(getSetting())
-  }, [setting])
+  })
+
+  const setChatSetting = useMemoizedFn((action: SetStateAction<AIAgentSetting>) => {
+    const current = getSetting()
+    const next = typeof action === 'function' ? action(current) : action
+    updateSessionSetting(next)
+    if (!isEqual(omit(current, reviewSettingKeys), omit(next, reviewSettingKeys))) {
+      void persistSharedChatSetting(next)
+    }
+  })
 
   const { onStart, onSend, onClose, onUpdatePageId, pendingChat, cancelPendingChat, detachPendingChat } = useChatIPC(
     YakitRoute.AI_Agent,
@@ -218,7 +231,7 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
   const dispatcher: AIAgentContextDispatcher = useMemo(() => {
     return {
       getSetting: getSetting,
-      setSetting: setSetting,
+      setSetting: setChatSetting,
       setActiveChat: setActiveChatForContext,
       onStart,
       onSend,
@@ -232,15 +245,20 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
     if (activeChat.SessionID) {
       Object.assign(globalSessionEngine.ensureSession(activeChat.SessionID).request, cloneDeep(value))
     }
-    lastInitializedSettingRef.current = value
     setSetting(value)
   })
 
   /** 读取全局配置缓存，初始化无会话页面 */
   const initToCacheData = useMemoizedFn(async (isDisposed: () => boolean) => {
+    const initial = getSetting()
     const result = await loadAIAgentChatSetting()
-    if (isDisposed() || result.status !== 'success') return
-    initializeSetting(applyAIAgentChatSettingSessionDefaults(result.setting))
+    if (isDisposed()) return
+    const current = getSetting()
+    const saved = result.status === 'success' ? result.setting : AIAgentSettingDefault
+    initializeSetting({
+      ...(result.status === 'success' ? applyAIAgentChatSettingSessionDefaults(saved) : current),
+      ...restoreReviewSettings(initial, current, saved),
+    })
   })
 
   const initialize = useMemoizedFn(async (sessionId: string | undefined, isDisposed: () => boolean) => {
@@ -263,8 +281,9 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
         return
       }
       // grpcQueryAISession长时间无响应： 查询期间配置已被修改时，保留当前配置。
-      if (getSetting() === initialSetting) {
-        const params = session.StartParams
+      const current = getSetting()
+      const params = session.StartParams
+      if (current === initialSetting) {
         initializeSetting({
           ...cloneDeep(AIAgentSettingDefault),
           ...omit(params, [
@@ -280,6 +299,14 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
         updateActiveChat((current) =>
           current?.SessionID === sessionId ? { ...current, StartParams: params } : current,
         )
+      } else {
+        const review = restoreReviewSettings(initialSetting, current, { ...AIAgentSettingDefault, ...params })
+        if (
+          current.ReviewPolicy !== review.ReviewPolicy ||
+          current.AIReviewRiskControlScore !== review.AIReviewRiskControlScore
+        ) {
+          initializeSetting({ ...current, ...review })
+        }
       }
       const { queryPagesDataById } = usePageInfo.getState()
       const node = queryPagesDataById(YakitRoute.AI_Agent, pageId)
@@ -330,8 +357,9 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
       try {
         const cache = JSON.parse(payload) as Partial<AIAgentSetting>
         if (typeof cache !== 'object' || !cache) return
-        if (serializeAIAgentChatSetting(getSetting()) === payload) return
-        setSetting((old) => applyAIAgentChatSettingBroadcast(old, cache))
+        const current = getSetting()
+        const next = applyAIAgentChatSettingBroadcast(current, omit(cache, reviewSettingKeys))
+        if (!isEqual(current, next)) updateSessionSetting(next)
       } catch (_) {}
     }
     emiter.on('onAIAgentChatSettingChange', onChange)

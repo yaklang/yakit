@@ -939,45 +939,6 @@ export class ChatMultiSessionController {
     return this.readyChannels.has(sessionId)
   }
 
-  /** 查询指定页面类型下已完成握手且仍有效的会话。 */
-  public getConnectedSessionIds(route: YakitRouteType): string[] {
-    const sessionIds: string[] = []
-    for (const connection of this.connectionsByToken.values()) {
-      const { lifecycle } = connection.data.meta
-      if (
-        connection.input.route !== route ||
-        !connection.confirmed ||
-        !lifecycle.current ||
-        lifecycle.closing ||
-        !connection.data.store.getState().execute
-      )
-        continue
-      sessionIds.push(connection.sessionId)
-    }
-    return sessionIds
-  }
-
-  public syncConnectedReviewPolicy(settings: Pick<AIStartParams, 'ReviewPolicy' | 'AIReviewRiskControlScore'>) {
-    const patches: AIInputEvent[] = []
-    if (settings.ReviewPolicy !== undefined) {
-      patches.push({
-        IsConfigHotpatch: true,
-        HotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_AgreePolicy,
-        Params: { ReviewPolicy: settings.ReviewPolicy },
-      })
-    }
-    if (settings.AIReviewRiskControlScore !== undefined) {
-      patches.push({
-        IsConfigHotpatch: true,
-        HotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_RiskControlScore,
-        Params: { AIReviewRiskControlScore: settings.AIReviewRiskControlScore },
-      })
-    }
-    for (const sessionId of this.getConnectedSessionIds(YakitRoute.AI_Agent)) {
-      for (const params of patches) this.handleSendMessage({ token: sessionId, type: '', params })
-    }
-  }
-
   /** 关页后的收尾窗口：连接还在，但已经在停，不能再当成一次新的建立 */
   public isSessionClosing(sessionId: string) {
     return !!this.metaPool.get(sessionId)?.lifecycle.closing || this.pendingDisposeSessions.has(sessionId)

@@ -2,6 +2,8 @@ import { type ReactNode, useEffect, useRef, useState } from 'react'
 import { Slider } from 'antd'
 import { useMemoizedFn } from 'ahooks'
 import cloneDeep from 'lodash/cloneDeep'
+import omit from 'lodash/omit'
+import isEqual from 'lodash/isEqual'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInputNumber'
@@ -15,11 +17,11 @@ import {
   applyAIAgentChatSettingBroadcast,
   loadAIAgentChatSetting,
   persistAIAgentChatSetting,
+  reviewSettingKeys,
   serializeAIAgentChatSetting,
 } from '@/pages/ai-agent/utils/aiAgentChatSettingCache'
 import emiter from '@/utils/eventBus/eventBus'
 import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
-import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import classNames from 'classnames'
 import { SettingsSections } from '../../constants'
@@ -111,29 +113,16 @@ export const AIConfigSettings: React.FC = () => {
   }
   const [setting, setSetting] = useState<AIAgentSetting>(() => cloneDeep(AIAgentSettingDefault))
   const [ready, setReady] = useState(false)
-  const lastPayloadRef = useRef(serializeAIAgentChatSetting(AIAgentSettingDefault))
   const settingRef = useRef(setting)
   const readyRef = useRef(false)
-  const hasBroadcastRef = useRef(false)
   settingRef.current = setting
 
   const applyAll = useMemoizedFn((next: AIAgentSetting) => {
     if (!readyRef.current) return
-    const reviewChanges: Pick<AIAgentSetting, 'ReviewPolicy' | 'AIReviewRiskControlScore'> = {}
-    if (next.ReviewPolicy && next.ReviewPolicy !== settingRef.current.ReviewPolicy) {
-      reviewChanges.ReviewPolicy = next.ReviewPolicy
-    }
-    if (
-      next.AIReviewRiskControlScore !== undefined &&
-      next.AIReviewRiskControlScore !== settingRef.current.AIReviewRiskControlScore
-    ) {
-      reviewChanges.AIReviewRiskControlScore = next.AIReviewRiskControlScore
-    }
-    if (Object.keys(reviewChanges).length) globalSessionEngine.syncConnectedReviewPolicy(reviewChanges)
+    const sharedSettingsChanged = !isEqual(omit(next, reviewSettingKeys), omit(settingRef.current, reviewSettingKeys))
     settingRef.current = next
     setSetting(next)
-    lastPayloadRef.current = serializeAIAgentChatSetting(next)
-    persistAIAgentChatSetting(next)
+    persistAIAgentChatSetting(next, sharedSettingsChanged)
   })
 
   const apply = useMemoizedFn((patch: Partial<AIAgentSetting>) => {
@@ -142,15 +131,17 @@ export const AIConfigSettings: React.FC = () => {
 
   useEffect(() => {
     let cancelled = false
+    const pendingBroadcasts: Partial<AIAgentSetting>[] = []
     const onChange = (payload?: string) => {
       if (!payload) return
       try {
         const cache = JSON.parse(payload) as AIAgentSetting
         if (typeof cache !== 'object' || !cache) return
-        hasBroadcastRef.current = true
-        if (payload === lastPayloadRef.current) return
-        lastPayloadRef.current = payload
-        setSetting((old) => applyAIAgentChatSettingBroadcast(old, cache))
+        if (!readyRef.current) pendingBroadcasts.push(cache)
+        const next = applyAIAgentChatSettingBroadcast(settingRef.current, cache)
+        if (serializeAIAgentChatSetting(next) === serializeAIAgentChatSetting(settingRef.current)) return
+        settingRef.current = next
+        setSetting(next)
       } catch (_) {}
     }
     emiter.on('onAIAgentChatSettingChange', onChange)
@@ -158,10 +149,12 @@ export const AIConfigSettings: React.FC = () => {
       .then((result) => {
         if (cancelled) return
         if (result.status === 'error') return
-        if (!hasBroadcastRef.current && result.status === 'success') {
-          lastPayloadRef.current = serializeAIAgentChatSetting(result.setting)
-          setSetting(result.setting)
+        if (result.status === 'success') {
+          const next = pendingBroadcasts.reduce(applyAIAgentChatSettingBroadcast, result.setting)
+          settingRef.current = next
+          setSetting(next)
         }
+        pendingBroadcasts.length = 0
         readyRef.current = true
         setReady(true)
       })
