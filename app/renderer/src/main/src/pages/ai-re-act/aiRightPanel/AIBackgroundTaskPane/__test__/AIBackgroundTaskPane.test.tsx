@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createStore } from 'zustand/vanilla'
 import type { AIAgentGrpcApi } from '../../../hooks/grpcApi'
@@ -35,6 +35,27 @@ vi.mock('../../../hooks/useCurrentSessionId', () => ({
   default: () => session.id,
 }))
 vi.mock('@/pages/ai-agent/useContext/useDispatcher', () => ({ default: () => ({ onSend }) }))
+// CI 的根配置将样式模块替换为空对象；折叠用例需要稳定 class 名。
+vi.mock('../AIBackgroundTaskPane.module.scss', () => ({
+  default: {
+    content: 'content',
+    empty: 'empty',
+    'group-title': 'group-title',
+    expanded: 'expanded',
+    'group-list': 'group-list',
+    'group-list-inner': 'group-list-inner',
+    'execution-item': 'execution-item',
+    'running-item': 'running-item',
+    running: 'running',
+    completed: 'completed',
+    failed: 'failed',
+    'execution-time': 'execution-time',
+    'execution-time-hide': 'execution-time-hide',
+    'execution-fail-reason': 'execution-fail-reason',
+    'execution-cancel': 'execution-cancel',
+    'list-end': 'list-end',
+  },
+}))
 
 const { AIBackgroundTaskPane } = await compileReactModule<typeof AIBackgroundTaskPaneModule>(
   import.meta.url,
@@ -50,6 +71,34 @@ const makeExecution = (
   state,
   metadata: { name },
 })
+
+const makeSnapshot = (running: number, succeeded: number, failed: number): AIAgentGrpcApi.AsyncExecutionSnapshot => ({
+  revision: 1,
+  running_count: running,
+  updated_at: 1,
+  executions: [
+    ...Array.from({ length: running }, (_, i) => makeExecution(`r-${i}`, AsyncExecutionState.running)),
+    ...Array.from({ length: succeeded }, (_, i) => makeExecution(`s-${i}`, AsyncExecutionState.completed)),
+    ...Array.from({ length: failed }, (_, i) => makeExecution(`f-${i}`, AsyncExecutionState.failed)),
+  ],
+})
+
+const groupTitle = (section: 'Running' | 'Succeeded' | 'Failed') =>
+  screen.getByText(new RegExp(`AIRightPanel\\.execution${section}`))
+
+const expectSectionExpanded = (section: 'Running' | 'Succeeded' | 'Failed', expanded: boolean) => {
+  const title = groupTitle(section)
+  expect(title).toHaveClass('group-title')
+  const list = title.nextElementSibling
+  expect(list).toHaveClass('group-list')
+  if (expanded) {
+    expect(title).toHaveClass('expanded')
+    expect(list).toHaveClass('expanded')
+  } else {
+    expect(title).not.toHaveClass('expanded')
+    expect(list).not.toHaveClass('expanded')
+  }
+}
 
 describe('AIBackgroundTaskPane', () => {
   beforeEach(() => {
@@ -126,5 +175,72 @@ describe('AIBackgroundTaskPane', () => {
         SyncJsonInput: JSON.stringify({ execute_id: 'exec-1' }),
       },
     })
+  })
+
+  it('首帧有数据时按 expandLimit 决定各分组初始展开', () => {
+    rawData.asyncExecution = makeSnapshot(6, 6, 1)
+    render(<AIBackgroundTaskPane />)
+    expectSectionExpanded('Running', true)
+    expectSectionExpanded('Succeeded', false)
+    expectSectionExpanded('Failed', false)
+    cleanup()
+
+    rawData.asyncExecution = makeSnapshot(1, 6, 1)
+    render(<AIBackgroundTaskPane />)
+    expectSectionExpanded('Running', true)
+    expectSectionExpanded('Succeeded', true)
+    expectSectionExpanded('Failed', false)
+  })
+
+  it('异步数据到达后按 expandLimit 初始化展开态', () => {
+    render(<AIBackgroundTaskPane />)
+    expect(screen.getByText('empty')).toBeInTheDocument()
+
+    rawData.asyncExecution = makeSnapshot(6, 1, 1)
+    act(() => {
+      store.setState({ asyncExecutionUpdate: 1 })
+    })
+    expectSectionExpanded('Running', true)
+    expectSectionExpanded('Succeeded', false)
+    expectSectionExpanded('Failed', false)
+  })
+
+  it('stopping 状态归入运行中并展示取消', () => {
+    rawData.asyncExecution = {
+      revision: 1,
+      running_count: 1,
+      updated_at: 1,
+      executions: [makeExecution('exec-stopping', AsyncExecutionState.stopping, 'stopping-task')],
+    }
+    render(<AIBackgroundTaskPane />)
+    expect(screen.getByText(/AIRightPanel\.executionRunning/)).toBeInTheDocument()
+    expect(screen.getByText('stopping-task')).toBeInTheDocument()
+    fireEvent.click(screen.getByText('AIRightPanel.executionCancel'))
+    expect(onSend).toHaveBeenCalledWith({
+      token: 'session-1',
+      type: '',
+      params: {
+        IsSyncMessage: true,
+        SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_STOP_ASYNC_EXECUTION,
+        SyncID: 'sync-id',
+        SyncJsonInput: JSON.stringify({ execute_id: 'exec-stopping' }),
+      },
+    })
+  })
+
+  it('点击分组标题切换折叠', () => {
+    rawData.asyncExecution = makeSnapshot(1, 1, 1)
+    render(<AIBackgroundTaskPane />)
+    expectSectionExpanded('Running', true)
+    expectSectionExpanded('Succeeded', true)
+    expectSectionExpanded('Failed', true)
+
+    fireEvent.click(groupTitle('Succeeded'))
+    expectSectionExpanded('Running', true)
+    expectSectionExpanded('Succeeded', false)
+    expectSectionExpanded('Failed', true)
+
+    fireEvent.click(groupTitle('Succeeded'))
+    expectSectionExpanded('Succeeded', true)
   })
 })
