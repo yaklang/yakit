@@ -6,10 +6,12 @@ import {
   loadAIAgentChatSetting,
   serializeAIAgentChatSetting,
 } from '@/pages/ai-agent/utils/aiAgentChatSettingCache'
+import type * as ChatSettingCache from '@/pages/ai-agent/utils/aiAgentChatSettingCache'
 import type { LoadAIAgentChatSettingResult } from '@/pages/ai-agent/utils/aiAgentChatSettingCache'
 import { AIAgentSettingDefault, defaultAIGlobalConfig } from '@/pages/ai-agent/defaultConstant'
 import type { AIAgentSetting } from '@/pages/ai-agent/aiAgentType'
 import emiter from '@/utils/eventBus/eventBus'
+import type * as NotificationModule from '@/utils/notification'
 import { yakitNotify } from '@/utils/notification'
 import { RemoteAIAgentGV } from '@/enums/aiAgent'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
@@ -18,7 +20,7 @@ import { grpcGetAIGlobalConfig, grpcSetAIGlobalConfig } from '@/pages/ai-agent/a
 import { useAIGlobalConfigStore } from '@/store/aiGlobalConfig'
 
 vi.mock('@/utils/notification', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@/utils/notification')>()),
+  ...(await importOriginal<typeof NotificationModule>()),
   yakitNotify: vi.fn(),
 }))
 
@@ -99,9 +101,7 @@ describe('AIConfigSettings', () => {
   })
 
   it('并发会话写入后审核补丁保留共享字段，并显示实际提交的合并结果', async () => {
-    const actual = await vi.importActual<typeof import('@/pages/ai-agent/utils/aiAgentChatSettingCache')>(
-      '@/pages/ai-agent/utils/aiAgentChatSettingCache',
-    )
+    const actual = await vi.importActual<typeof ChatSettingCache>('@/pages/ai-agent/utils/aiAgentChatSettingCache')
     const initial = successLoad({ AICallTokenLimit: 20, ReviewPolicy: 'manual' }).setting
     let stored = serializeAIAgentChatSetting(initial)
     let releaseWrite!: () => void
@@ -153,9 +153,7 @@ describe('AIConfigSettings', () => {
   })
 
   it('连续修改审核策略时，较早提交的广播不会覆盖尚未提交的新选择', async () => {
-    const actual = await vi.importActual<typeof import('@/pages/ai-agent/utils/aiAgentChatSettingCache')>(
-      '@/pages/ai-agent/utils/aiAgentChatSettingCache',
-    )
+    const actual = await vi.importActual<typeof ChatSettingCache>('@/pages/ai-agent/utils/aiAgentChatSettingCache')
     let stored = serializeAIAgentChatSetting(successLoad({ ReviewPolicy: 'manual' }).setting)
     const releases: (() => void)[] = []
     const gates = [0, 1].map(() => new Promise<void>((resolve) => releases.push(resolve)))
@@ -186,9 +184,7 @@ describe('AIConfigSettings', () => {
   })
 
   it('会话保存审核默认值后，已打开的设置页通过真实广播同步', async () => {
-    const actual = await vi.importActual<typeof import('@/pages/ai-agent/utils/aiAgentChatSettingCache')>(
-      '@/pages/ai-agent/utils/aiAgentChatSettingCache',
-    )
+    const actual = await vi.importActual<typeof ChatSettingCache>('@/pages/ai-agent/utils/aiAgentChatSettingCache')
     const initial = successLoad({ ReviewPolicy: 'manual', AIReviewRiskControlScore: 0.5 }).setting
     vi.mocked(loadAIAgentChatSetting).mockResolvedValueOnce({ status: 'success', setting: initial })
     vi.mocked(getRemoteValue).mockResolvedValue(serializeAIAgentChatSetting(initial))

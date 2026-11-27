@@ -1,5 +1,6 @@
 import '../../ai-re-act/hooks/__test__/setupElectron'
 import type { ReactNode } from 'react'
+import type * as AIAgentChatModule from '../aiAgentChat/AIAgentChat'
 import type { AIAgentChatProps } from '../aiAgentChat/type'
 import type { AIAgentChatLayoutProps } from '../aiAgentChat/AIAgentChatLayout/AIAgentChatLayout'
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
@@ -116,7 +117,7 @@ vi.mock('../../yakRunner/SplitView/SplitView', () => ({
 }))
 
 vi.mock('../aiAgentChat/AIAgentChat', async (importOriginal) => {
-  const { AIAgentChat: RealChat } = await importOriginal<typeof import('../aiAgentChat/AIAgentChat')>()
+  const { AIAgentChat: RealChat } = await importOriginal<typeof AIAgentChatModule>()
   const { useContext, useEffect } = await import('react')
   const { default: AIAgentContext } = await import('../useContext/AIAgentContext')
   return {

@@ -1251,7 +1251,7 @@ describe('输入框资料栏', () => {
     expect(stop.compareDocumentPosition(send) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
-  it('上下文单独显示时独占状态区，排队和停止按钮不计入状态项', () => {
+  it('空闲时上下文独占状态区，普通和目标模式运行时均显示轮次状态', () => {
     const { container, rerender } = render(<AIChatTextarea chatDataStoreKey="test" />)
 
     expect(screen.getByRole('progressbar', { name: 'AIContextUsage.label' })).toBeInTheDocument()
@@ -1274,7 +1274,8 @@ describe('输入框资料栏', () => {
       sessionStore.setState({ execute: true, sessionSnapshot: processingSnapshot })
       publishGoalPolicy(false)
     })
-    expect(Array.from(statusItems.children)).toEqual([contextButton])
+    expect(Array.from(statusItems.children)).toEqual([contextButton, screen.getByRole('status')])
+    expect(screen.getByRole('status')).toHaveTextContent('AIRunningStatus.round')
     act(() => publishGoalPolicy(true))
     expect(Array.from(statusItems.children)).toEqual([contextButton, screen.getByRole('status')])
 
