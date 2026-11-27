@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen, waitFor, within } from '@testing-librar
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createChatStore } from '@/pages/ai-re-act/hooks/chatStore'
 import { DefaultPlanItemDetailsData } from '@/pages/ai-re-act/hooks/defaultConstant'
+import { AITaskStatus } from '@/pages/ai-re-act/hooks/grpcApi'
 import AIRunningStatus from '../AIRunningStatus/AIRunningStatus'
 import styles from '../AIRunningStatus/AIRunningStatus.module.scss'
 import emiter from '@/utils/eventBus/eventBus'
@@ -51,6 +52,7 @@ beforeEach(() => {
   currentSessionId.mockReturnValue('running-session')
   store = createChatStore()
   store.setState({ execute: true })
+  store.getState().updateCurrentChatStatus({ status: AITaskStatus.inProgress })
   rawData.agentPolicySnapshot = initialPolicy
   rawData.pendingGoalDurationSeconds = undefined
   rawData.agentPolicySnapshotReceivedAtMs = performance.now()
@@ -180,6 +182,33 @@ it('does not fall back to accumulated execution time when current_round_start_at
   const trigger = screen.getByRole('button', { name: 'AIRunningStatus.label 2 —' })
   expect(trigger).toHaveTextContent(/· —$/)
   expect(trigger).not.toHaveTextContent('12m36s')
+})
+
+it('hides a stale processing snapshot when the current task already finished', () => {
+  store.setState({
+    sessionSnapshot: snapshot,
+    currentChatStatus: {
+      questionID: 'question',
+      coordinatorId: '',
+      status: AITaskStatus.success,
+    },
+  })
+  render(<AIRunningStatus />)
+  expect(screen.queryByRole('status')).toBeNull()
+})
+
+it('keeps the running status visible while waiting for the first reply', () => {
+  store.setState({
+    sessionSnapshot: snapshot,
+    pendingReply: true,
+    currentChatStatus: {
+      questionID: '',
+      coordinatorId: '',
+      status: AITaskStatus.created,
+    },
+  })
+  render(<AIRunningStatus />)
+  expect(screen.getByRole('status')).toBeInTheDocument()
 })
 
 it('recalibrates elapsed time when only the snapshot receipt timestamp changes', () => {
@@ -526,15 +555,12 @@ it('ticks the elapsed time in a non-deadline status and keeps only the round whe
   }
 })
 
-it.each([
-  ['AIRunningStatus.unlimited', 'never_ending', -1],
-  ['AIRunningStatus.stopAfterRound', 'disabled', 0],
-] as const)('shows duration presets after the policy snapshot confirms %s', async (action, mode, seconds) => {
+it('shows duration presets after the policy snapshot confirms unlimited', async () => {
   store.setState({ sessionSnapshot: snapshot })
   render(<AIRunningStatus />)
   const trigger = screen.getByRole('button', { name: 'AIRunningStatus.state 12m36s' })
   fireEvent.click(trigger)
-  fireEvent.click(screen.getByRole('button', { name: action }))
+  fireEvent.click(screen.getByRole('button', { name: 'AIRunningStatus.unlimited' }))
   expect(screen.queryByText('AIRunningStatus.resetDurationHint')).toBeNull()
   expect(onSend).toHaveBeenCalledTimes(2)
 
@@ -543,8 +569,8 @@ it.each([
       ...initialPolicy,
       goal: {
         ...initialPolicy.goal,
-        effective: mode === 'never_ending',
-        time_limit: { mode, configured_duration_seconds: seconds, deadline_at: 0 },
+        effective: true,
+        time_limit: { mode: 'never_ending', configured_duration_seconds: -1, deadline_at: 0 },
       },
     }
     store.getState().updateStateCount('agentPolicySnapshotUpdate')
@@ -561,7 +587,7 @@ it.each([
   ])
   expect(durationOptions.getByRole('button', { name: 'AIMilkdownModeSlash.durationNever' })).toHaveAttribute(
     'aria-pressed',
-    String(mode === 'never_ending'),
+    'true',
   )
   expect(screen.queryByRole('button', { name: 'AIMilkdownModeSlash.minIterations' })).toBeNull()
   expect(screen.queryByRole('button', { name: 'AIMilkdownModeSlash.acceptance' })).toBeNull()
@@ -595,37 +621,27 @@ it.each([
   expect(setSetting).not.toHaveBeenCalled()
 })
 
-it('shows that the current time limit was removed when Goal is enabled with a disabled time limit', async () => {
+it.each([
+  ['disabled', 0],
+  ['deadline', initialPolicy.goal.time_limit.deadline_at],
+] as const)('keeps the %s status non-interactive when configured duration is zero', (mode, deadlineAt) => {
   rawData.agentPolicySnapshot = {
     ...initialPolicy,
     goal: {
       ...initialPolicy.goal,
       enabled: true,
       effective: false,
-      time_limit: { mode: 'disabled', configured_duration_seconds: 0, deadline_at: 0 },
+      time_limit: { mode, configured_duration_seconds: 0, deadline_at: deadlineAt },
     },
   }
   store.setState({ sessionSnapshot: snapshot })
   render(<AIRunningStatus />)
-  fireEvent.click(screen.getByRole('button', { name: 'AIRunningStatus.state 12m36s' }))
-  const removed = screen.getByText('AIRunningStatus.timeLimitRemoved')
-  await waitFor(() => expect(removed).toBeVisible())
-  expect(removed.querySelector('svg')).toBeInTheDocument()
-  expect(screen.queryByText('AIRunningStatus.remaining')).toBeNull()
-  expect(screen.getByText('AIRunningStatus.resetDurationHint')).toBeInTheDocument()
-  expect(
-    within(screen.getByRole('group', { name: 'AIMilkdownModeSlash.duration' }))
-      .getAllByRole('button')
-      .map((button) => button.textContent),
-  ).toEqual(['30m', '1h', '3h', 'AIMilkdownModeSlash.durationNever', 'AIRunModeSelect.customDuration'])
-  expect(screen.queryByRole('group', { name: 'AIRunningStatus.shorten' })).toBeNull()
+  const status = screen.getByRole('status')
+  expect(status).toHaveTextContent(/^AIRunningStatus.state[\s\S]*12m36s$/)
+  expect(status.querySelector('svg')).toBeNull()
+  expect(screen.queryByRole('button')).toBeNull()
+  expect(screen.queryByText('AIRunningStatus.title')).toBeNull()
   expect(onSend).not.toHaveBeenCalled()
-  fireEvent.click(screen.getByRole('button', { name: 'AIMilkdownModeSlash.durationNever' }))
-  expect(onSend.mock.calls[0][0].params).toMatchObject({
-    HotpatchType: 'GoalTime',
-    GoalTimePatch: { Action: 'AI_GOAL_TIME_ACTION_NEVER_ENDING' },
-  })
-  expect(rawData.pendingGoalDurationSeconds).toBe(-1)
 })
 
 it('shows elapsed time and the deadline preview without a round', async () => {

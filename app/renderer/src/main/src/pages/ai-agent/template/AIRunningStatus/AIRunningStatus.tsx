@@ -13,6 +13,7 @@ import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
 import {
   AIGoalTimeAction,
+  AITaskStatus,
   AIInputEventHotPatchTypeEnum,
   AIInputEventSyncTypeEnum,
 } from '@/pages/ai-re-act/hooks/grpcApi'
@@ -50,6 +51,7 @@ const formatWorkDuration = (seconds?: number, maxUnits?: number) => {
 const readGoalTiming = ({ agentPolicySnapshot, agentPolicySnapshotReceivedAtMs }: AIAgentChatData) => {
   if (agentPolicySnapshot?.goal.enabled !== true) return
   const timeLimit = agentPolicySnapshot.goal.time_limit
+  if ((timeLimit?.configured_duration_seconds ?? 0) === 0) return { panel: undefined }
   if (timeLimit?.mode !== 'deadline') {
     const mode = timeLimit?.mode
     const editable = mode === 'never_ending' || mode === 'disabled'
@@ -75,12 +77,20 @@ const AIRunningStatus: FC<AIRunningStatusProps> = ({ className }) => {
   const store = useCurrentStore()
   const rawData = useCurrentRawData()
   const execute = useStore(store, (state) => state.execute)
+  const pendingReply = useStore(store, (state) => state.pendingReply)
+  const chatStatus = useStore(store, (state) => state.currentChatStatus.status)
   const execution = useStore(store, (state) => state.sessionSnapshot?.execution)
   const round = useStore(store, (state) => state.sessionSnapshot?.current_round)
   const roundStartAt = useStore(store, (state) => state.sessionSnapshot?.current_round_start_at)
   const agentPolicySnapshotUpdate = useStore(store, (state) => state.agentPolicySnapshotUpdate)
   const timing = useCreation(() => readGoalTiming(rawData), [rawData, agentPolicySnapshotUpdate])
-  if (!execute || execution?.status !== 'processing') return null
+  if (
+    !execute ||
+    (chatStatus !== AITaskStatus.inProgress && !pendingReply) ||
+    (execution !== undefined && execution.status !== 'processing')
+  ) {
+    return null
+  }
 
   return (
     <RunningStatusButton
@@ -88,7 +98,7 @@ const AIRunningStatus: FC<AIRunningStatusProps> = ({ className }) => {
       timing={timing}
       round={round}
       roundStartAt={roundStartAt}
-      executionSeconds={execution.execution_seconds}
+      executionSeconds={execution?.execution_seconds}
     />
   )
 }
