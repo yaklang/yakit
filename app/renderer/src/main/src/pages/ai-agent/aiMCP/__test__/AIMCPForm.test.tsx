@@ -100,6 +100,13 @@ describe('AIMCPForm 保存', () => {
     expect(onCancel.mock.calls[0]).toHaveLength(0)
   })
 
+  it('提供粘贴入口时，点击按钮进入导入流程', () => {
+    const onPasteConfig = vi.fn()
+    render(<AIMCPForm onCancel={vi.fn()} onPasteConfig={onPasteConfig} />)
+    fireEvent.click(screen.getByRole('button', { name: 'AIMCPImport.paste' }))
+    expect(onPasteConfig).toHaveBeenCalledTimes(1)
+  })
+
   it('重名等保存失败时提示错误，不回调不关闭', async () => {
     vi.mocked(grpcAddMCPServer).mockResolvedValue({ Ok: false, Reason: 'mcp server name already exists' })
     const onCancel = vi.fn()

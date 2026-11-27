@@ -4,6 +4,8 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testi
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import '../../../ai-re-act/hooks/__test__/setupElectron'
 import AIMCP from '../AIMCP'
+import { AIMCPImport } from '../AIMCPImportModal'
+import { AIMCPForm } from '../aiMCPForm/AIMCPForm'
 import styles from '../AIMCP.module.scss'
 import { getMCPServersById, grpcDeleteMCPServer, grpcGetAllMCPServers, grpcUpdateMCPServer } from '../utils'
 import { showYakitModal, YakitModalConfirm } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
@@ -15,7 +17,8 @@ vi.mock('../utils', () => ({
   grpcDeleteMCPServer: vi.fn(),
   getMCPServersById: vi.fn(),
 }))
-vi.mock('../aiMCPForm/AIMCPForm', () => ({ AIMCPForm: () => null }))
+vi.mock('../aiMCPForm/AIMCPForm', () => ({ AIMCPForm: vi.fn(() => null) }))
+vi.mock('../AIMCPImportModal', () => ({ AIMCPImport: vi.fn(() => null) }))
 // jsdom 无真实尺寸，useVirtualList 渲染不出条目，按 MessageCenter 测试的做法直接平铺数据
 vi.mock('@/components/RollingLoadList/RollingLoadList', () => ({
   RollingLoadList: ({ data, renderRow }: { data: any[]; renderRow: (item: any, index: number) => React.ReactNode }) => (
@@ -72,6 +75,7 @@ const modalForm = () => {
     onCancel: (saved?: AddMCPServerRequest | UpdateMCPServerRequest) => void
   }>
 }
+const addForm = () => vi.mocked(AIMCPForm).mock.lastCall![0]
 const confirmConfig = () => {
   const config = vi.mocked(YakitModalConfirm).mock.calls[0][0]
   return config as unknown as {
@@ -101,6 +105,7 @@ beforeEach(() => {
 afterEach(() => {
   cleanup()
   vi.unstubAllGlobals()
+  vi.unstubAllEnvs()
 })
 
 describe('AIMCP 服务器列表', () => {
@@ -121,7 +126,7 @@ describe('AIMCP 服务器列表', () => {
     await screen.findByText('YakitEmpty.noData')
     expect(screen.queryByText(server.Name)).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'AIMCP.addMcp' }))
-    expect(showYakitModal).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ width: 600 }))
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
   })
 
   it('分组可折叠与展开，不重新查询列表', async () => {
@@ -311,17 +316,17 @@ describe('AIMCP 服务器列表', () => {
     render(<AIMCP />)
     await screen.findByText('YakitEmpty.noData')
     fireEvent.click(screen.getByRole('button', { name: 'AIMCP.addMcpServer' }))
-    expect(showYakitModal).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ width: 600 }))
-    const form = modalForm()
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    const form = addForm()
     await act(async () => {
       savedInDb = true
-      form.props.onCancel(created)
+      form.onCancel(created)
     })
     await screen.findByText('AIMCP.toolList')
     // 定位查询按新服务器名独立发起，可见列表仍按当前关键词刷新
     expect(vi.mocked(grpcGetAllMCPServers).mock.calls.filter(([req]) => req.Keyword === saved.Name)).toHaveLength(1)
     expect(vi.mocked(grpcGetAllMCPServers).mock.calls.filter(([req]) => req.Keyword === '')).toHaveLength(2)
-    expect(vi.mocked(showYakitModal).mock.results[0].value.destroy).toHaveBeenCalled()
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
   })
 
   it('非匹配搜索下新增启用服务器仍会自动打开工具列表', async () => {
@@ -351,10 +356,10 @@ describe('AIMCP 服务器列表', () => {
     })
     await waitFor(() => expect(vi.mocked(grpcGetAllMCPServers).mock.calls.some(([req]) => req.Keyword === 'missing')))
     fireEvent.click(screen.getByRole('button', { name: 'AIMCP.addMcpServer' }))
-    const form = modalForm()
+    const form = addForm()
     await act(async () => {
       savedInDb = true
-      form.props.onCancel(created)
+      form.onCancel(created)
     })
     await screen.findByText('AIMCP.toolList')
     // 定位查询按新服务器名独立发起；可见列表仍按 'missing' 过滤，保持空态
@@ -382,10 +387,10 @@ describe('AIMCP 服务器列表', () => {
     render(<AIMCP />)
     await screen.findByText('YakitEmpty.noData')
     fireEvent.click(screen.getByRole('button', { name: 'AIMCP.addMcpServer' }))
-    const form = modalForm()
+    const form = addForm()
     await act(async () => {
       savedInDb = true
-      form.props.onCancel(created)
+      form.onCancel(created)
     })
     // 未启用的保存只刷新列表，不打开工具页
     await waitFor(() =>
@@ -393,7 +398,7 @@ describe('AIMCP 服务器列表', () => {
     )
     expect(screen.queryByText('AIMCP.toolList')).not.toBeInTheDocument()
     expect(within(group('disabledGroup')).getByText(saved.Name)).toBeInTheDocument()
-    expect(vi.mocked(showYakitModal).mock.results[0].value.destroy).toHaveBeenCalled()
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
   })
 
   it('新增后定位请求失败仅刷新列表且不跳转', async () => {
@@ -415,10 +420,10 @@ describe('AIMCP 服务器列表', () => {
     render(<AIMCP />)
     await screen.findByText('YakitEmpty.noData')
     fireEvent.click(screen.getByRole('button', { name: 'AIMCP.addMcpServer' }))
-    const form = modalForm()
+    const form = addForm()
     await act(async () => {
       savedInDb = true
-      form.props.onCancel(created)
+      form.onCancel(created)
     })
     await waitFor(() =>
       expect(vi.mocked(grpcGetAllMCPServers).mock.calls.filter(([req]) => req.Keyword === '')).toHaveLength(2),
@@ -447,10 +452,10 @@ describe('AIMCP 服务器列表', () => {
     render(<AIMCP />)
     await screen.findByText('YakitEmpty.noData')
     fireEvent.click(screen.getByRole('button', { name: 'AIMCP.addMcpServer' }))
-    const form = modalForm()
+    const form = addForm()
     await act(async () => {
       savedInDb = true
-      form.props.onCancel(created)
+      form.onCancel(created)
     })
     await waitFor(() =>
       expect(vi.mocked(grpcGetAllMCPServers).mock.calls.filter(([req]) => req.Keyword === '')).toHaveLength(2),
@@ -463,12 +468,37 @@ describe('AIMCP 服务器列表', () => {
     render(<AIMCP />)
     await screen.findByText(server.Name)
     fireEvent.click(screen.getByRole('button', { name: 'AIMCP.addMcpServer' }))
-    const form = modalForm()
+    const form = addForm()
     await act(async () => {
-      form.props.onCancel()
+      form.onCancel()
     })
     expect(grpcGetAllMCPServers).toHaveBeenCalledTimes(1)
     expect(screen.getByText(server.Name)).toBeInTheDocument()
+  })
+
+  it('Memfit 在同一个新增弹窗切换手动填写和导入预览，保存后刷新列表', async () => {
+    vi.stubEnv('YAKIT_EDITION', 'memfit')
+    render(<AIMCP />)
+    await screen.findByText(server.Name)
+    fireEvent.click(screen.getByRole('button', { name: 'AIMCP.addMcpServer' }))
+    const dialog = screen.getByRole('dialog')
+    const paste = () => act(() => addForm().onPasteConfig?.())
+    const importProps = () => vi.mocked(AIMCPImport).mock.lastCall![0]
+
+    paste()
+    expect(screen.getByRole('dialog')).toBe(dialog)
+    expect(within(dialog).getByText('AIMCPImport.title')).toBeInTheDocument()
+    expect(showYakitModal).not.toHaveBeenCalled()
+    act(() => importProps().onBackToForm?.())
+    expect(screen.getByRole('dialog')).toBe(dialog)
+    expect(within(dialog).getByText('AIMCP.addMcpServer')).toBeInTheDocument()
+
+    paste()
+    await act(async () => importProps().onImported())
+    expect(grpcGetAllMCPServers).toHaveBeenCalledTimes(2)
+    expect(screen.getByRole('dialog')).toBe(dialog)
+    act(() => importProps().onClose())
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
   })
 
   it('编辑保存为启用态后刷新列表并延迟拉取工具，不打开工具列表', async () => {

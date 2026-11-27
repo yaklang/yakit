@@ -19,7 +19,7 @@ import type { HTTPHeader } from '@/pages/mitm/MITMContentReplacerHeaderOperator'
 import type { KVPair } from '@/models/kv'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 export const AIMCPForm: React.FC<AIMCPFormProps> = React.memo((props) => {
-  const { onCancel, defaultValues } = props
+  const { onCancel, defaultValues, onPasteConfig } = props
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const [loading, setLoading] = useState<boolean>(false)
   const tableRef = useRef<HTMLDivElement>(null)
@@ -274,6 +274,11 @@ export const AIMCPForm: React.FC<AIMCPFormProps> = React.memo((props) => {
         onSave={onSaveHeaders}
       />
       <div className={styles['button-group']}>
+        {onPasteConfig && (
+          <YakitButton type="outline1" className={styles['paste-config']} disabled={loading} onClick={onPasteConfig}>
+            {t('AIMCPImport.paste')}
+          </YakitButton>
+        )}
         <YakitButton type="outline2" size="large" onClick={() => onCancel()}>
           {t('YakitButton.cancel')}
         </YakitButton>
