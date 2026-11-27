@@ -1271,7 +1271,8 @@ describe('输入框资料栏', () => {
       />,
     )
     act(() => {
-      sessionStore.setState({ execute: true, sessionSnapshot: processingSnapshot })
+      startSessionTask()
+      sessionStore.setState({ sessionSnapshot: processingSnapshot })
       publishGoalPolicy(false)
     })
     expect(Array.from(statusItems.children)).toEqual([contextButton, screen.getByRole('status')])
@@ -1540,7 +1541,8 @@ describe('输入框资料栏', () => {
   })
 
   it('右侧配置支持调整状态组件顺序和自定义内容', () => {
-    sessionStore.setState({ execute: true, sessionSnapshot: processingSnapshot })
+    startSessionTask()
+    sessionStore.setState({ sessionSnapshot: processingSnapshot })
     render(
       <AIChatTextarea
         chatDataStoreKey="test"
