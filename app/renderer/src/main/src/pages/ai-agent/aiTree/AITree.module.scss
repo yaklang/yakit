@@ -98,7 +98,8 @@
         border-right: 4px solid var(--bg-hover-color);
       }
       .node-title .node-extra {
-        .info-icon {
+        .info-icon,
+        .sub-forge-chevron {
           display: block;
         }
       }
@@ -129,7 +130,8 @@
         display: flex;
         align-items: center;
         gap: 4px;
-        .info-icon {
+        .info-icon,
+        .sub-forge-chevron {
           display: none;
         }
       }

@@ -4,7 +4,7 @@ import { TaskErrorIcon } from '@yakit-libs/yakit-ui-icons/oldicon/TaskErrorIcon'
 import { TaskSkippedIcon } from '@yakit-libs/yakit-ui-icons/oldicon/TaskSkippedIcon'
 import { TaskSuccessIcon } from '@yakit-libs/yakit-ui-icons/oldicon/TaskSuccessIcon'
 import { TaskInProgressIndicator } from './TaskInProgressIndicator'
-import { InformationCircleOutlined, ListTodoOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { ChevronRightOutlined, InformationCircleOutlined, ListTodoOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { useMemoizedFn } from 'ahooks'
 
@@ -147,7 +147,7 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(
       return (
         <div className={styles['node-title']}>
           <p>{data.name}</p>
-          <div className={styles['node-extra']} onClick={(e) => e.stopPropagation()}>
+          <div className={styles['node-extra']}>
             {!isSubForgeTreeTask(data.task_id) && (
               <YakitPopover
                 classNames={{ root: styles['task-detail-popover'] }}
@@ -162,7 +162,11 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(
                 open={infoShow}
                 onOpenChange={setInfoShow}
               >
-                <InformationCircleOutlined className={styles['info-icon']} color="currentColor" />
+                <InformationCircleOutlined
+                  className={styles['info-icon']}
+                  color="currentColor"
+                  onClick={(e) => e.stopPropagation()}
+                />
               </YakitPopover>
             )}
             {data.isLeaf && data.progress === 'processing' && <AIHistorySkipTask taskId={data.task_id} />}
@@ -177,6 +181,9 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(
               </Tooltip>
             )}
             {aiTreeTitleExtraNode && <div className={styles['ai-tree-extra-node']}>{aiTreeTitleExtraNode?.(data)}</div>}
+            {!!data.subForgeChildren?.length && (
+              <ChevronRightOutlined className={styles['sub-forge-chevron']} color="currentColor" />
+            )}
           </div>
         </div>
       )

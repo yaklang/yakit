@@ -68,6 +68,7 @@ const dependencies: Record<string, unknown> = {
   '@yakit-libs/yakit-ui-icons/outline': {
     InformationCircleOutlined: () => null,
     ListTodoOutlined: () => null,
+    ChevronRightOutlined: () => null,
   },
   '@/components/yakitUI/YakitPopover/YakitPopover': {
     YakitPopover: ({ children }: React.PropsWithChildren) => <>{children}</>,
