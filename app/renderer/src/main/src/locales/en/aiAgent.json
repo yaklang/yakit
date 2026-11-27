@@ -979,7 +979,6 @@
     "envVariables": "Environment Variables"
   },
   "AIMCPImport": {
-    "backToForm": "Back to manual setup",
     "editJson": "Edit JSON",
     "reading": "Reading configuration…",
     "paste": "Paste configuration",

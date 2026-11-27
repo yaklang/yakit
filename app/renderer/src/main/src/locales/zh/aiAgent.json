@@ -979,7 +979,6 @@
     "envVariables": "环境变量"
   },
   "AIMCPImport": {
-    "backToForm": "返回手动添加",
     "editJson": "编辑 JSON",
     "reading": "正在解析配置…",
     "paste": "粘贴配置",

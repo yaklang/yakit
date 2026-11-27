@@ -11,6 +11,7 @@ import { yakitNotify } from '@/utils/notification'
 import type { MCPServer } from '../type/aiMCP'
 import { getMCPServersById, grpcAddMCPServer, grpcGetAllMCPServers, grpcUpdateMCPServer } from './utils'
 import { type MCPImportEntry, parseMCPImportConfig } from './mcpImportConfig'
+import { ReplyOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import styles from './AIMCPImportModal.module.scss'
 
 type ExistingServer = Pick<MCPServer, 'ID' | 'Enable'>
@@ -321,13 +322,13 @@ export const AIMCPImport = ({ config, onImported, onClose, onBackToForm, onSavin
       <div className={styles['import-footer']}>
         {onBackToForm && !imported && (
           <YakitButton
-            type="text"
-            size="large"
+            type="outline1"
             className={styles['import-back']}
             disabled={operation === 'saving'}
             onClick={onBackToForm}
+            icon={<ReplyOutlined color="currentColor" />}
           >
-            {t('AIMCPImport.backToForm')}
+            {t('YakitButton.back')}
           </YakitButton>
         )}
         <YakitButton type="outline2" size="large" disabled={operation === 'saving'} onClick={onClose}>
