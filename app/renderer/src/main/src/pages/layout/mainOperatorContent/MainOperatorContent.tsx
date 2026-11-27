@@ -1005,6 +1005,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
       case YakitRoute.ManageRightClickPlugins:
         addManageRightClickPlugins(params)
         break
+      case YakitRoute.AI_Bash_Guard_Rules:
+        addAIBashGuardRules()
+        break
       case YakitRoute.ContextMenuResult:
         addContextMenuResult(params)
         break
@@ -1350,6 +1353,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         },
       },
     )
+  })
+  const addAIBashGuardRules = useMemoizedFn(() => {
+    openMenuPage({ route: YakitRoute.AI_Bash_Guard_Rules })
   })
   const addSettingsPage = useMemoizedFn((data?: { anchor?: string; section?: string }) => {
     const isExist = pageCache.filter((item) => item.route === YakitRoute.Settings).length

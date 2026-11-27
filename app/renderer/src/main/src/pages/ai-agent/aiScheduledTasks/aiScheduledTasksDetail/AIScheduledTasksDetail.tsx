@@ -185,6 +185,7 @@ const AIScheduledTasksDetail: React.FC<AIScheduledTasksDetailProps> = React.memo
       EnablePlan: relatedSession.StartParams?.EnablePlan ?? false,
       SingleModelMode: relatedSession.StartParams?.SingleModelMode ?? false,
       DisableMemoryTriage: relatedSession.StartParams?.DisableMemoryTriage ?? false,
+      DisableBuiltinSyntaxFlowRules: relatedSession.StartParams?.DisableBuiltinSyntaxFlowRules ?? true,
       Strategy: {
         EnableMultiAgent: relatedSession.StartParams?.Strategy?.EnableMultiAgent ?? false,
         EnableGoalMode: relatedSession.StartParams?.Strategy?.EnableGoalMode ?? false,

@@ -193,6 +193,13 @@ export interface AIStartParams {
    * @default false
    */
   DisableMemoryTriage?: boolean
+
+  /**
+   * 为 true 时关闭命令执行安全规则（内置规则与自定义规则都不生效）。
+   * 前端默认关闭安全规则，即默认发送 true。
+   * @default true
+   */
+  DisableBuiltinSyntaxFlowRules?: boolean
 }
 
 /** 执行策略，对应后端 AIExecutionStrategy */
@@ -238,6 +245,7 @@ export enum AIInputEventHotPatchTypeEnum {
   HotPatchType_SyncPerceptionTrigger = 'SyncPerceptionTrigger',
   HotPatchType_EnablePlan = 'EnablePlan',
   HotPatchType_Strategy = 'ExecutionStrategy',
+  HotPatchType_SyntaxFlowRules = 'SyntaxFlowRules',
 
   HotPatchType_EnabledCapabilities = 'EnabledCapabilities',
   HotPatchType_DisabledCapabilities = 'DisabledCapabilities',

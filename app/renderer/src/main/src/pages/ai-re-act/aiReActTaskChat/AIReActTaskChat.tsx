@@ -39,6 +39,7 @@ import useCurrentSessionId from '../hooks/useCurrentSessionId'
 import { useStore } from 'zustand'
 import { AIAgentSettingDefault } from '@/pages/ai-agent/defaultConstant'
 import { isChatSession } from '@/pages/ai-agent/utils/isChatSession'
+import { YakitRoute } from '@/enums/yakitRoute'
 
 const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
   const { setShowFreeChat, setTimeLine, onTaskTabsChange } = props
@@ -150,7 +151,12 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
   const effectiveSingleModelMode = globalSingleModelMode || !!setting.SingleModelMode
   const singleModelModeLocked = globalSingleModelMode || isChatSession(activeChat) || execute
   const allowUserPrompt = !(setting.DisallowRequireForUserPrompt ?? AIAgentSettingDefault.DisallowRequireForUserPrompt)
-
+  // 会话配置优先，缺省回退全局默认；后端字段是 Disable 语义，UI 用正向开关展示。
+  const enableCommandSecurityRules = !(
+    setting.DisableBuiltinSyntaxFlowRules ??
+    aiGlobalConfig.DisableBuiltinSyntaxFlowRules ??
+    AIAgentSettingDefault.DisableBuiltinSyntaxFlowRules
+  )
   const [visible, setVisible] = useControllableValue<boolean>(props, {
     defaultValue: false,
     valuePropName: 'visible',
@@ -177,7 +183,8 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
     if (!visible) return
     form.setFieldValue('SingleModelMode', effectiveSingleModelMode)
     form.setFieldValue('AllowUserPrompt', allowUserPrompt)
-  }, [visible, effectiveSingleModelMode, allowUserPrompt])
+    form.setFieldValue('EnableCommandSecurityRules', enableCommandSecurityRules)
+  }, [visible, effectiveSingleModelMode, allowUserPrompt, enableCommandSecurityRules])
 
   // 缓存弹窗打开时的文本域初始值，用于关闭时比较是否修改
   const promptSnapshotRef = useRef<{ AIPresetPrompt: string; AIPlanPrompt: string }>({
@@ -264,6 +271,15 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
         SyncPerceptionTrigger: !!changedValues.SyncPerceptionTrigger,
       }))
     }
+    if (has(changedValues, 'EnableCommandSecurityRules')) {
+      const next = {
+        DisableBuiltinSyntaxFlowRules: !changedValues.EnableCommandSecurityRules,
+      }
+      // 会话级启动参数随 setting 下发；同时写回全局默认，供新会话/其它入口复用。
+      onHotConfigChange(AIInputEventHotPatchTypeEnum.HotPatchType_SyntaxFlowRules, next)
+      setSetting?.((v) => ({ ...v, ...next }))
+      aiGlobalConfigEvent.setAIGlobalConfig(next)
+    }
   })
 
   // 打开弹窗时记录当前文本域快照，关闭时若有改动才保存
@@ -276,6 +292,7 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
       form.setFieldsValue({
         AllowUserPrompt: allowUserPrompt,
         SingleModelMode: effectiveSingleModelMode,
+        EnableCommandSecurityRules: enableCommandSecurityRules,
         AIPresetPrompt: aiGlobalConfig.AIPresetPrompt || '',
         AIPlanPrompt: aiGlobalConfig.AIPlanPrompt || '',
       })
@@ -299,12 +316,17 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
     const defaults = {
       SingleModelMode: singleModelModeLocked ? effectiveSingleModelMode : !!AIAgentSettingDefault.SingleModelMode,
       SyncPerceptionTrigger: !!AIAgentSettingDefault.SyncPerceptionTrigger,
+      EnableCommandSecurityRules: !AIAgentSettingDefault.DisableBuiltinSyntaxFlowRules,
       AIPresetPrompt: '',
       AIPlanPrompt: '',
     }
     form.setFieldsValue(defaults)
     onValuesChange(defaults)
     modelContextRef.current?.reset()
+  })
+
+  const onOpenBashGuardRules = useMemoizedFn(() => {
+    emiter.emit('openPage', JSON.stringify({ route: YakitRoute.AI_Bash_Guard_Rules }))
   })
 
   return (
@@ -350,6 +372,7 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
               SingleModelMode: effectiveSingleModelMode,
               SyncPerceptionTrigger: setting.SyncPerceptionTrigger,
               EnablePlan: setting.EnablePlan,
+              EnableCommandSecurityRules: enableCommandSecurityRules,
               AIPresetPrompt: aiGlobalConfig.AIPresetPrompt || '',
               AIPlanPrompt: aiGlobalConfig.AIPlanPrompt || '',
             }}
@@ -425,6 +448,38 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
             </div>
             <div className={styles['model-context-settings']}>
               <AIModelContextSettings key={sessionId} ref={bindModelContext} source="settings" open={visible} />
+            </div>
+            <div className={styles['settings-options']}>
+              <Form.Item
+                label={
+                  <div className={styles['setting-label']}>
+                    <span>{t('AIReActTaskChatContent.enableCommandSecurityRules')}</span>
+                    <span className={styles['setting-description']}>
+                      {t('AIReActTaskChatContent.enableCommandSecurityRulesTip')}
+                    </span>
+                  </div>
+                }
+                name="EnableCommandSecurityRules"
+                layout="horizontal"
+                valuePropName="checked"
+                className={styles['inline-form-item']}
+              >
+                <YakitSwitch
+                  aria-label={t('AIReActTaskChatContent.enableCommandSecurityRules')}
+                  wrapperClassName={styles['setting-switch']}
+                />
+              </Form.Item>
+              <div className={styles['custom-rule-entry']}>
+                <div className={styles['setting-label']}>
+                  <span>{t('AIReActTaskChatContent.customBashRulesTitle')}</span>
+                  <span className={styles['setting-description']}>
+                    {t('AIReActTaskChatContent.customBashRulesTip')}
+                  </span>
+                </div>
+                <YakitButton type="outline2" size="small" onClick={onOpenBashGuardRules}>
+                  {t('AIReActTaskChatContent.configureCustomSyntaxFlowRules')}
+                </YakitButton>
+              </div>
             </div>
             <Form.Item
               label={t('AIReActTaskChatContent.globalDirective')}

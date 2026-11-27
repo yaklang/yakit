@@ -171,6 +171,16 @@
     padding: 0;
   }
 
+  .custom-rule-entry {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
+  }
+
   .model-context-settings {
     margin-top: 8px;
   }

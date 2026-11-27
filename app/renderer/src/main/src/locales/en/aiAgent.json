@@ -208,7 +208,12 @@
     "singleModelModeGlobalTip": "Enabled by the global configuration and cannot be disabled for this session",
     "singleModelModeSessionTip": "Single-model mode can only be changed before starting a new session",
     "advancedConfiguration": "Advanced configuration",
-    "singleModelModeDescription": "Use only the globally configured primary model for this session when enabled"
+    "singleModelModeDescription": "Use only the globally configured primary model for this session when enabled",
+    "enableCommandSecurityRules": "Enable command execution security rules",
+    "enableCommandSecurityRulesTip": "Master switch: when off, neither built-in nor custom rules apply. When on, all built-in rules apply; custom rules still need to be enabled individually on the AI Bash Security Rules page.",
+    "customBashRulesTitle": "Custom security rules",
+    "customBashRulesTip": "Custom rules are off by default; enable them individually on the rules page.",
+    "configureCustomSyntaxFlowRules": "Configure rules"
   },
   "AIModelGlobalConfig": {
     "savedRefreshFailed": "Configuration saved, but refreshing it failed.",
@@ -1119,7 +1124,38 @@
     "retryForever": "Unlimited retry",
     "retryForeverDesc": "Wait and retry model failures or invalid action output until recovery or cancellation. Buffers each response before delivery so partial output cannot reach the Agent.",
     "networkDebug": "Network request Debug",
-    "networkDebugDesc": "Writes model HTTP requests, responses and timing to aispace files only, never the traffic database. Session exports include captures. Contains credentials and business data; disable after diagnosis."
+    "networkDebugDesc": "Writes model HTTP requests, responses and timing to aispace files only, never the traffic database. Session exports include captures. Contains credentials and business data; disable after diagnosis.",
+    "aiBashGuardRules": "AI Bash custom security rules",
+    "aiBashGuardRulesDesc": "Maintain custom regex rules (block / ask / warn) for AI Bash calls; saving writes them to the local engine.",
+    "configure": "Configure"
+  },
+  "AIBashGuardRules": {
+    "title": "AI Bash Security Rules",
+    "description": "Maintain the rules applied to AI-issued Bash commands: a match is blocked, confirmed, or warned. Regex uses Go RE2 syntax, which has no lookarounds or backreferences; new rules start disabled until you turn them on.",
+    "addRule": "Add rule",
+    "save": "Save",
+    "empty": "No custom rules yet. Click \"Add rule\" to create one.",
+    "matchRegex": "Regex",
+    "matchExact": "Exact command",
+    "matchPrefix": "Command prefix",
+    "patternPlaceholder": "Command / regex, e.g. rm\\s+-rf\\s+/",
+    "namePlaceholder": "Rule name (optional)",
+    "descriptionPlaceholder": "Description (optional, shown to AI on match)",
+    "enableRule": "Enable rule",
+    "actionDeny": "Block",
+    "actionAsk": "Ask",
+    "actionWarn": "Warn",
+    "remove": "Delete",
+    "removeConfirm": "Rule {{index}} ({{pattern}}) will be deleted after saving. Continue?",
+    "saveSuccess": "Saved {{count}} enabled rule(s)",
+    "saveFailed": "Failed to save: {{error}}",
+    "loadFailed": "Failed to load rules: {{error}}",
+    "errorFixRows": "{{count}} rule(s) need fixes before saving",
+    "errorPatternRequired": "Command or regex is required",
+    "errorPatternSyntax": "Invalid regex: {{error}}",
+    "errorPatternLookaround": "Lookarounds ((?=, (?!, (?<=, (?<!) are not supported",
+    "errorPatternBackreference": "Backreferences (\\1 etc.) are not supported",
+    "errorPatternDuplicate": "Duplicate pattern for the same match mode: {{pattern}}"
   },
   "AIChatWorkspace": {
     "allItems": "All",

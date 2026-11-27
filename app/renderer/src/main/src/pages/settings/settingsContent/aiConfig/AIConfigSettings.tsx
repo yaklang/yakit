@@ -18,6 +18,7 @@ import {
   serializeAIAgentChatSetting,
 } from '@/pages/ai-agent/utils/aiAgentChatSettingCache'
 import emiter from '@/utils/eventBus/eventBus'
+import { YakitRoute } from '@/enums/yakitRoute'
 import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import classNames from 'classnames'
@@ -236,6 +237,14 @@ export const AIConfigSettings: React.FC = () => {
                 {setting.AIReviewRiskControlScore ?? AIAgentSettingDefault.AIReviewRiskControlScore}
               </span>
             </div>
+          </SettingRow>
+          <SettingRow title={t('AIChatSetting.aiBashGuardRules')} desc={t('AIChatSetting.aiBashGuardRulesDesc')}>
+            <YakitButton
+              type="outline2"
+              onClick={() => emiter.emit('openPage', JSON.stringify({ route: YakitRoute.AI_Bash_Guard_Rules }))}
+            >
+              {t('AIChatSetting.configure')}
+            </YakitButton>
           </SettingRow>
           <SettingRow title={t('AIChatSetting.disableWelcomeAnimation')}>
             <YakitSwitch

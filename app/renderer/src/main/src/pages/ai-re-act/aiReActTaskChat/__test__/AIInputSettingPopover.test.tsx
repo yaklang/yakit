@@ -258,8 +258,9 @@ describe('AIInputSettingPopover', () => {
       SingleModelMode: false,
       SyncPerceptionTrigger: false,
       EnablePlan: true,
+      DisableBuiltinSyntaxFlowRules: true,
     })
-    expect(mocks.setSetting).toHaveBeenCalledTimes(2)
+    expect(mocks.setSetting).toHaveBeenCalledTimes(3)
     expect(mocks.onSend).not.toHaveBeenCalled()
   })
 
@@ -277,7 +278,7 @@ describe('AIInputSettingPopover', () => {
     expect(screen.getAllByRole('switch')[0]).toBeChecked()
     expect(screen.getAllByRole('switch')[0]).toBeDisabled()
     expect(mocks.setting.SingleModelMode).toBe(lock === 'session')
-    expect(mocks.setSetting).toHaveBeenCalledTimes(1)
+    expect(mocks.setSetting).toHaveBeenCalledTimes(2)
   })
 
   it('运行中重置 token 草稿并立即关闭同步意图识别', () => {
@@ -291,8 +292,11 @@ describe('AIInputSettingPopover', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'YakitButton.reset' }))
 
-    expect(mocks.onSend).toHaveBeenCalledTimes(1)
-    for (const [HotpatchType, Params] of [['SyncPerceptionTrigger', { SyncPerceptionTrigger: false }]]) {
+    expect(mocks.onSend).toHaveBeenCalledTimes(2)
+    for (const [HotpatchType, Params] of [
+      ['SyncPerceptionTrigger', { SyncPerceptionTrigger: false }],
+      [AIInputEventHotPatchTypeEnum.HotPatchType_SyntaxFlowRules, { DisableBuiltinSyntaxFlowRules: true }],
+    ]) {
       expect(mocks.onSend).toHaveBeenCalledWith({
         token: 'session-id',
         type: 'casual',
@@ -302,9 +306,10 @@ describe('AIInputSettingPopover', () => {
     expect(mocks.activeChat?.StartParams).toEqual({
       SyncPerceptionTrigger: false,
       EnablePlan: true,
+      DisableBuiltinSyntaxFlowRules: true,
     })
     expect(screen.getAllByRole('switch')[0]).toBeChecked()
-    expect(mocks.setSetting).toHaveBeenCalledTimes(1)
+    expect(mocks.setSetting).toHaveBeenCalledTimes(2)
   })
 
   it('重置清空全局提示词，直到关闭弹窗才保存', () => {
@@ -317,9 +322,12 @@ describe('AIInputSettingPopover', () => {
 
     expect(screen.getByLabelText('AIReActTaskChatContent.globalDirective')).toHaveValue('')
     expect(screen.getByLabelText('AIReActTaskChatContent.planPrompt')).toHaveValue('')
-    expect(mocks.setAIGlobalConfig).not.toHaveBeenCalled()
+    expect(mocks.setAIGlobalConfig).toHaveBeenCalledExactlyOnceWith({
+      DisableBuiltinSyntaxFlowRules: true,
+    })
     fireEvent.click(screen.getByText('关闭设置'))
-    expect(mocks.setAIGlobalConfig).toHaveBeenCalledExactlyOnceWith({ AIPresetPrompt: '', AIPlanPrompt: '' })
+    expect(mocks.setAIGlobalConfig).toHaveBeenCalledTimes(2)
+    expect(mocks.setAIGlobalConfig).toHaveBeenLastCalledWith({ AIPresetPrompt: '', AIPlanPrompt: '' })
   })
 
   it('提示词未编辑时关闭弹窗不保存全局配置', () => {
@@ -530,5 +538,51 @@ describe('AIInputSettingPopover', () => {
     mocks.sessionId = ''
     render(<AIInputSettingPopover visible />)
     expect(screen.getByRole('switch', { name: 'AIReActTaskChatContent.allowUserPrompt' })).toBeDisabled()
+  })
+
+  it('默认关闭命令执行安全规则，自定义规则只显示配置入口', () => {
+    render(<AIInputSettingPopover visible />)
+
+    const builtin = screen.getByRole('switch', { name: 'AIReActTaskChatContent.enableCommandSecurityRules' })
+    expect(builtin).not.toBeChecked()
+    expect(
+      screen.queryByRole('switch', { name: 'AIReActTaskChatContent.enableCustomSyntaxFlowRules' }),
+    ).not.toBeInTheDocument()
+    expect(screen.getByText('AIReActTaskChatContent.customBashRulesTitle')).toBeInTheDocument()
+    expect(screen.getByText('AIReActTaskChatContent.configureCustomSyntaxFlowRules')).toBeInTheDocument()
+  })
+
+  it('点击自定义规则入口打开规则配置页', () => {
+    render(<AIInputSettingPopover visible />)
+
+    fireEvent.click(screen.getByText('AIReActTaskChatContent.configureCustomSyntaxFlowRules'))
+
+    expect(mocks.emit).toHaveBeenCalledWith('openPage', JSON.stringify({ route: 'ai-bash-guard-rules' }))
+  })
+
+  it('切换命令执行安全规则后立即热更新会话，并写入全局配置', () => {
+    mocks.setSetting.mockImplementation((update) => {
+      mocks.setting = update(mocks.setting)
+    })
+    sessionStore.setState({ execute: true })
+    render(<AIInputSettingPopover visible />)
+
+    const builtin = screen.getByRole('switch', { name: 'AIReActTaskChatContent.enableCommandSecurityRules' })
+    fireEvent.click(builtin)
+
+    expect(mocks.setting).toMatchObject({
+      DisableBuiltinSyntaxFlowRules: false,
+    })
+    expect(mocks.setAIGlobalConfig).toHaveBeenCalledExactlyOnceWith({
+      DisableBuiltinSyntaxFlowRules: false,
+    })
+    expect(mocks.onSend).toHaveBeenCalledTimes(1)
+    expect(mocks.onSend.mock.calls[0][0].params).toMatchObject({
+      IsConfigHotpatch: true,
+      HotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_SyntaxFlowRules,
+      Params: {
+        DisableBuiltinSyntaxFlowRules: false,
+      },
+    })
   })
 })

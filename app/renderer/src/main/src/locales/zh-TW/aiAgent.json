@@ -208,7 +208,12 @@
     "singleModelModeGlobalTip": "全局配置已啟用，當前會話無法關閉",
     "singleModelModeSessionTip": "單模型模式只能在新會話啟動前修改",
     "advancedConfiguration": "進階配置",
-    "singleModelModeDescription": "開啟後本會話只使用全局配置中的主模型"
+    "singleModelModeDescription": "開啟後本會話只使用全局配置中的主模型",
+    "enableCommandSecurityRules": "啟用命令執行安全規則",
+    "enableCommandSecurityRulesTip": "總開關：關閉後內建與自訂規則均不生效；開啟後內建規則全部生效，自訂規則仍需在「AI Bash 安全規則」頁逐條開啟。",
+    "customBashRulesTitle": "自訂安全規則",
+    "customBashRulesTip": "自訂規則預設關閉，開啟規則頁逐條開啟後才會參與匹配。",
+    "configureCustomSyntaxFlowRules": "設定規則"
   },
   "AIModelGlobalConfig": {
     "savedRefreshFailed": "設定已儲存，重新整理失敗。",
@@ -1119,7 +1124,38 @@
     "retryForever": "無限重試",
     "retryForeverDesc": "模型呼叫失敗或動作格式不合法時持續等待重試，可隨時停止。開啟後先收齊回應再交付，避免殘缺輸出進入 Agent。",
     "networkDebug": "網路請求 Debug",
-    "networkDebugDesc": "模型 HTTP 請求、回應及耗時只寫入 aispace 檔案，不存入流量資料庫。會話匯出日誌附帶網路記錄；包含憑據及業務資料，排查後關閉。"
+    "networkDebugDesc": "模型 HTTP 請求、回應及耗時只寫入 aispace 檔案，不存入流量資料庫。會話匯出日誌附帶網路記錄；包含憑據及業務資料，排查後關閉。",
+    "aiBashGuardRules": "AI Bash 自訂安全規則",
+    "aiBashGuardRulesDesc": "逐條維護 AI 呼叫 Bash 時的自訂正則規則（攔截 / 詢問 / 警告），儲存後寫入本機引擎。",
+    "configure": "設定"
+  },
+  "AIBashGuardRules": {
+    "title": "AI Bash 安全規則",
+    "description": "逐條維護 AI 執行 Bash 命令時的規則：命中後按所選動作攔截 / 詢問 / 警告。正則使用 Go RE2 語法，不支援零寬斷言與反向引用；新建規則預設關閉，開啟開關後才會參與匹配。",
+    "addRule": "新增規則",
+    "save": "儲存",
+    "empty": "暫無自訂規則，點擊「新增規則」新增一條",
+    "matchRegex": "正則",
+    "matchExact": "精確命令",
+    "matchPrefix": "命令前綴",
+    "patternPlaceholder": "命令 / 正則，例如 rm\\s+-rf\\s+/",
+    "namePlaceholder": "規則名稱（選填）",
+    "descriptionPlaceholder": "說明（選填，命中後展示給 AI）",
+    "enableRule": "啟用規則",
+    "actionDeny": "攔截",
+    "actionAsk": "詢問",
+    "actionWarn": "警告",
+    "remove": "刪除",
+    "removeConfirm": "將刪除第 {{index}} 條規則（{{pattern}}），儲存後生效，是否繼續？",
+    "saveSuccess": "儲存成功，共 {{count}} 條啟用中的規則",
+    "saveFailed": "儲存失敗：{{error}}",
+    "loadFailed": "讀取規則失敗：{{error}}",
+    "errorFixRows": "有 {{count}} 處規則填寫有誤，請修正後再儲存",
+    "errorPatternRequired": "命令或正則不能為空",
+    "errorPatternSyntax": "正則語法錯誤：{{error}}",
+    "errorPatternLookaround": "暫不支援零寬斷言（(?=、(?!、(?<=、(?<!），請改寫正則",
+    "errorPatternBackreference": "暫不支援反向引用（\\1 等），請改寫正則",
+    "errorPatternDuplicate": "命令/正則與前面某條同匹配方式的規則重複：{{pattern}}"
   },
   "AIChatWorkspace": {
     "allItems": "全部",

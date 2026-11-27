@@ -2405,6 +2405,8 @@ message AIStartParams {
   // Connection-local, build-generated component catalog and interaction capabilities.
   string ClientUI = 53;
 	AIImageInputConfig ImageInput = 54;
+  // 为 true 时禁用命令执行安全规则（内置规则与自定义规则都不生效）。
+  bool DisableBuiltinSyntaxFlowRules = 57;
 }
 
 message AIExecutionStrategy {
@@ -9698,6 +9700,9 @@ message AIGlobalConfig {
   bool NetworkDebug = 13;
   // Engine-wide model attempts per minute; zero disables proactive rate limiting.
   int64 ModelRequestsPerMinute = 14;
+  // Global default for disabling built-in SyntaxFlow security rules. A session
+  // AIStartParams value can override this default.
+  bool DisableBuiltinSyntaxFlowRules = 15;
 }
 
 // Local Model Messages

@@ -68,6 +68,24 @@ describe('context and image engine wire compatibility', () => {
   })
 })
 
+describe('SyntaxFlow security rule switches', () => {
+  it.each(['StartAIReAct', 'StartAITask'])('%s 使用 57 下发会话开关', (rpc) => {
+    const method = ypb.Yak.service[rpc]
+    const wire = Buffer.from('1203c80301', 'hex')
+    const params = { DisableBuiltinSyntaxFlowRules: true }
+    expect(method.requestDeserialize(wire)).toMatchObject({ Params: params })
+    expect(method.requestSerialize({ Params: params })).toEqual(wire)
+  })
+
+  it('AIGlobalConfig 使用 15 持久化全局默认', () => {
+    const method = ypb.Yak.service.SetAIGlobalConfig
+    const wire = Buffer.from('7801', 'hex')
+    const config = { DisableBuiltinSyntaxFlowRules: true }
+    expect(method.requestDeserialize(wire)).toMatchObject(config)
+    expect(method.requestSerialize(config)).toEqual(wire)
+  })
+})
+
 describe('model context protocol', () => {
   it.each([undefined, false, true])('preserves optional automatic adjustment (%s)', (disabled) => {
     const method = ypb.Yak.service.SetAIModelContext

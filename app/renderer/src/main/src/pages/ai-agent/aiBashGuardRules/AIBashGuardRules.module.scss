@@ -1,0 +1,106 @@
+.ai-bash-guard-rules {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+  padding: 16px;
+  overflow: hidden;
+  background: var(--Colors-Use-Basic-Background);
+
+  .header {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    .title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--Colors-Use-Neutral-Text-1-Title);
+    }
+
+    .description {
+      font-size: 12px;
+      line-height: 18px;
+      color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    }
+  }
+
+  .toolbar {
+    display: flex;
+    gap: 8px;
+  }
+
+  .rule-list {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 0;
+    padding-right: 4px;
+    overflow: auto;
+  }
+
+  .empty {
+    padding: 32px 0;
+    font-size: 12px;
+    color: var(--Colors-Use-Neutral-Text-4-Help-text);
+    text-align: center;
+  }
+
+  .rule-row {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    border: 1px solid var(--Colors-Use-Neutral-Border);
+    border-radius: 8px;
+    background: var(--Colors-Use-Basic-Background);
+  }
+
+  .rule-row-disabled {
+    opacity: 0.65;
+  }
+
+  .rule-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .rule-index {
+      display: inline-flex;
+      flex-shrink: 0;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--Colors-Use-Neutral-Bg-Hover);
+      font-size: 12px;
+      color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    }
+
+    .name-input {
+      width: 240px;
+      max-width: 100%;
+    }
+  }
+
+  .rule-body {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+
+    .pattern-input {
+      flex: 1;
+      min-width: 0;
+      font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+    }
+  }
+
+  .row-error {
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--Colors-Use-Error-Primary);
+  }
+}
