@@ -117,9 +117,11 @@
 
 .message-center-layout {
   height: 100%;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   .message-header {
+    flex-shrink: 0;
     padding: 12px 16px 0px;
     display: flex;
     flex-direction: row;
@@ -138,6 +140,7 @@
     }
   }
   .message-channel-bar {
+    flex-shrink: 0;
     padding: 12px 16px 0;
     display: flex;
     flex-direction: row;
@@ -156,15 +159,26 @@
     gap: 8px;
   }
   .message-center-tab {
-    flex: 1;
+    min-height: 0;
     :global {
       .ant-tabs-nav {
         padding: 0px 16px 0px;
+      }
+      .ant-tabs-content-holder {
+        min-height: 0;
+        overflow: hidden;
+      }
+      .ant-tabs-content,
+      .ant-tabs-tabpane {
+        height: 100%;
+        min-height: 0;
       }
     }
     .tab-item-box {
       padding: 0px 8px;
       height: 100%;
+      min-height: 0;
+      overflow: hidden;
     }
     .info-tab {
       // display: flex;
@@ -186,6 +200,24 @@
         font-size: 11px;
         color: var(--Colors-Use-Neutral-Text-1-Title);
       }
+    }
+  }
+}
+
+.message-list {
+  // 虚拟行高度不包含底部状态，为其保留独立空间，避免触底时滚动范围收缩。
+  > div:has(> :global(.grid-block)) {
+    position: relative;
+    box-sizing: content-box;
+    padding-block-end: 28px;
+
+    > :global(.grid-block) {
+      position: absolute;
+      inset: auto 0 0;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
   }
 }

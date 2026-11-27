@@ -474,6 +474,7 @@ service Yak {
   rpc NewRiskRead(NewRiskReadRequest) returns (Empty);
   // 风险漏洞自动同步
   rpc UploadRiskToOnline(UploadRiskToOnlineRequest) returns (Empty);
+  rpc UploadRiskToOnlineBatch(UploadRiskToOnlineBatchRequest) returns (UploadRiskToOnlineBatchResponse);
   rpc SetTagForRisk(SetTagForRiskRequest) returns (Empty);
   rpc QueryRiskTags(Empty) returns (QueryRiskTagsResponse);
   rpc RiskFieldGroup(Empty) returns (RiskFieldGroupResponse);
@@ -5604,6 +5605,16 @@ message UploadRiskToOnlineRequest {
   repeated string Hash = 3;
   string ExternalModule = 4;
   string ExternalProjectCode = 5;
+}
+
+message UploadRiskToOnlineBatchRequest {
+  UploadRiskToOnlineRequest ToOnlineWhere = 1;
+  QueryRisksRequest UploadRisksWhere = 2;
+}
+
+message UploadRiskToOnlineBatchResponse {
+  int64 SuccessCount = 1;
+  int64 FailedCount = 2;
 }
 
 message SetTagForRiskRequest {

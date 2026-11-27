@@ -26,6 +26,17 @@ const mocks = vi.hoisted(() => ({
   queryIncrement: vi.fn(),
   queryRiskTypes: vi.fn(),
   queryRiskTags: vi.fn(),
+  uploadRisk: vi.fn(),
+  notify: vi.fn(),
+  enpriTrace: true,
+  loggedIn: true,
+  token: 'token-1',
+  project: {
+    ProjectName: 'project-1',
+    ExternalModule: 'module-1',
+    ExternalProjectCode: 'code-1',
+  } as any,
+  rightMenu: undefined as any,
   columns: [] as any[],
   rowSelection: undefined as any,
   refreshRisks: undefined as (() => void) | undefined,
@@ -90,7 +101,7 @@ vi.mock('@yakit-libs/yakit-ui-icons/colorful', async (importOriginal) => ({
 }))
 
 vi.mock('@/components/TableVirtualResize/TableVirtualResize', () => ({
-  TableVirtualResize: ({ renderTitle, rowSelection, data, pagination, columns, onChange }) => {
+  TableVirtualResize: ({ renderTitle, rowSelection, data, pagination, columns, onChange, onRowContextMenu }) => {
     mocks.columns = columns
     mocks.rowSelection = rowSelection
     return (
@@ -126,6 +137,9 @@ vi.mock('@/components/TableVirtualResize/TableVirtualResize', () => ({
         <button type="button" onClick={() => rowSelection.onSelectAll([], [], false)}>
           clear-selection
         </button>
+        <button type="button" onClick={() => onRowContextMenu(rows[0])}>
+          right-click-first
+        </button>
       </div>
     )
   },
@@ -139,6 +153,9 @@ vi.mock('../RiskBatchOperationsMenu', () => ({
       </button>
       <button type="button" onClick={() => onAction('delete')}>
         batch-delete
+      </button>
+      <button type="button" onClick={() => onAction('upload-data')}>
+        batch-upload
       </button>
       <button type="button" onClick={() => onAction('export-csv')}>
         batch-export-csv
@@ -158,6 +175,7 @@ vi.mock('../utils', () => ({
   apiQueryRisksIncrementOrderDesc: mocks.queryIncrement,
   apiRiskFeedbackToOnline: vi.fn().mockResolvedValue(undefined),
   apiSetTagForRisk: vi.fn().mockResolvedValue(undefined),
+  apiUploadRiskToOnlineBatch: mocks.uploadRisk,
 }))
 
 vi.mock('@/components/yakitUI/YakitModal/YakitModalConfirm', () => ({
@@ -229,10 +247,18 @@ vi.mock('@/pages/yakRunner/CollapseList/CollapseList', () => ({ CollapseList: ()
 vi.mock('@/components/yakCodemirror/YakCodemirror', () => ({ YakCodemirror: () => null }))
 vi.mock('@/pages/assetViewer/reportRenders/markdownRender', () => ({ SafeMarkdown: () => null }))
 vi.mock('../RiskDisposalLog', () => ({ RiskDisposalLog: () => null }))
-vi.mock('@/store', () => ({ useStore: () => ({ userInfo: { isLogin: true, token: 'token-1' } }) }))
+vi.mock('@/store', () => ({
+  useStore: () => ({ userInfo: { isLogin: mocks.loggedIn, token: mocks.token } }),
+}))
 vi.mock('@/utils/envfile', async (importOriginal) => ({
   ...(await importOriginal<Record<string, unknown>>()),
   isEnterpriseEdition: () => mocks.enterprise,
+  isEnpriTrace: () => mocks.enpriTrace,
+}))
+vi.mock('@/pages/globalVariable', () => ({
+  get NowProjectDescription() {
+    return mocks.project
+  },
 }))
 vi.mock('@/i18n/useI18nNamespaces', () => ({
   useI18nNamespaces: () => ({ t: (key: string) => key, i18n: { language: mocks.language }, i18nRefresh: 0 }),
@@ -246,7 +272,12 @@ vi.mock('@/utils/eventBus/eventBus', () => ({
     off: vi.fn(),
   },
 }))
-vi.mock('@/utils/notification', () => ({ yakitNotify: vi.fn() }))
+vi.mock('@/utils/notification', () => ({ yakitNotify: mocks.notify }))
+vi.mock('@/components/yakitUI/YakitMenu/showByRightContext', () => ({
+  showByRightContext: (config) => {
+    mocks.rightMenu = config
+  },
+}))
 vi.mock('@/utils/kv', () => ({ getRemoteValue: vi.fn().mockResolvedValue('true') }))
 vi.mock('@/utils/duplex/duplex', () => ({ serverPushStatus: false }))
 vi.mock('@/utils/getMainOperatorPageBodyContainer', () => ({ getMainOperatorPageBodyContainer: () => document.body }))
@@ -372,6 +403,14 @@ const openStatefulRiskBatch = async (selection: 'all' | 'explicit', targetIds: n
 describe('YakitRiskTable 批量操作', () => {
   beforeEach(() => {
     mocks.enterprise = true
+    mocks.enpriTrace = true
+    mocks.loggedIn = true
+    mocks.token = 'token-1'
+    mocks.project = {
+      ProjectName: 'project-1',
+      ExternalModule: 'module-1',
+      ExternalProjectCode: 'code-1',
+    }
     mocks.language = 'zh'
     mocks.queryRiskTypes.mockResolvedValue([])
     mocks.queryRiskTags.mockResolvedValue({ RiskTags: [] })
@@ -383,6 +422,7 @@ describe('YakitRiskTable 批量操作', () => {
     })
     mocks.batchSetRiskTags.mockResolvedValue({ UpdatedCount: 2 })
     mocks.deleteRisk.mockResolvedValue(null)
+    mocks.uploadRisk.mockResolvedValue({ SuccessCount: 2, FailedCount: 0 })
     mocks.queryIncrement.mockResolvedValue({ Data: [] })
     mocks.showModal.mockImplementation((config) => {
       return { destroy: mocks.destroyModal, config }
@@ -771,6 +811,106 @@ describe('YakitRiskTable 批量操作', () => {
 
     expect(mocks.showModal).not.toHaveBeenCalled()
     expect(mocks.batchSetRiskTags).not.toHaveBeenCalled()
+  })
+
+  it('上传显式选择时只传完整 IDs，并按成功失败数提示部分失败', async () => {
+    await renderTable()
+    mocks.uploadRisk.mockResolvedValueOnce({ SuccessCount: '1', FailedCount: '1' })
+    fireEvent.click(screen.getByRole('button', { name: 'select-first' }))
+    fireEvent.click(screen.getByRole('button', { name: 'select-second' }))
+    fireEvent.click(screen.getByRole('button', { name: 'batch-upload' }))
+
+    await waitFor(() => expect(mocks.uploadRisk).toHaveBeenCalledTimes(1))
+    expect(mocks.uploadRisk).toHaveBeenCalledWith({
+      ToOnlineWhere: {
+        Token: 'token-1',
+        ProjectName: 'project-1',
+        ExternalModule: 'module-1',
+        ExternalProjectCode: 'code-1',
+      },
+      UploadRisksWhere: {
+        Ids: [11, 22],
+        Pagination: { Page: 1, Limit: 2, OrderBy: 'id', Order: 'asc' },
+      },
+    })
+    await waitFor(() => expect(mocks.notify).toHaveBeenCalledWith('warning', 'YakitRiskTable.uploadResult'))
+  })
+
+  it('全选上传覆盖筛选总数并去掉游标', async () => {
+    await renderTable()
+    fireEvent.click(screen.getByRole('button', { name: 'type-false' }))
+    fireEvent.click(screen.getByRole('button', { name: 'select-all' }))
+    fireEvent.click(screen.getByRole('button', { name: 'batch-upload' }))
+
+    await waitFor(() => expect(mocks.uploadRisk).toHaveBeenCalledTimes(1))
+    const filter = mocks.uploadRisk.mock.calls[0][0].UploadRisksWhere
+    expect(filter).toEqual(
+      expect.objectContaining({
+        Search: 'needle',
+        Network: '10.0.0.0/8',
+        RiskType: 'SQL注入',
+        IsRead: 'false',
+        Ids: [],
+      }),
+    )
+    expect(filter.Pagination).toEqual({ Page: 1, Limit: 100, OrderBy: 'id', Order: 'asc' })
+    expect(filter).not.toHaveProperty('FromId')
+    expect(filter).not.toHaveProperty('UntilId')
+    expect(filter).not.toHaveProperty('RiskTypeList')
+  })
+
+  it.each([
+    ['未登录', false, 'token-1', { ProjectName: 'project-1' }, 'YakitRiskTable.uploadLoginRequired'],
+    ['空 token', true, '', { ProjectName: 'project-1' }, 'YakitRiskTable.uploadLoginRequired'],
+    ['缺失项目', true, 'token-1', undefined, 'YakitRiskTable.uploadMissingProject'],
+  ])('%s 时不发送上传请求', async (_name, loggedIn, token, project, message) => {
+    mocks.loggedIn = loggedIn
+    mocks.token = token
+    mocks.project = project
+    await renderTable()
+    fireEvent.click(screen.getByRole('button', { name: 'right-click-first' }))
+    mocks.rightMenu.onClick({ key: 'upload-data' })
+
+    expect(mocks.uploadRisk).not.toHaveBeenCalled()
+    expect(mocks.notify).toHaveBeenCalledWith('warning', message)
+  })
+
+  it('上传全部失败时显示 error 结果通知', async () => {
+    await renderTable()
+    mocks.uploadRisk.mockResolvedValueOnce({ SuccessCount: 0, FailedCount: 2 })
+    fireEvent.click(screen.getByRole('button', { name: 'select-first' }))
+    fireEvent.click(screen.getByRole('button', { name: 'batch-upload' }))
+
+    await waitFor(() => expect(mocks.notify).toHaveBeenCalledWith('error', 'YakitRiskTable.uploadResult'))
+  })
+
+  it('行上传不受全选影响，防止重复提交，并在旧引擎报错后允许重试', async () => {
+    let rejectUpload: (reason?: unknown) => void = () => {}
+    mocks.uploadRisk.mockImplementationOnce(
+      () =>
+        new Promise((_resolve, reject) => {
+          rejectUpload = reject
+        }),
+    )
+    await renderTable()
+    fireEvent.click(screen.getByRole('button', { name: 'select-all' }))
+    fireEvent.click(screen.getByRole('button', { name: 'right-click-first' }))
+    mocks.rightMenu.onClick({ key: 'upload-data' })
+    mocks.rightMenu.onClick({ key: 'upload-data' })
+
+    expect(mocks.uploadRisk).toHaveBeenCalledTimes(1)
+    expect(mocks.uploadRisk.mock.calls[0][0].UploadRisksWhere).toEqual({
+      Ids: [11],
+      Pagination: { Page: 1, Limit: 1, OrderBy: 'id', Order: 'asc' },
+    })
+    expect(mocks.notify).toHaveBeenCalledWith('warning', 'YakitRiskTable.uploadInProgress')
+
+    await act(async () => rejectUpload({ code: 12, message: 'UNIMPLEMENTED' }))
+    expect(mocks.notify).toHaveBeenCalledWith('error', 'YakitRiskTable.uploadUnsupported')
+
+    mocks.uploadRisk.mockResolvedValueOnce({ SuccessCount: 1, FailedCount: 0 })
+    mocks.rightMenu.onClick({ key: 'upload-data' })
+    await waitFor(() => expect(mocks.uploadRisk).toHaveBeenCalledTimes(2))
   })
 
   it('CSV 弹窗固定打开时的显式选择快照', async () => {

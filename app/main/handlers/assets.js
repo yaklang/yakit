@@ -320,6 +320,18 @@ module.exports = (win, getClient) => {
     })
   }
 
+  ipcMain.handle('UploadRiskToOnlineBatch', async (e, params) => {
+    return new Promise((resolve, reject) => {
+      getClient().UploadRiskToOnlineBatch(params, (err, data) => {
+        if (err) {
+          reject(err)
+          return
+        }
+        resolve(data)
+      })
+    })
+  })
+
   // 风险漏洞误报反馈
   const asyncRiskFeedbackToOnline = (params) => {
     return new Promise((resolve, reject) => {

@@ -80,7 +80,7 @@ afterEach(() => {
 describe('RiskBatchOperationsMenu', () => {
   it('disables the trigger when no risk is selected and guards stale actions', () => {
     const onAction = vi.fn()
-    render(<RiskBatchOperationsMenu selectedCount={0} isEnterprise onAction={onAction} />)
+    render(<RiskBatchOperationsMenu selectedCount={0} isEnterprise canUpload onAction={onAction} />)
 
     const trigger = screen.getByRole('button', { name: 'YakitButton.batchOperation' })
     expect(trigger).toBeDisabled()
@@ -93,22 +93,24 @@ describe('RiskBatchOperationsMenu', () => {
 
   it('shows common actions in community edition and blocks modify mark', () => {
     const onAction = vi.fn()
-    render(<RiskBatchOperationsMenu selectedCount={2} isEnterprise={false} onAction={onAction} />)
+    render(<RiskBatchOperationsMenu selectedCount={2} isEnterprise={false} canUpload={false} onAction={onAction} />)
 
     fireEvent.click(screen.getByRole('button', { name: 'YakitButton.batchOperation' }))
     expect(screen.queryByRole('button', { name: 'modify-mark' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'upload-data' })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'export-csv' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'export-html' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'delete' })).toBeInTheDocument()
     expect(screen.getByTestId('menu-divider')).toBeInTheDocument()
 
     act(() => latestMenu.current?.onClick({ key: 'modify-mark' }))
+    act(() => latestMenu.current?.onClick({ key: 'upload-data' }))
     expect(onAction).not.toHaveBeenCalled()
   })
 
   it('dispatches enterprise actions and closes the menu after a click', () => {
     const onAction = vi.fn()
-    render(<RiskBatchOperationsMenu selectedCount={3} isEnterprise onAction={onAction} />)
+    render(<RiskBatchOperationsMenu selectedCount={3} isEnterprise canUpload onAction={onAction} />)
 
     fireEvent.click(screen.getByRole('button', { name: 'YakitButton.batchOperation' }))
     fireEvent.click(screen.getByRole('button', { name: 'modify-mark' }))
@@ -119,18 +121,31 @@ describe('RiskBatchOperationsMenu', () => {
 
   it('closes the menu when the selection count or edition changes', () => {
     const onAction = vi.fn()
-    const { rerender } = render(<RiskBatchOperationsMenu selectedCount={1} isEnterprise={false} onAction={onAction} />)
+    const { rerender } = render(
+      <RiskBatchOperationsMenu selectedCount={1} isEnterprise={false} canUpload={false} onAction={onAction} />,
+    )
 
     fireEvent.click(screen.getByRole('button', { name: 'YakitButton.batchOperation' }))
     expect(screen.getByTestId('batch-menu')).toBeInTheDocument()
-    rerender(<RiskBatchOperationsMenu selectedCount={2} isEnterprise={false} onAction={onAction} />)
+    rerender(<RiskBatchOperationsMenu selectedCount={2} isEnterprise={false} canUpload={false} onAction={onAction} />)
     expect(screen.queryByTestId('batch-menu')).not.toBeInTheDocument()
-    rerender(<RiskBatchOperationsMenu selectedCount={1} isEnterprise={false} onAction={onAction} />)
+    rerender(<RiskBatchOperationsMenu selectedCount={1} isEnterprise={false} canUpload={false} onAction={onAction} />)
     expect(screen.queryByTestId('batch-menu')).not.toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'YakitButton.batchOperation' }))
     expect(screen.getByTestId('batch-menu')).toBeInTheDocument()
-    rerender(<RiskBatchOperationsMenu selectedCount={2} isEnterprise onAction={onAction} />)
+    rerender(<RiskBatchOperationsMenu selectedCount={2} isEnterprise canUpload onAction={onAction} />)
+    expect(screen.queryByTestId('batch-menu')).not.toBeInTheDocument()
+  })
+
+  it('shows and dispatches upload only when upload is available', () => {
+    const onAction = vi.fn()
+    render(<RiskBatchOperationsMenu selectedCount={2} isEnterprise={false} canUpload onAction={onAction} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'YakitButton.batchOperation' }))
+    fireEvent.click(screen.getByRole('button', { name: 'upload-data' }))
+
+    expect(onAction).toHaveBeenCalledWith('upload-data')
     expect(screen.queryByTestId('batch-menu')).not.toBeInTheDocument()
   })
 })
