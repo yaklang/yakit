@@ -360,6 +360,17 @@ process.on('loaded', function () {
       onClose: (callback) => subscribe('client-socket-close', callback),
       onError: (callback) => subscribe('client-socket-error', callback),
     },
+    traffic: {
+      getPcapMetadata: () => invoke('GetPcapMetadata', {}),
+      queryPackets: (params) => invoke('QueryPCAPPackets', params),
+      getPacketDetail: (params) => invoke('GetPCAPPacketDetail', params),
+      readBytes: (params) => invoke('ReadPCAPBytes', params),
+      queryDatabases: (params) => invoke('QueryPCAPDatabase', params),
+      importFile: (params, token) => invoke('ImportPCAPFile', params, token),
+      startLiveCapture: (params, token) => invoke('PcapX', params, token),
+      exportData: (params) => invoke('ExportPCAPData', params),
+      deleteDatabase: (params) => invoke('DeletePCAPDatabase', params),
+    },
     stream: {
       onData: (token, callback) => subscribe(getStreamChannel(token, 'data'), callback),
       onError: (token, callback) => subscribe(getStreamChannel(token, 'error'), callback),

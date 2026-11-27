@@ -1,0 +1,300 @@
+import { useEffect, useMemo, useRef } from 'react'
+import { Empty, Spin } from 'antd'
+import { TableVirtuoso, type ItemProps, type TableVirtuosoHandle } from 'react-virtuoso'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import type { PCAPPacketSummary } from './pcapTypes'
+import { formatTimestamp } from './pcapUtils'
+import styles from './PCAPPacketViewer.module.scss'
+
+interface PacketColumn {
+  key: string
+  title: string
+  width: number
+  align?: 'left' | 'right'
+  render: (packet: PCAPPacketSummary) => React.ReactNode
+}
+
+const protocolColor = (protocol: string) =>
+  ({ HTTP: 'success', DNS: 'blue', TLS: 'purple', ARP: 'warning', TCP: 'info', UDP: 'cyan' })[protocol] || 'info'
+
+const columns: PacketColumn[] = [
+  {
+    key: 'Id',
+    title: 'No.',
+    width: 68,
+    render: (packet) => <span className={styles['packet-number']}>{packet.Id}</span>,
+  },
+  {
+    key: 'TimestampNS',
+    title: '捕获时间',
+    width: 180,
+    render: (packet) => <span className={styles.mono}>{formatTimestamp(packet.TimestampNS)}</span>,
+  },
+  {
+    key: 'SourceIP',
+    title: '源地址',
+    width: 180,
+    render: (packet) => (
+      <span className={styles.mono}>
+        {packet.SourceIP || packet.SourceMAC || '—'}
+        {packet.SourceIP && ['tcp', 'udp', 'sctp'].includes(packet.Transport) && <small>:{packet.SourcePort}</small>}
+      </span>
+    ),
+  },
+  {
+    key: 'DestinationIP',
+    title: '目的地址',
+    width: 180,
+    render: (packet) => (
+      <span className={styles.mono}>
+        {packet.DestinationIP || packet.DestinationMAC || '—'}
+        {packet.DestinationIP && ['tcp', 'udp', 'sctp'].includes(packet.Transport) && (
+          <small>:{packet.DestinationPort}</small>
+        )}
+      </span>
+    ),
+  },
+  {
+    key: 'Protocol',
+    title: '协议',
+    width: 90,
+    render: (packet) => (
+      <span className={styles['protocol-badge']} data-protocol={protocolColor(packet.Protocol)}>
+        {packet.Protocol || '—'}
+      </span>
+    ),
+  },
+  {
+    key: 'CapturedLength',
+    title: '长度',
+    width: 76,
+    align: 'right',
+    render: (packet) => <span className={styles.mono}>{packet.CapturedLength}</span>,
+  },
+  {
+    key: 'Info',
+    title: '摘要',
+    width: 326,
+    render: (packet) => (
+      <span className={packet.DecodeError ? styles.warning : ''} title={packet.DecodeError || packet.Info}>
+        {packet.Info}
+      </span>
+    ),
+  },
+]
+
+const PacketTableEmpty = () => (
+  <div className={styles['packet-table-empty']}>
+    <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="没有匹配的数据包，试试调整过滤条件" />
+  </div>
+)
+
+export const PCAPPacketTable = ({
+  packets,
+  totalKnown,
+  hasFilters,
+  selectedID,
+  loading,
+  loadingMore,
+  hasMore,
+  followLive,
+  error,
+  onSelect,
+  onLoadMore,
+  onRetry,
+}: {
+  packets: PCAPPacketSummary[]
+  totalKnown?: string
+  hasFilters: boolean
+  selectedID: string
+  loading: boolean
+  loadingMore: boolean
+  hasMore: boolean
+  followLive: boolean
+  error: string
+  onSelect: (id: string) => void
+  onLoadMore: () => void
+  onRetry: () => void
+}) => {
+  const listRef = useRef<TableVirtuosoHandle>(null)
+  const listViewport = useRef<HTMLDivElement>(null)
+  const lastSelectedID = useRef('')
+  const skipNextReveal = useRef(false)
+  const userDetached = useRef(false)
+  const lastScrollTop = useRef(0)
+  const touchStartY = useRef(0)
+
+  useEffect(() => {
+    if (!packets.length) listRef.current?.scrollTo({ top: 0 })
+  }, [packets.length])
+
+  useEffect(() => {
+    if (!followLive) {
+      userDetached.current = false
+      return
+    }
+    if (!packets.length || userDetached.current) return
+    const frame = requestAnimationFrame(() => {
+      listRef.current?.scrollToIndex({ index: packets.length - 1, align: 'end' })
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [followLive, packets.length])
+
+  const onBottomStateChange = (atBottom: boolean) => {
+    if (atBottom) userDetached.current = false
+  }
+
+  useEffect(() => {
+    if (!selectedID) {
+      lastSelectedID.current = ''
+      return
+    }
+    if (lastSelectedID.current === selectedID) return
+    lastSelectedID.current = selectedID
+    if (skipNextReveal.current) {
+      skipNextReveal.current = false
+      return
+    }
+    const index = packets.findIndex((packet) => packet.Id === selectedID)
+    if (index < 0) return
+    const selectedRowVisible = Array.from(
+      listViewport.current?.querySelectorAll<HTMLElement>('[data-row-key]') || [],
+    ).some((row) => row.dataset.rowKey === selectedID)
+    if (selectedRowVisible) return
+    const frame = requestAnimationFrame(() => {
+      listRef.current?.scrollToIndex({ index, align: 'center' })
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [packets, selectedID])
+
+  const components = useMemo(
+    () => ({
+      Table: ({ style, ...props }: React.ComponentProps<'table'>) => (
+        <table
+          {...props}
+          aria-label="原始数据包列表"
+          style={{ ...style, width: '100%', minWidth: 1100, tableLayout: 'fixed' }}
+        />
+      ),
+      TableRow: ({ item, children, ...props }: ItemProps<PCAPPacketSummary>) => {
+        const selected = item.Id === selectedID
+        return (
+          <tr
+            {...props}
+            className={selected ? styles['selected-row'] : ''}
+            data-row-key={item.Id}
+            tabIndex={0}
+            aria-selected={selected}
+            onClick={() => {
+              skipNextReveal.current = true
+              onSelect(item.Id)
+            }}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault()
+                skipNextReveal.current = true
+                onSelect(item.Id)
+              }
+            }}
+          >
+            {children}
+          </tr>
+        )
+      },
+      EmptyPlaceholder: PacketTableEmpty,
+    }),
+    [onSelect, selectedID],
+  )
+
+  const totalText =
+    totalKnown === undefined
+      ? hasFilters
+        ? '匹配总数未统计'
+        : '总数未统计'
+      : `${Number(totalKnown).toLocaleString()} 条${hasFilters ? '匹配' : ''}`
+
+  return (
+    <section className={styles['packet-list']} aria-label="原始数据包列表">
+      <div className={styles['pane-heading']}>
+        <span>
+          原始数据包 <small>{totalText}</small>
+        </span>
+        <small>已加载 {packets.length.toLocaleString()} 条 · 滚动继续加载</small>
+      </div>
+      <div
+        ref={listViewport}
+        className={styles['table-box']}
+        data-testid="pcap-packet-scroll"
+        onWheelCapture={(event) => {
+          if (followLive && event.deltaY < 0) userDetached.current = true
+        }}
+        onTouchStart={(event) => {
+          touchStartY.current = event.touches[0]?.clientY || 0
+        }}
+        onTouchMove={(event) => {
+          const nextY = event.touches[0]?.clientY || 0
+          if (followLive && nextY > touchStartY.current) userDetached.current = true
+          touchStartY.current = nextY
+        }}
+        onKeyDownCapture={(event) => {
+          if (followLive && ['ArrowUp', 'PageUp', 'Home'].includes(event.key)) userDetached.current = true
+        }}
+        onScrollCapture={(event) => {
+          const nextScrollTop = (event.target as HTMLElement).scrollTop
+          if (followLive && nextScrollTop + 2 < lastScrollTop.current) userDetached.current = true
+          lastScrollTop.current = nextScrollTop
+        }}
+      >
+        <TableVirtuoso
+          ref={listRef}
+          data={packets}
+          className={styles['packet-table']}
+          style={{ width: '100%', height: '100%' }}
+          fixedItemHeight={29}
+          overscan={20}
+          increaseViewportBy={{ top: 400, bottom: 800 }}
+          computeItemKey={(_, packet) => packet.Id}
+          fixedHeaderContent={() => (
+            <tr>
+              {columns.map((column) => (
+                <th key={column.key} scope="col" style={{ width: column.width, textAlign: column.align }}>
+                  {column.title}
+                </th>
+              ))}
+            </tr>
+          )}
+          itemContent={(_, packet) =>
+            columns.map((column) => (
+              <td key={column.key} style={{ width: column.width, textAlign: column.align }}>
+                {column.render(packet)}
+              </td>
+            ))
+          }
+          endReached={hasMore ? onLoadMore : undefined}
+          followOutput={followLive ? 'auto' : false}
+          atBottomStateChange={followLive ? onBottomStateChange : undefined}
+          components={components}
+        />
+        {loading && (
+          <div className={styles['packet-table-loading']} role="status">
+            <Spin size="small" />
+          </div>
+        )}
+      </div>
+      {error ? (
+        <div className={styles['scroll-status']}>
+          <span>{error}</span>
+          <YakitButton type="text2" size="small" onClick={onRetry}>
+            重试
+          </YakitButton>
+        </div>
+      ) : loadingMore ? (
+        <div className={styles['scroll-status']} role="status">
+          <Spin size="small" /> 正在加载更多数据
+        </div>
+      ) : !hasMore && packets.length > 0 ? (
+        <div className={styles['scroll-status']}>已加载全部 {packets.length.toLocaleString()} 条数据</div>
+      ) : null}
+    </section>
+  )
+}
