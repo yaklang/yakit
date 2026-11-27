@@ -10815,6 +10815,8 @@ enum AIGoalTimeAction {
   AI_GOAL_TIME_ACTION_DISABLE = 3;
   // Keep the goal time-window gate open indefinitely.
   AI_GOAL_TIME_ACTION_NEVER_ENDING = 4;
+  // Set a finite duration starting from the backend's current time.
+  AI_GOAL_TIME_ACTION_SET_DURATION = 5;
 }
 
 message AIGoalTimePatch {
@@ -10823,6 +10825,8 @@ message AIGoalTimePatch {
   int64 ExtendSeconds = 2;
   // Absolute Unix timestamp for AI_GOAL_TIME_ACTION_SET_DEADLINE.
   int64 DeadlineUnix = 3;
+  // Positive duration in seconds for AI_GOAL_TIME_ACTION_SET_DURATION.
+  int64 DurationSeconds = 4;
 }
 
 message ProbeModelVisionRequest {

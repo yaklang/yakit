@@ -30,6 +30,20 @@
   gap: 4px;
 }
 
+.customDuration {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  max-width: calc(100% - 72px);
+
+  > :first-child {
+    width: 220px;
+    max-width: 100%;
+  }
+}
+
 .option:global(.ant-btn) {
   height: auto;
   padding: 4px 8px;

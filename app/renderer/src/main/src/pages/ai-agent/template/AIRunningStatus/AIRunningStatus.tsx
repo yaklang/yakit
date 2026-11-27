@@ -1,5 +1,5 @@
 import type { FC, KeyboardEvent, ReactNode } from 'react'
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useState } from 'react'
 import { useCreation } from 'ahooks'
 import { useStore } from 'zustand'
 import { v4 as uuidv4 } from 'uuid'
@@ -22,7 +22,7 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useCurrentRawData, useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
 import GoalTimeAdjustments from './GoalTimeAdjustments/GoalTimeAdjustments'
-import RunningGoalConditions from './RunningGoalConditions/RunningGoalConditions'
+import RunningGoalDuration from './RunningGoalDuration/RunningGoalDuration'
 import type { AIAgentChatData } from '@/pages/ai-agent/type/aiChat'
 import type { AIRunningStatusProps } from './type'
 import panelStyles from '../AIContextUsage/AIContextUsage.module.scss'
@@ -76,6 +76,7 @@ const AIRunningStatus: FC<AIRunningStatusProps> = ({ className }) => {
   const rawData = useCurrentRawData()
   const execution = useStore(store, (state) => state.sessionSnapshot?.execution)
   const round = useStore(store, (state) => state.sessionSnapshot?.current_round)
+  const roundStartAt = useStore(store, (state) => state.sessionSnapshot?.current_round_start_at)
   const agentPolicySnapshotUpdate = useStore(store, (state) => state.agentPolicySnapshotUpdate)
   const timing = useCreation(() => readGoalTiming(rawData), [rawData, agentPolicySnapshotUpdate])
   if (execution?.status !== 'processing' || !timing) return null
@@ -85,6 +86,7 @@ const AIRunningStatus: FC<AIRunningStatusProps> = ({ className }) => {
       className={className}
       timing={timing}
       round={round}
+      roundStartAt={roundStartAt}
       executionSeconds={execution.execution_seconds}
     />
   )
@@ -94,10 +96,12 @@ const RunningStatusButton = ({
   className,
   timing,
   round,
+  roundStartAt,
   executionSeconds,
 }: AIRunningStatusProps & {
   timing: NonNullable<ReturnType<typeof readGoalTiming>>
   round?: number
+  roundStartAt?: number
   executionSeconds?: number
 }) => {
   const { t } = useI18nNamespaces(['aiAgent'])
@@ -105,18 +109,27 @@ const RunningStatusButton = ({
   const receivedAtMs = useStore(store, (state) => state.sessionSnapshotReceivedAtMs)
   const [nowMs, setNowMs] = useState(Date.now) // 让已用时间在两次后端快照之间也能每秒刷新
   useEffect(() => {
-    if (receivedAtMs === undefined || executionSeconds === undefined) return
+    const waitingForRoundStart = roundStartAt === undefined
+    if (waitingForRoundStart && (receivedAtMs === undefined || executionSeconds === undefined)) return
     let timer: number
     const tick = () => {
       const now = Date.now()
       setNowMs(now)
-      timer = window.setTimeout(tick, 1000 - (Math.max(0, now - receivedAtMs) % 1000))
+      const anchor = waitingForRoundStart ? receivedAtMs! : roundStartAt * 1000
+      timer = window.setTimeout(tick, 1000 - (Math.max(0, now - anchor) % 1000))
     }
     tick()
     return () => window.clearTimeout(timer)
-  }, [receivedAtMs, executionSeconds])
+  }, [receivedAtMs, executionSeconds, roundStartAt])
   const secondsSinceSnapshot = receivedAtMs === undefined ? 0 : Math.max(0, Math.floor((nowMs - receivedAtMs) / 1000))
-  const used = executionSeconds === undefined ? undefined : executionSeconds + secondsSinceSnapshot
+  const used =
+    roundStartAt === undefined
+      ? executionSeconds === undefined
+        ? undefined
+        : executionSeconds + secondsSinceSnapshot
+      : roundStartAt > 0
+        ? Math.max(0, Math.floor(nowMs / 1000) - roundStartAt)
+        : undefined
   const badgeElapsed = formatWorkDuration(used, 2)
   const roundLabel = round == null ? undefined : t('AIRunningStatus.round', { round })
   const label =
@@ -169,7 +182,7 @@ const RunningTimePopover = ({
   const rawData = useCurrentRawData()
   const { onSend } = useAIAgentDispatcher()
   const { loading, markSending } = useSyncLoadingState()
-  const adjustGoalTime = (patch: AIGoalTimePatch) => {
+  const adjustGoalTime = (patch: AIGoalTimePatch, pendingDuration?: number) => {
     if (!sessionId || loading) return
     const sent = onSend({
       token: sessionId,
@@ -181,8 +194,9 @@ const RunningTimePopover = ({
       },
     })
     if (!sent) return
-    if (patch.Action === AIGoalTimeAction.NeverEnding) rawData.pendingGoalDurationSeconds = -1
-    if (patch.Action === AIGoalTimeAction.Disable) rawData.pendingGoalDurationSeconds = 0
+    if (pendingDuration !== undefined) rawData.pendingGoalDurationSeconds = pendingDuration
+    else if (patch.Action === AIGoalTimeAction.NeverEnding) rawData.pendingGoalDurationSeconds = -1
+    else if (patch.Action === AIGoalTimeAction.Disable) rawData.pendingGoalDurationSeconds = 0
     // GoalTime 的推送不带 SyncID，单独拉取策略快照以获取本次同步的回执。
     const syncId = uuidv4()
     markSending(syncId)
@@ -196,15 +210,18 @@ const RunningTimePopover = ({
       },
     })
   }
-  const [open, setOpen] = useState(false)
-  const submitConditions = useRef<(() => void) | null>(null)
-  const handleOpenChange = (nextOpen: boolean) => {
-    if (!nextOpen && open) {
-      submitConditions.current?.()
-      submitConditions.current = null
-    }
-    setOpen(nextOpen)
+  const setGoalDuration = (seconds: number) => {
+    if (!Number.isSafeInteger(seconds) || seconds < 60) return
+    adjustGoalTime(
+      {
+        Action: AIGoalTimeAction.SetDuration,
+        DurationSeconds: seconds,
+      },
+      seconds,
+    )
   }
+  const [open, setOpen] = useState(false)
+  const handleOpenChange = (nextOpen: boolean) => setOpen(nextOpen)
   const { deadlineMs, deadlineAt } = timing
   const [remaining, setRemaining] = useState<number>()
   useLayoutEffect(() => {
@@ -293,14 +310,7 @@ const RunningTimePopover = ({
               <div className={panelStyles.usage}>{renderUsage()}</div>
               <div className={panelStyles.settings}>
                 {timing.panel === 'never_ending' || timing.panel === 'disabled' ? (
-                  open && (
-                    <RunningGoalConditions
-                      key={`${sessionId}:${timing.panel}`}
-                      ref={submitConditions}
-                      sessionId={sessionId}
-                      mode={timing.panel}
-                    />
-                  )
+                  open && <RunningGoalDuration loading={loading} onSetDuration={setGoalDuration} />
                 ) : (
                   <GoalTimeAdjustments loading={loading} expired={expired} onAdjust={adjustGoalTime} />
                 )}

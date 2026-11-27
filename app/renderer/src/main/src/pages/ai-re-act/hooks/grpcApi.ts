@@ -266,6 +266,8 @@ export enum AIGoalTimeAction {
   Disable = 'AI_GOAL_TIME_ACTION_DISABLE',
   /** 保持目标时间窗口无限开放。 */
   NeverEnding = 'AI_GOAL_TIME_ACTION_NEVER_ENDING',
+  /** 从后端当前时间开始设置有限时长。 */
+  SetDuration = 'AI_GOAL_TIME_ACTION_SET_DURATION',
 }
 
 export interface AIGoalTimePatch {
@@ -275,6 +277,8 @@ export interface AIGoalTimePatch {
   ExtendSeconds?: number
   /** SetDeadline 的截止时间，单位为 Unix 秒。 */
   DeadlineUnix?: number
+  /** SetDuration 的持续时间，单位为秒。 */
+  DurationSeconds?: number
 }
 
 /** AIInputEvent-SyncType 的可选值 */
@@ -988,6 +992,8 @@ export declare namespace AIAgentGrpcApi {
 
   export interface SessionSnapshot {
     current_round?: number
+    /** 当前逻辑轮次开始的 Unix 秒时间戳；同一轮重试保持不变，尚无顶层轮次时为 0。 */
+    current_round_start_at?: number
     total_rounds?: number
     revision: number
     updated_at: number

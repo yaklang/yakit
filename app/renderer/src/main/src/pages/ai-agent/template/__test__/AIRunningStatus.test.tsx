@@ -143,6 +143,43 @@ it('ticks from execution_seconds independently of the goal deadline and its adju
   }
 })
 
+it('calculates current round time from current_round_start_at instead of accumulated execution_seconds', () => {
+  vi.useFakeTimers()
+  try {
+    const roundStartAt = Math.floor(Date.now() / 1000) - 95
+    store.setState({
+      sessionSnapshot: {
+        ...snapshot,
+        current_round: 3,
+        current_round_start_at: roundStartAt,
+        execution: { ...execution, execution_seconds: 9999 },
+      },
+      sessionSnapshotReceivedAtMs: Date.now() - 60000,
+    })
+    render(<AIRunningStatus />)
+    const trigger = screen.getByRole('button', { name: 'AIRunningStatus.label 3 1m35s' })
+    expect(trigger).toHaveTextContent(/· 1m35s$/)
+    act(() => vi.advanceTimersByTime(1000))
+    expect(trigger).toHaveTextContent(/· 1m36s$/)
+  } finally {
+    vi.useRealTimers()
+  }
+})
+
+it('does not fall back to accumulated execution time when current_round_start_at is zero', () => {
+  store.setState({
+    sessionSnapshot: {
+      ...snapshot,
+      current_round: 2,
+      current_round_start_at: 0,
+    },
+  })
+  render(<AIRunningStatus />)
+  const trigger = screen.getByRole('button', { name: 'AIRunningStatus.label 2 —' })
+  expect(trigger).toHaveTextContent(/· —$/)
+  expect(trigger).not.toHaveTextContent('12m36s')
+})
+
 it('recalibrates elapsed time when only the snapshot receipt timestamp changes', () => {
   vi.useFakeTimers()
   try {
@@ -484,7 +521,7 @@ it('ticks the elapsed time in a non-deadline status and keeps only the round whe
 it.each([
   ['AIRunningStatus.unlimited', 'never_ending', -1],
   ['AIRunningStatus.stopAfterRound', 'disabled', 0],
-] as const)('shows the duration editor after the policy snapshot confirms %s', (action, mode, seconds) => {
+] as const)('shows duration presets after the policy snapshot confirms %s', async (action, mode, seconds) => {
   store.setState({ sessionSnapshot: snapshot })
   render(<AIRunningStatus />)
   const trigger = screen.getByRole('button', { name: 'AIRunningStatus.state 12m36s' })
@@ -506,27 +543,44 @@ it.each([
   })
   expect(trigger).toHaveAttribute('aria-expanded', 'true')
   expect(screen.getByText('AIRunningStatus.resetDurationHint')).toBeInTheDocument()
-  expect(screen.getByRole('group', { name: 'AIMilkdownModeSlash.duration' })).toBeInTheDocument()
+  const durationOptions = within(screen.getByRole('group', { name: 'AIMilkdownModeSlash.duration' }))
+  expect(durationOptions.getAllByRole('button').map((button) => button.textContent)).toEqual([
+    '30m',
+    '1h',
+    '2h',
+    '3h',
+    'AIRunModeSelect.customDuration',
+  ])
+  expect(screen.queryByRole('button', { name: 'AIMilkdownModeSlash.minIterations' })).toBeNull()
+  expect(screen.queryByRole('button', { name: 'AIMilkdownModeSlash.acceptance' })).toBeNull()
   expect(screen.queryByRole('group', { name: 'AIRunningStatus.extend' })).toBeNull()
-  fireEvent.click(trigger)
-  expect(onSend).toHaveBeenCalledTimes(2)
-  expect(setSetting).not.toHaveBeenCalled()
 
-  fireEvent.click(trigger)
-  fireEvent.click(screen.getByRole('button', { name: '30m' }))
-  expect(onSend).toHaveBeenCalledTimes(2)
-  fireEvent.click(trigger)
-  expect(onSend).toHaveBeenCalledTimes(3)
-  expect(onSend).toHaveBeenLastCalledWith(
-    expect.objectContaining({
-      token: 'running-session',
-      params: expect.objectContaining({
-        GoalTimePatch: expect.objectContaining({ Action: 'AI_GOAL_TIME_ACTION_SET_DEADLINE' }),
-        Params: { Strategy: expect.objectContaining({ GoalDurationSeconds: 1800 }) },
+  const thirtyMinutes = durationOptions.getByRole('button', { name: '30m' })
+  await waitFor(() => expect(thirtyMinutes).toBeEnabled())
+  fireEvent.click(thirtyMinutes)
+  expect(onSend).toHaveBeenNthCalledWith(3, {
+    token: 'running-session',
+    type: '',
+    params: {
+      IsConfigHotpatch: true,
+      HotpatchType: 'GoalTime',
+      GoalTimePatch: expect.objectContaining({
+        Action: 'AI_GOAL_TIME_ACTION_SET_DURATION',
+        DurationSeconds: 1800,
       }),
-    }),
-  )
-  expect(setSetting).toHaveBeenCalledOnce()
+    },
+  })
+  expect(onSend.mock.calls[2][0].params).not.toHaveProperty('Params')
+  expect(onSend).toHaveBeenNthCalledWith(4, {
+    token: 'running-session',
+    type: '',
+    params: {
+      IsSyncMessage: true,
+      SyncType: 'agent_policy_snapshot_sync',
+      SyncID: expect.any(String),
+    },
+  })
+  expect(setSetting).not.toHaveBeenCalled()
 })
 
 it('shows that the current time limit was removed when Goal is enabled with a disabled time limit', async () => {
@@ -547,7 +601,11 @@ it('shows that the current time limit was removed when Goal is enabled with a di
   expect(removed.querySelector('svg')).toBeInTheDocument()
   expect(screen.queryByText('AIRunningStatus.remaining')).toBeNull()
   expect(screen.getByText('AIRunningStatus.resetDurationHint')).toBeInTheDocument()
-  expect(screen.getByRole('group', { name: 'AIMilkdownModeSlash.duration' })).toBeInTheDocument()
+  expect(
+    within(screen.getByRole('group', { name: 'AIMilkdownModeSlash.duration' }))
+      .getAllByRole('button')
+      .map((button) => button.textContent),
+  ).toEqual(['30m', '1h', '2h', '3h', 'AIRunModeSelect.customDuration'])
   expect(screen.queryByRole('group', { name: 'AIRunningStatus.shorten' })).toBeNull()
   expect(onSend).not.toHaveBeenCalled()
 })
@@ -605,13 +663,11 @@ it('hides the status and closes its preview when Goal is disabled or execution f
   expect(screen.queryByRole('status')).toBeNull()
 })
 
-describe('editing stop conditions while the goal is unlimited', () => {
+describe('setting a finite duration while the goal has no finite limit', () => {
   const emit = vi.spyOn(emiter, 'emit')
 
   beforeEach(() => {
     emit.mockClear()
-    vi.useFakeTimers({ toFake: ['Date', 'performance'] })
-    vi.setSystemTime(new Date('2030-01-01T00:00:00Z'))
     rawData.agentPolicySnapshot = {
       ...initialPolicy,
       goal: {
@@ -619,119 +675,60 @@ describe('editing stop conditions while the goal is unlimited', () => {
         time_limit: { mode: 'never_ending', configured_duration_seconds: -1, deadline_at: 0 },
       },
     }
-    rawData.agentPolicySnapshotReceivedAtMs = performance.now() - 30000
     store.setState({ sessionSnapshot: { ...snapshot, current_round: 1 } })
     render(<AIRunningStatus />)
     fireEvent.click(screen.getByRole('button', { name: /^AIRunningStatus.label/ }))
   })
 
-  afterEach(() => vi.useRealTimers())
-
-  const expectStopConditionPatches = (seconds: number, iterations: number, acceptance: string) => {
-    expect(onSend).toHaveBeenCalledExactlyOnceWith({
+  const expectDurationHotpatch = (seconds: number) => {
+    expect(onSend).toHaveBeenNthCalledWith(1, {
       token: 'running-session',
       type: '',
       params: {
         IsConfigHotpatch: true,
-        HotpatchType: 'ExecutionStrategy',
-        GoalTimePatch:
-          seconds > 0
-            ? { Action: 'AI_GOAL_TIME_ACTION_SET_DEADLINE', DeadlineUnix: serverTime + 30 + seconds }
-            : { Action: 'AI_GOAL_TIME_ACTION_DISABLE' },
-        Params: {
-          Strategy: {
-            EnableMultiAgent: true,
-            MaxSubAgents: 6,
-            EnableGoalMode: true,
-            GoalMinIterations: iterations,
-            GoalDurationSeconds: seconds,
-            GoalAcceptanceCriteria: acceptance,
-          },
+        HotpatchType: 'GoalTime',
+        GoalTimePatch: {
+          Action: 'AI_GOAL_TIME_ACTION_SET_DURATION',
+          DurationSeconds: seconds,
         },
       },
     })
-    const goalStrategy = {
-      EnableGoalMode: true,
-      GoalMinIterations: iterations,
-      GoalAcceptanceCriteria: acceptance,
-      GoalDurationSeconds: seconds,
-    }
-    expect(setSetting).toHaveBeenCalledTimes(1)
-    const previous = { EnablePlan: true, Strategy: { EnableMultiAgent: true, MaxSubAgents: 8 } }
-    expect(setSetting.mock.calls[0][0](previous)).toEqual({
-      ...previous,
-      Strategy: { ...previous.Strategy, ...goalStrategy },
+    expect(onSend).toHaveBeenNthCalledWith(2, {
+      token: 'running-session',
+      type: '',
+      params: {
+        IsSyncMessage: true,
+        SyncType: 'agent_policy_snapshot_sync',
+        SyncID: expect.any(String),
+      },
     })
-    expect(emit).toHaveBeenCalledTimes(1)
-    expect(emit).toHaveBeenCalledWith(
-      'sessionData',
-      JSON.stringify({
-        type: 'updateSession',
-        sessionId: 'running-session',
-        updates: { StartParams: { Strategy: goalStrategy } },
-      }),
-    )
+    expect(onSend).toHaveBeenCalledTimes(2)
+    expect(onSend.mock.calls[0][0].params).not.toHaveProperty('Params')
+    expect(onSend.mock.calls[0][0].params.GoalTimePatch).not.toHaveProperty('DeadlineUnix')
+    expect(rawData.pendingGoalDurationSeconds).toBe(seconds)
+    expect(setSetting).not.toHaveBeenCalled()
+    expect(emit).not.toHaveBeenCalled()
   }
 
-  it('applies a duration preset when the trigger closes the popover', () => {
-    fireEvent.click(screen.getByRole('button', { name: 'AIMilkdownModeSlash.duration' }))
-    fireEvent.click(screen.getByRole('button', { name: '3h' }))
-    expect(onSend).not.toHaveBeenCalled()
-    const trigger = screen.getByRole('button', { name: /^AIRunningStatus.label/ })
-    fireEvent.click(trigger)
-    expect(trigger).toHaveAttribute('aria-expanded', 'false')
-    expectStopConditionPatches(10800, 0, '')
-    fireEvent.keyDown(trigger, { key: 'Escape' })
-    expect(onSend).toHaveBeenCalledTimes(1)
-    expect(setSetting).toHaveBeenCalledTimes(1)
-  })
-
-  it('shows all duration options and skips the hotpatch when returning to never ending', () => {
+  it.each([
+    ['30m', 1800],
+    ['1h', 3600],
+    ['2h', 7200],
+    ['3h', 10800],
+  ] as const)('sends %s as a GoalTime-only hotpatch', (label, seconds) => {
     const options = within(screen.getByRole('group', { name: 'AIMilkdownModeSlash.duration' }))
     expect(options.getAllByRole('button').map((button) => button.textContent)).toEqual([
       '30m',
       '1h',
+      '2h',
       '3h',
-      'AIMilkdownModeSlash.durationNever',
       'AIRunModeSelect.customDuration',
     ])
-    const never = options.getByRole('button', { name: 'AIMilkdownModeSlash.durationNever' })
-    expect(never).toHaveAttribute('aria-pressed', 'true')
-    fireEvent.click(options.getByRole('button', { name: '1h' }))
-    expect(never).toHaveAttribute('aria-pressed', 'false')
-    fireEvent.click(never)
-    expect(never).toHaveAttribute('aria-pressed', 'true')
-    fireEvent.click(screen.getByRole('button', { name: /^AIRunningStatus.label/ }))
-    expect(onSend).not.toHaveBeenCalled()
+    fireEvent.click(options.getByRole('button', { name: label }))
+    expectDurationHotpatch(seconds)
   })
 
-  it('applies edited minimum iterations when Escape closes the popover', () => {
-    fireEvent.click(screen.getByRole('button', { name: 'AIMilkdownModeSlash.minIterations' }))
-    fireEvent.change(screen.getByRole('spinbutton', { name: 'AIMilkdownModeSlash.minIterations' }), {
-      target: { value: '4' },
-    })
-    expect(onSend).not.toHaveBeenCalled()
-    expect(screen.queryByRole('button', { name: 'YakitButton.ok' })).toBeNull()
-    fireEvent.keyDown(screen.getByRole('spinbutton', { name: 'AIMilkdownModeSlash.minIterations' }), { key: 'Escape' })
-    expectStopConditionPatches(0, 4, '')
-  })
-
-  it('applies edited acceptance criteria when clicking outside closes the popover', async () => {
-    fireEvent.click(screen.getByRole('button', { name: 'AIMilkdownModeSlash.acceptance' }))
-    fireEvent.change(screen.getByRole('textbox', { name: 'AIMilkdownModeSlash.acceptance' }), {
-      target: { value: 'Complete the summary' },
-    })
-    expect(onSend).not.toHaveBeenCalled()
-    fireEvent.mouseDown(document.body)
-    fireEvent.click(document.body)
-    await waitFor(() =>
-      expect(screen.getByRole('button', { name: /^AIRunningStatus.label/ })).toHaveAttribute('aria-expanded', 'false'),
-    )
-    expectStopConditionPatches(0, 0, 'Complete the summary')
-  })
-
-  it('submits custom hours and minutes as one finite deadline on close', () => {
-    fireEvent.click(screen.getByRole('button', { name: 'AIMilkdownModeSlash.duration' }))
+  it('sets custom hours and minutes with the same GoalTime-only hotpatch', () => {
     fireEvent.click(screen.getByRole('button', { name: 'AIRunModeSelect.customDuration' }))
     fireEvent.change(screen.getByRole('spinbutton', { name: 'AIRunModeSelect.durationHours' }), {
       target: { value: '2' },
@@ -740,44 +737,12 @@ describe('editing stop conditions while the goal is unlimited', () => {
       target: { value: '15' },
     })
     expect(onSend).not.toHaveBeenCalled()
-    fireEvent.click(screen.getByRole('button', { name: /^AIRunningStatus.label/ }))
-    expectStopConditionPatches(8100, 0, '')
+    fireEvent.click(screen.getByRole('button', { name: 'YakitButton.apply' }))
+    expectDurationHotpatch(8100)
   })
 
-  it('closes without submitting when no condition was edited', () => {
+  it('closes without submitting when no duration was selected', () => {
     fireEvent.click(screen.getByRole('button', { name: /^AIRunningStatus.label/ }))
-    expect(onSend).not.toHaveBeenCalled()
-    expect(setSetting).not.toHaveBeenCalled()
-    expect(emit).not.toHaveBeenCalled()
-  })
-
-  it('does not submit empty acceptance criteria', () => {
-    fireEvent.click(screen.getByRole('button', { name: 'AIMilkdownModeSlash.acceptance' }))
-    fireEvent.change(screen.getByRole('textbox', { name: 'AIMilkdownModeSlash.acceptance' }), {
-      target: { value: '   ' },
-    })
-    fireEvent.click(screen.getByRole('button', { name: /^AIRunningStatus.label/ }))
-    expect(onSend).not.toHaveBeenCalled()
-    expect(setSetting).not.toHaveBeenCalled()
-    expect(emit).not.toHaveBeenCalled()
-  })
-
-  it('does not submit a custom duration of zero', () => {
-    fireEvent.click(screen.getByRole('button', { name: 'AIRunModeSelect.customDuration' }))
-    fireEvent.change(screen.getByRole('spinbutton', { name: 'AIRunModeSelect.durationHours' }), {
-      target: { value: '0' },
-    })
-    fireEvent.click(screen.getByRole('button', { name: /^AIRunningStatus.label/ }))
-    expect(onSend).not.toHaveBeenCalled()
-    expect(setSetting).not.toHaveBeenCalled()
-    expect(emit).not.toHaveBeenCalled()
-  })
-
-  it('discards an old session draft when switching to another session', () => {
-    fireEvent.click(screen.getByRole('button', { name: '3h' }))
-    currentSessionId.mockReturnValue('other-session')
-    act(() => store.setState({ sessionSnapshot: { ...snapshot, current_round: 2 } }))
-    fireEvent.keyDown(screen.getByRole('button', { name: /^AIRunningStatus.label/ }), { key: 'Escape' })
     expect(onSend).not.toHaveBeenCalled()
     expect(setSetting).not.toHaveBeenCalled()
     expect(emit).not.toHaveBeenCalled()
