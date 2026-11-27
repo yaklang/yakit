@@ -1,8 +1,11 @@
 import '../../ai-re-act/hooks/__test__/setupElectron'
 import type { ReactNode } from 'react'
+import type { AIAgentChatProps } from '../aiAgentChat/type'
+import type { AIAgentChatLayoutProps } from '../aiAgentChat/AIAgentChatLayout/AIAgentChatLayout'
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
+import { yakitNotify } from '@/utils/notification'
 import emiter from '@/utils/eventBus/eventBus'
 import { persistAIAgentChatSetting, serializeAIAgentChatSetting } from '../utils/aiAgentChatSettingCache'
 import { AIAgentSettingDefault, createWelcomeChat } from '../defaultConstant'
@@ -18,10 +21,13 @@ import { globalSessionEngine } from '../../ai-re-act/hooks/ChatMultiSessionContr
 const ipc = vi.hoisted(() => ({
   useChatIPC: vi.fn(),
   onSend: vi.fn(),
+  onStart: vi.fn(),
+  renderRealChat: false,
   detachPendingChat: vi.fn(),
   cancelPendingChat: vi.fn(),
   onClose: vi.fn(),
   queryPagesDataById: vi.fn(),
+  getCurrentPageTabRouteKey: () => 'ai-agent',
   updatePagesDataCacheById: vi.fn(),
   pages: new Map(),
   sessions: new Map(),
@@ -109,11 +115,12 @@ vi.mock('../../yakRunner/SplitView/SplitView', () => ({
   ),
 }))
 
-vi.mock('../aiAgentChat/AIAgentChat', async () => {
+vi.mock('../aiAgentChat/AIAgentChat', async (importOriginal) => {
+  const { AIAgentChat: RealChat } = await importOriginal<typeof import('../aiAgentChat/AIAgentChat')>()
   const { useContext, useEffect } = await import('react')
   const { default: AIAgentContext } = await import('../useContext/AIAgentContext')
   return {
-    AIAgentChat: () => {
+    AIAgentChat: (props: AIAgentChatProps) => {
       const { store, dispatcher } = useContext(AIAgentContext)
       if (ipc.prepareWelcomeStore && store.activeChat?.isDraftSession && store.activeChat.SessionID) {
         globalSessionEngine.ensureSession(store.activeChat.SessionID)
@@ -124,6 +131,7 @@ vi.mock('../aiAgentChat/AIAgentChat', async () => {
       }, [])
       useEffect(() => {
         if (
+          !ipc.renderRealChat &&
           store.activeChat?.isDraftSession &&
           globalSessionEngine.sessionStores.getState().has(store.activeChat.SessionID)
         ) {
@@ -132,6 +140,7 @@ vi.mock('../aiAgentChat/AIAgentChat', async () => {
       }, [store.activeChat?.SessionID])
       return (
         <div>
+          {ipc.renderRealChat && <RealChat {...props} />}
           <button
             onClick={() => {
               dispatcher.setActiveChat((current) =>
@@ -200,7 +209,7 @@ vi.mock('../../ai-re-act/hooks/useChatIPC', () => ({
   useChatIPC: (...args: unknown[]) => {
     ipc.useChatIPC(...args)
     return {
-      onStart: vi.fn(),
+      onStart: ipc.onStart,
       onSend: ipc.onSend,
       onClose: ipc.onClose,
       onUpdatePageId: vi.fn(),
@@ -221,6 +230,7 @@ vi.mock('../../ai-re-act/hooks/ChatMultiSessionController', async () => {
   return {
     globalSessionEngine: {
       sessionStores,
+      canStartExecutingSession: vi.fn(() => true),
       registerDraftSession: vi.fn(),
       discardUnsentDraft: vi.fn(),
       updateSessionConfig: vi.fn(),
@@ -242,6 +252,23 @@ vi.mock('../../ai-re-act/hooks/ChatMultiSessionController', async () => {
 
 vi.mock('../../KnowledgeBase/hooks/useKnowledgeBase', () => ({
   useKnowledgeBase: () => ({ initialize: vi.fn(), knowledgeBases: [] }),
+}))
+vi.mock('../aiAgentChat/AIAgentChatLayout/AIAgentChatLayout', () => ({
+  AIAgentChatLayout: ({ mode, initialDraft, onTriageSubmit }: AIAgentChatLayoutProps) =>
+    mode === 'welcome' && initialDraft ? (
+      <button onClick={() => onTriageSubmit({ qs: initialDraft.markdown })}>retry-draft</button>
+    ) : null,
+}))
+vi.mock('@/components/yakitUI/YakitHint/YakitHint', () => ({ YakitHint: () => null }))
+vi.mock('../components/aiReActChatReview/AIReActChatReview', () => ({ AIReActChatReview: () => null }))
+vi.mock('../components/aiMilkdownInput/utils', () => ({ aiInputWithParamsTemplate: vi.fn() }))
+vi.mock('../aiToolList/utils', () => ({ grpcGetAIToolById: vi.fn() }))
+vi.mock('@/pages/plugins/utils', () => ({ apiCancelDebugPlugin: vi.fn() }))
+vi.mock('../aiModelList/utils', () => ({ isForcedSetAIModal: vi.fn() }))
+vi.mock('@/pages/yakRunner/utils', () => ({ isYaklangScriptDeliveryPath: vi.fn() }))
+vi.mock('@/components/yakitUI/YakitModal/YakitModalConfirm', () => ({ YakitModalConfirm: vi.fn() }))
+vi.mock('../../KnowledgeBase/hooks/useMultipleHoldGRPCStream', () => ({
+  default: () => [[], { tokens: [] }],
 }))
 
 vi.mock('../components/aiFileSystemList/store/useHistoryFolder', () => ({
@@ -273,6 +300,7 @@ describe('AIAgent 配置广播', () => {
     vi.clearAllMocks()
     ipc.showHistory = false
     ipc.prepareWelcomeStore = false
+    ipc.renderRealChat = false
     ipc.pages.clear()
     ipc.sessions.clear()
     globalSessionEngine.sessionStores.setState(new Map(), true)
@@ -303,7 +331,12 @@ describe('AIAgent 配置广播', () => {
     }
   })
 
-  it('对话审核模式和阈值仅保存当前会话，后续共享配置更新也不传播审核覆盖值', async () => {
+  it('会话审核编辑保存全局默认，欢迎页实时跟随而已有会话保持各自审核设置', async () => {
+    let cache = JSON.stringify({ ...AIAgentSettingDefault, ReviewPolicy: 'manual', AIReviewRiskControlScore: 0.6 })
+    getRemoteValueMock.mockImplementation(async () => cache)
+    setRemoteValueMock.mockImplementation(async (key, value) => {
+      if (key === RemoteAIAgentGV.AIAgentChatSetting) cache = String(value)
+    })
     const sessions = ['review-a', 'review-b'].map((SessionID) => ({
       SessionID,
       Title: SessionID,
@@ -315,68 +348,94 @@ describe('AIAgent 配置广播', () => {
     sessions.forEach((session) =>
       globalSessionEngine.ensureSession(session.SessionID).store.setState({ execute: true }),
     )
-    const first = render(<AIAgent pageId="review-a" initialSession={sessions[0]} />)
-    const second = render(<AIAgent pageId="review-b" initialSession={sessions[1]} />)
-    const a = within(first.container)
-    const b = within(second.container)
-    await waitFor(() => expect(a.getByTestId('review-policy')).toHaveTextContent('manual'))
-    await waitFor(() => expect(b.getByTestId('review-policy')).toHaveTextContent('manual'))
-    const broadcast = vi.fn()
-    emiter.on('onAIAgentChatSettingChange', broadcast)
-    try {
-      fireEvent.click(a.getByText('change-review-policy'))
-      fireEvent.click(a.getByText('clear-review-risk-score'))
-      expect(a.getByTestId('review-policy')).toHaveTextContent('yolo')
-      expect(JSON.parse(a.getByTestId('setting').textContent!).AIReviewRiskControlScore).toBe(0)
-      expect(b.getByTestId('review-policy')).toHaveTextContent('manual')
-      expect(JSON.parse(b.getByTestId('setting').textContent!).AIReviewRiskControlScore).toBe(0.6)
-      expect(globalSessionEngine.updateSessionConfig).toHaveBeenLastCalledWith(
-        'review-a',
-        expect.objectContaining({ ReviewPolicy: 'yolo', AIReviewRiskControlScore: 0 }),
-      )
-      expect(broadcast).not.toHaveBeenCalled()
-      expect(setRemoteValueMock).not.toHaveBeenCalled()
-
-      fireEvent.click(a.getByText('change-token-limit'))
-      await waitFor(() => expect(JSON.parse(b.getByTestId('setting').textContent!).AICallTokenLimit).toBe(600))
-      expect(a.getByTestId('review-policy')).toHaveTextContent('yolo')
-      expect(b.getByTestId('review-policy')).toHaveTextContent('manual')
-      expect(JSON.parse(b.getByTestId('setting').textContent!).AIReviewRiskControlScore).toBe(0.6)
-      for (const [payload] of broadcast.mock.calls) {
-        expect(JSON.parse(payload)).not.toHaveProperty('ReviewPolicy')
-        expect(JSON.parse(payload)).not.toHaveProperty('AIReviewRiskControlScore')
+    const a = within(render(<AIAgent pageId="review-a" initialSession={sessions[0]} />).container)
+    const b = within(render(<AIAgent pageId="review-b" initialSession={sessions[1]} />).container)
+    const drafts = ['welcome-a', 'welcome-b'].map((pageId) => within(render(<AIAgent pageId={pageId} />).container))
+    await act(async () => {})
+    fireEvent.click(a.getByText('change-review-policy'))
+    fireEvent.click(a.getByText('clear-review-risk-score'))
+    await waitFor(() => expect(JSON.parse(cache)).toMatchObject({ ReviewPolicy: 'yolo', AIReviewRiskControlScore: 0 }))
+    expect(a.getByTestId('review-policy')).toHaveTextContent('yolo')
+    expect(JSON.parse(a.getByTestId('setting').textContent!).AIReviewRiskControlScore).toBe(0)
+    expect(b.getByTestId('review-policy')).toHaveTextContent('manual')
+    expect(JSON.parse(b.getByTestId('setting').textContent!).AIReviewRiskControlScore).toBe(0.6)
+    await waitFor(() => {
+      for (const draft of drafts) {
+        expect(draft.getByTestId('review-policy')).toHaveTextContent('yolo')
+        expect(JSON.parse(draft.getByTestId('setting').textContent!).AIReviewRiskControlScore).toBe(0)
       }
+    })
+    const laterDraft = within(render(<AIAgent pageId="later-welcome" />).container)
+    await waitFor(() => expect(laterDraft.getByTestId('review-policy')).toHaveTextContent('yolo'))
+    expect(JSON.parse(laterDraft.getByTestId('setting').textContent!).AIReviewRiskControlScore).toBe(0)
 
-      const draft = render(<AIAgent pageId="existing-draft" />)
-      const existingDraft = within(draft.container)
-      await waitFor(() => expect(existingDraft.getByTestId('review-policy')).toHaveTextContent('yolo'))
-      const previousDraftSetting = JSON.parse(existingDraft.getByTestId('setting').textContent!)
-      setRemoteValueMock.mockImplementation(async (key, value) => {
-        if (key === RemoteAIAgentGV.AIAgentChatSetting) getRemoteValueMock.mockResolvedValue(value)
-      })
-      await act(async () => {
-        await persistAIAgentChatSetting({
-          ...AIAgentSettingDefault,
-          ReviewPolicy: 'ai',
-          AIReviewRiskControlScore: 0.8,
-        })
-      })
-      expect(a.getByTestId('review-policy')).toHaveTextContent('yolo')
-      expect(b.getByTestId('review-policy')).toHaveTextContent('manual')
-      expect(JSON.parse(a.getByTestId('setting').textContent!).AIReviewRiskControlScore).toBe(0)
-      expect(JSON.parse(b.getByTestId('setting').textContent!).AIReviewRiskControlScore).toBe(0.6)
-      expect(existingDraft.getByTestId('review-policy')).toHaveTextContent(previousDraftSetting.ReviewPolicy)
-      expect(JSON.parse(existingDraft.getByTestId('setting').textContent!).AIReviewRiskControlScore).toBe(
-        previousDraftSetting.AIReviewRiskControlScore,
-      )
-      const third = render(<AIAgent pageId="new-draft" />)
-      const c = within(third.container)
-      await waitFor(() => expect(c.getByTestId('review-policy')).toHaveTextContent('ai'))
-      expect(JSON.parse(c.getByTestId('setting').textContent!).AIReviewRiskControlScore).toBe(0.8)
-      expect(ipc.onSend).not.toHaveBeenCalled()
-    } finally {
-      emiter.off('onAIAgentChatSettingChange', broadcast)
+    fireEvent.click(a.getByText('change-token-limit'))
+    await waitFor(() => expect(JSON.parse(b.getByTestId('setting').textContent!).AICallTokenLimit).toBe(600))
+    await act(async () => {
+      await persistAIAgentChatSetting({ ReviewPolicy: 'ai', AIReviewRiskControlScore: 0.8 })
+    })
+    expect(a.getByTestId('review-policy')).toHaveTextContent('yolo')
+    expect(JSON.parse(a.getByTestId('setting').textContent!).AIReviewRiskControlScore).toBe(0)
+    expect(b.getByTestId('review-policy')).toHaveTextContent('manual')
+    expect(JSON.parse(b.getByTestId('setting').textContent!).AIReviewRiskControlScore).toBe(0.6)
+    for (const draft of [...drafts, laterDraft]) {
+      expect(draft.getByTestId('review-policy')).toHaveTextContent('ai')
+      expect(JSON.parse(draft.getByTestId('setting').textContent!).AIReviewRiskControlScore).toBe(0.8)
     }
+    expect(JSON.parse(cache)).toMatchObject({
+      ReviewPolicy: 'ai',
+      AIReviewRiskControlScore: 0.8,
+      AICallTokenLimit: 600,
+    })
+    const newestDraft = within(render(<AIAgent pageId="newest-welcome" />).container)
+    await waitFor(() => expect(newestDraft.getByTestId('review-policy')).toHaveTextContent('ai'))
+    expect(JSON.parse(newestDraft.getByTestId('setting').textContent!).AIReviewRiskControlScore).toBe(0.8)
+    expect(ipc.onSend).not.toHaveBeenCalled()
+  })
+
+  it.each(['plan', 'shared'])('全局写入未完成时会话 %s 编辑保留全局共享字段', async (edit) => {
+    let cache = JSON.stringify({ ...AIAgentSettingDefault, DisableMemoryTriage: false })
+    getRemoteValueMock.mockImplementation(async () => cache)
+    const pending = deferred<void>()
+    setRemoteValueMock.mockImplementation(async (_key, value) => {
+      await pending.promise
+      cache = String(value)
+    })
+    render(<AIAgent pageId="concurrent-global" />)
+    await act(async () => {})
+    let globalWrite!: ReturnType<typeof persistAIAgentChatSetting>
+    act(() => {
+      globalWrite = persistAIAgentChatSetting({ DisableMemoryTriage: true })
+    })
+    await waitFor(() => expect(setRemoteValueMock).toHaveBeenCalledTimes(1))
+    fireEvent.click(screen.getByText(edit === 'plan' ? 'turn-on-plan' : 'change-token-limit'))
+    await act(async () => {
+      pending.resolve()
+      await globalWrite
+    })
+    await waitFor(() => expect(screen.getByTestId('memory')).toHaveTextContent('true'))
+    expect(setRemoteValueMock).toHaveBeenCalledTimes(edit === 'plan' ? 1 : 2)
+    expect(JSON.parse(cache).DisableMemoryTriage).toBe(true)
+    if (edit === 'plan') {
+      expect(screen.getByTestId('enable-plan')).toHaveTextContent('true')
+      expect(JSON.parse(cache)).not.toHaveProperty('EnablePlan')
+    } else {
+      expect(JSON.parse(cache).AICallTokenLimit).toBe(600)
+      expect(JSON.parse(screen.getByTestId('setting').textContent!).AICallTokenLimit).toBe(600)
+    }
+  })
+
+  it('共享保存失败仅应用到当前会话，并提示用户', async () => {
+    const a = within(render(<AIAgent pageId="draft-a" />).container)
+    const b = within(render(<AIAgent pageId="draft-b" />).container)
+    await waitFor(() => expect(a.getByTestId('review-policy')).toHaveTextContent('yolo'))
+    await waitFor(() => expect(b.getByTestId('review-policy')).toHaveTextContent('yolo'))
+    const previous = JSON.parse(b.getByTestId('setting').textContent!).AICallTokenLimit
+    setRemoteValueMock.mockRejectedValueOnce(new Error('SetKey failed'))
+    fireEvent.click(a.getByText('change-token-limit'))
+    await waitFor(() => expect(yakitNotify).toHaveBeenCalledWith('error', 'AIChatSetting.sharedSaveFailed'))
+    expect(JSON.parse(a.getByTestId('setting').textContent!).AICallTokenLimit).toBe(600)
+    expect(JSON.parse(b.getByTestId('setting').textContent!).AICallTokenLimit).toBe(previous)
   })
 
   it('运行中的页面忽略广播内审核字段，保留本会话策略', async () => {
@@ -458,6 +517,99 @@ describe('AIAgent 配置广播', () => {
     expect(getRemoteValueMock).not.toHaveBeenCalledWith(RemoteAIAgentGV.AIAgentChatSetting)
   })
 
+  it.each(['恢复期间', '恢复后'])('首问被拒绝，%s修改全局审核，重试使用最新策略和零阈值', async (timing) => {
+    ipc.renderRealChat = true
+    const session = createWelcomeChat()
+    const { meta, request } = globalSessionEngine.ensureSession(session.SessionID)
+    const initialCache = JSON.stringify({ ReviewPolicy: 'yolo', AIReviewRiskControlScore: 0.8 })
+    let cache = initialCache
+    const readStarted = deferred<void>()
+    const pendingRead = deferred<string>()
+    let firstRead = true
+    getRemoteValueMock.mockImplementation(async (key) => {
+      if (key !== RemoteAIAgentGV.AIAgentChatSetting) return ''
+      if (firstRead) {
+        firstRead = false
+        readStarted.resolve()
+        if (timing === '恢复期间') return pendingRead.promise
+      }
+      return cache
+    })
+    setRemoteValueMock.mockImplementation(async (_key, value) => {
+      cache = String(value)
+    })
+    meta.pendingWelcomeInput = { qs: '重试首问' }
+    Object.assign(request, { ReviewPolicy: 'ai', AIReviewRiskControlScore: 0, EnablePlan: true })
+    vi.mocked(globalSessionEngine.canStartExecutingSession).mockReturnValueOnce(false)
+    render(<AIAgent pageId="recovered-draft" initialSession={session} />)
+    await act(async () => {
+      await readStarted.promise
+    })
+    expect(ipc.onStart).not.toHaveBeenCalled()
+    if (timing === '恢复后') {
+      expect(screen.getByTestId('review-policy')).toHaveTextContent('yolo')
+    } else {
+      expect(screen.queryByRole('button', { name: 'retry-draft' })).toBeNull()
+    }
+
+    await act(async () => {
+      await persistAIAgentChatSetting({ ReviewPolicy: 'ai', AIReviewRiskControlScore: 0 })
+      pendingRead.resolve(initialCache)
+    })
+    fireEvent.click(await screen.findByRole('button', { name: 'retry-draft' }))
+    expect(ipc.onStart).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({
+        sessionId: session.SessionID,
+        params: expect.objectContaining({
+          Params: expect.objectContaining({
+            UserQuery: '重试首问',
+            ReviewPolicy: 'ai',
+            AIReviewRiskControlScore: 0,
+            EnablePlan: true,
+          }),
+        }),
+      }),
+    )
+  })
+
+  it('预建欢迎草稿读取全局审核，保留其他会话配置', async () => {
+    const session = createWelcomeChat()
+    const { request } = globalSessionEngine.ensureSession(session.SessionID)
+    Object.assign(request, { ReviewPolicy: 'manual', AIReviewRiskControlScore: 0.4, AICallTokenLimit: 777 })
+    render(<AIAgent pageId="seeded-welcome" initialSession={session} />)
+    await waitFor(() => expect(screen.getByTestId('review-policy')).toHaveTextContent('yolo'))
+    expect(JSON.parse(screen.getByTestId('setting').textContent!).AICallTokenLimit).toBe(777)
+  })
+
+  it('预建草稿的延迟全局读取保留期间的审核编辑', async () => {
+    const session = createWelcomeChat()
+    globalSessionEngine.ensureSession(session.SessionID)
+    const pending = deferred<string>()
+    getRemoteValueMock.mockReturnValue(pending.promise)
+    render(<AIAgent pageId="late-welcome" initialSession={session} />)
+    fireEvent.click(screen.getByText('change-review-policy'))
+    await act(async () => {
+      pending.resolve(JSON.stringify({ ...AIAgentSettingDefault, ReviewPolicy: 'ai' }))
+    })
+    expect(screen.getByTestId('review-policy')).toHaveTextContent('yolo')
+  })
+
+  it('预建草稿的延迟读取不会覆盖切换后的正式会话', async () => {
+    const session = createWelcomeChat()
+    globalSessionEngine.ensureSession(session.SessionID)
+    const pending = deferred<string>()
+    getRemoteValueMock.mockReturnValue(pending.promise)
+    querySessionMock.mockResolvedValue(
+      sessionResponse([{ SessionID: 'history', StartParams: { ReviewPolicy: 'manual' } } as AISession]),
+    )
+    render(<AIAgent pageId="navigated-welcome" initialSession={session} />)
+    fireEvent.click(screen.getByText('select-history'))
+    await waitFor(() => expect(screen.getByTestId('active-session')).toHaveTextContent('history'))
+    await act(async () => {
+      pending.resolve(JSON.stringify({ ...AIAgentSettingDefault, ReviewPolicy: 'yolo' }))
+    })
+    expect(screen.getByTestId('review-policy')).toHaveTextContent('manual')
+  })
   it.each([false, true])('子组件创建默认会话后欢迎页仍读取缓存（StrictMode=%s）', async (reactStrictMode) => {
     ipc.prepareWelcomeStore = true
     const session = createWelcomeChat()
@@ -958,11 +1110,7 @@ describe('AIAgent 配置广播', () => {
     expect(setRemoteValueMock).not.toHaveBeenCalled()
     fireEvent.click(screen.getByText('turn-on-plan'))
     await act(async () => {})
-    if (result === 'empty') {
-      expect(setRemoteValueMock).toHaveBeenCalled()
-    } else {
-      expect(setRemoteValueMock).not.toHaveBeenCalled()
-    }
+    expect(setRemoteValueMock).not.toHaveBeenCalled()
     expect(screen.getByTestId('enable-plan')).toHaveTextContent('true')
   })
 
@@ -1014,7 +1162,7 @@ describe('AIAgent 配置广播', () => {
     expect(querySessionMock).not.toHaveBeenCalled()
     expect(globalSessionEngine.updateSessionConfig).not.toHaveBeenCalled()
     expect(setRemoteValueMock).not.toHaveBeenCalled()
-    fireEvent.click(screen.getByText('turn-on-plan'))
+    fireEvent.click(screen.getByText('change-token-limit'))
     await waitFor(() => expect(setRemoteValueMock).toHaveBeenCalled())
   })
 
@@ -1036,7 +1184,7 @@ describe('AIAgent 配置广播', () => {
   it.each([false, true])('空 SessionID 不查询或更新引擎，即使 isDraftSession=%s', async (isDraftSession) => {
     render(<AIAgent pageId="test" initialSession={{ ...createWelcomeChat(), SessionID: '', isDraftSession }} />)
     await waitFor(() => expect(screen.getByTestId('review-policy')).toHaveTextContent('yolo'))
-    fireEvent.click(screen.getByText('turn-on-plan'))
+    fireEvent.click(screen.getByText('change-token-limit'))
     await waitFor(() => expect(setRemoteValueMock).toHaveBeenCalled())
 
     expect(querySessionMock).not.toHaveBeenCalled()
@@ -1174,7 +1322,7 @@ describe('AIAgent 配置广播', () => {
     render(<AIAgent pageId="legacy-settings" />)
     await waitFor(() => expect(screen.getByTestId('review-policy')).toHaveTextContent('yolo'))
     expect(JSON.parse(screen.getByTestId('setting').textContent!)).not.toHaveProperty('RuntimeContextSizeLimit')
-    fireEvent.click(screen.getByText('turn-on-plan'))
+    fireEvent.click(screen.getByText('change-token-limit'))
     await waitFor(() => expect(setRemoteValueMock).toHaveBeenCalled())
     for (const [, config] of vi.mocked(globalSessionEngine.updateSessionConfig).mock.calls) {
       expect(config).not.toHaveProperty('RuntimeContextSizeLimit')
@@ -1611,7 +1759,7 @@ describe('AIAgent 配置广播', () => {
     })
 
     await waitFor(() => {
-      expect(screen.getByTestId('review-policy')).toHaveTextContent('yolo')
+      expect(screen.getByTestId('review-policy')).toHaveTextContent('manual')
     })
     expect(screen.getByTestId('enable-plan')).toHaveTextContent('true')
     expect(screen.getByTestId('memory')).toHaveTextContent('true')

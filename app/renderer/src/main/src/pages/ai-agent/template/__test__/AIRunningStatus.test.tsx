@@ -49,6 +49,7 @@ beforeEach(() => {
   setSetting.mockClear()
   currentSessionId.mockReturnValue('running-session')
   store = createChatStore()
+  store.setState({ execute: true })
   rawData.agentPolicySnapshot = initialPolicy
   rawData.pendingGoalDurationSeconds = undefined
   rawData.agentPolicySnapshotReceivedAtMs = performance.now()
@@ -628,6 +629,18 @@ it('keeps the deadline preview available when the remaining time cannot be calcu
   fireEvent.click(screen.getByRole('button', { name: 'AIRunningStatus.state 12m36s' }))
   expect(screen.getByText('AIRunningStatus.remaining').nextElementSibling).toHaveTextContent('—')
   await waitFor(() => expect(screen.getByRole('button', { name: '+15m' })).toBeVisible())
+})
+
+it('removes the running status and its open preview on disconnect with a stale processing snapshot', async () => {
+  store.setState({ sessionSnapshot: snapshot })
+  const { container } = render(<AIRunningStatus />)
+  fireEvent.click(screen.getByRole('button', { name: /^AIRunningStatus.state/ }))
+  await waitFor(() => expect(screen.getByText('AIRunningStatus.title')).toBeVisible())
+
+  act(() => store.setState({ execute: false }))
+
+  expect(container).toBeEmptyDOMElement()
+  expect(screen.queryByText('AIRunningStatus.title')).not.toBeInTheDocument()
 })
 
 it('hides the status and closes its preview when Goal is disabled or execution finishes', () => {

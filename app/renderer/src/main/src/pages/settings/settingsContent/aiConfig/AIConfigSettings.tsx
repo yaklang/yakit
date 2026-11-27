@@ -1,9 +1,8 @@
-import { type ReactNode, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import type { ReactNode } from 'react'
 import { Slider } from 'antd'
 import { useMemoizedFn } from 'ahooks'
 import cloneDeep from 'lodash/cloneDeep'
-import omit from 'lodash/omit'
-import isEqual from 'lodash/isEqual'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInputNumber'
@@ -17,10 +16,10 @@ import {
   applyAIAgentChatSettingBroadcast,
   loadAIAgentChatSetting,
   persistAIAgentChatSetting,
-  reviewSettingKeys,
   serializeAIAgentChatSetting,
 } from '@/pages/ai-agent/utils/aiAgentChatSettingCache'
 import emiter from '@/utils/eventBus/eventBus'
+import { yakitNotify } from '@/utils/notification'
 import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import classNames from 'classnames'
@@ -114,19 +113,34 @@ export const AIConfigSettings: React.FC = () => {
   const [setting, setSetting] = useState<AIAgentSetting>(() => cloneDeep(AIAgentSettingDefault))
   const [ready, setReady] = useState(false)
   const settingRef = useRef(setting)
+  const savedSetting = useRef(setting)
+  const pendingSettings = useRef(new Map<AIAgentSetting, Partial<AIAgentSetting>>())
   const readyRef = useRef(false)
-  settingRef.current = setting
 
-  const applyAll = useMemoizedFn((next: AIAgentSetting) => {
-    if (!readyRef.current) return
-    const sharedSettingsChanged = !isEqual(omit(next, reviewSettingKeys), omit(settingRef.current, reviewSettingKeys))
-    settingRef.current = next
-    setSetting(next)
-    persistAIAgentChatSetting(next, sharedSettingsChanged)
+  const syncDisplayedSetting = useMemoizedFn(() => {
+    const displayed = [...pendingSettings.current.values()].reduce<AIAgentSetting>(
+      applyAIAgentChatSettingBroadcast,
+      savedSetting.current,
+    )
+    if (serializeAIAgentChatSetting(displayed) === serializeAIAgentChatSetting(settingRef.current)) return
+    settingRef.current = displayed
+    setSetting(displayed)
   })
 
-  const apply = useMemoizedFn((patch: Partial<AIAgentSetting>) => {
-    applyAll({ ...settingRef.current, ...patch })
+  const apply = useMemoizedFn(async (patch?: Partial<AIAgentSetting>) => {
+    if (!readyRef.current) return
+    const next = patch ? { ...settingRef.current, ...patch } : cloneDeep(AIAgentSettingDefault)
+    pendingSettings.current.set(next, patch ?? next)
+    settingRef.current = next
+    setSetting(next)
+    try {
+      savedSetting.current = await persistAIAgentChatSetting(patch)
+    } catch (error) {
+      yakitNotify('error', t('AIChatSetting.saveFailed', { error: String(error) }))
+    } finally {
+      pendingSettings.current.delete(next)
+      syncDisplayedSetting()
+    }
   })
 
   useEffect(() => {
@@ -135,13 +149,12 @@ export const AIConfigSettings: React.FC = () => {
     const onChange = (payload?: string) => {
       if (!payload) return
       try {
-        const cache = JSON.parse(payload) as AIAgentSetting
+        const cache = JSON.parse(payload) as Partial<AIAgentSetting>
         if (typeof cache !== 'object' || !cache) return
         if (!readyRef.current) pendingBroadcasts.push(cache)
-        const next = applyAIAgentChatSettingBroadcast(settingRef.current, cache)
-        if (serializeAIAgentChatSetting(next) === serializeAIAgentChatSetting(settingRef.current)) return
-        settingRef.current = next
-        setSetting(next)
+        const next = applyAIAgentChatSettingBroadcast(savedSetting.current, cache)
+        savedSetting.current = next
+        syncDisplayedSetting()
       } catch (_) {}
     }
     emiter.on('onAIAgentChatSettingChange', onChange)
@@ -151,6 +164,7 @@ export const AIConfigSettings: React.FC = () => {
         if (result.status === 'error') return
         if (result.status === 'success') {
           const next = pendingBroadcasts.reduce(applyAIAgentChatSettingBroadcast, result.setting)
+          savedSetting.current = next
           settingRef.current = next
           setSetting(next)
         }
@@ -182,7 +196,7 @@ export const AIConfigSettings: React.FC = () => {
           disabled={!ready || globalWriteDisabled}
           onClick={() => {
             if (!readyRef.current || globalWriteDisabled) return
-            applyAll(cloneDeep(AIAgentSettingDefault))
+            apply()
             resetGlobal()
           }}
         >

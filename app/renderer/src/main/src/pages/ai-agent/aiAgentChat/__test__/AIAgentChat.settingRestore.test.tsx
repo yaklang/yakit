@@ -260,22 +260,22 @@ describe('AIAgentChat SingleModelMode 生命周期', () => {
       EnablePlan: true,
       SyncPerceptionTrigger: true,
       AICallTokenLimit: 64,
+      ReviewPolicy: 'yolo',
       Strategy: { EnableMultiAgent: true, EnableGoalMode: true },
     })
     render(<AIAgentChat />)
     act(() => {
       emiter.emit('onReActChatEvent', JSON.stringify({ type: ReActChatEventEnum.NEW_CHAT, pageId: 'tab-1' }))
     })
+    expect(mocks.getSetting()).toMatchObject({ ReviewPolicy: 'yolo', SingleModelMode: true })
     const welcome = mocks.setActiveChat.mock.calls[0][0]
     expect(globalSessionEngine.ensureSession(welcome.SessionID).request).toMatchObject({
       SingleModelMode: false,
       EnablePlan: false,
       SyncPerceptionTrigger: false,
       AICallTokenLimit: 64,
-      Strategy: expect.objectContaining({
-        EnableMultiAgent: false,
-        EnableGoalMode: false,
-      }),
+      ReviewPolicy: 'manual',
+      Strategy: expect.objectContaining({ EnableMultiAgent: false, EnableGoalMode: false }),
     })
     expect(mocks.setActiveChat).toHaveBeenCalledWith(
       expect.objectContaining({ isDraftSession: true, SessionID: expect.any(String) }),

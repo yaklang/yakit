@@ -1,6 +1,6 @@
 import cloneDeep from 'lodash/cloneDeep'
 import omit from 'lodash/omit'
-import pick from 'lodash/pick'
+import isEqual from 'lodash/isEqual'
 import { AISourceEnum } from '@/pages/ai-re-act/hooks/grpcApi'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import emiter from '@/utils/eventBus/eventBus'
@@ -22,6 +22,22 @@ export const stripAIAgentChatSettingForPersist = (setting: Partial<AIAgentSettin
 
 export const serializeAIAgentChatSetting = (setting: AIAgentSetting) => {
   return JSON.stringify(stripAIAgentChatSettingForPersist(setting))
+}
+
+const changedFields = <T extends object>(before: T, after: T): Partial<T> => {
+  const patch: Partial<T> = {}
+  for (const key of Object.keys(after) as (keyof T)[]) {
+    if (!isEqual(before[key], after[key])) patch[key] = after[key]
+  }
+  return patch
+}
+
+export const getChatSettingPatch = (current: AIAgentSetting, next: AIAgentSetting): Partial<AIAgentSetting> => {
+  const { Strategy: previousStrategy, ...before } = stripAIAgentChatSettingForPersist(current)
+  const { Strategy: nextStrategy, ...after } = stripAIAgentChatSettingForPersist(next)
+  const patch = changedFields(before, after)
+  const strategy = changedFields(previousStrategy ?? {}, nextStrategy ?? {})
+  return Object.keys(strategy).length ? { ...patch, Strategy: strategy } : patch
 }
 
 export const applyAIAgentChatSettingBroadcast = (
@@ -72,48 +88,38 @@ export type LoadAIAgentChatSettingResult =
   | { status: 'empty' }
   | { status: 'error' }
 
-const readAIAgentChatSetting = async (): Promise<LoadAIAgentChatSettingResult> => {
-  try {
-    const res = await getRemoteValue(RemoteAIAgentGV.AIAgentChatSetting)
-    if (!res) return { status: 'empty' }
-    const cache = JSON.parse(res) as unknown
-    if (typeof cache !== 'object' || !cache) return { status: 'error' }
-    return { status: 'success', setting: mergeAIAgentChatSettingCache(cache as AIAgentSetting) }
-  } catch {
-    return { status: 'error' }
-  }
+const readAIAgentChatSetting = async (): Promise<Exclude<LoadAIAgentChatSettingResult, { status: 'error' }>> => {
+  const res = await getRemoteValue(RemoteAIAgentGV.AIAgentChatSetting)
+  if (!res) return { status: 'empty' }
+  const cache = JSON.parse(res) as unknown
+  if (typeof cache !== 'object' || !cache) throw new Error('Invalid AI chat settings')
+  return { status: 'success', setting: mergeAIAgentChatSettingCache(cache as AIAgentSetting) }
 }
 
 // 会话只写共享项。与全局设置的写入串行，避免读到旧审核默认值后再覆盖新的全局选择。
-let pendingWrite = Promise.resolve()
-export const loadAIAgentChatSetting = () => pendingWrite.then(readAIAgentChatSetting)
-
-const queueSettingWrite = (write: () => Promise<unknown>) => {
-  pendingWrite = pendingWrite.then(write).then(
-    () => undefined,
-    () => undefined,
-  )
-  return pendingWrite
+let pendingWrite: Promise<unknown> = Promise.resolve()
+export const loadAIAgentChatSetting = async (): Promise<LoadAIAgentChatSettingResult> => {
+  const writesBeforeRead = pendingWrite
+  const result = await writesBeforeRead.then(readAIAgentChatSetting).catch(() => ({ status: 'error' }) as const)
+  // 读取期间又有全局配置写入，恢复草稿前以最后一次写入后的值为准。
+  return writesBeforeRead === pendingWrite ? result : loadAIAgentChatSetting()
 }
 
-export const persistAIAgentChatSetting = (setting: AIAgentSetting, emit = true) => {
-  const payload = serializeAIAgentChatSetting(setting)
-  const write = queueSettingWrite(() => setRemoteValue(RemoteAIAgentGV.AIAgentChatSetting, payload))
-  if (emit) emiter.emit('onAIAgentChatSettingChange', serializeAIAgentChatSetting(omit(setting, reviewSettingKeys)))
-  return write
+const queueSettingWrite = <T>(write: () => Promise<T>) => {
+  const result = pendingWrite.then(write)
+  pendingWrite = result.catch(() => undefined)
+  return result
 }
 
-export const persistSharedChatSetting = (setting: AIAgentSetting) => {
-  const shared = omit(stripAIAgentChatSettingForPersist(setting), reviewSettingKeys)
-  const write = queueSettingWrite(async () => {
-    const cached = await readAIAgentChatSetting()
-    if (cached.status === 'error') return
-    const defaults = cached.status === 'success' ? cached.setting : AIAgentSettingDefault
-    await setRemoteValue(
-      RemoteAIAgentGV.AIAgentChatSetting,
-      JSON.stringify({ ...shared, ...pick(defaults, reviewSettingKeys) }),
-    )
+/** 全局设置按字段合并到队列执行时的最新配置；省略 patch 表示重置全部。 */
+export const persistAIAgentChatSetting = (patch?: Partial<AIAgentSetting>) =>
+  queueSettingWrite(async () => {
+    let saved = AIAgentSettingDefault
+    if (patch) {
+      const cached = await readAIAgentChatSetting()
+      saved = applyAIAgentChatSettingBroadcast(cached.status === 'success' ? cached.setting : saved, patch)
+    }
+    await setRemoteValue(RemoteAIAgentGV.AIAgentChatSetting, serializeAIAgentChatSetting(saved))
+    emiter.emit('onAIAgentChatSettingChange', serializeAIAgentChatSetting(patch ?? saved))
+    return saved
   })
-  emiter.emit('onAIAgentChatSettingChange', JSON.stringify(shared))
-  return write
-}

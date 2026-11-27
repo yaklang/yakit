@@ -1099,6 +1099,8 @@
     "expand": "Expand"
   },
   "AIChatSetting": {
+    "saveFailed": "Failed to save AI settings: {{error}}",
+    "sharedSaveFailed": "Settings applied to this session, but shared settings could not be saved: {{error}}",
     "permissionsAndSecurity": "Permissions & Security",
     "planningAndExecution": "Planning & Execution",
     "automation": "Automation",

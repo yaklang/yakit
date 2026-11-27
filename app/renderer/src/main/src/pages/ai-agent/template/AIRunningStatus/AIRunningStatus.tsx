@@ -74,12 +74,13 @@ const readGoalTiming = ({ agentPolicySnapshot, agentPolicySnapshotReceivedAtMs }
 const AIRunningStatus: FC<AIRunningStatusProps> = ({ className }) => {
   const store = useCurrentStore()
   const rawData = useCurrentRawData()
+  const execute = useStore(store, (state) => state.execute)
   const execution = useStore(store, (state) => state.sessionSnapshot?.execution)
   const round = useStore(store, (state) => state.sessionSnapshot?.current_round)
   const roundStartAt = useStore(store, (state) => state.sessionSnapshot?.current_round_start_at)
   const agentPolicySnapshotUpdate = useStore(store, (state) => state.agentPolicySnapshotUpdate)
   const timing = useCreation(() => readGoalTiming(rawData), [rawData, agentPolicySnapshotUpdate])
-  if (execution?.status !== 'processing' || !timing) return null
+  if (!execute || execution?.status !== 'processing' || !timing) return null
 
   return (
     <RunningStatusButton

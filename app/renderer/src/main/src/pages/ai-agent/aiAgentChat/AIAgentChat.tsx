@@ -48,7 +48,7 @@ import { syncAIAgentPageInfo } from '../utils/syncAIAgentPageInfo'
 import { isChatSession } from '../utils/isChatSession'
 import type { AIChatInputDraft } from '../template/type'
 
-export const AIAgentChat: React.FC<AIAgentChatProps> = memo(() => {
+export const AIAgentChat: React.FC<AIAgentChatProps> = memo(({ restoreWelcomeSettings }) => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
 
   const { activeChat, pageId, pendingChat, openChatInNewTab } = useAIAgentStore()
@@ -144,7 +144,8 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo(() => {
   useEffect(() => {
     if (!openChatInNewTab || !meta.pendingWelcomeInput) return
     // 延后领取，StrictMode 的首轮 effect 清理不会丢失首问。
-    const timer = window.setTimeout(() => {
+    let disposed = false
+    const timer = window.setTimeout(async () => {
       const input = meta.pendingWelcomeInput
       if (!input) return
       const draft = meta.welcomeDraft?.status === 'pending' ? meta.welcomeDraft.draft : undefined
@@ -163,9 +164,13 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo(() => {
           enabledCapabilities: input.enabledCapabilities,
         },
       }
-      setMode('welcome')
+      await restoreWelcomeSettings?.(() => disposed)
+      if (!disposed) setMode('welcome')
     }, 0)
-    return () => window.clearTimeout(timer)
+    return () => {
+      disposed = true
+      window.clearTimeout(timer)
+    }
   }, [sessionId])
 
   const resetWelcome = useMemoizedFn((clearInputParams = false) => {
@@ -180,6 +185,8 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo(() => {
     const welcome = createWelcomeChat()
     globalSessionEngine.updateSessionConfig(welcome.SessionID, {
       ...getSetting(),
+      ReviewPolicy: AIAgentSettingDefault.ReviewPolicy,
+      AIReviewRiskControlScore: AIAgentSettingDefault.AIReviewRiskControlScore,
       SyncPerceptionTrigger: AIAgentSettingDefault.SyncPerceptionTrigger,
       EnablePlan: AIAgentSettingDefault.EnablePlan,
       SingleModelMode: AIAgentSettingDefault.SingleModelMode,

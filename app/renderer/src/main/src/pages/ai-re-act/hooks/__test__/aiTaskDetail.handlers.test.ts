@@ -100,17 +100,21 @@ describe('aiTaskDetail handlers', () => {
     expect(req.store.getState().agentPolicySnapshotUpdate).toBe(count + 2)
   })
 
-  it('缺少时间策略的快照报错并保留上次有效快照', () => {
+  it('忽略缺少时间策略的快照，保留上次有效快照并接受后续有效帧', () => {
     const node = { NodeId: 'agent_policy_snapshot' }
     const policy = { updated_at: 1, revision: 1, goal: { time_limit: { mode: 'disabled' } } }
     const req = makeHandlerRequest({ res: makeGrpcJsonRes('agent_policy_snapshot', policy, node) })
     aiTaskDetailDataHandlers.agent_policy_snapshot(req)
     req.res = makeGrpcJsonRes('agent_policy_snapshot', { updated_at: 2, revision: 2, goal: {} }, node)
-    expect(() => aiTaskDetailDataHandlers.agent_policy_snapshot(req)).toThrow(
-      'agent_policy_snapshot 缺少 goal.time_limit',
-    )
+    aiTaskDetailDataHandlers.agent_policy_snapshot(req)
     expect(req.rawData.agentPolicySnapshot).toEqual(policy)
     expect(req.store.getState().agentPolicySnapshotUpdate).toBe(1)
+
+    const validPolicy = { ...policy, updated_at: 2, revision: 2 }
+    req.res = makeGrpcJsonRes('agent_policy_snapshot', validPolicy, node)
+    aiTaskDetailDataHandlers.agent_policy_snapshot(req)
+    expect(req.rawData.agentPolicySnapshot).toEqual(validPolicy)
+    expect(req.store.getState().agentPolicySnapshotUpdate).toBe(2)
   })
 
   it.each([

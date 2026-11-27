@@ -1099,6 +1099,8 @@
     "expand": "展開"
   },
   "AIChatSetting": {
+    "saveFailed": "AI 設定儲存失敗：{{error}}",
+    "sharedSaveFailed": "設定已套用至目前對話，但共享設定儲存失敗：{{error}}",
     "permissionsAndSecurity": "基礎權限與安全",
     "planningAndExecution": "任務規劃與執行",
     "automation": "自動化配置",

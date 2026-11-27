@@ -11,7 +11,7 @@ import {
   loadAIAgentChatSetting,
   mergeAIAgentChatSettingCache,
   persistAIAgentChatSetting,
-  persistSharedChatSetting,
+  getChatSettingPatch,
   serializeAIAgentChatSetting,
 } from '../aiAgentChatSettingCache'
 
@@ -216,24 +216,54 @@ describe('applyAIAgentChatSettingBroadcast', () => {
 
 describe('persistAIAgentChatSetting', () => {
   beforeEach(() => {
+    getRemoteValueMock.mockReset().mockResolvedValue('')
     setRemoteValueMock.mockReset()
     emitMock.mockReset()
   })
 
   it('默认写入远端并广播，payload 不含模型字段', async () => {
     await persistAIAgentChatSetting(settingWithModel)
-    const payload = serializeAIAgentChatSetting(settingWithModel)
+    const payload = serializeAIAgentChatSetting({
+      ...settingWithModel,
+      Strategy: { ...AIAgentSettingDefault.Strategy, ...settingWithModel.Strategy },
+    })
     expect(setRemoteValueMock).toHaveBeenCalledWith(RemoteAIAgentGV.AIAgentChatSetting, payload)
-    const { ReviewPolicy, AIReviewRiskControlScore, ...shared } = JSON.parse(payload)
-    expect(ReviewPolicy).toBe('yolo')
-    expect(emitMock).toHaveBeenCalledWith('onAIAgentChatSettingChange', JSON.stringify(shared))
+    expect(emitMock).toHaveBeenCalledWith('onAIAgentChatSettingChange', serializeAIAgentChatSetting(settingWithModel))
     expect(payload).not.toContain('gpt-test')
     expect(payload).not.toContain('EnablePlan')
   })
 
-  it('emit=false 时只落库不广播', async () => {
-    await persistAIAgentChatSetting(settingWithModel, false)
-    expect(setRemoteValueMock).toHaveBeenCalled()
+  it('会话只切换运行开关没有持久化补丁，修改子 Agent 数量只提交该字段', () => {
+    const next = {
+      ...settingWithModel,
+      EnablePlan: !settingWithModel.EnablePlan,
+      Strategy: { ...settingWithModel.Strategy, EnableMultiAgent: false },
+    }
+    expect(getChatSettingPatch(settingWithModel, next)).toEqual({})
+    expect(getChatSettingPatch(settingWithModel, { ...next, Strategy: { ...next.Strategy, MaxSubAgents: 5 } })).toEqual(
+      {
+        Strategy: { MaxSubAgents: 5 },
+      },
+    )
+  })
+
+  it('写入失败不广播，后续保存仍可成功', async () => {
+    getRemoteValueMock.mockResolvedValue('')
+    const error = new Error('SetKey failed')
+    setRemoteValueMock.mockRejectedValueOnce(error).mockResolvedValueOnce(undefined)
+    const first = persistAIAgentChatSetting(settingWithModel)
+    expect(emitMock).not.toHaveBeenCalled()
+    await expect(first).rejects.toBe(error)
+    expect(emitMock).not.toHaveBeenCalled()
+    await persistAIAgentChatSetting(settingWithModel)
+    expect(emitMock).toHaveBeenCalledOnce()
+  })
+
+  it('共享设置读取失败时保留原始错误，不写入或广播', async () => {
+    const error = new Error('GetKey failed')
+    getRemoteValueMock.mockRejectedValueOnce(error)
+    await expect(persistAIAgentChatSetting(settingWithModel)).rejects.toBe(error)
+    expect(setRemoteValueMock).not.toHaveBeenCalled()
     expect(emitMock).not.toHaveBeenCalled()
   })
 
@@ -243,12 +273,10 @@ describe('persistAIAgentChatSetting', () => {
     setRemoteValueMock.mockImplementation(async (_, payload) => {
       cache = payload
     })
-    const chat = { ...settingWithModel, AIReviewRiskControlScore: 0.5 }
-    const global = { ...settingWithModel, ReviewPolicy: 'ai' as const, AIReviewRiskControlScore: 0 }
     const writes = [
-      persistSharedChatSetting(chat),
-      persistAIAgentChatSetting(global),
-      persistSharedChatSetting({ ...chat, AICallTokenLimit: 600 }),
+      persistAIAgentChatSetting({ DisableMemoryTriage: true }),
+      persistAIAgentChatSetting({ ReviewPolicy: 'ai', AIReviewRiskControlScore: 0 }),
+      persistAIAgentChatSetting({ AICallTokenLimit: 600 }),
     ]
     await Promise.all(writes)
     expect(JSON.parse(setRemoteValueMock.mock.calls[0][1])).toMatchObject({
@@ -266,5 +294,27 @@ describe('persistAIAgentChatSetting', () => {
       'onAIAgentChatSettingChange',
       expect.not.stringContaining('"AIReviewRiskControlScore"'),
     )
+  })
+
+  it('会话保存共享值后排队修改全局审核策略，保留已广播的共享值', async () => {
+    let cache = JSON.stringify({ ReviewPolicy: 'manual', AICallTokenLimit: 200 })
+    getRemoteValueMock.mockImplementation(async () => cache)
+    setRemoteValueMock.mockImplementation(async (_, payload) => {
+      cache = payload
+    })
+
+    const sharedWrite = persistAIAgentChatSetting({ AICallTokenLimit: 600 })
+    const reviewWrite = persistAIAgentChatSetting({ ReviewPolicy: 'ai' })
+    const [, saved] = await Promise.all([sharedWrite, reviewWrite])
+
+    const expected = { ReviewPolicy: 'ai', AICallTokenLimit: 600 }
+    expect(JSON.parse(cache)).toMatchObject(expected)
+    expect(saved).toMatchObject(expected)
+    expect(emitMock).toHaveBeenNthCalledWith(
+      1,
+      'onAIAgentChatSettingChange',
+      expect.stringContaining('"AICallTokenLimit":600'),
+    )
+    expect(emitMock).toHaveBeenNthCalledWith(2, 'onAIAgentChatSettingChange', JSON.stringify({ ReviewPolicy: 'ai' }))
   })
 })

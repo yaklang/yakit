@@ -237,14 +237,21 @@ describe('useAIRunMode', () => {
     })
   })
 
-  it('运行中从 1h 切到永不停止后，只改子 Agent 数量保留当前时限', () => {
+  it.each([
+    { mode: 'disabled', effective: false, duration: 0 },
+    { mode: 'never_ending', effective: true, duration: -1 },
+  ])('后端确认 $mode 后，只改子 Agent 数量保留已确认的时限 $duration', ({ mode, effective, duration }) => {
     executeRef.value = true
     Object.assign(settingRef.value.Strategy, {
       EnableGoalMode: true,
       EnableMultiAgent: true,
       GoalDurationSeconds: 3600,
     })
-    snapshotGoal.mockReturnValueOnce({ effective: true, time_limit: { configured_duration_seconds: -1 } })
+    snapshotGoal.mockReturnValueOnce({
+      enabled: true,
+      effective,
+      time_limit: { mode, configured_duration_seconds: duration },
+    })
     const { result } = renderHook(() => useAIRunMode())
 
     act(() => result.current.onSetStrategy({ MaxSubAgents: 5 }, true))
@@ -255,12 +262,12 @@ describe('useAIRunMode', () => {
       params: {
         IsConfigHotpatch: true,
         HotpatchType: 'ExecutionStrategy',
-        Params: { Strategy: { ...settingRef.value.Strategy, MaxSubAgents: 5, GoalDurationSeconds: -1 } },
+        Params: { Strategy: { ...settingRef.value.Strategy, MaxSubAgents: 5, GoalDurationSeconds: duration } },
       },
     })
   })
 
-  it.each([-1, 1800])('快照延迟时连续修改保留新时限 %s', (duration) => {
+  it.each([0, -1, 1800])('快照延迟时连续修改保留新时限 %s', (duration) => {
     executeRef.value = true
     snapshotGoal.mockReturnValue({ effective: true, time_limit: { configured_duration_seconds: 3600 } })
     const first = renderHook(() => useAIRunMode())

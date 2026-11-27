@@ -1099,6 +1099,8 @@
     "expand": "展开"
   },
   "AIChatSetting": {
+    "saveFailed": "AI 设置保存失败：{{error}}",
+    "sharedSaveFailed": "设置已应用到当前会话，但共享设置保存失败：{{error}}",
     "permissionsAndSecurity": "基础权限与安全",
     "planningAndExecution": "任务规划与执行",
     "automation": "自动化配置",

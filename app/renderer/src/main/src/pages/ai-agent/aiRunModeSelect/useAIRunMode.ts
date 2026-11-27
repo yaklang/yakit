@@ -66,8 +66,7 @@ export const useAIRunMode = () => {
   const togglePlan = useDebounceFn(onSetPlan, { wait: 200, leading: true }).run
 
   const resolveGoalDuration = (editedDuration?: number) => {
-    const goal = rawData.agentPolicySnapshot?.goal
-    const confirmedDuration = goal?.effective ? goal.time_limit.configured_duration_seconds : undefined
+    const confirmedDuration = rawData.agentPolicySnapshot?.goal?.time_limit.configured_duration_seconds
     return editedDuration ?? rawData.pendingGoalDurationSeconds ?? confirmedDuration ?? strategy?.GoalDurationSeconds
   }
 
