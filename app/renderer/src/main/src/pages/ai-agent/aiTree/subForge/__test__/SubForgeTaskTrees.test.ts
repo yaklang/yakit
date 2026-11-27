@@ -180,6 +180,36 @@ describe('insertSubForgeTasks', () => {
     expect(inserted[1].subForgeChildren?.[1]).toMatchObject({ name: 'nested', subForgeHead: false })
   })
 
+  it.each([
+    ['failed', AITaskStatus.error],
+    ['timed_out', AITaskStatus.error],
+    ['cancelled', AITaskStatus.skipped],
+    ['succeeded', AITaskStatus.success],
+  ] as const)('maps call status %s', (status, progress) => {
+    expect(insertSubForgeTasks([parentTask()], { 'child-1': run({ status }) }, 'parent', true)[1].progress).toBe(
+      progress,
+    )
+  })
+
+  it.each([
+    ['aborted', AITaskStatus.error],
+    ['skipped', AITaskStatus.skipped],
+    ['completed', AITaskStatus.success],
+  ] as const)('maps node progress %s', (progress, expected) => {
+    const inserted = insertSubForgeTasks(
+      [parentTask()],
+      {
+        'child-1': run({
+          status: 'succeeded',
+          task_tree: { name: 'root', progress, task_id: 'n' },
+        }),
+      },
+      'parent',
+      true,
+    )
+    expect(inserted[1].subForgeChildren?.[0].progress).toBe(expected)
+  })
+
   it('识别 subforge- 前缀', () => {
     expect(isSubForgeTreeTask('subforge-child-1')).toBe(true)
     expect(isSubForgeTreeTask('task-east')).toBe(false)

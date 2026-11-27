@@ -15,7 +15,8 @@ export function applySubForgeSnapshot(
   if (previous && previous.revision > snapshot.revision) return runs
   if (previous && previous.revision === snapshot.revision) {
     const upgraded = !isTerminalStatus(previous.status) && isTerminalStatus(snapshot.status)
-    if (!upgraded) {
+    const filledTree = !previous.task_tree && !!snapshot.task_tree
+    if (!upgraded && !filledTree) {
       if (!previous.historical || historical) return runs
       if (snapshot.status === 'running') return runs
     }
@@ -75,10 +76,12 @@ export const handleSubForgeTaskTree: AIMessageHandler = ({ res, store, pushLog }
     pushLog({ level: 'error', message: 'Invalid sub-Forge task tree snapshot' })
     return
   }
+  const planCoordinatorId = store.getState().currentChatStatus.coordinatorId
   if (
     res.CoordinatorId &&
     res.CoordinatorId !== snapshot.parent_coordinator_id &&
-    res.CoordinatorId !== snapshot.child_coordinator_id
+    res.CoordinatorId !== snapshot.child_coordinator_id &&
+    res.CoordinatorId !== planCoordinatorId
   ) {
     pushLog({ level: 'error', message: 'Invalid sub-Forge task tree snapshot' })
     return

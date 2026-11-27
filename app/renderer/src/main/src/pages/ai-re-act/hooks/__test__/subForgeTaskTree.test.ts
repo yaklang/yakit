@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import {
   applySubForgeSnapshot,
   dropSubForgeRunsByParent,
@@ -7,7 +7,7 @@ import {
 } from '../grpcStreamHandler/subForgeTaskTree'
 import { aiOtherDataHandlers } from '../grpcStreamHandler/aiOther'
 import { handleTaskPlanEnd } from '../utils'
-import { makeGrpcJsonRes, makeHandlerRequest, createTestSession } from './fixtures'
+import { makeGrpcJsonRes, makeGrpcRes, makeHandlerRequest, createTestSession } from './fixtures'
 import { AITaskStatus } from '../grpcApi'
 
 const snapshot = {
@@ -37,11 +37,49 @@ describe('subForgeRuns', () => {
     expect(req.store.getState().subForgeRuns['child-1'].parent_coordinator_id).toBe('parent')
   })
 
+  it.each([
+    ['invalid json', makeGrpcRes({ Type: 'sub_forge_task_tree', Content: new TextEncoder().encode('{') })],
+    ['missing child coordinator', makeGrpcJsonRes('sub_forge_task_tree', { ...snapshot, child_coordinator_id: '' })],
+  ])('rejects %s snapshots', (_label, res) => {
+    const pushLog = vi.fn()
+    const req = makeHandlerRequest({ res, pushLog })
+    handleSubForgeTaskTree(req)
+    expect(pushLog).toHaveBeenCalledWith({ level: 'error', message: 'Invalid sub-Forge task tree snapshot' })
+    expect(req.store.getState().subForgeRuns).toEqual({})
+  })
+
+  it('accepts a nested snapshot whose envelope CoordinatorId is the top-level plan', () => {
+    const nested = {
+      ...snapshot,
+      parent_coordinator_id: 'child-1',
+      child_coordinator_id: 'child-1a',
+    }
+    const req = makeHandlerRequest({
+      res: makeGrpcJsonRes('sub_forge_task_tree', nested, { CoordinatorId: 'plan' }),
+    })
+    req.store.getState().updateCurrentChatStatus({ coordinatorId: 'plan' })
+    handleSubForgeTaskTree(req)
+    expect(req.store.getState().subForgeRuns['child-1a']).toMatchObject({
+      parent_coordinator_id: 'child-1',
+      child_coordinator_id: 'child-1a',
+    })
+  })
+
   it('keeps a higher revision and does not unfreeze historical running with a delayed live running event', () => {
     const terminal = applySubForgeSnapshot({}, { ...snapshot, revision: 4, status: 'succeeded' }, true)
     expect(applySubForgeSnapshot(terminal, snapshot, false)['child-1'].status).toBe('succeeded')
     const frozen = applySubForgeSnapshot({}, snapshot, true)
     expect(applySubForgeSnapshot(frozen, snapshot, false)['child-1'].historical).toBe(true)
+  })
+
+  it('fills empty task_tree from a same-revision sync snapshot without marking historical', () => {
+    const live = applySubForgeSnapshot({}, snapshot, false)
+    const tree = { name: 'root', subtasks: [] }
+    expect(applySubForgeSnapshot(live, { ...snapshot, task_tree: tree }, true)['child-1']).toMatchObject({
+      revision: 2,
+      historical: false,
+      task_tree: tree,
+    })
   })
 
   it('upgrades same-revision running to succeeded', () => {
