@@ -41,8 +41,8 @@ vi.mock('@/auxWindow/utils/messaging', () => ({
   syncAppSettings: vi.fn(),
 }))
 
-vi.mock('../../assets/theme-preview-light.png', () => ({ default: 'light.png' }))
-vi.mock('../../assets/theme-preview-dark.png', () => ({ default: 'dark.png' }))
+vi.mock('@/assets/theme-preview-light.png', () => ({ default: 'light.png' }))
+vi.mock('@/assets/theme-preview-dark.png', () => ({ default: 'dark.png' }))
 
 describe('AppearanceSettings', () => {
   beforeEach(() => {

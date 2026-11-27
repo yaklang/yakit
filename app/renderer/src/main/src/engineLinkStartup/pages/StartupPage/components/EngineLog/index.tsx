@@ -1,0 +1,121 @@
+import React, { useEffect, useRef } from 'react'
+import { getStartupReleaseEditionName } from '@/utils/envfile'
+import { xtermFit } from '@/utils/xtermUtils'
+import ReactResizeDetector from 'react-resize-detector'
+import { XTerm } from 'xterm-for-react'
+import { useXTermOptions } from '@/hook/useXTermOptions/useXTermOptions'
+import { useMemoizedFn } from 'ahooks'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import { DocumentDuplicateOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { setClipboardText } from '@/utils/clipboard'
+import { yakitNotify } from '@/utils/notification'
+import { Tooltip } from 'antd'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { subscribeEngineLog } from '../../engineLogCapture'
+
+import styles from './EngineLog.module.scss'
+
+interface EngineLogProps {}
+export const EngineLog: React.FC<EngineLogProps> = React.memo((props) => {
+  const { t } = useI18nNamespaces(['link'])
+  const xtermRef = useRef<any>(null)
+  const terminalOptions = useXTermOptions({
+    getTerminal: () => xtermRef.current?.terminal,
+    delay: 200,
+    backgroundColorVar: '--Colors-Use-Basic-Background',
+  })
+
+  /** 日志输出 */
+  const writeToConsole = (i: string) => {
+    if (!xtermRef) return
+    xtermRef.current.terminal.write(i)
+  }
+
+  useEffect(() => {
+    if (!xtermRef) {
+      return
+    }
+
+    writeToConsole(t('EngineLog.welcome', { name: getStartupReleaseEditionName() }) + '\n')
+
+    return subscribeEngineLog((chunk) => {
+      if (chunk.kind === 'log') {
+        writeToConsole(t('EngineLog.verbose_log', { name: getStartupReleaseEditionName(), stdout: chunk.text }))
+        return
+      }
+      writeToConsole(chunk.text)
+    })
+  }, [xtermRef])
+
+  const getFullTerminalText = (terminal: any) => {
+    if (!terminal) return ''
+
+    const buffer = terminal.buffer.active
+    const result: string[] = []
+    let currentLine = ''
+
+    for (let i = 0; i < buffer.length; i++) {
+      const line = buffer.getLine(i)
+      if (!line) continue
+
+      const text = line.translateToString(false) // 保留原样但不 trimmed
+      const isWrapped = line.isWrapped // <-- wrap 状态（关键）
+
+      currentLine += text.trimEnd()
+
+      if (!isWrapped) {
+        // 当前行不是 wrap → 本行结束
+        if (currentLine.trim() !== '') {
+          result.push(currentLine)
+        }
+        currentLine = ''
+      }
+    }
+
+    // 最后一行
+    if (currentLine.trim() !== '') {
+      result.push(currentLine)
+    }
+
+    return result.join('\n')
+  }
+
+  const onCopyEngineLog = useMemoizedFn(() => {
+    const terminal = xtermRef.current?.terminal
+    const fullText = getFullTerminalText(terminal)
+    setClipboardText(fullText, {
+      hiddenHint: true,
+      finalCallback: () => {
+        yakitNotify('success', t('EngineLog.copy_success'))
+      },
+    })
+  })
+
+  return (
+    <div className={styles['engine-log-wrapper']}>
+      <ReactResizeDetector
+        onResize={(width, height) => {
+          if (!width || !height) return
+
+          const row = Math.floor(height / 18.5)
+          const col = Math.floor(width / 10)
+          if (xtermRef) xtermFit(xtermRef, col, row)
+        }}
+        handleWidth={true}
+        handleHeight={true}
+        refreshMode={'debounce'}
+        refreshRate={50}
+      />
+      <XTerm ref={xtermRef} options={terminalOptions} />
+      <div className={styles['engine-copy']}>
+        <Tooltip title={t('EngineLog.copy_log_tooltip')} placement="topRight">
+          <YakitButton
+            icon={<DocumentDuplicateOutlined color="currentColor" />}
+            type="secondary2"
+            onClick={onCopyEngineLog}
+          ></YakitButton>
+        </Tooltip>
+      </div>
+    </div>
+  )
+})

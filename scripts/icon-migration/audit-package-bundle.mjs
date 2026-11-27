@@ -237,16 +237,24 @@ async function parsePackageLedger({ ts, packageRoot }) {
   return { mapping, findings }
 }
 
-async function scanSourceImports({ ts, roots }) {
+async function scanSourceImports({ ts, roots = [], files: providedFiles }) {
   const imports = Object.fromEntries(FAMILIES.map((family) => [family, new Set()]))
   const forbidden = []
   const files = []
 
-  for (const root of roots) {
-    files.push(
-      ...(await collectFiles(root, (path) => SOURCE_EXTENSIONS.has(extension(path)) && isRuntimeSourcePath(path))),
-    )
+  if (providedFiles) {
+    for (const file of providedFiles) {
+      if (!existsSync(file) || !SOURCE_EXTENSIONS.has(extension(file)) || !isRuntimeSourcePath(file)) continue
+      files.push(resolve(file))
+    }
+  } else {
+    for (const root of roots) {
+      files.push(
+        ...(await collectFiles(root, (path) => SOURCE_EXTENSIONS.has(extension(path)) && isRuntimeSourcePath(path))),
+      )
+    }
   }
+  files.splice(0, files.length, ...[...new Set(files)].sort())
 
   for (const path of files) {
     const code = await readFile(path, 'utf8')
@@ -353,7 +361,7 @@ async function treeHash(files) {
 }
 
 function defaultPackageRoot(repoRoot, renderer) {
-  const rendererRoot = renderer === 'main' ? 'app/renderer/src/main' : 'app/renderer/engine-link-startup'
+  const rendererRoot = 'app/renderer/src/main'
   const candidates = [
     resolve(repoRoot, rendererRoot, 'node_modules/@yakit-libs/yakit-ui-icons'),
     resolve(repoRoot, 'node_modules/@yakit-libs/yakit-ui-icons'),
@@ -367,18 +375,28 @@ function defaultSourceRoots(repoRoot, renderer) {
   return [
     renderer === 'main'
       ? resolve(repoRoot, 'app/renderer/src/main/src')
-      : resolve(repoRoot, 'app/renderer/engine-link-startup/src'),
+      : resolve(repoRoot, 'app/renderer/src/main/src/engineLinkStartup'),
   ]
 }
+
+/** Link 构建产物旁的模块图清单；合并后 Link 会引用主窗共享组件，不能只扫 engineLinkStartup */
+const LINK_SOURCE_MANIFEST = 'app/renderer/pages/.link-module-manifest.json'
 
 export async function auditPackageBundle(options) {
   const startedAt = new Date().toISOString()
   const repoRoot = options.repoRoot ?? REPO_ROOT
   const packageRoot = options.packageRoot ?? defaultPackageRoot(repoRoot, options.renderer)
   const sourceRoots = options.sourceRoots ?? defaultSourceRoots(repoRoot, options.renderer)
+  const sourceManifestPath =
+    options.sourceManifest ??
+    (options.renderer === 'link' && !options.sourceRoots ? resolve(repoRoot, LINK_SOURCE_MANIFEST) : null)
+  const sourceManifestUsed = Boolean(sourceManifestPath && existsSync(sourceManifestPath))
+  const sourceFiles = sourceManifestUsed
+    ? JSON.parse(await readFile(sourceManifestPath, 'utf8')).source_files
+    : undefined
   const ts = loadTypeScript(repoRoot)
   const packageLedger = await parsePackageLedger({ ts, packageRoot })
-  const sourceLedger = await scanSourceImports({ ts, roots: sourceRoots })
+  const sourceLedger = await scanSourceImports({ ts, roots: sourceRoots, files: sourceFiles })
   const allMappings = FAMILIES.flatMap((family) => packageLedger.mapping[family].map((item) => ({ ...item, family })))
   const byDisplayName = new Map(allMappings.map((item) => [item.display_name, item]))
   const retainedLedger = await scanRetainedDisplayNames({
@@ -453,6 +471,7 @@ export async function auditPackageBundle(options) {
       dist: await treeHash(retainedLedger.jsFiles),
       package_entries: await treeHash(FAMILIES.map((family) => resolve(packageRoot, 'dist', family, 'index.js'))),
     },
+    source_manifest: sourceManifestUsed ? relative(repoRoot, sourceManifestPath) : null,
     source_public_imports: sourceLedger.imports,
     public_internal_display_name_map: packageLedger.mapping,
     retained_display_names: retainedByFamily,

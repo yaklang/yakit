@@ -9,9 +9,9 @@
 | `yarn typecheck:electron` | 主进程和 preload 类型检查；新 TS 严格检查，历史 JS 暂不开启 checkJs |
 | `yarn build:electron:dev` | 跳过 tsc，生成未压缩 bundle 和调试 map |
 | `yarn build:electron` | 先执行 tsc 类型检查，再生成压缩 bundle 和独立 map |
-| `yarn cli electron` | 等待两端页面有效，单次开发构建（跳过 tsc），然后启动 |
-| `yarn cli dev -v yakit` | 启动两个渲染服务，再执行上述主进程流程 |
-| `yarn cli build -v yakit` | 构建两端渲染，再构建发布主进程 |
+| `yarn cli electron` | 等待渲染页有效，单次开发构建（跳过 tsc），然后启动 |
+| `yarn cli dev -v yakit` | 启动渲染服务，再执行上述主进程流程 |
+| `yarn cli build -v yakit` | 构建渲染产物，再构建发布主进程 |
 | `yarn cli build --electron` | 只构建发布主进程，无需发行版参数 |
 | `yarn cli pack -s mac -v yakit` | beforePack 校验渲染资源、重新生成发布主进程，再打包 |
 

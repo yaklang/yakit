@@ -220,8 +220,8 @@ function createEngineLinkWindow() {
   rendererRecovery.attach(engineLinkWin, 'engineLinkWin')
 
   if (!hasPos) engineLinkWin.center()
-  if (isDev) engineLinkWin.loadURL('http://127.0.0.1:5173')
-  else engineLinkWin.loadFile(appResourcePath('renderer', 'engine-link-startup', 'dist', 'index.html'))
+  if (isDev) engineLinkWin.loadURL('http://127.0.0.1:5173/engine-link.html')
+  else engineLinkWin.loadFile(appResourcePath('renderer', 'pages', 'link', 'engine-link.html'))
 
   engineLinkWin.webContents.setWindowOpenHandler(() => ({ action: 'deny' }))
 

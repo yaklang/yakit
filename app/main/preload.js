@@ -92,10 +92,6 @@ process.on('loaded', function () {
     },
     theme: {
       setTheme: (theme) => invoke('aux-window:app-sync', { type: 'theme', payload: theme }),
-      onUpdated: (callback) =>
-        subscribe('aux-window:app-sync', (message) => {
-          if (message?.type === 'theme') callback(message.payload)
-        }),
     },
     system: {
       fetchSystemName: () => invoke('fetch-system-name'),
@@ -416,6 +412,7 @@ process.on('loaded', function () {
       downloadDisposalFile: (params) => invoke('download-disposal-file', params),
       isFileExists: (targetPath) => invoke('is-file-exists', targetPath),
       fetchFileContent: (targetPath) => invoke('fetch-file-content', targetPath),
+      fetchFileInfoByPath: (targetPath) => invoke('fetch-file-info-by-path', targetPath),
     },
     ai: {
       checkHahValidConfig: () => invoke('CheckHahValidAiConfig'),

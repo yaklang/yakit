@@ -92,7 +92,7 @@ jobs:
             --run-dir icon-migration-evidence \
             --mode production \
             --renderer link \
-            --dist app/renderer/engine-link-startup/dist 2>&1 | tee icon-migration-audit-link.log
+            --dist app/renderer/pages/link 2>&1 | tee icon-migration-audit-link.log
 
       - name: Upload icon migration evidence
         if: always() && steps.classify.outputs.run_full != 'false'

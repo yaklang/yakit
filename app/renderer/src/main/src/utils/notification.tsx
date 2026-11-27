@@ -7,8 +7,11 @@ import { CloseCircleIcon } from '@yakit-libs/yakit-ui-icons/oldicon/CloseCircleI
 import { ExclamationOutlineIcon } from '@yakit-libs/yakit-ui-icons/oldicon/ExclamationOutlineIcon'
 import { CopyComponents } from '@/components/yakitUI/YakitTag/YakitTag'
 
+const isLinkEntry = typeof window !== 'undefined' && window.__YAKIT_ENTRY__ === 'link'
+const notificationPlacement = isLinkEntry ? ('bottomRight' as const) : ('bottomLeft' as const)
+
 const defaultNotificationConfig = {
-  placement: 'bottomLeft' as const,
+  placement: notificationPlacement,
   bottom: 8,
   stack: false,
 }
@@ -17,7 +20,7 @@ let notificationApi: NotificationInstance | null = null
 let messageApi: MessageInstance | null = null
 
 // 静态实例不会消费 <App notification={config}>，需手动 config 确保回退路径的 bottom 与 placement 一致
-staticNotification.config({ placement: 'bottomLeft', bottom: 8 })
+staticNotification.config({ placement: notificationPlacement, bottom: 8 })
 
 const getNotificationApi = (): NotificationInstance => notificationApi ?? staticNotification
 
@@ -65,7 +68,7 @@ export const success = (msg: React.ReactNode) => {
 export const successControlled = (msg: React.ReactNode, time?: number) => {
   getNotificationApi().success({
     message: msg,
-    placement: 'bottomLeft',
+    placement: notificationPlacement,
     duration: time === undefined ? 4.5 : time,
   })
 }
@@ -128,7 +131,7 @@ export const yakitNotify = (
   getNotificationApi()[notifyType]({
     ...newProps,
     icon: getIcon(notifyType),
-    placement: 'bottomLeft',
+    placement: notificationPlacement,
     className: `yakit-notification-${notifyType}`,
   })
 }

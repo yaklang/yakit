@@ -88,6 +88,49 @@ const browserBoundaryPatterns = [
   },
 ]
 
+const engineLinkRoot = path.join(rendererRoot, 'engineLinkStartup')
+const engineLinkBridgeAdapter = path.join(engineLinkRoot, 'utils/bridgeFacade.ts')
+const engineLinkModuleRules = [
+  {
+    matches: (moduleName) => moduleName.startsWith('@/pages/') || moduleName.startsWith('@/newApp/'),
+    reason: 'engineLinkStartup must not import main-window page modules; keep the link entry thin',
+  },
+  {
+    matches: (moduleName) => moduleName === '@/services/electronBridge',
+    reason: 'engineLinkStartup must use its own narrow bridge adapter (utils/bridgeFacade)',
+  },
+]
+
+for (const absolutePath of sourceFiles(engineLinkRoot).filter((file) => !file.split(path.sep).includes('__test__'))) {
+  const source = fs.readFileSync(absolutePath, 'utf8')
+  for (const reference of moduleReferences(source)) {
+    const rule = engineLinkModuleRules.find((item) => item.matches(reference.moduleName))
+    if (rule) {
+      violations.push({
+        file: relativePath(absolutePath),
+        line: lineAt(source, reference.index),
+        reason: rule.reason,
+      })
+    }
+  }
+  for (const match of source.matchAll(/(?:window|globalThis)\s*\.\s*require\s*\(/g)) {
+    violations.push({
+      file: relativePath(absolutePath),
+      line: lineAt(source, match.index),
+      reason: 'engineLinkStartup must not call window.require; use the preload bridge',
+    })
+  }
+  if (absolutePath !== engineLinkBridgeAdapter) {
+    for (const match of source.matchAll(/\bwindow\s*\.\s*yakitBridge\b/g)) {
+      violations.push({
+        file: relativePath(absolutePath),
+        line: lineAt(source, match.index),
+        reason: 'engineLinkStartup must import utils/bridgeFacade instead of reading window.yakitBridge',
+      })
+    }
+  }
+}
+
 for (const absolutePath of sourceFiles(browserExtensionRoot)) {
   const source = fs.readFileSync(absolutePath, 'utf8')
   for (const rule of browserBoundaryPatterns) {
@@ -110,6 +153,6 @@ if (violations.length) {
   process.exitCode = 1
 } else {
   console.log(
-    'Renderer boundary check passed: no Node/Electron imports and browserExtension uses the typed preload bridge.',
+    'Renderer boundary check passed: no Node/Electron imports, engineLinkStartup stays on its own bridge, and browserExtension uses the typed preload bridge.',
   )
 }

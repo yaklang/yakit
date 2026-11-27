@@ -6,7 +6,7 @@ import { dirname, resolve } from 'node:path'
 const RELEVANT_PATHS = [
   /^app\/renderer\/vite-plugins\//,
   /^app\/renderer\/src\/main\/src\//,
-  /^app\/renderer\/engine-link-startup\/src\//,
+  /^app\/renderer\/src\/main\/src\/engineLinkStartup\//,
   /^scripts\/icon-migration\//,
   /^scripts\/ci-select-vitest-tests\.js$/,
   /^\.github\/actions\/pr-ci-setup-node-yarn\//,
@@ -14,7 +14,7 @@ const RELEVANT_PATHS = [
   /^package\.json$/,
   /^yarn\.lock$/,
   /^vitest\.config\.ts$/,
-  /^app\/renderer\/(?:src\/main|engine-link-startup)\/(?:package\.json|yarn\.lock|vite\.config\.(?:ts|mts)|vitest\.config\.(?:ts|mts))$/,
+  /^app\/renderer\/src\/main\/(?:package\.json|yarn\.lock|vite\.config\.(?:ts|mts)|vite\.link\.config\.mts|vitest\.config\.(?:ts|mts))$/,
 ]
 
 function writeOutput(name, value) {

@@ -21,7 +21,7 @@ const SYSTEMS = [
   { value: 'mwl', name: 'Mac + Windows + Linux' },
 ]
 
-const INSTALL_TARGETS = ['electron', 'main', 'link']
+const INSTALL_TARGETS = ['electron', 'main']
 const isInstallTarget = (value) => INSTALL_TARGETS.includes(value) || value === 'cli'
 
 const EDITION_VALUES = EDITIONS.map((item) => item.value)

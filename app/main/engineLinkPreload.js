@@ -44,13 +44,13 @@ contextBridge.exposeInMainWorld('yakitBridge', {
     setYakitHomeConfig: (key, value) => invokePrefixed('set-yakit-home-config', key, value),
     relaunchApp: () => invokePrefixed('relaunch-app'),
     getDirSize: (dirPath) => invokePrefixed('get-dir-size', dirPath),
+    onSync: (callback) => subscribe('aux-window:app-sync', callback),
   },
   theme: {
     setTheme: (theme) => invoke('aux-window:app-sync', { type: 'theme', payload: theme }),
-    onUpdated: (callback) =>
-      subscribe('aux-window:app-sync', (message) => {
-        if (message?.type === 'theme') callback(message.payload)
-      }),
+  },
+  release: {
+    setEditionRaw: (edition) => invokePrefixed('set-release-edition-raw', edition),
   },
   shell: {
     openUrl: (url) => invokePrefixed('open-url', url),
@@ -140,6 +140,7 @@ contextBridge.exposeInMainWorld('yakitBridge', {
   },
   fileSystem: {
     fetchFileContent: (targetPath) => invokePrefixed('fetch-file-content', targetPath),
+    fetchFileInfoByPath: (targetPath) => invokePrefixed('fetch-file-info-by-path', targetPath),
   },
 })
 

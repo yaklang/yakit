@@ -74,8 +74,17 @@ async function injectCrash(action = 'recover', target = 'main') {
   if (action) await queueChoices([action])
   return browser.electron.execute(
     async (electron, target, simulateOOM) => {
-      const match = target === 'main' ? '/renderer/pages/main/' : '/engine-link-startup/'
-      const window = electron.BrowserWindow.getAllWindows().find((entry) => entry.webContents.getURL().includes(match))
+      const isMainTarget = target === 'main'
+      const window = electron.BrowserWindow.getAllWindows().find((entry) => {
+        const url = entry.webContents.getURL()
+        if (isMainTarget) {
+          return (
+            url.includes('/renderer/pages/main/') ||
+            (/^https?:\/\/(?:127\.0\.0\.1|localhost):3000\/?(?:[?#]|$)/.test(url) && !url.includes('/engine-link.html'))
+          )
+        }
+        return url.includes('/pages/link/') || url.includes('/engine-link.html')
+      })
       const pid = window.webContents.getOSProcessId()
       if (!pid || pid === process.pid) throw new Error('Refusing to signal an invalid renderer PID')
       let heapLimitBytes
@@ -442,9 +451,10 @@ describe('Renderer crash recovery with a real Yak engine', function () {
     )
     await captureRenderer(LINK_WINDOW_URL, 'link-recovered.png')
     const state = await browser.electron.execute((electron) => {
-      const window = electron.BrowserWindow.getAllWindows().find((entry) =>
-        entry.webContents.getURL().includes('/engine-link-startup/'),
-      )
+      const window = electron.BrowserWindow.getAllWindows().find((entry) => {
+        const url = entry.webContents.getURL()
+        return url.includes('/pages/link/') || url.includes('/engine-link.html')
+      })
       return { rendererPid: window.webContents.getOSProcessId(), mainPid: process.pid }
     })
     expect(state.rendererPid).not.toBe(crashed.rendererPid)
@@ -485,9 +495,10 @@ describe('Renderer crash recovery with a real Yak engine', function () {
         .filter((name) => name.endsWith('.dmp'))
     const dumpsBefore = await readDumps()
     const killed = await browser.electron.execute((electron) => {
-      const link = electron.BrowserWindow.getAllWindows().find((entry) =>
-        entry.webContents.getURL().includes('/engine-link-startup/'),
-      )
+      const link = electron.BrowserWindow.getAllWindows().find((entry) => {
+        const url = entry.webContents.getURL()
+        return url.includes('/pages/link/') || url.includes('/engine-link.html')
+      })
       const pid = link.webContents.getOSProcessId()
       if (!pid || pid === process.pid) throw new Error('Invalid renderer PID')
       process.kill(pid, 'SIGKILL')

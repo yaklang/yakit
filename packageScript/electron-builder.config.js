@@ -180,10 +180,7 @@ const configOption = {
     '!backups/**/*',
     '!app/renderer/src/**/*',
     '!app/renderer/vite-plugins/**/*',
-    // 先排除整个目录（后面的规则可以“打破前面的排除”）
-    '!app/renderer/engine-link-startup/**/*',
-    // 再单独放行 dist
-    'app/renderer/engine-link-startup/dist/**/*',
+    '!app/renderer/pages/.link-module-manifest.json',
     '!cli/*',
     '!**/*.p12',
     '!imgs/**/*',
@@ -259,6 +256,15 @@ if (isLegacy) {
     from: 'bins/yakit-system-mode.txt',
     to: 'bins/yakit-system-mode.txt',
   })
+}
+
+// 内置引擎开关：off 时不打包引擎元数据；本地默认 off，CI 的打包 workflow 按 engine 输入设置 on
+// （正式发版由 release-finalize 的 finalize 阶段注入引擎，不走 before-pack 的这个开关）
+const builtinEngineMode = (process.env.YAKIT_BUILTIN_ENGINE || 'off').toLowerCase()
+if (builtinEngineMode === 'off') {
+  configOption.extraFiles = configOption.extraFiles.filter(
+    (file) => file.to !== 'bins/engine-version.txt' && file.to !== 'bins/engine-build-type.txt',
+  )
 }
 
 // 是否执行公证流程

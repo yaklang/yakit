@@ -10,7 +10,7 @@ import ExclamationCircleOutlined from '@ant-design/icons/lib/icons/ExclamationCi
 import { XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { createRoot } from 'react-dom/client'
 import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { ALL_I18N_NAMESPACES } from '@/i18n/namespaces'
+import { ENTRY_I18N_NAMESPACES } from '@/i18n/namespaces'
 import i18n from '@/i18n/i18n'
 import { YakitAntdProvider } from '@/theme/antdTheme'
 const tOriginal = i18n.getFixedT(null, 'yakitUi')
@@ -25,7 +25,7 @@ export type ModalI18nNode = React.ReactNode | ((modalT: TFunction) => React.Reac
 
 /** 将title, content 改为function传入 使用modalT 替换 t('') 即可解决中英文切换问题 */
 export const ModalI18nRender: React.FC<{ node?: ModalI18nNode }> = ({ node }) => {
-  const { t } = useI18nNamespaces(ALL_I18N_NAMESPACES)
+  const { t } = useI18nNamespaces(ENTRY_I18N_NAMESPACES)
   if (typeof node === 'function') {
     return <>{(node as (modalT: TFunction) => React.ReactNode)(t)}</>
   }

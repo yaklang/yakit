@@ -1,9 +1,12 @@
+import { getYakitBridge } from './yakitBridge'
+
 const getBridge = (): YakitBridge => {
-  if (!window.yakitBridge) {
+  const bridge = getYakitBridge()
+  if (!bridge) {
     throw new Error('yakit bridge is unavailable')
   }
 
-  return window.yakitBridge
+  return bridge
 }
 
 export const yakitApp = getBridge().app

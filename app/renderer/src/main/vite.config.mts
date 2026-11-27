@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process'
-import { defineConfig, loadEnv, type Plugin } from 'vite'
+import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -7,32 +7,10 @@ import { nodePolyfills } from 'vite-plugin-node-polyfills'
 import { visualizer } from 'rollup-plugin-visualizer'
 import checker from 'vite-plugin-checker'
 import { yakitUiIconsPurePlugin } from '../../vite-plugins/yakitUiIconsPurePlugin.mjs'
+import { createProcessEnvDefines } from '../../vite-plugins/yakitProcessEnv.mjs'
 
 const rootDir = path.dirname(fileURLToPath(import.meta.url))
 const outDir = path.resolve(rootDir, '../../pages/main')
-
-/**
- * 将 YAKIT_* / NODE_ENV 注入为 process.env（整体对象）。
- * 发行版由 CLI 注入 YAKIT_EDITION，不再依赖 env-cmd / .env.[mode]。
- * 使用整体 define 而非逐键 `process.env.XXX`，避免与 vite-plugin-node-polyfills
- * 的 process shim 冲突导致标识符被拆坏。
- */
-function yakitProcessEnvDefines(mode: string): Record<string, string> {
-  const fileEnv = loadEnv(mode, rootDir, ['YAKIT_', 'REACT_APP_', 'VITE_'])
-  const merged: Record<string, string> = {
-    NODE_ENV: process.env.NODE_ENV || (mode === 'development' ? 'development' : 'production'),
-    ...fileEnv,
-  }
-  for (const [key, value] of Object.entries(process.env)) {
-    if (value == null || value === '') continue
-    if (key.startsWith('YAKIT_') || key.startsWith('REACT_APP_') || key.startsWith('VITE_')) {
-      merged[key] = value
-    }
-  }
-  return {
-    'process.env': JSON.stringify(merged),
-  }
-}
 
 /** 构建分析：YAKIT_ANALYZER=true */
 function analyzerPlugin(): Plugin | null {
@@ -61,6 +39,7 @@ function generateThemeCssPlugin(): Plugin {
     name: 'generate-theme-css',
     // 必须早于 initPublicFiles，否则新生成的 theme.css 不在 publicFiles 白名单里
     config() {
+      if (process.env.THEME_CSS_PREGENERATED === '1') return
       execFileSync(process.execPath, [path.resolve(rootDir, 'scripts/generate-theme-css.cjs')], {
         stdio: 'inherit',
         cwd: rootDir,
@@ -86,7 +65,7 @@ function noopAntdComponentStylePlugin(): Plugin {
   }
 }
 
-export default defineConfig(({ mode, command }) => {
+export default defineConfig(({ mode }) => {
   const sourcemap = process.env.YAKIT_SOURCEMAP === 'true'
 
   return {
@@ -94,7 +73,7 @@ export default defineConfig(({ mode, command }) => {
     base: './',
     publicDir: 'public',
     envPrefix: ['YAKIT_', 'REACT_APP_', 'VITE_'],
-    define: yakitProcessEnvDefines(mode),
+    define: { ...createProcessEnvDefines(mode, rootDir), __YAKIT_LINK_ENTRY__: 'false' },
     plugins: [
       {
         name: 'memfit-ui-catalog',
@@ -240,6 +219,7 @@ export default defineConfig(({ mode, command }) => {
         'yakit-aux.html',
         'src/**/*.{ts,tsx}',
         '!src/**/*.d.ts', // 核心：排除声明文件
+        '!src/engineLinkStartup/**', // Link 入口由独立服务与配置扫描，避免主窗预构建混入 Link 依赖
         '!src/**/__test__/**',
         '!src/**/__tests__/**',
         '!src/alibaba/ali-react-table-dist/**', // 第三方 dist 仅含 .d.ts，无需 crawl

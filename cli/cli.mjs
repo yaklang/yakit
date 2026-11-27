@@ -19,7 +19,6 @@ import {
   repoRoot,
   cliDir,
   MAIN_RENDER_DIR,
-  LINK_RENDER_DIR,
 } from './utils.mjs'
 import { EDITIONS, SYSTEMS, INSTALL_TARGETS, isEdition, isSystem, isInstallTarget, buildYakitEnv } from './env.mjs'
 import {
@@ -51,11 +50,10 @@ const spawnPm = (pm, args, cwd) =>
     })
   })
 
-/** electron | main | link → { name, cwd }；非法 target 返回 null */
+/** electron | main → { name, cwd }；非法 target 返回 null */
 const resolvePkgTarget = (target) => {
   if (target === 'electron') return { name: 'Electron (root)', cwd: repoRoot }
   if (target === 'main') return { name: 'Main-Render', cwd: MAIN_RENDER_DIR }
-  if (target === 'link') return { name: 'Link-Render', cwd: LINK_RENDER_DIR }
   return null
 }
 
@@ -108,7 +106,7 @@ const installCliRuntime = async () => {
   await spawnPm(pm, installArgs, cliDir)
 }
 
-/** 安装依赖。无 target 时按 electron → link → main 依次 install；cli 只装 CLI 运行时 */
+/** 安装依赖。无 target 时按 electron → main 依次 install；cli 只装 CLI 运行时 */
 const runCliInstall = async (target) => {
   if (target && !isInstallTarget(target)) {
     console.error(`Error: 无效的安装目标 "${target}". 支持: ${INSTALL_TARGETS.join(' | ')} | cli`)
@@ -121,9 +119,7 @@ const runCliInstall = async (target) => {
   }
 
   const pm = detectPmOrExit()
-  const targets = target
-    ? [resolvePkgTarget(target)]
-    : [resolvePkgTarget('electron'), resolvePkgTarget('link'), resolvePkgTarget('main')]
+  const targets = target ? [resolvePkgTarget(target)] : [resolvePkgTarget('electron'), resolvePkgTarget('main')]
 
   for (const item of targets) {
     console.log(`Start install ${item.name} (${pm}) ...`)
@@ -155,16 +151,16 @@ const cliArgs = process.argv.slice(2)
 if (cliArgs[0] === 'install' || cliArgs[0] === 'add' || cliArgs[0] === 'remove') {
   if (cliArgs.includes('-h') || cliArgs.includes('--help')) {
     if (cliArgs[0] === 'install') {
-      console.log(`Usage: yarn cli install [electron | main | link | cli]`)
-      console.log('安装依赖（默认根目录 + 两个渲染端）。install 不依赖 commander，全新 clone 可直接执行。')
+      console.log(`Usage: yarn cli install [electron | main | cli]`)
+      console.log('安装依赖（默认根目录 + 主渲染端）。install 不依赖 commander，全新 clone 可直接执行。')
       console.log('cli：只装 CLI 运行时到 cli/（commander / execa 等），不含 Electron。')
       console.log(InstallCMDExamplesDoc)
     } else if (cliArgs[0] === 'add') {
-      console.log(`Usage: yarn cli add <electron | main | link> <pkg...> [-D|--dev]`)
+      console.log(`Usage: yarn cli add <electron | main> <pkg...> [-D|--dev]`)
       console.log('在指定子项目添加依赖（转发到 yarn add / npm add / pnpm add）。')
       console.log(AddCMDExamplesDoc)
     } else {
-      console.log(`Usage: yarn cli remove <electron | main | link> <pkg...>`)
+      console.log(`Usage: yarn cli remove <electron | main> <pkg...>`)
       console.log('在指定子项目移除依赖（转发到 yarn remove / npm remove / pnpm remove）。')
       console.log(RemoveCMDExamplesDoc)
     }
@@ -284,6 +280,9 @@ const resolveRenderTargets = (main, link) => {
   return { main: true, link: true }
 }
 
+/** electron / dev 的 --link：只处理 link（link 是启动入口，所以没有只等 main 的模式） */
+const resolveLinkOnlyTargets = (linkOnly) => ({ main: !linkOnly, link: true })
+
 /** 把渲染端选择格式化成日志里的「Link & Main」/「Main-Render」/「Link-Render」 */
 const renderLabel = ({ main, link }) => {
   if (main && link) return 'Link & Main'
@@ -301,53 +300,47 @@ const runLocal = (file, args, { cwd, env } = {}) =>
     localDir: cwd || repoRoot,
   })
 
-/** 在指定渲染端目录跑 vite（开发）或 vite build（生产） */
-const runVite = async ({ cwd, build, env }) => {
-  const args = build ? ['build'] : []
-  await runLocal('vite', args, { cwd, env })
+/**
+ * main 与 link 共用同一份生成的 theme.css（link 会再复制到自己的 .link-public）。
+ * 两个 Vite 进程同时启动/构建时先统一生成一次，避免并发写同一文件。
+ */
+const prepareThemeCss = async (env) => {
+  const themeCssScript = path.join(MAIN_RENDER_DIR, 'scripts', 'generate-theme-css.cjs')
+  if (!fs.existsSync(themeCssScript)) return env
+  await runLocal(process.execPath, [themeCssScript], { env })
+  return { ...env, THEME_CSS_PREGENERATED: '1' }
 }
 
 /**
- * 启动或构建渲染端。只跑一端时串行；两端都跑时 concurrently，失败则互杀。
- * Link 生产构建会先 tsc -b 再 vite build。
+ * 启动或构建渲染端。main 与 link 共用同一源码树：
+ * - 开发态 main :3000、link :5173，各自使用自己的 Vite 配置
+ * - 生产构建按目标输出两份产物：pages/main 与 pages/link
  */
 const runRenderers = async ({ main, link, build, env }) => {
   const jobs = []
+  if (main) jobs.push({ name: MainChalk('main'), args: build ? ['build'] : [] })
   if (link) {
     jobs.push({
       name: BlueChalk('link'),
-      cwd: LINK_RENDER_DIR,
-      build,
-    })
-  }
-  if (main) {
-    jobs.push({
-      name: MainChalk('main'),
-      cwd: MAIN_RENDER_DIR,
-      build,
+      args: build ? ['build', '--config', 'vite.link.config.mts'] : ['--config', 'vite.link.config.mts'],
     })
   }
 
+  if (jobs.length === 0) return
+
+  const runEnv = jobs.length > 1 ? await prepareThemeCss(env) : env
   if (jobs.length === 1) {
-    const job = jobs[0]
-    if (build && job.cwd === LINK_RENDER_DIR) {
-      await runLocal('tsc', ['-b'], { cwd: job.cwd, env })
-    }
-    await runVite({ cwd: job.cwd, build, env })
+    await runLocal('vite', jobs[0].args, { cwd: MAIN_RENDER_DIR, env: runEnv })
     return
   }
 
   await concurrently(
-    jobs.map((job) => {
-      const binEnv = withLocalBin(job.cwd, env)
-      const command = build && job.cwd === LINK_RENDER_DIR ? 'tsc -b && vite build' : build ? 'vite build' : 'vite'
-      return {
-        command,
-        name: job.name,
-        cwd: job.cwd,
-        env: binEnv,
-      }
-    }),
+    jobs.map((job) => ({
+      command: `vite ${job.args.join(' ')}`.trim(),
+      name: job.name,
+      cwd: MAIN_RENDER_DIR,
+      env: withLocalBin(MAIN_RENDER_DIR, runEnv),
+    })),
     {
       killOthers: ['failure'],
       prefix: '[{name}]',
@@ -386,8 +379,8 @@ program.configureOutput({
 // 下面 install/add/remove 只为 yarn cli -h 列出子命令；真正执行已被文件前部拦截
 program
   .command('install')
-  .description('安装依赖（默认根目录 + 两个渲染端）')
-  .argument('[target]', '只装其中一个: electron | main | link | cli')
+  .description('安装依赖（默认根目录 + 主渲染端）')
+  .argument('[target]', '只装其中一个: electron | main | cli')
   .addHelpText('after', `\n${YellowChalk.bold('Examples:')}\n${InstallCMDExamplesDoc}`)
   .action(async (target) => {
     try {
@@ -428,10 +421,10 @@ program
 /** start：注入 YAKIT_EDITION + DEVTOOLS，开发态跑 vite（不启 Electron） */
 program
   .command('start')
-  .description('开发模式启动渲染端（默认 main + link）')
+  .description('开发模式启动渲染端（默认 main :3000 + link :5173）')
   .option('-v, --version <type>', `业务版本 (${editionValues})`)
-  .option('--main', '只启动主渲染端', false)
-  .option('--link', '只启动 Link 渲染端', false)
+  .option('--main', '只启动主渲染端 main :3000', false)
+  .option('--link', '只启动 Link 渲染端 link :5173', false)
   .addHelpText('after', `\n${YellowChalk.bold('Examples:')}\n${StartCMDExamplesDoc}`)
   .action(async (options) => {
     const version = await requireEdition(options.version)
@@ -441,7 +434,8 @@ program
     console.log(GreenChalk('\n准备执行...'))
     console.log(CyanChalk.bold(`> 业务版本: ${version}`))
     console.log(CyanChalk.bold(`> 模式: Development`))
-    console.log(CyanChalk.bold(`> 渲染端: ${renderLabel(targets)}`))
+    const endpoints = [targets.main && 'main :3000', targets.link && 'link :5173'].filter(Boolean).join(' / ')
+    console.log(CyanChalk.bold(`> 渲染端: ${renderLabel(targets)} → ${endpoints}`))
     console.log('')
 
     try {
@@ -510,6 +504,7 @@ program
   .option('-v, --version <type>', `业务版本 (${editionValues})`)
   .option('--legacy', '旧版兼容模式', false)
   .option('--sign', '开启 macOS 签名/公证探测 (CSC_IDENTITY_AUTO_DISCOVERY=true)', false)
+  .option('--with-engine', '打包内置引擎（需要 bins/yak_<platform>_<arch>.zip）', false)
   .addHelpText('after', `\n${YellowChalk.bold('Examples:')}\n${PackCMDExamplesDoc}`)
   .action(async (options) => {
     const system = await requireSystem(options.system)
@@ -519,6 +514,8 @@ program
       legacy: options.legacy,
       sign: Boolean(options.sign),
     })
+    const withEngine = options.withEngine ? 'on' : process.env.YAKIT_BUILTIN_ENGINE || 'off'
+    env.YAKIT_BUILTIN_ENGINE = withEngine
     if (!options.sign) env.CSC_IDENTITY_AUTO_DISCOVERY = 'false'
 
     console.log(GreenChalk('\n准备执行...'))
@@ -526,6 +523,7 @@ program
     console.log(CyanChalk.bold(`> 业务版本: ${version}`))
     console.log(CyanChalk.bold(`> legacy: ${options.legacy ? 'Yes' : 'No'}`))
     console.log(CyanChalk.bold(`> sign: ${options.sign ? 'Yes' : 'No'}`))
+    console.log(CyanChalk.bold(`> 内置引擎: ${withEngine === 'on' ? 'Yes' : 'No'}`))
     console.log('')
 
     /** 打单个系统：electron-builder build --win|--mac|--linux */
@@ -547,65 +545,76 @@ program
     }
   })
 
-/** electron：只起主进程。不注入版本；窗口加载当前已运行的 :3000/:5173 */
+/** electron：只起主进程。不注入版本；窗口加载已运行的 main :3000 / link :5173 */
 program
   .command('electron')
   .description('等待渲染页面、单次开发构建并启动 Electron（手动重启）')
+  .option('--link', '只等待 link :5173（只改 Link 时用；link 是启动入口，main 进入前必须先连 link）', false)
   .addHelpText('after', `\n${YellowChalk.bold('Examples:')}\n${ElectronCMDExamplesDoc}`)
-  .action(async () => {
+  .action(async (options) => {
+    const targets = resolveLinkOnlyTargets(options.link)
+
     console.log(CyanChalk('开始启动 Electron 开发环境...\n'))
+    console.log(CyanChalk.bold(`> 等待渲染端: ${renderLabel(targets)}`))
+    console.log('')
     try {
-      await runLocal(process.execPath, ['scripts/start-electron.mjs'])
+      await runLocal(process.execPath, ['scripts/start-electron.mjs', ...(options.link ? ['--link'] : [])])
     } catch (error) {
       exitOnError(error)
     }
   })
 
-/** dev：两端 Vite 页面就绪后单次构建并启动 Electron，无 watch 或自动重启 */
+/** dev：Vite 页面就绪后单次构建并启动 Electron，无 watch 或自动重启 */
 program
   .command('dev')
-  .description('启动两端渲染，等待 :3000/:5173 后启动 Electron')
+  .description('启动渲染服务，等待页面就绪后启动 Electron（默认 main :3000 + link :5173）')
   .option('-v, --version <type>', `业务版本 (${editionValues})`)
+  .option('--link', '只启动并只等待 link :5173（只改 Link 时用；link 是启动入口）', false)
   .addHelpText('after', `\n${YellowChalk.bold('Examples:')}\n${DevCMDExamplesDoc}`)
   .action(async (options) => {
     const version = await requireEdition(options.version)
+    const targets = resolveLinkOnlyTargets(options.link)
     const env = buildYakitEnv({ edition: version, devtools: true })
+
+    const electronArgs = ['scripts/start-electron.mjs', ...(options.link ? ['--link'] : [])]
+    const endpoints = [targets.main && 'main :3000', targets.link && 'link :5173'].filter(Boolean).join(' / ')
 
     console.log(GreenChalk('\n准备执行...'))
     console.log(CyanChalk.bold(`> 业务版本: ${version}`))
-    console.log(CyanChalk.bold(`> start + wait for renderer HTML + build electron + electron`))
+    console.log(CyanChalk.bold(`> 渲染端: ${renderLabel(targets)} → ${endpoints} → wait HTML → build electron`))
     console.log('')
 
     try {
-      await concurrently(
-        [
-          {
-            command: 'vite',
-            name: BlueChalk('link'),
-            cwd: LINK_RENDER_DIR,
-            env: withLocalBin(LINK_RENDER_DIR, env),
-          },
-          {
-            command: 'vite',
-            name: MainChalk('main'),
-            cwd: MAIN_RENDER_DIR,
-            env: withLocalBin(MAIN_RENDER_DIR, env),
-          },
-          {
-            command: 'node scripts/start-electron.mjs',
-            name: GreenChalk('electron'),
-            cwd: repoRoot,
-            env: withLocalBin(repoRoot, env),
-          },
-        ],
-        {
-          // 关掉 Electron 是成功退出；必须连 success 一起互杀，否则两端 vite 会把 CLI 卡住
-          killOthers: ['success', 'failure'],
-          // 以先退出的进程为准：关窗口视为成功，避免被杀掉的 vite 把整个命令打成失败
-          successCondition: 'first',
-          prefix: '[{name}]',
-        },
-      )
+      // 两端同跑时先统一生成一次 theme.css，避免两个 Vite 进程并发写同一文件
+      const devEnv = targets.main && targets.link ? await prepareThemeCss(env) : env
+      const jobs = []
+      if (targets.main)
+        jobs.push({
+          command: 'vite',
+          name: MainChalk('main'),
+          cwd: MAIN_RENDER_DIR,
+          env: withLocalBin(MAIN_RENDER_DIR, devEnv),
+        })
+      if (targets.link)
+        jobs.push({
+          command: 'vite --config vite.link.config.mts',
+          name: BlueChalk('link'),
+          cwd: MAIN_RENDER_DIR,
+          env: withLocalBin(MAIN_RENDER_DIR, devEnv),
+        })
+      jobs.push({
+        command: `node ${electronArgs.join(' ')}`,
+        name: GreenChalk('electron'),
+        cwd: repoRoot,
+        env: withLocalBin(repoRoot, devEnv),
+      })
+      await concurrently(jobs, {
+        // 关掉 Electron 是成功退出；必须连 success 一起互杀，否则 vite 会把 CLI 卡住
+        killOthers: ['success', 'failure'],
+        // 以先退出的进程为准：关窗口视为成功，避免被杀掉的 vite 把整个命令打成失败
+        successCondition: 'first',
+        prefix: '[{name}]',
+      })
     } catch (error) {
       exitOnError(error)
     }

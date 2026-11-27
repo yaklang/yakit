@@ -2,10 +2,10 @@
 /**
  * CI：根据 PR 变更选择 Vitest 目标。
  *
- * 仓库内三个子项目（与根目录 vitest.config.ts 的 alias / include 一致）：
+ * 仓库内两个子项目（与根目录 vitest.config.ts 的 alias / include 一致）：
  * 1) app/main — Electron 主进程
  * 2) app/renderer/src/main — renderer 主包；业务根 app/renderer/src/main/src
- * 3) app/renderer/engine-link-startup — 业务根 …/src
+ *    （link 窗口源码位于 …/src/engineLinkStartup，随主包一起选择/执行）
  *
  * 单测约定：与业务文件同目录下建 **__test__/** 目录，内放同名 `*.test.*` / `*.spec.*`（如 `Foo.tsx` → `__test__/Foo.test.tsx`）。
  *
@@ -21,11 +21,19 @@ const path = require('path')
 
 const SRC_EXTS = new Set(['.ts', '.tsx', '.js', '.jsx'])
 const TEST_SUFFIXES = ['test.ts', 'test.tsx', 'test.js', 'test.jsx', 'spec.ts', 'spec.tsx', 'spec.js', 'spec.jsx']
+/** Link 开发入口守卫：改到端口 / 等待地址 / 窗口匹配相关文件时一并执行（根 vitest.config.ts 的 include 已覆盖 e2e 用例） */
+const LINK_DEV_TESTS = [
+  'e2e/fixtures/__test__/link-boundary.test.mjs',
+  'e2e/fixtures/__test__/start-electron.test.mjs',
+  'e2e/fixtures/__test__/window-url.test.mjs',
+]
+/** 选测脚本自身的用例：改到选测规则时随之验证，否则规则被改坏无人发现 */
+const SELECTOR_SELF_TESTS = ['e2e/fixtures/__test__/ci-vitest-selection.test.mjs']
 const SKIP_DIR_NAMES = new Set(['node_modules', 'dist', 'build', '.git', 'coverage'])
 const DEDICATED_ICON_MIGRATION_TESTS = new Set([
   'app/renderer/src/main/src/__test__/yakitUiIconsPurePlugin.test.ts',
-  'app/renderer/engine-link-startup/src/__test__/yakitUiIconsPurePlugin.test.ts',
-  'app/renderer/engine-link-startup/src/__test__/iconMigrationConsumerContract.test.tsx',
+  'app/renderer/src/main/src/engineLinkStartup/__test__/yakitUiIconsPurePlugin.test.ts',
+  'app/renderer/src/main/src/engineLinkStartup/__test__/iconMigrationConsumerContract.test.tsx',
 ])
 
 function isVitestSelectDebug() {
@@ -33,7 +41,7 @@ function isVitestSelectDebug() {
   return v === '1' || v === 'true' || v === 'yes'
 }
 
-/** 顺序：主进程 → renderer 主包 → engine-link */
+/** 顺序：主进程 → renderer 主包 */
 const PACKAGES = [
   {
     id: 'app-main',
@@ -46,12 +54,6 @@ const PACKAGES = [
     label: 'app/renderer/src/main',
     src: 'app/renderer/src/main/src',
     importPrefixes: ['@/', '@renderer/'],
-  },
-  {
-    id: 'engine-link',
-    label: 'app/renderer/engine-link-startup',
-    src: 'app/renderer/engine-link-startup/src',
-    importPrefixes: ['@engine/', '@engne/'],
   },
 ]
 
@@ -119,7 +121,7 @@ function readChangedList() {
 }
 
 function isTestPath(rel) {
-  return /\.(test|spec)\.(ts|tsx|js|jsx)$/.test(rel)
+  return /\.(test|spec)\.(ts|tsx|js|jsx|mjs)$/.test(rel)
 }
 
 function isGenericVitestPath(rel) {
@@ -331,6 +333,20 @@ function main() {
   ) {
     results.add('e2e/fixtures/__test__/electron-build.test.mjs')
     results.add('e2e/fixtures/__test__/cli-build.test.mjs')
+  }
+  // Link dev 端口 5173 / 登录回调端口 / 窗口 URL 的回归守卫：改动这些入口文件时随之执行
+  if (
+    changed.some((file) =>
+      /^(app\/main\/index\.js$|app\/main\/handlers\/userInfo\.js$|app\/renderer\/src\/main\/vite\.link\.config\.mts$|scripts\/start-electron\.mjs$|e2e\/)/.test(
+        file,
+      ),
+    )
+  ) {
+    for (const t of LINK_DEV_TESTS) results.add(t)
+  }
+  // 改动选测脚本本身 → 跑它自己的用例
+  if (changed.some((file) => /^scripts\/ci-select-vitest-tests\.js$/.test(file))) {
+    for (const t of SELECTOR_SELF_TESTS) results.add(t)
   }
   const DEBUG = isVitestSelectDebug()
   const debugLines = DEBUG ? [] : null

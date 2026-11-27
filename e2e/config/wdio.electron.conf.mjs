@@ -1,6 +1,7 @@
 import { access, mkdir, readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { matchesYakitWindowUrl } from '../fixtures/electron/window-url.mjs'
 
 const configDir = path.dirname(fileURLToPath(import.meta.url))
 const repoRoot = path.resolve(configDir, '../..')
@@ -72,7 +73,7 @@ const switchToYakitWindow = async (urlFragment) => {
     // execute is deliberately excluded from Electron Service's automatic
     // focus switching, so it reports the handle selected directly above.
     const currentUrl = await browser.execute(() => window.location.href)
-    if (currentUrl.includes(urlFragment)) return handle
+    if (matchesYakitWindowUrl(currentUrl, urlFragment)) return handle
   }
 
   throw new Error(`No Electron window matched URL fragment: ${urlFragment}`)

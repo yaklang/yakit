@@ -21,14 +21,14 @@ node ./cli/cli.mjs <command>
 
 | 命令 | 做什么 | 常用参数 | 默认 |
 | --- | --- | --- | --- |
-| `install [electron\|main\|link\|cli]` | 装依赖 | 位置参数；`cli` 只装 CLI 运行时 | 三端全装 |
-| `add <electron\|main\|link> <pkg…>` | 给指定子项目加包 | `-D` / `--dev` 及其他 yarn/npm/pnpm 原样 flag | 必须指定一端 |
-| `remove <electron\|main\|link> <pkg…>` | 从指定子项目卸包 | 位置参数 | 必须指定一端 |
-| `start` | 开发态启动渲染端 | `-v`、`--main`、`--link` | 两端都启 |
+| `install [electron\|main\|cli]` | 装依赖 | 位置参数；`cli` 只装 CLI 运行时 | 根目录 + 主渲染端 |
+| `add <electron\|main> <pkg…>` | 给指定子项目加包 | `-D` / `--dev` 及其他 yarn/npm/pnpm 原样 flag | 必须指定一端 |
+| `remove <electron\|main> <pkg…>` | 从指定子项目卸包 | 位置参数 | 必须指定一端 |
+| `start` | 开发态启动渲染服务（默认 main :3000 + link :5173） | `-v`、`--main`、`--link`（只启一端） | 默认两个服务 |
 | `build` | 生产构建三端 | `-v`、`--electron`、`--main`、`--link`、`--devtools`、`--no-license`、`--analyzer` | 三端都构建 |
 | `pack` | electron-builder 打安装包 | `-s`、`-v`、`--legacy`、`--sign` | 本机默认不签名 |
-| `electron` | 页面就绪后单次开发构建并启动 Electron | 无 | 不区分业务版本 |
-| `dev` | `start` + 等待页面 + 编译并启动 `electron` | `-v` | 两端渲染 + 主进程 |
+| `electron` | 页面就绪后单次开发构建并启动 Electron | `--link`（只等待 link） | 默认等待两端 |
+| `dev` | Vite + 等待页面 + 编译并启动 `electron` | `-v`、`--link`（只跑 link） | 渲染服务 + 主进程 |
 
 短 flag **不跨命令复用**。旧命令名 `render` / `electron -b` 已删除，没有别名。
 
@@ -36,7 +36,7 @@ node ./cli/cli.mjs <command>
 
 - 仅 TTY 且缺**该命令必需项**时才 inquirer：`start` / `build` / `dev` 缺 `-v`（`build --electron` 除外），`pack` 缺 `-s` 或 `-v`
 - 非 TTY（CI）缺参直接 `exit 1`，禁止交互
-- `--main` 与 `--link` 不能同时使用；`build --electron` 与两者互斥。`start` 默认两端渲染，`build` 默认三端。
+- `--main` 与 `--link` 不能同时使用；`build --electron` 与两者互斥。`start` 的 `--main` / `--link` 只起对应一端 Vite；`electron` / `dev` 只提供 `--link`（只改 Link 时只等待 / 只启动 link），因为 link 是启动入口、主窗口要连上引擎后才显示，没有"只等 main"的等价模式。`build` 默认构建主窗口产物、link 产物与主进程。
 
 ```bash
 yarn cli -h
@@ -80,11 +80,11 @@ CI 输入 `ce/ee/se/irify/irifyee/memfit` 映射为上面的 `-v` 取值。
 ```bash
 yarn cli install
 yarn cli start -v yakit
-# 两端页面真正可访问后
+# 两个入口真正可访问后
 yarn cli electron
 ```
 
-一条命令（确认两端返回 HTTP 200 且包含页面内容，单次构建后启动 Electron）：
+一条命令（确认两个入口返回 HTTP 200 且包含页面内容，单次构建后启动 Electron）：
 
 ```bash
 yarn cli dev -v yakit
@@ -98,7 +98,6 @@ yarn cli dev -v yakit
 yarn cli add main lodash
 yarn cli add main -D vite-plugin-checker
 yarn cli add electron wait-on
-yarn cli add link ahooks
 
 yarn cli remove main lodash
 yarn cli remove electron env-cmd
@@ -106,12 +105,23 @@ yarn cli remove electron env-cmd
 
 flag 原样转发（`-D` / `--dev` 等）。识别到 npm 时，仅把 `--dev` 转成 `--save-dev`（npm 没有 `--dev`）。
 
-### 只启一端
+### 只启一端（`start` / `electron` / `dev`）
+
+`start` 支持 `--main` / `--link`（互斥），只起对应一端 Vite；`electron` / `dev` 只提供 `--link`（只改 Link 时用）：
 
 ```bash
-yarn cli start -v yakit --main
-yarn cli start -v irifyEE --link
+# 只起 Vite（不含 Electron 窗口）
+yarn cli start -v yakit --main   # 只启动 main :3000
+yarn cli start -v irifyEE --link # 只启动 link :5173（http://127.0.0.1:5173/engine-link.html）
+
+# 只改 Link 的完整 Electron 调试：只起 link，Electron 也只等它
+yarn cli dev -v yakit --link
+# 或分两步
+yarn cli start -v yakit --link
+yarn cli electron --link
 ```
+
+Electron 始终创建 main 与 link 两个窗口：link 窗口（`show: true`）是启动入口，主窗口默认隐藏、连上引擎后才显示。所以只改 Link 时 main 起不起都不影响使用，也没有"只等 main"的模式——不连 link 根本进不去主窗口。`electron` / `dev` 默认仍是等待两端，只起一端又跑 `yarn cli electron`（不带参数）会在 30 秒内快速失败并打印补救命令；单端等待的阈值可用 `YAKIT_SINGLE_END_TIMEOUT_MS` 覆盖（机器冷启动较慢时调大）。
 
 ### 生产构建
 
@@ -123,6 +133,8 @@ yarn cli build --main -v yakit --devtools
 ```
 
 默认产物不含 sourcemap。`--devtools` 会注入 `YAKIT_DEVTOOLS=true`。`--no-license` 会注入 `YAKIT_REQUIRE_ENTERPRISE_LICENSE=false`。
+
+渲染端静态基线可用 `yarn renderer:baseline` 查看（入口引用、首屏体积、lazy chunk、主题 token）。
 
 ### 打安装包
 
@@ -141,6 +153,22 @@ yarn cli pack -s mwl -v yakitEE
 ```
 
 未传 `--sign` 时设 `CSC_IDENTITY_AUTO_DISCOVERY=false`。`--sign` 设为 `true`（electron-builder 内置变量，CLI 不改名）。
+
+### 内置引擎
+
+`--with-engine` 控制安装包是否包含内置引擎：
+
+```bash
+# 本地默认：不打内置引擎，缺少引擎文件也不会失败
+yarn cli pack -s win -v yakit
+
+# 必须带内置引擎：缺少 bins/yak_<platform>_<arch>.zip 直接失败
+yarn cli pack -s win -v yakit --with-engine
+```
+
+也可以直接用环境变量 `YAKIT_BUILTIN_ENGINE=on|off` 控制；命令行 `--with-engine` 优先。
+
+CI 的 `multi-platform-build` 按 `engine` 输入映射：`true` → `on`，`false` → `off`；`verify-yakit-sign-build` 固定为 `on`。
 
 ## 环境变量 `YAKIT_*`
 
@@ -186,9 +214,9 @@ yarn cli pack -s mwl -v yakitEE
 - `yarn build:electron` / `yarn cli build --electron`：先执行 tsc 类型检查，再生成发布 bundle，压缩语法、空白和局部变量名；不混淆协议属性、不删除日志。
 - `yarn test:electron-build`：验证开发／发布构建、混合类型、资源路径、沙箱 preload 和压缩后的截图执行。
 
-主进程及三个 preload 的输出位于 `dist/electron`，两种模式布局一致。启动前检查两端渲染内容，最多等待 120 秒。构建失败不启动旧产物。仅保存代码不会编译、重启 Electron 或重载窗口；请主动关闭 Electron 后再运行 `yarn cli electron`。需要保留渲染服务时，分别运行 `cli start` 与 `cli electron`；`cli dev` 仍在 Electron 退出时清理它启动的渲染服务。
+主进程及三个 preload 的输出位于 `dist/electron`，两种模式布局一致。启动前检查两个渲染入口内容，最多等待 120 秒。构建失败不启动旧产物。仅保存代码不会编译、重启 Electron 或重载窗口；请主动关闭 Electron 后再运行 `yarn cli electron`。需要保留渲染服务时，分别运行 `cli start` 与 `cli electron`；`cli dev` 仍在 Electron 退出时清理它启动的渲染服务。
 
-主进程构建仅需根目录依赖，无需安装或构建渲染端。子窗口加载页在运行时复用主渲染端的 `yakit-aux.html?mode=child-loading` 和 `theme.css`，主题 CSS 由渲染端开发／构建流程生成，主进程不再独立生成或缓存。开发时需先等待渲染服务就绪；发布时需准备 `app/renderer/pages/main` 中的主渲染端产物（含 aux HTML 和主题 CSS）。仅 `--main/--link` 的 CI 仍不要求安装主进程构建工具；打安装包仍需准备两个渲染端产物。
+主进程构建仅需根目录依赖，无需安装或构建渲染端。子窗口加载页在运行时复用主渲染端的 `yakit-aux.html?mode=child-loading` 和 `theme.css`，主题 CSS 由渲染端开发／构建流程生成，主进程不再独立生成或缓存。开发时需先等待渲染服务就绪；发布时需准备 `app/renderer/pages/main` 与 `app/renderer/pages/link` 中的渲染产物（含 aux HTML、link HTML 和主题 CSS）。仅 `--main/--link` 的 CI 仍不要求安装主进程构建工具；打安装包仍需准备两份渲染产物。
 
 新增 JS／TS 业务模块时更新 `app/main/ipcModules.js` 的字面量、延迟加载清单；不要同时保留同名 JS 和 TS。保持相对模块引用。新增运行资源时更新 `scripts/build-electron.mjs` 的资源清单和 `app/main/runtimePaths.js`，不要依赖源码位置的 `__dirname`。E2E 初始化必须早于用户目录、缓存和业务模块加载。
 

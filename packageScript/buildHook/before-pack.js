@@ -1,5 +1,9 @@
 const packageJson = require('../../package.json')
 const writeEngineBuildTypeFile = require('./write-engine-build-type')
+const { resolveEngineMode, engineArchiveFor, engineSha256For, assertEngineArchive } = require('./enginePackaging')
+
+const ENGINE_MODE = resolveEngineMode()
+const withBuiltinEngine = ENGINE_MODE === 'on'
 
 module.exports = async function (context) {
   const { prepareElectronPack } = await import('../../scripts/build-electron.mjs')
@@ -12,11 +16,19 @@ module.exports = async function (context) {
     3: 'arm64',
   }
   const arch = archMap[context.arch]
-  writeEngineBuildTypeFile({
-    platform: context.electronPlatformName,
-    arch,
-    isLegacy,
-  })
+  const engineArchive = engineArchiveFor(context.electronPlatformName, arch)
+  const engineSha256 = context.electronPlatformName === 'darwin' ? engineSha256For(engineArchive) : ''
+  assertEngineArchive(engineArchive, { withBuiltinEngine })
+  assertEngineArchive(engineSha256, { withBuiltinEngine })
+
+  if (withBuiltinEngine) {
+    writeEngineBuildTypeFile({
+      platform: context.electronPlatformName,
+      arch,
+      isLegacy,
+    })
+  }
+
   const baseInfo = context.packager.appInfo
   let productVersion = packageJson.version || baseInfo.version
   // CE
@@ -35,20 +47,23 @@ module.exports = async function (context) {
   /** win32 */
   const win32Config = context.electronPlatformName === 'win32' ? context.packager.config.win : null
   if (win32Config) {
-    win32Config.extraFiles = [
+    const win32ExtraFiles = [
       {
         from: 'bins/flag.windows.txt',
         to: 'bins/flag.windows.txt',
-      },
-      {
-        from: 'bins/yak_windows_amd64.zip',
-        to: 'bins/yak.zip',
       },
       {
         from: 'LICENSE.md',
         to: 'LICENSE.md',
       },
     ]
+    if (withBuiltinEngine) {
+      win32ExtraFiles.push({
+        from: engineArchive,
+        to: 'bins/yak.zip',
+      })
+    }
+    win32Config.extraFiles = win32ExtraFiles
     win32Config.artifactName = `${artifactName}-${productVersion}-windows${isLegacy ? '-legacy' : ''}-amd64.${'${ext}'}`
     context.packager.config.win = win32Config
   }
@@ -67,30 +82,24 @@ module.exports = async function (context) {
         to: 'LICENSE.md',
       },
     ]
+    if (withBuiltinEngine) {
+      linuxExtraFiles.push({
+        from: engineArchive,
+        to: 'bins/yak.zip',
+      })
+    }
     switch (arch) {
       case 'arm64':
         linuxConfig.artifactName = `${artifactName}-${productVersion}-linux${
           isLegacy ? '-legacy' : ''
         }-arm64.${'${ext}'}`
-        linuxConfig.extraFiles = [
-          ...linuxExtraFiles,
-          {
-            from: 'bins/yak_linux_arm64.zip',
-            to: 'bins/yak.zip',
-          },
-        ]
+        linuxConfig.extraFiles = linuxExtraFiles
         break
       case 'x64':
         linuxConfig.artifactName = `${artifactName}-${productVersion}-linux${
           isLegacy ? '-legacy' : ''
         }-amd64.${'${ext}'}`
-        linuxConfig.extraFiles = [
-          ...linuxExtraFiles,
-          {
-            from: 'bins/yak_linux_amd64.zip',
-            to: 'bins/yak.zip',
-          },
-        ]
+        linuxConfig.extraFiles = linuxExtraFiles
         break
 
       default:
@@ -109,35 +118,25 @@ module.exports = async function (context) {
         to: 'bins/flag.darwin.txt',
       },
     ]
+    if (withBuiltinEngine) {
+      darwinExtraFiles.push({
+        from: engineArchive,
+        to: 'bins/yak.zip',
+      })
+      darwinExtraFiles.push({
+        from: engineSha256,
+        to: 'bins/engine-sha256.txt',
+      })
+    }
     macConfig.artifactName = `${artifactName}-${productVersion}-darwin${
       isLegacy ? '-legacy' : ''
     }-${'${arch}'}.${'${ext}'}`
     switch (arch) {
       case 'arm64':
-        macConfig.extraFiles = [
-          ...darwinExtraFiles,
-          {
-            from: 'bins/yak_darwin_arm64.zip',
-            to: 'bins/yak.zip',
-          },
-          {
-            from: 'bins/yak_darwin_arm64.sha256.txt',
-            to: 'bins/engine-sha256.txt',
-          },
-        ]
+        macConfig.extraFiles = darwinExtraFiles
         break
       case 'x64':
-        macConfig.extraFiles = [
-          ...darwinExtraFiles,
-          {
-            from: 'bins/yak_darwin_amd64.zip',
-            to: 'bins/yak.zip',
-          },
-          {
-            from: 'bins/yak_darwin_amd64.sha256.txt',
-            to: 'bins/engine-sha256.txt',
-          },
-        ]
+        macConfig.extraFiles = darwinExtraFiles
         break
 
       default:

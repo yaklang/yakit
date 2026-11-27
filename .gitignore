@@ -72,7 +72,9 @@ pr-ci-changed-files-list.txt
 
 # Generated theme css
 app/renderer/src/main/public/theme.css
-app/renderer/engine-link-startup/public/theme.css
+
+# 已废弃的 Link 独立渲染端（源码已并入主渲染端）：忽略本地残留，避免合并后以未跟踪文件出现
+/app/renderer/engine-link-startup/
 
 # Electron build outputs
 /dist/electron/

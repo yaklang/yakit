@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { create } from 'zustand'
-import { yakitTheme } from '@/services/electronBridge'
+import { yakitTheme } from '@/hook/useTheme/themeBridge'
 
 export type Theme = 'light' | 'dark'
 export type ThemeMode = Theme | 'system'
@@ -27,8 +27,12 @@ function readTheme(): ThemeMode {
   return isThemeMode(stored) ? stored : 'light'
 }
 
-function applyTheme(theme: ThemeMode) {
+function applyDocumentTheme(theme: ThemeMode) {
   document.documentElement.setAttribute('data-theme', resolveTheme(theme))
+}
+
+function applyTheme(theme: ThemeMode) {
+  applyDocumentTheme(theme)
   localStorage.setItem('theme', theme)
 }
 
@@ -37,6 +41,7 @@ const useThemeStore = create<{
   theme: ThemeMode
   setTheme: (theme: ThemeMode) => void
   syncTheme: (theme: ThemeMode) => void
+  previewTheme: (theme: ThemeMode) => void
 }>((set, get) => {
   const initialTheme = readTheme()
   applyTheme(initialTheme)
@@ -54,6 +59,12 @@ const useThemeStore = create<{
     syncTheme: (theme) => {
       if (!isThemeMode(theme)) return
       applyTheme(theme)
+      set({ theme })
+    },
+    previewTheme: (theme) => {
+      if (!isThemeMode(theme)) return
+      // 预览只改当前窗口的 DOM/状态；确认时由 setTheme 统一落盘并广播
+      applyDocumentTheme(theme)
       set({ theme })
     },
     setTheme: (theme) => {
@@ -83,8 +94,9 @@ function useThemeHook() {
   const themeMode = useThemeStore((s) => s.theme)
   const setTheme = useThemeStore((s) => s.setTheme)
   const syncTheme = useThemeStore((s) => s.syncTheme)
+  const previewTheme = useThemeStore((s) => s.previewTheme)
   const theme = useLiveResolvedTheme(themeMode)
-  return { theme, themeMode, setTheme, syncTheme }
+  return { theme, themeMode, setTheme, syncTheme, previewTheme }
 }
 
 /** theme：当前实际亮/暗；themeMode：用户选的 system/light/dark */

@@ -25,6 +25,9 @@ export enum PRODUCT_RELEASE_EDITION {
 
 export type VersionSource = 'yakit' | 'irify' | 'memfit'
 
+/** @deprecated 使用 VersionSource；保留给启动窗口兼容 */
+export type SoftwareVersion = VersionSource
+
 export const getReleaseEditionName = () => {
   switch (GetReleaseEdition()) {
     case PRODUCT_RELEASE_EDITION.EnpriTrace:
@@ -117,6 +120,13 @@ export const getCurrentVersionSource = (): VersionSource => {
   return 'yakit'
 }
 
+/** @deprecated 使用 getCurrentVersionSource；保留给启动窗口兼容 */
+// 启动窗口的旧行为只区分 irify / yakit，memfit 也按 yakit 处理
+export const FetchSoftwareVersion = (): SoftwareVersion => (isIRify() ? 'irify' : 'yakit')
+
+/** 启动窗口保持迁移前行为：breachtrace 也显示 Yakit */
+export const getStartupReleaseEditionName = () => (isBreachTrace() ? 'Yakit' : getReleaseEditionName())
+
 /** CE Yakit  */
 export const isCommunityYakit = () => {
   return GetReleaseEdition() === PRODUCT_RELEASE_EDITION.Yakit
@@ -195,6 +205,9 @@ export const fetchEnv = () => {
   }
 }
 
+/** @deprecated 使用 fetchEnv；保留给启动窗口兼容（构建期常量快照，未注入时为 undefined） */
+export const __PLATFORM__ = process.env.YAKIT_EDITION
+
 /** 引擎 Handshake 仍使用旧平台名 */
 export const toEngineHandshakeName = (edition = fetchEnv()) => {
   switch (edition) {
@@ -216,13 +229,21 @@ export const toEngineHandshakeName = (edition = fetchEnv()) => {
 }
 
 /*
- * 在导入的时候，就马上设置，不用等到组件加载
+ * 在导入的时候，就马上设置，不用等到组件加载（引擎拉起时主进程就要用到版本对应的库名）
  * */
-yakitRelease.setEditionRaw(fetchEnv() || '').then(() => {
-  if (isEnpriTraceAgent()) {
-    info(tOriginal('envfile.setReleaseEditionSuccess', { edition: getReleaseEditionName() }))
-  }
-})
+const releaseEdition = fetchEnv()
+const isLinkEntry = typeof window !== 'undefined' && window.__YAKIT_ENTRY__ === 'link'
+// 主窗口与旧逻辑一致：无论是否注入版本都写，空版本按社区版兜底。
+// link 窗口先于主窗口加载：仅在构建注入了版本时写一次（与主窗口同值），空版本不要覆盖主进程的版本缓存和库名。
+if (!isLinkEntry || releaseEdition) {
+  yakitRelease?.setEditionRaw?.(releaseEdition || '')?.then(() => {
+    // 提示只在主窗口、且只针对便携 / 简易企业版：link 窗口只预加载 link/yakitUi，
+    // utils 命名空间未就绪会显示原始 key，旧启动页也没有这个副作用。
+    if (!isLinkEntry && isEnpriTraceAgent()) {
+      info(tOriginal('envfile.setReleaseEditionSuccess', { edition: getReleaseEditionName() }))
+    }
+  })
+}
 
 /** 是否展示开发者工具 */
 export const showDevTool = () => {

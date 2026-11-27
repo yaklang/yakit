@@ -12,7 +12,7 @@ import { createRoot } from 'react-dom/client'
 import './theme/yakit.scss'
 import './assets/global.scss'
 import './theme/scrollbar.scss'
-import './pages/GlobalClass.scss'
+import './theme/globalClass.scss'
 import './theme/componentsTheme/formItemHelp.css'
 import { Suspense, lazy, useEffect, useLayoutEffect, useState } from 'react'
 const ChildNewApp = lazy(() => import('./newApp/ChildNewApp'))

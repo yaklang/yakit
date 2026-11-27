@@ -831,7 +831,6 @@ declare global {
     }
     theme: {
       setTheme: (theme: 'light' | 'dark' | 'system') => Promise<unknown>
-      onUpdated: (callback: (theme: 'light' | 'dark' | 'system') => void) => BridgeCleanup
     }
     system: {
       fetchSystemName: () => Promise<YakitSystem>
@@ -1161,6 +1160,7 @@ declare global {
       }) => Promise<{ canceled: boolean; filePath?: string }>
       isFileExists: (targetPath: string) => Promise<boolean>
       fetchFileContent: (targetPath: string) => Promise<string>
+      fetchFileInfoByPath: (targetPath: string) => Promise<{ size: number }>
     }
     ai: {
       checkHahValidConfig: () => Promise<CheckHahValidConfigResult>
@@ -1169,6 +1169,8 @@ declare global {
 
   interface Window {
     yakitBridge: YakitBridge
+    /** 渲染入口标识：主窗口/辅助窗口不设置，link 启动窗口为 'link' */
+    __YAKIT_ENTRY__?: 'link'
   }
 }
 

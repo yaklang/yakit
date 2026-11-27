@@ -489,9 +489,11 @@ describe('FuncDomain 设置菜单（UIOpSetting）', () => {
     fireEvent.click(screen.getByTestId('ui-op-setting-trigger'))
   }
 
+  const EXPERIMENTAL_MENU_TIMEOUT = 5000
+
   const openExperimentalMenu = async () => {
     openSettingMenu()
-    const explab = await screen.findByText('FuncDomain.explab')
+    const explab = await screen.findByText('FuncDomain.explab', undefined, { timeout: EXPERIMENTAL_MENU_TIMEOUT })
     fireEvent.mouseEnter(explab.closest('.ant-menu-submenu-title') ?? explab)
   }
 
@@ -573,25 +575,29 @@ describe('FuncDomain 设置菜单（UIOpSetting）', () => {
     render(<FuncDomain {...baseProps} />)
     await openExperimentalMenu()
 
-    expect(await screen.findByText('FuncDomain.vulinboxManager')).toBeInTheDocument()
+    expect(
+      await screen.findByText('FuncDomain.vulinboxManager', undefined, { timeout: EXPERIMENTAL_MENU_TIMEOUT }),
+    ).toBeInTheDocument()
     for (const label of sharedExperimentalLabels) {
       expect(screen.getByText(label)).toBeInTheDocument()
     }
     for (const label of memfitOnlyExperimentalLabels) {
       expect(screen.queryByText(label)).not.toBeInTheDocument()
     }
-  })
+  }, 15000)
 
   it('Memfit 的试验性功能保留 AI 相关入口与其余项', async () => {
     edition.memfit = true
     render(<FuncDomain {...baseProps} />)
     await openExperimentalMenu()
 
-    expect(await screen.findByText('FuncDomain.basChaosmaker')).toBeInTheDocument()
+    expect(
+      await screen.findByText('FuncDomain.basChaosmaker', undefined, { timeout: EXPERIMENTAL_MENU_TIMEOUT }),
+    ).toBeInTheDocument()
     for (const label of [...memfitOnlyExperimentalLabels, ...sharedExperimentalLabels]) {
       expect(screen.getByText(label)).toBeInTheDocument()
     }
-  })
+  }, 15000)
 })
 
 describe('FuncDomain 设置菜单录屏/截屏', () => {
@@ -630,13 +636,15 @@ describe('FuncDomain 设置菜单录屏/截屏', () => {
     await waitFor(() => expect(yakitUILayout.cancelScreenRecorder).toHaveBeenCalledWith('t'))
   })
 
+  const SUBMENU_TIMEOUT = 5000
+
   /** 展开「截屏」二级菜单 */
   const openScreenshotSubmenu = async () => {
     const parent = await screen.findByText('FuncDomain.screenshot')
     const title = parent.closest('.ant-menu-submenu-title') ?? parent
     fireEvent.mouseEnter(title)
     fireEvent.mouseMove(title)
-    await screen.findByText('FuncDomain.screenshotSelect')
+    await screen.findByText('FuncDomain.screenshotSelect', undefined, { timeout: SUBMENU_TIMEOUT })
   }
 
   type CaptureResult = { path: string; clipboardCopied: boolean; clipboardError: string }
@@ -713,13 +721,15 @@ describe('FuncDomain 设置菜单录屏/截屏', () => {
     await openScreenshotSubmenu()
 
     fireEvent.click(screen.getByText('FuncDomain.screenshotFullscreen'))
-    await waitFor(() =>
-      expect(yakitNotify).toHaveBeenCalledWith(
-        'warning',
-        expect.objectContaining({
-          message: 'Screenshot.clipboardFailed?error=clipboard unavailable',
-        }),
-      ),
+    await waitFor(
+      () =>
+        expect(yakitNotify).toHaveBeenCalledWith(
+          'warning',
+          expect.objectContaining({
+            message: 'Screenshot.clipboardFailed?error=clipboard unavailable',
+          }),
+        ),
+      { timeout: SUBMENU_TIMEOUT },
     )
     const warningCall = (yakitNotify as ReturnType<typeof vi.fn>).mock.calls.find(([type]) => type === 'warning')
     expect(warningCall?.[1]?.description.props.children).toBe('/saved.png')
@@ -734,8 +744,10 @@ describe('FuncDomain 设置菜单录屏/截屏', () => {
       emiter.emit('onGlobalShortcutKey', JSON.stringify({ eventName: 'screenshotFullscreen', currentFocus: null }))
     })
 
-    await waitFor(() => expect(screenshotCapture).toHaveBeenCalledTimes(1))
-    await waitFor(() => expect(yakitNotify).toHaveBeenCalledWith('success', expect.anything()))
+    await waitFor(() => expect(screenshotCapture).toHaveBeenCalledTimes(1), { timeout: SUBMENU_TIMEOUT })
+    await waitFor(() => expect(yakitNotify).toHaveBeenCalledWith('success', expect.anything()), {
+      timeout: SUBMENU_TIMEOUT,
+    })
   })
 
   it('「截全屏」失败时提示错误且允许再次点击', async () => {

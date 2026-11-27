@@ -29,6 +29,7 @@ Finalize 与 **Publish OSS Version Tag** 共用升级入口发布锁。在锁内
 ## 提前完成的工作
 
 - 在 Linux 标准 runner 上构建主渲染端、Link 和生产 Electron 主进程，冻结 Chrome 扩展资源。
+- 渲染端统一发布包含 `pages/main` 与 `pages/link` 的合并产物，不再单独发布 `link/render/`。
 - 按 Windows x64、Linux x64/arm64、macOS Intel/Apple Silicon 并行预装配，分别使用 Electron 44.11.3 和兼容版 22.3.27。普通版要求 64 位 Windows 10 或 macOS 13 及以上，Electron 44 不提供 Windows 32 位或 Linux ARM 32 位运行时；旧系统需使用兼容版，Electron 22 已停止安全维护。当前发布矩阵没有 Windows 32 位安装包。
 - 完成生产依赖筛选、`app.asar`、Electron 外壳、图标、平台标记和应用版本等准备。
 - 全部目标成功后才写入候选的 `candidate.json` 就绪标记。构建结束后释放 runner，不等待后端。
@@ -51,7 +52,7 @@ Prepare 阶段小体积的工作流交接产物保存 1 天；完整的预装配
 
 构建与打包工具分开缓存。渲染构建保留完整开发依赖；原生预装配和收尾仅安装根生产依赖与固定版本的 Electron、electron-builder、esbuild、公证工具，省去测试框架和 TypeScript 等依赖。依赖版本从根清单读取，使用现有 `yarn.lock` 的 frozen 安装，不修改根清单或锁文件。
 
-两个渲染端缓存已安装的 `node_modules`，命中后不重复执行依赖安装。缓存按系统、架构、Node 版本、依赖声明及锁文件内容区分，软件版本号变化不使依赖缓存失效。Electron ZIP 按系统、目标架构、精确版本单独缓存；安装器工具在收尾阶段单独缓存。主进程只构建一次，预装配直接移动应用目录，避免复制完整 Electron 外壳。
+渲染端缓存已安装的 `node_modules`，命中后不重复执行依赖安装。缓存按系统、架构、Node 版本、依赖声明及锁文件内容区分，软件版本号变化不使依赖缓存失效。Electron ZIP 按系统、目标架构、精确版本单独缓存；安装器工具在收尾阶段单独缓存。主进程只构建一次，预装配直接移动应用目录，避免复制完整 Electron 外壳。
 
 **Warm Release Caches** 在主分支依赖或缓存配置变更后自动执行，并于每周一、四北京时间 05:30 刷新。它只准备依赖和 Electron，不构建应用、不下载引擎、不创建候选、不触发发布。默认分支缓存可被新正式 tag 读取；不同 tag 之间不能直接共享缓存，因此不能用某个旧 tag 的热缓存代替主分支预热。合并后可从 Actions 手动执行一次预热；缓存失效时仍自动按锁文件安装。
 

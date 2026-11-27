@@ -3,17 +3,19 @@ import { useCreation, useMemoizedFn } from 'ahooks'
 import { getAllYakitColorVars } from '@/utils/yakitColorVars'
 import { defaultTerminalOptions } from '@/components/yakitUI/YakitXterm/terminalOptions'
 
-const applyYakitXtermTheme = (terminal, fun, theme: Theme) => {
+const DEFAULT_XTERM_BACKGROUND = '--Colors-Use-Neutral-Bg'
+
+const applyYakitXtermTheme = (terminal, fun, theme: Theme, backgroundColorVar?: string) => {
   requestAnimationFrame(() => {
-    fun(terminal, getXtermTheme(theme))
+    fun(terminal, getXtermTheme(theme, backgroundColorVar))
   })
 }
 
-export const getXtermTheme = (theme?: Theme) => {
+export const getXtermTheme = (theme?: Theme, backgroundColorVar = DEFAULT_XTERM_BACKGROUND) => {
   const vars = getAllYakitColorVars(theme)
   return {
     foreground: vars['--Colors-Use-Neutral-Text-1-Title'],
-    background: vars['--Colors-Use-Neutral-Bg'],
+    background: vars[backgroundColorVar] ?? vars[DEFAULT_XTERM_BACKGROUND],
 
     cursor: vars['--Colors-Use-Main-Primary'],
     cursorAccent: vars['--Colors-Use-Neutral-Bg'],
@@ -66,9 +68,11 @@ export const getXtermTheme = (theme?: Theme) => {
 interface UseXTermOptionsParams {
   getTerminal: () => any
   delay?: number
+  /** 默认使用主窗口的 --Colors-Use-Neutral-Bg，Link 连接页可传 --Colors-Use-Basic-Background */
+  backgroundColorVar?: string
 }
 export const useXTermOptions = (params: UseXTermOptionsParams) => {
-  const { getTerminal, delay = 0 } = params
+  const { getTerminal, delay = 0, backgroundColorVar } = params
   const { theme: themeGlobal } = useTheme()
 
   const onOption = useMemoizedFn((terminal, theme) => {
@@ -83,9 +87,9 @@ export const useXTermOptions = (params: UseXTermOptionsParams) => {
     const terminal = getTerminal()
     if (terminal) {
       if (terminal.options) {
-        applyYakitXtermTheme(terminal, onOption, themeGlobal)
+        applyYakitXtermTheme(terminal, onOption, themeGlobal, backgroundColorVar)
       } else if (terminal.setOption) {
-        applyYakitXtermTheme(terminal, onSetOption, themeGlobal)
+        applyYakitXtermTheme(terminal, onSetOption, themeGlobal, backgroundColorVar)
       }
     }
   })
@@ -93,7 +97,7 @@ export const useXTermOptions = (params: UseXTermOptionsParams) => {
   const terminalOptions = useCreation(() => {
     const option = {
       ...defaultTerminalOptions,
-      theme: { ...getXtermTheme(themeGlobal) },
+      theme: { ...getXtermTheme(themeGlobal, backgroundColorVar) },
     }
     if (delay) {
       setTimeout(() => {
@@ -103,7 +107,7 @@ export const useXTermOptions = (params: UseXTermOptionsParams) => {
       handleSetOptions()
     }
     return option
-  }, [themeGlobal, delay])
+  }, [themeGlobal, delay, backgroundColorVar])
 
   return terminalOptions
 }

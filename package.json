@@ -8,7 +8,6 @@
     "check-deps": "node scripts/check-deps.js",
     "postinstall": "node node_modules/electron/install.js && electron-builder install-app-deps",
     "release-render": "cd app/renderer/src/main && yarn release-render",
-    "release-link-render": "cd app/renderer/engine-link-startup && yarn release-render",
     "release-irify": "node scripts/release-irify.js",
     "release-memfit": "node scripts/release-memfit.js",
     "release-yakit": "node scripts/prod-pack.js",
@@ -50,7 +49,6 @@
     "test:e2e:electron:local": "yarn test:e2e:build && yarn test:e2e:preflight && yarn test:e2e:electron:smoke && yarn test:e2e:electron:real-engine",
     "test:e2e:fixture": "vitest run e2e/fixtures/__test__/yak-engine-fixture.test.js",
     "i18n:check": "node scripts/locale-parity.js",
-    "link-i18n:check": "cd app/renderer/engine-link-startup && yarn i18n:check",
     "ci:eslint": "cd app/renderer/src/main && yarn lint",
     "ci:renderer-boundary": "node scripts/check-renderer-boundaries.js",
     "ci:tsc": "node scripts/check-renderer-boundaries.js && cd app/renderer/src/main && yarn type-check",
@@ -60,7 +58,8 @@
     "build:electron": "node scripts/build-electron.mjs --mode production",
     "build:electron:dev": "node scripts/build-electron.mjs --mode development",
     "test:electron-build": "vitest run e2e/fixtures/__test__/electron-build.test.mjs e2e/fixtures/__test__/cli-build.test.mjs --maxWorkers=1",
-    "ci:electron": "yarn typecheck:electron && yarn test:electron-build"
+    "ci:electron": "yarn typecheck:electron && yarn test:electron-build",
+    "renderer:baseline": "node scripts/renderer-baseline-report.mjs"
   },
   "keywords": [],
   "author": "",

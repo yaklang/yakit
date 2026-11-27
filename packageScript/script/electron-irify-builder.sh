@@ -2,6 +2,8 @@
 # 用法: ./electron-irify-builder.sh <version>
 # 示例: ./electron-irify-builder.sh irify
 
+export YAKIT_BUILTIN_ENGINE=on
+
 if [ "$#" -lt 1 ]; then
     echo "Usage: $0 <version>"
     exit 1
@@ -20,7 +22,6 @@ fi
 electron_version=$(node -p "require('./package.json').devDependencies.electron")
 [ -n "$electron_version" ] && [ "$electron_version" != "undefined" ] || { echo "Failed to read electron version from package.json" >&2; exit 1; }
 
-rm -rf ./app/renderer/engine-link-startup/dist
 rm -rf ./app/renderer/pages
 rm -rf ./release
 

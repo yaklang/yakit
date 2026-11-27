@@ -58,5 +58,17 @@ module.exports = {
     ipcMain.handle(ipcEventPre + 'fetch-file-content', async (e, params) => {
       return await asyncFetchFileContent(params)
     })
+
+    // 获取文件信息（YakitForm / YakitDraggerContent 选择文件后读取大小）
+    ipcMain.handle(ipcEventPre + 'fetch-file-info-by-path', async (e, targetPath) => {
+      return await new Promise((resolve, reject) => {
+        try {
+          const stats = FS.statSync(targetPath)
+          resolve({ size: stats.size })
+        } catch (error) {
+          reject(error)
+        }
+      })
+    })
   },
 }
