@@ -159,6 +159,127 @@ describe('frontend allocated session identity', () => {
     expect(controller.getSessionPageId('client-session', YakitRoute.AI_Agent)).toBe('page')
   })
 
+  it('审核策略只发送给指定会话，握手前的请求不会在建联后补发', async () => {
+    const established = await start()
+    await emit(established, 'pong', 'client-session')
+    const reconnecting = controller.handleStartSession({
+      kind: 'resume',
+      sessionId: 'resume-session',
+      route: YakitRoute.AI_Agent,
+      pageId: 'resume-page',
+      params: { IsStart: true, Params: { Source: 'ai' } },
+    }) as string
+    await tick()
+    controller.setActiveShowSession('resume-session')
+    ipcRendererMock.invoke.mockClear()
+    controller.handleSendMessage({
+      token: 'client-session',
+      type: '',
+      params: { IsConfigHotpatch: true, HotpatchType: 'AgreePolicy', Params: { ReviewPolicy: 'manual' } },
+    })
+    expect(ipcRendererMock.invoke).toHaveBeenCalledExactlyOnceWith('send-ai-re-act', established, {
+      IsConfigHotpatch: true,
+      HotpatchType: 'AgreePolicy',
+      Params: { ReviewPolicy: 'manual' },
+    })
+    expect(
+      controller.handleSendMessage({
+        token: 'resume-session',
+        type: '',
+        params: { IsConfigHotpatch: true, HotpatchType: 'AgreePolicy', Params: { ReviewPolicy: 'manual' } },
+      }),
+    ).toBe(false)
+    ipcRendererMock.invoke.mockClear()
+    await emit(reconnecting, 'pong', 'resume-session')
+    controller
+      .ensureSession('resume-session')
+      .store.getState()
+      .updateState({ initLoading: false, grpcLoadMoreLoading: false })
+    expect(ipcRendererMock.invoke.mock.calls.filter(([, , params]) => params?.HotpatchType === 'AgreePolicy')).toEqual(
+      [],
+    )
+    ipcRendererMock.invoke.mockClear()
+    controller.handleSendMessage({
+      token: 'client-session',
+      type: '',
+      params: { IsConfigHotpatch: true, HotpatchType: 'AgreePolicy', Params: { ReviewPolicy: 'yolo' } },
+    })
+    expect(ipcRendererMock.invoke).toHaveBeenCalledExactlyOnceWith('send-ai-re-act', established, {
+      IsConfigHotpatch: true,
+      HotpatchType: 'AgreePolicy',
+      Params: { ReviewPolicy: 'yolo' },
+    })
+    await controller.handleSessionEnd('client-session')
+    await controller.handleSessionEnd('resume-session')
+  })
+
+  it.each([false, true])('离开页面后加载结束只发送最新审核策略，结束会话则丢弃，ended=%s', async (ended) => {
+    const token = await start()
+    await emit(token, 'pong', 'client-session')
+    const { store } = controller.ensureSession('client-session')
+    store.getState().updateState({ execute: true, grpcLoadMoreLoading: true })
+    ipcRendererMock.invoke.mockClear()
+    for (const policy of ['manual', 'yolo', 'manual'] as const) {
+      controller.handleSendMessage({
+        token: 'client-session',
+        type: '',
+        params: { IsConfigHotpatch: true, HotpatchType: 'AgreePolicy', Params: { ReviewPolicy: policy } },
+      })
+    }
+    controller.setActiveShowSession('other-session')
+    expect(ipcRendererMock.invoke).not.toHaveBeenCalled()
+    if (ended) store.getState().updateState({ execute: false })
+    store.getState().updateState({ grpcLoadMoreLoading: false })
+    if (ended) {
+      expect(ipcRendererMock.invoke).not.toHaveBeenCalled()
+    } else {
+      expect(ipcRendererMock.invoke).toHaveBeenCalledExactlyOnceWith('send-ai-re-act', token, {
+        IsConfigHotpatch: true,
+        HotpatchType: 'AgreePolicy',
+        Params: { ReviewPolicy: 'manual' },
+      })
+      store.getState().updateState({ grpcLoadMoreLoading: true })
+      store.getState().updateState({ grpcLoadMoreLoading: false })
+      expect(ipcRendererMock.invoke).toHaveBeenCalledTimes(1)
+    }
+    await controller.handleSessionEnd('client-session')
+  })
+
+  it.each([false, true])('审核阈值支持归零，加载期间与模式独立保留最新值，loading=%s', async (loading) => {
+    const token = await start()
+    await emit(token, 'pong', 'client-session')
+    const { store } = controller.ensureSession('client-session')
+    store.getState().updateState({ grpcLoadMoreLoading: loading })
+    ipcRendererMock.invoke.mockClear()
+    controller.handleSendMessage({
+      token: 'client-session',
+      type: '',
+      params: { IsConfigHotpatch: true, HotpatchType: 'AgreePolicy', Params: { ReviewPolicy: 'manual' } },
+    })
+    for (const score of [60, 0]) {
+      controller.handleSendMessage({
+        token: 'client-session',
+        type: '',
+        params: {
+          IsConfigHotpatch: true,
+          HotpatchType: 'RiskControlScore',
+          Params: { AIReviewRiskControlScore: score },
+        },
+      })
+    }
+    if (loading) expect(ipcRendererMock.invoke).not.toHaveBeenCalled()
+    store.getState().updateState({ grpcLoadMoreLoading: false })
+    const patches = ipcRendererMock.invoke.mock.calls.map(([, , params]) => params)
+    expect(patches).toEqual([
+      { IsConfigHotpatch: true, HotpatchType: 'AgreePolicy', Params: { ReviewPolicy: 'manual' } },
+      ...(!loading
+        ? [{ IsConfigHotpatch: true, HotpatchType: 'RiskControlScore', Params: { AIReviewRiskControlScore: 60 } }]
+        : []),
+      { IsConfigHotpatch: true, HotpatchType: 'RiskControlScore', Params: { AIReviewRiskControlScore: 0 } },
+    ])
+    await controller.handleSessionEnd('client-session')
+  })
+
   it('omits the legacy context limit on start and converts token limit copies', async () => {
     const config = { RuntimeContextSizeLimit: 300, AICallTokenLimit: 40 }
     const input: AIChatIPCStartParams = {

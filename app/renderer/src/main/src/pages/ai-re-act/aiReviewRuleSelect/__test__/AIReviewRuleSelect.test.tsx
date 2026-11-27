@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
     'ReviewPolicy' | 'AIReviewRiskControlScore'
   >,
   execute: false,
+  sessionId: 'session-1',
   setSetting: vi.fn(),
   onSend: vi.fn(),
 }))
@@ -29,7 +30,7 @@ vi.mock('@/pages/ai-agent/useContext/useStore', () => ({ default: () => ({ setti
 vi.mock('@/pages/ai-agent/useContext/useDispatcher', () => ({
   default: () => ({ setSetting: mocks.setSetting, onSend: mocks.onSend }),
 }))
-vi.mock('../../hooks/useCurrentSessionId', () => ({ default: () => 'session-1' }))
+vi.mock('../../hooks/useCurrentSessionId', () => ({ default: () => mocks.sessionId }))
 vi.mock('../../hooks/useCurrentDataBySession', () => ({ useCurrentStore: () => ({}) }))
 vi.mock('zustand', () => ({
   useStore: (_store: unknown, selector: (state: { execute: boolean }) => unknown) =>
@@ -80,6 +81,7 @@ beforeEach(() => {
   mocks.setting.ReviewPolicy = 'ai'
   mocks.setting.AIReviewRiskControlScore = 0.5
   mocks.execute = false
+  mocks.sessionId = 'session-1'
 })
 afterEach(cleanup)
 
@@ -138,6 +140,25 @@ describe('AIReviewRuleSelect selected display', () => {
     )
   })
 
+  it('sends one policy hotpatch when three selectors share the same running session', () => {
+    mocks.execute = true
+    const renderSelectors = () =>
+      ['first', 'second', 'third'].map((key) => <AIReviewRuleSelect key={key} className={mocks.setting.ReviewPolicy} />)
+    const { container, rerender } = render(<>{renderSelectors()}</>)
+    fireEvent.click(container.querySelector(`.${styles['ai-chat-select-wrapper']}`)!)
+    const dropdown = document.querySelector(`.${styles['drop-select-wrapper']}`) as HTMLElement
+    fireEvent.click(within(dropdown).getByText('人工'))
+
+    // 模拟共享配置更新后，同一会话的所有入口都读到新模式。
+    mocks.setting = mocks.setSetting.mock.calls[0][0](mocks.setting)
+    rerender(<>{renderSelectors()}</>)
+    expect(mocks.onSend).toHaveBeenCalledExactlyOnceWith({
+      token: 'session-1',
+      type: '',
+      params: { IsConfigHotpatch: true, HotpatchType: 'AgreePolicy', Params: { ReviewPolicy: 'manual' } },
+    })
+  })
+
   it('closes when clicking the current policy without hotpatching it', () => {
     mocks.execute = true
     const { container } = render(<AIReviewRuleSelect />)
@@ -162,6 +183,7 @@ describe('AIReviewRuleSelect selected display', () => {
 
   it('keeps the dropdown open and reveals the inline threshold when switching to AI collaboration', () => {
     mocks.setting.ReviewPolicy = 'manual'
+    mocks.execute = true
     const { container } = render(<AIReviewRuleSelect />)
     fireEvent.click(container.querySelector(`.${styles['ai-chat-select-wrapper']}`)!)
     expect(screen.queryByRole('slider')).not.toBeInTheDocument()
@@ -171,7 +193,72 @@ describe('AIReviewRuleSelect selected display', () => {
 
     expect(screen.getByRole('combobox')).toHaveAttribute('aria-expanded', 'true')
     expect(screen.getByRole('slider', { name: '风险阈值' })).toHaveAttribute('aria-valuenow', '0.5')
+    expect(mocks.setSetting).not.toHaveBeenCalled()
+    expect(mocks.onSend).not.toHaveBeenCalled()
+
+    fireEvent.mouseDown(document.body)
     expect(mocks.setSetting.mock.calls[0][0](mocks.setting)).toEqual({ ...mocks.setting, ReviewPolicy: 'ai' })
+    expect(mocks.onSend).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({ params: expect.objectContaining({ Params: { ReviewPolicy: 'ai' } }) }),
+    )
+  })
+
+  it('commits the final policy and threshold once on close and does not resend setting updates', () => {
+    mocks.setting.ReviewPolicy = 'manual'
+    mocks.execute = true
+    const { container, rerender } = render(<AIReviewRuleSelect />)
+    fireEvent.click(container.querySelector(`.${styles['ai-chat-select-wrapper']}`)!)
+    const dropdown = document.querySelector(`.${styles['drop-select-wrapper']}`) as HTMLElement
+    fireEvent.click(within(dropdown).getByText('协同'))
+    const slider = screen.getByRole('slider', { name: '风险阈值' })
+    fireEvent.keyDown(slider, { key: 'End', keyCode: 35, which: 35 })
+    expect(mocks.onSend).not.toHaveBeenCalled()
+    expect(mocks.setSetting).not.toHaveBeenCalled()
+
+    fireEvent.mouseDown(document.body)
+    expect(mocks.onSend).toHaveBeenCalledTimes(2)
+    expect(mocks.onSend.mock.calls.map(([request]) => request.params.Params)).toEqual([
+      { ReviewPolicy: 'ai' },
+      { AIReviewRiskControlScore: 1 },
+    ])
+    expect(mocks.setSetting).toHaveBeenCalledOnce()
+    mocks.setting = mocks.setSetting.mock.calls[0][0](mocks.setting)
+    rerender(<AIReviewRuleSelect />)
+    fireEvent.mouseDown(document.body)
+    expect(mocks.onSend).toHaveBeenCalledTimes(2)
+    expect(mocks.setting).toEqual({ ReviewPolicy: 'ai', AIReviewRiskControlScore: 1 })
+  })
+
+  it('discards pending edits when the active session changes', () => {
+    mocks.setting.ReviewPolicy = 'manual'
+    mocks.execute = true
+    const { container, rerender } = render(<AIReviewRuleSelect />)
+    fireEvent.click(container.querySelector(`.${styles['ai-chat-select-wrapper']}`)!)
+    const dropdown = document.querySelector(`.${styles['drop-select-wrapper']}`) as HTMLElement
+    fireEvent.click(within(dropdown).getByText('协同'))
+    mocks.sessionId = 'session-2'
+    mocks.setting = { ReviewPolicy: 'yolo', AIReviewRiskControlScore: 0.7 }
+    rerender(<AIReviewRuleSelect className="session-2" />)
+    fireEvent.mouseDown(document.body)
+
+    expect(screen.getByRole('combobox')).toHaveAttribute('aria-expanded', 'false')
+    expect(container.querySelector('.ant-select-selection-item')).toHaveTextContent('YOLO')
+    expect(mocks.onSend).not.toHaveBeenCalled()
+    expect(mocks.setSetting).not.toHaveBeenCalled()
+  })
+
+  it('does not send when the selected policy returns to its original value', () => {
+    mocks.setting.ReviewPolicy = 'manual'
+    mocks.execute = true
+    const { container } = render(<AIReviewRuleSelect />)
+    fireEvent.click(container.querySelector(`.${styles['ai-chat-select-wrapper']}`)!)
+    const dropdown = document.querySelector(`.${styles['drop-select-wrapper']}`) as HTMLElement
+    fireEvent.click(within(dropdown).getByText('协同'))
+    fireEvent.click(within(dropdown).getByText('人工'))
+
+    expect(screen.getByRole('combobox')).toHaveAttribute('aria-expanded', 'false')
+    expect(mocks.onSend).not.toHaveBeenCalled()
+    expect(mocks.setSetting).not.toHaveBeenCalled()
   })
 
   it('saves the edited threshold and hot-updates a running session when the dropdown closes', () => {

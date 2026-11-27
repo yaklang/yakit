@@ -49,7 +49,9 @@ import type { KnowledgeBaseItem } from '@/pages/KnowledgeBase/hooks/useKnowledge
 import { useBrowserInstances } from '../../browserInstances/browserInstanceStore'
 import type { AIBrowserInstance } from '../../browserInstances/browserInstanceStore'
 import { createChatStore } from '@/pages/ai-re-act/hooks/chatStore'
+import { DefaultPlanItemDetailsData } from '@/pages/ai-re-act/hooks/defaultConstant'
 import { AIInputEventSyncTypeEnum, AITaskStatus } from '@/pages/ai-re-act/hooks/grpcApi'
+import type { AIAgentGrpcApi } from '@/pages/ai-re-act/hooks/grpcApi'
 import type * as CurrentDataBySession from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import type * as AIAgentStoreModule from '@/pages/ai-agent/useContext/useStore'
 import type * as AIAgentDispatcherModule from '@/pages/ai-agent/useContext/useDispatcher'
@@ -112,11 +114,34 @@ vi.mock('@/components/yakitUI/YakitButton/yakitButton.module.scss', () => ({
 const editors: Editor[] = []
 const fileSessions = new Map<
   string,
-  { rawData: { draftMaterials: { files: { path: string; isFolder: boolean }[] } } }
+  {
+    rawData: {
+      draftMaterials: { files: { path: string; isFolder: boolean }[] }
+      agentPolicySnapshot?: Pick<AIAgentGrpcApi.AgentPolicySnapshot, 'goal'>
+    }
+  }
 >()
 const fileSession = { id: 'file-session' }
 let sessionStore: ReturnType<typeof createChatStore>
 const sessionControls = vi.hoisted(() => ({ pending: false, onSend: vi.fn(), cancelPendingChat: vi.fn() }))
+const processingSnapshot = {
+  current_round: 1,
+  revision: 1,
+  updated_at: 1,
+  background_processes: [],
+  execution: { ...DefaultPlanItemDetailsData.execution, status: 'processing' },
+}
+const publishGoalPolicy = (enabled: boolean) => {
+  fileSessions.get(fileSession.id)!.rawData.agentPolicySnapshot = {
+    goal: {
+      enabled,
+      effective: enabled,
+      min_iterations: enabled ? 1 : 0,
+      time_limit: { enabled: false, mode: 'disabled', configured_duration_seconds: 0, deadline_at: 0, revision: 1 },
+    },
+  }
+  sessionStore.getState().updateStateCount('agentPolicySnapshotUpdate')
+}
 const startSessionTask = () =>
   sessionStore.setState((state) => ({
     execute: true,
@@ -1226,11 +1251,11 @@ describe('输入框资料栏', () => {
     expect(stop.compareDocumentPosition(send) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
-  it('上下文单独显示时独占状态区，排队和停止按钮不计入状态项', () => {
+  it('空闲时上下文独占状态区，普通和目标模式运行时均显示轮次状态', () => {
     const { container, rerender } = render(<AIChatTextarea chatDataStoreKey="test" />)
 
     expect(screen.getByRole('progressbar', { name: 'AIContextUsage.label' })).toBeInTheDocument()
-    expect(screen.queryByRole('status', { name: 'AIRunningStatus.label' })).not.toBeInTheDocument()
+    expect(screen.queryByText('AIRunningStatus.state')).not.toBeInTheDocument()
     const contextButton = screen.getByRole('button', { name: 'AIContextUsage.label' })
     const statusItems = contextButton.parentElement!
     expect(Array.from(statusItems.children)).toEqual([contextButton])
@@ -1245,6 +1270,14 @@ describe('输入框资料栏', () => {
         footerRightTypes={[AIInputFooterRightEnum.AIContextUsage, AIInputFooterRightEnum.AIRunningStatus]}
       />,
     )
+    act(() => {
+      startSessionTask()
+      sessionStore.setState({ sessionSnapshot: processingSnapshot })
+      publishGoalPolicy(false)
+    })
+    expect(Array.from(statusItems.children)).toEqual([contextButton, screen.getByRole('status')])
+    expect(screen.getByRole('status')).toHaveTextContent('AIRunningStatus.round')
+    act(() => publishGoalPolicy(true))
     expect(Array.from(statusItems.children)).toEqual([contextButton, screen.getByRole('status')])
 
     rerender(<AIChatTextarea chatDataStoreKey="test" footerRightTypes={[]} />)
@@ -1449,10 +1482,10 @@ describe('输入框资料栏', () => {
     const onSubmit = vi.fn()
     const view = render(<AIChatTextarea chatDataStoreKey="test" defaultValue="follow up" onSubmit={onSubmit} />)
     expect(screen.getByRole('progressbar', { name: 'AIContextUsage.label' })).toHaveAttribute('aria-valuenow', '25')
-    expect(screen.queryByRole('status', { name: 'AIRunningStatus.label' })).not.toBeInTheDocument()
+    expect(screen.queryByText('AIRunningStatus.state')).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'YakitButton.send' })).toBeInTheDocument()
     act(startSessionTask)
-    expect(screen.queryByRole('status', { name: 'AIRunningStatus.label' })).not.toBeInTheDocument()
+    expect(screen.queryByText('AIRunningStatus.state')).not.toBeInTheDocument()
     const contextUsage = screen.getByRole('progressbar', { name: 'AIContextUsage.label' })
     const queue = screen.getByRole('button', { name: 'AIChatTextarea.queueSend' })
     const stop = screen.getByRole('button', { name: 'YakitButton.stop' })
@@ -1481,12 +1514,12 @@ describe('输入框资料栏', () => {
         currentChatStatus: { ...state.currentChatStatus, status: AITaskStatus.success },
       })),
     )
-    expect(screen.queryByRole('status', { name: 'AIRunningStatus.label' })).not.toBeInTheDocument()
+    expect(screen.queryByText('AIRunningStatus.state')).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'YakitButton.send' })).toBeInTheDocument()
     act(startSessionTask)
     view.rerender(<AIChatTextarea chatDataStoreKey="test" footerRightTypes={[]} />)
     expect(screen.queryByText('AIContextUsage.label')).not.toBeInTheDocument()
-    expect(screen.queryByRole('status', { name: 'AIRunningStatus.label' })).not.toBeInTheDocument()
+    expect(screen.queryByText('AIRunningStatus.state')).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'YakitButton.stop' }))
     expect(sessionControls.onSend).toHaveBeenCalledTimes(1)
     expect(screen.getByRole('button', { name: 'AIChatTextarea.queueSend' })).toBeInTheDocument()
@@ -1504,10 +1537,12 @@ describe('输入框资料栏', () => {
     rerender(<AIChatTextarea chatDataStoreKey="test" onSubmitWithDraft={vi.fn()} />)
     expect(screen.getByRole('button', { name: 'YakitButton.send' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'YakitButton.stop' })).not.toBeInTheDocument()
-    expect(screen.queryByRole('status', { name: 'AIRunningStatus.label' })).not.toBeInTheDocument()
+    expect(screen.queryByText('AIRunningStatus.state')).not.toBeInTheDocument()
   })
 
   it('右侧配置支持调整状态组件顺序和自定义内容', () => {
+    startSessionTask()
+    sessionStore.setState({ sessionSnapshot: processingSnapshot })
     render(
       <AIChatTextarea
         chatDataStoreKey="test"
@@ -1517,10 +1552,10 @@ describe('输入框资料栏', () => {
         ]}
       />,
     )
+    act(() => publishGoalPolicy(true))
     expect(
-      screen
-        .getByRole('status', { name: 'AIRunningStatus.label' })
-        .compareDocumentPosition(screen.getByText('custom context')) & Node.DOCUMENT_POSITION_FOLLOWING,
+      screen.getByRole('status').compareDocumentPosition(screen.getByText('custom context')) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy()
     expect(screen.queryByText('AIContextUsage.label')).not.toBeInTheDocument()
   })

@@ -1,4 +1,5 @@
 import type React from 'react'
+import { useRef } from 'react'
 import { useControllableValue } from 'ahooks'
 import { Tooltip } from 'antd'
 import classNames from 'classnames'
@@ -20,7 +21,8 @@ interface AIRunModeSelectProps {
 
 const AIRunModeSelect: React.FC<AIRunModeSelectProps> = (props) => {
   const { t } = useI18nNamespaces(['aiAgent'])
-  const { selectedModes, strategy, goalMinIterations } = useAIRunMode()
+  const { selectedModes, strategy, goalMinIterations, sessionId } = useAIRunMode()
+  const submitDraft = useRef<(() => void) | null>(null)
   const modeCount = selectedModes.length
   const hasModes = modeCount > 0
   const [firstMode] = selectedModes
@@ -41,13 +43,19 @@ const AIRunModeSelect: React.FC<AIRunModeSelectProps> = (props) => {
   return (
     <div className={styles['run-mode-trigger']} data-goal-kind={goal.kind ?? undefined}>
       <YakitPopover
-        content={<AIRunModeMenu open={open} />}
+        content={<>{open && <AIRunModeMenu key={sessionId} ref={submitDraft} />}</>}
         fresh
         trigger="click"
         placement="topLeft"
         arrow={false}
         open={open}
-        onOpenChange={setOpen}
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen) {
+            submitDraft.current?.()
+            submitDraft.current = null
+          }
+          setOpen(nextOpen)
+        }}
         destroyOnHidden
         classNames={{ root: styles['mode-popover'] }}
       >
@@ -70,23 +78,15 @@ const AIRunModeSelect: React.FC<AIRunModeSelectProps> = (props) => {
               <AtomOutlined size={16} color="currentColor" />
             )}
           </span>
-          <span className={styles['mode-label']}>
-            {modeCount > 1 ? (
-              <>
-                <span className={styles['mode-count-full']}>{label}</span>
-                <span className={styles['mode-count-short']}>
-                  {t('AIRunModeSelect.modeCountShort', { count: modeCount })}
-                </span>
-              </>
-            ) : (
-              label
-            )}
-          </span>
+          <span className={classNames(styles['mode-label'], modeCount > 1 && styles['mode-count-full'])}>{label}</span>
+          {modeCount > 1 && (
+            <span className={styles['mode-count-short']}>
+              {t('AIRunModeSelect.modeCountShort', { count: modeCount })}
+            </span>
+          )}
           {detail && (
-            <>
-              <span className={styles['mode-separator']} aria-hidden="true">
-                ·
-              </span>
+            <span className={styles['mode-goal-detail']}>
+              <span aria-hidden="true">·</span>
               {goal.acceptanceText ? (
                 <Tooltip title={<span className={styles['criteria-tooltip']}>{goal.acceptanceText}</span>}>
                   <span className={styles['mode-detail']}>{goal.acceptanceText}</span>
@@ -94,7 +94,7 @@ const AIRunModeSelect: React.FC<AIRunModeSelectProps> = (props) => {
               ) : (
                 <span className={styles['mode-detail']}>{detail}</span>
               )}
-            </>
+            </span>
           )}
           <span className={styles['mode-chevron']} aria-hidden="true">
             <ChevronDownOutlined

@@ -272,13 +272,14 @@
   min-width: 0;
   overflow: hidden;
   background-color: var(--Colors-Use-Neutral-Bg);
-  border-radius: 12px 12px 0 0;
+  border-radius: 12px;
   color: var(--Colors-Use-Neutral-Text-1-Title);
   font-size: 12px;
   line-height: 16px;
   letter-spacing: 0.5px;
   padding: 10px 12px 8px;
   gap: 8px;
+  margin-bottom: 8px;
 
   .notify-label {
     display: flex;

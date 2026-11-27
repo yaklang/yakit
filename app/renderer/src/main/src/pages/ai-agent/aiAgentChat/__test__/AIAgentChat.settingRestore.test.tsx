@@ -1,5 +1,5 @@
 import { useImperativeHandle, type ReactNode, type Ref } from 'react'
-import { act, cleanup, render, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createStore } from 'zustand/vanilla'
 // 先注册 electron stub，避免依赖链顶层 window.require('electron') 报错
@@ -7,10 +7,11 @@ import '../../../ai-re-act/hooks/__test__/setupElectron'
 import emiter from '@/utils/eventBus/eventBus'
 import { ReActChatEventEnum } from '../../defaultConstant'
 import { sessionStatusStore, SessionDeleteStatus } from '@/pages/ai-re-act/hooks/sessionStatus/sessionStatusStore'
+import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
 
 const { mocks, ctx } = vi.hoisted(() => ({
   mocks: {
-    setSetting: vi.fn(),
+    getSetting: vi.fn(),
     setActiveChat: vi.fn(),
     onStart: vi.fn(),
     onClose: vi.fn(),
@@ -150,7 +151,7 @@ afterEach(() => {
 })
 
 beforeEach(() => {
-  mocks.setSetting.mockClear()
+  mocks.getSetting.mockReset()
   mocks.setActiveChat.mockClear()
 })
 
@@ -253,34 +254,28 @@ describe('AIAgentChat delayed connection cancellation', () => {
 })
 
 describe('AIAgentChat SingleModelMode 生命周期', () => {
-  it('NEW_CHAT 事件会将 SingleModelMode 重置为 false', async () => {
-    render(<AIAgentChat />)
-
-    await waitFor(() => {
-      // 监听已挂上（inViewPort=true）
-      expect(true).toBe(true)
-    })
-
-    act(() => {
-      emiter.emit('onReActChatEvent', JSON.stringify({ type: ReActChatEventEnum.NEW_CHAT, pageId: 'tab-1' }))
-    })
-
-    await waitFor(() => expect(mocks.setSetting).toHaveBeenCalled())
-    const updater = mocks.setSetting.mock.calls[0][0] as (old: Record<string, unknown>) => Record<string, unknown>
-    const next = updater({
+  it('NEW_CHAT 只重置新欢迎草稿的会话开关，并保留其他设置', () => {
+    mocks.getSetting.mockReturnValue({
       SingleModelMode: true,
       EnablePlan: true,
       SyncPerceptionTrigger: true,
+      AICallTokenLimit: 64,
+      ReviewPolicy: 'yolo',
       Strategy: { EnableMultiAgent: true, EnableGoalMode: true },
     })
-    expect(next).toMatchObject({
+    render(<AIAgentChat />)
+    act(() => {
+      emiter.emit('onReActChatEvent', JSON.stringify({ type: ReActChatEventEnum.NEW_CHAT, pageId: 'tab-1' }))
+    })
+    expect(mocks.getSetting()).toMatchObject({ ReviewPolicy: 'yolo', SingleModelMode: true })
+    const welcome = mocks.setActiveChat.mock.calls[0][0]
+    expect(globalSessionEngine.ensureSession(welcome.SessionID).request).toMatchObject({
       SingleModelMode: false,
       EnablePlan: false,
       SyncPerceptionTrigger: false,
-      Strategy: expect.objectContaining({
-        EnableMultiAgent: false,
-        EnableGoalMode: false,
-      }),
+      AICallTokenLimit: 64,
+      ReviewPolicy: 'manual',
+      Strategy: expect.objectContaining({ EnableMultiAgent: false, EnableGoalMode: false }),
     })
     expect(mocks.setActiveChat).toHaveBeenCalledWith(
       expect.objectContaining({ isDraftSession: true, SessionID: expect.any(String) }),

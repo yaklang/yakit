@@ -679,14 +679,14 @@ describe('ChatMultiSessionController start / send / history', async () => {
     await ctrl.handleSessionEnd('s-runtime-snapshot')
   })
 
-  it.each(['', '新会话问题'])('首批历史完成后同步一次会话快照（UserQuery=%j）', async (userQuery) => {
+  it.each(['', '新会话问题'])('首批历史完成后各同步一次会话和策略快照（UserQuery=%j）', async (userQuery) => {
     const sessionId = 's-session-snapshot'
     const snapshotCalls = () =>
       ipcRendererMock.invoke.mock.calls.filter(
         ([channel, token, params]) =>
           channel === 'send-ai-re-act' &&
           token === streamTokenFor(sessionId) &&
-          params?.SyncType === 'session_snapshot_sync',
+          ['session_snapshot_sync', 'agent_policy_snapshot_sync'].includes(params?.SyncType),
       )
 
     try {
@@ -702,6 +702,11 @@ describe('ChatMultiSessionController start / send / history', async () => {
       await vi.waitFor(() => {
         expect(snapshotCalls()).toEqual([
           ['send-ai-re-act', streamTokenFor(sessionId), { IsSyncMessage: true, SyncType: 'session_snapshot_sync' }],
+          [
+            'send-ai-re-act',
+            streamTokenFor(sessionId),
+            { IsSyncMessage: true, SyncType: 'agent_policy_snapshot_sync' },
+          ],
         ])
       })
     } finally {

@@ -4,6 +4,7 @@ import { UI_PROTOCOL, isQuestionnaireSubmission } from '../interactive-ui/utils'
 import catalogManifest from '../interactive-ui/catalog.manifest.json'
 import type { AIAgentChatData, AIAgentChatMetaData, AIDraftMaterials } from '@/pages/ai-agent/type/aiChat'
 import {
+  AIInputEventHotPatchTypeEnum,
   AIInputEventSyncTypeEnum,
   AISourceEnum,
   AITaskStatus,
@@ -82,6 +83,9 @@ const genAIAgentChatData = (generation = 0): AIAgentChatData => {
   const defaultData: AIAgentChatData = {
     draftMaterials: DefaultDraftMaterials,
     modelContext: { status: 'idle', generation },
+    agentPolicySnapshot: undefined,
+    agentPolicySnapshotReceivedAtMs: undefined,
+    pendingGoalDurationSeconds: undefined,
     httpFuzzRequest: undefined,
     httpFlowFuzzStatus: undefined,
     sessionTitle: '',
@@ -319,6 +323,40 @@ export class ChatMultiSessionController {
   private draftPageIds = new Map<string, string>()
   /** 业务操作使用 SessionId，通过此表找到当前这轮连接的 token。 */
   private tokenBySessionId = new Map<string, string>()
+  private pendingReviewPolicies = new Map<
+    string,
+    { payloads: Map<string, AIChatSendParams>; unsubscribe: () => void }
+  >()
+
+  private clearPendingReviewPolicy = (sessionId: string) => {
+    this.pendingReviewPolicies.get(sessionId)?.unsubscribe()
+    this.pendingReviewPolicies.delete(sessionId)
+  }
+
+  private deferReviewPolicy = (payload: AIChatSendParams) => {
+    const sessionId = payload.token
+    const existing = this.pendingReviewPolicies.get(sessionId)
+    if (existing) {
+      existing.payloads.set(payload.params.HotpatchType!, payload)
+      return
+    }
+    const { store, meta } = this.ensureSession(sessionId)
+    const unsubscribe = store.subscribe((state) => {
+      if (meta.lifecycle.closing || !state.execute) {
+        this.clearPendingReviewPolicy(sessionId)
+        return
+      }
+      if (state.initLoading || state.grpcLoadMoreLoading) return
+      const pending = this.pendingReviewPolicies.get(sessionId)
+      if (!pending) return
+      this.clearPendingReviewPolicy(sessionId)
+      for (const request of pending.payloads.values()) this.handleSendMessage(request)
+    })
+    this.pendingReviewPolicies.set(sessionId, {
+      payloads: new Map([[payload.params.HotpatchType!, payload]]),
+      unsubscribe,
+    })
+  }
 
   /** 创建内存数据；通过回调延迟获取业务 ID，避免把临时 token 当作 IDB 的键。 */
   private createSessionData(getSessionId: () => string | undefined) {
@@ -339,6 +377,7 @@ export class ChatMultiSessionController {
 
   /** 将已有数据引用登记到正式会话池；保留首问及 React 对原 store 的订阅。 */
   private registerSessionData(sessionId: string, data: ReturnType<ChatMultiSessionController['createSessionData']>) {
+    this.clearPendingReviewPolicy(sessionId)
     this.requestPool.set(sessionId, data.request)
     this.rawDataPool.set(sessionId, data.rawData)
     this.metaPool.set(sessionId, data.meta)
@@ -346,6 +385,7 @@ export class ChatMultiSessionController {
   }
 
   private removeSessionData(sessionId: string) {
+    this.clearPendingReviewPolicy(sessionId)
     const rawData = this.rawDataPool.get(sessionId)
     if (rawData) {
       clearModelContextSaveTimer(rawData.modelContext.pending)
@@ -1414,9 +1454,22 @@ export class ChatMultiSessionController {
 
       const { store, rawData, meta } = this.ensureSession(token)
 
+      const isReviewHotpatch =
+        params.IsConfigHotpatch &&
+        (params.HotpatchType === AIInputEventHotPatchTypeEnum.HotPatchType_AgreePolicy ||
+          params.HotpatchType === AIInputEventHotPatchTypeEnum.HotPatchType_RiskControlScore)
+      if (isReviewHotpatch) {
+        const streamToken = this.tokenBySessionId.get(token)
+        if (!streamToken || !this.connectionsByToken.get(streamToken)?.confirmed) return false
+      }
+
       // 向上加载历史（recovery_history）进行中时禁止发送消息，避免与 gRPC 查询并发导致后端表死锁
-      // 同步/热更新是 UI 自动触发的（如重开会话恢复 setting 时的配置热补丁），静默丢弃不提示
+      // 运行中的审核策略保留最新值，查询结束后补发；其他同步/热更新静默拒绝。
       if (meta.lifecycle.closing || store.getState().initLoading || store.getState().grpcLoadMoreLoading) {
+        if (!meta.lifecycle.closing && store.getState().execute && isReviewHotpatch) {
+          this.deferReviewPolicy(payload)
+          return true
+        }
         if (!params.IsSyncMessage && !params.IsConfigHotpatch) {
           yakitNotify('warning', tAgent('ChatSessionNotify.historyLoading'))
         }
@@ -1769,6 +1822,11 @@ export class ChatMultiSessionController {
     this.requestMessage(sessionId, {
       IsSyncMessage: true,
       SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_SESSION_SNAPSHOT_SYNC,
+    })
+
+    this.requestMessage(sessionId, {
+      IsSyncMessage: true,
+      SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_AGENT_POLICY_SNAPSHOT_SYNC,
     })
 
     this.requestMessage(sessionId, {

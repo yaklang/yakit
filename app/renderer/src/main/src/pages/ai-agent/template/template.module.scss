@@ -209,6 +209,10 @@ textarea.qs-input-textarea {
         @include icon-only-selector;
       }
 
+      &:has(> .footer-right [data-ai-running-status]) > .footer-left .model-self-adaptive {
+        @include icon-only-selector;
+      }
+
       > .footer-left {
         .focus-mode-self-adaptive :global(.ant-select-clear) {
           display: none;
@@ -327,6 +331,19 @@ textarea.qs-input-textarea {
       }
     }
 
+    @container ai-chat-textarea (width < 864px) {
+      .footer-right {
+        .queue-send-btn:global(.ant-btn) {
+          width: 24px;
+          padding: 0;
+
+          .queue-send-label {
+            display: none;
+          }
+        }
+      }
+    }
+
     @container ai-chat-textarea (width < 640px) {
       > .footer-left {
         .focus-mode-self-adaptive {
@@ -350,7 +367,6 @@ textarea.qs-input-textarea {
 
       .footer-right {
         --ai-footer-context-label-display: none;
-        --ai-footer-running-label-display: none;
 
         .queue-send-btn:global(.ant-btn) {
           display: none;
@@ -358,22 +374,16 @@ textarea.qs-input-textarea {
       }
     }
 
+    @container ai-chat-textarea (width < 500px) {
+      &:has(> .footer-right [data-ai-running-status]) > .footer-left {
+        --ai-footer-mode-count-full-display: none;
+        --ai-footer-mode-count-short-display: inline;
+      }
+    }
+
     @container ai-chat-textarea (width < 450px) {
       > .footer-left .model-self-adaptive {
         @include icon-only-selector;
-      }
-    }
-
-    @container ai-chat-textarea (width < 450px) {
-      .footer-right {
-        --ai-footer-running-time-display: none;
-        --ai-footer-running-chevron-display: none;
-      }
-    }
-
-    @container ai-chat-textarea (width < 360px) {
-      .footer-right {
-        --ai-footer-running-dot-display: none;
       }
     }
   }

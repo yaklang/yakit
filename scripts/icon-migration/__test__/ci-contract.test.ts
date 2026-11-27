@@ -96,6 +96,12 @@ describe('icon migration test ownership', () => {
     expect(config).toContain('iconMigrationConsumerContract.test.tsx')
     expect(workflow).toContain('name: ci-icon-migration')
     expect(workflow).toContain('yarn test:icon-migration')
+    expect(workflow).toContain('ref: ${{ github.sha }}')
+    expect(workflow).not.toContain('repository: ${{ github.event.pull_request.head.repo.full_name }}')
+    expect(workflow).not.toContain('ref: ${{ github.event.pull_request.head.sha }}')
+    expect(workflow).toContain(
+      "git diff --name-only -z '${{ github.event.pull_request.base.sha }}' '${{ github.event.pull_request.head.sha }}'",
+    )
     expect(workflow.match(/if-no-files-found: error/g)).toHaveLength(2)
   })
 })

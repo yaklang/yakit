@@ -28,6 +28,106 @@ vi.mock('../persist/contentPersistHelper', () => ({
 vi.mock('@/utils/notification', () => ({ yakitNotify: vi.fn() }))
 
 describe('aiTaskDetail handlers', () => {
+  it('session_snapshot 同步顶层轮次并阻止旧快照回退状态', () => {
+    const req = makeHandlerRequest({
+      res: makeGrpcJsonRes(
+        'structured',
+        {
+          revision: 2,
+          current_round: 3,
+          total_rounds: 7,
+          execution: { status: 'processing', execution_seconds: 60 },
+        },
+        { NodeId: 'session_snapshot', TaskId: '' },
+      ),
+    })
+    const beforeReceive = Date.now()
+    aiTaskDetailDataHandlers.session_snapshot(req)
+    const receivedAt = req.store.getState().sessionSnapshotReceivedAtMs
+    expect(receivedAt).toBeGreaterThanOrEqual(beforeReceive)
+    expect(receivedAt).toBeLessThanOrEqual(Date.now())
+    expect(req.store.getState().sessionSnapshot).toMatchObject({ current_round: 3, total_rounds: 7 })
+    req.res = makeGrpcJsonRes(
+      'structured',
+      {
+        revision: 1,
+        current_round: 1,
+        total_rounds: 1,
+        execution: { status: 'idle' },
+      },
+      { NodeId: 'session_snapshot', TaskId: '' },
+    )
+    aiTaskDetailDataHandlers.session_snapshot(req)
+    expect(req.store.getState().sessionSnapshotReceivedAtMs).toBe(receivedAt)
+    expect(req.store.getState().sessionSnapshot).toMatchObject({
+      current_round: 3,
+      total_rounds: 7,
+      execution: { status: 'processing' },
+    })
+  })
+
+  it('agent_policy_snapshot 按顶层 revision 替换快照，忽略新旧时间戳顺序', () => {
+    const snapshot = { goal: { time_limit: { configured_duration_seconds: 10800 } }, updated_at: 10, revision: 2 }
+    const req = makeHandlerRequest({
+      res: makeGrpcJsonRes('agent_policy_snapshot', snapshot, { NodeId: 'agent_policy_snapshot' }),
+    })
+    const count = req.store.getState().agentPolicySnapshotUpdate
+    const beforeReceive = performance.now()
+    aiTaskDetailDataHandlers.agent_policy_snapshot(req)
+    const receivedAt = req.rawData.agentPolicySnapshotReceivedAtMs
+    req.rawData.pendingGoalDurationSeconds = -1
+    expect(receivedAt).toBeGreaterThanOrEqual(beforeReceive)
+    expect(receivedAt).toBeLessThanOrEqual(performance.now())
+    expect(req.rawData.agentPolicySnapshot).toEqual(snapshot)
+    expect(req.store.getState().agentPolicySnapshotUpdate).toBe(count + 1)
+    for (const revision of [1, 2]) {
+      req.res = makeGrpcJsonRes(
+        'agent_policy_snapshot',
+        { ...snapshot, updated_at: 11, revision },
+        { NodeId: 'agent_policy_snapshot' },
+      )
+      aiTaskDetailDataHandlers.agent_policy_snapshot(req)
+    }
+    expect(req.rawData.agentPolicySnapshotReceivedAtMs).toBe(receivedAt)
+    expect(req.rawData.pendingGoalDurationSeconds).toBe(-1)
+    expect(req.rawData.agentPolicySnapshot).toEqual(snapshot)
+    expect(req.store.getState().agentPolicySnapshotUpdate).toBe(count + 1)
+    const newer = { ...snapshot, updated_at: 9, revision: 3, goal: { time_limit: { configured_duration_seconds: -1 } } }
+    req.res = makeGrpcJsonRes('agent_policy_snapshot', newer, { NodeId: 'agent_policy_snapshot' })
+    aiTaskDetailDataHandlers.agent_policy_snapshot(req)
+    expect(req.rawData.agentPolicySnapshot).toEqual(newer)
+    expect(req.rawData.pendingGoalDurationSeconds).toBeUndefined()
+    expect(req.store.getState().agentPolicySnapshotUpdate).toBe(count + 2)
+  })
+
+  it('忽略缺少时间策略的快照，保留上次有效快照并接受后续有效帧', () => {
+    const node = { NodeId: 'agent_policy_snapshot' }
+    const policy = { updated_at: 1, revision: 1, goal: { time_limit: { mode: 'disabled' } } }
+    const req = makeHandlerRequest({ res: makeGrpcJsonRes('agent_policy_snapshot', policy, node) })
+    aiTaskDetailDataHandlers.agent_policy_snapshot(req)
+    req.res = makeGrpcJsonRes('agent_policy_snapshot', { updated_at: 2, revision: 2, goal: {} }, node)
+    aiTaskDetailDataHandlers.agent_policy_snapshot(req)
+    expect(req.rawData.agentPolicySnapshot).toEqual(policy)
+    expect(req.store.getState().agentPolicySnapshotUpdate).toBe(1)
+
+    const validPolicy = { ...policy, updated_at: 2, revision: 2 }
+    req.res = makeGrpcJsonRes('agent_policy_snapshot', validPolicy, node)
+    aiTaskDetailDataHandlers.agent_policy_snapshot(req)
+    expect(req.rawData.agentPolicySnapshot).toEqual(validPolicy)
+    expect(req.store.getState().agentPolicySnapshotUpdate).toBe(2)
+  })
+
+  it.each([
+    ['structured', 'agent_policy_snapshot', { goal: {} }],
+    ['agent_policy_snapshot', 'other', { goal: {} }],
+    ['agent_policy_snapshot', 'agent_policy_snapshot', {}],
+  ])('agent_policy_snapshot 忽略不匹配或空消息 %s %s', (type, nodeId, payload) => {
+    const req = makeHandlerRequest({ res: makeGrpcJsonRes(type, payload, { NodeId: nodeId }) })
+    aiTaskDetailDataHandlers.agent_policy_snapshot(req)
+    expect(req.rawData.agentPolicySnapshot).toBeUndefined()
+    expect(req.store.getState().agentPolicySnapshotUpdate).toBe(0)
+  })
+
   it('skill_detail 按名称缓存完整详情，替换同名结果并保留业务错误，不新增通知计数', () => {
     const detail = {
       name: 'review',
@@ -641,9 +741,11 @@ describe('aiTaskDetail handlers', () => {
     aiTaskDetailDataHandlers.session_snapshot(req)
 
     expect(req.rawData.taskDetailsMap.size).toBe(0)
-    expect(req.store.getState().sessionExecution?.http_flow_count).toBe(18)
-    expect(req.store.getState().sessionExecution?.risk_level_count).toEqual(snapshot.execution.risk_level_count)
-    expect(req.store.getState().sessionExecutionRevision).toBe(3)
+    expect(req.store.getState().sessionSnapshot?.execution.http_flow_count).toBe(18)
+    expect(req.store.getState().sessionSnapshot?.execution.risk_level_count).toEqual(
+      snapshot.execution.risk_level_count,
+    )
+    expect(req.store.getState().sessionSnapshotRevision).toBe(3)
   })
 
   it('session_snapshot 无 TaskId 时旧 revision 不回退会话累计 execution', () => {
@@ -667,8 +769,8 @@ describe('aiTaskDetail handlers', () => {
     })
     aiTaskDetailDataHandlers.session_snapshot(staleReq)
 
-    expect(newerReq.store.getState().sessionExecution?.http_flow_count).toBe(30)
-    expect(newerReq.store.getState().sessionExecutionRevision).toBe(8)
+    expect(newerReq.store.getState().sessionSnapshot?.execution.http_flow_count).toBe(30)
+    expect(newerReq.store.getState().sessionSnapshotRevision).toBe(8)
   })
 
   it('session_snapshot 旧 revision 的 tasks 不回退已更新的 sessionTaskList', () => {

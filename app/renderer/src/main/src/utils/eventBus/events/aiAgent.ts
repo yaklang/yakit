@@ -10,7 +10,7 @@ export type AIAgentEventProps = {
   onRefreshAvailableAIModelList?: string
   /** 刷新ai模型列表 */
   onRefreshAIModelList?: string
-  /** AI Agent 全局聊天配置变更（JSON string of AIAgentSetting） */
+  /** AI Agent 已保存的默认聊天配置补丁（JSON string of Partial<AIAgentSetting>，包含审核默认值） */
   onAIAgentChatSettingChange?: string
   /** ai任务树定位规划列表（请求：必要时先打开深度规划） */
   onAITreeLocatePlanningList?: string

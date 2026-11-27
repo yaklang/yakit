@@ -1,0 +1,51 @@
+.adjustments {
+  padding: 12px;
+  border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
+  border-radius: 8px;
+  background: var(--Colors-Use-Neutral-Bg);
+}
+
+.hint {
+  margin-bottom: 12px;
+  color: var(--Colors-Use-Neutral-Text-4-Help-text);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+
+  & + & {
+    margin-top: 8px;
+    padding-top: 7px;
+    border-top: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
+  }
+}
+
+.options {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.option:global(.ant-btn) {
+  height: auto;
+  padding: 4px 8px;
+  border: 0;
+  font: inherit;
+  letter-spacing: inherit;
+
+  // 点击后焦点仍在按钮上，移开鼠标时保留按钮底色。
+  &:focus:not(:hover):not(:focus-visible) {
+    background-color: var(--Colors-Use-Neutral-Bg-Hover) !important;
+  }
+
+  &:hover,
+  &:focus-visible {
+    color: var(--Colors-Use-Main-Primary);
+    background: var(--Colors-Use-Main-Bg);
+    font-weight: 500;
+  }
+}

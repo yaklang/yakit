@@ -14,7 +14,7 @@ import type { AIReviewRuleOptionsType } from '@/pages/ai-agent/defaultConstant'
 import { HandOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { AIColorful } from '@yakit-libs/yakit-ui-icons/colorful'
 import { AIInputEventHotPatchTypeEnum } from '../hooks/grpcApi'
-import type { AIInputEvent, AIStartParams } from '../hooks/grpcApi'
+import type { AIStartParams } from '../hooks/grpcApi'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import useCurrentSessionId from '../hooks/useCurrentSessionId'
 import { useCurrentStore } from '../hooks/useCurrentDataBySession'
@@ -31,49 +31,27 @@ const AIReviewRuleSelect: React.FC<ReviewRuleSelectProps> = memo((props) => {
   const { setSetting, onSend } = useAIAgentDispatcher()
 
   const [open, setOpen] = useState<boolean>(false)
+  const openSessionRef = useRef<string>()
   const [draftRiskScore, setDraftRiskScore] = useState<number>()
-  const modelValue = setting?.ReviewPolicy || AIAgentSettingDefault.ReviewPolicy
+  const modelValue = setting.ReviewPolicy || AIAgentSettingDefault.ReviewPolicy
   const [selectReviewPolicy, setSelectReviewPolicy] = useState<AIStartParams['ReviewPolicy']>()
   const displayReviewPolicy = selectReviewPolicy ?? modelValue
-  const savedRiskScore = setting?.AIReviewRiskControlScore ?? AIAgentSettingDefault.AIReviewRiskControlScore
+  const savedRiskScore = setting.AIReviewRiskControlScore ?? AIAgentSettingDefault.AIReviewRiskControlScore
   const riskScore = draftRiskScore ?? savedRiskScore
   const riskLabel = t('AIChatSetting.riskThreshold')
 
-  //#region 热更新 Review 规则
   useUpdateEffect(() => {
-    if (setting.ReviewPolicy) handHotpatchReviewPolicy(setting.ReviewPolicy)
-  }, [setting.ReviewPolicy])
-  /** 热更新 Review 规则 */
-  const handHotpatchReviewPolicy = useMemoizedFn((value: AIStartParams['ReviewPolicy']) => {
-    if (!sessionId) return
-    const info: AIInputEvent = {
-      IsConfigHotpatch: true,
-      HotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_AgreePolicy,
-      Params: {
-        ReviewPolicy: value,
-      },
-    }
-    onSend({ token: sessionId, type: '', params: info })
-  })
-  //#endregion
+    openSessionRef.current = undefined
+    setOpen(false)
+    setDraftRiskScore(undefined)
+    setSelectReviewPolicy(undefined)
+  }, [sessionId])
 
-  //#region 热更新 AIReviewRiskControlScore
-  useUpdateEffect(() => {
-    if (setting.AIReviewRiskControlScore) handHotpatchAIReviewRiskControlScore(setting.AIReviewRiskControlScore)
-  }, [setting.AIReviewRiskControlScore])
-  /** 热更新 AIReviewRiskControlScore */
-  const handHotpatchAIReviewRiskControlScore = useMemoizedFn((value: number) => {
-    if (!sessionId) return
-    const info: AIInputEvent = {
-      IsConfigHotpatch: true,
-      HotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_RiskControlScore,
-      Params: {
-        AIReviewRiskControlScore: value ?? 0,
-      },
+  const sendHotpatch = (type: AIInputEventHotPatchTypeEnum, params: AIStartParams) => {
+    if (execute && sessionId) {
+      onSend({ token: sessionId, type: '', params: { IsConfigHotpatch: true, HotpatchType: type, Params: params } })
     }
-    onSend({ token: sessionId, type: '', params: info })
-  })
-  //#endregion
+  }
 
   const getIcon = useMemoizedFn((value: AIReviewRuleOptionsType) => {
     return AIReviewRuleIconMap[value]?.icon
@@ -83,27 +61,37 @@ const AIReviewRuleSelect: React.FC<ReviewRuleSelectProps> = memo((props) => {
     if (value === 'manual') return <HandOutlined color="currentColor" />
     return getIcon(value)
   })
-  const onSetOpen = useMemoizedFn((nextOpen: boolean) => {
+  const onSetOpen = useMemoizedFn((nextOpen: boolean, selectedPolicy = displayReviewPolicy) => {
     setOpen(nextOpen)
-    if (nextOpen) return
-
-    if (draftRiskScore !== undefined && draftRiskScore !== savedRiskScore) {
-      if (execute) handHotpatchAIReviewRiskControlScore(draftRiskScore)
-      setSetting?.((old) => ({ ...old, AIReviewRiskControlScore: draftRiskScore }))
+    if (nextOpen) {
+      openSessionRef.current = sessionId
+      return
+    }
+    const owner = openSessionRef.current
+    openSessionRef.current = undefined
+    if (owner === sessionId) {
+      const changes: Partial<AIStartParams> = {}
+      if (selectedPolicy !== modelValue) {
+        changes.ReviewPolicy = selectedPolicy
+        sendHotpatch(AIInputEventHotPatchTypeEnum.HotPatchType_AgreePolicy, { ReviewPolicy: selectedPolicy })
+      }
+      if (riskScore !== savedRiskScore) {
+        changes.AIReviewRiskControlScore = riskScore
+        sendHotpatch(AIInputEventHotPatchTypeEnum.HotPatchType_RiskControlScore, {
+          AIReviewRiskControlScore: riskScore,
+        })
+      }
+      if (Object.keys(changes).length) setSetting((old) => ({ ...old, ...changes }))
     }
     setDraftRiskScore(undefined)
     setSelectReviewPolicy(undefined)
   })
   const onPickPolicy = (policy: AIReviewRuleOptionsType) => {
-    if (policy !== displayReviewPolicy) {
-      if (execute) handHotpatchReviewPolicy(policy)
-      setSetting?.((old) => ({ ...old, ReviewPolicy: policy }))
-      if (policy === 'ai') {
-        setSelectReviewPolicy(policy)
-        return
-      }
+    if (policy === 'ai' && policy !== displayReviewPolicy) {
+      setSelectReviewPolicy(policy)
+      return
     }
-    onSetOpen(false)
+    onSetOpen(false, policy)
   }
   const renderContent = useMemoizedFn(() => {
     const currentSelect = AIReviewRuleOptions.find((item) => item.value === displayReviewPolicy)

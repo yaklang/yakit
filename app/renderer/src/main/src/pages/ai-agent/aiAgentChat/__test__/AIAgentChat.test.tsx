@@ -143,8 +143,16 @@ describe('welcome submission', () => {
   it('一级欢迎页发送只打开新标签并重置自身，会话在新标签中建立且 StrictMode 不重复发送', async () => {
     mocks.openChatInNewTab = true
     mocks.activeChat = { SessionID: 'welcome-session', isDraftSession: true }
-    const setting = { ...AIAgentSettingDefault, EnablePlan: true }
+    const setting = {
+      ...AIAgentSettingDefault,
+      EnablePlan: true,
+      Strategy: { ...AIAgentSettingDefault.Strategy, EnableGoalMode: true, GoalDurationSeconds: 1800 },
+    }
     mocks.getSetting.mockReturnValue(setting)
+    // 与页面 dispatcher 一致，修改当前设置会写回当前 SessionID。
+    mocks.setSetting.mockImplementationOnce((update) =>
+      globalSessionEngine.updateSessionConfig('welcome-session', update(setting)),
+    )
     const opened = vi.fn()
     emiter.on('openPage', opened)
     try {
@@ -158,7 +166,12 @@ describe('welcome submission', () => {
       expect(mocks.setActiveChat).toHaveBeenCalledExactlyOnceWith(
         expect.objectContaining({ isDraftSession: true, SessionID: expect.any(String) }),
       )
-      expect(mocks.setSetting).toHaveBeenCalledOnce()
+      const nextWelcome = mocks.setActiveChat.mock.calls[0][0]
+      expect(nextWelcome.SessionID).not.toBe('welcome-session')
+      expect(globalSessionEngine.ensureSession('welcome-session').request.Strategy).toEqual(setting.Strategy)
+      expect(globalSessionEngine.ensureSession(nextWelcome.SessionID).request.Strategy).toEqual(
+        AIAgentSettingDefault.Strategy,
+      )
       expect(syncAIAgentPageInfo).toHaveBeenCalledWith({
         pageId: 'test-tab',
         aiAgentPageInfo: { defualtAIMentionCommandParams: undefined, forgeExec: undefined },
@@ -201,6 +214,7 @@ describe('welcome submission', () => {
       expect(mocks.onClose).not.toHaveBeenCalled()
       expect(mocks.cancelPendingChat).not.toHaveBeenCalled()
     } finally {
+      mocks.setSetting.mockReset()
       emiter.off('openPage', opened)
     }
   })

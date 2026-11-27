@@ -1,22 +1,30 @@
-.badge {
-  display: inline-flex;
+.roundBadge,
+.badge:global(.ant-btn) {
+  border: 0;
   flex-shrink: 0;
-  align-items: center;
   gap: 8px;
-  height: 24px;
   max-width: 100%;
-  box-sizing: border-box;
   padding: 0 8px;
-  border-radius: 9999px;
-  background: var(--Colors-Use-Success-Bg);
-  color: var(--Colors-Use-Neutral-Text-1-Title);
-  font-size: 12px;
+  font-weight: inherit;
   line-height: 16px;
   white-space: nowrap;
 }
 
+.roundBadge {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  border-radius: 9999px;
+  font-size: 12px;
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  background: var(--Colors-Use-Success-Bg);
+}
+
+.badge:global(.ant-btn):hover {
+  --ai-running-status-bg: var(--Colors-Use-Neutral-Bg-Hover);
+}
+
 .dot {
-  display: var(--ai-footer-running-dot-display, block);
   flex-shrink: 0;
   width: 6px;
   height: 6px;
@@ -24,15 +32,38 @@
   background: var(--Colors-Use-Success-Primary);
 }
 
-.label {
-  display: var(--ai-footer-running-label-display, inline);
+.targetReached {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
-.time {
-  display: var(--ai-footer-running-time-display, inline);
+.resetDurationHint {
+  margin-bottom: 8px;
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
 }
 
-.chevron {
-  display: var(--ai-footer-running-chevron-display, inline-flex);
+.badge .chevron {
+  display: inline-flex;
   flex-shrink: 0;
+  width: 12px;
+  height: 12px;
+}
+
+@container ai-chat-textarea (width < 864px) {
+  .label {
+    display: none;
+  }
+}
+
+@container ai-chat-textarea (width < 512px) {
+  .badge .chevron {
+    display: none;
+  }
+}
+
+@container ai-chat-textarea (width < 410px) {
+  .time {
+    display: none;
+  }
 }

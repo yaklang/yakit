@@ -229,6 +229,10 @@ export const toServerAIStartParams = <T extends AIStartParams>(params: T): T => 
 export const fromServerAIStartParams = <T extends AIStartParams>(params: T) => ({
   ...omitLegacyAIContextLimits(params),
   ...(params.AICallTokenLimit !== undefined ? { AICallTokenLimit: params.AICallTokenLimit / 1024 } : {}),
+  // gRPC 将 int64 时长返回为字符串，恢复配置时统一为预设使用的数字秒数。
+  ...(params.Strategy?.GoalDurationSeconds !== undefined
+    ? { Strategy: { ...params.Strategy, GoalDurationSeconds: Number(params.Strategy.GoalDurationSeconds) } }
+    : {}),
 })
 
 /** AIInputEvent-HotpatchType 的可选值 */
@@ -238,6 +242,8 @@ export enum AIInputEventHotPatchTypeEnum {
   HotPatchType_SyncPerceptionTrigger = 'SyncPerceptionTrigger',
   HotPatchType_EnablePlan = 'EnablePlan',
   HotPatchType_Strategy = 'ExecutionStrategy',
+  /** 调整当前会话的目标时限。 */
+  HotPatchType_GoalTime = 'GoalTime',
 
   HotPatchType_EnabledCapabilities = 'EnabledCapabilities',
   HotPatchType_DisabledCapabilities = 'DisabledCapabilities',
@@ -247,6 +253,32 @@ export enum AIInputEventHotPatchTypeEnum {
   HotPatchType_AIService = 'AIService',
   HotPatchType_RiskControlScore = 'RiskControlScore',
   HotPatchType_AIModelName = 'ModelName',
+}
+
+export enum AIGoalTimeAction {
+  /** 未指定操作。 */
+  Unspecified = 'AI_GOAL_TIME_ACTION_UNSPECIFIED',
+  /** 按秒延长或缩短时限。 */
+  Extend = 'AI_GOAL_TIME_ACTION_EXTEND',
+  /** 指定绝对截止时间。 */
+  SetDeadline = 'AI_GOAL_TIME_ACTION_SET_DEADLINE',
+  /** 解除时间限制，允许本轮结束后停止。 */
+  Disable = 'AI_GOAL_TIME_ACTION_DISABLE',
+  /** 保持目标时间窗口无限开放。 */
+  NeverEnding = 'AI_GOAL_TIME_ACTION_NEVER_ENDING',
+  /** 从后端当前时间开始设置有限时长。 */
+  SetDuration = 'AI_GOAL_TIME_ACTION_SET_DURATION',
+}
+
+export interface AIGoalTimePatch {
+  /** 对目标时限执行的操作。 */
+  Action: AIGoalTimeAction
+  /** Extend 的调整秒数，正数延长，负数缩短。 */
+  ExtendSeconds?: number
+  /** SetDeadline 的截止时间，单位为 Unix 秒。 */
+  DeadlineUnix?: number
+  /** SetDuration 的持续时间，单位为秒。 */
+  DurationSeconds?: number
 }
 
 /** AIInputEvent-SyncType 的可选值 */
@@ -302,6 +334,8 @@ export enum AIInputEventSyncTypeEnum {
   SYNC_CLOSE_BROWSER = 'close_browser_sync',
   /** 请求后端做一次会话快照同步 */
   SYNC_TYPE_SESSION_SNAPSHOT_SYNC = 'session_snapshot_sync',
+  /** 请求后端同步 Agent 运行策略快照 */
+  SYNC_TYPE_AGENT_POLICY_SNAPSHOT_SYNC = 'agent_policy_snapshot_sync',
   /** 按 task_id 查询已物化的任务详情快照 */
   SYNC_TYPE_TASK_SNAPSHOT = 'task_snapshot_sync',
   /** 查询当前会话的后台执行快照；没有 Manager 时返回空列表且不创建 */
@@ -327,6 +361,8 @@ export const readonlySyncQueryTypes = new Set<`${AIInputEventSyncTypeEnum}`>([
   AIInputEventSyncTypeEnum.SYNC_TYPE_SKILL_DETAIL,
   AIInputEventSyncTypeEnum.SYNC_TYPE_TASK_SNAPSHOT,
   AIInputEventSyncTypeEnum.SYNC_TYPE_ASYNC_EXECUTION,
+  AIInputEventSyncTypeEnum.SYNC_TYPE_SESSION_SNAPSHOT_SYNC,
+  AIInputEventSyncTypeEnum.SYNC_TYPE_AGENT_POLICY_SNAPSHOT_SYNC,
 ])
 
 export const isReadonlySyncQuery = (syncType?: `${AIInputEventSyncTypeEnum}`): boolean =>
@@ -339,6 +375,8 @@ export interface AIInputEvent {
 
   IsConfigHotpatch?: boolean
   HotpatchType?: `${AIInputEventHotPatchTypeEnum}`
+  /** GoalTime 热更新参数，仅作用于当前运行中的会话。 */
+  GoalTimePatch?: AIGoalTimePatch
 
   IsInteractiveMessage?: boolean // 是否为交互消息(review)
   InteractiveId?: string // id
@@ -953,6 +991,10 @@ export declare namespace AIAgentGrpcApi {
   }
 
   export interface SessionSnapshot {
+    current_round?: number
+    /** 当前逻辑轮次开始的 Unix 秒时间戳；同一轮重试保持不变，尚无顶层轮次时为 0。 */
+    current_round_start_at?: number
+    total_rounds?: number
     revision: number
     updated_at: number
     execution: {
@@ -992,6 +1034,41 @@ export declare namespace AIAgentGrpcApi {
     perception?: SessionSnapshotPerception
     capabilities?: CapabilityInventoryItem[]
     tasks?: SessionSnapshotTaskSummary[]
+  }
+
+  export interface AgentPolicySnapshot {
+    schema_version: number
+    revision: number
+    updated_at: number
+    server_time: number
+    goal: {
+      enabled: boolean
+      effective: boolean
+      min_iterations: number
+      acceptance_criteria?: string
+      time_limit: {
+        enabled: boolean
+        mode: 'disabled' | 'deadline' | 'never_ending'
+        deadline_at: number
+        configured_duration_seconds: number
+        revision: number
+      }
+    }
+    multi_agent: {
+      enabled: boolean
+      effective: boolean
+      prefer_dispatch: boolean
+      max_concurrency: number
+    }
+    plan: {
+      enabled: boolean
+      effective: boolean
+      detached: boolean
+      task_concurrency: number
+      allow_user_interact: boolean
+      max_user_interactions: number
+      allow_subagents: boolean
+    }
   }
 
   /** task_snapshot_sync 回包中的待办投影 */

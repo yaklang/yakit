@@ -56,7 +56,7 @@ import {
   UserCircleOutlined,
   XOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
-import { Flex, Tooltip } from 'antd'
+import { Tooltip } from 'antd'
 import styles from './AIRightPanel.module.scss'
 import type { AIRightPanelMenuKey, AIRightPanelPaneKey, AIRightPanelProps, AIRightPanelRiskCounts } from './type'
 import { AI_RIGHT_PANEL_INPUT_MAX_WIDTH, AI_RIGHT_PANEL_NORMAL_SLOT_WIDTH } from './type'
@@ -154,6 +154,7 @@ const DataCards: React.FC<{ executionData?: AIAgentGrpcApi.SessionSnapshot['exec
     const { userInfo } = useUserStore()
     const isLogin = !!userInfo.isLogin
     const store = useCurrentStore()
+    const currentRound = useStore(store, (state) => state.sessionSnapshot?.current_round)
     const execute = useStore(store, (state) => state.execute)
     const pendingReply = useStore(store, (state) => state.pendingReply)
     const chatStatus = useStore(store, (state) => state.currentChatStatus?.status)
@@ -254,7 +255,14 @@ const DataCards: React.FC<{ executionData?: AIAgentGrpcApi.SessionSnapshot['exec
 
     return (
       <div className={styles['data-cards']}>
-        <Flex gap={4} className={styles['data-cards-row']}>
+        <div className={styles['data-cards-row']}>
+          <div className={classNames(styles['data-card'], styles['data-card-metric'], styles['data-card-round'])}>
+            <div className={styles['data-card-accent']} />
+            <div className={styles['data-card-row']}>
+              <span className={styles['data-card-label']}>{t('AIRightPanel.currentRound')}</span>
+              <span className={styles['data-card-value']}>{currentRound ?? PLACEHOLDER}</span>
+            </div>
+          </div>
           <div className={classNames(styles['data-card'], styles['data-card-metric'], styles['data-card-step'])}>
             <div className={styles['data-card-accent']} />
             <div className={styles['data-card-row']}>
@@ -276,7 +284,7 @@ const DataCards: React.FC<{ executionData?: AIAgentGrpcApi.SessionSnapshot['exec
               <span className={styles['data-card-value']}>{executionData?.tool_call_total || 0}</span>
             </div>
           </div>
-        </Flex>
+        </div>
 
         <div className={styles['main-model-token']}>
           <AIMainModelTokens className={styles['main-model-token-content']} />
@@ -637,7 +645,7 @@ const ChatRightPanel: React.FC<ChatRightPanelProps> = React.memo((props) => {
   useStore(store, (state) => state.asyncExecutionUpdate)
   const questionID = useStore(store, (state) => state.currentChatStatus.questionID)
   const taskData = useCurrentTaskData(questionID)
-  const sessionExecution = useStore(store, (state) => state.sessionExecution)
+  const sessionExecution = useStore(store, (state) => state.sessionSnapshot?.execution)
   const executionData = taskData?.execution ?? sessionExecution
   const { instances: browserInstances } = useBrowserInstances()
   const browserOnlineCount = useMemo(

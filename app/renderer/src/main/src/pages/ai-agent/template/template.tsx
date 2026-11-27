@@ -86,10 +86,7 @@ const getMaterialKey = ({ mentionType, mentionSource, mentionId }: AIMentionComm
   `${mentionType}:${mentionSource ?? ''}:${mentionId}`
 
 const resourceTypes = ['http', 'risk'] as const
-const defaultFooterRightTypes = [
-  AIInputFooterRightEnum.AIContextUsage,
-  // AIInputFooterRightEnum.AIRunningStatus,
-]
+const defaultFooterRightTypes = [AIInputFooterRightEnum.AIContextUsage, AIInputFooterRightEnum.AIRunningStatus]
 
 const getResourceIds = (references: AIResourceReferenceParams[]): AIResourceIds => {
   const ids: AIResourceIds = { http: [], risk: [] }
@@ -704,7 +701,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
           case AIInputFooterRightEnum.AIContextUsage:
             return <Fragment key={item.type}>{component ?? <AIContextUsage key={sessionId} />}</Fragment>
           case AIInputFooterRightEnum.AIRunningStatus:
-            return <Fragment key={item.type}>{component ?? <AIRunningStatus />}</Fragment>
+            return <Fragment key={item.type}>{component ?? <AIRunningStatus key={sessionId} />}</Fragment>
           case AIInputFooterRightEnum.Custom:
             return 'key' in item ? <Fragment key={item.key}>{item.component}</Fragment> : null
           default:

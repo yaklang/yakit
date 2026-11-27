@@ -41,6 +41,7 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
       asyncExecutionUpdate: 0,
       draftMaterialsUpdate: 0,
       modelContextUpdate: 0,
+      agentPolicySnapshotUpdate: 0,
 
       grpcFolders: [],
       reActTimelines: [],
@@ -50,8 +51,8 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
       planHistoryCount: 0,
       sessionTaskList: [],
       sessionTaskListRevision: 0,
-      sessionExecution: undefined,
-      sessionExecutionRevision: 0,
+      sessionSnapshot: undefined,
+      sessionSnapshotRevision: 0,
       questionQueue: cloneDeep(DefaultAIQuestionQueues),
 
       httpTabShow: false,

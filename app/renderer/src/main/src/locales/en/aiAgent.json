@@ -263,9 +263,26 @@
     "saveFailed": "Failed to save context settings"
   },
   "AIRunningStatus": {
-    "label": "Running round {{round}} · {{elapsed}} / {{duration}}",
+    "label": "Running round {{round}} · {{time}}",
     "state": "Running",
-    "round": "round {{round}}"
+    "round": "round {{round}}",
+    "title": "Run time for this round",
+    "used": "Time worked",
+    "remaining": "Remaining",
+    "workSchedule": "Work until at least {{deadline}}, remaining work time {{remaining}}",
+    "workUntil": "Work until at least {{deadline}}",
+    "tomorrow": "tomorrow {{time}}",
+    "dayAfterTomorrow": "the day after tomorrow at {{time}}",
+    "monthDay": "{{month}}/{{day}}",
+    "targetReached": "Target work time reached",
+    "timeLimitRemoved": "Remove the current time limit",
+    "infinite": "Unlimited",
+    "resetDurationHint": "You can set a duration.",
+    "adjustmentHint": "Changes take effect immediately without interrupting this round.",
+    "extend": "Extend",
+    "shorten": "Shorten",
+    "unlimited": "Never stop",
+    "stopAfterRound": "Stop after this round"
   },
   "AIAddMaterialsPopover": {
     "scenarioCapabilities": "Capabilities",
@@ -823,6 +840,7 @@
     "more": "More",
     "running": "Running",
     "loginToViewBalance": "Login to view balance",
+    "currentRound": "Current round",
     "step": "Step",
     "runtime": "Runtime",
     "toolCallCount": "Tool Call Count"
@@ -1116,6 +1134,8 @@
     "expand": "Expand"
   },
   "AIChatSetting": {
+    "saveFailed": "Failed to save AI settings: {{error}}",
+    "sharedSaveFailed": "Settings applied to this session, but shared settings could not be saved: {{error}}",
     "permissionsAndSecurity": "Permissions & Security",
     "planningAndExecution": "Planning & Execution",
     "automation": "Automation",

@@ -126,7 +126,7 @@ describe('AIRunModeSelect', () => {
       rerender(<AIRunModeSelect />)
       const button = screen.getByRole('button')
       expect(within(button).getByText(threeModes)).toBeInTheDocument()
-      expect(within(button).getByText(short)).toBeInTheDocument()
+      expect(within(button).getByText(short).parentElement).toBe(button)
     },
   )
 
@@ -202,7 +202,9 @@ describe('AIRunModeSelect', () => {
     const chevron = within(button).getByTestId('chevron-icon')
     expect(chevron.style.color).toBe('var(--Colors-Use-Neutral-Text-3-Secondary)')
     expect(chevron.parentElement).toHaveAttribute('aria-hidden', 'true')
-    expect(within(button).getByText('3h')).toBeInTheDocument()
+    const goalDetail = within(button).getByText('3h').parentElement
+    expect(goalDetail?.parentElement).toBe(button)
+    expect(goalDetail).toHaveTextContent(/^·3h$/)
   })
 
   it('reveals the complete Goal acceptance criteria on hover and hides it when Goal turns off', async () => {

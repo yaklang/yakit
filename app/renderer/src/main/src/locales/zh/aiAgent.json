@@ -263,9 +263,26 @@
     "saveFailed": "保存上下文设置失败"
   },
   "AIRunningStatus": {
-    "label": "运行中 第 {{round}} 轮 · {{elapsed}} / {{duration}}",
+    "label": "运行中 第 {{round}} 轮 · {{time}}",
     "state": "运行中",
-    "round": "第 {{round}} 轮"
+    "round": "第 {{round}} 轮",
+    "title": "本轮运行时间",
+    "used": "已工作",
+    "remaining": "剩余",
+    "workSchedule": "至少工作到 {{deadline}}，剩余工作时间 {{remaining}}",
+    "workUntil": "至少工作到 {{deadline}}",
+    "tomorrow": "明天 {{time}}",
+    "dayAfterTomorrow": "后天 {{time}}",
+    "monthDay": "{{month}}月{{day}}日",
+    "targetReached": "已到目标工作时间",
+    "timeLimitRemoved": "解除当前时间限制",
+    "infinite": "无限",
+    "resetDurationHint": "可设置持续时间",
+    "adjustmentHint": "运行中调整会立即生效，不会打断当前这一轮",
+    "extend": "延长",
+    "shorten": "缩短",
+    "unlimited": "永不停止",
+    "stopAfterRound": "本轮结束后停止"
   },
   "AIAddMaterialsPopover": {
     "scenarioCapabilities": "能力",
@@ -823,6 +840,7 @@
     "more": "更多",
     "running": "执行中",
     "loginToViewBalance": "登录查看余额",
+    "currentRound": "当前轮数",
     "step": "Step",
     "runtime": "运行时间",
     "toolCallCount": "工具调用数"
@@ -1116,6 +1134,8 @@
     "expand": "展开"
   },
   "AIChatSetting": {
+    "saveFailed": "AI 设置保存失败：{{error}}",
+    "sharedSaveFailed": "设置已应用到当前会话，但共享设置保存失败：{{error}}",
     "permissionsAndSecurity": "基础权限与安全",
     "planningAndExecution": "任务规划与执行",
     "automation": "自动化配置",
