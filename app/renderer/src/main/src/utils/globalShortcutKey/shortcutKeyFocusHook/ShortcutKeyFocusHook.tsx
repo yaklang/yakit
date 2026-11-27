@@ -1,5 +1,6 @@
 import type React from 'react'
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
+import { useDeepCompareEffect } from 'ahooks'
 import styles from './ShortcutKeyFocusHook.module.scss'
 import ShortcutKeyFocusContext, {
   type ShortcutKeyFocusContextStore,
@@ -24,7 +25,7 @@ const ShortcutKeyFocusHook: React.FC<ShortcutKeyFocusHookProps> = (props) => {
   const [shortcutIds, setShortcutIds] = useState<string[]>()
   const [isHint, setHint] = useState<boolean>(false)
 
-  useEffect(() => {
+  useDeepCompareEffect(() => {
     const newShortcutIds: string[] = [uuidv4()]
     setShortcutIds(focusId ? focusId : newShortcutIds)
   }, [focusId])
