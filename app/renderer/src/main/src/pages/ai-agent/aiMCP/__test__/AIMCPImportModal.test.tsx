@@ -209,13 +209,17 @@ describe('MCP 配置导入', () => {
     expect(onImported).toHaveBeenCalledTimes(2)
   })
 
-  it('解析 SSE 与 stdio 常用格式，并拒绝引擎无法表示的命令参数', () => {
+  it('解析常用 MCP 配置并返回具体的校验错误', () => {
+    expect(parseMCPImportConfig('{}')).toEqual({ error: 'emptyConfig' })
+    expect(parseMCPImportConfig('{"mcpServers":{}}')).toEqual({ error: 'emptyConfig' })
+
     expect(
       parseMCPImportConfig(
         JSON.stringify({
           mcpServers: {
             sse: { url: 'https://example.test/sse?example=1' },
             stdio: { command: 'npx', args: ['-y', 'mcp-example'], env: { SAMPLE: 'value' } },
+            yakit: { type: 'streamable-http', url: 'http://127.0.0.1:8080/mcp' },
             unsupported: { command: 'node', args: ['path with spaces'] },
           },
         }),
@@ -231,7 +235,41 @@ describe('MCP 配置导入', () => {
             Enable: false,
           }),
         }),
+        expect.objectContaining({
+          name: 'yakit',
+          server: expect.objectContaining({ Type: 'streamable_http', URL: 'http://127.0.0.1:8080/mcp' }),
+        }),
         { name: 'unsupported', error: 'invalidCommand' },
+      ],
+    })
+
+    expect(
+      parseMCPImportConfig(
+        JSON.stringify({
+          mcpServers: {
+            invalidServer: null,
+            invalidTransport: { type: 'websocket', url: 'https://example.test/mcp' },
+            missingUrl: { type: 'sse' },
+            malformedUrl: { url: 'example.test/mcp' },
+            invalidScheme: { url: 'ftp://example.test/mcp' },
+            invalidArgs: { command: 'node', args: 'server.js' },
+            invalidEnv: { command: 'node', env: { PORT: 8080 } },
+            invalidHeaders: { url: 'https://example.test/mcp', headers: { 'X-Port': 8080 } },
+            invalidHeaderName: { url: 'https://example.test/mcp', headers: { 'Invalid Header': 'value' } },
+          },
+        }),
+      ),
+    ).toEqual({
+      entries: [
+        { name: 'invalidServer', error: 'invalidServer' },
+        { name: 'invalidTransport', error: 'invalidTransport' },
+        { name: 'missingUrl', error: 'invalidUrl' },
+        { name: 'malformedUrl', error: 'invalidUrl' },
+        { name: 'invalidScheme', error: 'invalidUrl' },
+        { name: 'invalidArgs', error: 'invalidCommand' },
+        { name: 'invalidEnv', error: 'invalidPairs' },
+        { name: 'invalidHeaders', error: 'invalidPairs' },
+        { name: 'invalidHeaderName', error: 'invalidPairs' },
       ],
     })
   })
