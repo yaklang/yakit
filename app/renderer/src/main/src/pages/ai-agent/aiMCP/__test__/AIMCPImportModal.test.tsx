@@ -126,12 +126,47 @@ describe('MCP 配置导入', () => {
         Type: 'streamable_http',
         URL: ytray.url,
         Enable: true,
-        Headers: [{ Key: 'Authorization', Value: 'Bearer example-token' }],
+        Headers: [{ Key: 'authorization', Value: 'Bearer example-token' }],
       }),
       true,
     )
     expect(grpcUpdateMCPServer).not.toHaveBeenCalled()
     expect(onImported).toHaveBeenCalledTimes(1)
+  })
+
+  it('快服务完成后先更新同一条通知，慢服务保持检查中', async () => {
+    const slowServer = { ...system, Enable: true, ErrorMsg: 'unavailable' }
+    vi.mocked(grpcGetAllMCPServers)
+      .mockResolvedValueOnce(listing([]))
+      .mockResolvedValueOnce(listing([]))
+      .mockResolvedValue(listing([browser, slowServer]))
+    let finishSlowConnection!: (value: MCPServer) => void
+    vi.mocked(getMCPServersById).mockImplementation((id) => {
+      if (id === browser.ID) return Promise.resolve(browser)
+      return new Promise((resolve) => {
+        finishSlowConnection = resolve
+      })
+    })
+    const { modal } = open()
+    expect(await screen.findByRole('checkbox', { name: browser.Name })).toBeChecked()
+    expect(screen.getByRole('checkbox', { name: slowServer.Name })).toBeChecked()
+    confirm()
+
+    await waitFor(() => expect(yakitNotify).toHaveBeenCalledTimes(2))
+    expect(modal.destroy).toHaveBeenCalledTimes(1)
+    expect(getMCPServersById).toHaveBeenCalledWith(slowServer.ID, true)
+    const { key, description } = notice()
+    expect(notice().message).toBe('AIMCPImport.importedCount 2')
+    const { getByText, queryByText, rerender } = render(description)
+    expect(getByText('AIMCPImport.connected 1').closest('li')).toHaveTextContent(browser.Name)
+    expect(getByText('AIMCPImport.checking').closest('li')).toHaveTextContent(slowServer.Name)
+
+    await act(async () => finishSlowConnection(slowServer))
+    expect(notice().key).toBe(key)
+    rerender(notice().description)
+    expect(getByText('AIMCPImport.connected 1').closest('li')).toHaveTextContent(browser.Name)
+    expect(getByText('AIMCPImport.connectionFailed').closest('li')).toHaveTextContent(slowServer.Name)
+    expect(queryByText('AIMCPImport.checking')).not.toBeInTheDocument()
   })
 
   it('可以只更新同名项，并保留该服务的启停状态', async () => {
@@ -270,6 +305,31 @@ describe('MCP 配置导入', () => {
         { name: 'invalidEnv', error: 'invalidPairs' },
         { name: 'invalidHeaders', error: 'invalidPairs' },
         { name: 'invalidHeaderName', error: 'invalidPairs' },
+      ],
+    })
+  })
+
+  it('将校验后的 HTTP 地址和请求头用于保存', () => {
+    const result = parseMCPImportConfig(
+      JSON.stringify({
+        mcpServers: {
+          example: {
+            type: 'streamable-http',
+            url: ' http:EXAMPLE.test:80/mcp?name=sample ',
+            headers: { Authorization: '\tBearer example-token\r\n' },
+          },
+        },
+      }),
+    )
+    expect(result).toEqual({
+      entries: [
+        expect.objectContaining({
+          target: 'http://example.test',
+          server: expect.objectContaining({
+            URL: 'http://example.test/mcp?name=sample',
+            Headers: [{ Key: 'authorization', Value: 'Bearer example-token' }],
+          }),
+        }),
       ],
     })
   })

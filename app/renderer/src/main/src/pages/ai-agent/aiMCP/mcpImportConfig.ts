@@ -74,8 +74,12 @@ const parseServer = (name: string, config: unknown): MCPImportEntry => {
   }
   const headers = parsePairs(config.headers)
   if (!headers) return { name, error: 'invalidPairs' }
+  const normalizedHeaders: KVPair[] = []
   try {
-    new Headers(headers.map<[string, string]>(({ Key, Value }) => [Key, Value]))
+    const validated = new Headers(headers.map<[string, string]>(({ Key, Value }) => [Key, Value]))
+    validated.forEach((Value, Key) => {
+      normalizedHeaders.push({ Key, Value })
+    })
   } catch {
     return { name, error: 'invalidPairs' }
   }
@@ -87,11 +91,11 @@ const parseServer = (name: string, config: unknown): MCPImportEntry => {
     server: {
       Name: name,
       Type: isSse ? 'sse' : 'streamable_http',
-      URL: url.trim(),
+      URL: endpoint.href,
       Command: '',
       Enable: true,
       Envs: [],
-      Headers: headers,
+      Headers: normalizedHeaders,
     },
   }
 }

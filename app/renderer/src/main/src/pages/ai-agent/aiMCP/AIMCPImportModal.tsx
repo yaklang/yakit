@@ -42,22 +42,12 @@ const getExistingServers = async () => {
   }
 }
 
-const checkConnections = async (saved: ImportRow[]) => {
-  const lookup = saved.some((row) => row.connection === 'checking' && !row.existing)
-    ? await getExistingServers().catch(() => null)
-    : null
-  return Promise.all(
-    saved.map(async (row): Promise<ImportRow> => {
-      if (row.connection !== 'checking') return row
-      const id = (row.existing ?? lookup?.get(row.entry.name))?.ID
-      const detail = id ? await getMCPServersById(id, true).catch(() => null) : null
-      const connection =
-        detail?.Name === row.entry.name && detail.Enable && !detail.ErrorMsg
-          ? (detail.Tools?.length ?? 0)
-          : 'connectionFailed'
-      return { ...row, connection }
-    }),
-  )
+const checkConnection = async (row: ImportRow, lookup?: Promise<Map<string, ExistingServer> | null>) => {
+  const id = (row.existing ?? (await lookup)?.get(row.entry.name))?.ID
+  const detail = id ? await getMCPServersById(id, true).catch(() => null) : null
+  return detail?.Name === row.entry.name && detail.Enable && !detail.ErrorMsg
+    ? (detail.Tools?.length ?? 0)
+    : 'connectionFailed'
 }
 
 interface AIMCPImportProps {
@@ -210,14 +200,18 @@ export const AIMCPImport = ({ config, onImported, onClose, onBackToForm, onSavin
       }
       if (saved.length > 0) onImported()
 
-      if (saved.some((row) => row.connection === 'checking')) {
-        void checkConnections(saved).then((checked) => {
+      const lookup = saved.some((row) => row.connection === 'checking' && !row.existing)
+        ? getExistingServers().catch(() => null)
+        : undefined
+      for (const [index, row] of saved.entries()) {
+        if (row.connection !== 'checking') continue
+        void checkConnection(row, lookup).then((connection) => {
           if (closeAfterSave) {
-            notifyImported(checked)
+            saved[index] = { ...row, connection }
+            notifyImported(saved)
             return
           }
-          const checkedRows = new Map(checked.map((row) => [row.entry, row]))
-          setRows((current) => current?.map((row) => checkedRows.get(row.entry) ?? row))
+          setRows((current) => current?.map((item) => (item.entry === row.entry ? { ...item, connection } : item)))
         })
       }
     } catch {
