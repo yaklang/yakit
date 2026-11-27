@@ -75,9 +75,17 @@
   flex-direction: column;
   gap: 6px;
   width: 100%;
-  padding: 0 8px;
+  padding: 0 7px;
+  border: 1px solid transparent;
+  border-radius: 8px;
   color: var(--Colors-Use-Neutral-Text-3-Secondary);
   @include thought.thought-stream-header;
+
+  &:hover {
+    background: var(--Colors-Use-Neutral-Bg);
+    --group-stream-mask-bg: var(--Colors-Use-Neutral-Bg);
+    --stream-title-color: var(--Colors-Use-Neutral-Text-1-Title);
+  }
 
   .thought-body {
     @include thought.thought-stream-body;

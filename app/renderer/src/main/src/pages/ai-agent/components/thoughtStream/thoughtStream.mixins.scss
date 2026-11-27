@@ -9,16 +9,16 @@
   }
 
   .thought-header {
-    display: inline-flex;
+    display: flex;
     align-items: center;
     gap: 4px;
-    width: fit-content;
+    width: 100%;
     cursor: pointer;
     user-select: none;
-    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    color: var(--stream-title-color, var(--Colors-Use-Neutral-Text-3-Secondary));
     font-size: 12px;
     font-weight: 500;
-    line-height: 16px;
+    line-height: 20px;
   }
 
   .thought-icon {
@@ -35,12 +35,12 @@
   }
 
   .thought-title-blink {
-    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    color: var(--stream-title-color, var(--Colors-Use-Neutral-Text-3-Secondary));
     background-image: linear-gradient(
       90deg,
-      var(--Colors-Use-Neutral-Text-3-Secondary) 20%,
+      var(--stream-title-color, var(--Colors-Use-Neutral-Text-3-Secondary)) 20%,
       var(--Colors-Use-Basic-White) 50%,
-      var(--Colors-Use-Neutral-Text-3-Secondary) 80%
+      var(--stream-title-color, var(--Colors-Use-Neutral-Text-3-Secondary)) 80%
     );
     background-size: 200% 100%;
     background-clip: text;
@@ -96,8 +96,8 @@
     top: 0;
     background: linear-gradient(
       180deg,
-      var(--Colors-Use-Basic-Background) 0%,
-      color-mix(in srgb, var(--Colors-Use-Basic-Background) 35%, transparent) 40%,
+      var(--group-stream-mask-bg, var(--Colors-Use-Basic-Background)) 0%,
+      color-mix(in srgb, var(--group-stream-mask-bg, var(--Colors-Use-Basic-Background)) 35%, transparent) 40%,
       transparent 100%
     );
   }
@@ -106,8 +106,8 @@
     bottom: 0;
     background: linear-gradient(
       0deg,
-      var(--Colors-Use-Basic-Background) 0%,
-      color-mix(in srgb, var(--Colors-Use-Basic-Background) 35%, transparent) 40%,
+      var(--group-stream-mask-bg, var(--Colors-Use-Basic-Background)) 0%,
+      color-mix(in srgb, var(--group-stream-mask-bg, var(--Colors-Use-Basic-Background)) 35%, transparent) 40%,
       transparent 100%
     );
   }

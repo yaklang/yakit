@@ -95,7 +95,7 @@ describe('AIGroupStreamCardHeard', () => {
 
   it('thought 标题点击切换展开', () => {
     const setExpand = vi.fn()
-    render(
+    const { rerender } = render(
       <AIGroupStreamCardHeard
         {...heardProps}
         setExpand={setExpand}
@@ -104,8 +104,21 @@ describe('AIGroupStreamCardHeard', () => {
         streaming={false}
       />,
     )
-    fireEvent.click(screen.getByText('思考'))
+    const header = screen.getByRole('button', { name: /思考/ })
+    expect(header).toHaveAttribute('aria-expanded', 'false')
+    fireEvent.click(header)
     expect(setExpand).toHaveBeenCalled()
+    rerender(
+      <AIGroupStreamCardHeard
+        {...heardProps}
+        expand
+        setExpand={setExpand}
+        nodeId={AI_STREAM_THOUGHT_NODE_ID}
+        lastItem={streamItem('end')}
+        streaming={false}
+      />,
+    )
+    expect(screen.getByRole('button', { name: /思考/ })).toHaveAttribute('aria-expanded', 'true')
   })
 
   it('非 thought 节点渲染普通组标题与摘要', () => {
