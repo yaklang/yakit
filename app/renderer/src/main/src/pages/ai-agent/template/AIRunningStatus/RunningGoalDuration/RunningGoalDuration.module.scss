@@ -1,0 +1,24 @@
+.hint {
+  margin-bottom: 8px;
+  color: var(--Colors-Use-Neutral-Text-4-Help-text);
+}
+
+.panel {
+  composes: mode-configuration from '../../../aiRunModeSelect/AIRunModeSelect.module.scss';
+}
+
+.row {
+  composes: goal-choice-row from '../../../aiRunModeSelect/AIRunModeSelect.module.scss';
+}
+
+.options {
+  composes: goal-pills from '../../../aiRunModeSelect/AIRunModeSelect.module.scss';
+}
+
+.customRow {
+  composes: duration-input-row from '../../../aiRunModeSelect/AIRunModeSelect.module.scss';
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+}

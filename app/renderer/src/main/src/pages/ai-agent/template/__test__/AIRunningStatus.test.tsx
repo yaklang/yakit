@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createChatStore } from '@/pages/ai-re-act/hooks/chatStore'
 import { DefaultPlanItemDetailsData } from '@/pages/ai-re-act/hooks/defaultConstant'
 import AIRunningStatus from '../AIRunningStatus/AIRunningStatus'
+import styles from '../AIRunningStatus/AIRunningStatus.module.scss'
 import emiter from '@/utils/eventBus/eventBus'
 
 let store: ReturnType<typeof createChatStore>
@@ -389,7 +390,7 @@ it('opens and closes the deadline preview once the policy snapshot arrives', asy
       <AIRunningStatus />
     </div>,
   )
-  expect(screen.queryByRole('status')).toBeNull()
+  expect(screen.getByRole('status')).toHaveTextContent(/^AIRunningStatus.round 5\s*· 12m36s$/)
   expect(screen.queryByRole('button')).toBeNull()
   act(() => {
     rawData.agentPolicySnapshot = initialPolicy
@@ -478,7 +479,7 @@ it('keeps adjustments disabled across reopening until the matching sync receipt 
 })
 
 it.each(['deadline', 'never_ending', 'disabled'])(
-  'hides a processing session with a round when Goal is off in %s mode',
+  'keeps only the round and elapsed time visible at every width when Goal is off in %s mode',
   (mode) => {
     rawData.agentPolicySnapshot = {
       ...initialPolicy,
@@ -486,7 +487,13 @@ it.each(['deadline', 'never_ending', 'disabled'])(
     }
     store.setState({ sessionSnapshot: { ...snapshot, current_round: 0 } })
     render(<AIRunningStatus />)
-    expect(screen.queryByRole('status')).toBeNull()
+    const status = screen.getByRole('status')
+    expect(status).toHaveTextContent(/^AIRunningStatus.round 0\s*· 12m36s$/)
+    expect(within(status).getByText(/12m36s$/)).not.toHaveClass(styles.time)
+    expect(status.querySelector('svg')).toBeNull()
+    fireEvent.click(status)
+    expect(screen.queryByRole('button')).toBeNull()
+    expect(screen.queryByText('AIRunningStatus.title')).toBeNull()
   },
 )
 
@@ -548,10 +555,14 @@ it.each([
   expect(durationOptions.getAllByRole('button').map((button) => button.textContent)).toEqual([
     '30m',
     '1h',
-    '2h',
     '3h',
+    'AIMilkdownModeSlash.durationNever',
     'AIRunModeSelect.customDuration',
   ])
+  expect(durationOptions.getByRole('button', { name: 'AIMilkdownModeSlash.durationNever' })).toHaveAttribute(
+    'aria-pressed',
+    String(mode === 'never_ending'),
+  )
   expect(screen.queryByRole('button', { name: 'AIMilkdownModeSlash.minIterations' })).toBeNull()
   expect(screen.queryByRole('button', { name: 'AIMilkdownModeSlash.acceptance' })).toBeNull()
   expect(screen.queryByRole('group', { name: 'AIRunningStatus.extend' })).toBeNull()
@@ -606,9 +617,15 @@ it('shows that the current time limit was removed when Goal is enabled with a di
     within(screen.getByRole('group', { name: 'AIMilkdownModeSlash.duration' }))
       .getAllByRole('button')
       .map((button) => button.textContent),
-  ).toEqual(['30m', '1h', '2h', '3h', 'AIRunModeSelect.customDuration'])
+  ).toEqual(['30m', '1h', '3h', 'AIMilkdownModeSlash.durationNever', 'AIRunModeSelect.customDuration'])
   expect(screen.queryByRole('group', { name: 'AIRunningStatus.shorten' })).toBeNull()
   expect(onSend).not.toHaveBeenCalled()
+  fireEvent.click(screen.getByRole('button', { name: 'AIMilkdownModeSlash.durationNever' }))
+  expect(onSend.mock.calls[0][0].params).toMatchObject({
+    HotpatchType: 'GoalTime',
+    GoalTimePatch: { Action: 'AI_GOAL_TIME_ACTION_NEVER_ENDING' },
+  })
+  expect(rawData.pendingGoalDurationSeconds).toBe(-1)
 })
 
 it('shows elapsed time and the deadline preview without a round', async () => {
@@ -643,7 +660,7 @@ it('removes the running status and its open preview on disconnect with a stale p
   expect(screen.queryByText('AIRunningStatus.title')).not.toBeInTheDocument()
 })
 
-it('hides the status and closes its preview when Goal is disabled or execution finishes', () => {
+it('closes the preview when Goal is disabled and hides the status when execution finishes', () => {
   store.setState({ sessionSnapshot: { ...snapshot, current_round: 2 } })
   render(<AIRunningStatus />)
   fireEvent.click(screen.getByRole('button', { name: /^AIRunningStatus.label 2 / }))
@@ -659,7 +676,7 @@ it('hides the status and closes its preview when Goal is disabled or execution f
     }
     store.getState().updateStateCount('agentPolicySnapshotUpdate')
   })
-  expect(screen.queryByRole('status')).toBeNull()
+  expect(screen.getByRole('status')).toHaveTextContent(/^AIRunningStatus.round 2\s*· 12m36s$/)
   expect(screen.queryByText('AIRunningStatus.title')).toBeNull()
   expect(screen.queryByRole('button')).toBeNull()
 
@@ -726,15 +743,14 @@ describe('setting a finite duration while the goal has no finite limit', () => {
   it.each([
     ['30m', 1800],
     ['1h', 3600],
-    ['2h', 7200],
     ['3h', 10800],
   ] as const)('sends %s as a GoalTime-only hotpatch', (label, seconds) => {
     const options = within(screen.getByRole('group', { name: 'AIMilkdownModeSlash.duration' }))
     expect(options.getAllByRole('button').map((button) => button.textContent)).toEqual([
       '30m',
       '1h',
-      '2h',
       '3h',
+      'AIMilkdownModeSlash.durationNever',
       'AIRunModeSelect.customDuration',
     ])
     fireEvent.click(options.getByRole('button', { name: label }))
@@ -743,6 +759,14 @@ describe('setting a finite duration while the goal has no finite limit', () => {
 
   it('sets custom hours and minutes with the same GoalTime-only hotpatch', () => {
     fireEvent.click(screen.getByRole('button', { name: 'AIRunModeSelect.customDuration' }))
+    expect(screen.getByRole('button', { name: 'AIRunModeSelect.customDuration' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    const customRow = within(screen.getByRole('group', { name: 'AIRunModeSelect.customDuration' }))
+    const minutes = customRow.getByRole('spinbutton', { name: 'AIRunModeSelect.durationMinutes' })
+    const apply = customRow.getByRole('button', { name: 'YakitButton.apply' })
+    expect(minutes.compareDocumentPosition(apply) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     fireEvent.change(screen.getByRole('spinbutton', { name: 'AIRunModeSelect.durationHours' }), {
       target: { value: '2' },
     })
@@ -750,7 +774,7 @@ describe('setting a finite duration while the goal has no finite limit', () => {
       target: { value: '15' },
     })
     expect(onSend).not.toHaveBeenCalled()
-    fireEvent.click(screen.getByRole('button', { name: 'YakitButton.apply' }))
+    fireEvent.click(apply)
     expectDurationHotpatch(8100)
   })
 

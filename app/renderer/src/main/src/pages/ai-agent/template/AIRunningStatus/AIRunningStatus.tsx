@@ -80,7 +80,7 @@ const AIRunningStatus: FC<AIRunningStatusProps> = ({ className }) => {
   const roundStartAt = useStore(store, (state) => state.sessionSnapshot?.current_round_start_at)
   const agentPolicySnapshotUpdate = useStore(store, (state) => state.agentPolicySnapshotUpdate)
   const timing = useCreation(() => readGoalTiming(rawData), [rawData, agentPolicySnapshotUpdate])
-  if (!execute || execution?.status !== 'processing' || !timing) return null
+  if (!execute || execution?.status !== 'processing') return null
 
   return (
     <RunningStatusButton
@@ -100,7 +100,7 @@ const RunningStatusButton = ({
   roundStartAt,
   executionSeconds,
 }: AIRunningStatusProps & {
-  timing: NonNullable<ReturnType<typeof readGoalTiming>>
+  timing?: NonNullable<ReturnType<typeof readGoalTiming>>
   round?: number
   roundStartAt?: number
   executionSeconds?: number
@@ -140,17 +140,17 @@ const RunningStatusButton = ({
   const content = (
     <>
       <span className={styles.dot} aria-hidden="true" />
-      <span className={styles.label}>{t('AIRunningStatus.state')}</span>
+      {timing && <span className={styles.label}>{t('AIRunningStatus.state')}</span>}
       {roundLabel && <span>{roundLabel}</span>}
-      {(used !== undefined || timing.panel) && (
-        <span className={roundLabel ? styles.time : undefined}>
+      {(used !== undefined || timing?.panel) && (
+        <span className={timing && roundLabel ? styles.time : undefined}>
           {roundLabel && '· '}
           {badgeElapsed}
         </span>
       )}
     </>
   )
-  if (!timing.panel) {
+  if (!timing?.panel) {
     return (
       <span role="status" data-ai-running-status className={classNames(styles.roundBadge, className)}>
         {content}
@@ -158,7 +158,14 @@ const RunningStatusButton = ({
     )
   }
   return (
-    <RunningTimePopover className={className} timing={timing} used={used} roundLabel={roundLabel} label={label}>
+    <RunningTimePopover
+      disableOpen={!timing}
+      className={className}
+      timing={timing}
+      used={used}
+      roundLabel={roundLabel}
+      label={label}
+    >
       {content}
     </RunningTimePopover>
   )
@@ -171,12 +178,14 @@ const RunningTimePopover = ({
   roundLabel,
   label,
   children,
+  disableOpen,
 }: AIRunningStatusProps & {
   timing: NonNullable<ReturnType<typeof readGoalTiming>>
   used?: number
   roundLabel?: string
   label: string
   children: ReactNode
+  disableOpen: boolean
 }) => {
   const { t } = useI18nNamespaces(['aiAgent'])
   const sessionId = useCurrentSessionId()
@@ -212,6 +221,10 @@ const RunningTimePopover = ({
     })
   }
   const setGoalDuration = (seconds: number) => {
+    if (seconds === -1) {
+      adjustGoalTime({ Action: AIGoalTimeAction.NeverEnding })
+      return
+    }
     if (!Number.isSafeInteger(seconds) || seconds < 60) return
     adjustGoalTime(
       {
@@ -222,7 +235,9 @@ const RunningTimePopover = ({
     )
   }
   const [open, setOpen] = useState(false)
-  const handleOpenChange = (nextOpen: boolean) => setOpen(nextOpen)
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!disableOpen) setOpen(nextOpen)
+  }
   const { deadlineMs, deadlineAt } = timing
   const [remaining, setRemaining] = useState<number>()
   useLayoutEffect(() => {
@@ -311,7 +326,14 @@ const RunningTimePopover = ({
               <div className={panelStyles.usage}>{renderUsage()}</div>
               <div className={panelStyles.settings}>
                 {timing.panel === 'never_ending' || timing.panel === 'disabled' ? (
-                  open && <RunningGoalDuration loading={loading} onSetDuration={setGoalDuration} />
+                  open && (
+                    <RunningGoalDuration
+                      key={timing.panel}
+                      loading={loading}
+                      neverEnding={timing.panel === 'never_ending'}
+                      onSetDuration={setGoalDuration}
+                    />
+                  )
                 ) : (
                   <GoalTimeAdjustments loading={loading} expired={expired} onAdjust={adjustGoalTime} />
                 )}
@@ -332,9 +354,11 @@ const RunningTimePopover = ({
           onKeyDown={handleKeyDown}
         >
           {children}
-          <span className={styles.chevron} aria-hidden="true">
-            <ChevronDownOutlined size={12} color="var(--Colors-Use-Neutral-Text-3-Secondary)" />
-          </span>
+          {!disableOpen && (
+            <span className={styles.chevron} aria-hidden="true">
+              <ChevronDownOutlined size={12} color="var(--Colors-Use-Neutral-Text-3-Secondary)" />
+            </span>
+          )}
         </YakitButton>
       </YakitPopover>
     </span>
