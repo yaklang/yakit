@@ -170,7 +170,6 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
     })
     const [inputSettingVisible, setInputSettingVisible] = useState<boolean>(false)
     const [footerMoreOpen, setFooterMoreOpen] = useState(false)
-    const [runModeOpen, setRunModeOpen] = useState(false)
     const footerLeftRef = useRef<HTMLDivElement>(null)
 
     const [disabled, setDisabled] = useState<boolean>(!defaultValue?.trim())
@@ -592,11 +591,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
           case AIInputInnerFeatureEnum.AddMaterials:
             return <Fragment key={item.type}>{item.component ?? renderAddMaterialsButton(materialControls)}</Fragment>
           case AIInputInnerFeatureEnum.AIRunModeSelect:
-            return (
-              <Fragment key={item.type}>
-                {item.component ?? <AIRunModeSelect open={runModeOpen} onOpenChange={setRunModeOpen} />}
-              </Fragment>
-            )
+            return <Fragment key={item.type}>{item.component ?? <AIRunModeSelect />}</Fragment>
           case AIInputInnerFeatureEnum.AIReviewRuleSelect:
             return (
               <Fragment key={item.type}>
@@ -799,7 +794,6 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                   materials={[...selectedMaterials, ...visibleInlineMaterials]}
                   focusMode={focusMode}
                   chatDataStoreKey={chatDataStoreKey}
-                  onModeChangeComplete={() => setRunModeOpen(true)}
                 />
                 <div className={styles['footer']} data-ai-input-footer>
                   <div className={styles['footer-left']} ref={footerLeftRef}>

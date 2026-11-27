@@ -255,7 +255,6 @@ vi.mock('@yakit-libs/yakit-ui-icons/solid', async (importOriginal) => ({
 }))
 vi.mock('../MenuCollapseIcon', () => ({
   MenuCollapseIcon: () => <svg aria-label="park-above" />,
-  MenuExpandIcon: () => <svg aria-label="park-above" />,
 }))
 vi.mock('../menuVisibilityGuide/MenuVisibilityGuide', () => ({
   MENU_VISIBILITY_GUIDE_HEADER_TARGET: 'menu-visibility-guide-header',

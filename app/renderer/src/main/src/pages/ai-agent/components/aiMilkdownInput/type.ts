@@ -26,8 +26,6 @@ export interface AIMilkdownInputBaseProps {
   filterMode?: AIChatMentionProps['filterMode']
   materials?: AIMentionCommandParams[]
   focusMode?: string
-  /** / 面板修改模式并关闭后，或 @ 选中非技能且开启 Plan 后触发 */
-  onModeChangeComplete?: () => void
   /**文件缓存路径 */
   chatDataStoreKey: string
 }

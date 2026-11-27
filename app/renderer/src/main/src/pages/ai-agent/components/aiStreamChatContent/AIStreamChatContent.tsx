@@ -34,9 +34,22 @@ const ThoughtStreamContent: React.FC<{
     if (!expand) setIsScroll(false)
   }, [expand])
 
+  const toggleExpand = () => setExpand((open) => !open)
+
   return (
     <div className={styles['ai-stream-chat-content-thought']}>
-      <div className={styles['thought-header']} onClick={() => setExpand((open) => !open)}>
+      <div
+        className={styles['thought-header']}
+        role="button"
+        tabIndex={0}
+        aria-expanded={expand}
+        onClick={toggleExpand}
+        onKeyDown={(e) => {
+          if (e.key !== 'Enter' && e.key !== ' ') return
+          e.preventDefault()
+          toggleExpand()
+        }}
+      >
         <OutlineThoughtIcon className={styles['thought-icon']} color="currentColor" />
         <span className={classNames({ [styles['thought-title-blink']]: streaming })}>
           {nodeLabel}

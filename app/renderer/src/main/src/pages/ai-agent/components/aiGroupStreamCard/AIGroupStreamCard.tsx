@@ -93,7 +93,6 @@ const AIGroupStreamCard: FC<{
     <div
       className={classNames(styles.container, {
         [styles['container-focus']]: isFocus && !isThought,
-        [styles['container-thought']]: isThought,
       })}
       ref={containerRef}
     >

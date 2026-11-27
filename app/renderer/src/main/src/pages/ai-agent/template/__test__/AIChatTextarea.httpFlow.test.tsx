@@ -54,6 +54,12 @@ import type * as CurrentDataBySession from '@/pages/ai-re-act/hooks/useCurrentDa
 import type * as AIAgentStoreModule from '@/pages/ai-agent/useContext/useStore'
 import type * as AIAgentDispatcherModule from '@/pages/ai-agent/useContext/useDispatcher'
 
+const runModeSelect = vi.hoisted(() => ({
+  open: undefined as boolean | undefined,
+  onOpenChange: undefined as ((open: boolean) => void) | undefined,
+}))
+const milkdownInputProps = vi.hoisted(() => ({ current: {} as Record<string, unknown> }))
+
 const modelContext = vi.hoisted(() => ({
   enabled: true,
   thresholdTokens: 500000,
@@ -260,7 +266,17 @@ vi.mock('@/pages/ai-re-act/aiReviewRuleSelect/AIReviewRuleSelect', async (import
 vi.mock('@/pages/ai-re-act/aiReasoningEffortSelect/AIReasoningEffortSelect', () => ({
   AIReasoningEffortSelect: () => null,
 }))
-vi.mock('../../aiRunModeSelect/AIRunModeSelect', () => ({ default: () => <button>执行模式</button> }))
+vi.mock('../../aiRunModeSelect/AIRunModeSelect', () => ({
+  default: ({ open, onOpenChange }: { open?: boolean; onOpenChange?: (open: boolean) => void }) => {
+    runModeSelect.open = open
+    runModeSelect.onOpenChange = onOpenChange
+    return (
+      <button type="button" aria-expanded={open === true}>
+        执行模式
+      </button>
+    )
+  },
+}))
 const StrategyFlagsContext = React.createContext<{ goal: boolean; subAgent: boolean; goalDurationSeconds?: number }>({
   goal: false,
   subAgent: false,
@@ -363,6 +379,7 @@ vi.mock('@/pages/ai-re-act/aiReActTaskChat/AIReActTaskChat', () => ({
 // 保留真实 Milkdown 文档、解析与序列化，仅隔离文件上传、提及面板等外围 UI。
 vi.mock('../../components/aiMilkdownInput/AIMilkdownInput', () => ({
   AIMilkdownInput: React.forwardRef<AIMilkdownInputRef, AIMilkdownInputProps>(function Input(props, ref) {
+    milkdownInputProps.current = props as Record<string, unknown>
     const root = useRef<HTMLDivElement>(null)
     useImperativeHandle(ref, () => ({
       getSessionId: () => 'draft-session',
@@ -428,6 +445,9 @@ beforeEach(() => {
     if (typeof target.getClientRects !== 'function') target.getClientRects = emptyClientRects
     if (typeof target.getBoundingClientRect !== 'function') target.getBoundingClientRect = zeroDomRect
   }
+  runModeSelect.open = undefined
+  runModeSelect.onOpenChange = undefined
+  milkdownInputProps.current = {}
   modelContext.promptTokens = 125000
   modelContext.enabled = true
   fileSessions.clear()
@@ -1133,6 +1153,14 @@ describe('输入框资料栏', () => {
     expect(screen.getByRole('button', { name: '执行模式' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '协同' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'AIRightPanel.aiSettings' })).toBeInTheDocument()
+  })
+
+  it('切换执行模式后不自动弹出运行模式面板', () => {
+    render(<AIChatTextarea chatDataStoreKey="test" />)
+    expect(screen.getByRole('button', { name: '执行模式' })).toHaveAttribute('aria-expanded', 'false')
+    expect(runModeSelect.open).toBeUndefined()
+    expect(runModeSelect.onOpenChange).toBeUndefined()
+    expect(milkdownInputProps.current).not.toHaveProperty('onModeChangeComplete')
   })
 
   it('左侧依次显示协同、模型、场景和设置，支持隐藏模型选择', () => {

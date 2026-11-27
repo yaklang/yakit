@@ -49,7 +49,6 @@ const AIChildWindowGroupStreamCard: FC<AIChildWindowGroupStreamCardProps> = memo
     <div
       className={classNames(styles.container, {
         [styles['container-focus']]: isFocus && !isThought,
-        [styles['container-thought']]: isThought,
       })}
       ref={containerRef}
     >

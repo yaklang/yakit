@@ -33,12 +33,11 @@ interface AIMilkdownMentionProps {
   onMemfitExtra?: (v: AIMentionCommandParams) => void
   filterMode?: AIChatMentionProps['filterMode']
   getMaterials?: () => Pick<AIChatMentionProps, 'materials' | 'focusMode'>
-  onModeChangeComplete?: () => void
 }
 
 const mentionTarget = '@'
 export const AIMilkdownMention: React.FC<AIMilkdownMentionProps> = (props) => {
-  const { onMemfitExtra, filterMode, getMaterials, onModeChangeComplete } = props
+  const { onMemfitExtra, filterMode, getMaterials } = props
   const { enablePlan, onToggleMode } = useAIRunMode()
   const ref = useRef<HTMLDivElement>(null)
   const slashProvider = useRef<SlashProvider>()
@@ -214,7 +213,6 @@ export const AIMilkdownMention: React.FC<AIMilkdownMentionProps> = (props) => {
   const startPlanIfNeeded = useMemoizedFn((items: AIChatMentionSelectEntry[]) => {
     if (!shouldStartPlanForMentions(items, enablePlan)) return
     onToggleMode('plan')
-    onModeChangeComplete?.()
   })
 
   const onSure = useMemoizedFn((type: AIMentionTypeItem, value?: AIChatMentionSelectItem) => {
