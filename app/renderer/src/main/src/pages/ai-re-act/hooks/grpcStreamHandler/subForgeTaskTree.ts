@@ -20,26 +20,45 @@ export function applySubForgeSnapshot(
       if (snapshot.status === 'running') return runs
     }
   }
-  return { ...runs, [snapshot.child_coordinator_id]: { ...snapshot, historical } }
+  return {
+    ...runs,
+    [snapshot.child_coordinator_id]: { ...snapshot, historical: previous ? previous.historical : historical },
+  }
+}
+
+const descendantRunIds = (runs: Record<string, SubForgeRun>, parentCoordinatorId: string) => {
+  const ids = new Set<string>()
+  const parents = new Set([parentCoordinatorId])
+  let growing = true
+  while (growing) {
+    growing = false
+    for (const [id, run] of Object.entries(runs)) {
+      if (ids.has(id) || !parents.has(run.parent_coordinator_id)) continue
+      ids.add(id)
+      parents.add(run.child_coordinator_id)
+      growing = true
+    }
+  }
+  return ids
 }
 
 export function dropSubForgeRunsByParent(
   runs: Record<string, SubForgeRun>,
   parentCoordinatorId: string,
 ): Record<string, SubForgeRun> {
-  return Object.fromEntries(Object.entries(runs).filter(([, run]) => run.parent_coordinator_id !== parentCoordinatorId))
+  const dropIds = descendantRunIds(runs, parentCoordinatorId)
+  return Object.fromEntries(Object.entries(runs).filter(([id]) => !dropIds.has(id)))
 }
 
 export function freezeRunningSubForgeRuns(
   runs: Record<string, SubForgeRun>,
   parentCoordinatorId?: string,
 ): Record<string, SubForgeRun> {
+  const freezeIds = parentCoordinatorId ? descendantRunIds(runs, parentCoordinatorId) : undefined
   return Object.fromEntries(
     Object.entries(runs).map(([id, run]) => [
       id,
-      run.status === 'running' && (!parentCoordinatorId || run.parent_coordinator_id === parentCoordinatorId)
-        ? { ...run, historical: true }
-        : run,
+      run.status === 'running' && (!freezeIds || freezeIds.has(id)) ? { ...run, historical: true } : run,
     ]),
   )
 }

@@ -8,8 +8,8 @@ import { reactCompilerPreset } from '@vitejs/plugin-react'
 import ts from 'typescript'
 import { useMemoizedFn } from 'ahooks'
 import classNames from 'classnames'
-import { cleanup, render, screen } from '@testing-library/react'
-import { afterEach, describe, expect, it } from 'vitest'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { AITreeProps } from '../type'
 import type { AITaskInfoProps } from '@/pages/ai-re-act/hooks/aiRender'
 
@@ -33,15 +33,28 @@ const { outputText } = ts.transpileModule(compiled.code!, {
   },
 })
 
+const emiter = { emit: vi.fn() }
+
 const dependencies: Record<string, unknown> = {
   react: React,
   ahooks: { useMemoizedFn },
   classnames: classNames,
   './AITree.module.scss': new Proxy({}, { get: (_, key) => (key === '__esModule' ? false : key) }),
   './subForge/SubForgeTreePopover': {
-    SubForgeTreePopover: ({ children }: React.PropsWithChildren) => <>{children}</>,
+    SubForgeTreePopover: ({
+      title,
+      tree,
+      children,
+    }: React.PropsWithChildren<{ title?: string; tree?: React.ReactNode }>) => (
+      <div data-testid="sub-forge-popover" data-title={title}>
+        {children}
+        <div data-testid="sub-forge-tree">{tree}</div>
+      </div>
+    ),
   },
-  './subForge/SubForgeTaskTrees': { isSubForgeTreeTask: () => false },
+  './subForge/SubForgeTaskTrees': {
+    isSubForgeTreeTask: (taskId: string) => taskId.startsWith('subforge-'),
+  },
   '@yakit-libs/yakit-ui-icons/oldicon/TaskErrorIcon': {
     TaskErrorIcon: () => <span data-testid="aborted" />,
   },
@@ -67,7 +80,7 @@ const dependencies: Record<string, unknown> = {
   },
   '@/components/yakitUI/YakitButton/YakitButton': { YakitButton: () => <button>任务详情</button> },
   antd: { Tooltip: ({ children }: React.PropsWithChildren) => <>{children}</> },
-  '@/utils/eventBus/eventBus': { emit: () => {} },
+  '@/utils/eventBus/eventBus': emiter,
   '@/utils/notification': { yakitNotify: () => {} },
 }
 const compiledExports: { AITree?: React.FC<AITreeProps> } = {}
@@ -95,7 +108,10 @@ const makeTask = (overrides: Partial<AITaskInfoProps> = {}): AITaskInfoProps => 
   ...overrides,
 })
 
-afterEach(cleanup)
+afterEach(() => {
+  cleanup()
+  emiter.emit.mockClear()
+})
 
 describe('AITree（启用 React Compiler）', () => {
   it.each([
@@ -137,6 +153,39 @@ describe('AITree（启用 React Compiler）', () => {
     expect(screen.queryByText('原目标')).not.toBeInTheDocument()
     expect(screen.getByText('3')).toBeInTheDocument()
     expect(screen.getByText('2')).toBeInTheDocument()
+  })
+
+  it('子 Forge 卡片走子弹层树，不展示跳过/详情，点击不定位规划列表', () => {
+    const inner = makeTask({
+      task_id: 'subforge-child-1-n0',
+      name: '内层任务',
+      isLeaf: false,
+      progress: 'completed',
+      goal: '',
+    })
+    render(
+      <AITree
+        tasks={[
+          makeTask({
+            task_id: 'subforge-child-1',
+            name: 'inventory',
+            isLeaf: false,
+            progress: 'completed',
+            goal: '',
+            subForgeHead: true,
+            subForgeChildren: [inner],
+          }),
+        ]}
+        taskType="current"
+      />,
+    )
+    expect(screen.getByTestId('sub-forge-popover')).toHaveAttribute('data-title', 'inventory')
+    expect(screen.getByTestId('sub-forge-tree')).toHaveTextContent('内层任务')
+    expect(screen.queryByText('高亮的为该任务的关联任务')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '跳过任务' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '任务详情' })).not.toBeInTheDocument()
+    fireEvent.click(screen.getByText('inventory').closest('.node-wrapper') as HTMLElement)
+    expect(emiter.emit).not.toHaveBeenCalled()
   })
 
   it('切换到历史任务时移除任务详情按钮', () => {

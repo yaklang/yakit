@@ -148,21 +148,23 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(
         <div className={styles['node-title']}>
           <p>{data.name}</p>
           <div className={styles['node-extra']} onClick={(e) => e.stopPropagation()}>
-            <YakitPopover
-              classNames={{ root: styles['task-detail-popover'] }}
-              styles={{ root: { paddingLeft: 4 } }}
-              placement="rightTop"
-              content={
-                <div className={styles['detail-wrapper']}>
-                  <div className={styles['detail-title']}>{data.name}</div>
-                  {data.goal && <div className={styles['detail-description']}>{data.goal}</div>}
-                </div>
-              }
-              open={infoShow}
-              onOpenChange={setInfoShow}
-            >
-              <InformationCircleOutlined className={styles['info-icon']} color="currentColor" />
-            </YakitPopover>
+            {!isSubForgeTreeTask(data.task_id) && (
+              <YakitPopover
+                classNames={{ root: styles['task-detail-popover'] }}
+                styles={{ root: { paddingLeft: 4 } }}
+                placement="rightTop"
+                content={
+                  <div className={styles['detail-wrapper']}>
+                    <div className={styles['detail-title']}>{data.name}</div>
+                    {data.goal && <div className={styles['detail-description']}>{data.goal}</div>}
+                  </div>
+                }
+                open={infoShow}
+                onOpenChange={setInfoShow}
+              >
+                <InformationCircleOutlined className={styles['info-icon']} color="currentColor" />
+              </YakitPopover>
+            )}
             {data.isLeaf && data.progress === 'processing' && <AIHistorySkipTask taskId={data.task_id} />}
             {taskType === 'current' && data.isLeaf && (
               <Tooltip title="任务详情" placement="top">

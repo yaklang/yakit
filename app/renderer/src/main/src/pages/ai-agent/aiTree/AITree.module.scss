@@ -197,13 +197,8 @@
 
   .node-icon-backslash {
     &::before {
-      @include line(-24deg);
+      @include line(-30deg);
       top: -17px;
-      left: 0;
-    }
-
-    &:has(+ *:not(.node-wrapper-default))::before {
-      transform: rotate(-30deg);
       left: -3px;
     }
   }
@@ -212,12 +207,8 @@
       background-color: transparent;
     }
     &::after {
-      @include line();
+      @include line(30deg);
       top: 19px;
-      left: 0;
-    }
-    &:has(+ *:not(.node-wrapper-default))::after {
-      transform: rotate(30deg);
       left: -3px;
     }
   }

@@ -49,9 +49,31 @@ describe('subForgeRuns', () => {
     expect(applySubForgeSnapshot(live, { ...snapshot, status: 'succeeded' }, false)['child-1'].status).toBe('succeeded')
   })
 
-  it('drops runs of one parent coordinator', () => {
+  it('does not mark a live run historical when a higher-revision sync snapshot arrives', () => {
+    const live = applySubForgeSnapshot({}, snapshot, false)
+    const synced = applySubForgeSnapshot(live, { ...snapshot, revision: 3 }, true)
+    expect(synced['child-1']).toMatchObject({ revision: 3, historical: false })
+    expect(applySubForgeSnapshot(synced, { ...snapshot, revision: 4 }, false)['child-1'].historical).toBe(false)
+  })
+
+  it('keeps historical when a delayed live terminal shares the same revision', () => {
+    const frozenDone = applySubForgeSnapshot({}, { ...snapshot, status: 'succeeded' }, true)
+    expect(applySubForgeSnapshot(frozenDone, { ...snapshot, status: 'succeeded' }, false)['child-1'].historical).toBe(
+      true,
+    )
+    const frozenRunning = applySubForgeSnapshot({}, snapshot, true)
+    const upgraded = applySubForgeSnapshot(frozenRunning, { ...snapshot, status: 'succeeded' }, false)['child-1']
+    expect(upgraded).toMatchObject({ status: 'succeeded', historical: true })
+  })
+
+  it('drops runs of one parent coordinator and nested descendants', () => {
     const other = { ...snapshot, parent_coordinator_id: 'other', child_coordinator_id: 'child-2' }
-    const runs = applySubForgeSnapshot(applySubForgeSnapshot({}, snapshot, false), other, false)
+    const nested = { ...snapshot, parent_coordinator_id: 'child-1', child_coordinator_id: 'child-1a' }
+    const runs = applySubForgeSnapshot(
+      applySubForgeSnapshot(applySubForgeSnapshot({}, snapshot, false), nested, false),
+      other,
+      false,
+    )
     expect(Object.keys(dropSubForgeRunsByParent(runs, 'parent'))).toEqual(['child-2'])
   })
 
@@ -165,11 +187,18 @@ describe('subForgeRuns', () => {
   it('freezes running children when the parent plan ends', () => {
     const session = createTestSession()
     const running = { ...snapshot, historical: false }
+    const nested = {
+      ...snapshot,
+      parent_coordinator_id: 'child-1',
+      child_coordinator_id: 'child-1a',
+      historical: false,
+    }
     const done = { ...snapshot, child_coordinator_id: 'done', status: 'succeeded' as const, historical: false }
     session.store.getState().updateCurrentChatStatus({ coordinatorId: 'parent' })
-    session.store.getState().updateState({ subForgeRuns: { 'child-1': running, done } })
+    session.store.getState().updateState({ subForgeRuns: { 'child-1': running, 'child-1a': nested, done } })
     handleTaskPlanEnd(session, false)
     expect(session.store.getState().subForgeRuns['child-1'].historical).toBe(true)
+    expect(session.store.getState().subForgeRuns['child-1a'].historical).toBe(true)
     expect(session.store.getState().subForgeRuns.done).toBe(done)
     expect(freezeRunningSubForgeRuns({ 'child-1': running }, 'other')['child-1'].historical).toBe(false)
   })

@@ -111,6 +111,29 @@ describe('insertSubForgeTasks', () => {
     expect(new Set(ids).size).toBe(ids.length)
   })
 
+  it('真实 task_id 为 n0 时 fallback 不会撞号', () => {
+    const inserted = insertSubForgeTasks(
+      [parentTask()],
+      {
+        'child-1': run({
+          status: 'succeeded',
+          task_tree: {
+            name: 'root',
+            task_id: 'n0',
+            subtasks: [{ name: 'leaf' }, { name: 'n1', task_id: 'n1' }],
+          },
+        }),
+      },
+      'parent',
+      true,
+    )
+    expect(inserted[1].subForgeChildren?.map((item) => item.task_id)).toEqual([
+      'subforge-child-1-n0',
+      'subforge-child-1-n2',
+      'subforge-child-1-n1',
+    ])
+  })
+
   it('非当前会话的 running 不展示为进行中', () => {
     const inserted = insertSubForgeTasks([parentTask()], { 'child-1': run() }, 'parent', false)
     expect(inserted[1].progress).toBe(AITaskStatus.created)
@@ -128,6 +151,33 @@ describe('insertSubForgeTasks', () => {
       true,
     )
     expect(inserted.map((item) => item.name)).toEqual(['华东仓委派', 'a', 'b'])
+  })
+
+  it('弹层内递归挂上以 child coordinator 为父的下一层 Forge', () => {
+    const inserted = insertSubForgeTasks(
+      [parentTask()],
+      {
+        'child-1': run({
+          status: 'succeeded',
+          task_tree: { name: 'inner', task_id: 'inner-1' },
+        }),
+        nested: run({
+          child_coordinator_id: 'child-2',
+          parent_coordinator_id: 'child-1',
+          parent_task_id: 'inner-1',
+          tool_name: 'nested',
+          status: 'succeeded',
+        }),
+      },
+      'parent',
+      true,
+    )
+    expect(inserted.map((item) => item.task_id)).toEqual(['task-east', 'subforge-child-1'])
+    expect(inserted[1].subForgeChildren?.map((item) => item.task_id)).toEqual([
+      'subforge-child-1-inner-1',
+      'subforge-child-2',
+    ])
+    expect(inserted[1].subForgeChildren?.[1]).toMatchObject({ name: 'nested', subForgeHead: false })
   })
 
   it('识别 subforge- 前缀', () => {
