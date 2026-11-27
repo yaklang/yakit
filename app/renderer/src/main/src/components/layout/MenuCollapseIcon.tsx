@@ -1,39 +1,66 @@
-import Icon from '@ant-design/icons'
-import type { CustomIconComponentProps } from '@ant-design/icons/lib/components/Icon'
+import type { SVGProps } from 'react'
+import { motion } from 'motion/react'
 
-type MenuCollapseIconProps = Partial<CustomIconComponentProps> & {
+type MenuCollapseIconProps = Omit<SVGProps<SVGSVGElement>, 'ref'> & {
   size?: number
   color?: string
+  /** true：菜单已收起，显示向下展开箭头 */
+  collapsed?: boolean
+  duration?: number
 }
 
-const MenuCollapseSvg = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20" fill="none">
-    <path d="M2.5 3.33331H17.5M2.5 16.6666H17.5" strokeLinecap="round" strokeLinejoin="round" stroke="currentColor" />
-    <path
-      d="M10 7.5V14.1667M10 7.5C10.4668 7.5 11.339 8.95418 11.6667 9.32292M10 7.5C9.53319 7.5 8.66103 8.95418 8.33334 9.32292"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      stroke="currentColor"
-    />
-  </svg>
-)
+const BARS = {
+  open: 'M2.5 3.333 H17.5 M2.5 16.667 H17.5',
+  collapsed: 'M2.5 3.333 H17.5 M2.5 8.333 H17.5',
+}
 
-export const MenuCollapseIcon = ({ size = 16, color = 'currentColor', style, ...props }: MenuCollapseIconProps) => (
-  <Icon component={MenuCollapseSvg} style={{ fontSize: size, color, ...style }} {...props} />
-)
+const ARROW = {
+  open: 'M10 7.5 L10 14.167 M8.333 9.323 L10 7.5 L11.667 9.323',
+  collapsed: 'M10 10.833 L10 17.5 M8.333 15.833 L10 17.5 L11.667 15.833',
+}
 
-const MenuExpandSvg = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20" fill="none">
-    <path d="M2.5 3.33331H17.5M2.5 8.33331H17.5" strokeLinecap="round" strokeLinejoin="round" stroke="currentColor" />
-    <path
-      d="M9.99998 10.8333V17.5M11.6666 15.8333L9.99998 17.5L8.33331 15.8333"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      stroke="currentColor"
-    />
-  </svg>
-)
+const stroke = {
+  fill: 'none' as const,
+  stroke: 'currentColor',
+  strokeLinecap: 'round' as const,
+  strokeLinejoin: 'round' as const,
+}
 
-export const MenuExpandIcon = ({ size = 16, color = 'currentColor', style, ...props }: MenuCollapseIconProps) => (
-  <Icon component={MenuExpandSvg} style={{ fontSize: size, color, ...style }} {...props} />
-)
+export const MenuCollapseIcon = ({
+  size = 16,
+  color = 'currentColor',
+  collapsed = false,
+  duration = 0.2,
+  style,
+  ...props
+}: MenuCollapseIconProps) => {
+  const state = collapsed ? 'collapsed' : 'open'
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={size}
+      height={size}
+      viewBox="0 0 20 20"
+      fill="none"
+      aria-hidden
+      data-collapsed={collapsed || undefined}
+      style={{ color, display: 'inline-block', verticalAlign: 'middle', ...style }}
+      {...props}
+    >
+      <motion.path
+        {...stroke}
+        variants={{ open: { d: BARS.open }, collapsed: { d: BARS.collapsed } }}
+        initial={false}
+        animate={state}
+        transition={{ duration, ease: 'easeInOut' }}
+      />
+      <motion.path
+        {...stroke}
+        variants={{ open: { d: ARROW.open }, collapsed: { d: ARROW.collapsed } }}
+        initial={false}
+        animate={state}
+        transition={{ duration, ease: 'easeInOut' }}
+      />
+    </svg>
+  )
+}

@@ -5,7 +5,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { AIMilkdownMention } from '../aiMilkdownMention/AIMilkdownMention'
 import { AIMilkdownModeSlash } from '../aiMilkdownModeSlash/AIMilkdownModeSlash'
 import { releaseMilkdownPopup, tryClaimMilkdownPopup } from '../panelMutex'
-import type { AIExecutionStrategy } from '@/pages/ai-re-act/hooks/grpcApi'
 
 const context = vi.hoisted(() => ({
   view: {} as any,
@@ -14,7 +13,6 @@ const context = vi.hoisted(() => ({
   providers: [] as any[],
   planSelected: false,
   onToggleMode: vi.fn(),
-  strategy: {} as AIExecutionStrategy,
 }))
 vi.mock('@milkdown/react', () => ({ useInstance: () => [false, () => ({ action: vi.fn() })] }))
 vi.mock('@prosemirror-adapter/react', () => ({
@@ -112,7 +110,6 @@ vi.mock('@/pages/ai-agent/aiRunModeSelect/useAIRunMode', () => ({
     enablePlan: context.planSelected,
     goalMinIterations: 1,
     maxSubAgents: 1,
-    strategy: context.strategy,
     onToggleMode: context.onToggleMode,
     onSetStrategy: vi.fn(),
     isModeSelected: () => context.planSelected,
@@ -128,7 +125,6 @@ beforeEach(() => {
   context.planSelected = false
   context.onToggleMode.mockClear()
   vi.mocked(callCommand).mockClear()
-  context.strategy = {}
   scrollContainer = document.createElement('div')
   const anchor = document.createElement('div')
   anchor.dataset.aiInputCard = ''
@@ -261,10 +257,7 @@ describe('mention onSelectMany wiring', () => {
   it('混选时插入全部提及、focus 走 onMemfitExtra、Plan 只开一次且不再删触发符', () => {
     context.content = '@'
     const onMemfitExtra = vi.fn()
-    const onModeChangeComplete = vi.fn()
-    const { getByRole } = render(
-      <AIMilkdownMention onMemfitExtra={onMemfitExtra} onModeChangeComplete={onModeChangeComplete} />,
-    )
+    const { getByRole } = render(<AIMilkdownMention onMemfitExtra={onMemfitExtra} />)
     act(() => vi.advanceTimersByTime(250))
 
     fireEvent.click(getByRole('button', { name: 'pick-mixed-many' }))
@@ -283,94 +276,68 @@ describe('mention onSelectMany wiring', () => {
     })
     expect(context.onToggleMode).toHaveBeenCalledOnce()
     expect(context.onToggleMode).toHaveBeenCalledWith('plan')
-    expect(onModeChangeComplete).toHaveBeenCalledOnce()
   })
 })
 
 describe('mention forge template starts plan', () => {
-  it('opens plan when selecting a yak forge and plan is off', () => {
+  it('enables plan when selecting a yak forge and plan is off', () => {
     context.content = '@'
-    const onModeChangeComplete = vi.fn()
-    const { getByRole } = render(<AIMilkdownMention onModeChangeComplete={onModeChangeComplete} />)
+    const { getByRole } = render(<AIMilkdownMention />)
     act(() => vi.advanceTimersByTime(250))
 
     fireEvent.click(getByRole('button', { name: 'pick-forge' }))
 
     expect(context.onToggleMode).toHaveBeenCalledWith('plan')
-    expect(onModeChangeComplete).toHaveBeenCalledOnce()
   })
 
   it('does not start plan for skillmd', () => {
     context.content = '@'
-    const onModeChangeComplete = vi.fn()
-    const { getByRole } = render(<AIMilkdownMention onModeChangeComplete={onModeChangeComplete} />)
+    const { getByRole } = render(<AIMilkdownMention />)
     act(() => vi.advanceTimersByTime(250))
 
     fireEvent.click(getByRole('button', { name: 'pick-skill' }))
 
     expect(context.onToggleMode).not.toHaveBeenCalled()
-    expect(onModeChangeComplete).not.toHaveBeenCalled()
   })
 
   it('does not start plan when plan is already on', () => {
     context.content = '@'
     context.planSelected = true
-    const onModeChangeComplete = vi.fn()
-    const { getByRole } = render(<AIMilkdownMention onModeChangeComplete={onModeChangeComplete} />)
+    const { getByRole } = render(<AIMilkdownMention />)
     act(() => vi.advanceTimersByTime(250))
 
     fireEvent.click(getByRole('button', { name: 'pick-forge' }))
 
     expect(context.onToggleMode).not.toHaveBeenCalled()
-    expect(onModeChangeComplete).not.toHaveBeenCalled()
   })
 })
 
 describe('mode slash settings completion', () => {
-  it.each(['plan', 'multiAgent', 'goal'])('closes / before notifying the %s mode change', (mode) => {
+  it.each(['plan', 'multiAgent', 'goal'])('closes / after confirming %s', (mode) => {
     context.content = '/'
-    const onModeChangeComplete = vi.fn(() => context.providers[0].element.dataset.show)
-    const { getByText, getByRole } = render(<AIMilkdownModeSlash onModeChangeComplete={onModeChangeComplete} />)
+    const { getByText, getByRole } = render(<AIMilkdownModeSlash />)
     act(() => vi.advanceTimersByTime(250))
 
     fireEvent.click(getByText(`AIMilkdownModeSlash.${mode}`))
     if (mode !== 'plan') {
-      expect(onModeChangeComplete).not.toHaveBeenCalled()
       expect(context.providers[0].element.dataset.show).toBe('true')
       if (mode === 'goal') fireEvent.click(getByText('AIMilkdownModeSlash.minIterations'))
       fireEvent.click(getByRole('button', { name: 'confirm' }))
     }
 
-    expect(onModeChangeComplete).toHaveBeenCalledOnce()
-    expect(onModeChangeComplete).toHaveReturnedWith('false')
+    expect(context.providers[0].element.dataset.show).toBe('false')
     expect(tryClaimMilkdownPopup('mention')).toBe(true)
   })
 
-  it('keeps the lower popover closed when the selected mode is already enabled', () => {
+  it('closes / when the selected mode is already enabled', () => {
     context.content = '/'
     context.planSelected = true
-    const onModeChangeComplete = vi.fn()
-    const { getByText } = render(<AIMilkdownModeSlash onModeChangeComplete={onModeChangeComplete} />)
+    const { getByText } = render(<AIMilkdownModeSlash />)
     act(() => vi.advanceTimersByTime(250))
 
     fireEvent.click(getByText('AIMilkdownModeSlash.plan'))
 
     expect(context.providers[0].element.dataset.show).toBe('false')
-    expect(onModeChangeComplete).not.toHaveBeenCalled()
-  })
-
-  it('keeps the lower popover closed when the strategy is confirmed without changes', () => {
-    context.content = '/'
-    context.strategy = { EnableMultiAgent: true, MaxSubAgents: 1 }
-    const onModeChangeComplete = vi.fn()
-    const { getByText, getByRole } = render(<AIMilkdownModeSlash onModeChangeComplete={onModeChangeComplete} />)
-    act(() => vi.advanceTimersByTime(250))
-
-    fireEvent.click(getByText('AIMilkdownModeSlash.multiAgent'))
-    fireEvent.click(getByRole('button', { name: 'confirm' }))
-
-    expect(context.providers[0].element.dataset.show).toBe('false')
-    expect(onModeChangeComplete).not.toHaveBeenCalled()
   })
 })
 

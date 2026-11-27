@@ -56,7 +56,7 @@ import { useMenuHeight } from '@/store/menuHeight'
 import emiter from '@/utils/eventBus/eventBus'
 import type { RemoteLinkInfo } from './RemoteEngine/RemoteEngineType'
 import { CheckCircleSolid, HomeSolid, StopSolid } from '@yakit-libs/yakit-ui-icons/solid'
-import { MenuCollapseIcon, MenuExpandIcon } from './MenuCollapseIcon'
+import { MenuCollapseIcon } from './MenuCollapseIcon'
 import { MENU_VISIBILITY_GUIDE_HEADER_TARGET, MenuVisibilityGuide } from './menuVisibilityGuide/MenuVisibilityGuide'
 import { setNowProjectDescription } from '@/pages/globalVariable'
 import { handleAIConfig, apiGetGlobalNetworkConfig, apiSetGlobalNetworkConfig } from '@/pages/spaceEngine/utils'
@@ -1753,7 +1753,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 }}
               >
                 <span className={styles['park-above-icon-text']}>{t('UILayout.menu')}</span>
-                {isMenuVisible ? <MenuCollapseIcon size={20} /> : <MenuExpandIcon size={20} />}
+                <MenuCollapseIcon size={20} collapsed={!isMenuVisible} />
               </div>
             </Tooltip>
           </YakitSpin>

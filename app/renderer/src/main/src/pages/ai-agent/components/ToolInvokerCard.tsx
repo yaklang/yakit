@@ -28,7 +28,7 @@ import {
 } from '@yakit-libs/yakit-ui-icons/outline'
 
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { Divider, Tooltip } from 'antd'
+import { Tooltip } from 'antd'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { formatTimestamp } from '@/utils/timeUtil'
 import { OperationCardFooter } from './OperationCardFooter/OperationCardFooter'
@@ -333,7 +333,6 @@ const ToolStdoutCard: React.FC<ToolStdoutCardProps> = memo((props) => {
                 e.stopPropagation()
                 expandToggle()
               }}
-              className={styles['stdout-expand-btn']}
             />
           </Tooltip>
         </div>
@@ -520,17 +519,14 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
       titleMore={
         <div className={styles['tool-invoker-card-extra']}>
           {!!riskFlowDataCount && (
-            <>
-              <label
-                onClick={(e) => {
-                  e.stopPropagation()
-                  switchAIActTab(AITabsEnum.Risk)
-                }}
-              >
-                {t('ToolInvokerCard.relatedRisks')} <span>{riskFlowDataCount}</span>
-              </label>
-              <Divider type="vertical" />
-            </>
+            <label
+              onClick={(e) => {
+                e.stopPropagation()
+                switchAIActTab(AITabsEnum.Risk)
+              }}
+            >
+              {t('ToolInvokerCard.relatedRisks')} <span>{riskFlowDataCount}</span>
+            </label>
           )}
           {!!httpFlowDataCount && (
             <label
@@ -546,7 +542,8 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
             <Tooltip title={t('ToolInvokerCard.refreshCodeBlockData')}>
               <YakitButton
                 size="small"
-                type="text"
+                type="secondary2"
+                className={styles['header-icon-btn']}
                 icon={<RefreshOutlined color="currentColor" />}
                 onClick={(e) => {
                   e.stopPropagation()
@@ -559,7 +556,7 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
           <Tooltip title={expand ? '收起' : '展开'}>
             <YakitButton
               size="small"
-              type="text"
+              type="secondary2"
               icon={
                 expand ? (
                   <ChevronsDownUpOutlined color="currentColor" />
@@ -567,11 +564,11 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
                   <ChevronsUpDownOutlined color="currentColor" />
                 )
               }
+              className={styles['header-icon-btn']}
               onClick={(e) => {
                 e.stopPropagation()
                 expandToggle()
               }}
-              className={styles['expand-btn']}
             />
           </Tooltip>
         </div>
