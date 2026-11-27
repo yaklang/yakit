@@ -1,3 +1,4 @@
+import { applySubForgeSnapshot, dropSubForgeRunsByParent } from './subForgeTaskTree'
 import type { AIAgentChatMetaData } from '@/pages/ai-agent/type/aiChat'
 import type { AIMessageHandler } from '../type'
 import { AIInputEventSyncTypeEnum, AINotifyType, AITaskStatus } from '../grpcApi'
@@ -266,6 +267,7 @@ const handleReactTaskDequeue: AIMessageHandler = (requestInfo) => {
     rawData.taskDetailsMap.set(nextTaskId, nextDetails)
     store.getState().updateStateCount('taskDetailsUpdate')
     store.getState().updateStateCount('chatTodoListUpdate')
+    const previousCoordinatorId = store.getState().currentChatStatus.coordinatorId
     store.getState().updateState({
       pendingReply: false,
       currentChatStatus: {
@@ -275,9 +277,11 @@ const handleReactTaskDequeue: AIMessageHandler = (requestInfo) => {
       },
       currentLoadingTitle: { casualTitle: tAgent('AIChatLoading.processingRequest'), planTitle: '' },
       focusMode: data.focus_mode ? data.focus_mode : '',
+      currentPlan: cloneDeep(DefaultCurrentExecTaskTree),
+      ...(previousCoordinatorId
+        ? { subForgeRuns: dropSubForgeRunsByParent(store.getState().subForgeRuns, previousCoordinatorId) }
+        : null),
     })
-    // 重置当前任务树详情
-    store.getState().updateState({ currentPlan: cloneDeep(DefaultCurrentExecTaskTree) })
     // 刷新历史任务树
     sendRequest({ IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN_EXEC_TASKS })
   }
@@ -383,6 +387,11 @@ const handlePlanExecTasks: AIMessageHandler = (request) => {
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const list = JSON.parse(ipcContent) as AIAgentGrpcApi.PlanHistoryList
   try {
+    let runs = store.getState().subForgeRuns
+    for (const snapshot of list.sub_forge_task_trees ?? []) {
+      if (snapshot?.child_coordinator_id) runs = applySubForgeSnapshot(runs, snapshot, true)
+    }
+    store.getState().updateState({ subForgeRuns: runs })
     const arr = cloneDeep(list.records)
     if (!arr || arr.length === 0) {
       store.getState().updateState({
@@ -404,7 +413,11 @@ const handlePlanExecTasks: AIMessageHandler = (request) => {
     store.getState().updateState({
       planHistoryList: {
         ...list,
-        records: newArr.filter((item) => item.task_progress.phase !== 'Completed'),
+        records: newArr.filter(
+          (item) =>
+            item.task_progress.phase !== 'Completed' ||
+            Object.values(runs).some((run) => run.parent_coordinator_id === item.coordinator_id),
+        ),
       },
       planHistoryCount: newArr.length,
     })

@@ -98,7 +98,8 @@
         border-right: 4px solid var(--bg-hover-color);
       }
       .node-title .node-extra {
-        .info-icon {
+        .info-icon,
+        .sub-forge-chevron {
           display: block;
         }
       }
@@ -129,7 +130,8 @@
         display: flex;
         align-items: center;
         gap: 4px;
-        .info-icon {
+        .info-icon,
+        .sub-forge-chevron {
           display: none;
         }
       }
@@ -191,16 +193,14 @@
     --text-color: var(--Colors-Use-Neutral-Text-2-Primary);
     --bg-hover-color: var(--Colors-Use-Neutral-Bg-Hover);
   }
+  .sub-forge-card {
+    cursor: pointer;
+  }
 
   .node-icon-backslash {
     &::before {
-      @include line(-24deg);
+      @include line(-30deg);
       top: -17px;
-      left: 0;
-    }
-
-    &:has(+ *:not(.node-wrapper-default))::before {
-      transform: rotate(-30deg);
       left: -3px;
     }
   }
@@ -209,12 +209,8 @@
       background-color: transparent;
     }
     &::after {
-      @include line();
+      @include line(30deg);
       top: 19px;
-      left: 0;
-    }
-    &:has(+ *:not(.node-wrapper-default))::after {
-      transform: rotate(30deg);
       left: -3px;
     }
   }
@@ -342,6 +338,14 @@
       background: transparent;
     }
   }
+}
+
+.sub-forge-tree {
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden auto;
 }
 
 .depends-on-popover {

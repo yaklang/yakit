@@ -1,5 +1,6 @@
 import type { StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
 import type { AIAgentGrpcApi, AIOutputEvent, AITaskStatusType, AIOutputI18n } from './grpcApi'
+import type { SubForgeRun } from './grpcStreamHandler/subForgeTaskTree'
 import type { CustomPluginExecuteFormValue } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
 import type { QuestionRequest, UISubmission } from '../interactive-ui/types'
 import type { UIDiagnostic } from '../interactive-ui/validate'
@@ -69,6 +70,10 @@ export interface AITaskInfoProps extends Omit<AIAgentGrpcApi.PlanTask, 'subtasks
   level: number
   /** 是否是叶子任务节点 */
   isLeaf: boolean
+  /** 子 Forge 根节点，点击后用 Popover 展示内部任务 */
+  subForgeHead?: boolean
+  /** 子 Forge 内部任务，不插入主树 */
+  subForgeChildren?: AITaskInfoProps[]
 }
 
 /** UI：待办清单卡片数据*/
@@ -730,6 +735,7 @@ export interface ChatStoreState {
   /** 任务详情 Map 写入后触发的更新计数 */
   taskDetailsUpdate: number
   currentPlan: CurrentExecTaskTree
+  subForgeRuns: Record<string, SubForgeRun>
 
   /**
    * 虚拟列表卡片展开态（纯 UI，不落库）

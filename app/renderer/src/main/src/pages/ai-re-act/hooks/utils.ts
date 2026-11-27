@@ -12,6 +12,7 @@ import { DefaultTaskPlanEndGate } from './defaultConstant'
 import type { ChatMultiSessionController } from './ChatMultiSessionController'
 import { persistIndependentItem } from './persist/contentPersistHelper'
 import type { AIAgentChatMetaData } from '@/pages/ai-agent/type/aiChat'
+import { freezeRunningSubForgeRuns } from './grpcStreamHandler/subForgeTaskTree'
 
 /**
  * 任务节点内的数据生成任务节点ID
@@ -90,7 +91,11 @@ export const handleTaskPlanEnd: (
     if (item.progress === AITaskStatus.inProgress) item.progress = AITaskStatus.error
     return item
   })
-  store.getState().updateState({ currentPlan: newPlanTree })
+  const { subForgeRuns, currentChatStatus } = store.getState()
+  store.getState().updateState({
+    currentPlan: newPlanTree,
+    subForgeRuns: freezeRunningSubForgeRuns(subForgeRuns, isChatEnd ? undefined : currentChatStatus.coordinatorId),
+  })
 
   // end 只清展示文案，保留 taskID / coordinatorId / status（status 由 settle 写）
   store.getState().updateCurrentLoadingTitle({ planTitle: '已结束' })

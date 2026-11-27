@@ -1,0 +1,33 @@
+.sub-forge-popover {
+  :global {
+    .ant-popover-inner {
+      padding: 8px 12px;
+      border-radius: 8px;
+      width: 100%;
+      font-size: 12px;
+      line-height: 16px;
+    }
+    .ant-popover-inner-content {
+      width: 100%;
+      font-size: 12px;
+      line-height: 16px;
+    }
+  }
+}
+
+.sub-forge-content {
+  display: flex;
+  flex-direction: column;
+  max-height: min(420px, 70vh);
+}
+
+.sub-forge-title {
+  box-sizing: border-box;
+  flex: none;
+  display: flex;
+  align-items: center;
+  height: 32px;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+}
