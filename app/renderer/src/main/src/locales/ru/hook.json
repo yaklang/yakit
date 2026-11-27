@@ -1,0 +1,10 @@
+{
+  "useDownloadUrlToLocal": {
+    "cancelDownloadFailed": "Не удалось отменить загрузку: {{error}}"
+  },
+  "useUploadOSSHooks": {
+    "uploadFailed": "Не удалось загрузить проект: {{error}}",
+    "notepadFiledHashRequired": "Для типа notepad требуется filedHash",
+    "cancelUploadFailed": "Не удалось отменить загрузку: {{error}}"
+  }
+}

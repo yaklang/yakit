@@ -1,0 +1,128 @@
+{
+  "UploadStatusInfo": {
+    "progress": "Ход выполнения",
+    "elapsedTime": "Прошедшее время"
+  },
+  "CreateDictionaries": {
+    "dictionaryNameExists": "Имя словаря уже существует",
+    "uploadHintLargeFile": "Поддерживается загрузка больших файлов (поддерживается тип файла txt)",
+    "incorrectFormat": "Файл {{name}} не является файлом txt или csv. Загрузите файл в правильном формате!",
+    "alreadySelected": "Путь {{path}} уже выбран",
+    "storageMethod": "Выберите способ хранения по необходимости; это не повлияет на использование:",
+    "fileStorage": "Хранение в файле: словарь сохраняется локально в виде файла; подсчёт совпадений не поддерживается, скорость загрузки выше.",
+    "databaseStorage": "Хранение в базе данных: данные словаря считываются и сохраняются в базе данных; поддерживается подсчёт совпадений, поиск удобнее.",
+    "largeFileStorageMethod": "Хранение больших файлов: если размер загружаемого файла превышает 20 МБ, можно использовать специальное хранилище больших файлов. Поддерживаются только файлы txt; хранение удобнее.",
+    "dictionaryName": "Имя словаря",
+    "uploadFile": "Загрузить файл",
+    "manualInput": "Ручной ввод",
+    "largeFileUpload": "Загрузка большого файла",
+    "uploadHint": "Перетащите файлы сюда или нажмите, чтобы импортировать",
+    "uploadHintFolder": "Поддерживается пакетная загрузка папок (поддерживаются типы файлов txt/csv)",
+    "largeFileOnlyTxt": "Для хранения больших файлов поддерживаются только файлы txt",
+    "saveToFile": "Сохранить в файл",
+    "largeFileStorage": "Хранение больших файлов",
+    "importing": "Выполняется импорт...",
+    "deduplicating": "Удаление дубликатов, подождите..."
+  },
+  "ReadOnlyNewPayload": {
+    "selected": "Выбрано:",
+    "totalCheckedItems": "{{count}} элементов",
+    "insert": "Вставить",
+    "supportInsertFileForFuzz": "Поддерживается вставка файлов для фаззинг-тестирования",
+    "pleaseSelectDictionaryOrFolder": "Выберите полезную нагрузку или папку для вставки"
+  },
+  "NewPayloadLocalList": {
+    "selectDictionaryToInsert": "Выберите полезную нагрузку, которую хотите вставить",
+    "goToDictionaryManagement": "Перейти к управлению полезными нагрузками",
+    "updateFailed": "Не удалось обновить данные: {{error}}",
+    "folderExists": "Папка уже существует",
+    "deleting": "Удаление...",
+    "renaming": "Переименование...",
+    "deleteDictionary": "Удалить полезную нагрузку",
+    "deleteDictionaryConfirm": "Вы уверены, что хотите удалить эту полезную нагрузку?",
+    "deleteFolder": "Удалить папку",
+    "deleteFolderConfirm": "Вы уверены, что хотите удалить эту папку и все её полезные нагрузки?",
+    "localDictionary": "Локальная полезная нагрузка",
+    "onlineDictionary": "Сетевая полезная нагрузка",
+    "batchExportConfirm": "Вы уверены, что хотите экспортировать выбранные полезные нагрузки пакетом?",
+    "batchExporting": "Пакетный экспорт...",
+    "dictionaryDetails": "Сведения о полезной нагрузке",
+    "exitEditConfirm": "Вы уверены, что хотите выйти из режима редактирования?",
+    "save": "Сохранить",
+    "exit": "Выйти",
+    "syncToOnline": "Синхронизировать с сетью",
+    "syncing": "Синхронизация полезной нагрузки...",
+    "syncFailed": "Сбой синхронизации",
+    "syncSuccess": "Синхронизация выполнена",
+    "updateSuccess": "Обновление выполнено",
+    "dictionaryManagement": "Управление полезными нагрузками",
+    "pleaseSelectExportContent": "Выберите содержимое для экспорта",
+    "newDictionary": "Новая полезная нагрузка",
+    "unnamedDetection": "Обнаружение без названия"
+  },
+  "FolderComponent": {
+    "createFolderSuccess": "Папка успешно создана",
+    "createFolderFailed": "Не удалось создать папку: {{error}}",
+    "nameNotAllowSpecial": "В имени запрещены специальные символы /*,",
+    "folderNameExistsCannotCreate": "Папка с таким именем уже существует, создать её нельзя",
+    "folderNameExistsCannotEdit": "Папка с таким именем уже существует, изменить имя нельзя",
+    "copyFuzztag": "Копировать Fuzztag",
+    "addChildPayload": "Добавить дочернюю полезную нагрузку"
+  },
+  "DeleteConfirm": {
+    "deleteConfirmTitle": "Вы уверены, что хотите удалить?",
+    "deleteConfirmContent": "После подтверждения элемент будет удалён без возможности восстановления."
+  },
+  "FileComponent": {
+    "extendDictionary": "Расширить полезную нагрузку",
+    "exportDictionary": "Экспортировать полезную нагрузку",
+    "toDatabase": "Преобразовать в хранилище базы данных",
+    "extendTo": "Расширить до {{name}}",
+    "toDatabaseWaiting": "Преобразование в хранилище базы данных, подождите..."
+  },
+  "MoveOrCopyPayload": {
+    "getDataFailed": "Не удалось получить данные: {{error}}",
+    "pleaseSelect": "Выберите..."
+  },
+  "PayloadLocalContent": {
+    "fuzzModuleRenderHint": "Можно отобразить с помощью модуля fuzz {{x(payload_name)}}",
+    "contentCannotBeEmpty": "Содержимое не может быть пустым",
+    "editorDataGetFailed": "Не удалось получить данные редактора",
+    "pleaseSelectDictionary": "Выберите словарь",
+    "operationFailed": "Не удалось выполнить операцию со словарём: {{error}}",
+    "backupToOther": "Резервное копирование в другой словарь",
+    "moveToOther": "Переместить в другой словарь",
+    "extendTo": "Расширить до {{name}}",
+    "extend": "Расширить",
+    "autoRemoveDuplicate": "Автоматически удалять дубликаты",
+    "autoRemoveDuplicateWaiting": "Автоматическое удаление дубликатов, подождите..."
+  },
+  "PayloadOnlineContent": {
+    "editorDataGetFailed": "Не удалось получить данные редактора",
+    "hugeDictionary": "Большой словарь"
+  },
+  "ExportByPayloadGrpc": {
+    "selectFolder": "Выберите папку",
+    "exportWaiting": "Выполняется экспорт, подождите..."
+  },
+  "UploadOrDownloadByPayloadGrpc": {
+    "waiting": "Выполняется операция «{{type}}», подождите..."
+  },
+  "NewPayload": {
+    "getDictionaryListFailed": "Не удалось получить список словарей: {{error}}",
+    "migrateData": "Перенос данных",
+    "migrateDataContent": "Из-за переработки функции полезных нагрузок необходимо нажать «ОК», чтобы перенести старые данные. Перенос данных не приведёт к их потере.",
+    "engineVersionTooLow": "Слишком низкая версия движка",
+    "engineVersionTooLowContent": "Текущая версия движка слишком старая для использования новой системы полезных нагрузок. Обновите движок до версии v1.2.9-sp3 или выше.",
+    "migratingDataWaiting": "Перенос данных, подождите...",
+    "noPayloadDictionary": "Нет словаря полезных нагрузок",
+    "newDictionary": "Новая полезная нагрузка",
+    "selectDictionaryHint": "Нажмите на список слева, чтобы выбрать словарь для просмотра"
+  },
+  "NewPayloadTable": {
+    "dictionaryContent": "Содержимое полезной нагрузки",
+    "addHitCountFieldNotice": "Добавлено поле количества совпадений. Чем выше количество совпадений, тем выше приоритет при переборе.",
+    "hitCount": "Количество совпадений",
+    "recordCount": "Всего записей: {{i}}"
+  }
+}

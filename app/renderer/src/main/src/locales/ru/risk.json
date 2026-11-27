@@ -1,0 +1,165 @@
+{
+  "RiskQuery": {
+    "advanced_query": "Расширенный запрос"
+  },
+  "IPList": {
+    "ipStatistics": "Статистика IP-адресов"
+  },
+  "VulnerabilityLevel": {
+    "vulnerabilityLevel": "Уровень критичности уязвимости"
+  },
+  "VulnerabilityType": {
+    "top10VulnerabilityTypes": "Топ-10 типов уязвимостей",
+    "resetTipAfterManualSelection": "После ручного выбора всех типов уязвимостей нажмите «Сбросить», чтобы просмотреть все данные"
+  },
+  "YakitRiskTable": {
+    "batch_modify_mark": "Изменить метки",
+    "delete_selected_risks": "Удалить выбранные риски",
+    "confirm_clear_filtered_risks": "Очистить все уязвимости и риски, соответствующие текущим фильтрам? Это действие нельзя отменить.",
+    "batch_mark_hint": "Применить одинаковые метки к {{count}} рискам. Пустые необязательные поля очистят существующие значения.",
+    "title": "Название",
+    "type": "Тип",
+    "level": "Уровень",
+    "disposal_status": "Статус устранения",
+    "discovery_time": "Время обнаружения",
+    "port_colon": "Порт",
+    "vulnerability_description": "Описание уязвимости",
+    "solution": "Решение",
+    "source": "Источник",
+    "reverse_token": "Токен обратного подключения",
+    "parameter": "Параметр",
+    "retest": "Повторное тестирование",
+    "false_positive_feedback": "Сообщить о ложном срабатывании",
+    "please_login_first": "Сначала войдите в систему",
+    "feedback_success": "Отзыв успешно отправлен",
+    "vulnerability_not_scanned_by_plugin": "Эта уязвимость не была обнаружена плагином",
+    "select_export_fields": "Выбрать поля для экспорта",
+    "export_html_failed": "Не удалось экспортировать HTML:",
+    "expand_filter": "Развернуть фильтр",
+    "all": "Все",
+    "unread": "Непрочитанные",
+    "mark_all_as_read": "Отметить всё как прочитанное",
+    "export_as": "Экспортировать как...",
+    "confirm_delete_all_risks": "Вы уверены, что хотите удалить все уязвимости и риски? Это действие нельзя отменить.",
+    "confirm_delete_selected_risks": "Вы уверены, что хотите удалить выбранные уязвимости и риски? Это действие нельзя отменить.",
+    "false_positive_feedback_reminder": "Напоминание об отзыве о ложном срабатывании",
+    "confirm_feedback_prompt": "После подтверждения отзыва вся информация об уязвимости будет отправлена на серверную часть. Разработчики используют эти сведения, чтобы исправить ложное срабатывание. Подтвердить отправку отзыва?",
+    "export_csv": "Экспортировать CSV",
+    "export_html": "Экспортировать HTML",
+    "vulnerability_detection": "Обнаружение уязвимостей",
+    "RowContextMenu": {
+      "delete_duplicate_title_data": "Удалить данные с дублирующимися заголовками",
+      "openInNewWindow": "Открыть в новом окне"
+    },
+    "queryRisksTotalFailed": "Не удалось получить общее количество в apiQueryRisksTotalByRuntimeId: ",
+    "queryRiskTagsFailed": "Ошибка запроса QueryRiskTags: ",
+    "queryAvailableRiskTypeFailed": "Ошибка запроса QueryAvailableRiskType: ",
+    "cvss_score": "Оценка CVSS",
+    "enter_cvss": "Введите оценку CVSS",
+    "select_disposal_status": "Выберите статус обработки"
+  },
+  "YakitRiskEditForm": {
+    "risk_type": "Тип проблемы",
+    "risk_type_required": "Выберите или введите тип проблемы",
+    "cvss_score": "Оценка CVSS",
+    "cvss_required": "Введите оценку CVSS",
+    "cvss_range": "Оценка CVSS должна быть в диапазоне от 0,0 до 10,0",
+    "level": "Уровень",
+    "disposal_status": "Статус устранения",
+    "disposal_required": "Выберите статус обработки",
+    "disposal_placeholder": "Выберите или введите статус обработки",
+    "pending_verify": "Ожидает проверки",
+    "confirmed": "Подтверждено",
+    "repaired": "Исправлено",
+    "false_positive": "Ложное срабатывание",
+    "closed": "Закрыто",
+    "verifier": "Проверяющий",
+    "verifier_required": "Выберите проверяющего",
+    "verifier_placeholder": "Найдите и выберите проверяющего",
+    "repair_time": "Время исправления",
+    "repair_time_required": "Выберите время исправления",
+    "repair_suggestion": "Рекомендация по исправлению",
+    "repair_suggestion_placeholder": "Введите рекомендацию по исправлению",
+    "disposal_note": "Примечание об устранении",
+    "disposal_note_placeholder": "Введите примечание об устранении"
+  },
+  "YakitRiskSelectTag": {
+    "false_positive": "Ложное срабатывание",
+    "ignore": "Игнорировать",
+    "processed": "Обработано",
+    "pending": "Ожидает выполнения"
+  },
+  "YakitRiskDetails": {
+    "vulnerability_details": "Подробные сведения об уязвимости",
+    "data_packet": "Пакет данных",
+    "disposal_log": "Журнал обработки",
+    "dispose_risk": "Обработать риск",
+    "port_colon": "Порт:",
+    "discovery_time_colon": "Время обнаружения:",
+    "no_data_packet": "Пакет данных отсутствует",
+    "retest": "Повторное тестирование",
+    "type": "Тип",
+    "source": "Источник",
+    "vulnerability_detection": "Обнаружение уязвимостей",
+    "reverse_token": "Токен обратного подключения",
+    "verification_status": "Статус проверки",
+    "verified": "Проверено",
+    "not_verified": "Не проверено",
+    "vulnerability_description": "Описание уязвимости",
+    "solution": "Решение",
+    "details": "Подробности",
+    "originReq": "Исходный запрос",
+    "verificationRecord": "Запись проверки"
+  },
+  "YakitRiskDetailContent": {
+    "related_code_snippet": "Связанный фрагмент кода"
+  },
+  "YakitCodeScanRiskDetails": {
+    "project": "Проект:",
+    "discovery_time_colon": "Время обнаружения:",
+    "open_in_code_audit": "Открыть в аудите кода",
+    "related_data_deleted": "Связанные данные удалены"
+  },
+  "AuditResultDescribe": {
+    "vulnerability_detection": "Обнаружение уязвимостей",
+    "type": "Тип",
+    "scan_rules": "Правила сканирования",
+    "vulnerability_description": "Описание уязвимости",
+    "solution": "Решение"
+  },
+  "RightBugAuditResultHeader": {
+    "discovery_time_colon": "Время обнаружения:",
+    "project": "Проект:"
+  },
+  "RightBugAuditResult": {
+    "vulnerability_detection": "Обнаружение уязвимостей",
+    "type": "Тип",
+    "scan_rules": "Правила сканирования",
+    "vulnerability_description": "Описание уязвимости",
+    "solution": "Решение"
+  },
+  "AuditResultCollapse": {
+    "open_in_code_audit": "Открыть в аудите кода"
+  },
+  "RiskDisposalLog": {
+    "please_login": "Войдите в систему",
+    "no_access_title": "Нет прав доступа",
+    "no_access_desc": "Войдите в систему, чтобы открыть эту страницу",
+    "empty": "Журналов устранения пока нет",
+    "dispose_risk": "Обработать риск",
+    "system": "Система",
+    "publish_comment": "Комментарий опубликован",
+    "reply_comment": "Ответ на комментарий",
+    "reply": "Ответить",
+    "download": "Скачать",
+    "repair_time": "Время исправления: ",
+    "repair_department": "Отдел исправления: ",
+    "repairer": "Исполнитель исправления: ",
+    "reply_prefix": "Ответ пользователю {{user}}: {{content}}",
+    "image_count": " [изображения] * {{count}}",
+    "fetch_logs_failed": "Не удалось получить журналы обработки",
+    "fetch_flow_logs_failed": "Не удалось получить журналы обработки потока",
+    "publish_comment_failed": "Не удалось опубликовать комментарий",
+    "delete_comment_failed": "Не удалось удалить комментарий"
+  }
+}

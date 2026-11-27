@@ -1,0 +1,14 @@
+{
+  "ICMPSizeLoggerPage": {
+    "description": "Определять обратное соединение ICMP, отправляя ping-пакеты заданной длины",
+    "setPingSize": "Задать размер пакета Ping:",
+    "randomLength": "Создать допустимую длину",
+    "pingLength": "Длина ICMP/Ping",
+    "remoteIp": "Удаленный IP-адрес",
+    "triggerTime": "Время срабатывания",
+    "summary": "ICMP Size Logger — это регистратор ICMP, который определяет обратные соединения ICMP по размеру ping-пакета:",
+    "windowsCommand": "В Windows используйте",
+    "macCommand": "В macOS/Linux/*nix используйте",
+    "command": "команду"
+  }
+}

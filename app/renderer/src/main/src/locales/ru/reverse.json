@@ -1,0 +1,37 @@
+{
+  "NewReverseServerPage": {
+    "startFacadeServer": "Запустить FacadeServer",
+    "startFacadeServerFailed": "Не удалось запустить FacadeServer: ",
+    "reverseServer": "Обратный сервер",
+    "reverseServerSubTitle": "Используйте технологию мультиплексирования протоколов и портов, чтобы одновременно обеспечивать обратное подключение по HTTP / RMI / HTTPS и другим протоколам через один порт"
+  },
+  "SettingReverseServer": {
+    "getRemoteAddrFailed": "Не удалось получить удалённый адрес: ",
+    "enablePublicTunnel": "Включить общедоступный туннель",
+    "publicTunnelHelp": "Установите основной движок yak на собственный сервер и выполните команду, чтобы",
+    "yakBridgeService": "Запустить общедоступную службу Yak Bridge",
+    "yakVersionRequirement": "yak version >= v1.0.11-sp9",
+    "publicBridgeAddr": "Адрес общедоступного моста",
+    "password": "Пароль",
+    "reverseAddr": "Адрес обратного подключения",
+    "reversePort": "Порт обратного подключения",
+    "startFacadeServerBtn": "Запустить FacadeServer"
+  },
+  "StartReverseServer": {
+    "applyToFacadeServerSuccess": "Успешно применено к FacadeServer",
+    "applyToFacadeServerFailed": "Не удалось применить к FacadeServer",
+    "payloadConfig": "Конфигурация полезной нагрузки: ",
+    "stopReverse": "Остановить обратное подключение",
+    "httpReverseAddr": "Адрес обратного подключения HTTP",
+    "rmiReverseAddr": "Адрес обратного подключения RMI",
+    "ldapReverseAddr": "Адрес обратного подключения LDAP"
+  },
+  "ReverseTable": {
+    "onlyShowToken": "Только токен",
+    "reverseType": "Тип обратного подключения",
+    "connectionSource": "Источник подключения",
+    "response": "Ответ",
+    "rmiConnection": "Подключение RMI",
+    "rmiHandshake": "Рукопожатие RMI"
+  }
+}

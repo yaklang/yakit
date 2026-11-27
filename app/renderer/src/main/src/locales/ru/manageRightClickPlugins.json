@@ -1,0 +1,66 @@
+{
+  "ManageRightClickPlugins": {
+    "editRightClickPlugins": "Изменить плагины контекстного меню",
+    "pluginExtensionSingle": "Плагин контекстного меню истории (один элемент)",
+    "pluginExtensionMultiple": "Плагин контекстного меню истории (несколько элементов)",
+    "packetContextMenu": "Плагин контекстного меню пакета",
+    "addedPluginsCount": "Добавлено {{count}} / {{UpperLimit}}",
+    "clearConfirm": "Очистить все добавленные плагины для текущей вкладки?",
+    "noPluginAdded": "Плагины не добавлены",
+    "addPluginHint": "Перетащите плагины справа или нажмите «Добавить»",
+    "rightClickPlugins": "Плагины контекстного меню",
+    "rightHelp": "Перетащите плагины или нажмите «Добавить», чтобы поместить их в центральный список",
+    "noAvailablePlugins": "Нет доступных плагинов",
+    "getPlugin": "Получить плагины",
+    "maxAddLimit": "Можно добавить не более {{UpperLimit}} плагинов",
+    "added": "Добавлено",
+    "searchPlaceholder": "Поиск по названию плагина",
+    "noMatchedPlugins": "Подходящих плагинов не найдено",
+    "resultModeLabel": "Отображение результата",
+    "resultModeDialog": "Всплывающее окно",
+    "resultModeDrawer": "Правая панель",
+    "resultModeTab": "Новая вкладка",
+    "shortcutLabel": "Сочетание клавиш",
+    "setShortcutMenu": "Задать сочетание клавиш",
+    "setResultModeMenu": "Задать способ отображения результата",
+    "pluginShortcutConflict": "Конфликт плагинов: {{name}} — это сочетание клавиш уже используется другим плагином в том же сценарии",
+    "systemShortcutConflict": "Конфликт системных сочетаний клавиш: {{name}} — задайте другое сочетание, чтобы избежать конфликта с существующими сочетаниями"
+  },
+  "ContextMenuExecutionHost": {
+    "executeFailed": "Не удалось выполнить плагин контекстного меню: {{error}}",
+    "saveParamsFailed": "Не удалось сохранить параметры плагина контекстного меню: {{error}}",
+    "paramsModalTitle": "Параметры плагина контекстного меню"
+  },
+  "ContextMenuActionExecution": {
+    "pluginFallbackName": "Плагин контекстного меню",
+    "executionExpiredEmpty": "Срок действия контекста выполнения истек. Запустите действие повторно из контекстного меню.",
+    "refreshPluginData": "Обновить данные плагина",
+    "extraParams": "Дополнительные параметры",
+    "applyChanges": "Применить изменения",
+    "packetModifyTitle": "Плагин вернул изменения пакета",
+    "packetModifyDesc": "Перед применением проверяется версия пакета, чтобы не перезаписать изменения, сделанные после вызова.",
+    "packetAppliedNotify": "Изменения пакета отправлены в исходный редактор",
+    "packetPageClosed": "Исходная страница пакета закрыта; применить изменения невозможно",
+    "sourceCodeNotFound": "Исходный код плагина не найден",
+    "requiredField": "Поле ${label} обязательно для заполнения",
+    "sourceTab": "Источник"
+  },
+  "pluginEditor": {
+    "contextMenuSaveBeforeRun": "Сначала сохраните плагины контекстного меню, а затем запускайте их в соответствующем сценарии истории или HTTP-пакета",
+    "contextMenuRunFromScene": "Плагины контекстного меню необходимо запускать в соответствующем сценарии истории или HTTP-пакета",
+    "contextMenuSaveAndTrigger": "После сохранения плагина запустите его через контекстное меню истории или HTTP-пакета",
+    "contextMenuSaveAndTriggerShort": "Сохранить и запустить из контекстного меню",
+    "executeFromRightClickMenu": "Запустить из контекстного меню",
+    "contextMenuEnableAndTrigger": "После сохранения и включения плагина в разделе управления плагинами контекстного меню запустите его в соответствующем сценарии истории или HTTP-пакета"
+  },
+  "grpc": {
+    "queryContextMenuActionsFailed": "Не удалось запросить плагины контекстного меню: {{error}}",
+    "setContextMenuActionBindingFailed": "Не удалось сохранить привязку плагина контекстного меню: {{error}}",
+    "cancelContextMenuActionFailed": "Не удалось отменить плагин контекстного меню: {{error}}",
+    "fetchPluginDetailFailed": "Не удалось получить сведения о локальном плагине: {{error}}",
+    "fetchPluginDetailFailedNoUUID": "UUID плагина не может быть пустым"
+  },
+  "utils": {
+    "engineVersionTooLow": "Версия движка слишком низкая. Обновите ее до версии выше {{version}}"
+  }
+}
