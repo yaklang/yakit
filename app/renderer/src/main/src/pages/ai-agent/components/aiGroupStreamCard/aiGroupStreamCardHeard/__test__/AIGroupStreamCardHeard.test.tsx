@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { createEvent, fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import AIGroupStreamCardHeard, { isThoughtHeaderStreaming } from '../AIGroupStreamCardHeard'
 import { AIChatQSDataTypeEnum, type ChatStream } from '@/pages/ai-re-act/hooks/aiRender'
@@ -119,6 +119,26 @@ describe('AIGroupStreamCardHeard', () => {
       />,
     )
     expect(screen.getByRole('button', { name: /思考/ })).toHaveAttribute('aria-expanded', 'true')
+  })
+
+  it('thought 标题键盘 Enter / 空格切换展开', () => {
+    const setExpand = vi.fn()
+    render(
+      <AIGroupStreamCardHeard
+        {...heardProps}
+        setExpand={setExpand}
+        nodeId={AI_STREAM_THOUGHT_NODE_ID}
+        lastItem={streamItem('end')}
+        streaming={false}
+      />,
+    )
+    const header = screen.getByRole('button', { name: /思考/ })
+    fireEvent.keyDown(header, { key: 'Enter' })
+    expect(setExpand).toHaveBeenCalledTimes(1)
+    const spaceEvent = createEvent.keyDown(header, { key: ' ' })
+    fireEvent(header, spaceEvent)
+    expect(spaceEvent.defaultPrevented).toBe(true)
+    expect(setExpand).toHaveBeenCalledTimes(2)
   })
 
   it('非 thought 节点渲染普通组标题与摘要', () => {

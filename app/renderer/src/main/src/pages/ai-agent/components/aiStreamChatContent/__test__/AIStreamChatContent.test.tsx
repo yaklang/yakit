@@ -1,5 +1,5 @@
 import React from 'react'
-import { fireEvent, render, screen } from '@testing-library/react'
+import { createEvent, fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { AIStreamChatContent } from '../AIStreamChatContent'
 import { AI_STREAM_THOUGHT_NODE_ID } from '@/pages/ai-re-act/hooks/defaultConstant'
@@ -137,6 +137,14 @@ describe('AIStreamChatContent', () => {
     expect(screen.getByText('思考内容')).toBeInTheDocument()
     expect(header).toHaveAttribute('aria-expanded', 'true')
     fireEvent.click(header)
+    expect(screen.queryByText('思考内容')).not.toBeInTheDocument()
+    expect(header).toHaveAttribute('aria-expanded', 'false')
+    fireEvent.keyDown(header, { key: 'Enter' })
+    expect(screen.getByText('思考内容')).toBeInTheDocument()
+    expect(header).toHaveAttribute('aria-expanded', 'true')
+    const spaceEvent = createEvent.keyDown(header, { key: ' ' })
+    fireEvent(header, spaceEvent)
+    expect(spaceEvent.defaultPrevented).toBe(true)
     expect(screen.queryByText('思考内容')).not.toBeInTheDocument()
     expect(header).toHaveAttribute('aria-expanded', 'false')
   })
